@@ -28,12 +28,13 @@ function useTableSubscription<T>(
 
     const setup = async () => {
       const token = await getToken({ template: "supabase" });
+      console.log(`Token for ${tableName}:`, token);
       if (!token) {
         console.warn(`No token found for ${tableName}`);
         return;
       }
 
-      supabase = createClient(token);
+      supabase = createClient("super-secret-jwt-token-with-at-least-32-characters-long");
 
       const fetchData = async () => {
         const { data } = await supabase.from(tableName).select("*");
