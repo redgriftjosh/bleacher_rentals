@@ -34,7 +34,7 @@ function useTableSubscription<T>(
         return;
       }
 
-      supabase = createClient("super-secret-jwt-token-with-at-least-32-characters-long");
+      supabase = createClient(token);
 
       const fetchData = async () => {
         const { data } = await supabase.from(tableName).select("*");
