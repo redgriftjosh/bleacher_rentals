@@ -44,6 +44,17 @@ function useTableSubscription<T>(
     let supabase: ReturnType<typeof import("@/utils/supabase/client").createClient>;
 
     const setup = async () => {
+      const STORAGE_KEY = `cached-${tableName}`;
+      const cached = localStorage.getItem(STORAGE_KEY);
+      if (cached) {
+        try {
+          setStore(JSON.parse(cached));
+          setLoading(false); // show something while fetching fresh
+        } catch (err) {
+          console.error("Failed to parse cache for", tableName);
+        }
+      }
+
       const token = await getToken({ template: "supabase" });
       if (!token) {
         console.warn(`No token found for ${tableName}`);
@@ -55,6 +66,7 @@ function useTableSubscription<T>(
       const fetchData = async () => {
         const { data } = await supabase.from(tableName).select("*");
         if (data) setStore(data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         setLoading(false);
       };
 

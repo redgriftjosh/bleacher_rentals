@@ -11,6 +11,8 @@ export function fetchBleachers() {
   const bleachers = useBleachersStore((s) => s.bleachers) as RawBleacher[];
   const homeBases = useHomeBasesStore((s) => s.homeBases) as RawHomeBase[];
 
+  if (!bleachers || !homeBases) return [];
+
   const formattedBleachers: FormattedBleacher[] = bleachers
     .map((bleacher) => {
       const homeBase = homeBases.find((base) => base.home_base_id === bleacher.home_base_id);

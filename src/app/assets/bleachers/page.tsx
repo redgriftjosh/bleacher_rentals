@@ -23,7 +23,6 @@ export default function BleachersPage() {
         <Suspense fallback={<BleacherListSkeleton />}>
           <BleacherList />
         </Suspense>
-        {/* <BleacherListSkeleton /> */}
       </table>
     </main>
   );
