@@ -26,10 +26,10 @@ const selectRowsDropDown: React.FC<selectRowsDropDownProps> = ({ onSelect, value
   return (
     // <div className="relative inline-block text-left" style={{ minWidth: "300px" }}>
 
-    <div className="relative inline-block text-left flex-1">
+    <div className="relative inline-block text-left flex-1 col-span-3">
       <button
         type="button"
-        className="inline-flex justify-between w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+        className="inline-flex justify-between w-full rounded-md border border-gray-250 px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
         onClick={() => setIsOpen((prev) => !prev)}
       >
         {selected ? (

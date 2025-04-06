@@ -1,10 +1,12 @@
 import { Suspense } from "react";
 import { BleacherList } from "./_lib/components/BleacherList";
 import { BleacherListSkeleton } from "./_lib/components/BleacherListSkeleton";
+import { SheetEditBleacher } from "./_lib/components/sheets/SheetEditBleacher";
 
 export default function BleachersPage() {
   return (
     <main className="">
+      <SheetEditBleacher />
       <table className="min-w-full border-collapse border border-gray-200">
         {/* Header */}
         <thead className="bg-gray-100">

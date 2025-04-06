@@ -1,4 +1,7 @@
 "use client";
+
+import { useRouter } from "next/navigation";
+
 interface BleacherItemProps {
   bleacherNumber: number;
   bleacherRows: number;
@@ -20,10 +23,16 @@ export function BleacherItemRow({
   homeBase,
   winterHomeBase,
 }: BleacherItemProps) {
+  const router = useRouter();
+
+  const handleClick = () => {
+    router.push(`/assets/bleachers?edit=${bleacherNumber}`);
+  };
+
   return (
     <tr
       className="border-b border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer"
-      // onClick={onEdit}
+      onClick={handleClick}
     >
       <td className="p-3 text-left">{bleacherNumber}</td>
       <td className="p-3 text-left">{bleacherRows}</td>

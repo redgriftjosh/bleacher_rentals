@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
+import { RawHomeBase } from "../../types";
 
-type HomeBaseDropDown = {
-  homeBaseId: number;
-  homeBaseName: string;
-};
+// type HomeBaseDropDown = {
+//   homeBaseId: number;
+//   homeBaseName: string;
+// };
 
 type selectHomeBaseDropDownProps = {
-  options: HomeBaseDropDown[];
-  onSelect: (selected: HomeBaseDropDown) => void;
+  options: RawHomeBase[];
+  onSelect: (selected: RawHomeBase) => void;
   placeholder?: string;
   value?: number;
 };
@@ -19,16 +20,16 @@ const selectHomeBaseDropDown: React.FC<selectHomeBaseDropDownProps> = ({
   value,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selected, setSelected] = useState<HomeBaseDropDown | null>(null);
+  const [selected, setSelected] = useState<RawHomeBase | null>(null);
 
   useEffect(() => {
     if (value !== undefined) {
-      const selectedOption = options.find((option) => option.homeBaseId === value);
+      const selectedOption = options.find((option) => option.home_base_id === value);
       setSelected(selectedOption ?? null);
     }
   }, [value]);
 
-  const handleSelect = (option: HomeBaseDropDown) => {
+  const handleSelect = (option: RawHomeBase) => {
     setSelected(option);
     onSelect(option);
     setIsOpen(false);
@@ -37,15 +38,15 @@ const selectHomeBaseDropDown: React.FC<selectHomeBaseDropDownProps> = ({
   return (
     // <div className="relative inline-block text-left" style={{ minWidth: "300px" }}>
 
-    <div className="relative inline-block text-left flex-1">
+    <div className="relative inline-block text-left flex-1 col-span-3">
       <button
         type="button"
-        className="inline-flex justify-between w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+        className="inline-flex justify-between w-full rounded-md border border-gray-250 px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
         onClick={() => setIsOpen((prev) => !prev)}
       >
         {selected ? (
           <div className="text-left">
-            <div>{`${selected.homeBaseName}`}</div>
+            <div>{`${selected.home_base_name}`}</div>
           </div>
         ) : (
           placeholder
@@ -61,7 +62,7 @@ const selectHomeBaseDropDown: React.FC<selectHomeBaseDropDownProps> = ({
                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                 onClick={() => handleSelect(option)}
               >
-                <div className="text-sm font-medium">{`${option.homeBaseName}`}</div>
+                <div className="text-sm font-medium">{`${option.home_base_name}`}</div>
               </li>
             ))}
           </ul>

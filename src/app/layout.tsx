@@ -6,6 +6,7 @@ import Script from "next/script";
 import { SignedInComponents } from "../components/SignedInComponents";
 import { ReactElement, ReactNode } from "react";
 import { AppProps } from "next/app";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({
             strategy="beforeInteractive"
           />
           <SignedIn>
+            <Toaster />
             <SignedInComponents>{children}</SignedInComponents>
           </SignedIn>
         </body>

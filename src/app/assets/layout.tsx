@@ -1,6 +1,6 @@
 import { Color } from "@/types/Color";
 import TabNavigation from "./bleachers/_lib/components/TabNavigation";
-import { SheetDemo } from "./bleachers/_lib/components/SheetDemo";
+import { SheetAddBleacher } from "./bleachers/_lib/components/sheets/SheetAddBleacher";
 const tabs = [
   { id: "bleachers", label: "Bleachers", path: "/assets/bleachers" },
   { id: "other-assets", label: "Other Assets", path: "/assets/other-assets" },
@@ -17,7 +17,7 @@ export default function AssetsLayout({ children }: { children: React.ReactNode }
             Manage your assets here.
           </p>
         </div>
-        <SheetDemo />
+        <SheetAddBleacher />
       </div>
       <TabNavigation />
       {children}

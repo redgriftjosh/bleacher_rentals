@@ -6,21 +6,38 @@ import { createClient } from "@/utils/supabase/client";
 import { useAuth } from "@clerk/nextjs";
 import { useBleachersStore } from "@/state/bleachersStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
+import { toast } from "sonner";
 
 export default function useSupabaseSubscriptions() {
   const { getToken } = useAuth();
 
   const setBleachers = useBleachersStore((s) => s.setBleachers);
-  const setHomeBases = useHomeBasesStore((s) => s.setHomeBases);
+  const setBleachersLoading = useBleachersStore((s) => s.setLoading);
 
-  useTableSubscription("Bleachers", "bleachers-subscription", setBleachers, getToken);
-  useTableSubscription("HomeBases", "homebases-subscription", setHomeBases, getToken);
+  const setHomeBases = useHomeBasesStore((s) => s.setHomeBases);
+  const setHomeBasesLoading = useHomeBasesStore((s) => s.setLoading);
+
+  useTableSubscription(
+    "Bleachers",
+    "bleachers-subscription",
+    setBleachers,
+    setBleachersLoading,
+    getToken
+  );
+  useTableSubscription(
+    "HomeBases",
+    "homebases-subscription",
+    setHomeBases,
+    setHomeBasesLoading,
+    getToken
+  );
 }
 
 function useTableSubscription<T>(
   tableName: string,
   channelName: string,
   setStore: (data: T[]) => void,
+  setLoading: (setLoaded: boolean) => void,
   getToken: GetToken
 ) {
   useEffect(() => {
@@ -28,7 +45,6 @@ function useTableSubscription<T>(
 
     const setup = async () => {
       const token = await getToken({ template: "supabase" });
-      console.log(`Token for ${tableName}:`, token);
       if (!token) {
         console.warn(`No token found for ${tableName}`);
         return;
@@ -39,6 +55,7 @@ function useTableSubscription<T>(
       const fetchData = async () => {
         const { data } = await supabase.from(tableName).select("*");
         if (data) setStore(data);
+        setLoading(false);
       };
 
       await fetchData();
@@ -48,6 +65,9 @@ function useTableSubscription<T>(
         .channel(channelName)
         .on("postgres_changes", { event: "*", schema: "public", table: tableName }, (payload) => {
           console.log(`Change received on ${tableName}:`, payload);
+          toast(`${tableName} ${payload.eventType}`, {
+            description: JSON.stringify(payload.new, null, 2),
+          });
           fetchData();
         })
         .subscribe();
@@ -58,5 +78,5 @@ function useTableSubscription<T>(
     };
 
     setup();
-  }, [tableName, channelName, setStore, getToken]);
+  }, [tableName, channelName, setStore, setLoading, getToken]);
 }
