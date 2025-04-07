@@ -6,8 +6,8 @@ import { BleacherListSkeleton } from "./BleacherListSkeleton";
 
 export function BleacherList() {
   const bleachers = fetchBleachers();
-  const loading = useBleachersStore((s) => s.loading);
-  if (loading) return <BleacherListSkeleton />;
+  // const loading = useBleachersStore((s) => s.loading);
+  // if (loading) return <BleacherListSkeleton />;
   return (
     <tbody>
       {bleachers.map((row, index) => (

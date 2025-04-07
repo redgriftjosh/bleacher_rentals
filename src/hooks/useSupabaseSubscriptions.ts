@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useBleachersStore } from "@/state/bleachersStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { useUsersStore } from "@/state/userStore";
+import { useInvitedUsersStore } from "@/state/invitedUserStore";
 
 export default function useSupabaseSubscriptions() {
   const { getToken } = useAuth();
@@ -34,7 +35,17 @@ export default function useSupabaseSubscriptions() {
 
   const setUsers = useUsersStore((s) => s.setUsers);
   const setUsersLoading = useUsersStore((s) => s.setLoading);
-  useTableSubscription("Users", "homebases-subscription", setUsers, setUsersLoading, getToken);
+  useTableSubscription("Users", "users-subscription", setUsers, setUsersLoading, getToken);
+
+  const setInvitedUsers = useInvitedUsersStore((s) => s.setInvitedUsers);
+  const setInvitedUsersLoading = useInvitedUsersStore((s) => s.setLoading);
+  useTableSubscription(
+    "InvitedUsers",
+    "invitedusers-subscription",
+    setInvitedUsers,
+    setInvitedUsersLoading,
+    getToken
+  );
 }
 
 function useTableSubscription<T>(

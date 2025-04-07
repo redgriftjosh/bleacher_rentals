@@ -52,7 +52,7 @@ export async function POST(req: Request) {
   const { id } = evt.data;
   const eventType = evt.type;
   console.log(`Received webhook with ID ${id} and event type of ${eventType}`);
-  console.log("Webhook payload:", body);
+  // console.log("Webhook payload:", body);
 
   const supabase = await createServiceRoleClient(); // no permission issues.
   if (evt.type === "user.created") {
