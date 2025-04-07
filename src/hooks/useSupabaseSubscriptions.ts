@@ -4,19 +4,16 @@ import { useEffect } from "react";
 import { type GetToken } from "@clerk/types";
 import { createClient } from "@/utils/supabase/client";
 import { useAuth } from "@clerk/nextjs";
+import { toast } from "sonner";
 import { useBleachersStore } from "@/state/bleachersStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
-import { toast } from "sonner";
+import { useUsersStore } from "@/state/userStore";
 
 export default function useSupabaseSubscriptions() {
   const { getToken } = useAuth();
 
   const setBleachers = useBleachersStore((s) => s.setBleachers);
   const setBleachersLoading = useBleachersStore((s) => s.setLoading);
-
-  const setHomeBases = useHomeBasesStore((s) => s.setHomeBases);
-  const setHomeBasesLoading = useHomeBasesStore((s) => s.setLoading);
-
   useTableSubscription(
     "Bleachers",
     "bleachers-subscription",
@@ -24,6 +21,9 @@ export default function useSupabaseSubscriptions() {
     setBleachersLoading,
     getToken
   );
+
+  const setHomeBases = useHomeBasesStore((s) => s.setHomeBases);
+  const setHomeBasesLoading = useHomeBasesStore((s) => s.setLoading);
   useTableSubscription(
     "HomeBases",
     "homebases-subscription",
@@ -31,6 +31,10 @@ export default function useSupabaseSubscriptions() {
     setHomeBasesLoading,
     getToken
   );
+
+  const setUsers = useUsersStore((s) => s.setUsers);
+  const setUsersLoading = useUsersStore((s) => s.setLoading);
+  useTableSubscription("Users", "homebases-subscription", setUsers, setUsersLoading, getToken);
 }
 
 function useTableSubscription<T>(
