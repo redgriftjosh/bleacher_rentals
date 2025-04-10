@@ -4,14 +4,14 @@ import { create } from "zustand";
 
 type Store = {
   invitedUsers: any[];
-  loading: boolean;
+  stale: boolean;
   setInvitedUsers: (data: any[]) => void;
-  setLoading: (loading: boolean) => void;
+  setStale: (stale: boolean) => void;
 };
 
 export const useInvitedUsersStore = create<Store>((set) => ({
   invitedUsers: [],
-  loading: true,
+  stale: true,
   setInvitedUsers: (data) => set({ invitedUsers: data }),
-  setLoading: (loading) => set({ loading: loading }),
+  setStale: (stale) => set({ stale: stale }),
 }));

@@ -4,14 +4,14 @@ import { create } from "zustand";
 
 type Store = {
   users: any[];
-  loading: boolean;
+  stale: boolean;
   setUsers: (data: any[]) => void;
-  setLoading: (loading: boolean) => void;
+  setStale: (stale: boolean) => void;
 };
 
 export const useUsersStore = create<Store>((set) => ({
   users: [],
-  loading: true,
+  stale: true,
   setUsers: (data) => set({ users: data }),
-  setLoading: (loading) => set({ loading: loading }),
+  setStale: (stale) => set({ stale: stale }),
 }));

@@ -21,9 +21,9 @@ export function SheetEditBleacher() {
   //   const editBleacherNumber = searchParams.get("edit");
   const [editBleacherNumber, setEditBleacherNumber] = useState<string | null>(null);
   const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
-  const homeBasesLoading = useHomeBasesStore((s) => s.loading);
+  const homeBasesLoading = useHomeBasesStore((s) => s.stale);
   const bleachers = useBleachersStore((s) => s.bleachers);
-  const bleachersLoading = useBleachersStore((s) => s.loading);
+  const bleachersLoading = useBleachersStore((s) => s.stale);
 
   const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);
   const [id, setId] = useState<number | null>(null);
@@ -112,7 +112,7 @@ export function SheetEditBleacher() {
           <div className="fixed inset-y-0 right-0 w-full sm:max-w-sm bg-white shadow-xl flex flex-col animate-in slide-in-from-right">
             {/* Header */}
             <div className="p-6 border-b">
-              <h2 className="text-lg font-semibold">Updare a Bleacher</h2>
+              <h2 className="text-lg font-semibold">Update a Bleacher</h2>
               <p className="text-sm text-gray-500">
                 Fill out the form and click 'Save Changes' to lock in your changes bleacher.
               </p>
