@@ -4,14 +4,14 @@ import { create } from "zustand";
 
 type Store = {
   bleachers: any[];
-  loading: boolean;
+  stale: boolean;
   setBleachers: (data: any[]) => void;
-  setLoading: (loading: boolean) => void;
+  setStale: (stale: boolean) => void;
 };
 
 export const useBleachersStore = create<Store>((set) => ({
   bleachers: [],
-  loading: true,
+  stale: true,
   setBleachers: (data) => set({ bleachers: data }),
-  setLoading: (loading) => set({ loading: loading }),
+  setStale: (stale) => set({ stale: stale }),
 }));

@@ -33,6 +33,7 @@ const SideBar = () => {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={true}
               className={`flex items-center text-base px-4 py-2 rounded-md m-2 space-x-3 ${
                 isSelected ? " text-lightBlue bg-blue-100" : "text-gray-500 hover:bg-gray-200"
               }`}

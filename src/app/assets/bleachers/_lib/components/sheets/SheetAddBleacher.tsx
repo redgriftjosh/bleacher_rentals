@@ -1,16 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
-import { RawHomeBase } from "../../types";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import { insertBleacher } from "../../db";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
+import { SelectHomeBase } from "@/types/tables/HomeBases";
 
 export function SheetAddBleacher() {
   const { getToken } = useAuth();
-  const homeBases = useHomeBasesStore((s) => s.homeBases) as RawHomeBase[];
+  const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
 
   const [isOpen, setIsOpen] = useState(false);
   const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);

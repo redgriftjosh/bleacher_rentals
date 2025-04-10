@@ -1,6 +1,6 @@
-// import { apiListAllBleachersWithEvents } from "@/functions/api/bleachers";
+// // import { apiListAllBleachersWithEvents } from "@/functions/api/bleachers";
 // import { DateTime } from "luxon";
-// import { convertToLocalString, convertToUTCString } from "@/functions/util";
+// // import { convertToLocalString, convertToUTCString } from "@/functions/util";
 // import { CreateEventPayload } from "../../_lib/interfaces";
 // import { apiCreateEvent } from "../../_lib/api";
 // import { calculateLeftAndWidthPercent } from "../../_lib/functions";
@@ -41,15 +41,15 @@
 //       events: bleacher.events.map((event: any) => {
 //         const { width: eventWidth, left: eventLeft } = calculateLeftAndWidthPercent(
 //           event.eventStart,
-//           event.eventEnd,
+//           event.eventEnd
 //         );
 //         const { width: setupWidth, left: setupLeft } = calculateLeftAndWidthPercent(
 //           event.setupStart,
-//           event.setupEnd,
+//           event.setupEnd
 //         );
 //         const { width: teardownWidth, left: teardownLeft } = calculateLeftAndWidthPercent(
 //           event.teardownStart,
-//           event.teardownEnd,
+//           event.teardownEnd
 //         );
 //         const { width: storeBeforeWidth, left: storeBeforeLeft } =
 //           event.storeBeforeStart && event.storeBeforeEnd
