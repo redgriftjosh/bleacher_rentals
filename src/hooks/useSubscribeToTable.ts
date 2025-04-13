@@ -23,7 +23,7 @@ export function useSubscribeToTable<T>({
   subscriptionId,
 }: UseSubscribeToTableOptions<T>) {
   useEffect(() => {
-    console.log(`Subscribing to ${tableName} [${subscriptionId}]`);
+    // console.log(`Subscribing to ${tableName} [${subscriptionId}]`);
     let channel: RealtimeChannel | null = null;
     let supabase: SupabaseClient | null = null;
 
@@ -53,7 +53,7 @@ export function useSubscribeToTable<T>({
     return () => {
       if (channel && supabase) {
         supabase.removeChannel(channel);
-        console.log(`Cleaned up ${tableName} [${subscriptionId}]`);
+        // console.log(`Cleaned up ${tableName} [${subscriptionId}]`);
       }
       channel = null;
       supabase = null;

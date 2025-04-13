@@ -40,11 +40,15 @@ export function SheetEditBleacher() {
       setEditBleacherNumber(null);
       return;
     }
-    console.log("editBleacherNumber:", edit);
+    // console.log("editBleacherNumber:", edit);
     setEditBleacherNumber(edit);
 
+    // gonna wait to show anything until data is not stale
+    // should at least try to see if cached data is available but don't throw the error
+    // until the data isn't stale and we've verified that it doesn't exist.
+    // Will do this later maybe.
     if (bleachersLoading || homeBasesLoading) return;
-    console.log("bleachersss:", bleachers);
+    // console.log("bleachersss:", bleachers);
     const bleacher = bleachers.find((b) => b.bleacher_number === Number(edit));
 
     if (bleacher) {

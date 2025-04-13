@@ -1,11 +1,12 @@
 "use client"; // Will run on server without this
 
 import { create } from "zustand";
+import { Tables } from "../../database.types";
 
 type Store = {
-  users: any[];
+  users: Tables<"Users">[];
   stale: boolean;
-  setUsers: (data: any[]) => void;
+  setUsers: (data: Tables<"Users">[]) => void;
   setStale: (stale: boolean) => void;
 };
 

@@ -1,108 +1,224 @@
-// export const BleacherTable = () => {
-//   // Generate 7 days starting from today
-//   const dates = Array.from({ length: 7 }, (_, i) => {
-//     const date = new Date();
-//     date.setDate(date.getDate() + i);
-//     return date.toISOString().split("T")[0];
-//   });
+import { Plus, Minus } from "lucide-react";
+import { useCurrentEventStore } from "../useCurrentEventStore";
+import { fetchBleachers } from "../db";
+import { Color } from "@/types/Color";
+import { DashboardEvent } from "../types";
+import React from "react";
 
-//   return (
-//     <div className="relative border h-[calc(100vh-170px)]">
-//       <div className="overflow-auto h-full">
-//         <table className="w-full">
-//           <thead>
-//             <tr>
-//               <th className="w-48 px-4 py-2 border-r text-left bg-gray-50 sticky left-0 top-0 z-20">
-//                 Bleacher
-//               </th>
-//               {dates.map((date, dateIndex) => (
-//                 <th
-//                   key={`date-header-${dateIndex}`}
-//                   className={`border-r px-4 py-2 sticky top-0 z-10 ${
-//                     date === new Date().toISOString().split("T")[0]
-//                       ? "bg-yellow-300"
-//                       : "bg-gray-200"
-//                   }`}
-//                   style={{ minWidth: "150px", maxWidth: "150px" }}
-//                 >
-//                   {date}
-//                 </th>
-//               ))}
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {/* Sample bleacher rows */}
-//             {[1, 2, 3, 4, 5].map((bleacherNum) => (
-//               <tr key={bleacherNum} className="border-t">
-//                 <td className="w-48 px-4 py-2 border-r font-medium sticky left-0 bg-white z-10 h-16">
-//                   <div className="flex justify-between items-center">
-//                     <span>Bleacher {bleacherNum}</span>
-//                   </div>
-//                 </td>
-//                 {dates.map((date, dateIndex) => (
-//                   <td
-//                     key={`cell-${bleacherNum}-${dateIndex}`}
-//                     className="border-r relative p-0 min-w-[100px]"
-//                     style={{ minWidth: "150px", maxWidth: "150px", height: "64px" }}
-//                   >
-//                     {/* Sample event for first bleacher on second day */}
-//                     {bleacherNum === 1 && dateIndex === 1 && (
-//                       <div
-//                         style={{
-//                           position: "absolute",
-//                           width: "300px", // spans 2 days
-//                           height: "80%",
-//                           top: "10%",
-//                           left: 0,
-//                           backgroundColor: "#60A5FA", // light blue
-//                           borderRadius: "4px",
-//                           zIndex: 3,
-//                         }}
-//                       >
-//                         <div className="px-2 py-1 text-white">Sample Event</div>
-//                       </div>
-//                     )}
-//                     {/* Sample setup period for second bleacher */}
-//                     {bleacherNum === 2 && dateIndex === 3 && (
-//                       <div
-//                         style={{
-//                           position: "absolute",
-//                           width: "150px",
-//                           height: "80%",
-//                           top: "10%",
-//                           left: 0,
-//                           backgroundColor: "#fcba03", // yellow
-//                           borderRadius: "4px",
-//                           zIndex: 2,
-//                         }}
-//                       >
-//                         <div className="px-2 py-1 text-white">Setup</div>
-//                       </div>
-//                     )}
-//                     {/* Sample storage period for third bleacher */}
-//                     {bleacherNum === 3 && dateIndex === 5 && (
-//                       <div
-//                         style={{
-//                           position: "absolute",
-//                           width: "150px",
-//                           height: "80%",
-//                           top: "10%",
-//                           left: 0,
-//                           backgroundColor: "#dbdbdb", // gray
-//                           borderRadius: "4px",
-//                           zIndex: 1,
-//                         }}
-//                       >
-//                         <div className="px-2 py-1 text-white">Storage</div>
-//                       </div>
-//                     )}
-//                   </td>
-//                 ))}
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//       </div>
-//     </div>
-//   );
-// };
+export const BleacherTable = (
+  dates: string[],
+  tableRef: any,
+  handleScroll: any,
+  cellWidth: number,
+  DateTime: any
+) => {
+  // const currentEventStore = useCurrentEventStore();
+
+  const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
+  const bleacherIds = useCurrentEventStore((s) => s.bleacherIds);
+  const setField = useCurrentEventStore((s) => s.setField);
+
+  const bleachers = fetchBleachers();
+
+  const toggle = (bleacherId: number) => {
+    if (!isFormExpanded) return; // ❌ Don't allow toggling if form is collapsed
+
+    const selected = bleacherIds;
+    const updated = selected.includes(bleacherId)
+      ? selected.filter((n) => n !== bleacherId)
+      : [...selected, bleacherId];
+
+    setField("bleacherIds", updated);
+  };
+
+  if (bleachers !== null && bleachers.length > 0) {
+    // ✅ If form is open, sort selected bleachers to top; else use original order
+    const sortedBleachers = isFormExpanded
+      ? [
+          ...bleachers.filter((b) => bleacherIds.includes(b.bleacherId)),
+          ...bleachers.filter((b) => !bleacherIds.includes(b.bleacherId)),
+        ]
+      : bleachers;
+
+    return (
+      <div className="relative border h-[calc(100vh-170px)]">
+        <div ref={tableRef} className="overflow-auto h-full" onScroll={handleScroll}>
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="w-48 px-4 py-2 border-r text-left bg-gray-50 sticky left-0 top-0 z-20">
+                  Bleacher
+                </th>
+                {dates.map((date, dateIndex) => (
+                  <th
+                    key={`date-header-${dateIndex}-${date}`}
+                    id={date === new Date().toISOString().split("T")[0] ? "today" : undefined}
+                    className={`border-r sticky top-0 z-10 ${
+                      date === new Date().toISOString().split("T")[0]
+                        ? "bg-yellow-300"
+                        : DateTime.fromISO(date).weekday >= 6
+                        ? "bg-gray-300"
+                        : "bg-gray-200"
+                    }`}
+                    style={{ minWidth: `${cellWidth}px`, maxWidth: `${cellWidth}px` }}
+                  >
+                    <div className="font-medium text-sm -mb-1">
+                      {DateTime.fromISO(date).toFormat("EEE, MMM d")}
+                    </div>
+                    <div className="font-light text-xs text-gray-400">
+                      {DateTime.fromISO(date).toFormat("yyyy")}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sortedBleachers.map((bleacher) => {
+                const isSelected = bleacherIds.includes(bleacher.bleacherId);
+                return (
+                  <tr
+                    key={`${bleacher.bleacherNumber}`}
+                    className={`border-t ${
+                      isFormExpanded && isSelected ? "bg-gray-100" : "bg-transparent"
+                    }`}
+                  >
+                    <td className="w-48 px-4 py-2 border-r font-medium sticky left-0 bg-white z-10 h-16">
+                      <div className="flex justify-between items-center">
+                        <span>{bleacher.bleacherNumber}</span>
+                        {isFormExpanded && (
+                          <button
+                            onClick={() => toggle(bleacher.bleacherId)}
+                            className={`p-1 rounded cursor-pointer ${
+                              isSelected
+                                ? "border-1 border-red-600 bg-red-50"
+                                : "border-1 border-green-600 bg-green-50"
+                            }`}
+                          >
+                            {isSelected ? (
+                              <Minus size={16} className="text-red-600" />
+                            ) : (
+                              <Plus size={16} className="text-green-600" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    {dates.map((date, dateIndex) => (
+                      <th
+                        key={`events-cell-${bleacher.bleacherNumber}-${dateIndex}-${date}`}
+                        id={date === new Date().toISOString().split("T")[0] ? "today" : undefined}
+                        className="border-r relative p-0 min-w-[100px]"
+                        style={{ minWidth: `${cellWidth}px`, maxWidth: `${cellWidth}px` }}
+                      >
+                        {bleacher.events.map((event: DashboardEvent, eventIndex: number) => {
+                          const currentDate = DateTime.fromISO(date);
+                          const eventStartDate = DateTime.fromISO(event.eventStart);
+                          const eventEndDate = DateTime.fromISO(event.eventEnd);
+                          const hsl = event.hslHue
+                            ? `hsl(${event.hslHue.toString()}, 61%, 61%)`
+                            : "hsl(0, 0%, 61%)";
+
+                          const daysVisible = Math.min(
+                            eventEndDate.diff(currentDate, "days").days + 1, // days from today to end
+                            dates.length - dateIndex // remaining loaded days
+                          );
+
+                          // Display if this is the first date the event should appear on
+                          const shouldDisplayEvent =
+                            currentDate.toISODate() === event.eventStart ||
+                            (dateIndex === 0 &&
+                              eventStartDate < currentDate &&
+                              eventEndDate >= currentDate);
+
+                          const padding = 6;
+                          const border = event.status === "Booked" ? 0 : 1;
+
+                          return (
+                            <div key={`${eventIndex}`}>
+                              {shouldDisplayEvent && (
+                                <div
+                                  key={`event${eventIndex}`}
+                                  className="hover:shadow-md transition-all cursor-pointer"
+                                  style={{
+                                    position: "absolute",
+                                    width: `${daysVisible * cellWidth - (padding * 2 + 1)}px`,
+                                    height: "80%",
+                                    top: "10%",
+                                    left: `${padding}px`,
+                                    backgroundColor: event.status === "Booked" ? hsl : "white",
+                                    border: `${border}px solid ${hsl}`,
+                                    borderRadius: "4px",
+                                    zIndex: 3,
+                                    overflow: "visible",
+                                  }}
+                                  // onClick={() => handleLoadEvent(event.eventId)}
+                                >
+                                  {/* Setup*/}
+                                  <div
+                                    className=" absolute inset-0"
+                                    style={{
+                                      backgroundColor: "hsl(54, 80%, 50%)",
+                                      width: `${cellWidth / 2 - padding / 2}px`,
+                                      borderTopLeftRadius: "3px",
+                                      borderBottomLeftRadius: "3px",
+                                    }}
+                                  ></div>
+                                  {/* Teardown */}
+                                  <div
+                                    className=" absolute inset-0"
+                                    style={{
+                                      backgroundColor: "hsl(54, 80%, 50%)",
+                                      width: `${cellWidth / 2 - padding / 2}px`,
+                                      left: `${
+                                        daysVisible * cellWidth -
+                                        (padding * 2 + 1) -
+                                        (cellWidth / 2 - padding / 2) -
+                                        border * 2
+                                      }px`,
+                                      borderTopRightRadius: "3px",
+                                      borderBottomRightRadius: "3px",
+                                    }}
+                                  ></div>
+                                  <div
+                                    className="sticky left-0 top-0 bg-transparent z-10 text-left px-2 pt-0.5"
+                                    style={{
+                                      width: "fit-content",
+                                      maxWidth: "100%",
+                                      left: "100px",
+                                    }}
+                                  >
+                                    <div
+                                      className=" text-white truncate"
+                                      style={{
+                                        color: event.status === "Booked" ? "white" : hsl,
+                                      }}
+                                    >
+                                      {event.eventName}
+                                    </div>
+                                    <div
+                                      className=" text-white text-xs font-normal -mt-1 truncate"
+                                      style={{
+                                        color: event.status === "Booked" ? "white" : hsl,
+                                      }}
+                                    >
+                                      {event.addressData?.address}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </th>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};

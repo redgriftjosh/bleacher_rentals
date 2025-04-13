@@ -1,28 +1,25 @@
 "use client";
-import { useSupabaseWithRealtime } from "@/hooks/unused/useSupabaseRealtime";
-import { useEffect } from "react";
+
+import { Color } from "@/types/Color";
 
 export default function EventDashboardPage() {
-  // const { supabase, ready } = useSupabaseWithRealtime();
-
-  // useEffect(() => {
-  //   console.log("supabase", supabase);
-  //   if (!ready || !supabase.current) return;
-
-  //   const supabaseClient = supabase.current;
-
-  //   const channel = supabaseClient
-  //     .channel("my-channel")
-  //     .on("postgres_changes", { event: "*", schema: "public", table: "Bleachers" }, (payload) => {
-  //       console.log("🔄 Change received:", payload);
-  //     });
-
-  //   channel.subscribe();
-
-  //   return () => {
-  //     channel.unsubscribe(); // more accurate than removeChannel
-  //   };
-  // }, [ready, supabase]);
-
-  return <div>I'm not doing anything rn...</div>;
+  return (
+    <div className="w-[4000px] h-[150px] relative">
+      <div
+        className="w-[500px] h-[100px] absolute rounded-md"
+        style={{ backgroundColor: Color.LIGHT_BLUE, left: "200px" }}
+      >
+        <div
+          className=" rounded absolute inset-0"
+          style={{ backgroundColor: "hsl(54, 80%, 50%)" }}
+        ></div>
+        <div
+          className="sticky left-0 top-0 bg-transparent text-white  z-10"
+          style={{ width: "fit-content" }}
+        >
+          I'm sticky horiz
+        </div>
+      </div>
+    </div>
+  );
 }
