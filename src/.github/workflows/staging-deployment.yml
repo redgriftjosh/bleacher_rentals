@@ -1,0 +1,31 @@
+name: STAGING Deployment
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  deploy_lambda:
+    name: Build and Deploy Lambda
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Supabase CLI and Postgres tools
+        run: |
+          curl -sL https://github.com/supabase/cli/releases/latest/download/supabase-cli-linux-amd64.tar.gz | tar -xz
+          sudo mv supabase /usr/local/bin
+          sudo apt-get install postgresql-client
+
+      - name: Dump Prod Schema and Data
+        run: |
+          pg_dump --schema-only --no-owner --dbname=$PROD_DB_URL > schema.sql
+          pg_dump --data-only --no-owner --dbname=$PROD_DB_URL > data.sql
+
+      - name: Reset Staging DB
+        run: |
+          psql $STAGING_DB_URL -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+
+      - name: Apply Schema and Data
+        run: |
+          psql $STAGING_DB_URL < schema.sql
+          psql $STAGING_DB_URL < data.sql
