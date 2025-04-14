@@ -17,12 +17,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install Supabase CLI and Postgres tools
+      - name: Install Supabase CLI
         run: |
-          curl -sL https://github.com/supabase/cli/releases/latest/download/supabase-cli-linux-amd64.tar.gz | tar -xz
+          curl -sL https://github.com/supabase/cli/releases/latest/download/supabase-linux-amd64 -o supabase
+          chmod +x supabase
           sudo mv supabase /usr/local/bin
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
 
       - name: Dump production schema
         run: |
