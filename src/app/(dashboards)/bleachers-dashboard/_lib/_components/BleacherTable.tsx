@@ -118,17 +118,33 @@ export const BleacherTable = (
                             ? `hsl(${event.hslHue.toString()}, 61%, 61%)`
                             : "hsl(0, 0%, 61%)";
 
+                          const visualStartDate = event.setupStart
+                            ? DateTime.fromISO(event.setupStart)
+                            : eventStartDate;
+                          const visualEndDate = event.teardownEnd
+                            ? DateTime.fromISO(event.teardownEnd)
+                            : eventEndDate;
+
+                          const shouldDisplayEvent =
+                            currentDate.toISODate() === visualStartDate.toISODate() ||
+                            (dateIndex === 0 &&
+                              visualStartDate < currentDate &&
+                              visualEndDate >= currentDate);
+
                           const daysVisible = Math.min(
-                            eventEndDate.diff(currentDate, "days").days + 1, // days from today to end
-                            dates.length - dateIndex // remaining loaded days
+                            visualEndDate.diff(currentDate, "days").days + 1,
+                            dates.length - dateIndex
                           );
 
-                          // Display if this is the first date the event should appear on
-                          const shouldDisplayEvent =
-                            currentDate.toISODate() === event.eventStart ||
-                            (dateIndex === 0 &&
-                              eventStartDate < currentDate &&
-                              eventEndDate >= currentDate);
+                          const setupDays: number | null =
+                            event.setupStart != ""
+                              ? eventStartDate.diff(DateTime.fromISO(event.setupStart), "days").days
+                              : null;
+
+                          const teardownDays =
+                            event.teardownEnd != ""
+                              ? DateTime.fromISO(event.teardownEnd).diff(eventEndDate, "days").days
+                              : null;
 
                           const padding = 6;
                           const border = event.status === "Booked" ? 0 : 1;
@@ -158,7 +174,11 @@ export const BleacherTable = (
                                     className=" absolute inset-0"
                                     style={{
                                       backgroundColor: "hsl(54, 80%, 50%)",
-                                      width: `${cellWidth / 2 - padding / 2}px`,
+                                      width: `${
+                                        setupDays !== null
+                                          ? setupDays * cellWidth - padding - border
+                                          : cellWidth / 2 - padding / 2
+                                      }px`,
                                       borderTopLeftRadius: "3px",
                                       borderBottomLeftRadius: "3px",
                                     }}
@@ -168,12 +188,21 @@ export const BleacherTable = (
                                     className=" absolute inset-0"
                                     style={{
                                       backgroundColor: "hsl(54, 80%, 50%)",
-                                      width: `${cellWidth / 2 - padding / 2}px`,
+                                      width: `${
+                                        teardownDays !== null
+                                          ? teardownDays * cellWidth - padding - border
+                                          : cellWidth / 2 - padding / 2
+                                      }px`,
                                       left: `${
-                                        daysVisible * cellWidth -
-                                        (padding * 2 + 1) -
-                                        (cellWidth / 2 - padding / 2) -
-                                        border * 2
+                                        teardownDays !== null
+                                          ? (eventEndDate.diff(currentDate, "days").days + 1) *
+                                              cellWidth -
+                                            padding -
+                                            border * 2
+                                          : daysVisible * cellWidth -
+                                            (padding * 2 + 1) -
+                                            (cellWidth / 2 - padding / 2) -
+                                            border * 2
                                       }px`,
                                       borderTopRightRadius: "3px",
                                       borderBottomRightRadius: "3px",
