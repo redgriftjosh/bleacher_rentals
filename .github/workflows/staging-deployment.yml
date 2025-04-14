@@ -19,7 +19,8 @@ jobs:
 
       - name: Install Supabase CLI and Postgres tools
         run: |
-          curl -sL https://github.com/supabase/cli/releases/latest/download/supabase-linux-amd64 -o supabase
+          SUPABASE_VERSION=$(curl -s https://api.github.com/repos/supabase/cli/releases/latest | grep tag_name | cut -d '"' -f 4)
+          curl -L -o supabase "https://github.com/supabase/cli/releases/download/$SUPABASE_VERSION/supabase_linux_amd64"
           chmod +x supabase
           sudo mv supabase /usr/local/bin
           sudo apt-get update
