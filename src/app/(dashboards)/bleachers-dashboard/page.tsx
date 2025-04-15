@@ -9,7 +9,7 @@ import { BleacherTable } from "./_lib/_components/BleacherTable";
 const BleachersDashboardPage = () => {
   const initialDays = 300; // Initial ±50 days range
   const cellWidth = 100; // in pixels
-  const daysToAdd = 200; // Number of days to add when scrolling.
+  const daysToAdd = 200; // Number of days to add when scrolling
   const [startDate, setStartDate] = useState(
     new Date(new Date().setDate(new Date().getDate() - initialDays))
   );
