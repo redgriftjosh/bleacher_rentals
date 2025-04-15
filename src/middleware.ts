@@ -1,4 +1,6 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
+import { NextRequest } from "next/server";
+import { updateSession } from "./utils/supabase/middleware";
 
 export default clerkMiddleware();
 
