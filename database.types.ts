@@ -36,6 +36,35 @@ export type Database = {
         }
         Relationships: []
       }
+      Alerts: {
+        Row: {
+          created_at: string
+          event_id: number | null
+          id: number
+          message: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id?: number | null
+          id?: number
+          message?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: number | null
+          id?: number
+          message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Alerts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["event_id"]
+          },
+        ]
+      }
       BleacherEvents: {
         Row: {
           bleacher_event_id: number
