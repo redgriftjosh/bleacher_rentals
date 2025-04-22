@@ -19,6 +19,7 @@ export const BleacherTable = (
   const setField = useCurrentEventStore((s) => s.setField);
 
   const bleachers = fetchBleachers();
+  console.log("bleachers:", bleachers);
 
   const toggle = (bleacherId: number) => {
     if (!isFormExpanded) return; // ❌ Don't allow toggling if form is collapsed
@@ -149,6 +150,8 @@ export const BleacherTable = (
                           const padding = 6;
                           const border = event.status === "Booked" ? 0 : 1;
 
+                          const alerts = event.alerts;
+
                           return (
                             <div key={`${eventIndex}`}>
                               {shouldDisplayEvent && (
@@ -216,13 +219,33 @@ export const BleacherTable = (
                                       left: "100px",
                                     }}
                                   >
-                                    <div
+                                    {/* <div
                                       className=" text-white truncate"
                                       style={{
                                         color: event.status === "Booked" ? "white" : hsl,
                                       }}
                                     >
                                       {event.eventName}
+                                      <span>{event.eventName}</span>
+                                      {event.alerts.length > 0 && (
+                                        <span className="text-xs font-bold text-white bg-red-600 rounded-full w-5 h-5 flex items-center justify-center">
+                                          {event.alerts.length}
+                                        </span>
+                                      )}
+                                    </div> */}
+                                    <div
+                                      className="flex items-center gap-2 text-white"
+                                      style={{
+                                        color: event.status === "Booked" ? "white" : hsl,
+                                        maxWidth: "100%",
+                                      }}
+                                    >
+                                      <span className="truncate">{event.eventName}</span>
+                                      {event.alerts.length > 0 && (
+                                        <span className="text-xs font-bold text-white bg-red-600 rounded-full w-5 h-5 flex items-center justify-center shrink-0">
+                                          {event.alerts.length}
+                                        </span>
+                                      )}
                                     </div>
                                     <div
                                       className=" text-white text-xs font-normal -mt-1 truncate"

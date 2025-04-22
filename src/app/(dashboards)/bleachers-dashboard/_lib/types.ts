@@ -17,6 +17,7 @@ export type DashboardBleacher = {
 };
 
 export type DashboardEvent = {
+  eventId: number;
   eventName: string;
   addressData: AddressData | null;
   seats: number | null;
@@ -36,4 +37,5 @@ export type DashboardEvent = {
   numDays: number; // this is inserted into the css propery 2 days should be "200%"
   status: "Quoted" | "Booked";
   hslHue: number | null;
+  alerts: string[];
 };

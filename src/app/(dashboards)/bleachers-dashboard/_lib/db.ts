@@ -16,6 +16,7 @@ import { DashboardBleacher, DashboardEvent } from "./types";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { supabaseClient } from "@/utils/supabase/supabaseClient";
 import { useMemo } from "react";
+import { useAlertsStore } from "@/state/alertsStore";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -29,9 +30,11 @@ export function fetchBleachers() {
   const addresses = useAddressesStore((s) => s.addresses);
   const events = useEventsStore((s) => s.events);
   const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
+  const alerts = useAlertsStore((s) => s.alerts);
 
   return useMemo(() => {
     console.log("fetchBleachers (dashboard)");
+    console.log("alerts", alerts);
     if (!bleachers) return [];
 
     const formattedBleachers: DashboardBleacher[] = bleachers
@@ -54,7 +57,12 @@ export function fetchBleachers() {
 
             const address = addresses.find((a) => a.address_id === event.address_id);
 
+            const relatedAlerts = alerts
+              .filter((a) => a.event_id === event.event_id)
+              .map((a) => a.message);
+
             return {
+              eventId: event.event_id,
               eventName: event.event_name,
               addressData: address
                 ? {
@@ -81,6 +89,7 @@ export function fetchBleachers() {
               numDays: calculateNumDays(event.event_start, event.event_end),
               status: event.booked ? "Booked" : "Quoted",
               hslHue: event.hsl_hue,
+              alerts: relatedAlerts,
             };
           })
           .filter((e) => e !== null) as DashboardEvent[]; // filter out nulls
