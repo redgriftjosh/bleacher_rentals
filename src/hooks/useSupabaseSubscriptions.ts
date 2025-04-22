@@ -10,6 +10,7 @@ import { useInvitedUsersStore } from "@/state/invitedUserStore";
 import { useEventsStore } from "@/state/eventsStore";
 import { useAddressesStore } from "@/state/addressesStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
+import { useAlertsStore } from "@/state/alertsStore";
 
 // I made a video explaining this code
 // https://www.loom.com/share/50e15eaa6e0e4f8e9e063ab896ecd8a1?sid=41289fe0-9b87-4026-a6a4-8ef9bd14f331
@@ -99,6 +100,17 @@ export default function useSupabaseSubscriptions() {
     setStore: bleacherEventsStore.setBleacherEvents,
     stale: bleacherEventsStore.stale,
     setStale: bleacherEventsStore.setStale,
+    subscriptionId,
+  });
+
+  const alertsStore = useAlertsStore();
+  useSetupTable({
+    tableName: "Alerts",
+    channelName: "alerts-channel",
+    getToken,
+    setStore: alertsStore.setAlerts,
+    stale: alertsStore.stale,
+    setStale: alertsStore.setStale,
     subscriptionId,
   });
 }
