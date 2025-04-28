@@ -38,4 +38,5 @@ export type DashboardEvent = {
   status: "Quoted" | "Booked";
   hslHue: number | null;
   alerts: string[];
+  mustBeClean: boolean;
 };

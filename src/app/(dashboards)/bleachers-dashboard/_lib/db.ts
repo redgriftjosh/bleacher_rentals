@@ -241,3 +241,138 @@ export async function createEvent(state: CurrentEventStore, token: string | null
     { duration: 10000 }
   );
 }
+
+export async function updateEvent(state: CurrentEventStore, token: string | null): Promise<void> {
+  if (!token) {
+    console.warn("No token found");
+    throw new Error("No authentication token found");
+  }
+
+  if (state.eventId === null) {
+    console.error("No eventId provided for update");
+    throw new Error("No event selected to update.");
+  }
+
+  const supabase = supabaseClient(token);
+
+  if (!checkEventFormRules(state)) {
+    throw new Error("Event form validation failed");
+  }
+
+  // 1. Update Address (if address exists)
+  if (state.addressData) {
+    const updatedAddress: Partial<TablesInsert<"Addresses">> = {
+      city: state.addressData.city ?? "",
+      state_province: state.addressData.state ?? "",
+      street: state.addressData.address ?? "",
+      zip_postal: state.addressData.postalCode ?? "",
+    };
+
+    const { error: addressError } = await supabase
+      .from("Addresses")
+      .update(updatedAddress)
+      .eq("address_id", state.eventId); // assuming eventId === address_id, but you might need to store address_id separately if not!
+
+    if (addressError) {
+      console.error("Failed to update address:", addressError);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: ["Failed to update address.", addressError?.message ?? ""],
+          }),
+        { duration: 10000 }
+      );
+      throw new Error(`Failed to update address: ${addressError?.message}`);
+    }
+  }
+
+  // 2. Update Event
+  const updatedEvent: Partial<TablesInsert<"Events">> = {
+    event_name: state.eventName,
+    event_start: state.eventStart,
+    event_end: state.eventEnd,
+    setup_start: state.sameDaySetup ? null : state.setupStart,
+    teardown_end: state.sameDayTeardown ? null : state.teardownEnd,
+    lenient: state.lenient,
+    total_seats: state.seats,
+    seven_row: state.sevenRow,
+    ten_row: state.tenRow,
+    fifteen_row: state.fifteenRow,
+    booked: state.selectedStatus === "Booked",
+    notes: state.notes,
+    hsl_hue: state.hslHue,
+  };
+
+  const { error: eventError } = await supabase
+    .from("Events")
+    .update(updatedEvent)
+    .eq("event_id", state.eventId);
+
+  if (eventError) {
+    console.error("Failed to update event:", eventError);
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["Failed to update event.", eventError?.message ?? ""],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error(`Failed to update event: ${eventError?.message}`);
+  }
+
+  // 3. Update BleacherEvents links (optional, depending if bleachers changed)
+  if (state.bleacherIds.length > 0) {
+    // First, delete existing bleacher links for this event
+    const { error: deleteError } = await supabase
+      .from("BleacherEvents")
+      .delete()
+      .eq("event_id", state.eventId);
+
+    if (deleteError) {
+      console.error("Failed to delete existing bleacher links:", deleteError);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: ["Failed to clear existing bleachers.", deleteError?.message ?? ""],
+          }),
+        { duration: 10000 }
+      );
+      throw new Error(`Failed to clear old bleacher links: ${deleteError?.message}`);
+    }
+
+    // Then, insert new ones
+    const bleacherEventInserts = state.bleacherIds.map((bleacher_id) => ({
+      event_id: state.eventId,
+      bleacher_id,
+    }));
+
+    const { error: insertError } = await supabase
+      .from("BleacherEvents")
+      .insert(bleacherEventInserts);
+
+    if (insertError) {
+      console.error("Failed to link new bleachers:", insertError);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: ["Updated event, but failed to link bleachers.", insertError?.message ?? ""],
+          }),
+        { duration: 10000 }
+      );
+      throw new Error(`Failed to link new bleachers: ${insertError?.message}`);
+    }
+  }
+
+  toast.custom(
+    (t) =>
+      React.createElement(SuccessToast, {
+        id: t,
+        lines: ["Event Updated"],
+      }),
+    { duration: 10000 }
+  );
+}

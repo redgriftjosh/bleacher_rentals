@@ -29,6 +29,7 @@
     },
     "events": [
       {
+        "eventId": 36,
         "eventName": "Test Event 1",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -56,6 +57,7 @@
         "alerts": []
       },
       {
+        "eventId": 53,
         "eventName": "Liv",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -99,6 +101,7 @@
     },
     "events": [
       {
+        "eventId": 37,
         "eventName": "Test 2",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -126,6 +129,7 @@
         "alerts": []
       },
       {
+        "eventId": 54,
         "eventName": "he",
         "addressData": {
           "address": "12 Winding Way, Harwich Port, MA, USA",
@@ -169,6 +173,7 @@
     },
     "events": [
       {
+        "eventId": 38,
         "eventName": "Test 3",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -193,7 +198,7 @@
         "numDays": 4,
         "status": "Quoted",
         "hslHue": 177,
-        "alerts": []
+        "alerts": ["Alert Text"]
       }
     ]
   },
@@ -212,6 +217,7 @@
     },
     "events": [
       {
+        "eventId": 54,
         "eventName": "he",
         "addressData": {
           "address": "12 Winding Way, Harwich Port, MA, USA",
@@ -239,6 +245,7 @@
         "alerts": []
       },
       {
+        "eventId": 55,
         "eventName": "asdfghjkl",
         "addressData": {
           "address": "Wołoska 12, Warsaw, Poland",
@@ -282,6 +289,7 @@
     },
     "events": [
       {
+        "eventId": 40,
         "eventName": "test 5",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -325,6 +333,7 @@
     },
     "events": [
       {
+        "eventId": 41,
         "eventName": "Test 6",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -352,6 +361,7 @@
         "alerts": []
       },
       {
+        "eventId": 54,
         "eventName": "he",
         "addressData": {
           "address": "12 Winding Way, Harwich Port, MA, USA",
@@ -395,6 +405,7 @@
     },
     "events": [
       {
+        "eventId": 42,
         "eventName": "Test 7",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -422,6 +433,7 @@
         "alerts": []
       },
       {
+        "eventId": 54,
         "eventName": "he",
         "addressData": {
           "address": "12 Winding Way, Harwich Port, MA, USA",
@@ -465,6 +477,7 @@
     },
     "events": [
       {
+        "eventId": 49,
         "eventName": "Test Event 8",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -508,6 +521,7 @@
     },
     "events": [
       {
+        "eventId": 44,
         "eventName": "Test 9",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -535,6 +549,7 @@
         "alerts": []
       },
       {
+        "eventId": 51,
         "eventName": "Test 16",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -578,6 +593,7 @@
     },
     "events": [
       {
+        "eventId": 45,
         "eventName": "Test 10",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -621,6 +637,7 @@
     },
     "events": [
       {
+        "eventId": 46,
         "eventName": "Test 11",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -648,6 +665,7 @@
         "alerts": []
       },
       {
+        "eventId": 54,
         "eventName": "he",
         "addressData": {
           "address": "12 Winding Way, Harwich Port, MA, USA",
@@ -691,6 +709,7 @@
     },
     "events": [
       {
+        "eventId": 47,
         "eventName": "Test 12",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -734,6 +753,7 @@
     },
     "events": [
       {
+        "eventId": 48,
         "eventName": "Test 13",
         "addressData": {
           "address": "12 Winding Way Crescent, London, ON, Canada",
@@ -761,6 +781,7 @@
         "alerts": []
       },
       {
+        "eventId": 54,
         "eventName": "he",
         "addressData": {
           "address": "12 Winding Way, Harwich Port, MA, USA",
@@ -819,6 +840,7 @@
     },
     "events": [
       {
+        "eventId": 56,
         "eventName": "Demo Test Event",
         "addressData": {
           "address": "6234 Bagby Avenue, Waco, TX, USA",
@@ -862,6 +884,7 @@
     },
     "events": [
       {
+        "eventId": 56,
         "eventName": "Demo Test Event",
         "addressData": {
           "address": "6234 Bagby Avenue, Waco, TX, USA",
@@ -905,6 +928,7 @@
     },
     "events": [
       {
+        "eventId": 56,
         "eventName": "Demo Test Event",
         "addressData": {
           "address": "6234 Bagby Avenue, Waco, TX, USA",
@@ -948,6 +972,7 @@
     },
     "events": [
       {
+        "eventId": 59,
         "eventName": "long Setup Bug",
         "addressData": {
           "address": "12 South, Nashville, TN, USA",
