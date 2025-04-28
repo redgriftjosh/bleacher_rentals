@@ -2,13 +2,24 @@ import AddressAutocomplete from "@/app/(dashboards)/_lib/_components/AddressAuto
 import { useState } from "react";
 import { LenientSelections } from "./LenientSelections";
 import { Toggle } from "./Toggle";
-import { createEvent } from "../db";
+import { createEvent, deleteEvent, updateEvent } from "../db";
 import { useAuth } from "@clerk/nextjs";
 import { Dropdown } from "@/components/DropDown";
 import { Textarea } from "@/components/TextArea";
 import { CoreTab } from "./tabs/CoreTab";
 import { DetailsTab } from "./tabs/DetailsTab";
 import { useCurrentEventStore } from "../useCurrentEventStore";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
@@ -26,6 +37,28 @@ export const EventConfiguration = () => {
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to create event:", error);
+    }
+  };
+
+  const handleUpdateEvent = async () => {
+    const state = useCurrentEventStore.getState();
+    const token = await getToken({ template: "supabase" });
+    try {
+      await updateEvent(state, token);
+      currentEventStore.resetForm();
+    } catch (error) {
+      console.error("Failed to update event:", error);
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    const state = useCurrentEventStore.getState();
+    const token = await getToken({ template: "supabase" });
+    try {
+      await deleteEvent(state.eventId, token);
+      currentEventStore.resetForm();
+    } catch (error) {
+      console.error("Failed to update event:", error);
     }
   };
 
@@ -53,12 +86,42 @@ export const EventConfiguration = () => {
             ))}
           </div>
 
-          <button
-            className="px-4 py-2 bg-darkBlue text-white text-sm font-semibold rounded-lg shadow-md hover:bg-lightBlue transition cursor-pointer"
-            onClick={handleCreateEvent}
-          >
-            Create Event
-          </button>
+          <div>
+            {currentEventStore.eventId && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button className="px-4 py-2 mr-2 bg-white text-red-800 text-sm font-semibold border border-red-800 rounded-sm hover:bg-red-800 hover:text-white transition cursor-pointer">
+                    Delete Event
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete the event and cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="cursor-pointer rounded-sm">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      className="cursor-pointer rounded-sm bg-red-800 text-white hover:bg-red-900"
+                      onClick={handleDeleteEvent}
+                    >
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            <button
+              className="px-4 py-2 bg-darkBlue text-white text-sm font-semibold rounded-sm shadow-md hover:bg-lightBlue transition cursor-pointer"
+              onClick={currentEventStore.eventId ? handleUpdateEvent : handleCreateEvent}
+            >
+              {currentEventStore.eventId ? "Update Event" : "Create Event"}
+            </button>
+          </div>
         </div>
         {activeTab === "Core" && <CoreTab />}
         {activeTab === "Details" && <DetailsTab />}
