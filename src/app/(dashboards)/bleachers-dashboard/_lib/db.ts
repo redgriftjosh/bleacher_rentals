@@ -376,3 +376,99 @@ export async function updateEvent(state: CurrentEventStore, token: string | null
     { duration: 10000 }
   );
 }
+
+export async function deleteEvent(eventId: number | null, token: string | null): Promise<void> {
+  if (!token) {
+    console.warn("No token found");
+    throw new Error("No authentication token found");
+  }
+
+  if (!eventId) {
+    console.error("No eventId provided for deletion");
+    throw new Error("No event selected to delete.");
+  }
+
+  const supabase = supabaseClient(token);
+
+  // 1. Find the event to get address_id
+  const { data: eventData, error: fetchEventError } = await supabase
+    .from("Events")
+    .select("address_id")
+    .eq("event_id", eventId)
+    .single();
+
+  if (fetchEventError || !eventData) {
+    console.error("Failed to fetch event details:", fetchEventError);
+    throw new Error(`Failed to fetch event: ${fetchEventError?.message}`);
+  }
+
+  const address_id = eventData.address_id;
+
+  // 2. Delete from BleacherEvents
+  const { error: bleacherEventError } = await supabase
+    .from("BleacherEvents")
+    .delete()
+    .eq("event_id", eventId);
+
+  if (bleacherEventError) {
+    console.error("Failed to delete bleacher-event links:", bleacherEventError);
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["Failed to remove event from bleachers.", bleacherEventError.message],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error(`Failed to delete bleacher-event links: ${bleacherEventError.message}`);
+  }
+
+  // 3. Delete Event
+  const { error: eventDeleteError } = await supabase
+    .from("Events")
+    .delete()
+    .eq("event_id", eventId);
+
+  if (eventDeleteError) {
+    console.error("Failed to delete event:", eventDeleteError);
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["Failed to delete event.", eventDeleteError.message],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error(`Failed to delete event: ${eventDeleteError.message}`);
+  }
+
+  // 4. Delete Address
+  if (address_id) {
+    const { error: addressDeleteError } = await supabase
+      .from("Addresses")
+      .delete()
+      .eq("address_id", address_id);
+
+    if (addressDeleteError) {
+      console.error("Failed to delete address:", addressDeleteError);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: ["Failed to delete address.", addressDeleteError.message],
+          }),
+        { duration: 10000 }
+      );
+      // We won't throw here — event and bleacher links are already deleted
+    }
+  }
+
+  toast.custom(
+    (t) =>
+      React.createElement(SuccessToast, {
+        id: t,
+        lines: ["Event Deleted"],
+      }),
+    { duration: 10000 }
+  );
+}
