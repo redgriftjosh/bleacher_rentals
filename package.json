@@ -11,9 +11,10 @@
   "dependencies": {
     "@clerk/backend": "^1.26.0",
     "@clerk/nextjs": "^6.12.12",
+    "@radix-ui/react-alert-dialog": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-label": "^2.1.2",
-    "@radix-ui/react-slot": "^1.1.2",
+    "@radix-ui/react-slot": "^1.2.0",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
     "class-variance-authority": "^0.7.1",
