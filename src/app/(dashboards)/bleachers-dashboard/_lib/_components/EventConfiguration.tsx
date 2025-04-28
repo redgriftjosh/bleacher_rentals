@@ -2,7 +2,7 @@ import AddressAutocomplete from "@/app/(dashboards)/_lib/_components/AddressAuto
 import { useState } from "react";
 import { LenientSelections } from "./LenientSelections";
 import { Toggle } from "./Toggle";
-import { createEvent } from "../db";
+import { createEvent, updateEvent } from "../db";
 import { useAuth } from "@clerk/nextjs";
 import { Dropdown } from "@/components/DropDown";
 import { Textarea } from "@/components/TextArea";
@@ -26,6 +26,17 @@ export const EventConfiguration = () => {
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to create event:", error);
+    }
+  };
+
+  const handleUpdateEvent = async () => {
+    const state = useCurrentEventStore.getState();
+    const token = await getToken({ template: "supabase" });
+    try {
+      await updateEvent(state, token);
+      currentEventStore.resetForm();
+    } catch (error) {
+      console.error("Failed to update event:", error);
     }
   };
 
@@ -55,9 +66,9 @@ export const EventConfiguration = () => {
 
           <button
             className="px-4 py-2 bg-darkBlue text-white text-sm font-semibold rounded-lg shadow-md hover:bg-lightBlue transition cursor-pointer"
-            onClick={handleCreateEvent}
+            onClick={currentEventStore.eventId ? handleUpdateEvent : handleCreateEvent}
           >
-            Create Event
+            {currentEventStore.eventId ? "Update Event" : "Create Event"}
           </button>
         </div>
         {activeTab === "Core" && <CoreTab />}

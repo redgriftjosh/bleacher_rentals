@@ -1,5 +1,9 @@
 import { Plus, Minus } from "lucide-react";
-import { useCurrentEventStore } from "../useCurrentEventStore";
+import {
+  CurrentEventState,
+  CurrentEventStore,
+  useCurrentEventStore,
+} from "../useCurrentEventStore";
 import { fetchBleachers } from "../db";
 import { Color } from "@/types/Color";
 import { DashboardEvent } from "../types";
@@ -30,6 +34,29 @@ export const BleacherTable = (
       : [...selected, bleacherId];
 
     setField("bleacherIds", updated);
+  };
+
+  const handleLoadEvent = (event: CurrentEventState) => {
+    setField("eventId", event.eventId);
+    setField("eventName", event.eventName);
+    setField("addressData", event.addressData);
+    setField("seats", event.seats);
+    setField("sevenRow", event.sevenRow);
+    setField("tenRow", event.tenRow);
+    setField("fifteenRow", event.fifteenRow);
+    setField("setupStart", event.setupStart);
+    setField("sameDaySetup", event.sameDaySetup);
+    setField("eventStart", event.eventStart);
+    setField("eventEnd", event.eventEnd);
+    setField("teardownEnd", event.teardownEnd);
+    setField("sameDayTeardown", event.sameDayTeardown);
+    setField("lenient", event.lenient);
+    setField("selectedStatus", event.selectedStatus);
+    setField("notes", event.notes);
+    setField("mustBeClean", event.mustBeClean);
+    setField("bleacherIds", event.bleacherIds);
+    setField("isFormExpanded", event.isFormExpanded);
+    setField("hslHue", event.hslHue);
   };
 
   if (bleachers !== null && bleachers.length > 0) {
@@ -170,7 +197,34 @@ export const BleacherTable = (
                                     zIndex: 3,
                                     overflow: "visible",
                                   }}
-                                  // onClick={() => handleLoadEvent(event.eventId)}
+                                  onClick={() =>
+                                    handleLoadEvent({
+                                      eventId: event.eventId,
+                                      eventName: event.eventName,
+                                      addressData: event.addressData,
+                                      seats: event.seats,
+                                      sevenRow: event.sevenRow,
+                                      tenRow: event.tenRow,
+                                      fifteenRow: event.fifteenRow,
+                                      setupStart: event.setupStart,
+                                      sameDaySetup: event.sameDaySetup,
+                                      eventStart: event.eventStart,
+                                      eventEnd: event.eventEnd,
+                                      teardownEnd: event.teardownEnd,
+                                      sameDayTeardown: event.sameDayTeardown,
+                                      lenient: event.lenient,
+                                      selectedStatus: event.selectedStatus,
+                                      notes: event.notes,
+                                      mustBeClean: false,
+                                      bleacherIds: bleachers
+                                        .filter((b) =>
+                                          b.events.some((e) => e.eventId === event.eventId)
+                                        )
+                                        .map((b) => b.bleacherId),
+                                      isFormExpanded: true,
+                                      hslHue: event.hslHue,
+                                    })
+                                  }
                                 >
                                   {/* Setup*/}
                                   <div

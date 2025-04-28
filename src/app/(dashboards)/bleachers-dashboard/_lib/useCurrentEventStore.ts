@@ -11,7 +11,8 @@ export type AddressData = {
 
 export type EventStatus = "Quoted" | "Booked";
 
-type CurrentEventState = {
+export type CurrentEventState = {
+  eventId: number | null;
   eventName: string;
   addressData: AddressData | null;
   seats: number | null;
@@ -43,6 +44,7 @@ export type CurrentEventStore = CurrentEventState & {
 };
 
 const initialState: CurrentEventState = {
+  eventId: null,
   eventName: "",
   addressData: null,
   seats: 0,
