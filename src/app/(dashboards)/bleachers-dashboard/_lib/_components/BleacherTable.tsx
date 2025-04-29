@@ -23,7 +23,7 @@ export const BleacherTable = (
   const setField = useCurrentEventStore((s) => s.setField);
 
   const bleachers = fetchBleachers();
-  console.log("bleachers:", bleachers);
+  // console.log("bleachers:", bleachers);
 
   const toggle = (bleacherId: number) => {
     if (!isFormExpanded) return; // ❌ Don't allow toggling if form is collapsed
