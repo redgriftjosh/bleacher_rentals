@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { AlertsTab } from "./tabs/AlertsTab";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
@@ -75,13 +76,18 @@ export const EventConfiguration = () => {
               <button
                 key={tab}
                 className={`px-2.5 mb-2 rounded-t border-b-2 cursor-pointer ${
-                  activeTab === tab
-                    ? "border-darkBlue text-darkBlue font-semibold"
-                    : "border-transparent text-gray-500"
+                  activeTab === tab ? "border-darkBlue font-semibold" : "border-transparent"
+                } ${
+                  tab === "Alerts"
+                    ? "text-red-700"
+                    : activeTab === tab
+                    ? "text-darkBlue"
+                    : "text-gray-500"
                 }`}
                 onClick={() => setActiveTab(tab)}
               >
                 {tab}
+                {tab === "Alerts" && " (2)"}
               </button>
             ))}
           </div>
@@ -125,6 +131,7 @@ export const EventConfiguration = () => {
         </div>
         {activeTab === "Core" && <CoreTab />}
         {activeTab === "Details" && <DetailsTab />}
+        {activeTab === "Alerts" && <AlertsTab />}
       </div>
     </div>
   );

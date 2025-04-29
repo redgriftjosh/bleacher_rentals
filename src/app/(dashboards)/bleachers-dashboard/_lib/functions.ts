@@ -3,8 +3,10 @@ import React from "react";
 import { ErrorToast } from "@/components/toasts/ErrorToast";
 import { Duration } from "luxon";
 import { SuccessToast } from "@/components/toasts/SuccessToast";
-import { CurrentEventStore } from "./useCurrentEventStore";
+import { CurrentEventState, CurrentEventStore, useCurrentEventStore } from "./useCurrentEventStore";
 import { Tables } from "../../../../../database.types";
+import { useEventsStore } from "@/state/eventsStore";
+import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 
 export function checkEventFormRules(createEventPayload: CurrentEventStore): boolean {
   // check if all required fields are filled in
@@ -131,4 +133,134 @@ export function calculateBestHue(
   console.log("newHue (unrounded)", newHue);
 
   return Math.round(newHue);
+}
+
+export function calculateEventAlerts(
+  events: Tables<"Events">[],
+  bleacherEvents: Tables<"BleacherEvents">[]
+): Record<number, string[]> {
+  const alerts: Record<number, string[]> = {};
+
+  for (const event of events) {
+    const eventAlerts: string[] = [];
+
+    // Find all bleachers linked to this event
+    const bleachersInThisEvent = bleacherEvents
+      .filter((be) => be.event_id === event.event_id)
+      .map((be) => be.bleacher_id);
+
+    if (bleachersInThisEvent.length === 0) {
+      alerts[event.event_id] = eventAlerts;
+      continue;
+    }
+
+    // Find all bleacher events where the bleacher is shared
+    const overlappingBleacherEvents = bleacherEvents.filter(
+      (be) => bleachersInThisEvent.includes(be.bleacher_id) && be.event_id !== event.event_id
+    );
+
+    const overlappingEventIds = [...new Set(overlappingBleacherEvents.map((be) => be.event_id))];
+
+    const overlappingEvents = events.filter((e) => overlappingEventIds.includes(e.event_id));
+
+    const thisSetupStart = event.setup_start
+      ? new Date(event.setup_start)
+      : new Date(event.event_start);
+    const thisTeardownEnd = event.teardown_end
+      ? new Date(event.teardown_end)
+      : new Date(event.event_end);
+
+    for (const otherEvent of overlappingEvents) {
+      const otherSetupStart = otherEvent.setup_start
+        ? new Date(otherEvent.setup_start)
+        : new Date(otherEvent.event_start);
+      const otherTeardownEnd = otherEvent.teardown_end
+        ? new Date(otherEvent.teardown_end)
+        : new Date(otherEvent.event_end);
+
+      // Check if times overlap
+      if (thisSetupStart <= otherTeardownEnd && otherSetupStart <= thisTeardownEnd) {
+        eventAlerts.push("This event is overlapping with other events!");
+        break; // Only need to push once per event even if multiple overlaps
+      }
+    }
+
+    alerts[event.event_id] = eventAlerts;
+  }
+
+  return alerts;
+}
+
+export function updateCurrentEventAlerts() {
+  const state = useCurrentEventStore.getState();
+  const events = useEventsStore.getState().events;
+  const bleacherEvents = useBleacherEventsStore.getState().bleacherEvents;
+  // console.log("updateCurrentEventAlerts");
+
+  // Only calculate if necessary
+  if (!state.eventStart || !state.eventEnd) return;
+
+  const oldAlerts = state.alerts;
+  const newAlerts = calculateConflictsForSingleEvent(state, events, bleacherEvents);
+
+  const isDifferent =
+    oldAlerts.length !== newAlerts.length || oldAlerts.some((a, i) => a !== newAlerts[i]);
+
+  if (isDifferent) {
+    useCurrentEventStore.getState().setField("alerts", newAlerts);
+  }
+}
+
+export function calculateConflictsForSingleEvent(
+  currentEvent: CurrentEventState,
+  allEvents: Tables<"Events">[],
+  allBleacherEvents: Tables<"BleacherEvents">[]
+): string[] {
+  const alerts: string[] = [];
+
+  const currentSetupStart = currentEvent.setupStart
+    ? new Date(currentEvent.setupStart)
+    : new Date(currentEvent.eventStart);
+
+  const currentTeardownEnd = currentEvent.teardownEnd
+    ? new Date(currentEvent.teardownEnd)
+    : new Date(currentEvent.eventEnd);
+
+  // Build a lookup: event_id => bleacher_ids[]
+  const eventIdToBleachers: Record<number, number[]> = {};
+  for (const be of allBleacherEvents) {
+    if (!eventIdToBleachers[be.event_id]) {
+      eventIdToBleachers[be.event_id] = [];
+    }
+    eventIdToBleachers[be.event_id].push(be.bleacher_id);
+  }
+
+  for (const event of allEvents) {
+    if (event.event_id === currentEvent.eventId) continue; // Don't compare with self
+
+    const eventSetupStart = event.setup_start
+      ? new Date(event.setup_start)
+      : new Date(event.event_start);
+
+    const eventTeardownEnd = event.teardown_end
+      ? new Date(event.teardown_end)
+      : new Date(event.event_end);
+
+    const bleachersInOtherEvent = eventIdToBleachers[event.event_id] || [];
+
+    // Check if bleachers overlap
+    const bleacherOverlap = bleachersInOtherEvent.some((id) =>
+      currentEvent.bleacherIds.includes(id)
+    );
+
+    if (!bleacherOverlap) continue;
+
+    // Check if times overlap
+    if (currentSetupStart <= eventTeardownEnd && eventSetupStart <= currentTeardownEnd) {
+      alerts.push("This event is overlapping with other events!");
+      break; // Only need one conflict to show the alert
+    }
+  }
+
+  return alerts;
 }
