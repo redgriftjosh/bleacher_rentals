@@ -3,13 +3,16 @@ import { useEffect, useState } from "react";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
-import { insertBleacher } from "../../db";
+import { fetchTakenBleacherNumbers, insertBleacher } from "../../db";
 import { useAuth } from "@clerk/nextjs";
-import { toast } from "sonner";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
+import { checkInsertBleacherFormRules } from "../../functions";
+import { useQuery } from "@tanstack/react-query";
+import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
 
 export function SheetAddBleacher() {
   const { getToken } = useAuth();
+  const [token, setToken] = useState<string | null>(null);
   const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
 
   const [isOpen, setIsOpen] = useState(false);
@@ -19,6 +22,8 @@ export function SheetAddBleacher() {
   // const [homeBases, setHomeBases] = useState<HomeBase[] | null>(null);
   const [selectedHomeBaseId, setSelectedHomeBaseId] = useState<number | null>(null);
   const [selectedWinterHomeBaseId, setSelectedWinterHomeBaseId] = useState<number | null>(null);
+  const [isTakenNumber, setIsTakenNumber] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
 
   // useEffect to set all back to default
   useEffect(() => {
@@ -31,14 +36,39 @@ export function SheetAddBleacher() {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    getToken({ template: "supabase" }).then(setToken);
+  }, [getToken]);
+
+  const { data: takenNumbers = [], isLoading } = useQuery({
+    queryKey: ["taken-bleacher-numbers"],
+    queryFn: () => fetchTakenBleacherNumbers(token!), // token is guaranteed to be set
+    enabled: !!token, // ✅ only run when token is ready
+  });
+
+  // Calculate the next available bleacher number
+  useEffect(() => {
+    if (!isLoading && takenNumbers.length > 0 && !bleacherNumber) {
+      const highestNumber = Math.max(...takenNumbers);
+      setBleacherNumber(highestNumber + 1);
+    }
+  }, [takenNumbers, isLoading, bleacherNumber]);
+
+  useEffect(() => {
+    if (bleacherNumber) {
+      setIsTakenNumber(takenNumbers.includes(bleacherNumber));
+    }
+  }, [bleacherNumber, takenNumbers]);
+
   const handleSave = async () => {
-    const token = await getToken({ template: "supabase" });
-    if (!token) {
+    const insertToken = await getToken({ template: "supabase" });
+    if (!insertToken) {
       console.warn("No token found");
       return;
     }
-    if (bleacherNumber && rows && seats && selectedHomeBaseId && selectedWinterHomeBaseId) {
-      await insertBleacher(
+
+    if (
+      !checkInsertBleacherFormRules(
         {
           bleacher_number: bleacherNumber,
           bleacher_rows: rows,
@@ -46,7 +76,20 @@ export function SheetAddBleacher() {
           home_base_id: selectedHomeBaseId,
           winter_home_base_id: selectedWinterHomeBaseId,
         },
-        token
+        takenNumbers
+      )
+    ) {
+      throw new Error("Event form validation failed");
+    } else {
+      await insertBleacher(
+        {
+          bleacher_number: bleacherNumber!,
+          bleacher_rows: rows!,
+          bleacher_seats: seats!,
+          home_base_id: selectedHomeBaseId!,
+          winter_home_base_id: selectedWinterHomeBaseId!,
+        },
+        insertToken
       );
       setIsOpen(false);
     }
@@ -86,13 +129,30 @@ export function SheetAddBleacher() {
                   <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
                     Bleacher Number
                   </label>
-                  <input
-                    id="name"
-                    type="number"
-                    value={bleacherNumber ?? ""}
-                    onChange={(e) => setBleacherNumber(Number(e.target.value))}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
+                  <div className="col-span-2">
+                    <div className="relative">
+                      <input
+                        id="name"
+                        type="number"
+                        value={bleacherNumber ?? ""}
+                        onChange={(e) => setBleacherNumber(Number(e.target.value))}
+                        className={`w-full px-3 py-2 border rounded-md text-sm font-medium ${
+                          isTakenNumber
+                            ? "border-red-700 focus:ring-red-700"
+                            : "text-gray-700 focus:ring-greenAccent focus:border-0"
+                        } focus:outline-none focus:ring-2`}
+                      />
+                      <div className="absolute -right-10 top-1/2 transform -translate-y-1/2">
+                        {isTakenNumber ? (
+                          <CircleAlert className="text-red-700" />
+                        ) : isLoading ? (
+                          <LoaderCircle className="text-blue-700 animate-spin" />
+                        ) : (
+                          <CheckCheck className="text-green-700" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
                   <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
