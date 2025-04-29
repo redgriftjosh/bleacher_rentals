@@ -26,10 +26,10 @@ export function checkInsertBleacherFormRules(
   }
 
   if (!bleacher.bleacher_rows) {
-    errors.push("Missing: Rows - how many rows is this bleacher?");
+    errors.push("Missing: Rows");
   }
   if (!bleacher.bleacher_seats) {
-    errors.push("Missing: Seats - how many seats does this bleacher have?");
+    errors.push("Missing: Seats");
   }
   if (!bleacher.home_base_id) {
     errors.push("Missing: Homebase");

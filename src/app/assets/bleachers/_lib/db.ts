@@ -52,13 +52,17 @@ export async function insertBleacher(bleacher: InsertBleacher, token: string) {
   const { error } = await supabase.from("Bleachers").insert(bleacher);
   if (error) {
     console.log("Error inserting bleacher:", error);
+    let errorMessage = error.message;
+    if (error.code === "23505") {
+      errorMessage = "Error: Bleacher number already exists!";
+    }
     toast.custom(
       (t) =>
         React.createElement(ErrorToast, {
           id: t,
           lines: [
             "Error inserting bleacher. Please refresh your page and try again.",
-            error.message,
+            errorMessage,
           ],
         }),
       {
