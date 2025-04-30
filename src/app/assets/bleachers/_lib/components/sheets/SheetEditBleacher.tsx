@@ -4,18 +4,22 @@ import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useBleachersStore } from "@/state/bleachersStore";
-import { insertBleacher, updateBleacher } from "../../db";
+import { fetchTakenBleacherNumbers, insertBleacher, updateBleacher } from "../../db";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import { toast } from "sonner";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
+import { useQuery } from "@tanstack/react-query";
+import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
+import { checkInsertBleacherFormRules } from "../../functions";
 
 // https://www.loom.com/share/377b110fd24f4eebbc6e90394ac3a407?sid=c32cff10-c666-4386-9a09-85ed203e4cb5
 // Did a little explainer on how this works.
 
 export function SheetEditBleacher() {
   const { getToken } = useAuth();
+  const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   //   const editBleacherNumber = searchParams.get("edit");
@@ -31,6 +35,8 @@ export function SheetEditBleacher() {
   const [seats, setSeats] = useState<number | null>(null);
   const [selectedHomeBaseId, setSelectedHomeBaseId] = useState<number | null>(null);
   const [selectedWinterHomeBaseId, setSelectedWinterHomeBaseId] = useState<number | null>(null);
+
+  const [isTakenNumber, setIsTakenNumber] = useState(true);
 
   // useEffect to set all back to default
   useEffect(() => {
@@ -77,21 +83,56 @@ export function SheetEditBleacher() {
     }
   }, [editBleacherNumber, router]);
 
+  useEffect(() => {
+    getToken({ template: "supabase" }).then(setToken);
+  }, [getToken]);
+
+  const { data: takenNumbers = [], isLoading } = useQuery({
+    queryKey: ["taken-bleacher-numbers", editBleacherNumber],
+    queryFn: () => {
+      console.log("Running query with editBleacherNumber:", editBleacherNumber);
+      return fetchTakenBleacherNumbers(
+        token!,
+        editBleacherNumber ? Number(editBleacherNumber) : undefined
+      );
+    },
+    enabled: !!token && !!editBleacherNumber,
+  });
+
+  useEffect(() => {
+    if (bleacherNumber) {
+      setIsTakenNumber(takenNumbers.includes(bleacherNumber));
+    }
+  }, [bleacherNumber, takenNumbers]);
+
   const handleSave = async () => {
     const token = await getToken({ template: "supabase" });
     if (!token) {
       console.warn("No token found");
       return;
     }
-    if (bleacherNumber && rows && seats && selectedHomeBaseId && selectedWinterHomeBaseId && id) {
-      await updateBleacher(
+    if (
+      !checkInsertBleacherFormRules(
         {
-          bleacher_id: id,
           bleacher_number: bleacherNumber,
           bleacher_rows: rows,
           bleacher_seats: seats,
           home_base_id: selectedHomeBaseId,
           winter_home_base_id: selectedWinterHomeBaseId,
+        },
+        takenNumbers
+      )
+    ) {
+      throw new Error("Event form validation failed");
+    } else {
+      await updateBleacher(
+        {
+          bleacher_id: id!,
+          bleacher_number: bleacherNumber!,
+          bleacher_rows: rows!,
+          bleacher_seats: seats!,
+          home_base_id: selectedHomeBaseId!,
+          winter_home_base_id: selectedWinterHomeBaseId!,
         },
         token
       );
@@ -129,13 +170,30 @@ export function SheetEditBleacher() {
                   <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
                     Bleacher Number
                   </label>
-                  <input
-                    id="name"
-                    type="number"
-                    value={bleacherNumber ?? ""}
-                    onChange={(e) => setBleacherNumber(Number(e.target.value))}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
+                  <div className="col-span-2">
+                    <div className="relative">
+                      <input
+                        id="name"
+                        type="number"
+                        value={bleacherNumber ?? ""}
+                        onChange={(e) => setBleacherNumber(Number(e.target.value))}
+                        className={`w-full px-3 py-2 border rounded-md text-sm font-medium ${
+                          isTakenNumber
+                            ? "border-red-700 focus:ring-red-700"
+                            : "text-gray-700 focus:ring-greenAccent focus:border-0"
+                        } focus:outline-none focus:ring-2`}
+                      />
+                      <div className="absolute -right-10 top-1/2 transform -translate-y-1/2">
+                        {isTakenNumber ? (
+                          <CircleAlert className="text-red-700" />
+                        ) : isLoading ? (
+                          <LoaderCircle className="text-blue-700 animate-spin" />
+                        ) : (
+                          <CheckCheck className="text-green-700" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
                   <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
