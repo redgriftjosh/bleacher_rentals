@@ -3,7 +3,7 @@ import { useBleachersStore } from "@/state/bleachersStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { SelectBleacher } from "@/types/tables/Bleachers";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
-import { calculateNumDays, checkEventFormRules } from "./functions";
+import { calculateEventAlerts, calculateNumDays, checkEventFormRules } from "./functions";
 import { Tables, TablesInsert } from "../../../../../database.types";
 import { toast } from "sonner";
 import React from "react";
@@ -16,7 +16,8 @@ import { DashboardBleacher, DashboardEvent } from "./types";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { supabaseClient } from "@/utils/supabase/supabaseClient";
 import { useMemo } from "react";
-import { useAlertsStore } from "@/state/alertsStore";
+import { useAlertTypesStore } from "@/state/alertTypesStore";
+import { useEventAlertsStore } from "@/state/eventAlertsStore";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -30,11 +31,12 @@ export function fetchBleachers() {
   const addresses = useAddressesStore((s) => s.addresses);
   const events = useEventsStore((s) => s.events);
   const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
-  const alerts = useAlertsStore((s) => s.alerts);
+
+  const eventAlerts = calculateEventAlerts(events, bleacherEvents);
+  // console.log("eventAlerts", eventAlerts);
 
   return useMemo(() => {
-    console.log("fetchBleachers (dashboard)");
-    console.log("alerts", alerts);
+    // console.log("fetchBleachers (dashboard)");
     if (!bleachers) return [];
 
     const formattedBleachers: DashboardBleacher[] = bleachers
@@ -57,9 +59,7 @@ export function fetchBleachers() {
 
             const address = addresses.find((a) => a.address_id === event.address_id);
 
-            const relatedAlerts = alerts
-              .filter((a) => a.event_id === event.event_id)
-              .map((a) => a.message);
+            const relatedAlerts = eventAlerts[event.event_id] || [];
 
             return {
               eventId: event.event_id,

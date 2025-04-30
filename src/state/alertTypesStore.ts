@@ -4,15 +4,15 @@ import { create } from "zustand";
 import { Tables } from "../../database.types";
 
 type Store = {
-  alerts: Tables<"Alerts">[];
+  alertTypes: Tables<"AlertTypes">[];
   stale: boolean;
-  setAlerts: (data: Tables<"Alerts">[]) => void;
+  setAlertTypes: (data: Tables<"AlertTypes">[]) => void;
   setStale: (stale: boolean) => void;
 };
 
-export const useAlertsStore = create<Store>((set) => ({
-  alerts: [],
+export const useAlertTypesStore = create<Store>((set) => ({
+  alertTypes: [],
   stale: true,
-  setAlerts: (data) => set({ alerts: data }),
+  setAlertTypes: (data) => set({ alertTypes: data }),
   setStale: (stale) => set({ stale: stale }),
 }));

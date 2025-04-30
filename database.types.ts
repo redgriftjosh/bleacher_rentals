@@ -36,34 +36,23 @@ export type Database = {
         }
         Relationships: []
       }
-      Alerts: {
+      AlertTypes: {
         Row: {
+          alert_types_id: number
           created_at: string
-          event_id: number | null
-          id: number
-          message: string | null
+          message: string
         }
         Insert: {
+          alert_types_id?: number
           created_at?: string
-          event_id?: number | null
-          id?: number
-          message?: string | null
+          message: string
         }
         Update: {
+          alert_types_id?: number
           created_at?: string
-          event_id?: number | null
-          id?: number
-          message?: string | null
+          message?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "Alerts_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "Events"
-            referencedColumns: ["event_id"]
-          },
-        ]
+        Relationships: []
       }
       BleacherEvents: {
         Row: {
@@ -152,6 +141,42 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "HomeBases"
             referencedColumns: ["home_base_id"]
+          },
+        ]
+      }
+      EventAlerts: {
+        Row: {
+          alert_types_id: number
+          created_at: string
+          event_alert_id: number
+          event_id: number
+        }
+        Insert: {
+          alert_types_id: number
+          created_at?: string
+          event_alert_id?: number
+          event_id: number
+        }
+        Update: {
+          alert_types_id?: number
+          created_at?: string
+          event_alert_id?: number
+          event_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Alerts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "EventAlerts_alert_types_id_fkey"
+            columns: ["alert_types_id"]
+            isOneToOne: false
+            referencedRelation: "AlertTypes"
+            referencedColumns: ["alert_types_id"]
           },
         ]
       }

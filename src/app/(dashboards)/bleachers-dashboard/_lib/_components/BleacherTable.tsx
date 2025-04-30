@@ -223,6 +223,7 @@ export const BleacherTable = (
                                         .map((b) => b.bleacherId),
                                       isFormExpanded: true,
                                       hslHue: event.hslHue,
+                                      alerts: [], // will be calculated on load
                                     })
                                   }
                                 >
@@ -296,7 +297,7 @@ export const BleacherTable = (
                                     >
                                       <span className="truncate">{event.eventName}</span>
                                       {event.alerts.length > 0 && (
-                                        <span className="text-xs font-bold text-white bg-red-600 rounded-full w-5 h-5 flex items-center justify-center shrink-0">
+                                        <span className="text-xs font-bold text-white shadow-sm bg-red-500 rounded-full w-5 h-5 flex items-center justify-center shrink-0">
                                           {event.alerts.length}
                                         </span>
                                       )}

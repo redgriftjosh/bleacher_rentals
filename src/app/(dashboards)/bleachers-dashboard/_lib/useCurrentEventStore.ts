@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { useEventsStore } from "@/state/eventsStore";
-import { calculateBestHue } from "./functions";
+import { calculateBestHue, updateCurrentEventAlerts } from "./functions";
 
 export type AddressData = {
   address: string;
@@ -32,6 +32,7 @@ export type CurrentEventState = {
   bleacherIds: number[];
   isFormExpanded: boolean;
   hslHue: number | null;
+  alerts: string[];
 };
 
 // Me take event form stuff, add tools to change it.
@@ -64,6 +65,7 @@ const initialState: CurrentEventState = {
   bleacherIds: [],
   isFormExpanded: false,
   hslHue: null,
+  alerts: [],
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.
@@ -79,6 +81,10 @@ export const useCurrentEventStore = create<CurrentEventStore>((set) => ({
 }));
 
 useCurrentEventStore.subscribe((state) => {
+  // 💥 Update alerts too!
+  console.log("Update alerts too!");
+  updateCurrentEventAlerts();
+
   if (state.eventStart === "" || state.hslHue !== null || state.eventEnd === "") return;
 
   const events = useEventsStore.getState().events;

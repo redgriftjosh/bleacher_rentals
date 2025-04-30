@@ -10,7 +10,8 @@ import { useInvitedUsersStore } from "@/state/invitedUserStore";
 import { useEventsStore } from "@/state/eventsStore";
 import { useAddressesStore } from "@/state/addressesStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
-import { useAlertsStore } from "@/state/alertsStore";
+import { useEventAlertsStore } from "@/state/eventAlertsStore";
+import { useAlertTypesStore } from "@/state/alertTypesStore";
 
 // I made a video explaining this code
 // https://www.loom.com/share/50e15eaa6e0e4f8e9e063ab896ecd8a1?sid=41289fe0-9b87-4026-a6a4-8ef9bd14f331
@@ -103,14 +104,25 @@ export default function useSupabaseSubscriptions() {
     subscriptionId,
   });
 
-  const alertsStore = useAlertsStore();
+  const eventAlertsStore = useEventAlertsStore();
   useSetupTable({
-    tableName: "Alerts",
-    channelName: "alerts-channel",
+    tableName: "EventAlerts",
+    channelName: "event-alerts-channel",
     getToken,
-    setStore: alertsStore.setAlerts,
-    stale: alertsStore.stale,
-    setStale: alertsStore.setStale,
+    setStore: eventAlertsStore.setEventAlerts,
+    stale: eventAlertsStore.stale,
+    setStale: eventAlertsStore.setStale,
+    subscriptionId,
+  });
+
+  const alertTypesStore = useAlertTypesStore();
+  useSetupTable({
+    tableName: "AlertTypes",
+    channelName: "alert-types-channel",
+    getToken,
+    setStore: alertTypesStore.setAlertTypes,
+    stale: alertTypesStore.stale,
+    setStale: alertTypesStore.setStale,
     subscriptionId,
   });
 }
