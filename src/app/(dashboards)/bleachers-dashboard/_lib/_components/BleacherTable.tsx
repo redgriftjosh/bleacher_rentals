@@ -1,4 +1,4 @@
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Sparkles } from "lucide-react";
 import {
   CurrentEventState,
   CurrentEventStore,
@@ -215,7 +215,7 @@ export const BleacherTable = (
                                       lenient: event.lenient,
                                       selectedStatus: event.selectedStatus,
                                       notes: event.notes,
-                                      mustBeClean: false,
+                                      mustBeClean: event.mustBeClean,
                                       bleacherIds: bleachers
                                         .filter((b) =>
                                           b.events.some((e) => e.eventId === event.eventId)
@@ -296,6 +296,11 @@ export const BleacherTable = (
                                       }}
                                     >
                                       <span className="truncate">{event.eventName}</span>
+                                      {event.mustBeClean && (
+                                        <span className="text-xs font-bold text-white w-5 h-5 flex items-center justify-center shrink-0">
+                                          <Sparkles />
+                                        </span>
+                                      )}
                                       {event.alerts.length > 0 && (
                                         <span className="text-xs font-bold text-white shadow-sm bg-red-500 rounded-full w-5 h-5 flex items-center justify-center shrink-0">
                                           {event.alerts.length}

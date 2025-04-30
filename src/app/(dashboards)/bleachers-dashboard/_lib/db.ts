@@ -90,6 +90,7 @@ export function fetchBleachers() {
               status: event.booked ? "Booked" : "Quoted",
               hslHue: event.hsl_hue,
               alerts: relatedAlerts,
+              mustBeClean: event.must_be_clean,
             };
           })
           .filter((e) => e !== null) as DashboardEvent[]; // filter out nulls
@@ -172,6 +173,7 @@ export async function createEvent(state: CurrentEventStore, token: string | null
     booked: state.selectedStatus === "Booked",
     notes: state.notes,
     hsl_hue: state.hslHue,
+    must_be_clean: state.mustBeClean,
   };
 
   const { data: eventData, error: eventError } = await supabase
@@ -302,6 +304,7 @@ export async function updateEvent(state: CurrentEventStore, token: string | null
     booked: state.selectedStatus === "Booked",
     notes: state.notes,
     hsl_hue: state.hslHue,
+    must_be_clean: state.mustBeClean,
   };
 
   const { error: eventError } = await supabase
