@@ -223,6 +223,7 @@ export const BleacherTable = (
                                         .map((b) => b.bleacherId),
                                       isFormExpanded: true,
                                       hslHue: event.hslHue,
+                                      alerts: [], // will be calculated on load
                                     })
                                   }
                                 >
