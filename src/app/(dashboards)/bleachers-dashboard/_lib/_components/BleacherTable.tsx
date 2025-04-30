@@ -302,7 +302,7 @@ export const BleacherTable = (
                                     style={{
                                       width: "fit-content",
                                       maxWidth: "100%",
-                                      left: isFormExpanded ? "180px" : "140px",
+                                      left: isFormExpanded ? "195px" : "160px",
                                     }}
                                   >
                                     {/* <div
