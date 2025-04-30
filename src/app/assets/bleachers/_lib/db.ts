@@ -84,14 +84,47 @@ export async function insertBleacher(bleacher: InsertBleacher, token: string) {
 export async function updateBleacher(bleacher: UpdateBleacher, token: string) {
   console.log("Updating bleacher", token);
   const supabase = createClient(token);
-  await supabase.from("Bleachers").update(bleacher).eq("bleacher_id", bleacher.bleacher_id);
+  const { error } = await supabase
+    .from("Bleachers")
+    .update(bleacher)
+    .eq("bleacher_id", bleacher.bleacher_id);
+
+  if (error) {
+    console.log("Error inserting bleacher:", error);
+    let errorMessage = error.message;
+    if (error.code === "23505") {
+      errorMessage = "Error: Bleacher number already exists!";
+    }
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["Error Updating bleacher. Please refresh your page and try again.", errorMessage],
+        }),
+      {
+        duration: 10000, // 20 seconds
+      }
+    );
+    throw new Error(`Failed to update bleacher: ${error.message}`);
+  }
+  toast.custom(
+    (t) =>
+      React.createElement(SuccessToast, {
+        id: t,
+        lines: ["Bleacher was Updated"],
+      }),
+    { duration: 10000 }
+  );
 }
 
 /**
  * Fetch all taken bleacher numbers from the Supabase "Bleachers" table.
  * Requires a valid Supabase JWT token.
  */
-export async function fetchTakenBleacherNumbers(token: string): Promise<number[]> {
+export async function fetchTakenBleacherNumbers(
+  token: string,
+  editBleacherNumber?: number
+): Promise<number[]> {
   const supabase = createClient(token);
 
   const { data, error } = await supabase.from("Bleachers").select("bleacher_number");
@@ -101,5 +134,13 @@ export async function fetchTakenBleacherNumbers(token: string): Promise<number[]
     throw new Error("Could not fetch bleacher numbers");
   }
 
-  return data.map((row) => row.bleacher_number).filter((n): n is number => typeof n === "number");
+  const numbers = data
+    .map((row) => row.bleacher_number)
+    .filter((n): n is number => typeof n === "number");
+
+  console.log("editBleacherNumber:", editBleacherNumber);
+  console.log("numbers:", numbers);
+
+  // Filter out the editBleacherNumber if it exists
+  return editBleacherNumber ? numbers.filter((num) => num !== editBleacherNumber) : numbers;
 }
