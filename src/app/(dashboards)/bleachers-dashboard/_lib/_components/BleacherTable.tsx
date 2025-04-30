@@ -74,7 +74,7 @@ export const BleacherTable = (
           <table className="w-full">
             <thead>
               <tr>
-                <th className="w-48 px-4 py-2 border-r text-left bg-gray-50 sticky left-0 top-0 z-20">
+                <th className="w-fit px-4 py-2 border-r text-left bg-gray-50 sticky left-0 top-0 z-20">
                   Bleacher
                 </th>
                 {dates.map((date, dateIndex) => (
@@ -110,17 +110,26 @@ export const BleacherTable = (
                       isFormExpanded && isSelected ? "bg-gray-100" : "bg-transparent"
                     }`}
                   >
-                    <td className="w-48 px-4 py-2 border-r font-medium sticky left-0 bg-white z-10 h-16">
-                      <div className="flex justify-between items-center">
-                        <span>{bleacher.bleacherNumber}</span>
-                        {isFormExpanded && (
+                    <td className="w-fit px-4 py-0.5 border-r font-medium sticky left-0 bg-white z-10 h-16 transition-all duration-1000 ease-in-out">
+                      <div className="flex items-center">
+                        <div
+                          className="overflow-hidden transition-all duration-1000 ease-in-out"
+                          style={{
+                            maxWidth: isFormExpanded ? "40px" : "0px",
+                            opacity: isFormExpanded ? 1 : 0,
+                            marginRight: isFormExpanded ? "12px" : "0px",
+                          }}
+                        >
                           <button
                             onClick={() => toggle(bleacher.bleacherId)}
-                            className={`p-1 rounded cursor-pointer ${
+                            className={`p-1 rounded cursor-pointer transform transition-transform duration-1000 ${
                               isSelected
                                 ? "border-1 border-red-600 bg-red-50"
                                 : "border-1 border-green-600 bg-green-50"
                             }`}
+                            style={{
+                              transform: isFormExpanded ? "translateX(0)" : "translateX(-40px)",
+                            }}
                           >
                             {isSelected ? (
                               <Minus size={16} className="text-red-600" />
@@ -128,7 +137,29 @@ export const BleacherTable = (
                               <Plus size={16} className="text-green-600" />
                             )}
                           </button>
-                        )}
+                        </div>
+
+                        <div>
+                          <div className="font-bold text-lg -mb-2">{bleacher.bleacherNumber}</div>
+                          <div className="whitespace-nowrap -mb-2">
+                            <span className="font-medium text-xs text-gray-500">
+                              {bleacher.bleacherRows}
+                            </span>
+                            <span className="font-medium text-xs text-gray-500 mr-2">row</span>
+                            <span className="font-medium text-xs text-gray-500">
+                              {bleacher.bleacherSeats}
+                            </span>
+                            <span className="font-medium text-xs text-gray-500 mr-2">seats</span>
+                          </div>
+                          <div className="whitespace-nowrap">
+                            <span className="font-medium mr-2 text-xs text-amber-500">
+                              {bleacher.homeBase.homeBaseName}
+                            </span>
+                            <span className="font-medium text-xs text-blue-500">
+                              {bleacher.winterHomeBase.homeBaseName}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </td>
                     {dates.map((date, dateIndex) => (
@@ -267,11 +298,11 @@ export const BleacherTable = (
                                     }}
                                   ></div>
                                   <div
-                                    className="sticky left-0 top-0 bg-transparent z-10 text-left px-2 pt-0.5"
+                                    className="sticky left-0 top-0 bg-transparent z-10 text-left px-2 pt-0.5 transition-all duration-1000 ease-in-out"
                                     style={{
                                       width: "fit-content",
                                       maxWidth: "100%",
-                                      left: "100px",
+                                      left: isFormExpanded ? "180px" : "140px",
                                     }}
                                   >
                                     {/* <div
