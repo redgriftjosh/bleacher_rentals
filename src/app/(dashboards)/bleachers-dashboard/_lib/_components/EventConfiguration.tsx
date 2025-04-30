@@ -78,7 +78,7 @@ export const EventConfiguration = () => {
                 className={`px-2.5 mb-2 rounded-t border-b-2 cursor-pointer ${
                   activeTab === tab ? "border-darkBlue font-semibold" : "border-transparent"
                 } ${
-                  tab === "Alerts"
+                  tab === "Alerts" && currentEventStore.alerts.length > 0
                     ? "text-red-700"
                     : activeTab === tab
                     ? "text-darkBlue"
@@ -87,7 +87,9 @@ export const EventConfiguration = () => {
                 onClick={() => setActiveTab(tab)}
               >
                 {tab}
-                {tab === "Alerts" && " (2)"}
+                {tab === "Alerts" &&
+                  currentEventStore.alerts.length > 0 &&
+                  ` (${currentEventStore.alerts.length})`}
               </button>
             ))}
           </div>
