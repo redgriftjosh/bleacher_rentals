@@ -7,7 +7,7 @@ type selectRowsDropDownProps = {
 
 const selectRowsDropDown: React.FC<selectRowsDropDownProps> = ({ onSelect, value }) => {
   const placeholder = "Rows";
-  const options = [7, 10, 15];
+  const options = [7, 8, 9, 10, 15];
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState<number | null>(value ?? null);
 
