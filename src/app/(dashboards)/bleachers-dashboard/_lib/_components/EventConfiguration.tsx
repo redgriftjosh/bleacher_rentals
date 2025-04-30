@@ -1,11 +1,6 @@
-import AddressAutocomplete from "@/app/(dashboards)/_lib/_components/AddressAutoComplete";
 import { useState } from "react";
-import { LenientSelections } from "./LenientSelections";
-import { Toggle } from "./Toggle";
 import { createEvent, deleteEvent, updateEvent } from "../db";
 import { useAuth } from "@clerk/nextjs";
-import { Dropdown } from "@/components/DropDown";
-import { Textarea } from "@/components/TextArea";
 import { CoreTab } from "./tabs/CoreTab";
 import { DetailsTab } from "./tabs/DetailsTab";
 import { useCurrentEventStore } from "../useCurrentEventStore";
