@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { Tables } from "../../database.types";
+import { updateCurrentEventAlerts } from "@/app/(dashboards)/bleachers-dashboard/_lib/functions";
 
 type Store = {
   bleacherEvents: Tables<"BleacherEvents">[];
@@ -16,3 +17,7 @@ export const useBleacherEventsStore = create<Store>((set) => ({
   setBleacherEvents: (data) => set({ bleacherEvents: data }),
   setStale: (stale) => set({ stale: stale }),
 }));
+
+useBleacherEventsStore.subscribe((state) => {
+  updateCurrentEventAlerts();
+});
