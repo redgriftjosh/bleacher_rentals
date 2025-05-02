@@ -18,12 +18,111 @@ import { supabaseClient } from "@/utils/supabase/supabaseClient";
 import { useMemo } from "react";
 import { useAlertTypesStore } from "@/state/alertTypesStore";
 import { useEventAlertsStore } from "@/state/eventAlertsStore";
+import { createClient } from "@/utils/supabase/client";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
 // 🔁 3. Match those event_ids to full events from your events store.
 // 🔁 4. Enrich each event with its address from the addresses store.
 // ✅ 5. Add those events as the events field in each DashboardBleacher.
+
+export async function queryTable(tableName: string, token: string) {
+  // const supabase = supabaseClient(token);
+  const supabase = createClient(token);
+  const { data, error } = await supabase.from(tableName).select("*");
+
+  if (error) {
+    console.error(`Error fetching ${tableName}:`, error);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function queryBleachers(token: string) {
+  const bleachers = await queryTable("Bleachers", token);
+  const homeBases = await queryTable("HomeBases", token);
+  const addresses = await queryTable("Addresses", token);
+  const events = await queryTable("Events", token);
+  const bleacherEvents = await queryTable("BleacherEvents", token);
+
+  const eventAlerts = calculateEventAlerts(events, bleacherEvents);
+
+  if (!bleachers) return [];
+
+  const formattedBleachers: DashboardBleacher[] = bleachers
+    .map((bleacher) => {
+      const homeBase = homeBases.find((base) => base.home_base_id === bleacher.home_base_id);
+      const winterHomeBase = homeBases.find(
+        (base) => base.home_base_id === bleacher.winter_home_base_id
+      );
+
+      const relatedBleacherEvents = bleacherEvents.filter(
+        (be) => be.bleacher_id === bleacher.bleacher_id
+      );
+
+      const relatedEvents: DashboardEvent[] = relatedBleacherEvents
+        .map((be) => {
+          const event = events.find((e) => e.event_id === be.event_id);
+          if (!event) return null;
+
+          const address = addresses.find((a) => a.address_id === event.address_id);
+          const relatedAlerts = eventAlerts[event.event_id] || [];
+
+          return {
+            eventId: event.event_id,
+            eventName: event.event_name,
+            addressData: address
+              ? {
+                  address: address.street,
+                  city: address.city,
+                  state: address.state_province,
+                  postalCode: address.zip_postal ?? undefined,
+                }
+              : null,
+            seats: event.total_seats,
+            sevenRow: event.seven_row,
+            tenRow: event.ten_row,
+            fifteenRow: event.fifteen_row,
+            setupStart: event.setup_start ?? "",
+            sameDaySetup: !event.setup_start,
+            eventStart: event.event_start,
+            eventEnd: event.event_end,
+            teardownEnd: event.teardown_end ?? "",
+            sameDayTeardown: !event.teardown_end,
+            lenient: event.lenient,
+            token: "",
+            selectedStatus: event.booked ? "Booked" : "Quoted",
+            notes: event.notes ?? "",
+            numDays: calculateNumDays(event.event_start, event.event_end),
+            status: event.booked ? "Booked" : "Quoted",
+            hslHue: event.hsl_hue,
+            alerts: relatedAlerts,
+            mustBeClean: event.must_be_clean,
+          };
+        })
+        .filter((e) => e !== null) as DashboardEvent[];
+
+      return {
+        bleacherId: bleacher.bleacher_id,
+        bleacherNumber: bleacher.bleacher_number,
+        bleacherRows: bleacher.bleacher_rows,
+        bleacherSeats: bleacher.bleacher_seats,
+        homeBase: {
+          homeBaseId: homeBase?.home_base_id ?? 0,
+          homeBaseName: homeBase?.home_base_name ?? "",
+        },
+        winterHomeBase: {
+          homeBaseId: winterHomeBase?.home_base_id ?? 0,
+          homeBaseName: winterHomeBase?.home_base_name ?? "",
+        },
+        events: relatedEvents,
+      };
+    })
+    .sort((a, b) => b.bleacherNumber - a.bleacherNumber);
+
+  return formattedBleachers;
+}
 
 export function fetchBleachers() {
   const bleachers = useBleachersStore((s) => s.bleachers);

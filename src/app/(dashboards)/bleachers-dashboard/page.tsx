@@ -5,9 +5,14 @@ import { DateTime } from "luxon";
 import { CreateEventButton } from "./_lib/_components/CreateEventButton";
 import { EventConfiguration } from "./_lib/_components/EventConfiguration";
 import { BleacherTable } from "./_lib/_components/BleacherTable";
+import { VirtualizedBleacherTable } from "./_lib/_components/VirtualizeBleacherTable";
+import { StickyGridTable } from "./_lib/_components/StickyGridTable";
+import { StickyHeaderGrid } from "./_lib/_components/StickyHeaderGrid";
+import { VirtualizedStickyHeaderGrid } from "./_lib/_components/VirtualizedStickyHeaderGrid";
+import { VirtualizedTableSticky } from "./_lib/_components/VirtualizedTableSticky";
 
 const BleachersDashboardPage = () => {
-  const initialDays = 300; // Initial ±50 days range
+  const initialDays = 3000; // Initial ±50 days range
   const cellWidth = 100; // in pixels
   const daysToAdd = 200; // Number of days to add when scrolling.
   const [startDate, setStartDate] = useState(
@@ -76,7 +81,12 @@ const BleachersDashboardPage = () => {
         <CreateEventButton />
       </div>
       <EventConfiguration />
-      {BleacherTable(dates, tableRef, handleScroll, cellWidth, DateTime)}
+      {/* {BleacherTable(dates, tableRef, handleScroll, cellWidth, DateTime)} */}
+      {/* <VirtualizedBleacherTable dates={dates} cellWidth={cellWidth} /> */}
+      {/* <StickyGridTable /> */}
+      {/* <StickyHeaderGrid /> */}
+      {/* <VirtualizedStickyHeaderGrid /> */}
+      <VirtualizedTableSticky />
     </div>
   );
 };

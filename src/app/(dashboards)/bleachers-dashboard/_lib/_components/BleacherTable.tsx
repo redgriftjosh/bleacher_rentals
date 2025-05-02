@@ -4,10 +4,12 @@ import {
   CurrentEventStore,
   useCurrentEventStore,
 } from "../useCurrentEventStore";
-import { fetchBleachers } from "../db";
+import { fetchBleachers, queryBleachers } from "../db";
 import { Color } from "@/types/Color";
 import { DashboardEvent } from "../types";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { useQuery } from "@tanstack/react-query";
 
 export const BleacherTable = (
   dates: string[],
@@ -18,12 +20,31 @@ export const BleacherTable = (
 ) => {
   // const currentEventStore = useCurrentEventStore();
 
-  const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
-  const bleacherIds = useCurrentEventStore((s) => s.bleacherIds);
+  // const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
+  const isFormExpanded = false;
+  // const bleacherIds = useCurrentEventStore((s) => s.bleacherIds);
+  const bleacherIds: number[] = [];
   const setField = useCurrentEventStore((s) => s.setField);
+  // clerk uaeAuth
+  const { getToken } = useAuth();
+  const [token, setToken] = useState<string | null>(null);
 
-  const bleachers = fetchBleachers();
+  // const bleachers = fetchBleachers();
+  useEffect(() => {
+    getToken({ template: "supabase" }).then(setToken);
+  }, [getToken]);
   // console.log("bleachers:", bleachers);
+
+  const { data: bleachers = [], isLoading } = useQuery({
+    queryKey: ["dashboard-bleachers"],
+    queryFn: () => queryBleachers(token!), // token is guaranteed to be set
+    enabled: !!token, // ✅ only run when token is ready
+  });
+
+  useEffect(() => {
+    console.log("bleachers:", bleachers);
+    console.log("bleacherIds:", bleacherIds);
+  }, [isLoading, bleachers, bleacherIds]);
 
   const toggle = (bleacherId: number) => {
     if (!isFormExpanded) return; // ❌ Don't allow toggling if form is collapsed
@@ -58,6 +79,10 @@ export const BleacherTable = (
     setField("isFormExpanded", event.isFormExpanded);
     setField("hslHue", event.hslHue);
   };
+
+  if (isLoading) {
+    return <div className="p-4 text-sm text-gray-500">Loading bleachers...</div>;
+  }
 
   if (bleachers !== null && bleachers.length > 0) {
     // ✅ If form is open, sort selected bleachers to top; else use original order
