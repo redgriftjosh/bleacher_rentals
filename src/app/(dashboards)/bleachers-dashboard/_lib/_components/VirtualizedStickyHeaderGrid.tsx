@@ -121,7 +121,7 @@ export const VirtualizedStickyHeaderGrid = () => {
                             width: `${virtualColumn.size}px`,
                             height: `${virtualRow.size}px`,
                             // top: `${virtualRow.start + 1}px`,
-                            transform: `translateY(${virtualRow.start}px)`,
+                            // transform: `translateY(${virtualRow.start}px)`,
                           }}
                         >
                           {virtualRow.index === 0

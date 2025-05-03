@@ -9,7 +9,7 @@ import { VirtualizedBleacherTable } from "./_lib/_components/VirtualizeBleacherT
 import { StickyGridTable } from "./_lib/_components/StickyGridTable";
 import { StickyHeaderGrid } from "./_lib/_components/StickyHeaderGrid";
 import { VirtualizedStickyHeaderGrid } from "./_lib/_components/VirtualizedStickyHeaderGrid";
-import { VirtualizedTableSticky } from "./_lib/_components/VirtualizedTableSticky";
+import { VirtualizedStickerColumn } from "./_lib/_components/VirtualizedStickerColumn";
 
 const BleachersDashboardPage = () => {
   const initialDays = 3000; // Initial ±50 days range
@@ -81,12 +81,12 @@ const BleachersDashboardPage = () => {
         <CreateEventButton />
       </div>
       <EventConfiguration />
-      {/* {BleacherTable(dates, tableRef, handleScroll, cellWidth, DateTime)} */}
+      {BleacherTable(dates, tableRef, handleScroll, cellWidth, DateTime)}
       {/* <VirtualizedBleacherTable dates={dates} cellWidth={cellWidth} /> */}
       {/* <StickyGridTable /> */}
       {/* <StickyHeaderGrid /> */}
-      {/* <VirtualizedStickyHeaderGrid /> */}
-      <VirtualizedTableSticky />
+      {/* <VirtualizedStickerColumn /> */}
+      {/* <VirtualizedTableSticky /> */}
     </div>
   );
 };
