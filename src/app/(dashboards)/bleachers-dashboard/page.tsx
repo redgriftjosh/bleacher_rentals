@@ -5,6 +5,7 @@ import { DateTime } from "luxon";
 import { CreateEventButton } from "./_lib/_components/CreateEventButton";
 import { EventConfiguration } from "./_lib/_components/EventConfiguration";
 import { BleacherTable } from "./_lib/_components/BleacherTable";
+import BleacherDashboard from "./_lib/_components/BleacherDashboard";
 
 const BleachersDashboardPage = () => {
   const initialDays = 300; // Initial ±50 days range
@@ -76,7 +77,9 @@ const BleachersDashboardPage = () => {
         <CreateEventButton />
       </div>
       <EventConfiguration />
-      {BleacherTable(dates, tableRef, handleScroll, cellWidth, DateTime)}
+      {/* {BleacherTable(dates, tableRef, handleScroll, cellWidth, DateTime)}
+       */}
+      <BleacherDashboard />
     </div>
   );
 };
