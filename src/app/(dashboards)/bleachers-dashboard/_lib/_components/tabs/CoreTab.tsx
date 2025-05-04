@@ -1,3 +1,4 @@
+"use client";
 import { Toggle } from "../Toggle";
 import React, { useEffect } from "react";
 import AddressAutocomplete from "@/app/(dashboards)/_lib/_components/AddressAutoComplete";
