@@ -112,6 +112,8 @@ const BleacherDashboard = memo(() => {
                       ROW_COUNT={ROW_COUNT}
                       onScroll={onScroll}
                       DATE_RANGE={DATE_RANGE}
+                      bleachers={bleachers}
+                      dates={dates}
                     />
                   </>
                 )}
