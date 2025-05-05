@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { createEvent, deleteEvent, updateEvent } from "../db";
 import { useAuth } from "@clerk/nextjs";
@@ -60,7 +61,7 @@ export const EventConfiguration = () => {
 
   return (
     <div
-      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+      className={`overflow-hidden transition-all duration-1000 ease-in-out ${
         currentEventStore.isFormExpanded ? "max-h-[500px] mb-4" : "max-h-0"
       }`}
     >
