@@ -16,6 +16,7 @@ type DropdownProps<T> = {
   placeholder?: string;
   selected?: T;
   className?: string;
+  formatSelectedLabel?: (label: string) => string;
 };
 
 export function Dropdown<T>({
@@ -24,6 +25,7 @@ export function Dropdown<T>({
   placeholder = "Select an option",
   selected,
   className = "",
+  formatSelectedLabel,
 }: DropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -55,7 +57,12 @@ export function Dropdown<T>({
     }
   }, [isOpen]);
 
-  const selectedLabel = options.find((option) => option.value === selected)?.label ?? placeholder;
+  const rawLabel = options.find((option) => option.value === selected)?.label;
+  const selectedLabel = rawLabel
+    ? formatSelectedLabel
+      ? formatSelectedLabel(rawLabel)
+      : rawLabel
+    : placeholder;
 
   return (
     <>

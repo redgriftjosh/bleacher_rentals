@@ -1,6 +1,6 @@
 import { Grid } from "react-virtualized";
-import { useCurrentEventStore } from "../../useCurrentEventStore";
 import { useEffect, useRef } from "react";
+import { useCurrentEventStore } from "../../../useCurrentEventStore";
 
 type TopLeftCellProps = {
   ROW_HEIGHT: number;

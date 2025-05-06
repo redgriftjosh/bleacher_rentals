@@ -1,8 +1,8 @@
 import clsx from "clsx";
 import scrollbarSize from "dom-helpers/esm/scrollbarSize";
 import { Grid, ScrollParams } from "react-virtualized";
-import { DashboardBleacher } from "../../types";
-import { useCurrentEventStore } from "../../useCurrentEventStore";
+import { DashboardBleacher, DashboardEvent } from "../../../types";
+import { useCurrentEventStore } from "../../../useCurrentEventStore";
 import { Minus, Plus } from "lucide-react";
 import { useEffect, useRef } from "react";
 
@@ -14,7 +14,7 @@ type StickyLeftColumnProps = {
   STICKY_LEFT_COLUMN_WIDTH: number;
   STICKY_LEFT_COLUMN_WIDTH_EXPANDED: number;
   HEADER_ROW_HEIGHT: number;
-  bleachers: DashboardBleacher[];
+  events: DashboardEvent[];
 };
 
 export default function StickyLeftColumn({
@@ -25,7 +25,7 @@ export default function StickyLeftColumn({
   STICKY_LEFT_COLUMN_WIDTH,
   STICKY_LEFT_COLUMN_WIDTH_EXPANDED,
   HEADER_ROW_HEIGHT,
-  bleachers,
+  events,
 }: StickyLeftColumnProps) {
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
   const bleacherIds = useCurrentEventStore((s) => s.bleacherIds);
@@ -51,14 +51,7 @@ export default function StickyLeftColumn({
     }
   }, [isFormExpanded]);
 
-  if (bleachers !== null && bleachers.length > 0) {
-    // ✅ If form is open, sort selected bleachers to top; else use original order
-    const sortedBleachers = isFormExpanded
-      ? [
-          ...bleachers.filter((b) => bleacherIds.includes(b.bleacherId)),
-          ...bleachers.filter((b) => !bleacherIds.includes(b.bleacherId)),
-        ]
-      : bleachers;
+  if (events !== null && events.length > 0) {
     return (
       <div
         className="absolute border-r z-10 transition-all duration-1000"
@@ -82,55 +75,22 @@ export default function StickyLeftColumn({
           rowCount={ROW_COUNT}
           width={isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
           cellRenderer={({ key, rowIndex, style }) => {
-            const isSelected = bleacherIds.includes(sortedBleachers[rowIndex].bleacherId);
             return (
               <div
                 key={key}
                 style={style}
                 className="flex justify-start px-2 border-b items-center text-sm w-full h-full"
               >
-                <button
-                  onClick={() => toggle(sortedBleachers[rowIndex].bleacherId)}
-                  className={`p-1 rounded cursor-pointer transform transition-transform duration-1000 ${
-                    isSelected
-                      ? "border-1 border-red-600 bg-red-50"
-                      : "border-1 border-green-600 bg-green-50"
-                  }`}
-                  style={{
-                    transform: isFormExpanded ? "translateX(0)" : "translateX(-40px)",
-                  }}
-                >
-                  {isSelected ? (
-                    <Minus size={16} className="text-red-600" />
-                  ) : (
-                    <Plus size={16} className="text-green-600" />
-                  )}
-                </button>
                 <div
-                  className="transition-all duration-1000 ease-in-out"
+                  className="transition-all duration-1000 ease-in-out w-full"
                   style={{
-                    marginLeft: isFormExpanded ? "4px" : "-24px",
+                    marginLeft: isFormExpanded ? "4px" : "0px",
                   }}
                 >
-                  <div className="font-bold text-lg -mb-2">
-                    {sortedBleachers[rowIndex].bleacherNumber}
-                  </div>
-                  <div className="whitespace-nowrap -mb-2">
-                    <span className="font-medium text-xs text-gray-500">
-                      {sortedBleachers[rowIndex].bleacherRows}
-                    </span>
-                    <span className="font-medium text-xs text-gray-500 mr-2">row</span>
-                    <span className="font-medium text-xs text-gray-500">
-                      {sortedBleachers[rowIndex].bleacherSeats}
-                    </span>
-                    <span className="font-medium text-xs text-gray-500 mr-2">seats</span>
-                  </div>
-                  <div className="whitespace-nowrap">
-                    <span className="font-medium mr-2 text-xs text-amber-500">
-                      {sortedBleachers[rowIndex].homeBase.homeBaseName}
-                    </span>
-                    <span className="font-medium text-xs text-blue-500">
-                      {sortedBleachers[rowIndex].winterHomeBase.homeBaseName}
+                  <div className="font-bold text-md truncate">{events[rowIndex].eventName}</div>
+                  <div className="text-left">
+                    <span className="font-medium text-xs text-gray-500 truncate block">
+                      {events[rowIndex].addressData?.city} {events[rowIndex].addressData?.state}
                     </span>
                   </div>
                 </div>

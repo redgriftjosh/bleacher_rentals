@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { useEventsStore } from "@/state/eventsStore";
 import { calculateBestHue, updateCurrentEventAlerts } from "./functions";
+import { useFilterDashboardStore } from "./useFilterDashboardStore";
 
 export type AddressData = {
   address: string;
@@ -81,6 +82,11 @@ export const useCurrentEventStore = create<CurrentEventStore>((set) => ({
 }));
 
 useCurrentEventStore.subscribe((state) => {
+  if (state.isFormExpanded) {
+    // Set another store's state here
+    useFilterDashboardStore.getState().setField("yAxis", "Bleachers");
+  }
+
   // 💥 Update alerts too!
   console.log("Update alerts too!");
   updateCurrentEventAlerts();

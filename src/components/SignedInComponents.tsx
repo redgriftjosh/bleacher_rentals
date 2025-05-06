@@ -11,7 +11,7 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <SideBar />
-        <main className="flex-1 p-6 bg-gray-50 overflow-auto">{children}</main>
+        <main className="flex-1  bg-gray-50 overflow-auto">{children}</main>
       </div>
     </div>
   );

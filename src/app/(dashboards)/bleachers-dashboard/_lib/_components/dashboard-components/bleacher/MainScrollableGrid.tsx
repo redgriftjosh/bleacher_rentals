@@ -1,8 +1,8 @@
 import clsx from "clsx";
 import { Sparkles } from "lucide-react";
 import { Grid, ScrollParams } from "react-virtualized";
-import { CurrentEventState, useCurrentEventStore } from "../../useCurrentEventStore";
-import { DashboardBleacher, DashboardEvent } from "../../types";
+import { CurrentEventState, useCurrentEventStore } from "../../../useCurrentEventStore";
+import { DashboardBleacher, DashboardEvent } from "../../../types";
 import { DateTime } from "luxon";
 import { useEffect, useRef, useState } from "react";
 
@@ -114,7 +114,8 @@ export default function MainScrollableGrid({
           rowHeight={ROW_HEIGHT}
           rowCount={ROW_COUNT}
           width={width}
-          // overscanColumnCount={30}
+          overscanColumnCount={5}
+          overscanRowCount={5}
           cellRenderer={({ rowIndex, columnIndex, key, style }) => {
             const isFirstVisibleColumn = columnIndex === firstVisibleColumnRef.current;
             return (
