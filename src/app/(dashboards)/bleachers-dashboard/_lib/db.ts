@@ -131,6 +131,66 @@ export function fetchBleachers() {
   }, [bleachers, homeBases, addresses, events, bleacherEvents]);
 }
 
+export function fetchDashboardEvents() {
+  const events = useEventsStore((s) => s.events);
+  const addresses = useAddressesStore((s) => s.addresses);
+  const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
+  const eventAlerts = calculateEventAlerts(events, bleacherEvents);
+
+  return useMemo(() => {
+    if (!events) return [];
+
+    const dashboardEvents: DashboardEvent[] = events.map((event) => {
+      const address = addresses.find((a) => a.address_id === event.address_id);
+      const relatedAlerts = eventAlerts[event.event_id] || [];
+
+      return {
+        eventId: event.event_id,
+        eventName: event.event_name,
+        addressData: address
+          ? {
+              address: address.street,
+              city: address.city,
+              state: address.state_province,
+              postalCode: address.zip_postal ?? undefined,
+            }
+          : null,
+        seats: event.total_seats,
+        sevenRow: event.seven_row,
+        tenRow: event.ten_row,
+        fifteenRow: event.fifteen_row,
+        setupStart: event.setup_start ?? "",
+        sameDaySetup: !event.setup_start,
+        eventStart: event.event_start,
+        eventEnd: event.event_end,
+        teardownEnd: event.teardown_end ?? "",
+        sameDayTeardown: !event.teardown_end,
+        lenient: event.lenient,
+        token: "", // unused
+        selectedStatus: event.booked ? "Booked" : "Quoted",
+        notes: event.notes ?? "",
+        numDays: calculateNumDays(event.event_start, event.event_end),
+        status: event.booked ? "Booked" : "Quoted",
+        hslHue: event.hsl_hue,
+        alerts: relatedAlerts,
+        mustBeClean: event.must_be_clean,
+        bleacherIds: bleacherEvents
+          .filter((be) => be.event_id === event.event_id)
+          .map((be) => be.bleacher_id),
+      };
+    });
+    console.log("dashboardEvents", dashboardEvents);
+
+    // ✅ Sort by setup if exists else eventStart (earliest first)
+    dashboardEvents.sort((a, b) => {
+      const dateA = new Date(a.setupStart || a.eventStart).getTime();
+      const dateB = new Date(b.setupStart || b.eventStart).getTime();
+      return dateA - dateB;
+    });
+    return dashboardEvents;
+  }, [events, addresses, bleacherEvents]);
+}
+
 export async function createEvent(state: CurrentEventStore, token: string | null): Promise<void> {
   if (!token) {
     console.warn("No token found");

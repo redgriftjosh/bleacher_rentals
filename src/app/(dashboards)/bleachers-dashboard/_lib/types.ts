@@ -39,4 +39,5 @@ export type DashboardEvent = {
   hslHue: number | null;
   alerts: string[];
   mustBeClean: boolean;
+  bleacherIds: number[];
 };

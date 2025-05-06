@@ -62,7 +62,7 @@ export const EventConfiguration = () => {
   return (
     <div
       className={`overflow-hidden transition-all duration-1000 ease-in-out ${
-        currentEventStore.isFormExpanded ? "max-h-[500px] mb-4" : "max-h-0"
+        currentEventStore.isFormExpanded ? "max-h-[500px] mb-2" : "max-h-0"
       }`}
     >
       <div className="bg-white p-4 shadow-lg border border-gray-200">
