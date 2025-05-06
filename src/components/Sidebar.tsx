@@ -7,8 +7,7 @@ import { usePathname } from "next/navigation";
 import { CalendarIcon, TruckIcon, UsersIcon } from "./Icons";
 
 const menuItems = [
-  { label: "Bleacher Dashboard", href: "/bleachers-dashboard", icon: CalendarIcon },
-  { label: "Event Dashboard", href: "/event-dashboard", icon: CalendarIcon },
+  { label: "Dashboard", href: "/bleachers-dashboard", icon: CalendarIcon },
   { label: "Team", href: "/team", icon: UsersIcon },
   { label: "Assets", href: "/assets", icon: TruckIcon },
 ];
