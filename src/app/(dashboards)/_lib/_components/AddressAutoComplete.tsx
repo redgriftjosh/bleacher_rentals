@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import usePlacesAutocomplete, { getGeocode } from "use-places-autocomplete";
+import { useCurrentEventStore } from "../../bleachers-dashboard/_lib/useCurrentEventStore";
 
 interface AddressData {
   address: string;
@@ -29,7 +30,7 @@ export default function AddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [suggestionPos, setSuggestionPos] = useState({ top: 0, left: 0, width: 0 });
-
+  const addressData = useCurrentEventStore().addressData;
   const {
     ready,
     value,
@@ -44,8 +45,10 @@ export default function AddressAutocomplete({
   useEffect(() => {
     if (initialValue) {
       setValue(initialValue, false);
+    } else {
+      setValue(addressData?.address ?? "", false);
     }
-  }, [initialValue]);
+  }, [initialValue, addressData]);
 
   useEffect(() => {
     if (status === "OK" && inputRef.current) {
