@@ -5,6 +5,7 @@ import { DashboardBleacher } from "../../../types";
 import { useCurrentEventStore } from "../../../useCurrentEventStore";
 import { Minus, Plus } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { useFilterDashboardStore } from "../../../useFilterDashboardStore";
 
 type StickyLeftColumnProps = {
   ROW_HEIGHT: number;
@@ -29,6 +30,9 @@ export default function StickyLeftColumn({
 }: StickyLeftColumnProps) {
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
   const bleacherIds = useCurrentEventStore((s) => s.bleacherIds);
+  const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
+  const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
+  const rows = useFilterDashboardStore((s) => s.rows);
   const setField = useCurrentEventStore((s) => s.setField);
   const gridRef = useRef<Grid>(null);
 
@@ -52,13 +56,29 @@ export default function StickyLeftColumn({
   }, [isFormExpanded]);
 
   if (bleachers !== null && bleachers.length > 0) {
-    // ✅ If form is open, sort selected bleachers to top; else use original order
+    // Filter bleachers based on selected homeBaseIds and winterHomeBaseIds
+    const matchesFilter = (b: DashboardBleacher) =>
+      homeBaseIds.includes(b.homeBase.homeBaseId) &&
+      winterHomeBaseIds.includes(b.winterHomeBase.homeBaseId) &&
+      rows.includes(b.bleacherRows);
+
+    const alwaysInclude = (b: DashboardBleacher) => bleacherIds.includes(b.bleacherId);
+
+    // Keep all selected bleachers, even if they don't match the filters (when expanded)
+    const filteredBleachers = isFormExpanded
+      ? bleachers.filter((b) => matchesFilter(b) || alwaysInclude(b))
+      : bleachers.filter(matchesFilter);
+
+    // Sort selected to top if form is expanded
     const sortedBleachers = isFormExpanded
       ? [
-          ...bleachers.filter((b) => bleacherIds.includes(b.bleacherId)),
-          ...bleachers.filter((b) => !bleacherIds.includes(b.bleacherId)),
+          ...filteredBleachers.filter(alwaysInclude),
+          ...filteredBleachers.filter((b) => !alwaysInclude(b)),
         ]
-      : bleachers;
+      : filteredBleachers;
+    if (sortedBleachers.length === 0) {
+      return null;
+    }
     return (
       <div
         className="absolute border-r z-10 transition-all duration-1000"
@@ -79,7 +99,7 @@ export default function StickyLeftColumn({
           columnCount={1}
           height={height - scrollbarSize()}
           rowHeight={ROW_HEIGHT}
-          rowCount={ROW_COUNT}
+          rowCount={sortedBleachers.length}
           width={isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
           cellRenderer={({ key, rowIndex, style }) => {
             const isSelected = bleacherIds.includes(sortedBleachers[rowIndex].bleacherId);

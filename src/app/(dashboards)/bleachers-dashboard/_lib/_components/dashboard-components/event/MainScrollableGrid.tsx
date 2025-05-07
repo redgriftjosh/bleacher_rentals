@@ -183,8 +183,8 @@ export default function MainScrollableGrid({
               }
 
               const hsl = events[rowIndex].hslHue
-                ? `hsl(${events[rowIndex].hslHue.toString()}, 61%, 61%)`
-                : "hsl(0, 0%, 61%)";
+                ? `hsl(${events[rowIndex].hslHue.toString()}, 50%, 50%)`
+                : "hsl(0, 0%, 50%)";
               return (
                 <div
                   key={key}
@@ -361,8 +361,8 @@ export default function MainScrollableGrid({
               const eventStartDate = DateTime.fromISO(events[rowIndex].eventStart);
               const eventEndDate = DateTime.fromISO(events[rowIndex].eventEnd);
               const hsl = events[rowIndex].hslHue
-                ? `hsl(${events[rowIndex].hslHue.toString()}, 61%, 61%)`
-                : "hsl(0, 0%, 61%)";
+                ? `hsl(${events[rowIndex].hslHue.toString()}, 50%, 50%)`
+                : "hsl(0, 0%, 50%)";
 
               const visualStartDate = events[rowIndex].setupStart
                 ? DateTime.fromISO(events[rowIndex].setupStart)
