@@ -70,7 +70,7 @@ export function Dropdown<T>({
         <button
           ref={buttonRef}
           onClick={() => setIsOpen((prev) => !prev)}
-          className="w-full flex items-center justify-between bg-white border rounded px-2 py-2 text-left hover:shadow transition-all"
+          className="w-full h-[40px] flex items-center text-sm text-muted-foreground font-medium cursor-pointer justify-between bg-white border rounded px-2 py-2 text-left hover:shadow transition-all"
         >
           <span>{selectedLabel}</span>
           <ChevronDown

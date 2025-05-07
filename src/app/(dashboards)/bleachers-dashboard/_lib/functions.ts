@@ -7,6 +7,8 @@ import { CurrentEventState, CurrentEventStore, useCurrentEventStore } from "./us
 import { Tables } from "../../../../../database.types";
 import { useEventsStore } from "@/state/eventsStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
+import { useHomeBasesStore } from "@/state/homeBaseStore";
+import { SelectHomeBase } from "@/types/tables/HomeBases";
 
 export function checkEventFormRules(createEventPayload: CurrentEventStore): boolean {
   // check if all required fields are filled in
@@ -106,6 +108,11 @@ export function calculateBestHue(
   const existingHues = eventsWithinRange
     .map((event) => event.hsl_hue)
     .filter((hue) => hue !== null);
+
+  // Exclude hues 40-70 because they look ugly with the yellow setup and teardown blocks
+  const forbiddenHues = Array.from({ length: 31 }, (_, i) => i + 40); // [40, 41, ..., 70]
+  console.log("forbiddenHues", forbiddenHues);
+  existingHues.push(...forbiddenHues);
 
   if (existingHues.length === 0) return Math.floor(Math.random() * 360);
 
@@ -263,4 +270,23 @@ export function calculateConflictsForSingleEvent(
   }
 
   return alerts;
+}
+
+export function getHomeBaseOptions() {
+  const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
+
+  return homeBases.map((homeBase) => ({
+    value: homeBase.home_base_id,
+    label: homeBase.home_base_name,
+  }));
+}
+
+export function getRowOptions() {
+  return [
+    { value: 7, label: "7" },
+    { value: 8, label: "8" },
+    { value: 9, label: "9" },
+    { value: 10, label: "10" },
+    { value: 15, label: "15" },
+  ];
 }
