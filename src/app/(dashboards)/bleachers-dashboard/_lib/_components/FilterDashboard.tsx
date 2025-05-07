@@ -87,7 +87,7 @@ export default function FilterDashboard() {
               onValueChange={(value) => setField("rows", value)}
               forceSelectedValues={rows}
               // defaultSelectedValues={homeBaseOptions.map((option) => option.value)}
-              placeholder="Home Bases"
+              placeholder="Rows"
               variant="inverted"
               maxCount={1}
             />

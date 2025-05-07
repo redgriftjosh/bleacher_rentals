@@ -70,12 +70,14 @@ export default function StickyLeftColumn({
       : bleachers.filter(matchesFilter);
 
     // Sort selected to top if form is expanded
-    const sortedBleachers = isFormExpanded
-      ? [
-          ...filteredBleachers.filter(alwaysInclude),
-          ...filteredBleachers.filter((b) => !alwaysInclude(b)),
-        ]
-      : filteredBleachers;
+    const sortedBleachers = (
+      isFormExpanded
+        ? [
+            ...filteredBleachers.filter(alwaysInclude),
+            ...filteredBleachers.filter((b) => !alwaysInclude(b)),
+          ]
+        : filteredBleachers
+    ).sort((a, b) => a.bleacherNumber - b.bleacherNumber);
     if (sortedBleachers.length === 0) {
       return null;
     }
