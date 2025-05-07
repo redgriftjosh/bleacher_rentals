@@ -1,10 +1,7 @@
-import { FormattedBleacher } from "@/app/assets/bleachers/_lib/types";
 import { useBleachersStore } from "@/state/bleachersStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
-import { SelectBleacher } from "@/types/tables/Bleachers";
-import { SelectHomeBase } from "@/types/tables/HomeBases";
 import { calculateEventAlerts, calculateNumDays, checkEventFormRules } from "./functions";
-import { Tables, TablesInsert } from "../../../../../database.types";
+import { TablesInsert } from "../../../../../database.types";
 import { toast } from "sonner";
 import React from "react";
 import { ErrorToast } from "@/components/toasts/ErrorToast";
@@ -16,8 +13,6 @@ import { DashboardBleacher, DashboardEvent } from "./types";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { supabaseClient } from "@/utils/supabase/supabaseClient";
 import { useMemo } from "react";
-import { useAlertTypesStore } from "@/state/alertTypesStore";
-import { useEventAlertsStore } from "@/state/eventAlertsStore";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.

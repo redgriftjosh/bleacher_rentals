@@ -5,6 +5,7 @@ import { CurrentEventState, useCurrentEventStore } from "../../../useCurrentEven
 import { DashboardBleacher, DashboardEvent } from "../../../types";
 import { DateTime } from "luxon";
 import { useEffect, useRef, useState } from "react";
+import { useFilterDashboardStore } from "../../../useFilterDashboardStore";
 
 type MainScrollableGridProps = {
   ROW_HEIGHT: number;
@@ -34,6 +35,8 @@ export default function MainScrollableGrid({
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
   const bleacherIds = useCurrentEventStore((s) => s.bleacherIds);
   const setField = useCurrentEventStore((s) => s.setField);
+  const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
+  const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
 
   const handleLoadEvent = (event: CurrentEventState) => {
     setField("eventId", event.eventId);
@@ -87,13 +90,25 @@ export default function MainScrollableGrid({
   }, [isFormExpanded]);
 
   if (bleachers !== null && bleachers.length > 0) {
-    // ✅ If form is open, sort selected bleachers to top; else use original order
+    // Filter bleachers based on selected homeBaseIds and winterHomeBaseIds
+    const matchesFilter = (b: DashboardBleacher) =>
+      homeBaseIds.includes(b.homeBase.homeBaseId) &&
+      winterHomeBaseIds.includes(b.winterHomeBase.homeBaseId);
+
+    const alwaysInclude = (b: DashboardBleacher) => bleacherIds.includes(b.bleacherId);
+
+    // Keep all selected bleachers, even if they don't match the filters (when expanded)
+    const filteredBleachers = isFormExpanded
+      ? bleachers.filter((b) => matchesFilter(b) || alwaysInclude(b))
+      : bleachers.filter(matchesFilter);
+
+    // Sort selected to top if form is expanded
     const sortedBleachers = isFormExpanded
       ? [
-          ...bleachers.filter((b) => bleacherIds.includes(b.bleacherId)),
-          ...bleachers.filter((b) => !bleacherIds.includes(b.bleacherId)),
+          ...filteredBleachers.filter(alwaysInclude),
+          ...filteredBleachers.filter((b) => !alwaysInclude(b)),
         ]
-      : bleachers;
+      : filteredBleachers;
     return (
       <div
         ref={containerRef}
@@ -112,7 +127,7 @@ export default function MainScrollableGrid({
           columnCount={COLUMN_COUNT}
           height={height}
           rowHeight={ROW_HEIGHT}
-          rowCount={ROW_COUNT}
+          rowCount={sortedBleachers.length}
           width={width}
           overscanColumnCount={5}
           overscanRowCount={5}
@@ -172,8 +187,8 @@ export default function MainScrollableGrid({
                       }
 
                       const hsl = event.hslHue
-                        ? `hsl(${event.hslHue.toString()}, 61%, 61%)`
-                        : "hsl(0, 0%, 61%)";
+                        ? `hsl(${event.hslHue.toString()}, 50%, 50%)`
+                        : "hsl(0, 0%, 50%)";
 
                       return (
                         <div
@@ -394,8 +409,8 @@ export default function MainScrollableGrid({
                       const eventStartDate = DateTime.fromISO(event.eventStart);
                       const eventEndDate = DateTime.fromISO(event.eventEnd);
                       const hsl = event.hslHue
-                        ? `hsl(${event.hslHue.toString()}, 61%, 61%)`
-                        : "hsl(0, 0%, 61%)";
+                        ? `hsl(${event.hslHue.toString()}, 50%, 50%)`
+                        : "hsl(0, 0%, 50%)";
 
                       const visualStartDate = event.setupStart
                         ? DateTime.fromISO(event.setupStart)

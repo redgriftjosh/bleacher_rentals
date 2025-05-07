@@ -1,7 +1,12 @@
 import { create } from "zustand";
+
 export type YAxis = "Bleachers" | "Events";
+
 export type FilterDashboardState = {
   yAxis: YAxis;
+  homeBaseIds: number[];
+  winterHomeBaseIds: number[];
+  rows: number[];
 };
 
 // Me take event form stuff, add tools to change it.
@@ -15,6 +20,9 @@ export type FilterDashboardStore = FilterDashboardState & {
 
 const initialState: FilterDashboardState = {
   yAxis: "Bleachers",
+  homeBaseIds: [],
+  winterHomeBaseIds: [],
+  rows: [],
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.

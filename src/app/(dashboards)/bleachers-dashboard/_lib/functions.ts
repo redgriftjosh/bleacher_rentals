@@ -7,6 +7,8 @@ import { CurrentEventState, CurrentEventStore, useCurrentEventStore } from "./us
 import { Tables } from "../../../../../database.types";
 import { useEventsStore } from "@/state/eventsStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
+import { useHomeBasesStore } from "@/state/homeBaseStore";
+import { SelectHomeBase } from "@/types/tables/HomeBases";
 
 export function checkEventFormRules(createEventPayload: CurrentEventStore): boolean {
   // check if all required fields are filled in
@@ -263,4 +265,13 @@ export function calculateConflictsForSingleEvent(
   }
 
   return alerts;
+}
+
+export function getHomeBaseOptions() {
+  const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
+
+  return homeBases.map((homeBase) => ({
+    value: homeBase.home_base_id,
+    label: homeBase.home_base_name,
+  }));
 }
