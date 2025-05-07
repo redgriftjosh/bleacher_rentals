@@ -14,6 +14,7 @@ export default function FilterDashboard() {
   const setField = useFilterDashboardStore((s) => s.setField);
   const homeBaseOptions = getHomeBaseOptions();
   const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
+  const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
 
   const [updated, setUpdated] = useState(false);
   useEffect(() => {
@@ -54,7 +55,8 @@ export default function FilterDashboard() {
               options={homeBaseOptions}
               color="bg-amber-500"
               onValueChange={(value) => setField("homeBaseIds", value)}
-              defaultSelectedValues={homeBaseOptions.map((option) => option.value)}
+              // defaultSelectedValues={homeBaseOptions.map((option) => option.value)}
+              forceSelectedValues={homeBaseIds}
               placeholder="Home Bases"
               variant="inverted"
               maxCount={1}
@@ -66,7 +68,8 @@ export default function FilterDashboard() {
               options={homeBaseOptions}
               color="bg-blue-500"
               onValueChange={(value) => setField("winterHomeBaseIds", value)}
-              defaultSelectedValues={homeBaseOptions.map((option) => option.value)}
+              forceSelectedValues={winterHomeBaseIds}
+              // defaultSelectedValues={homeBaseOptions.map((option) => option.value)}
               placeholder="Home Bases"
               variant="inverted"
               maxCount={1}

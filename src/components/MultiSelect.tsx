@@ -72,6 +72,8 @@ interface MultiSelectProps
   /** The default selected values when the component mounts. */
   defaultSelectedValues?: number[];
 
+  forceSelectedValues?: number[];
+
   /**
    * Placeholder text to be displayed when no values are selected.
    * Optional, defaults to "Select options".
@@ -118,6 +120,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       onValueChange,
       variant,
       defaultSelectedValues = [],
+      forceSelectedValues,
       placeholder = "Select options",
       animation = 0,
       maxCount = 3,
@@ -128,33 +131,42 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
     },
     ref
   ) => {
-    const [selectedValues, setSelectedValues] = React.useState<number[]>(
-      defaultSelectedValues ?? []
-    );
+    const [internalSelected, setInternalSelected] = React.useState<number[]>(defaultSelectedValues);
+    const isControlled = typeof forceSelectedValues !== "undefined";
+    const selectedValues = isControlled ? forceSelectedValues : internalSelected;
+
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
     const [isAnimating, setIsAnimating] = React.useState(false);
+
+    React.useEffect(() => {
+      if (isControlled) {
+        // if prop updates, sync internal state (optional for UI transitions)
+        setInternalSelected(forceSelectedValues ?? []);
+      }
+    }, [forceSelectedValues]);
 
     const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === "Enter") {
         setIsPopoverOpen(true);
       } else if (event.key === "Backspace" && !event.currentTarget.value) {
-        const newSelectedValues = [...selectedValues];
-        newSelectedValues.pop();
-        setSelectedValues(newSelectedValues);
-        onValueChange(newSelectedValues);
+        const newValues = [...selectedValues];
+        newValues.pop();
+        isControlled ? onValueChange(newValues) : setInternalSelected(newValues);
       }
     };
 
-    const toggleOption = (option: number) => {
-      const newSelectedValues = selectedValues.includes(option)
-        ? selectedValues.filter((value) => value !== option)
-        : [...selectedValues, option];
-      setSelectedValues(newSelectedValues);
-      onValueChange(newSelectedValues);
+    const toggleOption = (value: number) => {
+      const exists = selectedValues.includes(value);
+      const newValues = exists
+        ? selectedValues.filter((v) => v !== value)
+        : [...selectedValues, value];
+
+      isControlled ? onValueChange(newValues) : setInternalSelected(newValues);
+      onValueChange(newValues);
     };
 
     const handleClear = () => {
-      setSelectedValues([]);
+      isControlled ? onValueChange([]) : setInternalSelected([]);
       onValueChange([]);
     };
 
@@ -163,18 +175,16 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
     };
 
     const clearExtraOptions = () => {
-      const newSelectedValues = selectedValues.slice(0, maxCount);
-      setSelectedValues(newSelectedValues);
-      onValueChange(newSelectedValues);
+      const sliced = selectedValues.slice(0, maxCount);
+      isControlled ? onValueChange(sliced) : setInternalSelected(sliced);
     };
 
     const toggleAll = () => {
-      if (selectedValues.length === options.length) {
-        handleClear();
-      } else {
-        const allValues = options.map((option) => option.value);
-        setSelectedValues(allValues);
-        onValueChange(allValues);
+      if (selectedValues.length === options.length) handleClear();
+      else {
+        const all = options.map((o) => o.value);
+        isControlled ? onValueChange(all) : setInternalSelected(all);
+        onValueChange(all);
       }
     };
 

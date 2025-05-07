@@ -109,6 +109,11 @@ export function calculateBestHue(
     .map((event) => event.hsl_hue)
     .filter((hue) => hue !== null);
 
+  // Exclude hues 40-70 because they look ugly with the yellow setup and teardown blocks
+  const forbiddenHues = Array.from({ length: 31 }, (_, i) => i + 40); // [40, 41, ..., 70]
+  console.log("forbiddenHues", forbiddenHues);
+  existingHues.push(...forbiddenHues);
+
   if (existingHues.length === 0) return Math.floor(Math.random() * 360);
 
   // Normalize and sort hues
