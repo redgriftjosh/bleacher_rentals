@@ -6,24 +6,30 @@ import { MultiSelect } from "@/components/MultiSelect";
 import { useEffect, useState } from "react";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
-import { getHomeBaseOptions } from "../functions";
+import { getHomeBaseOptions, getRowOptions } from "../functions";
 
 export default function FilterDashboard() {
   const yAxis = useFilterDashboardStore((s) => s.yAxis);
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
   const setField = useFilterDashboardStore((s) => s.setField);
   const homeBaseOptions = getHomeBaseOptions();
+  const rowOptions = getRowOptions();
   const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
   const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
+  const rows = useFilterDashboardStore((s) => s.rows);
 
   const [updated, setUpdated] = useState(false);
   useEffect(() => {
-    if (homeBaseOptions.length === 0) return;
+    if (homeBaseOptions.length === 0 || rowOptions.length === 0) return;
     if (updated) return;
     setUpdated(true);
     const allIds = homeBaseOptions.map((option) => option.value);
     setField("homeBaseIds", allIds);
     setField("winterHomeBaseIds", allIds);
+    setField(
+      "rows",
+      rowOptions.map((option) => option.value)
+    );
   }, [homeBaseOptions]);
 
   useEffect(() => {
@@ -69,6 +75,17 @@ export default function FilterDashboard() {
               color="bg-blue-500"
               onValueChange={(value) => setField("winterHomeBaseIds", value)}
               forceSelectedValues={winterHomeBaseIds}
+              // defaultSelectedValues={homeBaseOptions.map((option) => option.value)}
+              placeholder="Home Bases"
+              variant="inverted"
+              maxCount={1}
+            />
+          </div>
+          <div>
+            <MultiSelect
+              options={rowOptions}
+              onValueChange={(value) => setField("rows", value)}
+              forceSelectedValues={rows}
               // defaultSelectedValues={homeBaseOptions.map((option) => option.value)}
               placeholder="Home Bases"
               variant="inverted"

@@ -32,6 +32,7 @@ export default function StickyLeftColumn({
   const bleacherIds = useCurrentEventStore((s) => s.bleacherIds);
   const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
   const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
+  const rows = useFilterDashboardStore((s) => s.rows);
   const setField = useCurrentEventStore((s) => s.setField);
   const gridRef = useRef<Grid>(null);
 
@@ -58,7 +59,8 @@ export default function StickyLeftColumn({
     // Filter bleachers based on selected homeBaseIds and winterHomeBaseIds
     const matchesFilter = (b: DashboardBleacher) =>
       homeBaseIds.includes(b.homeBase.homeBaseId) &&
-      winterHomeBaseIds.includes(b.winterHomeBase.homeBaseId);
+      winterHomeBaseIds.includes(b.winterHomeBase.homeBaseId) &&
+      rows.includes(b.bleacherRows);
 
     const alwaysInclude = (b: DashboardBleacher) => bleacherIds.includes(b.bleacherId);
 
@@ -74,6 +76,9 @@ export default function StickyLeftColumn({
           ...filteredBleachers.filter((b) => !alwaysInclude(b)),
         ]
       : filteredBleachers;
+    if (sortedBleachers.length === 0) {
+      return null;
+    }
     return (
       <div
         className="absolute border-r z-10 transition-all duration-1000"

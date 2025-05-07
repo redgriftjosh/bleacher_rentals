@@ -37,6 +37,7 @@ export default function MainScrollableGrid({
   const setField = useCurrentEventStore((s) => s.setField);
   const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
   const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
+  const rows = useFilterDashboardStore((s) => s.rows);
 
   const handleLoadEvent = (event: CurrentEventState) => {
     setField("eventId", event.eventId);
@@ -93,7 +94,8 @@ export default function MainScrollableGrid({
     // Filter bleachers based on selected homeBaseIds and winterHomeBaseIds
     const matchesFilter = (b: DashboardBleacher) =>
       homeBaseIds.includes(b.homeBase.homeBaseId) &&
-      winterHomeBaseIds.includes(b.winterHomeBase.homeBaseId);
+      winterHomeBaseIds.includes(b.winterHomeBase.homeBaseId) &&
+      rows.includes(b.bleacherRows);
 
     const alwaysInclude = (b: DashboardBleacher) => bleacherIds.includes(b.bleacherId);
 
@@ -109,6 +111,10 @@ export default function MainScrollableGrid({
           ...filteredBleachers.filter((b) => !alwaysInclude(b)),
         ]
       : filteredBleachers;
+
+    if (sortedBleachers.length === 0) {
+      return null;
+    }
     return (
       <div
         ref={containerRef}
@@ -237,40 +243,6 @@ export default function MainScrollableGrid({
                             })
                           }
                         >
-                          {/* <div
-                            className="sticky left-0 top-0 bg-transparent z-10 text-left px-2 pt-0.5 transition-all duration-1000 ease-in-out"
-                            style={{
-                              // width: "fit-content",
-                              maxWidth: "100%",
-                              paddingLeft: `${Math.max(
-                                10,
-                                scrollLeftRef.current - firstVisibleColumnRef.current * COLUMN_WIDTH
-                              )}px`,
-                            }}
-                          >
-                            <div
-                              className="flex items-center gap-2 text-white"
-                              style={{
-                                color: event.status === "Booked" ? "white" : hsl,
-                                maxWidth: "100%",
-                              }}
-                            >
-                              <span className="truncate">
-                                {event.eventName} setup: {daysRemainingSetup} event:{" "}
-                                {daysRemainingEvent} teardown: {daysRemainingTeardown}
-                              </span>
-                              {event.mustBeClean && (
-                                <span className="text-xs font-bold text-white w-5 h-5 flex items-center justify-center shrink-0">
-                                  <Sparkles />
-                                </span>
-                              )}
-                              {event.alerts.length > 0 && (
-                                <span className="text-xs font-bold text-white shadow-sm bg-red-500 rounded-full w-5 h-5 flex items-center justify-center shrink-0">
-                                  {event.alerts.length}
-                                </span>
-                              )}
-                            </div>
-                          </div> */}
                           <div
                             className="sticky left-0 top-0 bg-transparent z-10 text-left px-2 pt-0.5 transition-all duration-1000 ease-in-out"
                             style={{
@@ -357,53 +329,6 @@ export default function MainScrollableGrid({
                           />
                         </div>
                       );
-                      // const isTarget = columnIndex === 1000 && rowIndex === 0;
-                      // const left =
-                      //   typeof style.left === "number" ? style.left : parseFloat(style.left ?? "0");
-                      // const isClippedLeft = left < scrollLeftRef.current;
-                      // return (
-                      //   <div key={`first-visible-${rowIndex}-${columnIndex}-${eventIndex}`}>
-                      //     first!
-                      //     {isTarget && (
-                      //       <>
-                      //         <div
-                      //           className="absolute h-full bg-amber-700"
-                      //           style={{
-                      //             left: 0,
-                      //             width: "210px",
-                      //             zIndex: 10,
-                      //             paddingLeft: `${Math.max(
-                      //               10,
-                      //               scrollLeftRef.current - firstVisibleColumnRef.current * COLUMN_WIDTH
-                      //             )}px`,
-                      //             transition: "padding-left 0.1s linear",
-                      //           }}
-                      //         >
-                      //           <span>
-                      //             Hello {scrollLeftRef.current} {firstVisibleColumnRef.current}{" "}
-                      //             {COLUMN_WIDTH} {columnIndex}{" "}
-                      //             {((firstVisibleColumnRef.current * COLUMN_WIDTH -
-                      //               scrollLeftRef.current) *
-                      //               (firstVisibleColumnRef.current * COLUMN_WIDTH -
-                      //                 scrollLeftRef.current)) /
-                      //               2}
-                      //           </span>
-                      //         </div>
-                      //         {isClippedLeft && (
-                      //           <div
-                      //             className="fixed bg-amber-700 text-white px-2 py-0.5 z-50 shadow"
-                      //             style={{
-                      //               top: style.top,
-                      //               left: 0,
-                      //             }}
-                      //           >
-                      //             Hello
-                      //           </div>
-                      //         )}
-                      //       </>
-                      //     )}
-                      //   </div>
-                      // );
                     } else {
                       const currentDate = DateTime.fromISO(dates[columnIndex]);
                       const eventStartDate = DateTime.fromISO(event.eventStart);
