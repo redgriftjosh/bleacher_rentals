@@ -1,17 +1,9 @@
-import { LenientSelections } from "../LenientSelections";
-import { Toggle } from "../Toggle";
 import React from "react";
-import { Dropdown } from "@/components/DropDown";
-import { Textarea } from "@/components/TextArea";
-import { EventStatus, useCurrentEventStore } from "../../useCurrentEventStore";
-import { useAlertTypesStore } from "@/state/alertTypesStore";
-import { useEventAlertsStore } from "@/state/eventAlertsStore";
+import { useCurrentEventStore } from "../../../useCurrentEventStore";
 import { CheckCheck } from "lucide-react";
 
 export const AlertsTab = () => {
   const currentEventStore = useCurrentEventStore();
-  const alertTypes = useAlertTypesStore((s) => s.alertTypes);
-  const eventAlerts = useEventAlertsStore((s) => s.eventAlerts);
 
   return (
     <div className="min-h-32">

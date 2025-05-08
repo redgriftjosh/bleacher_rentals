@@ -3,7 +3,7 @@ import { Toggle } from "../Toggle";
 import React from "react";
 import { Dropdown } from "@/components/DropDown";
 import { Textarea } from "@/components/TextArea";
-import { EventStatus, useCurrentEventStore } from "../../useCurrentEventStore";
+import { EventStatus, useCurrentEventStore } from "../../../useCurrentEventStore";
 
 export const DetailsTab = () => {
   const currentEventStore = useCurrentEventStore();
