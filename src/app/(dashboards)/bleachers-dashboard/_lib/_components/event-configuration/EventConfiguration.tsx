@@ -1,10 +1,6 @@
 "use client";
 import { useState } from "react";
-import { createEvent, deleteEvent, updateEvent } from "../db";
 import { useAuth } from "@clerk/nextjs";
-import { CoreTab } from "./tabs/CoreTab";
-import { DetailsTab } from "./tabs/DetailsTab";
-import { useCurrentEventStore } from "../useCurrentEventStore";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +12,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useCurrentEventStore } from "../../useCurrentEventStore";
+import { createEvent, deleteEvent, updateEvent } from "../../db";
+import { CoreTab } from "./tabs/CoreTab";
+import { DetailsTab } from "./tabs/DetailsTab";
 import { AlertsTab } from "./tabs/AlertsTab";
 
 const tabs = ["Core", "Details", "Alerts"] as const;

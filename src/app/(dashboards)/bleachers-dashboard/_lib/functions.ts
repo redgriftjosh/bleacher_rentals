@@ -9,6 +9,7 @@ import { useEventsStore } from "@/state/eventsStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
+import { DashboardBleacher } from "./types";
 
 export function checkEventFormRules(createEventPayload: CurrentEventStore): boolean {
   // check if all required fields are filled in
@@ -289,4 +290,50 @@ export function getRowOptions() {
     { value: 10, label: "10" },
     { value: 15, label: "15" },
   ];
+}
+
+export function filterSortBleachers(
+  homeBaseIds: number[],
+  winterHomeBaseIds: number[],
+  rows: number[],
+  bleachers: DashboardBleacher[],
+  bleacherIds: number[],
+  isFormExpanded: boolean
+): DashboardBleacher[] {
+  const matchesFilter = (b: DashboardBleacher) =>
+    homeBaseIds.includes(b.homeBase.homeBaseId) &&
+    winterHomeBaseIds.includes(b.winterHomeBase.homeBaseId) &&
+    rows.includes(b.bleacherRows);
+
+  const alwaysInclude = (b: DashboardBleacher) => bleacherIds.includes(b.bleacherId);
+
+  // Keep all selected bleachers, even if they don't match the filters (when expanded)
+  const filteredBleachers = isFormExpanded
+    ? bleachers.filter((b) => matchesFilter(b) || alwaysInclude(b))
+    : bleachers.filter(matchesFilter);
+
+  // Sort selected to top if form is expanded
+  // const sortedBleachers = (
+  //   isFormExpanded
+  //     ? [
+  //         ...filteredBleachers.filter(alwaysInclude),
+  //         ...filteredBleachers.filter((b) => !alwaysInclude(b)),
+  //       ]
+  //     : filteredBleachers
+  // ).sort((a, b) => a.bleacherNumber - b.bleacherNumber);
+
+  const sortedBleachers = isFormExpanded
+    ? [
+        ...filteredBleachers
+          .filter(alwaysInclude)
+          .sort((a, b) => a.bleacherNumber - b.bleacherNumber),
+        ...filteredBleachers
+          .filter((b) => !alwaysInclude(b))
+          .sort((a, b) => a.bleacherNumber - b.bleacherNumber),
+      ]
+    : filteredBleachers.sort((a, b) => a.bleacherNumber - b.bleacherNumber);
+
+  console.log("sortedBleachers", sortedBleachers);
+  console.log("isFormExpanded", isFormExpanded);
+  return sortedBleachers;
 }

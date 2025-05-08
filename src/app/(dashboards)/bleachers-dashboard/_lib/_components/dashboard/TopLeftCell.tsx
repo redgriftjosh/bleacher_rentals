@@ -1,21 +1,26 @@
 import { Grid } from "react-virtualized";
 import { useEffect, useRef } from "react";
-import { useCurrentEventStore } from "../../../useCurrentEventStore";
+import { useCurrentEventStore } from "../../useCurrentEventStore";
+import { YAxis } from "../../useFilterDashboardStore";
 
 type TopLeftCellProps = {
   ROW_HEIGHT: number;
   STICKY_LEFT_COLUMN_WIDTH: number;
   STICKY_LEFT_COLUMN_WIDTH_EXPANDED: number;
+  yAxis: YAxis;
 };
 
 export default function TopLeftCell({
   ROW_HEIGHT,
   STICKY_LEFT_COLUMN_WIDTH,
   STICKY_LEFT_COLUMN_WIDTH_EXPANDED,
+  yAxis,
 }: TopLeftCellProps) {
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
   const gridRef = useRef<Grid>(null);
 
+  // This helps us change the width of the top left cell when the form is expanded
+  // to match the width of the stickyLeftColumn
   useEffect(() => {
     if (gridRef.current) {
       gridRef.current.recomputeGridSize();
@@ -24,7 +29,7 @@ export default function TopLeftCell({
   }, [isFormExpanded]);
   return (
     <div
-      className="absolute z-20 border-r border-b bg-gray-50 transition-all duration-1000 ease-in-out"
+      className="absolute z-20 border-r border-b bg-white transition-all duration-1000 ease-in-out"
       style={{
         width: isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH,
         height: ROW_HEIGHT,
@@ -39,7 +44,7 @@ export default function TopLeftCell({
             style={style}
             className="px-4 py-2 text-left text-md font-bold w-full h-full"
           >
-            Bleacher
+            {yAxis}
           </div>
         )}
         width={isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
