@@ -1,18 +1,11 @@
 "use client";
-import { Color } from "@/types/Color";
-import { useEffect, useRef, useState } from "react";
-import { DateTime } from "luxon";
-import { CreateEventButton } from "./_lib/_components/CreateEventButton";
-import { EventConfiguration } from "./_lib/_components/EventConfiguration";
-import { BleacherTable } from "./_lib/_components/BleacherTable";
 import dynamic from "next/dynamic";
-import { fetchBleachers } from "./_lib/db";
-import { Dropdown } from "@/components/DropDown";
 import FilterDashboard from "./_lib/_components/FilterDashboard";
 import { useFilterDashboardStore } from "./_lib/useFilterDashboardStore";
-import EventDashboard from "./_lib/_components/EventDashboard";
+import { CreateEventButton } from "./_lib/_components/event-configuration/CreateEventButton";
+import { EventConfiguration } from "./_lib/_components/event-configuration/EventConfiguration";
 
-const BleacherDashboard = dynamic(() => import("./_lib/_components/BleacherDashboard"), {
+const Dashboard = dynamic(() => import("./_lib/_components/dashboard/Dashboard"), {
   ssr: false,
 });
 
@@ -25,8 +18,7 @@ const BleachersDashboardPage = () => {
         <CreateEventButton />
       </div>
       <EventConfiguration />
-
-      {yAxis === "Bleachers" ? <BleacherDashboard /> : <EventDashboard />}
+      <Dashboard yAxis={yAxis} />
     </div>
   );
 };

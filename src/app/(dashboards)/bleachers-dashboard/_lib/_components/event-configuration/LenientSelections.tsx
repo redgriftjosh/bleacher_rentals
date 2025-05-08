@@ -1,5 +1,5 @@
+import { useCurrentEventStore } from "../../useCurrentEventStore";
 import { Toggle } from "./Toggle";
-import { useCurrentEventStore } from "../useCurrentEventStore";
 
 export const LenientSelections = () => {
   const currentEventStore = useCurrentEventStore();

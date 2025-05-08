@@ -2,7 +2,7 @@
 import { Toggle } from "../Toggle";
 import React, { useEffect } from "react";
 import AddressAutocomplete from "@/app/(dashboards)/_lib/_components/AddressAutoComplete";
-import { useCurrentEventStore } from "../../useCurrentEventStore";
+import { useCurrentEventStore } from "../../../useCurrentEventStore";
 
 export const CoreTab = () => {
   const currentEventStore = useCurrentEventStore();

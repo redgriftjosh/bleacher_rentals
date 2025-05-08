@@ -1,38 +1,37 @@
 import clsx from "clsx";
 import scrollbarSize from "dom-helpers/esm/scrollbarSize";
 import { Grid, ScrollParams } from "react-virtualized";
-import { DashboardBleacher } from "../../../types";
-import { useCurrentEventStore } from "../../../useCurrentEventStore";
 import { Minus, Plus } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { useFilterDashboardStore } from "../../../useFilterDashboardStore";
+import { DashboardBleacher, DashboardEvent } from "../../types";
+import { useCurrentEventStore } from "../../useCurrentEventStore";
+import { YAxis } from "../../useFilterDashboardStore";
 
 type StickyLeftColumnProps = {
   ROW_HEIGHT: number;
   height: number;
-  ROW_COUNT: number;
   scrollTop: number;
   STICKY_LEFT_COLUMN_WIDTH: number;
   STICKY_LEFT_COLUMN_WIDTH_EXPANDED: number;
   HEADER_ROW_HEIGHT: number;
   bleachers: DashboardBleacher[];
+  events: DashboardEvent[];
+  yAxis: YAxis;
 };
 
 export default function StickyLeftColumn({
   ROW_HEIGHT,
   height,
-  ROW_COUNT,
   scrollTop,
   STICKY_LEFT_COLUMN_WIDTH,
   STICKY_LEFT_COLUMN_WIDTH_EXPANDED,
   HEADER_ROW_HEIGHT,
   bleachers,
+  events,
+  yAxis,
 }: StickyLeftColumnProps) {
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
   const bleacherIds = useCurrentEventStore((s) => s.bleacherIds);
-  const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
-  const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
-  const rows = useFilterDashboardStore((s) => s.rows);
   const setField = useCurrentEventStore((s) => s.setField);
   const gridRef = useRef<Grid>(null);
 
@@ -47,7 +46,7 @@ export default function StickyLeftColumn({
     setField("bleacherIds", updated);
   };
 
-  // Recompute Grid sizes when expanded state changes
+  // Force rerender when we want to change the width of the sticky left column
   useEffect(() => {
     if (gridRef.current) {
       gridRef.current.recomputeGridSize();
@@ -55,56 +54,54 @@ export default function StickyLeftColumn({
     }
   }, [isFormExpanded]);
 
-  if (bleachers !== null && bleachers.length > 0) {
-    // Filter bleachers based on selected homeBaseIds and winterHomeBaseIds
-    const matchesFilter = (b: DashboardBleacher) =>
-      homeBaseIds.includes(b.homeBase.homeBaseId) &&
-      winterHomeBaseIds.includes(b.winterHomeBase.homeBaseId) &&
-      rows.includes(b.bleacherRows);
-
-    const alwaysInclude = (b: DashboardBleacher) => bleacherIds.includes(b.bleacherId);
-
-    // Keep all selected bleachers, even if they don't match the filters (when expanded)
-    const filteredBleachers = isFormExpanded
-      ? bleachers.filter((b) => matchesFilter(b) || alwaysInclude(b))
-      : bleachers.filter(matchesFilter);
-
-    // Sort selected to top if form is expanded
-    const sortedBleachers = (
-      isFormExpanded
-        ? [
-            ...filteredBleachers.filter(alwaysInclude),
-            ...filteredBleachers.filter((b) => !alwaysInclude(b)),
-          ]
-        : filteredBleachers
-    ).sort((a, b) => a.bleacherNumber - b.bleacherNumber);
-    if (sortedBleachers.length === 0) {
-      return null;
-    }
-    return (
-      <div
-        className="absolute border-r z-10 transition-all duration-1000"
-        style={{
-          backgroundColor: "white",
-          color: "black",
-          width: isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH,
-          top: HEADER_ROW_HEIGHT,
-        }}
-      >
-        <Grid
-          ref={gridRef}
-          style={{ overflow: "hidden" }}
-          scrollTop={scrollTop}
-          columnWidth={
-            isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH
-          }
-          columnCount={1}
-          height={height - scrollbarSize()}
-          rowHeight={ROW_HEIGHT}
-          rowCount={sortedBleachers.length}
-          width={isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
-          cellRenderer={({ key, rowIndex, style }) => {
-            const isSelected = bleacherIds.includes(sortedBleachers[rowIndex].bleacherId);
+  if (bleachers === null || bleachers.length <= 0) {
+    return null;
+  }
+  return (
+    <div
+      className="absolute border-r z-10 transition-all duration-1000"
+      style={{
+        backgroundColor: "white",
+        color: "black",
+        width: isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH,
+        top: HEADER_ROW_HEIGHT,
+      }}
+    >
+      <Grid
+        ref={gridRef}
+        style={{ overflow: "hidden" }}
+        scrollTop={scrollTop}
+        columnWidth={isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
+        columnCount={1}
+        height={height - scrollbarSize()}
+        rowHeight={ROW_HEIGHT}
+        rowCount={yAxis === "Bleachers" ? bleachers.length : events.length}
+        width={isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
+        cellRenderer={({ key, rowIndex, style }) => {
+          const isSelected = bleacherIds.includes(bleachers[rowIndex].bleacherId);
+          if (yAxis === "Events") {
+            return (
+              <div
+                key={key}
+                style={style}
+                className="flex justify-start px-2 border-b items-center text-sm w-full h-full"
+              >
+                <div
+                  className="transition-all duration-1000 ease-in-out w-full"
+                  style={{
+                    marginLeft: isFormExpanded ? "4px" : "0px",
+                  }}
+                >
+                  <div className="font-bold text-md truncate">{events[rowIndex].eventName}</div>
+                  <div className="text-left">
+                    <span className="font-medium text-xs text-gray-500 truncate block">
+                      {events[rowIndex].addressData?.city} {events[rowIndex].addressData?.state}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          } else {
             return (
               <div
                 key={key}
@@ -112,7 +109,7 @@ export default function StickyLeftColumn({
                 className="flex justify-start px-2 border-b items-center text-sm w-full h-full"
               >
                 <button
-                  onClick={() => toggle(sortedBleachers[rowIndex].bleacherId)}
+                  onClick={() => toggle(bleachers[rowIndex].bleacherId)}
                   className={`p-1 rounded cursor-pointer transform transition-transform duration-1000 ${
                     isSelected
                       ? "border-1 border-red-600 bg-red-50"
@@ -135,33 +132,32 @@ export default function StickyLeftColumn({
                   }}
                 >
                   <div className="font-bold text-lg -mb-2">
-                    {sortedBleachers[rowIndex].bleacherNumber}
+                    {bleachers[rowIndex].bleacherNumber}
                   </div>
                   <div className="whitespace-nowrap -mb-2">
                     <span className="font-medium text-xs text-gray-500">
-                      {sortedBleachers[rowIndex].bleacherRows}
+                      {bleachers[rowIndex].bleacherRows}
                     </span>
                     <span className="font-medium text-xs text-gray-500 mr-2">row</span>
                     <span className="font-medium text-xs text-gray-500">
-                      {sortedBleachers[rowIndex].bleacherSeats}
+                      {bleachers[rowIndex].bleacherSeats}
                     </span>
                     <span className="font-medium text-xs text-gray-500 mr-2">seats</span>
                   </div>
                   <div className="whitespace-nowrap">
                     <span className="font-medium mr-2 text-xs text-amber-500">
-                      {sortedBleachers[rowIndex].homeBase.homeBaseName}
+                      {bleachers[rowIndex].homeBase.homeBaseName}
                     </span>
                     <span className="font-medium text-xs text-blue-500">
-                      {sortedBleachers[rowIndex].winterHomeBase.homeBaseName}
+                      {bleachers[rowIndex].winterHomeBase.homeBaseName}
                     </span>
                   </div>
                 </div>
               </div>
             );
-          }}
-        />
-      </div>
-    );
-  }
-  return null;
+          }
+        }}
+      />
+    </div>
+  );
 }

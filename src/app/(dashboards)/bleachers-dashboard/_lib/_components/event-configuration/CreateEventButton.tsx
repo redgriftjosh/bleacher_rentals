@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { useCurrentEventStore } from "../useCurrentEventStore";
+import { useCurrentEventStore } from "../../useCurrentEventStore";
 
 export const CreateEventButton = () => {
   const currentEventStore = useCurrentEventStore();
