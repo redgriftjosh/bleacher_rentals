@@ -312,16 +312,6 @@ export function filterSortBleachers(
     ? bleachers.filter((b) => matchesFilter(b) || alwaysInclude(b))
     : bleachers.filter(matchesFilter);
 
-  // Sort selected to top if form is expanded
-  // const sortedBleachers = (
-  //   isFormExpanded
-  //     ? [
-  //         ...filteredBleachers.filter(alwaysInclude),
-  //         ...filteredBleachers.filter((b) => !alwaysInclude(b)),
-  //       ]
-  //     : filteredBleachers
-  // ).sort((a, b) => a.bleacherNumber - b.bleacherNumber);
-
   const sortedBleachers = isFormExpanded
     ? [
         ...filteredBleachers
