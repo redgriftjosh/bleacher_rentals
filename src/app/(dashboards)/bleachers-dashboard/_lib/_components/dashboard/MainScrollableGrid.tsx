@@ -142,9 +142,7 @@ export default function MainScrollableGrid({
                     isFirstVisibleColumn={isFirstVisibleColumn}
                     scrollLeftRef={scrollLeftRef}
                     firstVisibleColumnRef={firstVisibleColumnRef}
-                    bleacherIds={bleachers
-                      .filter((b) => b.events.some((e) => e.eventId === event.eventId))
-                      .map((b) => b.bleacherId)}
+                    bleacherIds={event.bleacherIds}
                   />
                 ))
               ) : (

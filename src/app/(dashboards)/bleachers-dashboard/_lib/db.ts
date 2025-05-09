@@ -86,6 +86,9 @@ export function fetchBleachers() {
               hslHue: event.hsl_hue,
               alerts: relatedAlerts,
               mustBeClean: event.must_be_clean,
+              bleacherIds: bleacherEvents
+                .filter((be) => be.event_id === event.event_id)
+                .map((be) => be.bleacher_id), // find all bleachers linked to this event
             };
           })
           .filter((e) => e !== null) as DashboardEvent[]; // filter out nulls
@@ -107,6 +110,7 @@ export function fetchBleachers() {
         };
       })
       .sort((a, b) => b.bleacherNumber - a.bleacherNumber);
+    // console.log("formattedBleachers", formattedBleachers);
 
     return formattedBleachers;
     // const multipliedBleachers = Array.from({ length: 100 }, (_, i) =>
