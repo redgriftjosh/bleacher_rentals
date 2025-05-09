@@ -52,7 +52,7 @@ export default function StickyLeftColumn({
       gridRef.current.recomputeGridSize();
       gridRef.current.forceUpdate(); // optional, but helps ensure render
     }
-  }, [isFormExpanded]);
+  }, [isFormExpanded, bleachers.length, events.length]);
 
   if (bleachers === null || bleachers.length <= 0) {
     return null;
@@ -69,11 +69,11 @@ export default function StickyLeftColumn({
     >
       <Grid
         ref={gridRef}
-        style={{ overflow: "hidden" }}
+        style={{ overflowX: "hidden", overflowY: "hidden" }}
         scrollTop={scrollTop}
         columnWidth={isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
         columnCount={1}
-        height={height - scrollbarSize()}
+        height={height}
         rowHeight={ROW_HEIGHT}
         rowCount={yAxis === "Bleachers" ? bleachers.length : events.length}
         width={isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
