@@ -8,7 +8,7 @@ const tabs = [
 
 export default function AssetsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main>
+    <main className="p-4">
       <div className="flex justify-between items-center mb-4">
         {/* Left Side: Title & Description */}
         <div>
