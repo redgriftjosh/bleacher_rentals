@@ -5,10 +5,13 @@ import { createServiceRoleClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
   console.log("Triggered");
-  const CLERK_WEBHOOK_SIGNING_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
+  const CLERK_WEBHOOK_SIGNING_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRETT;
 
   if (!CLERK_WEBHOOK_SIGNING_SECRET) {
-    throw new Error("Error: Please add SIGNING_SECRET from Clerk Dashboard to .env or .env");
+    console.error("Missing Clerk signing secret.");
+    return new Response("Server misconfiguration: Missing signing secret", {
+      status: 500,
+    });
   }
 
   // Create new Svix instance with secret
