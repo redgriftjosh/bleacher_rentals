@@ -13,7 +13,7 @@ export function UserList({
   setExistingUser: (user: ExistingUser) => void;
 }) {
   const users = fetchUsers();
-  console.log("users:", users);
+  // console.log("users:", users);
   const handleClick = (user: ExistingUser) => {
     setExistingUser(user);
     setIsSheetOpen(true);

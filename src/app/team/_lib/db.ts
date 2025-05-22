@@ -162,7 +162,7 @@ export function fetchUsers() {
     };
   });
 
-  console.log("usersWithDetails:", usersWithDetails);
+  // console.log("usersWithDetails:", usersWithDetails);
 
   return usersWithDetails;
 }
