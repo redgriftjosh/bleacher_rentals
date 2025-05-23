@@ -10,10 +10,22 @@ import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
 import { DashboardBleacher } from "./types";
+import { useUsersStore } from "@/state/userStore";
+import { useUser } from "@clerk/nextjs";
+import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
+import { getHomeBaseIdByName } from "@/utils/utils";
+import { UserResource } from "@clerk/types";
 
-export function checkEventFormRules(createEventPayload: CurrentEventStore): boolean {
+export function checkEventFormRules(
+  createEventPayload: CurrentEventStore,
+  user: UserResource | null
+): boolean {
   // check if all required fields are filled in
   let missingFields = [];
+  const error = isUserPermitted(createEventPayload.addressData?.state ?? "", user);
+  if (error) {
+    missingFields.push(error);
+  }
   if (createEventPayload.eventName == "") {
     missingFields.push("Missing: Event Name");
   }
@@ -280,6 +292,40 @@ export function getHomeBaseOptions() {
     value: homeBase.home_base_id,
     label: homeBase.home_base_name,
   }));
+}
+
+export function isUserPermitted(stateProv: string, user: UserResource | null): string | null {
+  const users = useUsersStore.getState().users;
+  const userHomeBases = useUserHomeBasesStore.getState().userHomeBases;
+  const errorMessages = [
+    "Error: Cannot Find Home Base",
+    "Error: Cannot Find User",
+    "You are not permitted to edit events in this region.",
+  ];
+  let eventHomeBaseId: number | null = null;
+  try {
+    eventHomeBaseId = getHomeBaseIdByName(stateProv);
+    if (!eventHomeBaseId) return errorMessages[0];
+  } catch (error) {
+    return errorMessages[0];
+  }
+
+  const currentUser = users.find((u) => u.clerk_user_id === user?.id);
+  if (!currentUser) {
+    return errorMessages[1];
+  }
+
+  if (currentUser.role === 2) return null; // Admin can access all events
+
+  // Check if any of the user's home base assignments match the eventHomeBaseId
+  const isPermitted = userHomeBases.some(
+    (uhb) => uhb.user_id === currentUser.user_id && uhb.home_base_id === eventHomeBaseId
+  );
+
+  if (!isPermitted) {
+    return errorMessages[2];
+  }
+  return null;
 }
 
 export function getRowOptions() {

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +17,7 @@ import { createEvent, deleteEvent, updateEvent } from "../../db";
 import { CoreTab } from "./tabs/CoreTab";
 import { DetailsTab } from "./tabs/DetailsTab";
 import { AlertsTab } from "./tabs/AlertsTab";
+import { isUserPermitted } from "../../functions";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
@@ -25,12 +26,13 @@ export const EventConfiguration = () => {
   const currentEventStore = useCurrentEventStore();
   const [activeTab, setActiveTab] = useState<Tab>("Core");
   const { getToken } = useAuth();
+  const { user } = useUser();
 
   const handleCreateEvent = async () => {
     const state = useCurrentEventStore.getState();
     const token = await getToken({ template: "supabase" });
     try {
-      await createEvent(state, token);
+      await createEvent(state, token, user ?? null);
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to create event:", error);
@@ -41,7 +43,7 @@ export const EventConfiguration = () => {
     const state = useCurrentEventStore.getState();
     const token = await getToken({ template: "supabase" });
     try {
-      await updateEvent(state, token);
+      await updateEvent(state, token, user ?? null);
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to update event:", error);
@@ -52,7 +54,7 @@ export const EventConfiguration = () => {
     const state = useCurrentEventStore.getState();
     const token = await getToken({ template: "supabase" });
     try {
-      await deleteEvent(state.eventId, token);
+      await deleteEvent(state.eventId, state.addressData?.state ?? "", token, user ?? null);
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to update event:", error);

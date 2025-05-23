@@ -1,6 +1,11 @@
 import { useBleachersStore } from "@/state/bleachersStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
-import { calculateEventAlerts, calculateNumDays, checkEventFormRules } from "./functions";
+import {
+  calculateEventAlerts,
+  calculateNumDays,
+  checkEventFormRules,
+  isUserPermitted,
+} from "./functions";
 import { TablesInsert } from "../../../../../database.types";
 import { toast } from "sonner";
 import React from "react";
@@ -13,6 +18,7 @@ import { DashboardBleacher, DashboardEvent } from "./types";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { supabaseClient } from "@/utils/supabase/supabaseClient";
 import { useMemo } from "react";
+import { UserResource } from "@clerk/types";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -190,7 +196,11 @@ export function fetchDashboardEvents() {
   }, [events, addresses, bleacherEvents]);
 }
 
-export async function createEvent(state: CurrentEventStore, token: string | null): Promise<void> {
+export async function createEvent(
+  state: CurrentEventStore,
+  token: string | null,
+  user: UserResource | null
+): Promise<void> {
   if (!token) {
     console.warn("No token found");
     throw new Error("No authentication token found");
@@ -198,7 +208,7 @@ export async function createEvent(state: CurrentEventStore, token: string | null
 
   const supabase = supabaseClient(token);
 
-  if (!checkEventFormRules(state)) {
+  if (!checkEventFormRules(state, user)) {
     throw new Error("Event form validation failed");
   }
 
@@ -317,7 +327,11 @@ export async function createEvent(state: CurrentEventStore, token: string | null
   );
 }
 
-export async function updateEvent(state: CurrentEventStore, token: string | null): Promise<void> {
+export async function updateEvent(
+  state: CurrentEventStore,
+  token: string | null,
+  user: UserResource | null
+): Promise<void> {
   if (!token) {
     console.warn("No token found");
     throw new Error("No authentication token found");
@@ -330,7 +344,7 @@ export async function updateEvent(state: CurrentEventStore, token: string | null
 
   const supabase = supabaseClient(token);
 
-  if (!checkEventFormRules(state)) {
+  if (!checkEventFormRules(state, user)) {
     throw new Error("Event form validation failed");
   }
 
@@ -453,7 +467,12 @@ export async function updateEvent(state: CurrentEventStore, token: string | null
   );
 }
 
-export async function deleteEvent(eventId: number | null, token: string | null): Promise<void> {
+export async function deleteEvent(
+  eventId: number | null,
+  stateProv: string,
+  token: string | null,
+  user: UserResource | null
+): Promise<void> {
   if (!token) {
     console.warn("No token found");
     throw new Error("No authentication token found");
@@ -463,6 +482,8 @@ export async function deleteEvent(eventId: number | null, token: string | null):
     console.error("No eventId provided for deletion");
     throw new Error("No event selected to delete.");
   }
+
+  isUserPermitted(stateProv, user);
 
   const supabase = supabaseClient(token);
 
