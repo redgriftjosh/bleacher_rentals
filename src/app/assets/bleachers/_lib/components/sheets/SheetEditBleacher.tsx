@@ -1,18 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useBleachersStore } from "@/state/bleachersStore";
-import { fetchTakenBleacherNumbers, insertBleacher, updateBleacher } from "../../db";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import { toast } from "sonner";
-import LoadingSpinner from "@/components/LoadingSpinner";
-import { SelectHomeBase } from "@/types/tables/HomeBases";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
 import { checkInsertBleacherFormRules } from "../../functions";
+import { fetchTakenBleacherNumbers, updateBleacher, useHomeBases } from "../../db";
+import { useBleachers } from "../../db";
 
 // https://www.loom.com/share/377b110fd24f4eebbc6e90394ac3a407?sid=c32cff10-c666-4386-9a09-85ed203e4cb5
 // Did a little explainer on how this works.
@@ -24,10 +21,8 @@ export function SheetEditBleacher() {
   const searchParams = useSearchParams();
   //   const editBleacherNumber = searchParams.get("edit");
   const [editBleacherNumber, setEditBleacherNumber] = useState<string | null>(null);
-  const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
-  const homeBasesLoading = useHomeBasesStore((s) => s.stale);
-  const bleachers = useBleachersStore((s) => s.bleachers);
-  const bleachersLoading = useBleachersStore((s) => s.stale);
+  const { homeBases, loading: homeBasesLoading } = useHomeBases();
+  const { bleachers, loading: bleachersLoading } = useBleachers();
 
   const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);
   const [id, setId] = useState<number | null>(null);

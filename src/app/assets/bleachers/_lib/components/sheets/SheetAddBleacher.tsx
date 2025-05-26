@@ -1,9 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
-import { useHomeBasesStore } from "@/state/homeBaseStore";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
-import { fetchTakenBleacherNumbers, insertBleacher } from "../../db";
+import { fetchTakenBleacherNumbers, insertBleacher, useHomeBases } from "../../db";
 import { useAuth } from "@clerk/nextjs";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
 import { checkInsertBleacherFormRules } from "../../functions";
@@ -13,7 +12,7 @@ import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
 export function SheetAddBleacher() {
   const { getToken } = useAuth();
   const [token, setToken] = useState<string | null>(null);
-  const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
+  const { homeBases } = useHomeBases();
 
   const [isOpen, setIsOpen] = useState(false);
   const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);

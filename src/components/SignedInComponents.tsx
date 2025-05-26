@@ -2,12 +2,10 @@
 
 import Header from "@/components/Header";
 import SideBar from "@/components/Sidebar";
-import useSupabaseSubscriptions from "@/hooks/useSupabaseSubscriptions";
-import { pusherClient } from "@/lib/pusher";
-import { useEffect } from "react";
+import useSubToDbChanges from "@/hooks/useSubToDbChanges";
 
 export function SignedInComponents({ children }: { children: React.ReactNode }) {
-  useSupabaseSubscriptions();
+  useSubToDbChanges();
   return (
     <div className="flex flex-col h-screen">
       <Header />

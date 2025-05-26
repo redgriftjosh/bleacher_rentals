@@ -1,17 +1,26 @@
 "use client";
-import { useBleachersStore } from "@/state/bleachersStore";
-import { fetchBleachers } from "../db";
 import { BleacherItemRow } from "./BleacherItemRow";
-import { BleacherListSkeleton } from "./BleacherListSkeleton";
+import { useBleachersWithHomeBases } from "../db";
 
 export function BleacherList() {
-  const bleachers = fetchBleachers();
+  // const bleachers = fetchBleachers();
+
+  // const bleachers = await fetchBleachersWithHomeBases();
+  const bleachers = useBleachersWithHomeBases();
+  console.log("bleachers:", bleachers);
   // const loading = useBleachersStore((s) => s.loading);
   // if (loading) return <BleacherListSkeleton />;
   return (
     <tbody>
       {bleachers.map((row, index) => (
-        <BleacherItemRow key={index} {...row} />
+        <BleacherItemRow
+          key={index}
+          {...row}
+          winterHomeBase={{
+            homeBaseId: row.winterHomeBase.homeBaseId,
+            homeBaseName: row.winterHomeBase.winterHomeBaseName,
+          }}
+        />
       ))}
     </tbody>
   );
