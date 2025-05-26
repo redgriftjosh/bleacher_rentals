@@ -1,4 +1,5 @@
 "use client";
+import { updateDataBase } from "@/app/actions/db.actions";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
 import { useUserRolesStore } from "@/state/userRolesStore";
@@ -49,6 +50,7 @@ export async function insertUser(
     console.error("Failed to link user to home bases:", linkError.message);
   } else {
     console.log("Linked user to home bases:", homeBaseIds);
+    updateDataBase(["Users", "UserHomeBases", "UserRoles", "UserStatuses"]);
   }
 }
 
@@ -97,6 +99,8 @@ export async function updateUser(
 
     await supabase.from("UserHomeBases").insert(inserts);
   }
+
+  updateDataBase(["Users", "UserHomeBases", "UserRoles", "UserStatuses"]);
 }
 
 export async function deactivateUser(userId: number, token: string) {
@@ -110,6 +114,7 @@ export async function deactivateUser(userId: number, token: string) {
     .eq("user_id", userId);
 
   if (updateError) throw updateError;
+  updateDataBase(["Users", "UserStatuses"]);
 }
 
 export async function reactivateUser(userId: number, token: string) {
@@ -123,6 +128,7 @@ export async function reactivateUser(userId: number, token: string) {
     .eq("user_id", userId);
 
   if (updateError) throw updateError;
+  updateDataBase(["Users", "UserStatuses"]);
 }
 
 export async function deleteUser(userId: number, token: string) {
@@ -131,6 +137,7 @@ export async function deleteUser(userId: number, token: string) {
   const { error: updateError } = await supabase.from("Users").delete().eq("user_id", userId);
 
   if (updateError) throw updateError;
+  updateDataBase(["UserStatuses", "Users", "UserHomeBases", "UserRoles"]);
 }
 
 export function fetchUsers() {

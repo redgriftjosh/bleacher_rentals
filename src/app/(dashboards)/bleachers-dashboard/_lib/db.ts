@@ -19,6 +19,7 @@ import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { supabaseClient } from "@/utils/supabase/supabaseClient";
 import { useMemo } from "react";
 import { UserResource } from "@clerk/types";
+import { updateDataBase } from "@/app/actions/db.actions";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -325,6 +326,7 @@ export async function createEvent(
       }),
     { duration: 10000 }
   );
+  updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
 }
 
 export async function updateEvent(
@@ -465,6 +467,7 @@ export async function updateEvent(
       }),
     { duration: 10000 }
   );
+  updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
 }
 
 export async function deleteEvent(
@@ -568,4 +571,5 @@ export async function deleteEvent(
       }),
     { duration: 10000 }
   );
+  updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
 }
