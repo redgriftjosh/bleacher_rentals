@@ -5,10 +5,15 @@ import { useRouter } from "next/navigation";
 // import { useAuth } from "@/contexts/authContext";
 import { UserButton } from "@clerk/nextjs";
 import { BellIcon } from "./Icons";
+import { updateDataBase } from "@/app/actions/db.actions";
 
 const Header = () => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const router = useRouter();
+
+  const sendTestMessage = async () => {
+    await updateDataBase(["Bleachers"]);
+  };
 
   // Mock user data (Replace with real authentication data)
   const user = {
@@ -47,7 +52,7 @@ const Header = () => {
           priority // Optimized for faster loading
         />
         <div className="flex items-center mr-2 relative">
-          <div className="flex mr-4">
+          <div className="flex mr-4" onClick={sendTestMessage}>
             <BellIcon color="#ffffff" />
           </div>
           {/* <div

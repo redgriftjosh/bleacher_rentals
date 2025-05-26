@@ -1,5 +1,6 @@
 "use client";
 
+// import { createClient } from "@/utils/supabase/client";
 // lib/fetchTableAndSetStore.ts
 import { supabaseClient } from "@/utils/supabase/supabaseClient";
 import { type GetToken } from "@clerk/types";
@@ -23,7 +24,8 @@ export const fetchTableSetStoreAndCache = async <T>(
   if (!token) return;
 
   const supabase = await supabaseClient(token);
-  supabase.realtime.setAuth(token);
+  // const supabase = await createClient(token);
+  // supabase.realtime.setAuth(token);
 
   const { data, error } = await supabase.from(tableName).select("*");
 

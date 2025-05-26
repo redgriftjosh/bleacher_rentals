@@ -11,6 +11,7 @@ import React from "react";
 import { ErrorToast } from "@/components/toasts/ErrorToast";
 import { supabaseClient } from "@/utils/supabase/supabaseClient";
 import { SuccessToast } from "@/components/toasts/SuccessToast";
+import { updateDataBase } from "@/app/actions/db.actions";
 
 // Fetching the list of bleachers that you see. Needed to join the Home bases on them.
 export function fetchBleachers() {
@@ -79,6 +80,7 @@ export async function insertBleacher(bleacher: InsertBleacher, token: string) {
       }),
     { duration: 10000 }
   );
+  await updateDataBase(["Bleachers"]);
 }
 
 export async function updateBleacher(bleacher: UpdateBleacher, token: string) {

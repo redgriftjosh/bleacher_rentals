@@ -3,6 +3,8 @@
 import Header from "@/components/Header";
 import SideBar from "@/components/Sidebar";
 import useSupabaseSubscriptions from "@/hooks/useSupabaseSubscriptions";
+import { pusherClient } from "@/lib/pusher";
+import { useEffect } from "react";
 
 export function SignedInComponents({ children }: { children: React.ReactNode }) {
   useSupabaseSubscriptions();
