@@ -50,7 +50,7 @@ const Dashboard = memo(({ yAxis }: DashboardProps) => {
 
   // when the user changes their filtering options in useFilterDashboardStore this will run
   const sortedBleachers = useMemo(() => {
-    console.log("filterSortBleachers re-running due to dependency change");
+    // console.log("filterSortBleachers re-running due to dependency change");
     return filterSortBleachers(
       homeBaseIds,
       winterHomeBaseIds,

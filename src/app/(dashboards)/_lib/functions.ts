@@ -100,10 +100,10 @@
 //     };
 
 //     if (createEventPayload.eventId && createEventPayload.addressId) {
-//       console.log("Updating event:", eventPayload);
+//       // console.log("Updating event:", eventPayload);
 //       await apiUpdateEvent(eventPayload);
 //     } else {
-//       console.log("Creating event:", eventPayload);
+//       // console.log("Creating event:", eventPayload);
 //       await apiCreateEvent(eventPayload);
 //     }
 //   } catch (err) {

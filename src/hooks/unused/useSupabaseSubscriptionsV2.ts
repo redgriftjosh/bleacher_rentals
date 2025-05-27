@@ -49,14 +49,14 @@ export default function useSupabaseSubscriptionsV2() {
         config: { private: false },
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "Bleachers" }, (payload) => {
-        console.log(`Change received on Bleachers:`, payload);
+        // console.log(`Change received on Bleachers:`, payload);
         toast(`Bleachers ${payload.eventType}`, {
           description: JSON.stringify(payload.new, null, 2),
         });
       })
       .subscribe((status, err) => {
         if (status === `SUBSCRIBED`) {
-          console.log(`Connected to Bleachers Table!`);
+          // console.log(`Connected to Bleachers Table!`);
         } else {
           console.error(`Subscription error:`, err);
         }

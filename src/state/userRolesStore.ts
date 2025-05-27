@@ -4,15 +4,15 @@ import { create } from "zustand";
 import { Tables } from "../../database.types";
 
 type Store = {
-  invitedUsers: Tables<"InvitedUsers">[];
+  userRoles: Tables<"UserRoles">[];
   stale: boolean;
-  setInvitedUsers: (data: Tables<"InvitedUsers">[]) => void;
+  setUserRoles: (data: Tables<"UserRoles">[]) => void;
   setStale: (stale: boolean) => void;
 };
 
-export const useInvitedUsersStore = create<Store>((set) => ({
-  invitedUsers: [],
+export const useUserRolesStore = create<Store>((set) => ({
+  userRoles: [],
   stale: true,
-  setInvitedUsers: (data) => set({ invitedUsers: data }),
+  setUserRoles: (data) => set({ userRoles: data }),
   setStale: (stale) => set({ stale: stale }),
 }));

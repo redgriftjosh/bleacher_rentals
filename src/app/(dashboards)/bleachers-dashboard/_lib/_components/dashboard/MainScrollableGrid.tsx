@@ -44,7 +44,7 @@ export default function MainScrollableGrid({
   const handleScroll = (params: ScrollParams) => {
     scrollLeftRef.current = params.scrollLeft;
     firstVisibleColumnRef.current = Math.floor(params.scrollLeft / COLUMN_WIDTH);
-    console.log("Calling forceUpdateGrid");
+    // console.log("Calling forceUpdateGrid");
     gridRef.current?.recomputeGridSize();
     gridRef.current?.forceUpdate();
     onScroll(params); // if you still need to propagate scroll
@@ -52,7 +52,7 @@ export default function MainScrollableGrid({
 
   // Scroll to closest event on load
   useEffect(() => {
-    console.log("Hello");
+    // console.log("Hello");
     if (yAxis === "Bleachers") return;
     if (!gridRef.current || events.length === 0) return;
 
@@ -77,13 +77,13 @@ export default function MainScrollableGrid({
       rowIndex: closestIndex,
     });
 
-    console.log("Scrolled to closest event on row", closestIndex);
+    // console.log("Scrolled to closest event on row", closestIndex);
   }, [events, DATE_RANGE, gridRef.current, yAxis]);
 
   useEffect(() => {
     // Scroll to your desired initial column on first mount
     gridRef.current?.scrollToCell({ columnIndex: DATE_RANGE + 4, rowIndex: 0 });
-    console.log("Scrolled to initial column");
+    // console.log("Scrolled to initial column");
   }, [gridRef.current]);
 
   // Recompute Grid sizes when expanded state changes
@@ -93,7 +93,7 @@ export default function MainScrollableGrid({
       gridRef.current.forceUpdate(); // optional, but helps ensure render
     }
   }, [isFormExpanded]);
-  console.log("Rendering yAxis", yAxis);
+  // console.log("Rendering yAxis", yAxis);
 
   if (bleachers === null || bleachers.length === 0) {
     return null;

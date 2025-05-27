@@ -58,14 +58,14 @@ export function useFetchTable<T>({
 //   let supabase: SupabaseClient | null = null;
 
 //   useEffect(() => {
-//     console.log(`stale: ${stale}`);
+//     // console.log(`stale: ${stale}`);
 //     if (!stale) return;
 //     const run = async () => {
 //       const STORAGE_KEY = `cached-${tableName}`;
 //       const token = await getToken({ template: "supabase" });
 //       if (!token) return;
 
-//       console.log(`Token ${token}`);
+//       // console.log(`Token ${token}`);
 
 //       // supabase = createClient(token);
 //       // need to use this one. the client.ts one doesn't work and I wasted many hours discovering that.

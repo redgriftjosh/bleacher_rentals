@@ -58,9 +58,9 @@ export function usePersistentSubscription({
         const newToken = await getToken({ template: "supabase" });
         if (!newToken || !supabaseRef.current) return;
         supabaseRef.current.realtime.setAuth(newToken);
-        console.log(
-          `🔁 Refreshed auth token for ${tableName} @ ${new Date().toLocaleTimeString()}`
-        );
+        // console.log(
+        //   `🔁 Refreshed auth token for ${tableName} @ ${new Date().toLocaleTimeString()}`
+        // );
       }, refreshIntervalMs);
     };
 

@@ -10,10 +10,22 @@ import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
 import { DashboardBleacher } from "./types";
+import { useUsersStore } from "@/state/userStore";
+import { useUser } from "@clerk/nextjs";
+import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
+import { getHomeBaseIdByName } from "@/utils/utils";
+import { UserResource } from "@clerk/types";
 
-export function checkEventFormRules(createEventPayload: CurrentEventStore): boolean {
+export function checkEventFormRules(
+  createEventPayload: CurrentEventStore,
+  user: UserResource | null
+): boolean {
   // check if all required fields are filled in
   let missingFields = [];
+  const error = isUserPermitted(createEventPayload.addressData?.state ?? "", user);
+  if (error) {
+    missingFields.push(error);
+  }
   if (createEventPayload.eventName == "") {
     missingFields.push("Missing: Event Name");
   }
@@ -101,10 +113,10 @@ export function calculateBestHue(
     return eventStart <= windowEnd && eventEnd >= windowStart;
   });
 
-  console.log(
-    "eventsWithinRange",
-    eventsWithinRange.map((e) => e.event_name)
-  );
+  // console.log(
+  //   "eventsWithinRange",
+  //   eventsWithinRange.map((e) => e.event_name)
+  // );
 
   const existingHues = eventsWithinRange
     .map((event) => event.hsl_hue)
@@ -112,7 +124,7 @@ export function calculateBestHue(
 
   // Exclude hues 40-70 because they look ugly with the yellow setup and teardown blocks
   const forbiddenHues = Array.from({ length: 31 }, (_, i) => i + 40); // [40, 41, ..., 70]
-  console.log("forbiddenHues", forbiddenHues);
+  // console.log("forbiddenHues", forbiddenHues);
   existingHues.push(...forbiddenHues);
 
   if (existingHues.length === 0) return Math.floor(Math.random() * 360);
@@ -121,7 +133,7 @@ export function calculateBestHue(
   const sorted = [...new Set(existingHues.map((h) => ((h % 360) + 360) % 360))].sort(
     (a, b) => a - b
   );
-  console.log("sorted", sorted);
+  // console.log("sorted", sorted);
 
   let maxGap = 0;
   let newHue = 0;
@@ -130,15 +142,15 @@ export function calculateBestHue(
     const current = sorted[i];
     const next = sorted[(i + 1) % sorted.length]; // wrap around
     const gap = (next > current ? next : next + 360) - current;
-    console.log(`${i} current-${current}, next-${next}, gap ${gap}`);
+    // console.log(`${i} current-${current}, next-${next}, gap ${gap}`);
 
     if (gap > maxGap) {
       maxGap = gap;
       newHue = (gap / 2 + current) % 360;
     }
   }
-  console.log("maxGap ", maxGap);
-  console.log("newHue (unrounded)", newHue);
+  // console.log("maxGap ", maxGap);
+  // console.log("newHue (unrounded)", newHue);
 
   return Math.round(newHue);
 }
@@ -282,6 +294,40 @@ export function getHomeBaseOptions() {
   }));
 }
 
+export function isUserPermitted(stateProv: string, user: UserResource | null): string | null {
+  const users = useUsersStore.getState().users;
+  const userHomeBases = useUserHomeBasesStore.getState().userHomeBases;
+  const errorMessages = [
+    "Error: Cannot Find Home Base",
+    "Error: Cannot Find User",
+    "You are not permitted to edit events in this region.",
+  ];
+  let eventHomeBaseId: number | null = null;
+  try {
+    eventHomeBaseId = getHomeBaseIdByName(stateProv);
+    if (!eventHomeBaseId) return errorMessages[0];
+  } catch (error) {
+    return errorMessages[0];
+  }
+
+  const currentUser = users.find((u) => u.clerk_user_id === user?.id);
+  if (!currentUser) {
+    return errorMessages[1];
+  }
+
+  if (currentUser.role === 2) return null; // Admin can access all events
+
+  // Check if any of the user's home base assignments match the eventHomeBaseId
+  const isPermitted = userHomeBases.some(
+    (uhb) => uhb.user_id === currentUser.user_id && uhb.home_base_id === eventHomeBaseId
+  );
+
+  if (!isPermitted) {
+    return errorMessages[2];
+  }
+  return null;
+}
+
 export function getRowOptions() {
   return [
     { value: 7, label: "7" },
@@ -323,7 +369,7 @@ export function filterSortBleachers(
       ]
     : filteredBleachers.sort((a, b) => a.bleacherNumber - b.bleacherNumber);
 
-  console.log("sortedBleachers", sortedBleachers);
-  console.log("isFormExpanded", isFormExpanded);
+  // console.log("sortedBleachers", sortedBleachers);
+  // console.log("isFormExpanded", isFormExpanded);
   return sortedBleachers;
 }

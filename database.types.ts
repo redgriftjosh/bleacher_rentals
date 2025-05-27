@@ -266,21 +266,57 @@ export type Database = {
         }
         Relationships: []
       }
-      InvitedUsers: {
+      UserHomeBases: {
         Row: {
           created_at: string
-          email: string
-          invited_user_id: number
+          home_base_id: number | null
+          user_home_base_id: number
+          user_id: number | null
         }
         Insert: {
           created_at?: string
-          email: string
-          invited_user_id?: number
+          home_base_id?: number | null
+          user_home_base_id?: number
+          user_id?: number | null
         }
         Update: {
           created_at?: string
-          email?: string
-          invited_user_id?: number
+          home_base_id?: number | null
+          user_home_base_id?: number
+          user_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "UserHomeBases_home_base_id_fkey"
+            columns: ["home_base_id"]
+            isOneToOne: false
+            referencedRelation: "HomeBases"
+            referencedColumns: ["home_base_id"]
+          },
+          {
+            foreignKeyName: "UserHomeBases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      UserRoles: {
+        Row: {
+          created_at: string
+          id: number
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          role: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          role?: string
         }
         Relationships: []
       }
@@ -292,6 +328,8 @@ export type Database = {
           first_name: string | null
           last_name: string | null
           phone: string | null
+          role: number | null
+          status: number
           user_id: number
         }
         Insert: {
@@ -301,6 +339,8 @@ export type Database = {
           first_name?: string | null
           last_name?: string | null
           phone?: string | null
+          role?: number | null
+          status?: number
           user_id?: number
         }
         Update: {
@@ -310,7 +350,27 @@ export type Database = {
           first_name?: string | null
           last_name?: string | null
           phone?: string | null
+          role?: number | null
+          status?: number
           user_id?: number
+        }
+        Relationships: []
+      }
+      UserStatuses: {
+        Row: {
+          created_at: string
+          id: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          status: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          status?: string
         }
         Relationships: []
       }

@@ -33,7 +33,7 @@ export default function FilterDashboard() {
   }, [homeBaseOptions]);
 
   useEffect(() => {
-    console.log("homeBaseIds", homeBaseIds);
+    // console.log("homeBaseIds", homeBaseIds);
   }, [homeBaseIds]);
 
   return (

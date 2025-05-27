@@ -90,7 +90,7 @@ export function SheetEditBleacher() {
   const { data: takenNumbers = [], isLoading } = useQuery({
     queryKey: ["taken-bleacher-numbers", editBleacherNumber],
     queryFn: () => {
-      console.log("Running query with editBleacherNumber:", editBleacherNumber);
+      // console.log("Running query with editBleacherNumber:", editBleacherNumber);
       return fetchTakenBleacherNumbers(
         token!,
         editBleacherNumber ? Number(editBleacherNumber) : undefined

@@ -67,7 +67,12 @@ export const CoreTab = () => {
         />
         <label className="block mt-1 text-sm font-medium text-gray-700">Address</label>
         <AddressAutocomplete
-          onAddressSelect={(data) => currentEventStore.setField("addressData", data)}
+          onAddressSelect={(data) =>
+            currentEventStore.setField("addressData", {
+              ...data,
+              addressId: currentEventStore.addressData?.addressId ?? null,
+            })
+          }
           initialValue={currentEventStore.addressData?.address || ""}
         />
       </div>
