@@ -2,6 +2,7 @@ import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { createServiceRoleClient } from "@/utils/supabase/server";
+import { updateDataBase } from "@/app/actions/db.actions";
 
 export async function POST(req: Request) {
   try {
@@ -123,7 +124,7 @@ export async function POST(req: Request) {
 
       // console.log("✅ User deleted from Supabase");
     }
-
+    updateDataBase(["Users"]);
     return new Response("Webhook received", { status: 200 });
   } catch (err: any) {
     console.error("❌ Unexpected server error:", err);

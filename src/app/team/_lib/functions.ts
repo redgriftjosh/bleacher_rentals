@@ -146,7 +146,7 @@ export async function deleteInviteUserEmail(email: string): Promise<boolean> {
         React.createElement(ErrorToast, {
           id: t,
           lines: [
-            "Error Sending Invite. Please notify Josh Redgrift (josh@tpi-3.ca) if the problem persists.",
+            "Error Revoking Invite. Please notify Josh Redgrift (josh@tpi-3.ca) if the problem persists.",
             data.error,
           ],
         }),

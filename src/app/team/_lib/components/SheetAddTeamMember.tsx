@@ -7,7 +7,12 @@ import { deactivateUser, deleteUser, insertUser, reactivateUser, updateUser } fr
 import { Dropdown } from "@/components/DropDown";
 import { useUserRolesStore } from "@/state/userRolesStore";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import { checkEmailRules, checkInsertUserFormRules, sendInviteUserEmail } from "../functions";
+import {
+  checkEmailRules,
+  checkInsertUserFormRules,
+  deleteInviteUserEmail,
+  sendInviteUserEmail,
+} from "../functions";
 import { useUsersStore } from "@/state/userStore";
 import React from "react";
 import { ErrorToast } from "@/components/toasts/ErrorToast";
@@ -170,7 +175,7 @@ export function SheetAddTeamMember({
     setIsOpen(false);
   };
 
-  const handleDelete = async () => {
+  const handleRevokeInvitationAndDeleteUser = async () => {
     setSubmitting(true);
     const token = await getToken({ template: "supabase" });
     if (!token) {
@@ -178,9 +183,32 @@ export function SheetAddTeamMember({
       setSubmitting(false);
       return;
     }
-    await deleteUser(existingUser!.user_id, token!);
-    setSubmitting(false);
-    setIsOpen(false);
+    const success = await deleteInviteUserEmail(email!);
+    if (success) {
+      await deleteUser(existingUser!.user_id, token!);
+      toast.custom(
+        (t) =>
+          React.createElement(SuccessToast, {
+            id: t,
+            lines: ["Invitation Revoked"],
+          }),
+        { duration: 10000 }
+      );
+      setSubmitting(false);
+      setIsOpen(false);
+      return;
+    } else {
+      setSubmitting(false);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: ["Failed to revoke invitation. Please try again."],
+          }),
+        { duration: 10000 }
+      );
+      return;
+    }
   };
 
   return (
@@ -360,7 +388,7 @@ export function SheetAddTeamMember({
                     className="bg-red-800 hover:bg-red-900"
                     loading={submitting}
                     loadingText="Ok..."
-                    onClick={handleDelete}
+                    onClick={handleRevokeInvitationAndDeleteUser}
                   >
                     Cancel Invitation
                   </PrimaryButton>
