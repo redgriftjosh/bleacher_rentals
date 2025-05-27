@@ -24,7 +24,7 @@ const Header = () => {
     // try {
     //   // setErrorMessage("Incorrect username or password.asdaa");
     //   const response = await signOut();
-    //   console.log("Logged in user:", response);
+    //   // console.log("Logged in user:", response);
     //   setIsAuthenticated(false);
     //   router.push("/login");
     // } catch (err: any) {

@@ -17,6 +17,7 @@
     "@radix-ui/react-popover": "^1.1.13",
     "@radix-ui/react-separator": "^1.1.6",
     "@radix-ui/react-slot": "^1.2.2",
+    "@radix-ui/react-tooltip": "^1.2.7",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
     "@tanstack/react-query": "^5.74.11",
@@ -28,6 +29,8 @@
     "lucide-react": "^0.487.0",
     "luxon": "^3.6.1",
     "next": "15.2.4",
+    "pusher": "^5.2.0",
+    "pusher-js": "^8.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-virtualized": "^9.22.6",
@@ -48,7 +51,7 @@
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.1.2",
     "postcss": "^8.5.3",
-    "supabase": "^2.20.12",
+    "supabase": "^2.23.4",
     "tailwindcss": "^4.1.1",
     "typescript": "^5"
   }

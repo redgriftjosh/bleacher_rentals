@@ -38,7 +38,7 @@ export function useSubscribeToTable<T>({
       channel = supabase
         .channel(channelName)
         .on("postgres_changes", { event: "*", schema: "public", table: tableName }, () => {
-          console.log(`Change detected on ${tableName}, fetching...`);
+          // console.log(`Change detected on ${tableName}, fetching...`);
           fetchTableSetStoreAndCache(getToken, tableName, setStore);
         })
         .subscribe((status, err) => {

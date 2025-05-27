@@ -2,10 +2,11 @@ import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { createServiceRoleClient } from "@/utils/supabase/server";
+import { updateDataBase } from "@/app/actions/db.actions";
 
 export async function POST(req: Request) {
   try {
-    console.log("Triggered");
+    // console.log("Triggered");
     const CLERK_WEBHOOK_SIGNING_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
 
     if (!CLERK_WEBHOOK_SIGNING_SECRET) {
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
     // For this guide, log payload to console
     const { id } = evt.data;
     const eventType = evt.type;
-    console.log(`Received webhook with ID ${id} and event type of ${eventType}`);
+    // console.log(`Received webhook with ID ${id} and event type of ${eventType}`);
     // console.log("Webhook payload:", body);
 
     if (!id) {
@@ -68,21 +69,27 @@ export async function POST(req: Request) {
     const supabase = await createServiceRoleClient(); // no permission issues.
     if (evt.type === "user.created") {
       const { first_name, last_name, email_addresses, phone_numbers } = evt.data;
+      // Users are created in clerk when they accept the invitation so they should already exist in the db. This set's the user as Active status instead of prending for this reason
 
-      const result = await supabase.from("Users").insert({
-        clerk_user_id: id,
-        first_name: first_name || null,
-        last_name: last_name || null,
-        email: email_addresses?.[0]?.email_address || null,
-        phone: phone_numbers?.[0]?.phone_number || null,
-      });
+      const result = await supabase.from("Users").upsert(
+        {
+          clerk_user_id: id,
+          first_name: first_name || null,
+          last_name: last_name || null,
+          email: email_addresses?.[0]?.email_address || null,
+          phone: phone_numbers?.[0]?.phone_number || null,
+          status: 2,
+          role: 1,
+        },
+        { onConflict: "email" }
+      );
 
       if (result.error) {
-        console.error("❌ Supabase insert error:", result.error);
-        return new Response(`Supabase insert error: ${result.error.message}`, { status: 500 });
+        console.error("❌ Supabase upsert error:", result.error);
+        return new Response(`Supabase upsert error: ${result.error.message}`, { status: 500 });
       }
 
-      console.log("✅ User created in Supabase");
+      // console.log("✅ User created in Supabase");
     } else if (evt.type === "user.updated") {
       const { first_name, last_name, email_addresses, phone_numbers } = evt.data;
 
@@ -101,18 +108,23 @@ export async function POST(req: Request) {
         return new Response(`Supabase update error: ${result.error.message}`, { status: 500 });
       }
 
-      console.log("✅ User updated in Supabase");
+      // console.log("✅ User updated in Supabase");
     } else if (evt.type === "user.deleted") {
-      const result = await supabase.from("Users").delete().eq("clerk_user_id", id);
+      const result = await supabase
+        .from("Users")
+        .update({
+          status: 3,
+        })
+        .eq("clerk_user_id", id);
 
       if (result.error) {
         console.error("❌ Supabase delete error:", result.error);
         return new Response(`Supabase delete error: ${result.error.message}`, { status: 500 });
       }
 
-      console.log("✅ User deleted from Supabase");
+      // console.log("✅ User deleted from Supabase");
     }
-
+    updateDataBase(["Users"]);
     return new Response("Webhook received", { status: 200 });
   } catch (err: any) {
     console.error("❌ Unexpected server error:", err);

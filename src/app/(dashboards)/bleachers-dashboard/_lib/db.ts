@@ -1,6 +1,11 @@
 import { useBleachersStore } from "@/state/bleachersStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
-import { calculateEventAlerts, calculateNumDays, checkEventFormRules } from "./functions";
+import {
+  calculateEventAlerts,
+  calculateNumDays,
+  checkEventFormRules,
+  isUserPermitted,
+} from "./functions";
 import { TablesInsert } from "../../../../../database.types";
 import { toast } from "sonner";
 import React from "react";
@@ -13,6 +18,8 @@ import { DashboardBleacher, DashboardEvent } from "./types";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { supabaseClient } from "@/utils/supabase/supabaseClient";
 import { useMemo } from "react";
+import { UserResource } from "@clerk/types";
+import { updateDataBase } from "@/app/actions/db.actions";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -61,6 +68,7 @@ export function fetchBleachers() {
               eventName: event.event_name,
               addressData: address
                 ? {
+                    addressId: address.address_id,
                     address: address.street,
                     city: address.city,
                     state: address.state_province,
@@ -148,6 +156,7 @@ export function fetchDashboardEvents() {
         eventName: event.event_name,
         addressData: address
           ? {
+              addressId: address.address_id,
               address: address.street,
               city: address.city,
               state: address.state_province,
@@ -178,7 +187,7 @@ export function fetchDashboardEvents() {
           .map((be) => be.bleacher_id),
       };
     });
-    console.log("dashboardEvents", dashboardEvents);
+    // console.log("dashboardEvents", dashboardEvents);
 
     // ✅ Sort by setup if exists else eventStart (earliest first)
     dashboardEvents.sort((a, b) => {
@@ -190,7 +199,11 @@ export function fetchDashboardEvents() {
   }, [events, addresses, bleacherEvents]);
 }
 
-export async function createEvent(state: CurrentEventStore, token: string | null): Promise<void> {
+export async function createEvent(
+  state: CurrentEventStore,
+  token: string | null,
+  user: UserResource | null
+): Promise<void> {
   if (!token) {
     console.warn("No token found");
     throw new Error("No authentication token found");
@@ -198,7 +211,7 @@ export async function createEvent(state: CurrentEventStore, token: string | null
 
   const supabase = supabaseClient(token);
 
-  if (!checkEventFormRules(state)) {
+  if (!checkEventFormRules(state, user)) {
     throw new Error("Event form validation failed");
   }
 
@@ -315,9 +328,14 @@ export async function createEvent(state: CurrentEventStore, token: string | null
       }),
     { duration: 10000 }
   );
+  updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
 }
 
-export async function updateEvent(state: CurrentEventStore, token: string | null): Promise<void> {
+export async function updateEvent(
+  state: CurrentEventStore,
+  token: string | null,
+  user: UserResource | null
+): Promise<void> {
   if (!token) {
     console.warn("No token found");
     throw new Error("No authentication token found");
@@ -330,7 +348,7 @@ export async function updateEvent(state: CurrentEventStore, token: string | null
 
   const supabase = supabaseClient(token);
 
-  if (!checkEventFormRules(state)) {
+  if (!checkEventFormRules(state, user)) {
     throw new Error("Event form validation failed");
   }
 
@@ -346,7 +364,7 @@ export async function updateEvent(state: CurrentEventStore, token: string | null
     const { error: addressError } = await supabase
       .from("Addresses")
       .update(updatedAddress)
-      .eq("address_id", state.eventId); // assuming eventId === address_id, but you might need to store address_id separately if not!
+      .eq("address_id", state.addressData.addressId);
 
     if (addressError) {
       console.error("Failed to update address:", addressError);
@@ -451,9 +469,15 @@ export async function updateEvent(state: CurrentEventStore, token: string | null
       }),
     { duration: 10000 }
   );
+  updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
 }
 
-export async function deleteEvent(eventId: number | null, token: string | null): Promise<void> {
+export async function deleteEvent(
+  eventId: number | null,
+  stateProv: string,
+  token: string | null,
+  user: UserResource | null
+): Promise<void> {
   if (!token) {
     console.warn("No token found");
     throw new Error("No authentication token found");
@@ -463,6 +487,8 @@ export async function deleteEvent(eventId: number | null, token: string | null):
     console.error("No eventId provided for deletion");
     throw new Error("No event selected to delete.");
   }
+
+  isUserPermitted(stateProv, user);
 
   const supabase = supabaseClient(token);
 
@@ -547,4 +573,5 @@ export async function deleteEvent(eventId: number | null, token: string | null):
       }),
     { duration: 10000 }
   );
+  updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
 }

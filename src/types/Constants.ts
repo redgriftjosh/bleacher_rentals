@@ -14,3 +14,11 @@ export const AUTHENTICATED_ROUTES = [
   "/assets/bleachers/edit",
   "/testing",
 ];
+
+export const USER_ROLES = {
+  ADMIN: 2,
+  ACCOUNT_MANAGER: 1,
+} as const;
+
+export type UserRoleKey = keyof typeof USER_ROLES;
+export type UserRoleValue = (typeof USER_ROLES)[UserRoleKey];
