@@ -78,7 +78,7 @@ export default function StickyLeftColumn({
         rowCount={yAxis === "Bleachers" ? bleachers.length : events.length}
         width={isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
         cellRenderer={({ key, rowIndex, style }) => {
-          const isSelected = bleacherIds.includes(bleachers[rowIndex].bleacherId);
+          const isSelected = bleacherIds.includes(bleachers[rowIndex]?.bleacherId);
           if (yAxis === "Events") {
             return (
               <div
