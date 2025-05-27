@@ -4,6 +4,7 @@ import { calculateBestHue, updateCurrentEventAlerts } from "./functions";
 import { useFilterDashboardStore } from "./useFilterDashboardStore";
 
 export type AddressData = {
+  addressId: number | null;
   address: string;
   city?: string;
   state?: string;

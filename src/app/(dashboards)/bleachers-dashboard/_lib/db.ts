@@ -68,6 +68,7 @@ export function fetchBleachers() {
               eventName: event.event_name,
               addressData: address
                 ? {
+                    addressId: address.address_id,
                     address: address.street,
                     city: address.city,
                     state: address.state_province,
@@ -155,6 +156,7 @@ export function fetchDashboardEvents() {
         eventName: event.event_name,
         addressData: address
           ? {
+              addressId: address.address_id,
               address: address.street,
               city: address.city,
               state: address.state_province,
@@ -362,7 +364,7 @@ export async function updateEvent(
     const { error: addressError } = await supabase
       .from("Addresses")
       .update(updatedAddress)
-      .eq("address_id", state.eventId); // assuming eventId === address_id, but you might need to store address_id separately if not!
+      .eq("address_id", state.addressData.addressId);
 
     if (addressError) {
       console.error("Failed to update address:", addressError);

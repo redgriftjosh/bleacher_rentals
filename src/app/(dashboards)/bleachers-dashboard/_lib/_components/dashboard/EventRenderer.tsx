@@ -32,6 +32,9 @@ export default function EventRenderer({
   const eventHsl = event.hslHue ? `hsl(${event.hslHue.toString()}, 50%, 50%)` : "hsl(0, 0%, 50%)";
   const yellowHsl = "hsl(54, 80%, 50%)"; // Setup & teardown color
   const setField = useCurrentEventStore((s) => s.setField);
+  if (event.eventId === 68) {
+    console.log("event 68", event);
+  }
 
   const visualStartDate = event.setupStart ? DateTime.fromISO(event.setupStart) : eventStartDate;
   const visualEndDate = event.teardownEnd ? DateTime.fromISO(event.teardownEnd) : eventEndDate;
