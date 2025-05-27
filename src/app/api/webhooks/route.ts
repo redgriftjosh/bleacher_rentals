@@ -5,7 +5,7 @@ import { createServiceRoleClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
   try {
-    console.log("Triggered");
+    // console.log("Triggered");
     const CLERK_WEBHOOK_SIGNING_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
 
     if (!CLERK_WEBHOOK_SIGNING_SECRET) {
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     // For this guide, log payload to console
     const { id } = evt.data;
     const eventType = evt.type;
-    console.log(`Received webhook with ID ${id} and event type of ${eventType}`);
+    // console.log(`Received webhook with ID ${id} and event type of ${eventType}`);
     // console.log("Webhook payload:", body);
 
     if (!id) {
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
         return new Response(`Supabase upsert error: ${result.error.message}`, { status: 500 });
       }
 
-      console.log("✅ User created in Supabase");
+      // console.log("✅ User created in Supabase");
     } else if (evt.type === "user.updated") {
       const { first_name, last_name, email_addresses, phone_numbers } = evt.data;
 
@@ -107,7 +107,7 @@ export async function POST(req: Request) {
         return new Response(`Supabase update error: ${result.error.message}`, { status: 500 });
       }
 
-      console.log("✅ User updated in Supabase");
+      // console.log("✅ User updated in Supabase");
     } else if (evt.type === "user.deleted") {
       const result = await supabase
         .from("Users")
@@ -121,7 +121,7 @@ export async function POST(req: Request) {
         return new Response(`Supabase delete error: ${result.error.message}`, { status: 500 });
       }
 
-      console.log("✅ User deleted from Supabase");
+      // console.log("✅ User deleted from Supabase");
     }
 
     return new Response("Webhook received", { status: 200 });

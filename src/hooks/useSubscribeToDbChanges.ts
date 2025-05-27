@@ -7,7 +7,7 @@ export default function useSubToDbChanges() {
     pusherClient.subscribe("db-changes-channel");
 
     pusherClient.bind("update-database", (data: { tables: string[] }) => {
-      //   console.log("Pusher data:", data);
+      //   // console.log("Pusher data:", data);
       data.tables.forEach((table) => {
         if (table in setStaleByTable) {
           setStaleByTable[table as keyof typeof setStaleByTable]();

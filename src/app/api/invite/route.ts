@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         const existingInvite = existingInvites.find(
           (invite) => invite.emailAddress.toLowerCase() === email.toLowerCase()
         );
-        console.log("existingInvites:", existingInvites);
+        // console.log("existingInvites:", existingInvites);
 
         if (!existingInvite) {
           return NextResponse.json(

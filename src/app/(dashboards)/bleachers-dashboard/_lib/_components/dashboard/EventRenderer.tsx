@@ -33,7 +33,7 @@ export default function EventRenderer({
   const yellowHsl = "hsl(54, 80%, 50%)"; // Setup & teardown color
   const setField = useCurrentEventStore((s) => s.setField);
   if (event.eventId === 68) {
-    console.log("event 68", event);
+    // console.log("event 68", event);
   }
 
   const visualStartDate = event.setupStart ? DateTime.fromISO(event.setupStart) : eventStartDate;

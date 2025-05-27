@@ -2,7 +2,6 @@
 
 import { type GetToken } from "@clerk/types";
 import { useVisibilityChangeRefresh } from "./useVisibilityChangeRefresh";
-import { useSubscribeToTable } from "./useSubscribeToTable";
 import { useFetchTable } from "./useFetchTable";
 import { useCachedTable } from "./useCachedTable";
 

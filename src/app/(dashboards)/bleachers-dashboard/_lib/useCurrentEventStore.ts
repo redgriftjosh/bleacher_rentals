@@ -89,14 +89,14 @@ useCurrentEventStore.subscribe((state) => {
   }
 
   // 💥 Update alerts too!
-  console.log("Update alerts too!");
+  // console.log("Update alerts too!");
   updateCurrentEventAlerts();
 
   if (state.eventStart === "" || state.hslHue !== null || state.eventEnd === "") return;
 
   const events = useEventsStore.getState().events;
   const newHue = calculateBestHue(state, events);
-  console.log("newHue", newHue);
+  // console.log("newHue", newHue);
 
   if (newHue !== null) {
     useCurrentEventStore.getState().setField("hslHue", newHue);

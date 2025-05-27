@@ -15,7 +15,7 @@ export async function insertUser(
   homeBaseIds: number[],
   token: string
 ) {
-  console.log("Inserting user", token);
+  // console.log("Inserting user", token);
   const supabase = supabaseClient(token);
 
   const { error: userError, data: userData } = await supabase
@@ -35,7 +35,7 @@ export async function insertUser(
     return;
   }
 
-  console.log("Inserted invited user:", userData);
+  // console.log("Inserted invited user:", userData);
 
   const userId = userData.user_id;
 
@@ -49,7 +49,7 @@ export async function insertUser(
   if (linkError) {
     console.error("Failed to link user to home bases:", linkError.message);
   } else {
-    console.log("Linked user to home bases:", homeBaseIds);
+    // console.log("Linked user to home bases:", homeBaseIds);
     updateDataBase(["Users", "UserHomeBases", "UserRoles", "UserStatuses"]);
   }
 }
@@ -73,7 +73,7 @@ export async function updateUser(
   }
 ) {
   const supabase = supabaseClient(token);
-  console.log("Updating user", token);
+  // console.log("Updating user", token);
 
   const { error: updateError } = await supabase
     .from("Users")

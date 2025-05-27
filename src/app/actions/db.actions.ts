@@ -4,7 +4,7 @@ import { pusherServer } from "@/lib/pusher";
 
 export const updateDataBase = async (tables: string[]) => {
   try {
-    console.log("Updating database", tables);
+    // console.log("Updating database", tables);
     pusherServer.trigger("db-changes-channel", "update-database", {
       tables,
     });

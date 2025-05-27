@@ -187,7 +187,7 @@ export function fetchDashboardEvents() {
           .map((be) => be.bleacher_id),
       };
     });
-    console.log("dashboardEvents", dashboardEvents);
+    // console.log("dashboardEvents", dashboardEvents);
 
     // ✅ Sort by setup if exists else eventStart (earliest first)
     dashboardEvents.sort((a, b) => {

@@ -48,11 +48,11 @@ export function fetchBleachers() {
 }
 
 export async function insertBleacher(bleacher: InsertBleacher, token: string) {
-  console.log("inserting bleacher", token);
+  // console.log("inserting bleacher", token);
   const supabase = supabaseClient(token);
   const { error } = await supabase.from("Bleachers").insert(bleacher);
   if (error) {
-    console.log("Error inserting bleacher:", error);
+    // console.log("Error inserting bleacher:", error);
     let errorMessage = error.message;
     if (error.code === "23505") {
       errorMessage = "Error: Bleacher number already exists!";
@@ -83,7 +83,7 @@ export async function insertBleacher(bleacher: InsertBleacher, token: string) {
 }
 
 export async function updateBleacher(bleacher: UpdateBleacher, token: string) {
-  console.log("Updating bleacher", token);
+  // console.log("Updating bleacher", token);
   const supabase = createClient(token);
   const { error } = await supabase
     .from("Bleachers")
@@ -91,7 +91,7 @@ export async function updateBleacher(bleacher: UpdateBleacher, token: string) {
     .eq("bleacher_id", bleacher.bleacher_id);
 
   if (error) {
-    console.log("Error inserting bleacher:", error);
+    // console.log("Error inserting bleacher:", error);
     let errorMessage = error.message;
     if (error.code === "23505") {
       errorMessage = "Error: Bleacher number already exists!";
@@ -140,8 +140,8 @@ export async function fetchTakenBleacherNumbers(
     .map((row) => row.bleacher_number)
     .filter((n): n is number => typeof n === "number");
 
-  console.log("editBleacherNumber:", editBleacherNumber);
-  console.log("numbers:", numbers);
+  // console.log("editBleacherNumber:", editBleacherNumber);
+  // console.log("numbers:", numbers);
 
   // Filter out the editBleacherNumber if it exists
   return editBleacherNumber ? numbers.filter((num) => num !== editBleacherNumber) : numbers;
