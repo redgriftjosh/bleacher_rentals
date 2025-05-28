@@ -29,7 +29,7 @@ export default function EventRenderer({
   const currentDate = DateTime.fromISO(dates[columnIndex]);
   const eventStartDate = DateTime.fromISO(event.eventStart);
   const eventEndDate = DateTime.fromISO(event.eventEnd);
-  const eventHsl = event.hslHue ? `hsl(${event.hslHue.toString()}, 50%, 50%)` : "hsl(0, 0%, 50%)";
+  const eventHsl = event.hslHue ? `hsl(${event.hslHue.toString()}, 60%, 60%)` : "hsl(0, 0%, 50%)";
   const yellowHsl = "hsl(54, 80%, 50%)"; // Setup & teardown color
   const setField = useCurrentEventStore((s) => s.setField);
   if (event.eventId === 68) {
@@ -135,23 +135,26 @@ export default function EventRenderer({
   };
 
   if (!isFirstVisibleColumn && !shouldDisplayEvent) return null;
+  let height = "80%";
+  let zIndex = "z-[3]";
+  let top = "10%";
 
   return (
     <div key={`${rowIndex}`}>
       {true && (
         <div
           key={`event${rowIndex}`}
-          className="hover:shadow-md transition-all cursor-pointer"
+          className={`hover:shadow-md hover:z-[100] transition-all cursor-pointer ${zIndex}`}
           style={{
             position: "absolute",
             width: width,
-            height: "80%",
-            top: "10%",
+            height: height,
+            top: top,
             left: `${padding}px`,
             backgroundColor: event.status === "Booked" ? eventHsl : "white",
             border: `${border}px solid ${eventHsl}`,
             borderRadius: "4px",
-            zIndex: 3,
+            // zIndex: zIndex,
             overflow: "visible",
           }}
           onClick={() =>
@@ -206,10 +209,17 @@ export default function EventRenderer({
                 maxWidth: "100%",
               }}
             >
-              <span className="truncate">{event.eventName}</span>
+              <span className="truncate font-semibold text-sm text-shadow-md">
+                {event.eventName}
+              </span>
               {event.mustBeClean && (
-                <span className="text-xs font-bold text-white w-5 h-5 flex items-center justify-center shrink-0">
-                  <Sparkles />
+                <span
+                  className="text-xs font-bold text-shadow-xs  w-5 h-5 flex items-center justify-center shrink-0"
+                  style={{
+                    color: event.status === "Booked" ? "white" : eventHsl,
+                  }}
+                >
+                  <Sparkles className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
                 </span>
               )}
               {event.alerts.length > 0 && (
@@ -219,7 +229,7 @@ export default function EventRenderer({
               )}
             </div>
             <div
-              className=" text-white text-xs font-normal -mt-1 truncate"
+              className=" text-white text-xs text-shadow-xs font-normal -mt-1 truncate"
               style={{
                 color: event.status === "Booked" ? "white" : eventHsl,
               }}
