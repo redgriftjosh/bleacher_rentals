@@ -15,6 +15,7 @@ import { useUser } from "@clerk/nextjs";
 import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
 import { getHomeBaseIdByName } from "@/utils/utils";
 import { UserResource } from "@clerk/types";
+import { ROW_OPTIONS } from "@/types/Constants";
 
 export function checkEventFormRules(
   createEventPayload: CurrentEventStore,
@@ -328,14 +329,17 @@ export function isUserPermitted(stateProv: string, user: UserResource | null): s
   return null;
 }
 
+// should return something like this:
+//   return [
+//     { value: 7, label: "7" },
+//     { value: 8, label: "8" },
+//     etc...
+//   ];
 export function getRowOptions() {
-  return [
-    { value: 7, label: "7" },
-    { value: 8, label: "8" },
-    { value: 9, label: "9" },
-    { value: 10, label: "10" },
-    { value: 15, label: "15" },
-  ];
+  return ROW_OPTIONS.map((value) => ({
+    value,
+    label: value.toString(),
+  }));
 }
 
 export function filterSortBleachers(

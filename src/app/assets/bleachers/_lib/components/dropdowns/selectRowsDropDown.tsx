@@ -1,3 +1,4 @@
+import { ROW_OPTIONS } from "@/types/Constants";
 import { useEffect, useState } from "react";
 
 type selectRowsDropDownProps = {
@@ -7,7 +8,6 @@ type selectRowsDropDownProps = {
 
 const selectRowsDropDown: React.FC<selectRowsDropDownProps> = ({ onSelect, value }) => {
   const placeholder = "Rows";
-  const options = [7, 8, 9, 10, 15];
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState<number | null>(value ?? null);
 
@@ -44,7 +44,7 @@ const selectRowsDropDown: React.FC<selectRowsDropDownProps> = ({ onSelect, value
       {isOpen && (
         <div className="absolute mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
           <ul className="py-1 max-h-[300px] overflow-y-auto">
-            {options.map((option, index) => (
+            {ROW_OPTIONS.map((option, index) => (
               <li
                 key={index}
                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
