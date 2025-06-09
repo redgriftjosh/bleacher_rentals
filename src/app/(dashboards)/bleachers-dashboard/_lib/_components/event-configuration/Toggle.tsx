@@ -13,7 +13,7 @@ export const Toggle = ({ label, tooltip, checked, onChange }: ToggleProps) => {
   return (
     <div className="flex flex-col">
       <div className="flex items-center mb-2">
-        <span className="text-sm font-medium text-gray-700">{label}</span>
+        <span className="text-xs text-gray-500 mb-1">{label}</span>
         {tooltip && (
           <div className="relative inline-block ml-1">
             <svg

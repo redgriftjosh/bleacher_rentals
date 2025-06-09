@@ -14,7 +14,7 @@ import MainScrollableGrid from "./MainScrollableGrid";
 import { filterSortBleachers } from "../../functions";
 
 const COLUMN_WIDTH = 100;
-const STICKY_LEFT_COLUMN_WIDTH = 145;
+const STICKY_LEFT_COLUMN_WIDTH = 185;
 const STICKY_LEFT_COLUMN_WIDTH_EXPANDED = STICKY_LEFT_COLUMN_WIDTH + 40;
 const DATE_RANGE = 1000;
 const HEADER_ROW_HEIGHT = 40;

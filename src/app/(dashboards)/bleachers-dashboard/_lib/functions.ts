@@ -373,3 +373,12 @@ export function filterSortBleachers(
   // console.log("isFormExpanded", isFormExpanded);
   return sortedBleachers;
 }
+
+export function filterSelectedBleachers(
+  bleachers: DashboardBleacher[],
+  bleacherIds: number[]
+): DashboardBleacher[] {
+  return bleachers
+    .filter((b) => bleacherIds.includes(b.bleacherId))
+    .sort((a, b) => a.bleacherNumber - b.bleacherNumber);
+}

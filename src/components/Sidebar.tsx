@@ -15,6 +15,18 @@ const menuItems = [
   },
   { label: "Team", href: "/team", icon: UsersIcon, roles: [USER_ROLES.ADMIN] },
   { label: "Assets", href: "/assets", icon: TruckIcon, roles: [USER_ROLES.ADMIN] },
+  {
+    label: "Work Trackers",
+    href: "/work-trackers",
+    icon: TruckIcon,
+    roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
+  },
+  {
+    label: "Create Event",
+    href: "/event-configuration",
+    icon: TruckIcon,
+    roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
+  },
 ];
 
 const SideBar = () => {
@@ -29,7 +41,7 @@ const SideBar = () => {
 
   return (
     <div
-      className="w-64 bg-gray-100 border-r border-gray-200 flex flex-col h-full"
+      className="w-64 bg-gray-200 border-r border-gray-200 flex flex-col h-full"
       data-testid="sidebar"
     >
       <nav className="flex-1 overflow-hidden">

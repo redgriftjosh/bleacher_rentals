@@ -92,7 +92,7 @@ export default function AddressAutocomplete({
       <div ref={containerRef} className="relative w-full">
         <input
           ref={inputRef}
-          className="w-full p-2 border rounded"
+          className="w-full p-2 border rounded-sm max-h-9.5"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           disabled={!ready}

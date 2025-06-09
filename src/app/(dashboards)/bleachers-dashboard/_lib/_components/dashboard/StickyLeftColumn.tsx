@@ -1,11 +1,11 @@
-import clsx from "clsx";
-import scrollbarSize from "dom-helpers/esm/scrollbarSize";
-import { Grid, ScrollParams } from "react-virtualized";
-import { Minus, Plus } from "lucide-react";
+import { Grid } from "react-virtualized";
+import { CircleUser, Minus, Plus } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { DashboardBleacher, DashboardEvent } from "../../types";
 import { useCurrentEventStore } from "../../useCurrentEventStore";
 import { YAxis } from "../../useFilterDashboardStore";
+import { AssignDriver } from "./AssignDriver";
+import BleacherLabel from "../BleacherLabel";
 
 type StickyLeftColumnProps = {
   ROW_HEIGHT: number;
@@ -84,7 +84,7 @@ export default function StickyLeftColumn({
               <div
                 key={key}
                 style={style}
-                className="flex justify-start px-2 border-b items-center text-sm w-full h-full"
+                className="flex  justify-start px-2 border-b items-center text-sm w-full h-full"
               >
                 <div
                   className="transition-all duration-1000 ease-in-out w-full"
@@ -92,7 +92,9 @@ export default function StickyLeftColumn({
                     marginLeft: isFormExpanded ? "4px" : "0px",
                   }}
                 >
-                  <div className="font-bold text-md truncate">{events[rowIndex].eventName}</div>
+                  <div className="bg-gray-100 font-bold text-md truncate">
+                    {events[rowIndex].eventName}
+                  </div>
                   <div className="text-left">
                     <span className="font-medium text-xs text-gray-500 truncate block">
                       {events[rowIndex].addressData?.city} {events[rowIndex].addressData?.state}
@@ -106,7 +108,7 @@ export default function StickyLeftColumn({
               <div
                 key={key}
                 style={style}
-                className="flex justify-start px-2 border-b items-center text-sm w-full h-full"
+                className="flex justify-start px-2 border-b items-center text-sm w-full h-full bg-gray-100"
               >
                 <button
                   onClick={() => toggle(bleachers[rowIndex].bleacherId)}
@@ -125,33 +127,14 @@ export default function StickyLeftColumn({
                     <Plus size={16} className="text-green-600" />
                   )}
                 </button>
+
                 <div
-                  className="transition-all duration-1000 ease-in-out"
+                  className="transition-all duration-1000 ease-in-out bg-gray-100"
                   style={{
                     marginLeft: isFormExpanded ? "4px" : "-24px",
                   }}
                 >
-                  <div className="font-bold text-lg -mb-2">
-                    {bleachers[rowIndex].bleacherNumber}
-                  </div>
-                  <div className="whitespace-nowrap -mb-2">
-                    <span className="font-medium text-xs text-gray-500">
-                      {bleachers[rowIndex].bleacherRows}
-                    </span>
-                    <span className="font-medium text-xs text-gray-500 mr-2">row</span>
-                    <span className="font-medium text-xs text-gray-500">
-                      {bleachers[rowIndex].bleacherSeats}
-                    </span>
-                    <span className="font-medium text-xs text-gray-500 mr-2">seats</span>
-                  </div>
-                  <div className="whitespace-nowrap">
-                    <span className="font-medium mr-2 text-xs text-amber-500">
-                      {bleachers[rowIndex].homeBase.homeBaseName}
-                    </span>
-                    <span className="font-medium text-xs text-blue-500">
-                      {bleachers[rowIndex].winterHomeBase.homeBaseName}
-                    </span>
-                  </div>
+                  <BleacherLabel bleacher={bleachers[rowIndex]} />
                 </div>
               </div>
             );

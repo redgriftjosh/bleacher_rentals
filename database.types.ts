@@ -9,6 +9,90 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      Activities: {
+        Row: {
+          activity_id: number
+          activity_type_id: number
+          bleacher_event_id: number
+          created_at: string
+          from_address_id: number | null
+          to_address_id: number | null
+          user_id: number | null
+        }
+        Insert: {
+          activity_id?: number
+          activity_type_id: number
+          bleacher_event_id: number
+          created_at?: string
+          from_address_id?: number | null
+          to_address_id?: number | null
+          user_id?: number | null
+        }
+        Update: {
+          activity_id?: number
+          activity_type_id?: number
+          bleacher_event_id?: number
+          created_at?: string
+          from_address_id?: number | null
+          to_address_id?: number | null
+          user_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Activities_activity_type_id_fkey"
+            columns: ["activity_type_id"]
+            isOneToOne: false
+            referencedRelation: "ActivityTypes"
+            referencedColumns: ["activity_type_id"]
+          },
+          {
+            foreignKeyName: "Activities_bleacher_event_id_fkey"
+            columns: ["bleacher_event_id"]
+            isOneToOne: false
+            referencedRelation: "BleacherEvents"
+            referencedColumns: ["bleacher_event_id"]
+          },
+          {
+            foreignKeyName: "Activities_from_address_id_fkey"
+            columns: ["from_address_id"]
+            isOneToOne: false
+            referencedRelation: "Addresses"
+            referencedColumns: ["address_id"]
+          },
+          {
+            foreignKeyName: "Activities_to_address_id_fkey"
+            columns: ["to_address_id"]
+            isOneToOne: false
+            referencedRelation: "Addresses"
+            referencedColumns: ["address_id"]
+          },
+          {
+            foreignKeyName: "Activities_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      ActivityTypes: {
+        Row: {
+          activity_type: string
+          activity_type_id: number
+          created_at: string
+        }
+        Insert: {
+          activity_type: string
+          activity_type_id?: number
+          created_at?: string
+        }
+        Update: {
+          activity_type?: string
+          activity_type_id?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
       Addresses: {
         Row: {
           address_id: number
@@ -36,42 +120,39 @@ export type Database = {
         }
         Relationships: []
       }
-      AlertTypes: {
-        Row: {
-          alert_types_id: number
-          created_at: string
-          message: string
-        }
-        Insert: {
-          alert_types_id?: number
-          created_at?: string
-          message: string
-        }
-        Update: {
-          alert_types_id?: number
-          created_at?: string
-          message?: string
-        }
-        Relationships: []
-      }
       BleacherEvents: {
         Row: {
           bleacher_event_id: number
           bleacher_id: number
           created_at: string
           event_id: number
+          must_be_clean: boolean
+          occupied_end: string | null
+          occupied_start: string | null
+          setup_start: string | null
+          teardown_end: string | null
         }
         Insert: {
           bleacher_event_id?: number
           bleacher_id: number
           created_at?: string
           event_id: number
+          must_be_clean?: boolean
+          occupied_end?: string | null
+          occupied_start?: string | null
+          setup_start?: string | null
+          teardown_end?: string | null
         }
         Update: {
           bleacher_event_id?: number
           bleacher_id?: number
           created_at?: string
           event_id?: number
+          must_be_clean?: boolean
+          occupied_end?: string | null
+          occupied_start?: string | null
+          setup_start?: string | null
+          teardown_end?: string | null
         }
         Relationships: [
           {
@@ -141,42 +222,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "HomeBases"
             referencedColumns: ["home_base_id"]
-          },
-        ]
-      }
-      EventAlerts: {
-        Row: {
-          alert_types_id: number
-          created_at: string
-          event_alert_id: number
-          event_id: number
-        }
-        Insert: {
-          alert_types_id: number
-          created_at?: string
-          event_alert_id?: number
-          event_id: number
-        }
-        Update: {
-          alert_types_id?: number
-          created_at?: string
-          event_alert_id?: number
-          event_id?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "Alerts_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "Events"
-            referencedColumns: ["event_id"]
-          },
-          {
-            foreignKeyName: "EventAlerts_alert_types_id_fkey"
-            columns: ["alert_types_id"]
-            isOneToOne: false
-            referencedRelation: "AlertTypes"
-            referencedColumns: ["alert_types_id"]
           },
         ]
       }
@@ -322,6 +367,7 @@ export type Database = {
       }
       Users: {
         Row: {
+          avatar_image_url: string | null
           clerk_user_id: string | null
           created_at: string
           email: string
@@ -333,6 +379,7 @@ export type Database = {
           user_id: number
         }
         Insert: {
+          avatar_image_url?: string | null
           clerk_user_id?: string | null
           created_at?: string
           email: string
@@ -344,6 +391,7 @@ export type Database = {
           user_id?: number
         }
         Update: {
+          avatar_image_url?: string | null
           clerk_user_id?: string | null
           created_at?: string
           email?: string

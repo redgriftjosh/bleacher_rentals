@@ -1,4 +1,5 @@
-import { useCurrentEventStore } from "../../useCurrentEventStore";
+import { Dropdown } from "@/components/DropDown";
+import { EventStatus, useCurrentEventStore } from "../../useCurrentEventStore";
 import { Toggle } from "./Toggle";
 
 export const LenientSelections = () => {
@@ -65,6 +66,28 @@ export const LenientSelections = () => {
             </div>
           </>
         )}
+        <div className="mt-1 flex-1">
+          <label className="block text-sm font-medium text-gray-700">Status</label>
+          <Dropdown
+            options={[
+              { label: "Quoted", value: "Quoted" },
+              { label: "Booked", value: "Booked" },
+            ]}
+            selected={currentEventStore.selectedStatus}
+            onSelect={(e) => currentEventStore.setField("selectedStatus", e as EventStatus)}
+            placeholder="Pick status"
+          />
+        </div>
+        <div className="flex-1">
+          <div className="mt-1">
+            <Toggle
+              label="Clean"
+              tooltip={false}
+              checked={currentEventStore.mustBeClean}
+              onChange={(e) => currentEventStore.setField("mustBeClean", e)}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

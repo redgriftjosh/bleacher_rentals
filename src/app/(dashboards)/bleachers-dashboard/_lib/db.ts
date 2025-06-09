@@ -6,7 +6,7 @@ import {
   checkEventFormRules,
   isUserPermitted,
 } from "./functions";
-import { TablesInsert } from "../../../../../database.types";
+import { Tables, TablesInsert } from "../../../../../database.types";
 import { toast } from "sonner";
 import React from "react";
 import { ErrorToast } from "@/components/toasts/ErrorToast";
@@ -20,6 +20,7 @@ import { supabaseClient } from "@/utils/supabase/supabaseClient";
 import { useMemo } from "react";
 import { UserResource } from "@clerk/types";
 import { updateDataBase } from "@/app/actions/db.actions";
+import { useUsersStore } from "@/state/userStore";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -136,6 +137,137 @@ export function fetchBleachers() {
 
     // return multipliedBleachers;
   }, [bleachers, homeBases, addresses, events, bleacherEvents]);
+}
+
+export type BleacherActivities = Tables<"Bleachers"> & {
+  activities: Tables<"Activities">[];
+};
+
+export type EventBleacherActivites = Tables<"Events"> & {
+  bleachers: BleacherActivities[];
+};
+
+export function fetchBleacherActivites() {
+  const bleachers = useBleachersStore((s) => s.bleachers);
+  const homeBases = useHomeBasesStore((s) => s.homeBases);
+  const addresses = useAddressesStore((s) => s.addresses);
+  const events = useEventsStore((s) => s.events);
+  const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
+
+  const eventAlerts = calculateEventAlerts(events, bleacherEvents);
+  // console.log("eventAlerts", eventAlerts);
+
+  return useMemo(() => {
+    // console.log("fetchBleachers (dashboard)");
+    if (!bleachers) return [];
+
+    const formattedBleachers: DashboardBleacher[] = bleachers
+      .map((bleacher) => {
+        const homeBase = homeBases.find((base) => base.home_base_id === bleacher.home_base_id);
+        const winterHomeBase = homeBases.find(
+          (base) => base.home_base_id === bleacher.winter_home_base_id
+        );
+
+        // ✅ Find all bleacherEvents for this bleacher
+        const relatedBleacherEvents = bleacherEvents.filter(
+          (be) => be.bleacher_id === bleacher.bleacher_id
+        );
+
+        // ✅ Map event_ids to full DashboardEvent objects
+        const relatedEvents: DashboardEvent[] = relatedBleacherEvents
+          .map((be) => {
+            const event = events.find((e) => e.event_id === be.event_id);
+            if (!event) return null;
+
+            const address = addresses.find((a) => a.address_id === event.address_id);
+
+            const relatedAlerts = eventAlerts[event.event_id] || [];
+
+            return {
+              eventId: event.event_id,
+              eventName: event.event_name,
+              addressData: address
+                ? {
+                    addressId: address.address_id,
+                    address: address.street,
+                    city: address.city,
+                    state: address.state_province,
+                    postalCode: address.zip_postal ?? undefined,
+                  }
+                : null,
+              seats: event.total_seats,
+              sevenRow: event.seven_row,
+              tenRow: event.ten_row,
+              fifteenRow: event.fifteen_row,
+              setupStart: event.setup_start ?? "",
+              sameDaySetup: !event.setup_start, // if setup_start is null, assume same-day
+              eventStart: event.event_start,
+              eventEnd: event.event_end,
+              teardownEnd: event.teardown_end ?? "",
+              sameDayTeardown: !event.teardown_end, // same logic
+              lenient: event.lenient,
+              token: "", // not needed or included here
+              selectedStatus: event.booked ? "Booked" : "Quoted",
+              notes: event.notes ?? "",
+              numDays: calculateNumDays(event.event_start, event.event_end),
+              status: event.booked ? "Booked" : "Quoted",
+              hslHue: event.hsl_hue,
+              alerts: relatedAlerts,
+              mustBeClean: event.must_be_clean,
+              bleacherIds: bleacherEvents
+                .filter((be) => be.event_id === event.event_id)
+                .map((be) => be.bleacher_id), // find all bleachers linked to this event
+            };
+          })
+          .filter((e) => e !== null) as DashboardEvent[]; // filter out nulls
+
+        return {
+          bleacherId: bleacher.bleacher_id,
+          bleacherNumber: bleacher.bleacher_number,
+          bleacherRows: bleacher.bleacher_rows,
+          bleacherSeats: bleacher.bleacher_seats,
+          homeBase: {
+            homeBaseId: homeBase?.home_base_id ?? 0,
+            homeBaseName: homeBase?.home_base_name ?? "",
+          },
+          winterHomeBase: {
+            homeBaseId: winterHomeBase?.home_base_id ?? 0,
+            homeBaseName: winterHomeBase?.home_base_name ?? "",
+          },
+          events: relatedEvents,
+        };
+      })
+      .sort((a, b) => b.bleacherNumber - a.bleacherNumber);
+    // console.log("formattedBleachers", formattedBleachers);
+
+    return formattedBleachers;
+    // const multipliedBleachers = Array.from({ length: 100 }, (_, i) =>
+    //   formattedBleachers.map((b) => ({
+    //     ...b,
+    //     bleacherId: b.bleacherId * 10 + i, // tweak ID to avoid collisions if needed
+    //     bleacherNumber: b.bleacherNumber * 10 + i, // optional: adjust display number
+    //     events: b.events.map((e) => ({
+    //       ...e,
+    //       eventId: e.eventId * 10 + i, // optional: make events unique
+    //       eventName: `${e.eventName} (${i + 1})`, // distinguish copies
+    //     })),
+    //   }))
+    // ).flat();
+
+    // return multipliedBleachers;
+  }, [bleachers, homeBases, addresses, events, bleacherEvents]);
+}
+
+export function fetchDrivers(): Tables<"Users">[] {
+  const users = useUsersStore((s) => s.users);
+
+  return useMemo(() => {
+    if (!users) return [];
+
+    const drivers = users.filter((user) => user.role === 3);
+
+    return drivers;
+  }, [users]);
 }
 
 export function fetchDashboardEvents() {

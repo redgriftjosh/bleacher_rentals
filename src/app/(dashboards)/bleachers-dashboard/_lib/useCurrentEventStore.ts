@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { useEventsStore } from "@/state/eventsStore";
 import { calculateBestHue, updateCurrentEventAlerts } from "./functions";
 import { useFilterDashboardStore } from "./useFilterDashboardStore";
+import { Tables } from "../../../../../database.types";
 
 export type AddressData = {
   addressId: number | null;
@@ -12,6 +13,27 @@ export type AddressData = {
 };
 
 export type EventStatus = "Quoted" | "Booked";
+
+export type BleacherRequirements = {
+  rows: number;
+  setupFrom: string;
+  setupTo: string;
+  teardownFrom: string;
+  teardownTo: string;
+  mustBeClean: boolean;
+  qty: number;
+};
+
+export type ActivityType = "Transport" | "Setup" | "Teardown" | "Clean" | "Repair";
+
+export type Activity = {
+  activityType: ActivityType;
+  bleacherId: number | null;
+  fromAddress: AddressData | null;
+  toAddress: AddressData | null;
+  address: AddressData | null;
+  userId: number | null;
+};
 
 export type CurrentEventState = {
   eventId: number | null;
@@ -35,6 +57,9 @@ export type CurrentEventState = {
   isFormExpanded: boolean;
   hslHue: number | null;
   alerts: string[];
+  seeAllBleachers: boolean;
+  bleacherRequirements: BleacherRequirements[];
+  activities: Activity[];
 };
 
 // Me take event form stuff, add tools to change it.
@@ -68,6 +93,9 @@ const initialState: CurrentEventState = {
   isFormExpanded: false,
   hslHue: null,
   alerts: [],
+  seeAllBleachers: false,
+  bleacherRequirements: [],
+  activities: [],
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.

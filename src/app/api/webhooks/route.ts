@@ -68,7 +68,7 @@ export async function POST(req: Request) {
 
     const supabase = await createServiceRoleClient(); // no permission issues.
     if (evt.type === "user.created") {
-      const { first_name, last_name, email_addresses, phone_numbers } = evt.data;
+      const { first_name, last_name, email_addresses, phone_numbers, image_url } = evt.data;
       // Users are created in clerk when they accept the invitation so they should already exist in the db. This set's the user as Active status instead of prending for this reason
 
       const result = await supabase.from("Users").upsert(
@@ -80,6 +80,7 @@ export async function POST(req: Request) {
           phone: phone_numbers?.[0]?.phone_number || null,
           status: 2,
           role: 1,
+          avatar_image_url: image_url || null,
         },
         { onConflict: "email" }
       );
@@ -91,7 +92,7 @@ export async function POST(req: Request) {
 
       // console.log("✅ User created in Supabase");
     } else if (evt.type === "user.updated") {
-      const { first_name, last_name, email_addresses, phone_numbers } = evt.data;
+      const { first_name, last_name, email_addresses, phone_numbers, image_url } = evt.data;
 
       const result = await supabase
         .from("Users")
@@ -100,6 +101,7 @@ export async function POST(req: Request) {
           last_name: last_name || null,
           email: email_addresses?.[0]?.email_address || null,
           phone: phone_numbers?.[0]?.phone_number || null,
+          avatar_image_url: image_url || null,
         })
         .eq("clerk_user_id", id);
 
