@@ -22,3 +22,6 @@ export const USER_ROLES = {
 
 export type UserRoleKey = keyof typeof USER_ROLES;
 export type UserRoleValue = (typeof USER_ROLES)[UserRoleKey];
+
+// How many rows are available for bleachers?
+export const ROW_OPTIONS = [4, 7, 8, 9, 10, 15];
