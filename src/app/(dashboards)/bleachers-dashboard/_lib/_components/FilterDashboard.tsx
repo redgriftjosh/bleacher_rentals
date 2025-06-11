@@ -11,6 +11,7 @@ import { getHomeBaseOptions, getRowOptions } from "../functions";
 export default function FilterDashboard() {
   const yAxis = useFilterDashboardStore((s) => s.yAxis);
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
+  const assignMode = useCurrentEventStore((s) => s.assignMode);
   const setField = useFilterDashboardStore((s) => s.setField);
   const homeBaseOptions = getHomeBaseOptions();
   const rowOptions = getRowOptions();
@@ -39,7 +40,7 @@ export default function FilterDashboard() {
   return (
     <div className="flex gap-2 mb-2">
       {/* Don't show option when form is expanded */}
-      {!isFormExpanded && (
+      {!assignMode && (
         <div className="w-[170px]">
           <Dropdown
             options={[

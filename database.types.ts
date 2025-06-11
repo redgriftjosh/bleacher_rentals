@@ -13,8 +13,10 @@ export type Database = {
         Row: {
           activity_id: number
           activity_type_id: number
-          bleacher_event_id: number
+          bleacher_id: number | null
           created_at: string
+          date: string | null
+          event_id: number | null
           from_address_id: number | null
           to_address_id: number | null
           user_id: number | null
@@ -22,8 +24,10 @@ export type Database = {
         Insert: {
           activity_id?: number
           activity_type_id: number
-          bleacher_event_id: number
+          bleacher_id?: number | null
           created_at?: string
+          date?: string | null
+          event_id?: number | null
           from_address_id?: number | null
           to_address_id?: number | null
           user_id?: number | null
@@ -31,8 +35,10 @@ export type Database = {
         Update: {
           activity_id?: number
           activity_type_id?: number
-          bleacher_event_id?: number
+          bleacher_id?: number | null
           created_at?: string
+          date?: string | null
+          event_id?: number | null
           from_address_id?: number | null
           to_address_id?: number | null
           user_id?: number | null
@@ -46,11 +52,18 @@ export type Database = {
             referencedColumns: ["activity_type_id"]
           },
           {
-            foreignKeyName: "Activities_bleacher_event_id_fkey"
-            columns: ["bleacher_event_id"]
+            foreignKeyName: "Activities_bleacher_id_fkey"
+            columns: ["bleacher_id"]
             isOneToOne: false
-            referencedRelation: "BleacherEvents"
-            referencedColumns: ["bleacher_event_id"]
+            referencedRelation: "Bleachers"
+            referencedColumns: ["bleacher_id"]
+          },
+          {
+            foreignKeyName: "Activities_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["event_id"]
           },
           {
             foreignKeyName: "Activities_from_address_id_fkey"
@@ -225,15 +238,62 @@ export type Database = {
           },
         ]
       }
+      EventBleacherRequirements: {
+        Row: {
+          created_at: string
+          event_bleacher_requirement_id: number
+          event_id: number | null
+          must_be_clean: boolean | null
+          qty: number | null
+          rows: number | null
+          setup_from: string | null
+          setup_to: string | null
+          teardown_from: string | null
+          teardown_to: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_bleacher_requirement_id?: number
+          event_id?: number | null
+          must_be_clean?: boolean | null
+          qty?: number | null
+          rows?: number | null
+          setup_from?: string | null
+          setup_to?: string | null
+          teardown_from?: string | null
+          teardown_to?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_bleacher_requirement_id?: number
+          event_id?: number | null
+          must_be_clean?: boolean | null
+          qty?: number | null
+          rows?: number | null
+          setup_from?: string | null
+          setup_to?: string | null
+          teardown_from?: string | null
+          teardown_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventBleacherRequirements_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["event_id"]
+          },
+        ]
+      }
       Events: {
         Row: {
           address_id: number
           booked: boolean
           created_at: string
-          event_end: string
+          event_end: string | null
           event_id: number
           event_name: string
-          event_start: string
+          event_start: string | null
           fifteen_row: number | null
           hsl_hue: number | null
           lenient: boolean
@@ -249,10 +309,10 @@ export type Database = {
           address_id: number
           booked?: boolean
           created_at?: string
-          event_end: string
+          event_end?: string | null
           event_id?: number
           event_name: string
-          event_start: string
+          event_start?: string | null
           fifteen_row?: number | null
           hsl_hue?: number | null
           lenient: boolean
@@ -268,10 +328,10 @@ export type Database = {
           address_id?: number
           booked?: boolean
           created_at?: string
-          event_end?: string
+          event_end?: string | null
           event_id?: number
           event_name?: string
-          event_start?: string
+          event_start?: string | null
           fifteen_row?: number | null
           hsl_hue?: number | null
           lenient?: boolean

@@ -122,20 +122,6 @@ export function fetchBleachers() {
     // console.log("formattedBleachers", formattedBleachers);
 
     return formattedBleachers;
-    // const multipliedBleachers = Array.from({ length: 100 }, (_, i) =>
-    //   formattedBleachers.map((b) => ({
-    //     ...b,
-    //     bleacherId: b.bleacherId * 10 + i, // tweak ID to avoid collisions if needed
-    //     bleacherNumber: b.bleacherNumber * 10 + i, // optional: adjust display number
-    //     events: b.events.map((e) => ({
-    //       ...e,
-    //       eventId: e.eventId * 10 + i, // optional: make events unique
-    //       eventName: `${e.eventName} (${i + 1})`, // distinguish copies
-    //     })),
-    //   }))
-    // ).flat();
-
-    // return multipliedBleachers;
   }, [bleachers, homeBases, addresses, events, bleacherEvents]);
 }
 

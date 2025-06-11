@@ -30,12 +30,12 @@ export function DatePicker({ date, onChange, maxDate, minDate }: DatePickerProps
         <Button
           variant={"outline"}
           className={cn(
-            "w-[240px] justify-start text-left font-normal",
+            "justify-start text-left font-normal rounded h-10 cursor-pointer",
             !date && "text-muted-foreground"
           )}
         >
           <CalendarIcon />
-          {date ? format(date, "PPP") : <span>Same Date Setup</span>}
+          {date ? format(date, "PPP") : <span>Select Date</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
@@ -49,7 +49,7 @@ export function DatePicker({ date, onChange, maxDate, minDate }: DatePickerProps
         />
         <div className="flex justify-center p-1 -mt-4 mb-1">
           <Button variant="outline" onClick={() => onChange(undefined)}>
-            Same Day
+            Clear
           </Button>
         </div>
       </PopoverContent>

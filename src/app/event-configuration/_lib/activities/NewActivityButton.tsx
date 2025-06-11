@@ -16,6 +16,7 @@ export default function NewActivityButton() {
       toAddress: null,
       address: null,
       userId: null,
+      date: "",
     };
 
     setField("activities", [...activities, newActivity]);

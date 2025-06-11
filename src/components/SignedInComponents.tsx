@@ -5,11 +5,13 @@ import useSupabaseSubscriptions from "@/hooks/useSupabaseSubscriptions";
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import { Button } from "./ui/button";
 import { useUsersStore } from "@/state/userStore";
+import { useCurrentEventStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
 
 export function SignedInComponents({ children }: { children: React.ReactNode }) {
   useSupabaseSubscriptions();
   const { user, isLoaded } = useUser();
   const users = useUsersStore((s) => s.users);
+
   // console.log("users:", users);
   // console.log("user:", user);
 

@@ -8,6 +8,7 @@ import { DateRangePicker } from "@/components/DateRangePicker";
 import { Dropdown } from "@/components/DropDown";
 import { Trash2 } from "lucide-react";
 import { DateTime } from "luxon";
+import { useEffect } from "react";
 
 export default function BleacherRequirementItem({
   requirement,
@@ -19,6 +20,10 @@ export default function BleacherRequirementItem({
   const setField = useCurrentEventStore((s) => s.setField);
   const requirements = useCurrentEventStore((s) => s.bleacherRequirements);
   const rowOptions = getRowOptions();
+
+  useEffect(() => {
+    console.log("requirements:", requirements);
+  }, [requirements]);
 
   const updateField = (key: keyof BleacherRequirements, value: any) => {
     const updated = [...requirements];

@@ -183,6 +183,7 @@ export default function EventRenderer({
               seeAllBleachers: false,
               bleacherRequirements: [], // will be calculated on load
               activities: [], // will be calculated on load
+              assignMode: null,
             })
           }
         >

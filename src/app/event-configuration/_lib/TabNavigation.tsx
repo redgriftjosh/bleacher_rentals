@@ -29,7 +29,7 @@ export default function TabNavigation() {
 
   return (
     <div className="flex justify-start mb-2">
-      <div className="flex border border-gray-300 bg-gray-100 rounded-lg overflow-hidden">
+      <div className="flex border border-gray-300 bg-gray-100 rounded overflow-hidden">
         {tabs.map((tab) => (
           <Link
             key={tab.id}

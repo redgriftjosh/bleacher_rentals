@@ -3,6 +3,7 @@ import { useEventsStore } from "@/state/eventsStore";
 import { calculateBestHue, updateCurrentEventAlerts } from "./functions";
 import { useFilterDashboardStore } from "./useFilterDashboardStore";
 import { Tables } from "../../../../../database.types";
+import { activityTypes } from "@/types/Constants";
 
 export type AddressData = {
   addressId: number | null;
@@ -24,10 +25,16 @@ export type BleacherRequirements = {
   qty: number;
 };
 
-export type ActivityType = "Transport" | "Setup" | "Teardown" | "Clean" | "Repair";
+export type AssignMode =
+  | { type: "bleacher"; activityIndex: number }
+  | { type: "user"; activityIndex: number }
+  | null;
+
+export type ActivityType = (typeof activityTypes)[number];
 
 export type Activity = {
   activityType: ActivityType;
+  date: string;
   bleacherId: number | null;
   fromAddress: AddressData | null;
   toAddress: AddressData | null;
@@ -60,6 +67,7 @@ export type CurrentEventState = {
   seeAllBleachers: boolean;
   bleacherRequirements: BleacherRequirements[];
   activities: Activity[];
+  assignMode: AssignMode;
 };
 
 // Me take event form stuff, add tools to change it.
@@ -96,6 +104,7 @@ const initialState: CurrentEventState = {
   seeAllBleachers: false,
   bleacherRequirements: [],
   activities: [],
+  assignMode: null,
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.
