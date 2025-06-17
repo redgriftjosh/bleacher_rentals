@@ -107,9 +107,7 @@ export default function StickyLeftColumn({
                     marginLeft: assignMode ? "4px" : "0px",
                   }}
                 >
-                  <div className="bg-gray-100 font-bold text-md truncate">
-                    {events[rowIndex].eventName}
-                  </div>
+                  <div className=" font-bold text-md truncate">{events[rowIndex].eventName}</div>
                   <div className="text-left">
                     <span className="font-medium text-xs text-gray-500 truncate block">
                       {events[rowIndex].addressData?.city} {events[rowIndex].addressData?.state}
@@ -123,7 +121,7 @@ export default function StickyLeftColumn({
               <div
                 key={key}
                 style={style}
-                className="flex justify-start px-2 border-b items-center text-sm w-full h-full bg-gray-100"
+                className="flex justify-start px-2 border-b items-center text-sm w-full h-full "
               >
                 <button
                   onClick={() => toggle(bleachers[rowIndex].bleacherId)}
@@ -144,7 +142,7 @@ export default function StickyLeftColumn({
                 </button>
 
                 <div
-                  className="transition-all duration-1000 ease-in-out bg-gray-100"
+                  className="transition-all duration-1000 ease-in-out "
                   style={{
                     marginLeft: assignMode ? "4px" : "-24px",
                   }}

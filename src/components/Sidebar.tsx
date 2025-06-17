@@ -41,7 +41,7 @@ const SideBar = () => {
 
   return (
     <div
-      className="w-64 bg-gray-200 border-r border-gray-200 flex flex-col h-full"
+      className="w-64 bg-gray-100 border-r border-gray-200 flex flex-col h-full"
       data-testid="sidebar"
     >
       <nav className="flex-1 overflow-hidden">
