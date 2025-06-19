@@ -30,7 +30,7 @@ export default function EventRenderer({
   const eventStartDate = DateTime.fromISO(event.eventStart);
   const eventEndDate = DateTime.fromISO(event.eventEnd);
   const eventHsl = event.hslHue ? `hsl(${event.hslHue.toString()}, 60%, 60%)` : "hsl(0, 0%, 50%)";
-  const yellowHsl = "hsl(54, 80%, 50%)"; // Setup & teardown color
+  const yellowHsl = "hsl(54, 90%, 60%)"; // Setup & teardown color
   const setField = useCurrentEventStore((s) => s.setField);
   if (event.eventId === 68) {
     // console.log("event 68", event);
@@ -205,7 +205,7 @@ export default function EventRenderer({
             <div
               className="flex items-center gap-2 text-white"
               style={{
-                color: event.status === "Booked" ? "white" : eventHsl,
+                color: event.status === "Booked" ? "black" : eventHsl,
                 maxWidth: "100%",
               }}
             >
@@ -216,7 +216,7 @@ export default function EventRenderer({
                 <span
                   className="text-xs font-bold text-shadow-xs  w-5 h-5 flex items-center justify-center shrink-0"
                   style={{
-                    color: event.status === "Booked" ? "white" : eventHsl,
+                    color: event.status === "Booked" ? "black" : eventHsl,
                   }}
                 >
                   <Sparkles className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
@@ -231,7 +231,7 @@ export default function EventRenderer({
             <div
               className=" text-white text-xs text-shadow-xs font-normal -mt-1 truncate"
               style={{
-                color: event.status === "Booked" ? "white" : eventHsl,
+                color: event.status === "Booked" ? "black" : eventHsl,
               }}
             >
               {event.addressData?.address}
