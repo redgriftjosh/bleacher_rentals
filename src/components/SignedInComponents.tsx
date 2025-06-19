@@ -10,8 +10,8 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
   useSupabaseSubscriptions();
   const { user, isLoaded } = useUser();
   const users = useUsersStore((s) => s.users);
-  // console.log("users:", users);
-  // console.log("user:", user);
+  console.log("users:", users);
+  console.log("user:", user);
 
   if (!isLoaded) return null;
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 // lib/fetchTableAndSetStore.ts
 import { supabaseClient } from "@/utils/supabase/supabaseClient";
 import { type GetToken } from "@clerk/types";
@@ -19,13 +20,17 @@ export const fetchTableSetStoreAndCache = async <T>(
   setStore: (data: T[]) => void
 ) => {
   const STORAGE_KEY = `cached-${tableName}`;
-  const token = await getToken({ template: "supabase" });
-  if (!token) return;
+  // const isDev = process.env.NODE_ENV === "development";
+  // const token = isDev
+  //   ? process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
+  //   : await getToken({ template: "supabase" });
+  // if (!token) return;
 
-  const supabase = await supabaseClient(token);
-  supabase.realtime.setAuth(token);
+  const supabase = await getSupabaseClient(getToken);
+  // supabase.realtime.setAuth(token);
 
   const { data, error } = await supabase.from(tableName).select("*");
+  console.log(`Fetched ${tableName}:`, data);
 
   if (error) {
     console.error(`Failed to fetch ${tableName}:`, error);
