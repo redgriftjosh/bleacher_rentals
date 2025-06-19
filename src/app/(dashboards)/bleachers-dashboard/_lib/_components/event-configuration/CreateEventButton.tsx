@@ -9,7 +9,7 @@ export const CreateEventButton = () => {
     <button
       onClick={() => {
         currentEventStore.setField("isFormExpanded", !currentEventStore.isFormExpanded);
-        currentEventStore.resetForm();
+        // currentEventStore.resetForm();
       }}
       className="px-2 py-2 bg-transparent font-light rounded mb-2 hover:bg-gray-100 hover:border-darkBlue border-transparent border transition text-gray-500 hover:text-darkBlue text-3xl cursor-pointer"
     >

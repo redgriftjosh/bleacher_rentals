@@ -82,7 +82,7 @@ export function fetchBleachers() {
               fifteenRow: event.fifteen_row,
               setupStart: event.setup_start ?? "",
               sameDaySetup: !event.setup_start, // if setup_start is null, assume same-day
-              eventStart: event.event_start,
+              eventStart: event.event_start ?? "",
               eventEnd: event.event_end,
               teardownEnd: event.teardown_end ?? "",
               sameDayTeardown: !event.teardown_end, // same logic
@@ -90,7 +90,7 @@ export function fetchBleachers() {
               token: "", // not needed or included here
               selectedStatus: event.booked ? "Booked" : "Quoted",
               notes: event.notes ?? "",
-              numDays: calculateNumDays(event.event_start, event.event_end),
+              numDays: calculateNumDays(event.event_start ?? "", event.event_end ?? ""),
               status: event.booked ? "Booked" : "Quoted",
               hslHue: event.hsl_hue,
               alerts: relatedAlerts,
@@ -133,116 +133,116 @@ export type EventBleacherActivites = Tables<"Events"> & {
   bleachers: BleacherActivities[];
 };
 
-export function fetchBleacherActivites() {
-  const bleachers = useBleachersStore((s) => s.bleachers);
-  const homeBases = useHomeBasesStore((s) => s.homeBases);
-  const addresses = useAddressesStore((s) => s.addresses);
-  const events = useEventsStore((s) => s.events);
-  const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
+// export function fetchBleacherActivites() {
+//   const bleachers = useBleachersStore((s) => s.bleachers);
+//   const homeBases = useHomeBasesStore((s) => s.homeBases);
+//   const addresses = useAddressesStore((s) => s.addresses);
+//   const events = useEventsStore((s) => s.events);
+//   const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
 
-  const eventAlerts = calculateEventAlerts(events, bleacherEvents);
-  // console.log("eventAlerts", eventAlerts);
+//   const eventAlerts = calculateEventAlerts(events, bleacherEvents);
+//   // console.log("eventAlerts", eventAlerts);
 
-  return useMemo(() => {
-    // console.log("fetchBleachers (dashboard)");
-    if (!bleachers) return [];
+//   return useMemo(() => {
+//     // console.log("fetchBleachers (dashboard)");
+//     if (!bleachers) return [];
 
-    const formattedBleachers: DashboardBleacher[] = bleachers
-      .map((bleacher) => {
-        const homeBase = homeBases.find((base) => base.home_base_id === bleacher.home_base_id);
-        const winterHomeBase = homeBases.find(
-          (base) => base.home_base_id === bleacher.winter_home_base_id
-        );
+//     const formattedBleachers: DashboardBleacher[] = bleachers
+//       .map((bleacher) => {
+//         const homeBase = homeBases.find((base) => base.home_base_id === bleacher.home_base_id);
+//         const winterHomeBase = homeBases.find(
+//           (base) => base.home_base_id === bleacher.winter_home_base_id
+//         );
 
-        // ✅ Find all bleacherEvents for this bleacher
-        const relatedBleacherEvents = bleacherEvents.filter(
-          (be) => be.bleacher_id === bleacher.bleacher_id
-        );
+//         // ✅ Find all bleacherEvents for this bleacher
+//         const relatedBleacherEvents = bleacherEvents.filter(
+//           (be) => be.bleacher_id === bleacher.bleacher_id
+//         );
 
-        // ✅ Map event_ids to full DashboardEvent objects
-        const relatedEvents: DashboardEvent[] = relatedBleacherEvents
-          .map((be) => {
-            const event = events.find((e) => e.event_id === be.event_id);
-            if (!event) return null;
+//         // ✅ Map event_ids to full DashboardEvent objects
+//         const relatedEvents: DashboardEvent[] = relatedBleacherEvents
+//           .map((be) => {
+//             const event = events.find((e) => e.event_id === be.event_id);
+//             if (!event) return null;
 
-            const address = addresses.find((a) => a.address_id === event.address_id);
+//             const address = addresses.find((a) => a.address_id === event.address_id);
 
-            const relatedAlerts = eventAlerts[event.event_id] || [];
+//             const relatedAlerts = eventAlerts[event.event_id] || [];
 
-            return {
-              eventId: event.event_id,
-              eventName: event.event_name,
-              addressData: address
-                ? {
-                    addressId: address.address_id,
-                    address: address.street,
-                    city: address.city,
-                    state: address.state_province,
-                    postalCode: address.zip_postal ?? undefined,
-                  }
-                : null,
-              seats: event.total_seats,
-              sevenRow: event.seven_row,
-              tenRow: event.ten_row,
-              fifteenRow: event.fifteen_row,
-              setupStart: event.setup_start ?? "",
-              sameDaySetup: !event.setup_start, // if setup_start is null, assume same-day
-              eventStart: event.event_start,
-              eventEnd: event.event_end,
-              teardownEnd: event.teardown_end ?? "",
-              sameDayTeardown: !event.teardown_end, // same logic
-              lenient: event.lenient,
-              token: "", // not needed or included here
-              selectedStatus: event.booked ? "Booked" : "Quoted",
-              notes: event.notes ?? "",
-              numDays: calculateNumDays(event.event_start, event.event_end),
-              status: event.booked ? "Booked" : "Quoted",
-              hslHue: event.hsl_hue,
-              alerts: relatedAlerts,
-              mustBeClean: event.must_be_clean,
-              bleacherIds: bleacherEvents
-                .filter((be) => be.event_id === event.event_id)
-                .map((be) => be.bleacher_id), // find all bleachers linked to this event
-            };
-          })
-          .filter((e) => e !== null) as DashboardEvent[]; // filter out nulls
+//             return {
+//               eventId: event.event_id,
+//               eventName: event.event_name,
+//               addressData: address
+//                 ? {
+//                     addressId: address.address_id,
+//                     address: address.street,
+//                     city: address.city,
+//                     state: address.state_province,
+//                     postalCode: address.zip_postal ?? undefined,
+//                   }
+//                 : null,
+//               seats: event.total_seats,
+//               sevenRow: event.seven_row,
+//               tenRow: event.ten_row,
+//               fifteenRow: event.fifteen_row,
+//               setupStart: event.setup_start ?? "",
+//               sameDaySetup: !event.setup_start, // if setup_start is null, assume same-day
+//               eventStart: event.event_start,
+//               eventEnd: event.event_end,
+//               teardownEnd: event.teardown_end ?? "",
+//               sameDayTeardown: !event.teardown_end, // same logic
+//               lenient: event.lenient,
+//               token: "", // not needed or included here
+//               selectedStatus: event.booked ? "Booked" : "Quoted",
+//               notes: event.notes ?? "",
+//               numDays: calculateNumDays(event.event_start, event.event_end),
+//               status: event.booked ? "Booked" : "Quoted",
+//               hslHue: event.hsl_hue,
+//               alerts: relatedAlerts,
+//               mustBeClean: event.must_be_clean,
+//               bleacherIds: bleacherEvents
+//                 .filter((be) => be.event_id === event.event_id)
+//                 .map((be) => be.bleacher_id), // find all bleachers linked to this event
+//             };
+//           })
+//           .filter((e) => e !== null) as DashboardEvent[]; // filter out nulls
 
-        return {
-          bleacherId: bleacher.bleacher_id,
-          bleacherNumber: bleacher.bleacher_number,
-          bleacherRows: bleacher.bleacher_rows,
-          bleacherSeats: bleacher.bleacher_seats,
-          homeBase: {
-            homeBaseId: homeBase?.home_base_id ?? 0,
-            homeBaseName: homeBase?.home_base_name ?? "",
-          },
-          winterHomeBase: {
-            homeBaseId: winterHomeBase?.home_base_id ?? 0,
-            homeBaseName: winterHomeBase?.home_base_name ?? "",
-          },
-          events: relatedEvents,
-        };
-      })
-      .sort((a, b) => b.bleacherNumber - a.bleacherNumber);
-    // console.log("formattedBleachers", formattedBleachers);
+//         return {
+//           bleacherId: bleacher.bleacher_id,
+//           bleacherNumber: bleacher.bleacher_number,
+//           bleacherRows: bleacher.bleacher_rows,
+//           bleacherSeats: bleacher.bleacher_seats,
+//           homeBase: {
+//             homeBaseId: homeBase?.home_base_id ?? 0,
+//             homeBaseName: homeBase?.home_base_name ?? "",
+//           },
+//           winterHomeBase: {
+//             homeBaseId: winterHomeBase?.home_base_id ?? 0,
+//             homeBaseName: winterHomeBase?.home_base_name ?? "",
+//           },
+//           events: relatedEvents,
+//         };
+//       })
+//       .sort((a, b) => b.bleacherNumber - a.bleacherNumber);
+//     // console.log("formattedBleachers", formattedBleachers);
 
-    return formattedBleachers;
-    // const multipliedBleachers = Array.from({ length: 100 }, (_, i) =>
-    //   formattedBleachers.map((b) => ({
-    //     ...b,
-    //     bleacherId: b.bleacherId * 10 + i, // tweak ID to avoid collisions if needed
-    //     bleacherNumber: b.bleacherNumber * 10 + i, // optional: adjust display number
-    //     events: b.events.map((e) => ({
-    //       ...e,
-    //       eventId: e.eventId * 10 + i, // optional: make events unique
-    //       eventName: `${e.eventName} (${i + 1})`, // distinguish copies
-    //     })),
-    //   }))
-    // ).flat();
+//     return formattedBleachers;
+//     // const multipliedBleachers = Array.from({ length: 100 }, (_, i) =>
+//     //   formattedBleachers.map((b) => ({
+//     //     ...b,
+//     //     bleacherId: b.bleacherId * 10 + i, // tweak ID to avoid collisions if needed
+//     //     bleacherNumber: b.bleacherNumber * 10 + i, // optional: adjust display number
+//     //     events: b.events.map((e) => ({
+//     //       ...e,
+//     //       eventId: e.eventId * 10 + i, // optional: make events unique
+//     //       eventName: `${e.eventName} (${i + 1})`, // distinguish copies
+//     //     })),
+//     //   }))
+//     // ).flat();
 
-    // return multipliedBleachers;
-  }, [bleachers, homeBases, addresses, events, bleacherEvents]);
-}
+//     // return multipliedBleachers;
+//   }, [bleachers, homeBases, addresses, events, bleacherEvents]);
+// }
 
 export function fetchDrivers(): Tables<"Users">[] {
   const users = useUsersStore((s) => s.users);
@@ -287,15 +287,15 @@ export function fetchDashboardEvents() {
         fifteenRow: event.fifteen_row,
         setupStart: event.setup_start ?? "",
         sameDaySetup: !event.setup_start,
-        eventStart: event.event_start,
-        eventEnd: event.event_end,
+        eventStart: event.event_start ?? "",
+        eventEnd: event.event_end ?? "",
         teardownEnd: event.teardown_end ?? "",
         sameDayTeardown: !event.teardown_end,
         lenient: event.lenient,
         token: "", // unused
         selectedStatus: event.booked ? "Booked" : "Quoted",
         notes: event.notes ?? "",
-        numDays: calculateNumDays(event.event_start, event.event_end),
+        numDays: calculateNumDays(event.event_start ?? "", event.event_end ?? ""),
         status: event.booked ? "Booked" : "Quoted",
         hslHue: event.hsl_hue,
         alerts: relatedAlerts,
@@ -416,27 +416,27 @@ export async function createEvent(
   const event_id = eventData.event_id;
 
   // ✅ 4. Insert into BleacherEvents
-  const bleacherEventInserts = state.bleacherIds.map((bleacher_id) => ({
-    event_id,
-    bleacher_id,
-  }));
+  // const bleacherEventInserts = state.bleacherIds.map((bleacher_id) => ({
+  //   event_id,
+  //   bleacher_id,
+  // }));
 
-  const { error: bleacherEventError } = await supabase
-    .from("BleacherEvents")
-    .insert(bleacherEventInserts);
+  // const { error: bleacherEventError } = await supabase
+  //   .from("BleacherEvents")
+  //   .insert(bleacherEventInserts);
 
-  if (bleacherEventError) {
-    console.error("Failed to insert into BleacherEvents:", bleacherEventError);
-    toast.custom(
-      (t) =>
-        React.createElement(ErrorToast, {
-          id: t,
-          lines: ["Event created, but failed to link bleachers.", bleacherEventError.message],
-        }),
-      { duration: 10000 }
-    );
-    throw new Error(`Failed to link bleachers: ${bleacherEventError.message}`);
-  }
+  // if (bleacherEventError) {
+  //   console.error("Failed to insert into BleacherEvents:", bleacherEventError);
+  //   toast.custom(
+  //     (t) =>
+  //       React.createElement(ErrorToast, {
+  //         id: t,
+  //         lines: ["Event created, but failed to link bleachers.", bleacherEventError.message],
+  //       }),
+  //     { duration: 10000 }
+  //   );
+  //   throw new Error(`Failed to link bleachers: ${bleacherEventError.message}`);
+  // }
 
   toast.custom(
     (t) =>
@@ -535,49 +535,49 @@ export async function updateEvent(
   }
 
   // 3. Update BleacherEvents links (optional, depending if bleachers changed)
-  if (state.bleacherIds.length > 0) {
-    // First, delete existing bleacher links for this event
-    const { error: deleteError } = await supabase
-      .from("BleacherEvents")
-      .delete()
-      .eq("event_id", state.eventId);
+  // if (state.bleacherIds.length > 0) {
+  //   // First, delete existing bleacher links for this event
+  //   const { error: deleteError } = await supabase
+  //     .from("BleacherEvents")
+  //     .delete()
+  //     .eq("event_id", state.eventId);
 
-    if (deleteError) {
-      console.error("Failed to delete existing bleacher links:", deleteError);
-      toast.custom(
-        (t) =>
-          React.createElement(ErrorToast, {
-            id: t,
-            lines: ["Failed to clear existing bleachers.", deleteError?.message ?? ""],
-          }),
-        { duration: 10000 }
-      );
-      throw new Error(`Failed to clear old bleacher links: ${deleteError?.message}`);
-    }
+  //   if (deleteError) {
+  //     console.error("Failed to delete existing bleacher links:", deleteError);
+  //     toast.custom(
+  //       (t) =>
+  //         React.createElement(ErrorToast, {
+  //           id: t,
+  //           lines: ["Failed to clear existing bleachers.", deleteError?.message ?? ""],
+  //         }),
+  //       { duration: 10000 }
+  //     );
+  //     throw new Error(`Failed to clear old bleacher links: ${deleteError?.message}`);
+  //   }
 
-    // Then, insert new ones
-    const bleacherEventInserts = state.bleacherIds.map((bleacher_id) => ({
-      event_id: state.eventId,
-      bleacher_id,
-    }));
+  //   // Then, insert new ones
+  //   const bleacherEventInserts = state.bleacherIds.map((bleacher_id) => ({
+  //     event_id: state.eventId,
+  //     bleacher_id,
+  //   }));
 
-    const { error: insertError } = await supabase
-      .from("BleacherEvents")
-      .insert(bleacherEventInserts);
+  //   const { error: insertError } = await supabase
+  //     .from("BleacherEvents")
+  //     .insert(bleacherEventInserts);
 
-    if (insertError) {
-      console.error("Failed to link new bleachers:", insertError);
-      toast.custom(
-        (t) =>
-          React.createElement(ErrorToast, {
-            id: t,
-            lines: ["Updated event, but failed to link bleachers.", insertError?.message ?? ""],
-          }),
-        { duration: 10000 }
-      );
-      throw new Error(`Failed to link new bleachers: ${insertError?.message}`);
-    }
-  }
+  //   if (insertError) {
+  //     console.error("Failed to link new bleachers:", insertError);
+  //     toast.custom(
+  //       (t) =>
+  //         React.createElement(ErrorToast, {
+  //           id: t,
+  //           lines: ["Updated event, but failed to link bleachers.", insertError?.message ?? ""],
+  //         }),
+  //       { duration: 10000 }
+  //     );
+  //     throw new Error(`Failed to link new bleachers: ${insertError?.message}`);
+  //   }
+  // }
 
   toast.custom(
     (t) =>

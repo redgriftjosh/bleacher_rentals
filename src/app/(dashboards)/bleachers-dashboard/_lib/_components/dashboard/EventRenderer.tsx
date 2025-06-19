@@ -129,7 +129,7 @@ export default function EventRenderer({
     setField("selectedStatus", event.selectedStatus);
     setField("notes", event.notes);
     setField("mustBeClean", event.mustBeClean);
-    setField("bleacherIds", event.bleacherIds);
+    // setField("bleacherIds", event.bleacherIds);
     setField("isFormExpanded", event.isFormExpanded);
     setField("hslHue", event.hslHue);
   };
@@ -176,14 +176,15 @@ export default function EventRenderer({
               selectedStatus: event.selectedStatus,
               notes: event.notes,
               mustBeClean: event.mustBeClean,
-              bleacherIds: bleacherIds,
+              bleachers: bleacherIds.map((id) => ({ bleacherId: id, activities: [] })),
+              // bleacherIds: bleacherIds,
               isFormExpanded: true,
               hslHue: event.hslHue,
               alerts: [], // will be calculated on load
               seeAllBleachers: false,
               bleacherRequirements: [], // will be calculated on load
-              activities: [], // will be calculated on load
-              assignMode: null,
+              // activities: [], // will be calculated on load
+              // assignMode: null,
             })
           }
         >

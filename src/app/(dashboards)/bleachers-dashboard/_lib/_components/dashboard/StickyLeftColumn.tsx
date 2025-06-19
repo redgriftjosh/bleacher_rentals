@@ -1,11 +1,11 @@
-import { Grid } from "react-virtualized";
-import { CircleUser, Minus, Plus } from "lucide-react";
+import clsx from "clsx";
+import scrollbarSize from "dom-helpers/esm/scrollbarSize";
+import { Grid, ScrollParams } from "react-virtualized";
+import { Minus, Plus } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { DashboardBleacher, DashboardEvent } from "../../types";
 import { useCurrentEventStore } from "../../useCurrentEventStore";
 import { YAxis } from "../../useFilterDashboardStore";
-import { AssignDriver } from "./AssignDriver";
-import BleacherLabel from "../BleacherLabel";
 
 type StickyLeftColumnProps = {
   ROW_HEIGHT: number;
@@ -30,44 +30,31 @@ export default function StickyLeftColumn({
   events,
   yAxis,
 }: StickyLeftColumnProps) {
-  // const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
-  const assignMode = useCurrentEventStore((s) => s.assignMode);
-  const bleacherIds = useCurrentEventStore((s) => s.bleacherIds);
+  const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
+  const selectedBleachers = useCurrentEventStore((s) => s.bleachers);
   const setField = useCurrentEventStore((s) => s.setField);
   const gridRef = useRef<Grid>(null);
 
   const toggle = (bleacherId: number) => {
-    if (!assignMode || assignMode.type !== "bleacher") return;
+    if (!isFormExpanded) return; // ❌ Don't allow toggling if form is collapsed
 
-    const { activityIndex } = assignMode;
-    const activities = useCurrentEventStore.getState().activities;
-    const setField = useCurrentEventStore.getState().setField;
+    const selected = selectedBleachers;
+    const exists = selected.find((b) => b.bleacherId === bleacherId);
 
-    // Make a copy of the activities array
-    const updatedActivities = [...activities];
+    const updated = exists
+      ? selected.filter((b) => b.bleacherId !== bleacherId)
+      : [...selected, { bleacherId, activities: [] }];
 
-    // Safety check: does the index exist?
-    if (!updatedActivities[activityIndex]) return;
-
-    // Update the activity
-    updatedActivities[activityIndex] = {
-      ...updatedActivities[activityIndex],
-      bleacherId,
-    };
-
-    // Save the updated list back to the store
-    setField("activities", updatedActivities);
-
-    // Optionally exit assign mode after assignment
-    setField("assignMode", null);
+    setField("bleachers", updated);
   };
+
   // Force rerender when we want to change the width of the sticky left column
   useEffect(() => {
     if (gridRef.current) {
       gridRef.current.recomputeGridSize();
       gridRef.current.forceUpdate(); // optional, but helps ensure render
     }
-  }, [assignMode, bleachers.length, events.length]);
+  }, [isFormExpanded, bleachers.length, events.length]);
 
   if (bleachers === null || bleachers.length <= 0) {
     return null;
@@ -78,7 +65,7 @@ export default function StickyLeftColumn({
       style={{
         backgroundColor: "white",
         color: "black",
-        width: assignMode ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH,
+        width: isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH,
         top: HEADER_ROW_HEIGHT,
       }}
     >
@@ -86,28 +73,31 @@ export default function StickyLeftColumn({
         ref={gridRef}
         style={{ overflowX: "hidden", overflowY: "hidden" }}
         scrollTop={scrollTop}
-        columnWidth={assignMode ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
+        columnWidth={isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
         columnCount={1}
         height={height}
         rowHeight={ROW_HEIGHT}
         rowCount={yAxis === "Bleachers" ? bleachers.length : events.length}
-        width={assignMode ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
+        width={isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
         cellRenderer={({ key, rowIndex, style }) => {
-          const isSelected = bleacherIds.includes(bleachers[rowIndex]?.bleacherId);
+          // const isSelected = bleacherIds.includes(bleachers[rowIndex]?.bleacherId);
+          const isSelected = selectedBleachers.find(
+            (b) => b.bleacherId === bleachers[rowIndex]?.bleacherId
+          );
           if (yAxis === "Events") {
             return (
               <div
                 key={key}
                 style={style}
-                className="flex  justify-start px-2 border-b items-center text-sm w-full h-full"
+                className="flex justify-start px-2 border-b items-center text-sm w-full h-full"
               >
                 <div
                   className="transition-all duration-1000 ease-in-out w-full"
                   style={{
-                    marginLeft: assignMode ? "4px" : "0px",
+                    marginLeft: isFormExpanded ? "4px" : "0px",
                   }}
                 >
-                  <div className=" font-bold text-md truncate">{events[rowIndex].eventName}</div>
+                  <div className="font-bold text-md truncate">{events[rowIndex].eventName}</div>
                   <div className="text-left">
                     <span className="font-medium text-xs text-gray-500 truncate block">
                       {events[rowIndex].addressData?.city} {events[rowIndex].addressData?.state}
@@ -121,7 +111,7 @@ export default function StickyLeftColumn({
               <div
                 key={key}
                 style={style}
-                className="flex justify-start px-2 border-b items-center text-sm w-full h-full "
+                className="flex justify-start px-2 border-b items-center text-sm w-full h-full"
               >
                 <button
                   onClick={() => toggle(bleachers[rowIndex].bleacherId)}
@@ -131,7 +121,7 @@ export default function StickyLeftColumn({
                       : "border-1 border-green-600 bg-green-50"
                   }`}
                   style={{
-                    transform: assignMode ? "translateX(0)" : "translateX(-40px)",
+                    transform: isFormExpanded ? "translateX(0)" : "translateX(-40px)",
                   }}
                 >
                   {isSelected ? (
@@ -140,14 +130,33 @@ export default function StickyLeftColumn({
                     <Plus size={16} className="text-green-600" />
                   )}
                 </button>
-
                 <div
-                  className="transition-all duration-1000 ease-in-out "
+                  className="transition-all duration-1000 ease-in-out"
                   style={{
-                    marginLeft: assignMode ? "4px" : "-24px",
+                    marginLeft: isFormExpanded ? "4px" : "-24px",
                   }}
                 >
-                  <BleacherLabel bleacher={bleachers[rowIndex]} />
+                  <div className="font-bold text-lg -mb-2">
+                    {bleachers[rowIndex].bleacherNumber}
+                  </div>
+                  <div className="whitespace-nowrap -mb-2">
+                    <span className="font-medium text-xs text-gray-500">
+                      {bleachers[rowIndex].bleacherRows}
+                    </span>
+                    <span className="font-medium text-xs text-gray-500 mr-2">row</span>
+                    <span className="font-medium text-xs text-gray-500">
+                      {bleachers[rowIndex].bleacherSeats}
+                    </span>
+                    <span className="font-medium text-xs text-gray-500 mr-2">seats</span>
+                  </div>
+                  <div className="whitespace-nowrap">
+                    <span className="font-medium mr-2 text-xs text-amber-500">
+                      {bleachers[rowIndex].homeBase.homeBaseName}
+                    </span>
+                    <span className="font-medium text-xs text-blue-500">
+                      {bleachers[rowIndex].winterHomeBase.homeBaseName}
+                    </span>
+                  </div>
                 </div>
               </div>
             );

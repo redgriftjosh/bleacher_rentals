@@ -66,9 +66,9 @@ export const RequirementsTab = () => {
     currentEventStore.teardownEnd,
   ]);
 
-  const selectedBleachers = useMemo(() => {
-    return filterSelectedBleachers(bleachers, currentEventStore.bleacherIds);
-  }, [currentEventStore.bleacherIds, bleachers]);
+  // const selectedBleachers = useMemo(() => {
+  //   return filterSelectedBleachers(bleachers, currentEventStore.bleacherIds);
+  // }, [currentEventStore.bleacherIds, bleachers]);
 
   return (
     <div className="max-h-[300px] overflow-y-auto p-4">
@@ -89,9 +89,9 @@ export const RequirementsTab = () => {
       </div>
       <h1 className="font-bold text-darkBlue ">Per Bleacher</h1>
       <BleacherHeader />
-      {selectedBleachers.map((bleacher) => (
+      {/* {selectedBleachers.map((bleacher) => (
         <BleacherRow bleacher={bleacher} />
-      ))}
+      ))} */}
     </div>
   );
 };

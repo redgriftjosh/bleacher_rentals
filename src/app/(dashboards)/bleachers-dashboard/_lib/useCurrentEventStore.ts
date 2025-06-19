@@ -25,11 +25,6 @@ export type BleacherRequirements = {
   qty: number;
 };
 
-export type AssignMode =
-  | { type: "bleacher"; activityIndex: number }
-  | { type: "user"; activityIndex: number }
-  | null;
-
 export type ActivityType = (typeof activityTypes)[number];
 
 export type Activity = {
@@ -40,6 +35,11 @@ export type Activity = {
   toAddress: AddressData | null;
   address: AddressData | null;
   userId: number | null;
+};
+
+export type Bleacher = {
+  bleacherId: number;
+  activities: Activity[];
 };
 
 export type CurrentEventState = {
@@ -60,14 +60,12 @@ export type CurrentEventState = {
   selectedStatus: EventStatus;
   notes: string;
   mustBeClean: boolean;
-  bleacherIds: number[];
+  bleachers: Bleacher[];
   isFormExpanded: boolean;
   hslHue: number | null;
   alerts: string[];
   seeAllBleachers: boolean;
   bleacherRequirements: BleacherRequirements[];
-  activities: Activity[];
-  assignMode: AssignMode;
 };
 
 // Me take event form stuff, add tools to change it.
@@ -97,14 +95,12 @@ const initialState: CurrentEventState = {
   selectedStatus: "Quoted",
   notes: "",
   mustBeClean: false,
-  bleacherIds: [],
+  bleachers: [],
   isFormExpanded: false,
   hslHue: null,
   alerts: [],
   seeAllBleachers: false,
   bleacherRequirements: [],
-  activities: [],
-  assignMode: null,
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.

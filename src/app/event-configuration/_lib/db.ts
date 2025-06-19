@@ -30,7 +30,7 @@ export async function createEvent(
   const event_address_id = await insertEventAddress(supabase, state);
   const event_id = await insertEvent(supabase, state, event_address_id);
 
-  await insertActivities(supabase, state, event_id);
+  // await insertActivities(supabase, state, event_id);
   await insertBleacherRequirements(supabase, state, event_id);
 
   toast.custom(
@@ -122,34 +122,34 @@ async function insertEvent(
   }
 }
 
-async function insertActivities(
-  supabase: SupabaseClient,
-  state: CurrentEventStore,
-  event_id: number
-) {
-  const activityInserts: TablesInsert<"Activities">[] = [];
+// async function insertActivities(
+//   supabase: SupabaseClient,
+//   state: CurrentEventStore,
+//   event_id: number
+// ) {
+//   const activityInserts: TablesInsert<"Activities">[] = [];
 
-  for (const activity of state.activities) {
-    const fromAddressId = await insertAddress(activity.fromAddress, supabase);
-    const toAddressId = await insertAddress(activity.toAddress, supabase);
+//   for (const activity of state.activities) {
+//     const fromAddressId = await insertAddress(activity.fromAddress, supabase);
+//     const toAddressId = await insertAddress(activity.toAddress, supabase);
 
-    activityInserts.push({
-      activity_type_id: 1, // You'll probably want to make this dynamic
-      bleacher_id: activity.bleacherId ?? null,
-      date: activity.date ?? null,
-      event_id,
-      from_address_id: fromAddressId,
-      to_address_id: toAddressId,
-      user_id: activity.userId ?? null,
-    });
-  }
+//     activityInserts.push({
+//       activity_type_id: 1, // You'll probably want to make this dynamic
+//       bleacher_id: activity.bleacherId ?? null,
+//       date: activity.date ?? null,
+//       event_id,
+//       from_address_id: fromAddressId,
+//       to_address_id: toAddressId,
+//       user_id: activity.userId ?? null,
+//     });
+//   }
 
-  const { error: activityError } = await supabase.from("Activities").insert(activityInserts);
+//   const { error: activityError } = await supabase.from("Activities").insert(activityInserts);
 
-  if (activityError) {
-    throwError(["Failed to insert activities", activityError.message ?? ""]);
-  }
-}
+//   if (activityError) {
+//     throwError(["Failed to insert activities", activityError.message ?? ""]);
+//   }
+// }
 
 async function insertBleacherRequirements(
   supabase: SupabaseClient,

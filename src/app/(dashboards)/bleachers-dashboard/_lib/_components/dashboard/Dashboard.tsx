@@ -30,7 +30,7 @@ const Dashboard = memo(({ yAxis }: DashboardProps) => {
   const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
   const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
   const rows = useFilterDashboardStore((s) => s.rows);
-  const bleacherIds = useCurrentEventStore((s) => s.bleacherIds);
+  const selectedBleachers = useCurrentEventStore((s) => s.bleachers);
 
   const dates: string[] = Array.from({ length: DATE_RANGE * 2 + 1 }, (_, i) =>
     DateTime.now()
@@ -56,10 +56,10 @@ const Dashboard = memo(({ yAxis }: DashboardProps) => {
       winterHomeBaseIds,
       rows,
       bleachers,
-      bleacherIds,
+      selectedBleachers.map((b) => b.bleacherId),
       isFormExpanded
     );
-  }, [homeBaseIds, winterHomeBaseIds, rows, bleachers, bleacherIds, isFormExpanded]);
+  }, [homeBaseIds, winterHomeBaseIds, rows, bleachers, selectedBleachers, isFormExpanded]);
 
   return (
     <ScrollSync>

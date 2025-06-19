@@ -16,13 +16,13 @@ export const ActivitiesTab = () => {
   const currentEventStore = useCurrentEventStore();
   const bleachers = fetchBleachers();
 
-  const selectedBleachers = useMemo(() => {
-    return filterSelectedBleachers(bleachers, currentEventStore.bleacherIds);
-  }, [currentEventStore.bleacherIds, bleachers]);
+  // const selectedBleachers = useMemo(() => {
+  //   return filterSelectedBleachers(bleachers, currentEventStore.bleacherIds);
+  // }, [currentEventStore.bleacherIds, bleachers]);
 
   return (
     <div className="max-h-[400px] overflow-y-auto p-4">
-      {selectedBleachers.map((bleacher) => (
+      {/* {selectedBleachers.map((bleacher) => (
         <>
           <BleacherLabel bleacher={selectedBleachers[0]} />
           <div className="ml-8">
@@ -32,7 +32,7 @@ export const ActivitiesTab = () => {
             <AddNewActivity />
           </div>
         </>
-      ))}
+      ))} */}
     </div>
   );
 };
