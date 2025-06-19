@@ -36,24 +36,6 @@ export type Database = {
         }
         Relationships: []
       }
-      AlertTypes: {
-        Row: {
-          alert_types_id: number
-          created_at: string
-          message: string
-        }
-        Insert: {
-          alert_types_id?: number
-          created_at?: string
-          message: string
-        }
-        Update: {
-          alert_types_id?: number
-          created_at?: string
-          message?: string
-        }
-        Relationships: []
-      }
       BleacherEvents: {
         Row: {
           bleacher_event_id: number
@@ -144,39 +126,35 @@ export type Database = {
           },
         ]
       }
-      EventAlerts: {
+      Blocks: {
         Row: {
-          alert_types_id: number
+          bleacher_id: number | null
+          block_id: number
           created_at: string
-          event_alert_id: number
-          event_id: number
+          date: string | null
+          text: string | null
         }
         Insert: {
-          alert_types_id: number
+          bleacher_id?: number | null
+          block_id?: number
           created_at?: string
-          event_alert_id?: number
-          event_id: number
+          date?: string | null
+          text?: string | null
         }
         Update: {
-          alert_types_id?: number
+          bleacher_id?: number | null
+          block_id?: number
           created_at?: string
-          event_alert_id?: number
-          event_id?: number
+          date?: string | null
+          text?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "Alerts_event_id_fkey"
-            columns: ["event_id"]
+            foreignKeyName: "Block_bleacher_id_fkey"
+            columns: ["bleacher_id"]
             isOneToOne: false
-            referencedRelation: "Events"
-            referencedColumns: ["event_id"]
-          },
-          {
-            foreignKeyName: "EventAlerts_alert_types_id_fkey"
-            columns: ["alert_types_id"]
-            isOneToOne: false
-            referencedRelation: "AlertTypes"
-            referencedColumns: ["alert_types_id"]
+            referencedRelation: "Bleachers"
+            referencedColumns: ["bleacher_id"]
           },
         ]
       }
@@ -266,6 +244,24 @@ export type Database = {
         }
         Relationships: []
       }
+      InvitedUsers: {
+        Row: {
+          created_at: string
+          email: string
+          invited_user_id: number
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          invited_user_id?: number
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          invited_user_id?: number
+        }
+        Relationships: []
+      }
       UserHomeBases: {
         Row: {
           created_at: string
@@ -287,14 +283,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "UserHomeBases_home_base_id_fkey"
+            foreignKeyName: "userhomebases_home_base_id_fkey"
             columns: ["home_base_id"]
             isOneToOne: false
             referencedRelation: "HomeBases"
             referencedColumns: ["home_base_id"]
           },
           {
-            foreignKeyName: "UserHomeBases_user_id_fkey"
+            foreignKeyName: "userhomebases_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "Users"
@@ -322,6 +318,7 @@ export type Database = {
       }
       Users: {
         Row: {
+          avatar_image_url: string | null
           clerk_user_id: string | null
           created_at: string
           email: string
@@ -333,6 +330,7 @@ export type Database = {
           user_id: number
         }
         Insert: {
+          avatar_image_url?: string | null
           clerk_user_id?: string | null
           created_at?: string
           email: string
@@ -344,6 +342,7 @@ export type Database = {
           user_id?: number
         }
         Update: {
+          avatar_image_url?: string | null
           clerk_user_id?: string | null
           created_at?: string
           email?: string
@@ -500,3 +499,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

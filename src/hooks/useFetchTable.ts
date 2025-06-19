@@ -38,7 +38,7 @@ export function useFetchTable<T>({
 // import { type GetToken } from "@clerk/types";
 // import { fetchTableSetStoreAndCache } from "@/lib/fetchSetStoreAndCache";
 // import { SupabaseClient } from "@supabase/supabase-js";
-// import { supabaseClient } from "@/utils/supabase/supabaseClient";
+// import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 
 // type UseFetchTableOptions<T> = {
 //   tableName: string;
@@ -69,7 +69,7 @@ export function useFetchTable<T>({
 
 //       // supabase = createClient(token);
 //       // need to use this one. the client.ts one doesn't work and I wasted many hours discovering that.
-//       supabase = await supabaseClient(token);
+//       supabase = await getSupabaseClient(token);
 //       supabase.realtime.setAuth(token);
 
 //       const { data, error } = await supabase.from(tableName).select("*");
