@@ -1,6 +1,7 @@
 import { useAddressesStore } from "@/state/addressesStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { useBleachersStore } from "@/state/bleachersStore";
+import { useBlocksStore } from "@/state/blocksStore";
 import { useEventsStore } from "@/state/eventsStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
@@ -12,6 +13,7 @@ type TableName =
   | "Addresses"
   | "BleacherEvents"
   | "Bleachers"
+  | "Blocks"
   | "Events"
   | "HomeBases"
   | "UserHomeBases"
@@ -25,6 +27,7 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   Addresses: () => useAddressesStore.getState().setStale(true),
   BleacherEvents: () => useBleacherEventsStore.getState().setStale(true),
   Bleachers: () => useBleachersStore.getState().setStale(true),
+  Blocks: () => useBlocksStore.getState().setStale(true),
   Events: () => useEventsStore.getState().setStale(true),
   HomeBases: () => useHomeBasesStore.getState().setStale(true),
   UserHomeBases: () => useUserHomeBasesStore.getState().setStale(true),

@@ -1,11 +1,20 @@
 import clsx from "clsx";
 import { Grid, ScrollParams } from "react-virtualized";
 import { DateTime } from "luxon";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DashboardBleacher, DashboardEvent } from "../../types";
 import { CurrentEventState, useCurrentEventStore } from "../../useCurrentEventStore";
 import { YAxis } from "../../useFilterDashboardStore";
 import EventRenderer from "./EventRenderer";
+import BlockRenderer from "./BlockRenderer";
+import BlockModal from "./BlockModal";
+
+export type EditBlock = {
+  blockId: number | null;
+  bleacherId: number;
+  date: string;
+  text: string;
+};
 
 type MainScrollableGridProps = {
   ROW_HEIGHT: number;
@@ -35,6 +44,7 @@ export default function MainScrollableGrid({
   yAxis,
 }: MainScrollableGridProps) {
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
+  const [selectedBlock, setSelectedBlock] = useState<EditBlock | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollLeftRef = useRef(0);
@@ -108,6 +118,7 @@ export default function MainScrollableGrid({
         overflow: "hidden",
       }}
     >
+      <BlockModal selectedBlock={selectedBlock} setSelectedBlock={setSelectedBlock} />
       <Grid
         ref={gridRef}
         // scrollToColumn={DATE_RANGE + 4}
@@ -127,24 +138,48 @@ export default function MainScrollableGrid({
               key={key}
               style={style}
               className={clsx(
-                "relative flex justify-center items-center text-sm w-full h-full border-r border-b bg-white"
+                "relative flex justify-center items-center text-sm w-full h-full border-r border-b bg-white",
+                {
+                  "hover:bg-gray-100 cursor-pointer": yAxis === "Bleachers",
+                }
               )}
+              onClick={() => {
+                if (yAxis === "Bleachers") {
+                  const block = bleachers[rowIndex].blocks.find(
+                    (b) => DateTime.fromISO(b.date).toISODate() === dates[columnIndex]
+                  );
+                  setSelectedBlock({
+                    blockId: block?.blockId ?? null,
+                    bleacherId: bleachers[rowIndex].bleacherId,
+                    date: dates[columnIndex],
+                    text: block?.text ?? "",
+                  });
+                }
+              }}
             >
               {yAxis === "Bleachers" ? (
-                bleachers[rowIndex].events.map((event: DashboardEvent, eventIndex: number) => (
-                  <EventRenderer
-                    key={event.eventId}
-                    event={event}
-                    dates={dates}
-                    columnIndex={columnIndex}
-                    rowIndex={rowIndex}
-                    COLUMN_WIDTH={COLUMN_WIDTH}
-                    isFirstVisibleColumn={isFirstVisibleColumn}
-                    scrollLeftRef={scrollLeftRef}
-                    firstVisibleColumnRef={firstVisibleColumnRef}
-                    bleacherIds={event.bleacherIds}
-                  />
-                ))
+                <>
+                  {bleachers[rowIndex].events.map((event: DashboardEvent, eventIndex: number) => (
+                    <EventRenderer
+                      key={event.eventId}
+                      event={event}
+                      dates={dates}
+                      columnIndex={columnIndex}
+                      rowIndex={rowIndex}
+                      COLUMN_WIDTH={COLUMN_WIDTH}
+                      isFirstVisibleColumn={isFirstVisibleColumn}
+                      scrollLeftRef={scrollLeftRef}
+                      firstVisibleColumnRef={firstVisibleColumnRef}
+                      bleacherIds={event.bleacherIds}
+                    />
+                  ))}
+                  {(() => {
+                    const block = bleachers[rowIndex].blocks.find(
+                      (b) => DateTime.fromISO(b.date).toISODate() === dates[columnIndex]
+                    );
+                    return block ? <BlockRenderer block={block} /> : null;
+                  })()}
+                </>
               ) : (
                 <EventRenderer
                   key={events[rowIndex]?.eventId ?? `${rowIndex}-${columnIndex}`}

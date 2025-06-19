@@ -27,7 +27,10 @@ export const fetchTableSetStoreAndCache = async <T>(
   // supabase.realtime.setAuth(token);
 
   const { data, error } = await supabase.from(tableName).select("*");
-  console.log(`Fetched ${tableName}:`, data);
+  // console.log(`Fetched ${tableName}:`, data);
+  if (tableName === "Blocks") {
+    console.log("Blocks data:", data);
+  }
 
   if (error) {
     console.error(`Failed to fetch ${tableName}:`, error);
