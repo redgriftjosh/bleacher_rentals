@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "generate-types-staging": "supabase gen types typescript --project-id \"sycrvbdpdbaczyfdwcnc\" --schema public > database.types.ts",
+    "generate-types-local": "supabase gen types typescript --local --schema public > database.types.ts",
     "dev": "concurrently \"next dev --turbo\" \"ngrok http --url=up-marmot-tops.ngrok-free.app 3000\"",
     "build": "next build",
     "start": "next start",

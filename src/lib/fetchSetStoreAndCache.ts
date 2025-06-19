@@ -1,5 +1,6 @@
 "use client";
 
+import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 // lib/fetchTableAndSetStore.ts
 import { supabaseClient } from "@/utils/supabase/supabaseClient";
 import { type GetToken } from "@clerk/types";
@@ -22,10 +23,14 @@ export const fetchTableSetStoreAndCache = async <T>(
   const token = await getToken({ template: "supabase" });
   if (!token) return;
 
-  const supabase = await supabaseClient(token);
-  supabase.realtime.setAuth(token);
+  const supabase = await getSupabaseClient(token);
+  // supabase.realtime.setAuth(token);
 
   const { data, error } = await supabase.from(tableName).select("*");
+  // console.log(`Fetched ${tableName}:`, data);
+  if (tableName === "Blocks") {
+    console.log("Blocks data:", data);
+  }
 
   if (error) {
     console.error(`Failed to fetch ${tableName}:`, error);

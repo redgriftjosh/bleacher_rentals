@@ -9,7 +9,7 @@ import { checkInsertBleacherFormRules } from "./functions";
 import { toast } from "sonner";
 import React from "react";
 import { ErrorToast } from "@/components/toasts/ErrorToast";
-import { supabaseClient } from "@/utils/supabase/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { SuccessToast } from "@/components/toasts/SuccessToast";
 import { updateDataBase } from "@/app/actions/db.actions";
 
@@ -49,7 +49,7 @@ export function fetchBleachers() {
 
 export async function insertBleacher(bleacher: InsertBleacher, token: string) {
   // console.log("inserting bleacher", token);
-  const supabase = supabaseClient(token);
+  const supabase = await getSupabaseClient(token);
   const { error } = await supabase.from("Bleachers").insert(bleacher);
   if (error) {
     // console.log("Error inserting bleacher:", error);

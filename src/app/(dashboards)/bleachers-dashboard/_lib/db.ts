@@ -14,12 +14,14 @@ import { SuccessToast } from "@/components/toasts/SuccessToast";
 import { CurrentEventStore } from "./useCurrentEventStore";
 import { useAddressesStore } from "@/state/addressesStore";
 import { useEventsStore } from "@/state/eventsStore";
-import { DashboardBleacher, DashboardEvent } from "./types";
+import { DashboardBleacher, DashboardBlock, DashboardEvent } from "./types";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
-import { supabaseClient } from "@/utils/supabase/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { useMemo } from "react";
 import { UserResource } from "@clerk/types";
 import { updateDataBase } from "@/app/actions/db.actions";
+import { useBlocksStore } from "@/state/blocksStore";
+import { EditBlock } from "./_components/dashboard/MainScrollableGrid";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -33,6 +35,7 @@ export function fetchBleachers() {
   const addresses = useAddressesStore((s) => s.addresses);
   const events = useEventsStore((s) => s.events);
   const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
+  const blocks = useBlocksStore((s) => s.blocks);
 
   const eventAlerts = calculateEventAlerts(events, bleacherEvents);
   // console.log("eventAlerts", eventAlerts);
@@ -47,6 +50,15 @@ export function fetchBleachers() {
         const winterHomeBase = homeBases.find(
           (base) => base.home_base_id === bleacher.winter_home_base_id
         );
+
+        const relatedBlocks: DashboardBlock[] = blocks
+          .filter((block) => block.bleacher_id === bleacher.bleacher_id)
+          .map((block) => ({
+            blockId: block.block_id,
+            bleacherId: bleacher.bleacher_id,
+            text: block.text ?? "",
+            date: block.date ?? "",
+          }));
 
         // ✅ Find all bleacherEvents for this bleacher
         const relatedBleacherEvents = bleacherEvents.filter(
@@ -115,27 +127,14 @@ export function fetchBleachers() {
             homeBaseName: winterHomeBase?.home_base_name ?? "",
           },
           events: relatedEvents,
+          blocks: relatedBlocks,
         };
       })
       .sort((a, b) => b.bleacherNumber - a.bleacherNumber);
     // console.log("formattedBleachers", formattedBleachers);
 
     return formattedBleachers;
-    // const multipliedBleachers = Array.from({ length: 100 }, (_, i) =>
-    //   formattedBleachers.map((b) => ({
-    //     ...b,
-    //     bleacherId: b.bleacherId * 10 + i, // tweak ID to avoid collisions if needed
-    //     bleacherNumber: b.bleacherNumber * 10 + i, // optional: adjust display number
-    //     events: b.events.map((e) => ({
-    //       ...e,
-    //       eventId: e.eventId * 10 + i, // optional: make events unique
-    //       eventName: `${e.eventName} (${i + 1})`, // distinguish copies
-    //     })),
-    //   }))
-    // ).flat();
-
-    // return multipliedBleachers;
-  }, [bleachers, homeBases, addresses, events, bleacherEvents]);
+  }, [bleachers, homeBases, addresses, events, bleacherEvents, blocks]);
 }
 
 export function fetchDashboardEvents() {
@@ -199,6 +198,81 @@ export function fetchDashboardEvents() {
   }, [events, addresses, bleacherEvents]);
 }
 
+export async function saveBlock(block: EditBlock | null, token: string | null): Promise<void> {
+  if (!token) {
+    console.warn("No token found");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No token found"],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error("No authentication token found");
+  }
+
+  if (!block) {
+    console.error("No block provided for save");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No block provided for save"],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error("No block selected to save.");
+  }
+
+  const supabase = await getSupabaseClient(token);
+  if (block.blockId) {
+    const { error } = await supabase
+      .from("Blocks")
+      .update({ text: block.text })
+      .eq("block_id", block.blockId);
+    if (error) {
+      console.error("Failed to update block:", error);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: ["Failed to update block", error.message],
+          }),
+        { duration: 10000 }
+      );
+      throw new Error(`Failed to update block: ${error.message}`);
+    }
+  } else {
+    const { error } = await supabase.from("Blocks").insert({
+      bleacher_id: block.bleacherId,
+      date: block.date,
+      text: block.text,
+    });
+    if (error) {
+      console.error("Failed to insert block:", error);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: ["Failed to insert block", error.message],
+          }),
+        { duration: 10000 }
+      );
+      throw new Error(`Failed to insert block: ${error.message}`);
+    }
+  }
+  toast.custom(
+    (t) =>
+      React.createElement(SuccessToast, {
+        id: t,
+        lines: ["Event Created"],
+      }),
+    { duration: 10000 }
+  );
+  updateDataBase(["Blocks"]);
+}
+
 export async function createEvent(
   state: CurrentEventStore,
   token: string | null,
@@ -209,7 +283,7 @@ export async function createEvent(
     throw new Error("No authentication token found");
   }
 
-  const supabase = supabaseClient(token);
+  const supabase = await getSupabaseClient(token);
 
   if (!checkEventFormRules(state, user)) {
     throw new Error("Event form validation failed");
@@ -346,7 +420,7 @@ export async function updateEvent(
     throw new Error("No event selected to update.");
   }
 
-  const supabase = supabaseClient(token);
+  const supabase = await getSupabaseClient(token);
 
   if (!checkEventFormRules(state, user)) {
     throw new Error("Event form validation failed");
@@ -490,7 +564,7 @@ export async function deleteEvent(
 
   isUserPermitted(stateProv, user);
 
-  const supabase = supabaseClient(token);
+  const supabase = await getSupabaseClient(token);
 
   // 1. Find the event to get address_id
   const { data: eventData, error: fetchEventError } = await supabase

@@ -14,6 +14,13 @@ export type DashboardBleacher = {
     homeBaseName: string;
   };
   events: DashboardEvent[];
+  blocks: DashboardBlock[];
+};
+
+export type DashboardBlock = {
+  blockId: number;
+  text: string;
+  date: string;
 };
 
 export type DashboardEvent = {
