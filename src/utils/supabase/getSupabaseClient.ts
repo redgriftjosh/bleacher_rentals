@@ -1,13 +1,10 @@
 "use client";
-import { type GetToken } from "@clerk/types";
 import { supabaseClient } from "./supabaseClient";
 import { SupabaseClient } from "@supabase/supabase-js";
 
-export const getSupabaseClient = async (getToken: GetToken): Promise<SupabaseClient> => {
+export const getSupabaseClient = async (supabaseToken: string): Promise<SupabaseClient> => {
   const isDev = process.env.NODE_ENV === "development";
-  const token = isDev
-    ? process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
-    : await getToken({ template: "supabase" });
+  const token = isDev ? process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY : supabaseToken;
   if (!token) throw new Error("Failed to get Supabase token");
 
   const supabase = await supabaseClient(token);

@@ -20,13 +20,10 @@ export const fetchTableSetStoreAndCache = async <T>(
   setStore: (data: T[]) => void
 ) => {
   const STORAGE_KEY = `cached-${tableName}`;
-  // const isDev = process.env.NODE_ENV === "development";
-  // const token = isDev
-  //   ? process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
-  //   : await getToken({ template: "supabase" });
-  // if (!token) return;
+  const token = await getToken({ template: "supabase" });
+  if (!token) return;
 
-  const supabase = await getSupabaseClient(getToken);
+  const supabase = await getSupabaseClient(token);
   // supabase.realtime.setAuth(token);
 
   const { data, error } = await supabase.from(tableName).select("*");

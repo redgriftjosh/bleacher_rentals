@@ -16,7 +16,7 @@ import { useAddressesStore } from "@/state/addressesStore";
 import { useEventsStore } from "@/state/eventsStore";
 import { DashboardBleacher, DashboardEvent } from "./types";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
-import { supabaseClient } from "@/utils/supabase/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { useMemo } from "react";
 import { UserResource } from "@clerk/types";
 import { updateDataBase } from "@/app/actions/db.actions";
@@ -209,7 +209,7 @@ export async function createEvent(
     throw new Error("No authentication token found");
   }
 
-  const supabase = supabaseClient(token);
+  const supabase = await getSupabaseClient(token);
 
   if (!checkEventFormRules(state, user)) {
     throw new Error("Event form validation failed");
@@ -346,7 +346,7 @@ export async function updateEvent(
     throw new Error("No event selected to update.");
   }
 
-  const supabase = supabaseClient(token);
+  const supabase = await getSupabaseClient(token);
 
   if (!checkEventFormRules(state, user)) {
     throw new Error("Event form validation failed");
@@ -490,7 +490,7 @@ export async function deleteEvent(
 
   isUserPermitted(stateProv, user);
 
-  const supabase = supabaseClient(token);
+  const supabase = await getSupabaseClient(token);
 
   // 1. Find the event to get address_id
   const { data: eventData, error: fetchEventError } = await supabase

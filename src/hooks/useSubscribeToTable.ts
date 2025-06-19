@@ -5,7 +5,7 @@ import { type GetToken } from "@clerk/types";
 import { createClient } from "@/utils/supabase/client";
 import { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import { fetchTableSetStoreAndCache } from "@/lib/fetchSetStoreAndCache";
-import { supabaseClient } from "@/utils/supabase/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 
 type UseSubscribeToTableOptions<T> = {
   tableName: string;
@@ -32,7 +32,7 @@ export function useSubscribeToTable<T>({
       if (!token) return;
 
       // supabase = createClient(token);
-      supabase = await supabaseClient(token);
+      supabase = await getSupabaseClient(token);
       supabase.realtime.setAuth(token);
 
       channel = supabase

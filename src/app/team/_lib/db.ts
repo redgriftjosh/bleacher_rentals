@@ -5,7 +5,7 @@ import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
 import { useUserRolesStore } from "@/state/userRolesStore";
 import { useUserStatusesStore } from "@/state/userStatusesStore";
 import { useUsersStore } from "@/state/userStore";
-import { supabaseClient } from "@/utils/supabase/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 
 export async function insertUser(
   email: string,
@@ -16,7 +16,7 @@ export async function insertUser(
   token: string
 ) {
   // console.log("Inserting user", token);
-  const supabase = supabaseClient(token);
+  const supabase = await getSupabaseClient(token);
 
   const { error: userError, data: userData } = await supabase
     .from("Users")
@@ -72,7 +72,7 @@ export async function updateUser(
     token: string;
   }
 ) {
-  const supabase = supabaseClient(token);
+  const supabase = await getSupabaseClient(token);
   // console.log("Updating user", token);
 
   const { error: updateError } = await supabase
@@ -104,7 +104,7 @@ export async function updateUser(
 }
 
 export async function deactivateUser(userId: number, token: string) {
-  const supabase = supabaseClient(token);
+  const supabase = await getSupabaseClient(token);
 
   const { error: updateError } = await supabase
     .from("Users")
@@ -118,7 +118,7 @@ export async function deactivateUser(userId: number, token: string) {
 }
 
 export async function reactivateUser(userId: number, token: string) {
-  const supabase = supabaseClient(token);
+  const supabase = await getSupabaseClient(token);
 
   const { error: updateError } = await supabase
     .from("Users")
@@ -132,7 +132,7 @@ export async function reactivateUser(userId: number, token: string) {
 }
 
 export async function deleteUser(userId: number, token: string) {
-  const supabase = supabaseClient(token);
+  const supabase = await getSupabaseClient(token);
 
   const { error: updateError } = await supabase.from("Users").delete().eq("user_id", userId);
 
