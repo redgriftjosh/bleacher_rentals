@@ -140,7 +140,7 @@ export default function MainScrollableGrid({
               className={clsx(
                 "relative flex justify-center items-center text-sm w-full h-full border-r border-b bg-white",
                 {
-                  "hover:bg-gray-100 cursor-pointer": yAxis === "Bleachers",
+                  "hover:bg-gray-50 cursor-pointer": yAxis === "Bleachers",
                 }
               )}
               onClick={() => {
