@@ -157,7 +157,8 @@ export default function EventRenderer({
             // zIndex: zIndex,
             overflow: "visible",
           }}
-          onClick={() =>
+          onClick={(e) => {
+            e.stopPropagation();
             handleLoadEvent({
               eventId: event.eventId,
               eventName: event.eventName,
@@ -180,8 +181,8 @@ export default function EventRenderer({
               isFormExpanded: true,
               hslHue: event.hslHue,
               alerts: [], // will be calculated on load
-            })
-          }
+            });
+          }}
         >
           <div
             className="sticky left-0 top-0 bg-transparent z-10 text-left px-2 pt-0.5 transition-all duration-1000 ease-in-out"
