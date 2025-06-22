@@ -21,6 +21,7 @@ export const fetchTableSetStoreAndCache = async <T>(
 ) => {
   const STORAGE_KEY = `cached-${tableName}`;
   const token = await getToken({ template: "supabase" });
+  // console.log(`Token ${token}`);
   if (!token) return;
 
   const supabase = await getSupabaseClient(token);
@@ -29,7 +30,7 @@ export const fetchTableSetStoreAndCache = async <T>(
   const { data, error } = await supabase.from(tableName).select("*");
   // console.log(`Fetched ${tableName}:`, data);
   if (tableName === "Blocks") {
-    console.log("Blocks data:", data);
+    // console.log("Blocks data:", data);
   }
 
   if (error) {
