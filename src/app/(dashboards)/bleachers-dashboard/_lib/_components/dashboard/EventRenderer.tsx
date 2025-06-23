@@ -30,86 +30,59 @@ export default function EventRenderer({
   const eventStartDate = DateTime.fromISO(event.eventStart);
   const eventEndDate = DateTime.fromISO(event.eventEnd);
   const eventHsl = event.hslHue ? `hsl(${event.hslHue.toString()}, 60%, 60%)` : "hsl(0, 0%, 50%)";
-  const yellowHsl = "hsl(54, 90%, 60%)"; // Setup & teardown color
   const setField = useCurrentEventStore((s) => s.setField);
-  if (event.eventId === 68) {
-    // console.log("event 68", event);
-  }
 
-  const visualStartDate = event.setupStart ? DateTime.fromISO(event.setupStart) : eventStartDate;
-  const visualEndDate = event.teardownEnd ? DateTime.fromISO(event.teardownEnd) : eventEndDate;
+  let shouldDisplayEvent = currentDate.toISODate() === eventStartDate.toISODate();
 
-  // this was my old paginated approach and I don't think is necessary anymore
-  // let shouldDisplayEvent =
-  //   currentDate.toISODate() === visualStartDate.toISODate() ||
-  //   (columnIndex === 0 && visualStartDate < currentDate && visualEndDate >= currentDate);
-  let shouldDisplayEvent = currentDate.toISODate() === visualStartDate.toISODate();
+  const sameDaySetup = event.setupStart === "";
 
   const daysVisible = Math.min(
-    visualEndDate.diff(currentDate, "days").days + 1,
+    eventEndDate.diff(currentDate, "days").days + 1,
     dates.length - columnIndex
   );
   const padding = 6;
-  let width = `${daysVisible * COLUMN_WIDTH - (padding * 2 + 1)}px`;
-
-  const setupDays: number | null =
-    event.setupStart != ""
-      ? eventStartDate.diff(DateTime.fromISO(event.setupStart), "days").days
-      : null;
-
-  const teardownDays =
-    event.teardownEnd != ""
-      ? DateTime.fromISO(event.teardownEnd).diff(eventEndDate, "days").days
-      : null;
-  const border = event.status === "Booked" ? 0 : 1;
-
-  const setupStartDate = event.setupStart ? DateTime.fromISO(event.setupStart) : null;
-
-  const daysRemainingSetup = Math.min(
-    eventStartDate.diff(currentDate, "days").days,
-    dates.length - columnIndex
-  );
-
   const halfDayWidth = COLUMN_WIDTH / 2 - padding / 2;
-  const setupWidth = isFirstVisibleColumn
-    ? daysRemainingSetup > 0
-      ? daysRemainingSetup * COLUMN_WIDTH - padding - border
-      : halfDayWidth
-    : setupDays !== null
-    ? setupDays * COLUMN_WIDTH - padding - border
-    : halfDayWidth;
 
-  const shouldRenderSetup = isFirstVisibleColumn
-    ? daysRemainingSetup > 0 || (!setupStartDate && currentDate.hasSame(eventStartDate, "day"))
-    : true;
+  let halfDayAdjustment = 0;
+  if (event.setupStart === "") {
+    halfDayAdjustment += halfDayWidth - 1;
+  }
+  if (event.teardownEnd === "") {
+    halfDayAdjustment += halfDayWidth;
+  }
+  if (event.teardownEnd === "" || event.setupStart === "") {
+    halfDayAdjustment = halfDayAdjustment + padding + 1;
+  }
+  if (event.teardownEnd === "" && event.setupStart === "") {
+    halfDayAdjustment = halfDayAdjustment + padding + 1;
+  }
+
+  let width = `${daysVisible * COLUMN_WIDTH - halfDayAdjustment}px`;
+  const border = event.status === "Booked" ? 0 : 1;
 
   const daysRemainingEvent = Math.min(
     eventEndDate.diff(currentDate, "days").days + 1,
     dates.length - columnIndex
   );
+  let left = sameDaySetup ? halfDayWidth + padding : 0;
 
   if (isFirstVisibleColumn) {
-    const teardownEndDate = event.teardownEnd ? DateTime.fromISO(event.teardownEnd) : null;
-    const startDate = event.setupStart ? DateTime.fromISO(event.setupStart) : eventStartDate;
-    const endDate = event.teardownEnd ? DateTime.fromISO(event.teardownEnd) : eventEndDate;
     const isOngoing =
-      currentDate >= startDate.startOf("day") && currentDate <= endDate.endOf("day");
+      currentDate >= eventStartDate.startOf("day") && currentDate <= eventEndDate.endOf("day");
 
     if (!isOngoing) return null;
 
     let daysRemainingTeardown = 0;
-    if (teardownEndDate) {
-      daysRemainingTeardown = Math.min(
-        teardownEndDate.diff(currentDate, "days").days,
-        dates.length - columnIndex
-      );
-      daysRemainingTeardown -= daysRemainingEvent + -1;
+    // if the first column is not the first day of the event
+    if (!shouldDisplayEvent) {
+      if (event.setupStart === "") {
+        halfDayAdjustment -= halfDayWidth;
+        left -= halfDayWidth;
+      }
     }
 
-    width = `${(daysRemainingEvent + daysRemainingTeardown) * COLUMN_WIDTH - (padding * 2 + 1)}px`;
+    width = `${(daysRemainingEvent + daysRemainingTeardown) * COLUMN_WIDTH - halfDayAdjustment}px`;
   }
-
-  const eventDays = isFirstVisibleColumn ? daysVisible : daysRemainingEvent;
 
   const handleLoadEvent = (event: CurrentEventState) => {
     setField("eventId", event.eventId);
@@ -150,10 +123,10 @@ export default function EventRenderer({
             width: width,
             height: height,
             top: top,
-            left: `${padding}px`,
+            left: `${left}px`,
             backgroundColor: event.status === "Booked" ? eventHsl : "white",
             border: `${border}px solid ${eventHsl}`,
-            borderRadius: "4px",
+            // borderRadius: "4px",
             // zIndex: zIndex,
             overflow: "visible",
           }}
@@ -238,39 +211,6 @@ export default function EventRenderer({
               {event.addressData?.address}
             </div>
           </div>
-          {/* Setup*/}
-          {shouldRenderSetup && (
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundColor: yellowHsl,
-                width: `${setupWidth}px`,
-                borderTopLeftRadius: "3px",
-                borderBottomLeftRadius: "3px",
-              }}
-            />
-          )}
-          {/* Teardown */}
-          <div
-            className=" absolute inset-0"
-            style={{
-              backgroundColor: yellowHsl,
-              width: `${
-                teardownDays !== null
-                  ? teardownDays * COLUMN_WIDTH - padding - border
-                  : halfDayWidth
-              }px`,
-              left: `${
-                teardownDays !== null
-                  ? (eventEndDate.diff(currentDate, "days").days + 1) * COLUMN_WIDTH -
-                    padding -
-                    border * 2
-                  : eventDays * COLUMN_WIDTH - (padding * 2 + 1) - halfDayWidth - border * 2
-              }px`,
-              borderTopRightRadius: "3px",
-              borderBottomRightRadius: "3px",
-            }}
-          ></div>
         </div>
       )}
     </div>

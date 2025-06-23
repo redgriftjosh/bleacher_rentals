@@ -8,6 +8,8 @@ import { YAxis } from "../../useFilterDashboardStore";
 import EventRenderer from "./EventRenderer";
 import BlockRenderer from "./BlockRenderer";
 import BlockModal from "./BlockModal";
+import SetupRenderer from "./SetupRenderer";
+import TeardownRenderer from "./TeardownRenderer";
 
 export type EditBlock = {
   blockId: number | null;
@@ -160,18 +162,44 @@ export default function MainScrollableGrid({
               {yAxis === "Bleachers" ? (
                 <>
                   {bleachers[rowIndex].events.map((event: DashboardEvent, eventIndex: number) => (
-                    <EventRenderer
-                      key={event.eventId}
-                      event={event}
-                      dates={dates}
-                      columnIndex={columnIndex}
-                      rowIndex={rowIndex}
-                      COLUMN_WIDTH={COLUMN_WIDTH}
-                      isFirstVisibleColumn={isFirstVisibleColumn}
-                      scrollLeftRef={scrollLeftRef}
-                      firstVisibleColumnRef={firstVisibleColumnRef}
-                      bleacherIds={event.bleacherIds}
-                    />
+                    <div key={`whole-event-${event.eventId}`}>
+                      <EventRenderer
+                        key={event.eventId}
+                        event={event}
+                        dates={dates}
+                        columnIndex={columnIndex}
+                        rowIndex={rowIndex}
+                        COLUMN_WIDTH={COLUMN_WIDTH}
+                        isFirstVisibleColumn={isFirstVisibleColumn}
+                        scrollLeftRef={scrollLeftRef}
+                        firstVisibleColumnRef={firstVisibleColumnRef}
+                        bleacherIds={event.bleacherIds}
+                      />
+                      <SetupRenderer
+                        key={`setup-${event.eventId}`}
+                        event={event}
+                        dates={dates}
+                        columnIndex={columnIndex}
+                        rowIndex={rowIndex}
+                        COLUMN_WIDTH={COLUMN_WIDTH}
+                        isFirstVisibleColumn={isFirstVisibleColumn}
+                        scrollLeftRef={scrollLeftRef}
+                        firstVisibleColumnRef={firstVisibleColumnRef}
+                        bleacherIds={event.bleacherIds}
+                      />
+                      <TeardownRenderer
+                        key={`teardown-${event.eventId}`}
+                        event={event}
+                        dates={dates}
+                        columnIndex={columnIndex}
+                        rowIndex={rowIndex}
+                        COLUMN_WIDTH={COLUMN_WIDTH}
+                        isFirstVisibleColumn={isFirstVisibleColumn}
+                        scrollLeftRef={scrollLeftRef}
+                        firstVisibleColumnRef={firstVisibleColumnRef}
+                        bleacherIds={event.bleacherIds}
+                      />
+                    </div>
                   ))}
                   {(() => {
                     const block = bleachers[rowIndex].blocks.find(
