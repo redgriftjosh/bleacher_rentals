@@ -42,18 +42,30 @@ export type Database = {
           bleacher_id: number
           created_at: string
           event_id: number
+          setup_confirmed: boolean
+          setup_text: string | null
+          teardown_confirmed: boolean
+          teardown_text: string | null
         }
         Insert: {
           bleacher_event_id?: number
           bleacher_id: number
           created_at?: string
           event_id: number
+          setup_confirmed?: boolean
+          setup_text?: string | null
+          teardown_confirmed?: boolean
+          teardown_text?: string | null
         }
         Update: {
           bleacher_event_id?: number
           bleacher_id?: number
           created_at?: string
           event_id?: number
+          setup_confirmed?: boolean
+          setup_text?: string | null
+          teardown_confirmed?: boolean
+          teardown_text?: string | null
         }
         Relationships: [
           {
@@ -499,4 +511,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

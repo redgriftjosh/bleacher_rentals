@@ -32,10 +32,14 @@ export type DashboardEvent = {
   tenRow: number | null;
   fifteenRow: number | null;
   setupStart: string;
+  setupText: string | null;
+  setupConfirmed: boolean;
   sameDaySetup: boolean;
   eventStart: string;
   eventEnd: string;
   teardownEnd: string;
+  teardownText: string | null;
+  teardownConfirmed: boolean;
   sameDayTeardown: boolean;
   lenient: boolean;
   token: string;

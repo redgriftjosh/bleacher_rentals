@@ -30,7 +30,7 @@ export default function SetupRenderer({
   const eventStartDate = DateTime.fromISO(event.eventStart);
   const eventEndDate = DateTime.fromISO(event.eventEnd);
   const eventHsl = event.hslHue ? `hsl(${event.hslHue.toString()}, 60%, 60%)` : "hsl(0, 0%, 50%)";
-  const yellowHsl = "hsl(54, 90%, 60%)"; // Setup & teardown color
+  const bgColour = event.setupConfirmed ? "hsl(0, 0%, 80%)" : "hsl(54, 90%, 60%)"; // Setup & teardown color
   const setField = useCurrentEventStore((s) => s.setField);
 
   const visualStartDate = event.setupStart ? DateTime.fromISO(event.setupStart) : eventStartDate;
@@ -96,9 +96,9 @@ export default function SetupRenderer({
     <div key={`setup-${rowIndex}`}>
       {shouldRenderSetup && (
         <div
-          className={`absolute inset-0 ${zIndex}`}
+          className={`hover:shadow-md hover:z-[100] transition-all cursor-pointer absolute inset-0 ${zIndex}`}
           style={{
-            backgroundColor: yellowHsl,
+            backgroundColor: bgColour,
             left: `${padding}px`,
             top: `${top}`,
             height: height,
@@ -106,7 +106,13 @@ export default function SetupRenderer({
             borderTopLeftRadius: "3px",
             borderBottomLeftRadius: "3px",
           }}
-        />
+        >
+          {event.setupText && (
+            <p className="flex items-center justify-center text-[10px] text-center truncate whitespace-pre-wrap break-words overflow-hidden h-full w-full">
+              {event.setupText}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

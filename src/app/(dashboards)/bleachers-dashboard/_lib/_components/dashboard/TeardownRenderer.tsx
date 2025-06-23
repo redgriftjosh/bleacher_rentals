@@ -30,7 +30,7 @@ export default function TeardownRenderer({
   const eventStartDate = DateTime.fromISO(event.eventStart);
   const eventEndDate = DateTime.fromISO(event.eventEnd);
   const eventHsl = event.hslHue ? `hsl(${event.hslHue.toString()}, 60%, 60%)` : "hsl(0, 0%, 50%)";
-  const yellowHsl = "hsl(54, 90%, 60%)"; // Setup & teardown color
+  const bgColour = event.teardownConfirmed ? "hsl(0, 0%, 80%)" : "hsl(54, 90%, 60%)"; // Setup & teardown color
   const setField = useCurrentEventStore((s) => s.setField);
 
   const visualStartDate = event.setupStart ? DateTime.fromISO(event.setupStart) : eventStartDate;
@@ -110,7 +110,7 @@ export default function TeardownRenderer({
       <div
         className={`absolute inset-0 hover:shadow-md hover:z-[100] transition-all cursor-pointer ${zIndex}`}
         style={{
-          backgroundColor: yellowHsl,
+          backgroundColor: bgColour,
           top: top,
           height: height,
           width: `${
@@ -126,7 +126,13 @@ export default function TeardownRenderer({
           borderTopRightRadius: "3px",
           borderBottomRightRadius: "3px",
         }}
-      ></div>
+      >
+        {event.teardownText && (
+          <p className="flex items-center justify-center text-[10px] text-center truncate whitespace-pre-wrap break-words overflow-hidden h-full w-full">
+            {event.teardownText}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

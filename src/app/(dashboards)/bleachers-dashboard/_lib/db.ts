@@ -92,10 +92,14 @@ export function fetchBleachers() {
               tenRow: event.ten_row,
               fifteenRow: event.fifteen_row,
               setupStart: event.setup_start ?? "",
+              setupText: be.setup_text,
+              setupConfirmed: be.setup_confirmed,
               sameDaySetup: !event.setup_start, // if setup_start is null, assume same-day
               eventStart: event.event_start,
               eventEnd: event.event_end,
               teardownEnd: event.teardown_end ?? "",
+              teardownText: be.teardown_text,
+              teardownConfirmed: be.teardown_confirmed,
               sameDayTeardown: !event.teardown_end, // same logic
               lenient: event.lenient,
               token: "", // not needed or included here
@@ -167,10 +171,14 @@ export function fetchDashboardEvents() {
         tenRow: event.ten_row,
         fifteenRow: event.fifteen_row,
         setupStart: event.setup_start ?? "",
+        setupText: null, // unused
+        setupConfirmed: false, // unused
         sameDaySetup: !event.setup_start,
         eventStart: event.event_start,
         eventEnd: event.event_end,
         teardownEnd: event.teardown_end ?? "",
+        teardownText: null, // unused
+        teardownConfirmed: false, // unused
         sameDayTeardown: !event.teardown_end,
         lenient: event.lenient,
         token: "", // unused
@@ -266,7 +274,72 @@ export async function saveBlock(block: EditBlock | null, token: string | null): 
     (t) =>
       React.createElement(SuccessToast, {
         id: t,
-        lines: ["Event Created"],
+        lines: ["Block saved"],
+      }),
+    { duration: 10000 }
+  );
+  updateDataBase(["Blocks"]);
+}
+
+export async function deleteBlock(block: EditBlock | null, token: string | null): Promise<void> {
+  if (!token) {
+    console.warn("No token found");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No token found"],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error("No authentication token found");
+  }
+
+  if (!block) {
+    console.error("No block provided for save");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No block provided for save"],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error("No block selected to save.");
+  }
+
+  const supabase = await getSupabaseClient(token);
+  if (block.blockId) {
+    const { error } = await supabase.from("Blocks").delete().eq("block_id", block.blockId);
+    if (error) {
+      console.error("Failed to delete block:", error);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: ["Failed to delete block", error.message],
+          }),
+        { duration: 10000 }
+      );
+      throw new Error(`Failed to delete block: ${error.message}`);
+    }
+  } else {
+    console.error("No Block ID provided for delete.");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["Failed to delete block, no block ID provided."],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error(`No Block ID provided for delete.`);
+  }
+  toast.custom(
+    (t) =>
+      React.createElement(SuccessToast, {
+        id: t,
+        lines: ["Block Deleted"],
       }),
     { duration: 10000 }
   );
