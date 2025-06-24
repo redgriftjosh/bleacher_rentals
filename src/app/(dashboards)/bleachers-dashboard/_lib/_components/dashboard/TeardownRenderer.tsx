@@ -82,8 +82,9 @@ export default function TeardownRenderer({
   if (isFirstVisibleColumn) {
     const teardownEndDate = event.teardownEnd ? DateTime.fromISO(event.teardownEnd) : null;
     const startDate = event.setupStart ? DateTime.fromISO(event.setupStart) : eventStartDate;
+    const endDate = event.teardownEnd ? DateTime.fromISO(event.teardownEnd) : eventEndDate;
     const isOngoing =
-      currentDate >= startDate.startOf("day") && currentDate <= eventEndDate.endOf("day");
+      currentDate >= startDate.startOf("day") && currentDate <= endDate.endOf("day");
 
     if (!isOngoing) return null;
 
