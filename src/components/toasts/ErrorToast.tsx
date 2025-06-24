@@ -27,3 +27,16 @@ export const ErrorToast = ({ id, lines }: ErrorToastProps) => (
     </button>
   </div>
 );
+
+export function createErrorToast(lines: string[]): never {
+  console.error(lines.join("\n"));
+  toast.custom(
+    (t) =>
+      React.createElement(ErrorToast, {
+        id: t,
+        lines,
+      }),
+    { duration: 10000 }
+  );
+  throw new Error(lines.join("\n"));
+}

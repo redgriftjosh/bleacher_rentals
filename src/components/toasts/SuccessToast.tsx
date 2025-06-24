@@ -25,3 +25,14 @@ export const SuccessToast = ({ id, lines }: SuccessToastProps) => (
     </button>
   </div>
 );
+
+export function createSuccessToast(lines: string[]) {
+  toast.custom(
+    (t) =>
+      React.createElement(SuccessToast, {
+        id: t,
+        lines,
+      }),
+    { duration: 10000 }
+  );
+}
