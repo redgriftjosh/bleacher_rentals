@@ -24,6 +24,7 @@ export function useVisibilityChangeRefresh(
         // console.log(
         //   `⏳ Window was hidden for ${Date.now() - lastHiddenTime.current}ms, refetching...`
         // );
+        // window.location.reload();
         fetchFn();
         lastHiddenTime.current = null;
       }

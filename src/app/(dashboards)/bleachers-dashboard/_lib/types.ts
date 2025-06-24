@@ -25,6 +25,7 @@ export type DashboardBlock = {
 
 export type DashboardEvent = {
   eventId: number;
+  bleacherEventId: number;
   eventName: string;
   addressData: AddressData | null;
   seats: number | null;

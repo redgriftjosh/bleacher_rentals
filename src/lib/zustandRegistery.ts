@@ -8,18 +8,9 @@ import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
 import { useUserRolesStore } from "@/state/userRolesStore";
 import { useUserStatusesStore } from "@/state/userStatusesStore";
 import { useUsersStore } from "@/state/userStore";
+import { Database } from "../../database.types";
 
-type TableName =
-  | "Addresses"
-  | "BleacherEvents"
-  | "Bleachers"
-  | "Blocks"
-  | "Events"
-  | "HomeBases"
-  | "UserHomeBases"
-  | "UserRoles"
-  | "UserStatuses"
-  | "Users"; // Extend this as needed
+export type TableName = keyof Database["public"]["Tables"];
 
 type SetStaleFn = () => void;
 

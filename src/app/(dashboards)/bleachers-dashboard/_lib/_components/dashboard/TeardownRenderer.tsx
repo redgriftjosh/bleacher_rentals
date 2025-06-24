@@ -2,6 +2,7 @@ import { DateTime } from "luxon";
 import { DashboardEvent } from "../../types";
 import { CurrentEventState, useCurrentEventStore } from "../../useCurrentEventStore";
 import { Sparkles } from "lucide-react";
+import { confirmedHsl, setupTeardownHsl } from "@/types/Constants";
 type EventRendererProps = {
   event: DashboardEvent;
   dates: string[];
@@ -30,7 +31,7 @@ export default function TeardownRenderer({
   const eventStartDate = DateTime.fromISO(event.eventStart);
   const eventEndDate = DateTime.fromISO(event.eventEnd);
   const eventHsl = event.hslHue ? `hsl(${event.hslHue.toString()}, 60%, 60%)` : "hsl(0, 0%, 50%)";
-  const bgColour = event.teardownConfirmed ? "hsl(0, 0%, 80%)" : "hsl(54, 90%, 60%)"; // Setup & teardown color
+  const bgColour = event.teardownConfirmed ? confirmedHsl : setupTeardownHsl; // Setup & teardown color
   const setField = useCurrentEventStore((s) => s.setField);
 
   const visualStartDate = event.setupStart ? DateTime.fromISO(event.setupStart) : eventStartDate;

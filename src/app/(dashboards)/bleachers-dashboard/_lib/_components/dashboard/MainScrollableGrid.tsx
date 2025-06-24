@@ -10,6 +10,7 @@ import BlockRenderer from "./BlockRenderer";
 import BlockModal from "./BlockModal";
 import SetupRenderer from "./SetupRenderer";
 import TeardownRenderer from "./TeardownRenderer";
+import SetupBlockModal, { SetupBlock } from "./SetupModal";
 
 export type EditBlock = {
   blockId: number | null;
@@ -47,6 +48,7 @@ export default function MainScrollableGrid({
 }: MainScrollableGridProps) {
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
   const [selectedBlock, setSelectedBlock] = useState<EditBlock | null>(null);
+  const [selectedSetupBlock, setSelectedSetupBlock] = useState<SetupBlock | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollLeftRef = useRef(0);
@@ -121,6 +123,10 @@ export default function MainScrollableGrid({
       }}
     >
       <BlockModal selectedBlock={selectedBlock} setSelectedBlock={setSelectedBlock} />
+      <SetupBlockModal
+        selectedBlock={selectedSetupBlock}
+        setSelectedBlock={setSelectedSetupBlock}
+      />
       <Grid
         ref={gridRef}
         // scrollToColumn={DATE_RANGE + 4}
@@ -178,6 +184,7 @@ export default function MainScrollableGrid({
                       <SetupRenderer
                         key={`setup-${event.eventId}`}
                         event={event}
+                        bleacherId={bleachers[rowIndex].bleacherId}
                         dates={dates}
                         columnIndex={columnIndex}
                         rowIndex={rowIndex}
@@ -186,6 +193,7 @@ export default function MainScrollableGrid({
                         scrollLeftRef={scrollLeftRef}
                         firstVisibleColumnRef={firstVisibleColumnRef}
                         bleacherIds={event.bleacherIds}
+                        setSelectedSetupBlock={setSelectedSetupBlock}
                       />
                       <TeardownRenderer
                         key={`teardown-${event.eventId}`}

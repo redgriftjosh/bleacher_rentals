@@ -256,24 +256,6 @@ export type Database = {
         }
         Relationships: []
       }
-      InvitedUsers: {
-        Row: {
-          created_at: string
-          email: string
-          invited_user_id: number
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          invited_user_id?: number
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          invited_user_id?: number
-        }
-        Relationships: []
-      }
       UserHomeBases: {
         Row: {
           created_at: string

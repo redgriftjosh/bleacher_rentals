@@ -25,3 +25,6 @@ export type UserRoleValue = (typeof USER_ROLES)[UserRoleKey];
 
 // How many rows are available for bleachers?
 export const ROW_OPTIONS = [4, 7, 8, 9, 10, 15];
+
+export const setupTeardownHsl = "hsl(54, 90%, 60%)";
+export const confirmedHsl = "hsl(0, 0%, 80%)";

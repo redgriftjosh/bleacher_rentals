@@ -1,9 +1,15 @@
+"use client";
 import { DateTime } from "luxon";
 import { DashboardEvent } from "../../types";
 import { CurrentEventState, useCurrentEventStore } from "../../useCurrentEventStore";
 import { Sparkles } from "lucide-react";
+import { useState } from "react";
+import SetupBlockModal, { SetupBlock } from "./SetupModal";
+import { useFilterDashboardStore } from "../../useFilterDashboardStore";
+import { confirmedHsl, setupTeardownHsl } from "@/types/Constants";
 type EventRendererProps = {
   event: DashboardEvent;
+  bleacherId: number;
   dates: string[];
   columnIndex: number;
   rowIndex: number;
@@ -12,10 +18,12 @@ type EventRendererProps = {
   scrollLeftRef: React.RefObject<number>;
   firstVisibleColumnRef: React.RefObject<number>;
   bleacherIds: number[];
+  setSelectedSetupBlock: (block: SetupBlock | null) => void;
 };
 
 export default function SetupRenderer({
   event,
+  bleacherId,
   dates,
   columnIndex,
   rowIndex,
@@ -24,14 +32,20 @@ export default function SetupRenderer({
   scrollLeftRef,
   firstVisibleColumnRef,
   bleacherIds,
+  setSelectedSetupBlock,
 }: EventRendererProps) {
-  const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
   const currentDate = DateTime.fromISO(dates[columnIndex]);
   const eventStartDate = DateTime.fromISO(event.eventStart);
   const eventEndDate = DateTime.fromISO(event.eventEnd);
-  const eventHsl = event.hslHue ? `hsl(${event.hslHue.toString()}, 60%, 60%)` : "hsl(0, 0%, 50%)";
-  const bgColour = event.setupConfirmed ? "hsl(0, 0%, 80%)" : "hsl(54, 90%, 60%)"; // Setup & teardown color
-  const setField = useCurrentEventStore((s) => s.setField);
+  const bgColour = event.setupConfirmed ? confirmedHsl : setupTeardownHsl; // Setup & teardown color
+  // const [selectedBlock, setSelectedBlock] = useState<SetupBlock | null>(null);
+  // const [selectedBlockTemp, setSelectedBlockTemp] = useState<SetupBlock | null>({
+  //   bleacherEventId: 1,
+  //   bleacherId: 2,
+  //   setupText: "test",
+  //   setupConfirmed: false,
+  // });
+  const yAxis = useFilterDashboardStore((state) => state.yAxis);
 
   const visualStartDate = event.setupStart ? DateTime.fromISO(event.setupStart) : eventStartDate;
   const visualEndDate = event.teardownEnd ? DateTime.fromISO(event.teardownEnd) : eventEndDate;
@@ -105,6 +119,18 @@ export default function SetupRenderer({
             width: `${setupWidth}px`,
             borderTopLeftRadius: "3px",
             borderBottomLeftRadius: "3px",
+          }}
+          onClick={(e) => {
+            console.log("Clicked Setup");
+            e.stopPropagation();
+            if (yAxis === "Bleachers") {
+              setSelectedSetupBlock({
+                bleacherEventId: event.bleacherEventId,
+                bleacherId: bleacherId,
+                setupText: event.setupText ?? "",
+                setupConfirmed: event.setupConfirmed,
+              });
+            }
           }}
         >
           {event.setupText && (

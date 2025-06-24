@@ -22,6 +22,7 @@ import { UserResource } from "@clerk/types";
 import { updateDataBase } from "@/app/actions/db.actions";
 import { useBlocksStore } from "@/state/blocksStore";
 import { EditBlock } from "./_components/dashboard/MainScrollableGrid";
+import { SetupBlock } from "./_components/dashboard/SetupModal";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -77,6 +78,7 @@ export function fetchBleachers() {
 
             return {
               eventId: event.event_id,
+              bleacherEventId: be.bleacher_event_id,
               eventName: event.event_name,
               addressData: address
                 ? {
@@ -156,6 +158,7 @@ export function fetchDashboardEvents() {
 
       return {
         eventId: event.event_id,
+        bleacherEventId: -1, // unused
         eventName: event.event_name,
         addressData: address
           ? {
@@ -204,6 +207,77 @@ export function fetchDashboardEvents() {
     });
     return dashboardEvents;
   }, [events, addresses, bleacherEvents]);
+}
+
+export async function saveSetupBlock(
+  block: SetupBlock | null,
+  token: string | null
+): Promise<void> {
+  if (!token) {
+    console.warn("No token found");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No token found"],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error("No authentication token found");
+  }
+
+  if (!block) {
+    console.error("No setup block provided for save");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No setup block provided for save"],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error("No setup block selected to save.");
+  }
+
+  const supabase = await getSupabaseClient(token);
+  if (block.bleacherEventId) {
+    const { error } = await supabase
+      .from("BleacherEvents")
+      .update({ setup_text: block.setupText, setup_confirmed: block.setupConfirmed })
+      .eq("bleacher_event_id", block.bleacherEventId);
+    if (error) {
+      console.error("Failed to update BleacherEvent:", error);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: ["Failed to update setup block", error.message],
+          }),
+        { duration: 10000 }
+      );
+      throw new Error(`Failed to update setup block: ${error.message}`);
+    }
+  } else {
+    console.error("Failed to save setup block: no BleacherEventId");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["ailed to save setup block: no BleacherEventId"],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error(`ailed to save setup block: no BleacherEventId`);
+  }
+  toast.custom(
+    (t) =>
+      React.createElement(SuccessToast, {
+        id: t,
+        lines: ["Setup Block saved"],
+      }),
+    { duration: 10000 }
+  );
+  updateDataBase(["BleacherEvents"]);
 }
 
 export async function saveBlock(block: EditBlock | null, token: string | null): Promise<void> {
