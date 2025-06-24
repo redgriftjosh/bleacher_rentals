@@ -1,12 +1,10 @@
 "use client";
 import { DateTime } from "luxon";
 import { DashboardEvent } from "../../types";
-import { CurrentEventState, useCurrentEventStore } from "../../useCurrentEventStore";
-import { Sparkles } from "lucide-react";
-import { useState } from "react";
-import SetupBlockModal, { SetupBlock } from "./SetupModal";
+import { SetupTeardownBlock } from "./SetupTeardownBlockModal";
 import { useFilterDashboardStore } from "../../useFilterDashboardStore";
 import { confirmedHsl, setupTeardownHsl } from "@/types/Constants";
+
 type EventRendererProps = {
   event: DashboardEvent;
   bleacherId: number;
@@ -15,10 +13,7 @@ type EventRendererProps = {
   rowIndex: number;
   COLUMN_WIDTH: number;
   isFirstVisibleColumn: boolean;
-  scrollLeftRef: React.RefObject<number>;
-  firstVisibleColumnRef: React.RefObject<number>;
-  bleacherIds: number[];
-  setSelectedSetupBlock: (block: SetupBlock | null) => void;
+  setSelectedSetupBlock: (block: SetupTeardownBlock | null) => void;
 };
 
 export default function SetupRenderer({
@@ -29,9 +24,6 @@ export default function SetupRenderer({
   rowIndex,
   COLUMN_WIDTH,
   isFirstVisibleColumn,
-  scrollLeftRef,
-  firstVisibleColumnRef,
-  bleacherIds,
   setSelectedSetupBlock,
 }: EventRendererProps) {
   const currentDate = DateTime.fromISO(dates[columnIndex]);
@@ -127,8 +119,9 @@ export default function SetupRenderer({
               setSelectedSetupBlock({
                 bleacherEventId: event.bleacherEventId,
                 bleacherId: bleacherId,
-                setupText: event.setupText ?? "",
-                setupConfirmed: event.setupConfirmed,
+                text: event.setupText ?? "",
+                confirmed: event.setupConfirmed,
+                type: "setup",
               });
             }
           }}

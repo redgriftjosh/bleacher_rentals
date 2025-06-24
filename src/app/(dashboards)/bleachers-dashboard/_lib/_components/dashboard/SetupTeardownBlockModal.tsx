@@ -1,29 +1,33 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { deleteBlock, saveBlock, saveSetupBlock } from "../../db";
+import { saveSetupTeardownBlock } from "../../db";
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import { confirmedHsl, setupTeardownHsl } from "@/types/Constants";
 
-export type SetupBlock = {
+export type SetupTeardownBlock = {
   bleacherEventId: number;
   bleacherId: number;
-  setupText: string;
-  setupConfirmed: boolean;
+  text: string;
+  confirmed: boolean;
+  type: "setup" | "teardown";
 };
 
-type SetupBlockModalProps = {
-  selectedBlock: SetupBlock | null;
-  setSelectedBlock: (block: SetupBlock | null) => void;
+type SetupTeardownBlockModalProps = {
+  selectedBlock: SetupTeardownBlock | null;
+  setSelectedBlock: (block: SetupTeardownBlock | null) => void;
 };
 
-export default function SetupBlockModal({ selectedBlock, setSelectedBlock }: SetupBlockModalProps) {
+export default function SetupBlockModal({
+  selectedBlock,
+  setSelectedBlock,
+}: SetupTeardownBlockModalProps) {
   const { getToken } = useAuth();
   const handleSaveBlock = async () => {
     const token = await getToken({ template: "supabase" });
     try {
-      await saveSetupBlock(selectedBlock, token);
+      await saveSetupTeardownBlock(selectedBlock, token);
       setSelectedBlock(null);
     } catch (error) {
       console.error("Failed to Save Block:", error);
@@ -45,11 +49,13 @@ export default function SetupBlockModal({ selectedBlock, setSelectedBlock }: Set
             onClick={(e) => e.stopPropagation()} // 👈 prevent bubbling here
             className=" p-4 rounded shadow w-[300px] transition-colors duration-200"
             style={{
-              backgroundColor: selectedBlock.setupConfirmed ? confirmedHsl : setupTeardownHsl,
+              backgroundColor: selectedBlock.confirmed ? confirmedHsl : setupTeardownHsl,
             }}
           >
             <div className="flex flex-row justify-between items-start">
-              <h2 className="text-sm font-semibold mb-2">Edit Setup</h2>
+              <h2 className="text-sm font-semibold mb-2">
+                Edit {selectedBlock.type.charAt(0).toUpperCase() + selectedBlock.type.slice(1)}
+              </h2>
               <X
                 className="-mt-1 cursor-pointer text-black/30 hover:text-black hover:drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] transition-all duration-200"
                 onClick={() => setSelectedBlock(null)}
@@ -57,8 +63,8 @@ export default function SetupBlockModal({ selectedBlock, setSelectedBlock }: Set
             </div>
             <textarea
               className="w-full text-sm border p-1 rounded bg-white"
-              value={selectedBlock.setupText}
-              onChange={(e) => setSelectedBlock({ ...selectedBlock, setupText: e.target.value })}
+              value={selectedBlock.text}
+              onChange={(e) => setSelectedBlock({ ...selectedBlock, text: e.target.value })}
               rows={4}
             />
             <div className="mt-3 flex justify-end items-center gap-2">
@@ -69,9 +75,9 @@ export default function SetupBlockModal({ selectedBlock, setSelectedBlock }: Set
                     type="checkbox"
                     className="sr-only peer"
                     onChange={(e) =>
-                      setSelectedBlock({ ...selectedBlock, setupConfirmed: e.target.checked })
+                      setSelectedBlock({ ...selectedBlock, confirmed: e.target.checked })
                     }
-                    checked={selectedBlock.setupConfirmed}
+                    checked={selectedBlock.confirmed}
                   />
                   <div className="w-11 h-6 bg-black/30 peer-focus:outline-none peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-darkBlue"></div>
                 </label>

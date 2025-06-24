@@ -22,7 +22,7 @@ import { UserResource } from "@clerk/types";
 import { updateDataBase } from "@/app/actions/db.actions";
 import { useBlocksStore } from "@/state/blocksStore";
 import { EditBlock } from "./_components/dashboard/MainScrollableGrid";
-import { SetupBlock } from "./_components/dashboard/SetupModal";
+import { SetupTeardownBlock } from "./_components/dashboard/SetupTeardownBlockModal";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -209,8 +209,8 @@ export function fetchDashboardEvents() {
   }, [events, addresses, bleacherEvents]);
 }
 
-export async function saveSetupBlock(
-  block: SetupBlock | null,
+export async function saveSetupTeardownBlock(
+  block: SetupTeardownBlock | null,
   token: string | null
 ): Promise<void> {
   if (!token) {
@@ -241,9 +241,19 @@ export async function saveSetupBlock(
 
   const supabase = await getSupabaseClient(token);
   if (block.bleacherEventId) {
+    const data =
+      block.type === "setup"
+        ? {
+            setup_text: block.text,
+            setup_confirmed: block.confirmed,
+          }
+        : {
+            teardown_text: block.text,
+            teardown_confirmed: block.confirmed,
+          };
     const { error } = await supabase
       .from("BleacherEvents")
-      .update({ setup_text: block.setupText, setup_confirmed: block.setupConfirmed })
+      .update(data)
       .eq("bleacher_event_id", block.bleacherEventId);
     if (error) {
       console.error("Failed to update BleacherEvent:", error);
@@ -251,23 +261,23 @@ export async function saveSetupBlock(
         (t) =>
           React.createElement(ErrorToast, {
             id: t,
-            lines: ["Failed to update setup block", error.message],
+            lines: [`Failed to update ${block.type} block`, error.message],
           }),
         { duration: 10000 }
       );
-      throw new Error(`Failed to update setup block: ${error.message}`);
+      throw new Error(`Failed to update ${block.type} block: ${error.message}`);
     }
   } else {
-    console.error("Failed to save setup block: no BleacherEventId");
+    console.error(`Failed to update ${block.type} block: No BleacherEventId provided.`);
     toast.custom(
       (t) =>
         React.createElement(ErrorToast, {
           id: t,
-          lines: ["ailed to save setup block: no BleacherEventId"],
+          lines: [`Failed to update ${block.type} block: No BleacherEventId provided.`],
         }),
       { duration: 10000 }
     );
-    throw new Error(`ailed to save setup block: no BleacherEventId`);
+    throw new Error(`Failed to update ${block.type} block: No BleacherEventId provided.`);
   }
   toast.custom(
     (t) =>

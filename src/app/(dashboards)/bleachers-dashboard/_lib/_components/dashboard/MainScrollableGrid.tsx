@@ -10,7 +10,8 @@ import BlockRenderer from "./BlockRenderer";
 import BlockModal from "./BlockModal";
 import SetupRenderer from "./SetupRenderer";
 import TeardownRenderer from "./TeardownRenderer";
-import SetupBlockModal, { SetupBlock } from "./SetupModal";
+import SetupBlockModal, { SetupTeardownBlock } from "./SetupTeardownBlockModal";
+import SetupTeardownBlockModal from "./SetupTeardownBlockModal";
 
 export type EditBlock = {
   blockId: number | null;
@@ -48,7 +49,8 @@ export default function MainScrollableGrid({
 }: MainScrollableGridProps) {
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
   const [selectedBlock, setSelectedBlock] = useState<EditBlock | null>(null);
-  const [selectedSetupBlock, setSelectedSetupBlock] = useState<SetupBlock | null>(null);
+  const [selectedSetupTeardownBlock, setSelectedSetupTeardownBlock] =
+    useState<SetupTeardownBlock | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollLeftRef = useRef(0);
@@ -123,9 +125,9 @@ export default function MainScrollableGrid({
       }}
     >
       <BlockModal selectedBlock={selectedBlock} setSelectedBlock={setSelectedBlock} />
-      <SetupBlockModal
-        selectedBlock={selectedSetupBlock}
-        setSelectedBlock={setSelectedSetupBlock}
+      <SetupTeardownBlockModal
+        selectedBlock={selectedSetupTeardownBlock}
+        setSelectedBlock={setSelectedSetupTeardownBlock}
       />
       <Grid
         ref={gridRef}
@@ -190,22 +192,18 @@ export default function MainScrollableGrid({
                         rowIndex={rowIndex}
                         COLUMN_WIDTH={COLUMN_WIDTH}
                         isFirstVisibleColumn={isFirstVisibleColumn}
-                        scrollLeftRef={scrollLeftRef}
-                        firstVisibleColumnRef={firstVisibleColumnRef}
-                        bleacherIds={event.bleacherIds}
-                        setSelectedSetupBlock={setSelectedSetupBlock}
+                        setSelectedSetupBlock={setSelectedSetupTeardownBlock}
                       />
                       <TeardownRenderer
                         key={`teardown-${event.eventId}`}
                         event={event}
+                        bleacherId={bleachers[rowIndex].bleacherId}
                         dates={dates}
                         columnIndex={columnIndex}
                         rowIndex={rowIndex}
                         COLUMN_WIDTH={COLUMN_WIDTH}
                         isFirstVisibleColumn={isFirstVisibleColumn}
-                        scrollLeftRef={scrollLeftRef}
-                        firstVisibleColumnRef={firstVisibleColumnRef}
-                        bleacherIds={event.bleacherIds}
+                        setSelectedSetupBlock={setSelectedSetupTeardownBlock}
                       />
                     </div>
                   ))}

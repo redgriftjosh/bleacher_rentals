@@ -3,39 +3,36 @@ import { DashboardEvent } from "../../types";
 import { CurrentEventState, useCurrentEventStore } from "../../useCurrentEventStore";
 import { Sparkles } from "lucide-react";
 import { confirmedHsl, setupTeardownHsl } from "@/types/Constants";
+import { SetupTeardownBlock } from "./SetupTeardownBlockModal";
+import { useFilterDashboardStore } from "../../useFilterDashboardStore";
 type EventRendererProps = {
   event: DashboardEvent;
+  bleacherId: number;
   dates: string[];
   columnIndex: number;
   rowIndex: number;
   COLUMN_WIDTH: number;
   isFirstVisibleColumn: boolean;
-  scrollLeftRef: React.RefObject<number>;
-  firstVisibleColumnRef: React.RefObject<number>;
-  bleacherIds: number[];
+  setSelectedSetupBlock: (block: SetupTeardownBlock | null) => void;
 };
 
 export default function TeardownRenderer({
   event,
+  bleacherId,
   dates,
   columnIndex,
   rowIndex,
   COLUMN_WIDTH,
   isFirstVisibleColumn,
-  scrollLeftRef,
-  firstVisibleColumnRef,
-  bleacherIds,
+  setSelectedSetupBlock,
 }: EventRendererProps) {
-  const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
   const currentDate = DateTime.fromISO(dates[columnIndex]);
   const eventStartDate = DateTime.fromISO(event.eventStart);
   const eventEndDate = DateTime.fromISO(event.eventEnd);
-  const eventHsl = event.hslHue ? `hsl(${event.hslHue.toString()}, 60%, 60%)` : "hsl(0, 0%, 50%)";
-  const bgColour = event.teardownConfirmed ? confirmedHsl : setupTeardownHsl; // Setup & teardown color
-  const setField = useCurrentEventStore((s) => s.setField);
+  const bgColour = event.teardownConfirmed ? confirmedHsl : setupTeardownHsl;
+  const yAxis = useFilterDashboardStore((state) => state.yAxis);
 
   const visualStartDate = event.setupStart ? DateTime.fromISO(event.setupStart) : eventStartDate;
-  const visualEndDate = event.teardownEnd ? DateTime.fromISO(event.teardownEnd) : eventEndDate;
 
   let shouldDisplayEvent = currentDate.toISODate() === visualStartDate.toISODate();
 
@@ -50,30 +47,8 @@ export default function TeardownRenderer({
       ? DateTime.fromISO(event.teardownEnd).diff(eventEndDate, "days").days
       : null;
   const border = event.status === "Booked" ? 0 : 1;
-  const setupDays: number | null =
-    event.setupStart != ""
-      ? eventStartDate.diff(DateTime.fromISO(event.setupStart), "days").days
-      : null;
-
-  const setupStartDate = event.setupStart ? DateTime.fromISO(event.setupStart) : null;
-
-  const daysRemainingSetup = Math.min(
-    eventStartDate.diff(currentDate, "days").days,
-    dates.length - columnIndex
-  );
 
   const halfDayWidth = COLUMN_WIDTH / 2 - padding / 2;
-  const setupWidth = isFirstVisibleColumn
-    ? daysRemainingSetup > 0
-      ? daysRemainingSetup * COLUMN_WIDTH - padding - border
-      : halfDayWidth
-    : setupDays !== null
-    ? setupDays * COLUMN_WIDTH - padding - border
-    : halfDayWidth;
-
-  const shouldRenderSetup = isFirstVisibleColumn
-    ? daysRemainingSetup > 0 || (!setupStartDate && currentDate.hasSame(eventStartDate, "day"))
-    : true;
 
   const daysRemainingEvent = Math.min(
     eventEndDate.diff(currentDate, "days").days + 1,
@@ -127,6 +102,19 @@ export default function TeardownRenderer({
           }px`,
           borderTopRightRadius: "3px",
           borderBottomRightRadius: "3px",
+        }}
+        onClick={(e) => {
+          console.log("Clicked Setup");
+          e.stopPropagation();
+          if (yAxis === "Bleachers") {
+            setSelectedSetupBlock({
+              bleacherEventId: event.bleacherEventId,
+              bleacherId: bleacherId,
+              text: event.teardownText ?? "",
+              confirmed: event.teardownConfirmed,
+              type: "teardown",
+            });
+          }
         }}
       >
         {event.teardownText && (

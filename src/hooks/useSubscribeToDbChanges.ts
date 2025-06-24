@@ -17,16 +17,16 @@ export default function useSubToDbChanges() {
 
     const handleStateChange = ({ previous, current }: any) => {
       console.log(`🔌 Pusher connection changed from ${previous} to ${current}`);
-      if (current === "disconnected" || current === "unavailable") {
-        // Optional: reload after a grace period
+      if (current === "disconnected" || current === "unavailable" || current === "connecting") {
         setTimeout(() => {
           if (
             pusherClient.connection.state === "disconnected" ||
-            pusherClient.connection.state === "unavailable"
+            pusherClient.connection.state === "unavailable" ||
+            current === "connecting"
           ) {
             window.location.reload();
           }
-        }, 10000); // give it 10 seconds to reconnect
+        }, 10000);
       } else if (current === "connected") {
         // Pusher seems to forget about the channel publications if this runs so we'll set each table to stale to refetch everything.
         Object.values(setStaleByTable).forEach((setStale) => setStale());
