@@ -131,7 +131,20 @@ export default function StickyLeftColumn({
                     marginLeft: isFormExpanded ? "4px" : "-24px",
                   }}
                 >
-                  <div className="font-bold text-lg -mb-2">
+                  {/* <div className="font-bold text-lg -mb-2">
+                    {bleachers[rowIndex].bleacherNumber}
+                  </div> */}
+                  <div
+                    className={`font-bold text-lg -mb-2 ${
+                      bleachers[rowIndex].bleacherRows === 7
+                        ? "text-green-700"
+                        : bleachers[rowIndex].bleacherRows === 10
+                        ? "text-red-700"
+                        : bleachers[rowIndex].bleacherRows === 15
+                        ? "text-yellow-500"
+                        : ""
+                    }`}
+                  >
                     {bleachers[rowIndex].bleacherNumber}
                   </div>
                   <div className="whitespace-nowrap -mb-2">
