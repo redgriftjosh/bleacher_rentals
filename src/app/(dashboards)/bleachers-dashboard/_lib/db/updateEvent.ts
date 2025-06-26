@@ -66,6 +66,7 @@ export async function updateEvent(
     notes: state.notes,
     hsl_hue: state.hslHue,
     must_be_clean: state.mustBeClean,
+    goodshuffle_url: state.goodshuffleUrl ?? null,
   };
 
   const { error: eventError } = await supabase

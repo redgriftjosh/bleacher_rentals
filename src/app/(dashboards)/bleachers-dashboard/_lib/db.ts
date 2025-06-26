@@ -115,6 +115,7 @@ export function fetchBleachers() {
               bleacherIds: bleacherEvents
                 .filter((be) => be.event_id === event.event_id)
                 .map((be) => be.bleacher_id), // find all bleachers linked to this event
+              goodshuffleUrl: event.goodshuffle_url ?? null,
             };
           })
           .filter((e) => e !== null) as DashboardEvent[]; // filter out nulls
@@ -195,6 +196,7 @@ export function fetchDashboardEvents() {
         bleacherIds: bleacherEvents
           .filter((be) => be.event_id === event.event_id)
           .map((be) => be.bleacher_id),
+        goodshuffleUrl: event.goodshuffle_url ?? null,
       };
     });
     // console.log("dashboardEvents", dashboardEvents);
@@ -491,6 +493,7 @@ export async function createEvent(
     notes: state.notes,
     hsl_hue: state.hslHue,
     must_be_clean: state.mustBeClean,
+    goodshuffle_url: state.goodshuffleUrl ?? null,
   };
 
   const { data: eventData, error: eventError } = await supabase

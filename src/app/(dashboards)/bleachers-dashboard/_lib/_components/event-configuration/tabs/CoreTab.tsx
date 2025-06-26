@@ -55,7 +55,7 @@ export const CoreTab = () => {
   ]);
 
   return (
-    <div className="grid grid-cols-[1fr_1fr_1fr] gap-4">
+    <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Event Name</label>
         <input
@@ -155,6 +155,16 @@ export const CoreTab = () => {
             />
           </div>
         </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Good Shuffle</label>
+        <input
+          type="text"
+          className="w-full p-2 border rounded"
+          placeholder="Enter goodshuffle url"
+          value={currentEventStore.goodshuffleUrl ?? ""}
+          onChange={(e) => currentEventStore.setField("goodshuffleUrl", e.target.value)}
+        />
       </div>
     </div>
   );

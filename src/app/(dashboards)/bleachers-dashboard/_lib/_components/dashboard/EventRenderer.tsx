@@ -2,6 +2,7 @@ import { DateTime } from "luxon";
 import { DashboardEvent } from "../../types";
 import { CurrentEventState, useCurrentEventStore } from "../../useCurrentEventStore";
 import { Sparkles } from "lucide-react";
+import GoodShuffleLogo from "../GSLogo";
 type EventRendererProps = {
   event: DashboardEvent;
   dates: string[];
@@ -105,6 +106,8 @@ export default function EventRenderer({
     setField("bleacherIds", event.bleacherIds);
     setField("isFormExpanded", event.isFormExpanded);
     setField("hslHue", event.hslHue);
+    // setField("alerts", event.alerts);
+    setField("goodshuffleUrl", event.goodshuffleUrl);
   };
 
   if (!isFirstVisibleColumn && !shouldDisplayEvent) return null;
@@ -154,6 +157,7 @@ export default function EventRenderer({
               isFormExpanded: true,
               hslHue: event.hslHue,
               alerts: [], // will be calculated on load
+              goodshuffleUrl: event.goodshuffleUrl,
             });
           }}
         >
@@ -183,18 +187,33 @@ export default function EventRenderer({
                 maxWidth: "100%",
               }}
             >
-              <span className="truncate font-semibold text-sm text-shadow-md">
-                {event.eventName}
-              </span>
+              <span className="truncate font-semibold text-sm ">{event.eventName}</span>
               {event.mustBeClean && (
                 <span
-                  className="text-xs font-bold text-shadow-xs  w-5 h-5 flex items-center justify-center shrink-0"
+                  className="-ml-1 text-xs font-bold w-5 h-5 flex items-center justify-center shrink-0"
                   style={{
                     color: event.status === "Booked" ? "black" : eventHsl,
                   }}
                 >
-                  <Sparkles className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
+                  <Sparkles className="" />
                 </span>
+              )}
+              {event.goodshuffleUrl && (
+                <img
+                  src="/GSLogo.png"
+                  alt="Goodshuffle Pro"
+                  className="-ml-1 h-4 hover:h-5 w-auto hover:drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] transition-all"
+                  // Doesn't work
+                  // style={{
+                  //   color: event.status === "Booked" ? "black" : eventHsl,
+                  // }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (event.goodshuffleUrl) {
+                      window.open(event.goodshuffleUrl, "_blank");
+                    }
+                  }}
+                />
               )}
               {event.alerts.length > 0 && (
                 <span className="text-xs font-bold text-white shadow-sm bg-red-500 rounded-full w-5 h-5 flex items-center justify-center shrink-0">

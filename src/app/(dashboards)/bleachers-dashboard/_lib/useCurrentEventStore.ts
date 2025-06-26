@@ -35,6 +35,7 @@ export type CurrentEventState = {
   isFormExpanded: boolean;
   hslHue: number | null;
   alerts: string[];
+  goodshuffleUrl: string | null;
 };
 
 // Me take event form stuff, add tools to change it.
@@ -68,6 +69,7 @@ const initialState: CurrentEventState = {
   isFormExpanded: false,
   hslHue: null,
   alerts: [],
+  goodshuffleUrl: null,
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.

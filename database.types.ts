@@ -180,6 +180,7 @@ export type Database = {
           event_name: string
           event_start: string
           fifteen_row: number | null
+          goodshuffle_url: string | null
           hsl_hue: number | null
           lenient: boolean
           must_be_clean: boolean
@@ -199,6 +200,7 @@ export type Database = {
           event_name: string
           event_start: string
           fifteen_row?: number | null
+          goodshuffle_url?: string | null
           hsl_hue?: number | null
           lenient: boolean
           must_be_clean?: boolean
@@ -218,6 +220,7 @@ export type Database = {
           event_name?: string
           event_start?: string
           fifteen_row?: number | null
+          goodshuffle_url?: string | null
           hsl_hue?: number | null
           lenient?: boolean
           must_be_clean?: boolean
