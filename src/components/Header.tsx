@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 // import { useAuth } from "@/contexts/authContext";
 import { UserButton } from "@clerk/nextjs";
 import { BellIcon } from "./Icons";
+import { Code, Laptop, Lightbulb, List } from "lucide-react";
 
 const Header = () => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -47,18 +48,15 @@ const Header = () => {
           priority // Optimized for faster loading
         />
         <div className="flex items-center mr-2 relative">
-          <div className="flex mr-4">
-            <BellIcon color="#ffffff" />
+          <div className="flex items-center  mr-4">
+            <button
+              className="flex text-white/70 items-center gap-1 rounded py-1 ml-2 text-sm hover:font-bold hover:underline hover:text-white cursor-pointer transition-all duration-300"
+              onClick={() => router.push("/roadmap")}
+            >
+              <Lightbulb size={20} />
+              Request a Feature
+            </button>
           </div>
-          {/* <div
-            className="flex items-center cursor-pointer"
-            // onClick={() => (setDropdownOpen(!isOpen))}
-          >
-            <div className="w-8 h-8 flex items-center justify-center bg-white rounded-full">
-              <UserIcon color="#a1a1a1" />
-            </div>
-            <ChevronDownIcon color="#ffffff" />
-          </div> */}
           <UserButton />
           {isDropdownOpen && (
             <div className="absolute top-full right-0 mt-2 w-64 bg-white text-black rounded-lg shadow-lg p-4 z-50">

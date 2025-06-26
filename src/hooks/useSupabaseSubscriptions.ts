@@ -14,6 +14,9 @@ import { useUserRolesStore } from "@/state/userRolesStore";
 import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
 import useSubToDbChanges from "./useSubscribeToDbChanges";
 import { useBlocksStore } from "@/state/blocksStore";
+import { useTasksStore } from "@/state/tasksStore";
+import { useTaskStatusesStore } from "@/state/taskStatusesStore";
+import { useTaskTypesStore } from "@/state/taskTypesStore";
 
 // I made a video explaining this code
 // https://www.loom.com/share/50e15eaa6e0e4f8e9e063ab896ecd8a1?sid=41289fe0-9b87-4026-a6a4-8ef9bd14f331
@@ -107,6 +110,39 @@ export default function useSupabaseSubscriptions() {
     setStore: eventsStore.setEvents,
     stale: eventsStore.stale,
     setStale: eventsStore.setStale,
+    // subscriptionId,
+  });
+
+  const tasksStore = useTasksStore();
+  useSetupTable({
+    tableName: "Tasks",
+    // channelName: "tasks-channel",
+    getToken,
+    setStore: tasksStore.setTasks,
+    stale: tasksStore.stale,
+    setStale: tasksStore.setStale,
+    // subscriptionId,
+  });
+
+  const taskStatusesStore = useTaskStatusesStore();
+  useSetupTable({
+    tableName: "TaskStatuses",
+    // channelName: "taskStatuses-channel",
+    getToken,
+    setStore: taskStatusesStore.setTaskStatuses,
+    stale: taskStatusesStore.stale,
+    setStale: taskStatusesStore.setStale,
+    // subscriptionId,
+  });
+
+  const taskTypesStore = useTaskTypesStore();
+  useSetupTable({
+    tableName: "TaskTypes",
+    // channelName: "taskTypes-channel",
+    getToken,
+    setStore: taskTypesStore.setTaskTypes,
+    stale: taskTypesStore.stale,
+    setStale: taskTypesStore.setStale,
     // subscriptionId,
   });
 

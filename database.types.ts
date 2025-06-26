@@ -256,6 +256,97 @@ export type Database = {
         }
         Relationships: []
       }
+      Tasks: {
+        Row: {
+          created_at: string
+          created_by_user_id: number
+          description: string
+          name: string
+          task_id: number
+          task_status_id: number
+          task_type_id: number
+        }
+        Insert: {
+          created_at?: string
+          created_by_user_id: number
+          description: string
+          name: string
+          task_id?: number
+          task_status_id: number
+          task_type_id: number
+        }
+        Update: {
+          created_at?: string
+          created_by_user_id?: number
+          description?: string
+          name?: string
+          task_id?: number
+          task_status_id?: number
+          task_type_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Tasks_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "Tasks_task_status_id_fkey"
+            columns: ["task_status_id"]
+            isOneToOne: false
+            referencedRelation: "TaskStatuses"
+            referencedColumns: ["task_status_id"]
+          },
+          {
+            foreignKeyName: "Tasks_task_type_id_fkey"
+            columns: ["task_type_id"]
+            isOneToOne: false
+            referencedRelation: "TaskTypes"
+            referencedColumns: ["task_type_id"]
+          },
+        ]
+      }
+      TaskStatuses: {
+        Row: {
+          created_at: string
+          hex: string
+          label: string
+          task_status_id: number
+        }
+        Insert: {
+          created_at?: string
+          hex: string
+          label: string
+          task_status_id?: number
+        }
+        Update: {
+          created_at?: string
+          hex?: string
+          label?: string
+          task_status_id?: number
+        }
+        Relationships: []
+      }
+      TaskTypes: {
+        Row: {
+          created_at: string
+          label: string
+          task_type_id: number
+        }
+        Insert: {
+          created_at?: string
+          label: string
+          task_type_id?: number
+        }
+        Update: {
+          created_at?: string
+          label?: string
+          task_type_id?: number
+        }
+        Relationships: []
+      }
       UserHomeBases: {
         Row: {
           created_at: string

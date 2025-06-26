@@ -5,8 +5,11 @@ import useSupabaseSubscriptions from "@/hooks/useSupabaseSubscriptions";
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import { Button } from "./ui/button";
 import { useUsersStore } from "@/state/userStore";
+import { useRef } from "react";
+import { LayoutProvider } from "@/contexts/LayoutContexts";
 
 export function SignedInComponents({ children }: { children: React.ReactNode }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
   useSupabaseSubscriptions();
   const { user, isLoaded } = useUser();
   const users = useUsersStore((s) => s.users);
@@ -35,12 +38,16 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
     );
   }
   return (
-    <div className="flex flex-col h-screen">
-      <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <SideBar />
-        <main className="flex-1  bg-gray-50 overflow-auto">{children}</main>
+    <LayoutProvider scrollRef={scrollRef}>
+      <div className="flex flex-col h-screen">
+        <Header />
+        <div className="flex flex-1 overflow-hidden">
+          <SideBar />
+          <main ref={scrollRef} className="flex-1  bg-gray-50 overflow-auto">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </LayoutProvider>
   );
 }

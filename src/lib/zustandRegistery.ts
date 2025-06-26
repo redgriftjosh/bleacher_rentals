@@ -9,6 +9,9 @@ import { useUserRolesStore } from "@/state/userRolesStore";
 import { useUserStatusesStore } from "@/state/userStatusesStore";
 import { useUsersStore } from "@/state/userStore";
 import { Database } from "../../database.types";
+import { useTasksStore } from "@/state/tasksStore";
+import { useTaskStatusesStore } from "@/state/taskStatusesStore";
+import { useTaskTypesStore } from "@/state/taskTypesStore";
 
 export type TableName = keyof Database["public"]["Tables"];
 
@@ -20,6 +23,9 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   Bleachers: () => useBleachersStore.getState().setStale(true),
   Blocks: () => useBlocksStore.getState().setStale(true),
   Events: () => useEventsStore.getState().setStale(true),
+  Tasks: () => useTasksStore.getState().setStale(true),
+  TaskStatuses: () => useTaskStatusesStore.getState().setStale(true),
+  TaskTypes: () => useTaskTypesStore.getState().setStale(true),
   HomeBases: () => useHomeBasesStore.getState().setStale(true),
   UserHomeBases: () => useUserHomeBasesStore.getState().setStale(true),
   UserRoles: () => useUserRolesStore.getState().setStale(true),
