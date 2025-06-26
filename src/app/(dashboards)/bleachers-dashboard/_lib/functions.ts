@@ -297,12 +297,21 @@ export function getHomeBaseOptions() {
 
 export function isUserPermitted(stateProv: string, user: UserResource | null): string | null {
   const users = useUsersStore.getState().users;
-  const userHomeBases = useUserHomeBasesStore.getState().userHomeBases;
+  const currentUser = users.find((u) => u.clerk_user_id === user?.id);
   const errorMessages = [
     "Error: Cannot Find Home Base",
     "Error: Cannot Find User",
     "You are not permitted to edit events in this region.",
   ];
+
+  if (!currentUser) {
+    return errorMessages[1];
+  }
+
+  if (currentUser.role === 2) return null; // Admin can access all events
+
+  const userHomeBases = useUserHomeBasesStore.getState().userHomeBases;
+
   let eventHomeBaseId: number | null = null;
   try {
     eventHomeBaseId = getHomeBaseIdByName(stateProv);
@@ -310,13 +319,6 @@ export function isUserPermitted(stateProv: string, user: UserResource | null): s
   } catch (error) {
     return errorMessages[0];
   }
-
-  const currentUser = users.find((u) => u.clerk_user_id === user?.id);
-  if (!currentUser) {
-    return errorMessages[1];
-  }
-
-  if (currentUser.role === 2) return null; // Admin can access all events
 
   // Check if any of the user's home base assignments match the eventHomeBaseId
   const isPermitted = userHomeBases.some(
