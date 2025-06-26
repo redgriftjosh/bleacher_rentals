@@ -48,6 +48,7 @@ export default function MainScrollableGrid({
   yAxis,
 }: MainScrollableGridProps) {
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
+  const eventId = useCurrentEventStore((s) => s.eventId);
   const [selectedBlock, setSelectedBlock] = useState<EditBlock | null>(null);
   const [selectedSetupTeardownBlock, setSelectedSetupTeardownBlock] =
     useState<SetupTeardownBlock | null>(null);
@@ -104,11 +105,17 @@ export default function MainScrollableGrid({
 
   // Recompute Grid sizes when expanded state changes
   useEffect(() => {
-    if (gridRef.current) {
+    if (gridRef.current && eventId !== null) {
       gridRef.current.recomputeGridSize();
       gridRef.current.forceUpdate(); // optional, but helps ensure render
+      const currentScrollLeft = gridRef.current.state.scrollLeft ?? 0;
+
+      gridRef.current.scrollToPosition({
+        scrollLeft: currentScrollLeft,
+        scrollTop: 0,
+      });
     }
-  }, [isFormExpanded]);
+  }, [isFormExpanded, eventId]);
   // console.log("Rendering yAxis", yAxis);
 
   if (bleachers === null || bleachers.length === 0) {
