@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { DashboardBleacher, DashboardEvent } from "../../types";
 import { useCurrentEventStore } from "../../useCurrentEventStore";
 import { YAxis } from "../../useFilterDashboardStore";
+import { getTodayLocation } from "../../functions";
 
 type StickyLeftColumnProps = {
   ROW_HEIGHT: number;
@@ -79,6 +80,7 @@ export default function StickyLeftColumn({
         width={isFormExpanded ? STICKY_LEFT_COLUMN_WIDTH_EXPANDED : STICKY_LEFT_COLUMN_WIDTH}
         cellRenderer={({ key, rowIndex, style }) => {
           const isSelected = bleacherIds.includes(bleachers[rowIndex]?.bleacherId);
+          const todayLocation = getTodayLocation(bleachers[rowIndex]);
           if (yAxis === "Events") {
             return (
               <div
@@ -134,18 +136,26 @@ export default function StickyLeftColumn({
                   {/* <div className="font-bold text-lg -mb-2">
                     {bleachers[rowIndex].bleacherNumber}
                   </div> */}
-                  <div
-                    className={`font-bold text-lg -mb-2 ${
-                      bleachers[rowIndex].bleacherRows === 7
-                        ? "text-green-700"
-                        : bleachers[rowIndex].bleacherRows === 10
-                        ? "text-red-700"
-                        : bleachers[rowIndex].bleacherRows === 15
-                        ? "text-yellow-500"
-                        : ""
-                    }`}
-                  >
-                    {bleachers[rowIndex].bleacherNumber}
+                  <div className="-mb-2">
+                    <span
+                      className={`font-bold text-lg ${
+                        bleachers[rowIndex].bleacherRows === 7
+                          ? "text-green-700"
+                          : bleachers[rowIndex].bleacherRows === 10
+                          ? "text-red-700"
+                          : bleachers[rowIndex].bleacherRows === 15
+                          ? "text-yellow-500"
+                          : ""
+                      }`}
+                    >
+                      {bleachers[rowIndex].bleacherNumber}
+                    </span>
+                    <span
+                      className="ml-2 text-xs font-bold text-gray-600 whitespace-nowrap"
+                      style={todayLocation ? {} : { color: "gray", opacity: 0.5 }}
+                    >
+                      {todayLocation ? todayLocation.city + ", " + todayLocation.state : "Timbuktu"}
+                    </span>
                   </div>
                   <div className="whitespace-nowrap -mb-2">
                     <span className="font-medium text-xs text-gray-500">

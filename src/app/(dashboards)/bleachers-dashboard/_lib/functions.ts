@@ -3,7 +3,12 @@ import React from "react";
 import { ErrorToast } from "@/components/toasts/ErrorToast";
 import { Duration } from "luxon";
 import { SuccessToast } from "@/components/toasts/SuccessToast";
-import { CurrentEventState, CurrentEventStore, useCurrentEventStore } from "./useCurrentEventStore";
+import {
+  AddressData,
+  CurrentEventState,
+  CurrentEventStore,
+  useCurrentEventStore,
+} from "./useCurrentEventStore";
 import { Tables } from "../../../../../database.types";
 import { useEventsStore } from "@/state/eventsStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
@@ -378,4 +383,24 @@ export function filterSortBleachers(
   // console.log("sortedBleachers", sortedBleachers);
   // console.log("isFormExpanded", isFormExpanded);
   return sortedBleachers;
+}
+
+export function getTodayLocation(bleacher: DashboardBleacher): AddressData | null {
+  const today = new Date();
+
+  const pastOrTodayEvents = bleacher.events.filter((e) => {
+    const start = new Date(e.eventStart);
+    return start <= today && e.addressData?.address;
+  });
+
+  if (pastOrTodayEvents.length === 0) return null;
+
+  // Find the event with the most recent start date that is not after today
+  const closestEvent = pastOrTodayEvents.reduce((latest, current) => {
+    const latestDate = new Date(latest.eventStart);
+    const currentDate = new Date(current.eventStart);
+    return currentDate > latestDate ? current : latest;
+  });
+
+  return closestEvent.addressData;
 }

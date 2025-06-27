@@ -35,11 +35,11 @@ export default function BlockModal({ selectedBlock, setSelectedBlock }: BlockMod
     <>
       {selectedBlock && (
         <div
-          onClick={() => setSelectedBlock(null)}
+          onMouseDown={() => setSelectedBlock(null)}
           className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xs flex items-center justify-center"
         >
           <div
-            onClick={(e) => e.stopPropagation()} // 👈 prevent bubbling here
+            onMouseDown={(e) => e.stopPropagation()} // 👈 prevent bubbling here
             className="bg-white p-4 rounded shadow w-[300px]"
           >
             <div className="flex flex-row justify-between items-start">
