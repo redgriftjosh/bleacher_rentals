@@ -251,8 +251,21 @@ export function SheetAddFeature({
                   className="w-full h-full resize-none"
                   placeholder="Describe your feature idea here! If you found a bug, describe the steps to reproduce it. And set the the type to Bug!"
                   value={description ?? ""}
+                  disabled={!isSavable}
                   onChange={(e) => setDescription(e.target.value)}
                 />
+                {/* {isSavable ? (
+                  <Textarea
+                    className="w-full h-full resize-none"
+                    placeholder="Describe your feature idea here! If you found a bug, describe the steps to reproduce it. And set the the type to Bug!"
+                    value={description ?? ""}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                ) : (
+                  <div className="w-full h-full resize-none bg-gray-100 p-3 rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0">
+                    {description}
+                  </div>
+                )} */}
               </div>
             </div>
 
