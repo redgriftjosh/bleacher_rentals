@@ -14,13 +14,13 @@ import { useEventsStore } from "@/state/eventsStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
-import { DashboardBleacher } from "./types";
+import { DashboardBleacher, DashboardEvent } from "./types";
 import { useUsersStore } from "@/state/userStore";
 import { useUser } from "@clerk/nextjs";
 import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
 import { getHomeBaseIdByName } from "@/utils/utils";
 import { UserResource } from "@clerk/types";
-import { ROW_OPTIONS } from "@/types/Constants";
+import { PROVINCES, ROW_OPTIONS, STATES } from "@/types/Constants";
 
 export function checkEventFormRules(
   createEventPayload: CurrentEventStore,
@@ -347,6 +347,26 @@ export function getRowOptions() {
     value,
     label: value.toString(),
   }));
+}
+
+export function getStateProvOptions() {
+  const allOptions = [...STATES, ...PROVINCES];
+  return allOptions.map((value, index) => ({
+    value: index,
+    label: value,
+  }));
+}
+
+export function filterEvents(events: DashboardEvent[], stateProvinces: number[]): DashboardEvent[] {
+  const allStatesAndProvinces = [...STATES, ...PROVINCES];
+
+  return events.filter((event) => {
+    const state = event.addressData?.state;
+    if (!state) return false;
+
+    const index = allStatesAndProvinces.indexOf(state);
+    return stateProvinces.includes(index);
+  });
 }
 
 export function filterSortBleachers(

@@ -6,7 +6,7 @@ import { MultiSelect } from "@/components/MultiSelect";
 import { useEffect, useState } from "react";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
-import { getHomeBaseOptions, getRowOptions } from "../functions";
+import { getHomeBaseOptions, getRowOptions, getStateProvOptions } from "../functions";
 
 export default function FilterDashboard() {
   const yAxis = useFilterDashboardStore((s) => s.yAxis);
@@ -14,9 +14,11 @@ export default function FilterDashboard() {
   const setField = useFilterDashboardStore((s) => s.setField);
   const homeBaseOptions = getHomeBaseOptions();
   const rowOptions = getRowOptions();
+  const stateProvOptions = getStateProvOptions();
   const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
   const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
   const rows = useFilterDashboardStore((s) => s.rows);
+  const stateProvinces = useFilterDashboardStore((s) => s.stateProvinces);
 
   const [updated, setUpdated] = useState(false);
   useEffect(() => {
@@ -29,6 +31,10 @@ export default function FilterDashboard() {
     setField(
       "rows",
       rowOptions.map((option) => option.value)
+    );
+    setField(
+      "stateProvinces",
+      stateProvOptions.map((option) => option.value)
     );
   }, [homeBaseOptions]);
 
@@ -93,6 +99,19 @@ export default function FilterDashboard() {
             />
           </div>
         </>
+      )}
+      {yAxis === "Events" && (
+        <div>
+          <MultiSelect
+            options={stateProvOptions}
+            onValueChange={(value) => setField("stateProvinces", value)}
+            forceSelectedValues={stateProvinces}
+            // defaultSelectedValues={homeBaseOptions.map((option) => option.value)}
+            placeholder="States & Provinces"
+            variant="inverted"
+            maxCount={1}
+          />
+        </div>
       )}
     </div>
   );
