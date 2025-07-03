@@ -17,6 +17,7 @@ import { useBlocksStore } from "@/state/blocksStore";
 import { useTasksStore } from "@/state/tasksStore";
 import { useTaskStatusesStore } from "@/state/taskStatusesStore";
 import { useTaskTypesStore } from "@/state/taskTypesStore";
+import { useWorkTrackersStore } from "@/state/workTrackersStore";
 
 // I made a video explaining this code
 // https://www.loom.com/share/50e15eaa6e0e4f8e9e063ab896ecd8a1?sid=41289fe0-9b87-4026-a6a4-8ef9bd14f331
@@ -55,6 +56,17 @@ export default function useSupabaseSubscriptions() {
     setStore: usersStore.setUsers,
     stale: usersStore.stale,
     setStale: usersStore.setStale,
+    // subscriptionId,
+  });
+
+  const workTrackersStore = useWorkTrackersStore();
+  useSetupTable({
+    tableName: "WorkTrackers",
+    // channelName: "workTrackers-channel",
+    getToken,
+    setStore: workTrackersStore.setWorkTrackers,
+    stale: workTrackersStore.stale,
+    setStale: workTrackersStore.setStale,
     // subscriptionId,
   });
 

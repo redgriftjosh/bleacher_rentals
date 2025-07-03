@@ -21,11 +21,13 @@ interface AddressComponent {
 interface AddressAutocompleteProps {
   onAddressSelect: (data: AddressData) => void;
   initialValue?: string;
+  className?: string;
 }
 
 export default function AddressAutocomplete({
   onAddressSelect,
   initialValue,
+  className = "",
 }: AddressAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -92,7 +94,7 @@ export default function AddressAutocomplete({
       <div ref={containerRef} className="relative w-full">
         <input
           ref={inputRef}
-          className="w-full p-2 border rounded"
+          className={`w-full p-2 border rounded ${className}`}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           disabled={!ready}

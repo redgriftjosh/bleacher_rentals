@@ -44,8 +44,10 @@ export type Database = {
           event_id: number
           setup_confirmed: boolean
           setup_text: string | null
+          setup_work_tracker_id: number | null
           teardown_confirmed: boolean
           teardown_text: string | null
+          teardown_work_tracker_id: number | null
         }
         Insert: {
           bleacher_event_id?: number
@@ -54,8 +56,10 @@ export type Database = {
           event_id: number
           setup_confirmed?: boolean
           setup_text?: string | null
+          setup_work_tracker_id?: number | null
           teardown_confirmed?: boolean
           teardown_text?: string | null
+          teardown_work_tracker_id?: number | null
         }
         Update: {
           bleacher_event_id?: number
@@ -64,8 +68,10 @@ export type Database = {
           event_id?: number
           setup_confirmed?: boolean
           setup_text?: string | null
+          setup_work_tracker_id?: number | null
           teardown_confirmed?: boolean
           teardown_text?: string | null
+          teardown_work_tracker_id?: number | null
         }
         Relationships: [
           {
@@ -81,6 +87,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "Events"
             referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "BleacherEvents_setup_work_tracker_id_fkey"
+            columns: ["setup_work_tracker_id"]
+            isOneToOne: false
+            referencedRelation: "WorkTrackers"
+            referencedColumns: ["work_tracker_id"]
+          },
+          {
+            foreignKeyName: "BleacherEvents_teardown_work_tracker_id_fkey"
+            columns: ["teardown_work_tracker_id"]
+            isOneToOne: false
+            referencedRelation: "WorkTrackers"
+            referencedColumns: ["work_tracker_id"]
           },
         ]
       }
@@ -460,6 +480,73 @@ export type Database = {
           status?: string
         }
         Relationships: []
+      }
+      WorkTrackers: {
+        Row: {
+          created_at: string
+          date: string | null
+          dropoff_address_id: number | null
+          dropoff_poc: string | null
+          dropoff_time: string | null
+          notes: string | null
+          pay_cents: number | null
+          pickup_address_id: number | null
+          pickup_poc: string | null
+          pickup_time: string | null
+          user_id: number | null
+          work_tracker_id: number
+        }
+        Insert: {
+          created_at?: string
+          date?: string | null
+          dropoff_address_id?: number | null
+          dropoff_poc?: string | null
+          dropoff_time?: string | null
+          notes?: string | null
+          pay_cents?: number | null
+          pickup_address_id?: number | null
+          pickup_poc?: string | null
+          pickup_time?: string | null
+          user_id?: number | null
+          work_tracker_id?: number
+        }
+        Update: {
+          created_at?: string
+          date?: string | null
+          dropoff_address_id?: number | null
+          dropoff_poc?: string | null
+          dropoff_time?: string | null
+          notes?: string | null
+          pay_cents?: number | null
+          pickup_address_id?: number | null
+          pickup_poc?: string | null
+          pickup_time?: string | null
+          user_id?: number | null
+          work_tracker_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "WorkTrackers_dropoff_address_id_fkey"
+            columns: ["dropoff_address_id"]
+            isOneToOne: false
+            referencedRelation: "Addresses"
+            referencedColumns: ["address_id"]
+          },
+          {
+            foreignKeyName: "WorkTrackers_pickup_address_id_fkey"
+            columns: ["pickup_address_id"]
+            isOneToOne: false
+            referencedRelation: "Addresses"
+            referencedColumns: ["address_id"]
+          },
+          {
+            foreignKeyName: "WorkTrackers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Views: {

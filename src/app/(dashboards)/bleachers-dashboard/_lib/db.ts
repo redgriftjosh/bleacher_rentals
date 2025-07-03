@@ -6,12 +6,12 @@ import {
   checkEventFormRules,
   isUserPermitted,
 } from "./functions";
-import { TablesInsert } from "../../../../../database.types";
+import { Tables, TablesInsert } from "../../../../../database.types";
 import { toast } from "sonner";
 import React from "react";
-import { ErrorToast } from "@/components/toasts/ErrorToast";
-import { SuccessToast } from "@/components/toasts/SuccessToast";
-import { CurrentEventStore } from "./useCurrentEventStore";
+import { createErrorToast, ErrorToast } from "@/components/toasts/ErrorToast";
+import { createSuccessToast, SuccessToast } from "@/components/toasts/SuccessToast";
+import { AddressData, CurrentEventStore } from "./useCurrentEventStore";
 import { useAddressesStore } from "@/state/addressesStore";
 import { useEventsStore } from "@/state/eventsStore";
 import { DashboardBleacher, DashboardBlock, DashboardEvent } from "./types";
@@ -23,6 +23,7 @@ import { updateDataBase } from "@/app/actions/db.actions";
 import { useBlocksStore } from "@/state/blocksStore";
 import { EditBlock } from "./_components/dashboard/MainScrollableGrid";
 import { SetupTeardownBlock } from "./_components/dashboard/SetupTeardownBlockModal";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -211,85 +212,187 @@ export function fetchDashboardEvents() {
   }, [events, addresses, bleacherEvents]);
 }
 
+async function saveAddress(
+  address: AddressData | null,
+  addressId: number | null,
+  supabase: SupabaseClient
+): Promise<number | null> {
+  if (!address) return null;
+
+  if (addressId) {
+    const { error: addressError } = await supabase
+      .from("Addresses")
+      .update({
+        city: address.city ?? "",
+        state_province: address.state ?? "",
+        street: address.address ?? "",
+        zip_postal: address.postalCode ?? "",
+      })
+      .eq("address_id", addressId);
+
+    if (addressError) {
+      createErrorToast(["Failed to update address.", addressError?.message ?? ""]);
+    }
+    return addressId;
+  } else {
+    const { data: addressData, error: addressError } = await supabase
+      .from("Addresses")
+      .insert({
+        city: address.city ?? "",
+        state_province: address.state ?? "",
+        street: address.address ?? "",
+        zip_postal: address.postalCode ?? "",
+      })
+      .select("address_id")
+      .single();
+
+    if (addressError || !addressData) {
+      createErrorToast(["Failed to insert address.", addressError?.message ?? ""]);
+    }
+    if (!addressData?.address_id) {
+      createErrorToast(["Inserted an address, but no address_id returned."]);
+    }
+    return addressData?.address_id;
+  }
+}
+
+export function getAddressFromId(addressId: number | null): AddressData | null {
+  const addresses = useAddressesStore.getState().addresses;
+  if (!addressId) return null;
+  const address = addresses.find((a) => a.address_id === addressId);
+  if (!address) return null;
+  return {
+    addressId: address.address_id,
+    address: address.street,
+    city: address.city,
+    state: address.state_province,
+    postalCode: address.zip_postal ?? undefined,
+  };
+}
+
+async function saveWorkTracker(
+  workTracker: Tables<"WorkTrackers"> | null,
+  workTrackerId: number | null,
+  pickUpAddressId: number | null,
+  dropOffAddressId: number | null,
+  supabase: SupabaseClient
+): Promise<number | null> {
+  if (!workTracker) return null;
+  if (workTrackerId) {
+    const { error: workTrackerError } = await supabase
+      .from("WorkTrackers")
+      .update({
+        user_id: workTracker.user_id,
+        date: workTracker.date,
+        pickup_address_id: pickUpAddressId,
+        pickup_poc: workTracker.pickup_poc,
+        pickup_time: workTracker.pickup_time,
+        dropoff_address_id: dropOffAddressId,
+        dropoff_poc: workTracker.dropoff_poc,
+        dropoff_time: workTracker.dropoff_time,
+        notes: workTracker.notes,
+        pay_cents: workTracker.pay_cents,
+      })
+      .eq("work_tracker_id", workTrackerId);
+
+    if (workTrackerError) {
+      createErrorToast(["Failed to update work tracker.", workTrackerError?.message ?? ""]);
+    }
+    return workTrackerId;
+  } else {
+    const { data: workTrackerData, error: workTrackerError } = await supabase
+      .from("WorkTrackers")
+      .insert({
+        user_id: workTracker.user_id,
+        date: workTracker.date,
+        pickup_address_id: pickUpAddressId,
+        pickup_poc: workTracker.pickup_poc,
+        pickup_time: workTracker.pickup_time,
+        dropoff_address_id: dropOffAddressId,
+        dropoff_poc: workTracker.dropoff_poc,
+        dropoff_time: workTracker.dropoff_time,
+        notes: workTracker.notes,
+        pay_cents: workTracker.pay_cents,
+      })
+      .select("work_tracker_id")
+      .single();
+
+    if (workTrackerError || !workTrackerData) {
+      createErrorToast(["Failed to insert work tracker.", workTrackerError?.message ?? ""]);
+    }
+    if (!workTrackerData?.work_tracker_id) {
+      createErrorToast(["Inserted a work tracker, but no work_tracker_id returned."]);
+    }
+    return workTrackerData?.work_tracker_id;
+  }
+}
+
 export async function saveSetupTeardownBlock(
   block: SetupTeardownBlock | null,
+  workTracker: Tables<"WorkTrackers"> | null,
+  pickUpAddress: AddressData | null,
+  dropOffAddress: AddressData | null,
   token: string | null
 ): Promise<void> {
   if (!token) {
-    console.warn("No token found");
-    toast.custom(
-      (t) =>
-        React.createElement(ErrorToast, {
-          id: t,
-          lines: ["No token found"],
-        }),
-      { duration: 10000 }
-    );
-    throw new Error("No authentication token found");
+    createErrorToast(["No authentication token found"]);
   }
 
   if (!block) {
-    console.error("No setup block provided for save");
-    toast.custom(
-      (t) =>
-        React.createElement(ErrorToast, {
-          id: t,
-          lines: ["No setup block provided for save"],
-        }),
-      { duration: 10000 }
-    );
-    throw new Error("No setup block selected to save.");
+    createErrorToast(["No setup block provided for save"]);
+  }
+
+  let workTrackerId: number | null = null;
+  let pickUpAddressId: number | null = null;
+  let dropOffAddressId: number | null = null;
+  if (workTracker) {
+    workTrackerId = workTracker.work_tracker_id;
+    pickUpAddressId = workTracker.pickup_address_id;
+    dropOffAddressId = workTracker.dropoff_address_id;
   }
 
   const supabase = await getSupabaseClient(token);
+  console.log("workTracker:", workTracker);
+  console.log("pickupAddressId:", pickUpAddressId);
+  console.log("pickUpAddress:", pickUpAddress);
+
+  pickUpAddressId = await saveAddress(pickUpAddress, pickUpAddressId, supabase);
+  console.log("pickupAddressId2:", pickUpAddressId);
+  dropOffAddressId = await saveAddress(dropOffAddress, dropOffAddressId, supabase);
+
+  workTrackerId = await saveWorkTracker(
+    workTracker,
+    workTrackerId,
+    pickUpAddressId,
+    dropOffAddressId,
+    supabase
+  );
+
   if (block.bleacherEventId) {
     const data =
       block.type === "setup"
         ? {
             setup_text: block.text,
             setup_confirmed: block.confirmed,
+            setup_work_tracker_id: workTrackerId,
           }
         : {
             teardown_text: block.text,
             teardown_confirmed: block.confirmed,
+            teardown_work_tracker_id: workTrackerId,
           };
     const { error } = await supabase
       .from("BleacherEvents")
       .update(data)
       .eq("bleacher_event_id", block.bleacherEventId);
     if (error) {
-      console.error("Failed to update BleacherEvent:", error);
-      toast.custom(
-        (t) =>
-          React.createElement(ErrorToast, {
-            id: t,
-            lines: [`Failed to update ${block.type} block`, error.message],
-          }),
-        { duration: 10000 }
-      );
-      throw new Error(`Failed to update ${block.type} block: ${error.message}`);
+      createErrorToast([`Failed to update ${block.type} block`, error.message]);
     }
   } else {
-    console.error(`Failed to update ${block.type} block: No BleacherEventId provided.`);
-    toast.custom(
-      (t) =>
-        React.createElement(ErrorToast, {
-          id: t,
-          lines: [`Failed to update ${block.type} block: No BleacherEventId provided.`],
-        }),
-      { duration: 10000 }
-    );
-    throw new Error(`Failed to update ${block.type} block: No BleacherEventId provided.`);
+    createErrorToast([`Failed to update ${block.type} block: No BleacherEventId provided.`]);
   }
-  toast.custom(
-    (t) =>
-      React.createElement(SuccessToast, {
-        id: t,
-        lines: ["Setup Block saved"],
-      }),
-    { duration: 10000 }
-  );
-  updateDataBase(["BleacherEvents"]);
+  createSuccessToast(["Setup Block saved"]);
+  updateDataBase(["BleacherEvents", "WorkTrackers"]);
 }
 
 export async function saveBlock(block: EditBlock | null, token: string | null): Promise<void> {

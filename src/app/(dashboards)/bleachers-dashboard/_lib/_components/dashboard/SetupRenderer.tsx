@@ -4,6 +4,9 @@ import { DashboardEvent } from "../../types";
 import { SetupTeardownBlock } from "./SetupTeardownBlockModal";
 import { useFilterDashboardStore } from "../../useFilterDashboardStore";
 import { confirmedHsl, setupTeardownHsl } from "@/types/Constants";
+import { useWorkTrackersStore } from "@/state/workTrackersStore";
+import { useBleacherEventsStore } from "@/state/bleacherEventStore";
+import { getWorkTracker } from "../../db/setupTeardownBlock/getWorkTracker";
 
 type EventRendererProps = {
   event: DashboardEvent;
@@ -38,6 +41,7 @@ export default function SetupRenderer({
   //   setupConfirmed: false,
   // });
   const yAxis = useFilterDashboardStore((state) => state.yAxis);
+  // const workTracker = getWorkTracker(event.bleacherEventId, "setup");
 
   const visualStartDate = event.setupStart ? DateTime.fromISO(event.setupStart) : eventStartDate;
   const visualEndDate = event.teardownEnd ? DateTime.fromISO(event.teardownEnd) : eventEndDate;
