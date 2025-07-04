@@ -11,7 +11,7 @@ import TopLeftCell from "./TopLeftCell";
 import StickyLeftColumn from "./StickyLeftColumn";
 import StickyTopRow from "./StickyTopRow";
 import MainScrollableGrid from "./MainScrollableGrid";
-import { filterSortBleachers } from "../../functions";
+import { filterEvents, filterSortBleachers } from "../../functions";
 
 const COLUMN_WIDTH = 100;
 const STICKY_LEFT_COLUMN_WIDTH = 175;
@@ -31,6 +31,7 @@ const Dashboard = memo(({ yAxis }: DashboardProps) => {
   const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
   const rows = useFilterDashboardStore((s) => s.rows);
   const bleacherIds = useCurrentEventStore((s) => s.bleacherIds);
+  const stateProvinces = useFilterDashboardStore((s) => s.stateProvinces);
 
   const dates: string[] = Array.from({ length: DATE_RANGE * 2 + 1 }, (_, i) =>
     DateTime.now()
@@ -61,6 +62,12 @@ const Dashboard = memo(({ yAxis }: DashboardProps) => {
     );
   }, [homeBaseIds, winterHomeBaseIds, rows, bleachers, bleacherIds, isFormExpanded]);
 
+  // when the user changes their filtering options in useFilterDashboardStore this will run
+  const sortedEvents = useMemo(() => {
+    // console.log("filterSortBleachers re-running due to dependency change");
+    return filterEvents(events, stateProvinces);
+  }, [events, stateProvinces]);
+
   return (
     <ScrollSync>
       {({ scrollLeft, scrollTop, onScroll }) => {
@@ -83,7 +90,7 @@ const Dashboard = memo(({ yAxis }: DashboardProps) => {
               STICKY_LEFT_COLUMN_WIDTH_EXPANDED={STICKY_LEFT_COLUMN_WIDTH_EXPANDED}
               HEADER_ROW_HEIGHT={HEADER_ROW_HEIGHT}
               bleachers={sortedBleachers}
-              events={events}
+              events={sortedEvents}
               yAxis={yAxis}
             />
 
@@ -110,7 +117,7 @@ const Dashboard = memo(({ yAxis }: DashboardProps) => {
                       onScroll={onScroll}
                       DATE_RANGE={DATE_RANGE}
                       bleachers={sortedBleachers}
-                      events={events}
+                      events={sortedEvents}
                       yAxis={yAxis}
                       dates={dates}
                     />
