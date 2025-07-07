@@ -24,6 +24,7 @@ import { useBlocksStore } from "@/state/blocksStore";
 import { EditBlock } from "./_components/dashboard/MainScrollableGrid";
 import { SetupTeardownBlock } from "./_components/dashboard/SetupTeardownBlockModal";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { useWorkTrackersStore } from "@/state/workTrackersStore";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -38,6 +39,7 @@ export function fetchBleachers() {
   const events = useEventsStore((s) => s.events);
   const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
   const blocks = useBlocksStore((s) => s.blocks);
+  const workTrackers = useWorkTrackersStore((s) => s.workTrackers);
 
   const eventAlerts = calculateEventAlerts(events, bleacherEvents);
   // console.log("eventAlerts", eventAlerts);
@@ -51,6 +53,10 @@ export function fetchBleachers() {
         const homeBase = homeBases.find((base) => base.home_base_id === bleacher.home_base_id);
         const winterHomeBase = homeBases.find(
           (base) => base.home_base_id === bleacher.winter_home_base_id
+        );
+
+        const relatedWorkTrackers = workTrackers.filter(
+          (wt) => wt.bleacher_id === bleacher.bleacher_id
         );
 
         const relatedBlocks: DashboardBlock[] = blocks
@@ -136,6 +142,10 @@ export function fetchBleachers() {
           },
           events: relatedEvents,
           blocks: relatedBlocks,
+          relatedWorkTrackers: relatedWorkTrackers.map((wt) => ({
+            workTrackerId: wt.work_tracker_id,
+            date: wt.date ?? "",
+          })),
         };
       })
       .sort((a, b) => b.bleacherNumber - a.bleacherNumber);
@@ -270,15 +280,43 @@ export function getAddressFromId(addressId: number | null): AddressData | null {
   };
 }
 
-async function saveWorkTracker(
-  workTracker: Tables<"WorkTrackers"> | null,
-  workTrackerId: number | null,
-  pickUpAddressId: number | null,
-  dropOffAddressId: number | null,
+export async function fetchAddressFromId(
+  id: number,
   supabase: SupabaseClient
-): Promise<number | null> {
-  if (!workTracker) return null;
-  if (workTrackerId) {
+): Promise<Tables<"Addresses"> | null> {
+  const { data, error } = await supabase
+    .from("Addresses")
+    .select("*")
+    .eq("address_id", id)
+    .single();
+
+  if (error) {
+    createErrorToast(["Failed to fetch address.", error.message]);
+  }
+  console.log("fetchAddressFromId", data);
+  return data;
+}
+
+export async function saveWorkTracker(
+  workTracker: Tables<"WorkTrackers"> | null,
+  pickUpAddress: AddressData | null,
+  dropOffAddress: AddressData | null,
+  token: string | null
+): Promise<void> {
+  if (!token) {
+    createErrorToast(["No authentication token found"]);
+  }
+  if (!workTracker) {
+    createErrorToast(["Failed to save work tracker. No work tracker provided."]);
+  }
+  const supabase = await getSupabaseClient(token);
+
+  let pickUpAddressId: number | null = workTracker.pickup_address_id;
+  let dropOffAddressId: number | null = workTracker.dropoff_address_id;
+  pickUpAddressId = await saveAddress(pickUpAddress, pickUpAddressId, supabase);
+  dropOffAddressId = await saveAddress(dropOffAddress, dropOffAddressId, supabase);
+
+  if (workTracker.work_tracker_id !== -1) {
     const { error: workTrackerError } = await supabase
       .from("WorkTrackers")
       .update({
@@ -292,13 +330,13 @@ async function saveWorkTracker(
         dropoff_time: workTracker.dropoff_time,
         notes: workTracker.notes,
         pay_cents: workTracker.pay_cents,
+        bleacher_id: workTracker.bleacher_id,
       })
-      .eq("work_tracker_id", workTrackerId);
+      .eq("work_tracker_id", workTracker.work_tracker_id);
 
     if (workTrackerError) {
       createErrorToast(["Failed to update work tracker.", workTrackerError?.message ?? ""]);
     }
-    return workTrackerId;
   } else {
     const { data: workTrackerData, error: workTrackerError } = await supabase
       .from("WorkTrackers")
@@ -313,6 +351,7 @@ async function saveWorkTracker(
         dropoff_time: workTracker.dropoff_time,
         notes: workTracker.notes,
         pay_cents: workTracker.pay_cents,
+        bleacher_id: workTracker.bleacher_id,
       })
       .select("work_tracker_id")
       .single();
@@ -323,8 +362,9 @@ async function saveWorkTracker(
     if (!workTrackerData?.work_tracker_id) {
       createErrorToast(["Inserted a work tracker, but no work_tracker_id returned."]);
     }
-    return workTrackerData?.work_tracker_id;
   }
+  updateDataBase(["WorkTrackers", "Addresses"]);
+  createSuccessToast(["Work Tracker saved"]);
 }
 
 export async function saveSetupTeardownBlock(

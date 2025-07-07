@@ -55,7 +55,13 @@ export default function BlockModal({ selectedBlock, setSelectedBlock }: BlockMod
               onChange={(e) => setSelectedBlock({ ...selectedBlock, text: e.target.value })}
               rows={4}
             />
-            <div className="mt-3 flex justify-end gap-2">
+            <div className="mt-3 flex justify-between gap-2">
+              <button
+                className="text-xs underline  text-gray-500 cursor-pointer hover:text-black transition-all duration-200"
+                onClick={handleSaveBlock}
+              >
+                Create Work Tracker?
+              </button>
               {selectedBlock.blockId && (
                 <button
                   className="text-sm text-gray-500 px-3 py-1 rounded bg-gray-200 cursor-pointer hover:bg-red-900/20 hover:text-red-700 hover:border-red-700 border-1 border-gray-200 transition-all duration-200"

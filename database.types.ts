@@ -483,6 +483,7 @@ export type Database = {
       }
       WorkTrackers: {
         Row: {
+          bleacher_id: number | null
           created_at: string
           date: string | null
           dropoff_address_id: number | null
@@ -497,6 +498,7 @@ export type Database = {
           work_tracker_id: number
         }
         Insert: {
+          bleacher_id?: number | null
           created_at?: string
           date?: string | null
           dropoff_address_id?: number | null
@@ -511,6 +513,7 @@ export type Database = {
           work_tracker_id?: number
         }
         Update: {
+          bleacher_id?: number | null
           created_at?: string
           date?: string | null
           dropoff_address_id?: number | null
@@ -525,6 +528,13 @@ export type Database = {
           work_tracker_id?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "WorkTrackers_bleacher_id_fkey"
+            columns: ["bleacher_id"]
+            isOneToOne: false
+            referencedRelation: "Bleachers"
+            referencedColumns: ["bleacher_id"]
+          },
           {
             foreignKeyName: "WorkTrackers_dropoff_address_id_fkey"
             columns: ["dropoff_address_id"]
