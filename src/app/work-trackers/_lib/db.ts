@@ -3,6 +3,7 @@ import { Tables } from "../../../../database.types";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { USER_ROLES } from "@/types/Constants";
 import { DateTime } from "luxon";
+import { fetchAddressFromId } from "@/app/(dashboards)/bleachers-dashboard/_lib/db";
 
 export async function fetchDrivers(token: string | null): Promise<{
   drivers: Tables<"Users">[] | null;
@@ -77,10 +78,16 @@ export async function fetchWorkTrackersForUserIdAndStartDate(
   token: string | null,
   userId: string,
   startDate: string
-): Promise<Tables<"WorkTrackers">[]> {
+): Promise<
+  {
+    workTracker: Tables<"WorkTrackers">;
+    pickup_address: Tables<"Addresses"> | null;
+    dropoff_address: Tables<"Addresses"> | null;
+  }[]
+> {
   if (!token) {
     createErrorToast(["No token found"]);
-    return [];
+    // return { workTracker: [], pickUpAddress: [], dropOffAddress: [] };
   }
 
   const supabase = await getSupabaseClient(token);
@@ -95,8 +102,27 @@ export async function fetchWorkTrackersForUserIdAndStartDate(
 
   if (error) {
     createErrorToast(["Failed to fetch work trackers", error.message]);
-    return [];
+    // return [];
   }
 
-  return data ?? [];
+  const result = await Promise.all(
+    (data || []).map(async (tracker) => {
+      const pickup =
+        tracker.pickup_address_id != null
+          ? await fetchAddressFromId(tracker.pickup_address_id, supabase)
+          : null;
+      const dropoff =
+        tracker.dropoff_address_id != null
+          ? await fetchAddressFromId(tracker.dropoff_address_id, supabase)
+          : null;
+
+      return {
+        workTracker: tracker,
+        pickup_address: pickup,
+        dropoff_address: dropoff,
+      };
+    })
+  );
+
+  return result;
 }
