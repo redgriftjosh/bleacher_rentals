@@ -34,9 +34,24 @@ export default function WorkTrackerModal({
   const [pickUpAddress, setPickUpAddress] = useState<AddressData | null>(pickupAddress);
   const [dropOffAddress, setDropOffAddress] = useState<AddressData | null>(dropoffAddress);
 
+  const [payInput, setPayInput] = useState(
+    selectedWorkTracker?.pay_cents != null ? (selectedWorkTracker?.pay_cents / 100).toFixed(2) : ""
+  );
+
   useEffect(() => {
     setWorkTracker(selectedWorkTracker);
+    setPayInput(
+      selectedWorkTracker?.pay_cents != null
+        ? (selectedWorkTracker?.pay_cents / 100).toFixed(2)
+        : ""
+    );
   }, [selectedWorkTracker]);
+
+  // useEffect(() => {
+  //   if (workTracker?.pay_cents != null) {
+  //     setPayInput((workTracker.pay_cents / 100).toFixed(2));
+  //   }
+  // }, [workTracker?.pay_cents]);
 
   console.log("selectedWorkTracker WorkTrackerModal", selectedWorkTracker);
 
@@ -62,6 +77,11 @@ export default function WorkTrackerModal({
     } else if (fetchedWorkTracker) {
       console.log("fetchedWorkTracker", fetchedWorkTracker);
       setWorkTracker(fetchedWorkTracker.workTracker);
+      setPayInput(
+        fetchedWorkTracker.workTracker && fetchedWorkTracker.workTracker.pay_cents != null
+          ? (fetchedWorkTracker.workTracker.pay_cents / 100).toFixed(2)
+          : ""
+      );
       setPickUpAddress({
         addressId: fetchedWorkTracker.pickupAddress?.address_id ?? null,
         address: fetchedWorkTracker.pickupAddress?.street ?? "",
@@ -89,6 +109,31 @@ export default function WorkTrackerModal({
       createErrorToast(["Failed to Save Work Tracker:", String(error)]);
     }
   };
+
+  function handlePayChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value;
+
+    // Allow empty input for backspacing
+    if (raw === "") {
+      setPayInput("");
+      setWorkTracker((prev) => ({ ...prev!, pay_cents: null }));
+      return;
+    }
+
+    // Only allow numbers with max 2 decimals
+    const validFormat = /^\d*\.?\d{0,2}$/;
+    if (!validFormat.test(raw)) return;
+
+    setPayInput(raw);
+
+    const parsed = parseFloat(raw);
+    if (!isNaN(parsed)) {
+      setWorkTracker((prev) => ({
+        ...prev!,
+        pay_cents: Math.round(parsed * 100),
+      }));
+    }
+  }
 
   const labelClassName = "block text-sm font-medium text-gray-700 mt-1";
   const inputClassName = "w-full p-2 border rounded bg-white";
@@ -166,6 +211,16 @@ export default function WorkTrackerModal({
                     }))
                   }
                   rows={4}
+                />
+                <label className={labelClassName}>Pay</label>
+                <input
+                  type="number"
+                  className={inputClassName}
+                  step="0.01"
+                  min="0"
+                  value={payInput}
+                  onChange={handlePayChange}
+                  placeholder="0.00"
                 />
               </div>
               {/* Column 2: Pickup */}

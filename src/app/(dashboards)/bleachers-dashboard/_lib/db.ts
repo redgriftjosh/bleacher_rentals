@@ -310,6 +310,7 @@ export async function saveWorkTracker(
     createErrorToast(["Failed to save work tracker. No work tracker provided."]);
   }
   const supabase = await getSupabaseClient(token);
+  // const payCents = Math.round(payInput * 100);
 
   let pickUpAddressId: number | null = workTracker.pickup_address_id;
   let dropOffAddressId: number | null = workTracker.dropoff_address_id;
