@@ -4,6 +4,7 @@ import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { USER_ROLES } from "@/types/Constants";
 import { DateTime } from "luxon";
 import { fetchAddressFromId } from "@/app/(dashboards)/bleachers-dashboard/_lib/db";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export async function fetchDrivers(token: string | null): Promise<{
   drivers: Tables<"Users">[] | null;
@@ -77,7 +78,8 @@ export async function fetchWorkTrackerWeeks(
 export async function fetchWorkTrackersForUserIdAndStartDate(
   token: string | null,
   userId: string,
-  startDate: string
+  startDate: string,
+  supabaseClient?: SupabaseClient // if supplied this is being called from the server
 ): Promise<
   {
     workTracker: Tables<"WorkTrackers">;
@@ -85,23 +87,40 @@ export async function fetchWorkTrackersForUserIdAndStartDate(
     dropoff_address: Tables<"Addresses"> | null;
   }[]
 > {
-  if (!token) {
+  // console.log("supabaseClient", supabaseClient);
+  if (!supabaseClient && !token) {
     createErrorToast(["No token found"]);
     // return { workTracker: [], pickUpAddress: [], dropOffAddress: [] };
   }
-
-  const supabase = await getSupabaseClient(token);
+  let supabase: SupabaseClient;
+  if (supabaseClient) {
+    supabase = supabaseClient;
+  } else if (token) {
+    supabase = await getSupabaseClient(token);
+  } else {
+    throw new Error("No token found");
+  }
+  // const supabase = await getSupabaseClient(token);
 
   // 1. Get all dates for the given user
+  // console.log("userId", userId);
+  // console.log("startDate", startDate);
+  // console.log("supabase", supabase);
   const { data, error } = await supabase
     .from("WorkTrackers")
     .select("*")
     .eq("user_id", userId)
     .gte("date", startDate)
     .lt("date", DateTime.fromISO(startDate).plus({ days: 7 }).toISODate());
+  // console.log("data", data);
 
   if (error) {
-    createErrorToast(["Failed to fetch work trackers", error.message]);
+    // if it's being called from the server, throw an error, otherwise toast
+    if (!supabaseClient) {
+      createErrorToast(["Failed to fetch work trackers", error.message]);
+    } else {
+      throw new Error(["Failed to fetch work trackers", error.message].join("\n"));
+    }
     // return [];
   }
 
@@ -109,11 +128,11 @@ export async function fetchWorkTrackersForUserIdAndStartDate(
     (data || []).map(async (tracker) => {
       const pickup =
         tracker.pickup_address_id != null
-          ? await fetchAddressFromId(tracker.pickup_address_id, supabase)
+          ? await fetchAddressFromId(tracker.pickup_address_id, supabase, supabaseClient != null)
           : null;
       const dropoff =
         tracker.dropoff_address_id != null
-          ? await fetchAddressFromId(tracker.dropoff_address_id, supabase)
+          ? await fetchAddressFromId(tracker.dropoff_address_id, supabase, supabaseClient != null)
           : null;
 
       return {

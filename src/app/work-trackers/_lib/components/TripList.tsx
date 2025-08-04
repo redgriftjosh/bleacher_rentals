@@ -5,6 +5,7 @@ import { fetchDrivers, fetchWorkTrackersForUserIdAndStartDate } from "../db";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
+import { calculateFinancialTotals } from "../../[userId]/[startDate]/pdf/_lib/util";
 
 type Props = {
   userId: string;
@@ -20,6 +21,10 @@ export function TripList({ userId, startDate }: Props) {
       return fetchWorkTrackersForUserIdAndStartDate(token, userId, startDate);
     },
   });
+  let financialTotals;
+  if (data) {
+    financialTotals = calculateFinancialTotals(data);
+  }
 
   if (error) {
     return (
@@ -44,6 +49,7 @@ export function TripList({ userId, startDate }: Props) {
   }
 
   const className = "py-1 text-center text-xs font-light border-r";
+  const classNameBold = "py-1 text-center text-xs font-bold border-r";
   return (
     <tbody>
       {data?.map((row, index) => (
@@ -60,11 +66,53 @@ export function TripList({ userId, startDate }: Props) {
           <th className={`w-[8%] ${className}`}>{row.workTracker.dropoff_poc}</th>
           <th className={`w-[7%] ${className}`}>{row.workTracker.dropoff_time}</th>
           <th className={`w-[8%] ${className}`}>
-            {row.workTracker.pay_cents ? (row.workTracker.pay_cents / 100).toFixed(2) : ""}
+            {row.workTracker.pay_cents ? `$${(row.workTracker.pay_cents / 100).toFixed(2)}` : ""}
           </th>
           <th className={` ${className}`}>{row.workTracker.notes}</th>
         </tr>
       ))}
+      <tr className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer">
+        <th className={`w-[8%] ${classNameBold}`}>SubTotal</th>
+        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[12%] ${className}`}></th>
+        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[7%] ${className}`}></th>
+        <th className={`w-[12%] ${className}`}></th>
+        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[7%] ${className}`}></th>
+        <th className={`w-[8%] ${className}`}>
+          {financialTotals ? `$${(financialTotals.subtotal / 100).toFixed(2)}` : ""}
+        </th>
+        <th className={` ${className}`}></th>
+      </tr>
+      <tr className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer">
+        <th className={`w-[8%] ${classNameBold}`}>HST (13%)</th>
+        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[12%] ${className}`}></th>
+        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[7%] ${className}`}></th>
+        <th className={`w-[12%] ${className}`}></th>
+        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[7%] ${className}`}></th>
+        <th className={`w-[8%] ${className}`}>
+          {financialTotals ? `$${(financialTotals.tax / 100).toFixed(2)}` : ""}
+        </th>
+        <th className={` ${className}`}></th>
+      </tr>
+      <tr className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer">
+        <th className={`w-[8%] ${classNameBold}`}>Total Amount To Be Paid</th>
+        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[12%] ${className}`}></th>
+        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[7%] ${className}`}></th>
+        <th className={`w-[12%] ${className}`}></th>
+        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[7%] ${className}`}></th>
+        <th className={`w-[8%] ${className}`}>
+          {financialTotals ? `$${(financialTotals.total / 100).toFixed(2)}` : ""}
+        </th>
+        <th className={` ${className}`}></th>
+      </tr>
     </tbody>
   );
 }

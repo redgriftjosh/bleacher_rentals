@@ -282,7 +282,8 @@ export function getAddressFromId(addressId: number | null): AddressData | null {
 
 export async function fetchAddressFromId(
   id: number,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  isServer?: boolean
 ): Promise<Tables<"Addresses"> | null> {
   const { data, error } = await supabase
     .from("Addresses")
@@ -291,9 +292,12 @@ export async function fetchAddressFromId(
     .single();
 
   if (error) {
+    if (isServer) {
+      throw new Error(["Failed to fetch address.", error.message].join("\n"));
+    }
     createErrorToast(["Failed to fetch address.", error.message]);
   }
-  console.log("fetchAddressFromId", data);
+  // console.log("fetchAddressFromId", data);
   return data;
 }
 
