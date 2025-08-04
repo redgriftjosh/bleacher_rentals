@@ -38,6 +38,7 @@ export default function SetupRenderer({
   //   setupConfirmed: false,
   // });
   const yAxis = useFilterDashboardStore((state) => state.yAxis);
+  // const workTracker = getWorkTracker(event.bleacherEventId, "setup");
 
   const visualStartDate = event.setupStart ? DateTime.fromISO(event.setupStart) : eventStartDate;
   const visualEndDate = event.teardownEnd ? DateTime.fromISO(event.teardownEnd) : eventEndDate;

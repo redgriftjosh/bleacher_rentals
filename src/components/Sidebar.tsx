@@ -6,7 +6,14 @@ import { useUser } from "@clerk/nextjs";
 import { useUsersStore } from "@/state/userStore";
 import { USER_ROLES, UserRoleValue } from "@/types/Constants";
 
-const menuItems = [
+type MenuItem = {
+  label: string;
+  href: string;
+  icon: React.ComponentType<any>;
+  roles: UserRoleValue[]; // ← This is the fix
+};
+
+const menuItems: MenuItem[] = [
   {
     label: "Dashboard",
     href: "/bleachers-dashboard",
@@ -15,6 +22,7 @@ const menuItems = [
   },
   { label: "Team", href: "/team", icon: UsersIcon, roles: [USER_ROLES.ADMIN] },
   { label: "Assets", href: "/assets", icon: TruckIcon, roles: [USER_ROLES.ADMIN] },
+  { label: "Work Trackers", href: "/work-trackers", icon: TruckIcon, roles: [USER_ROLES.ADMIN] },
 ];
 
 const SideBar = () => {

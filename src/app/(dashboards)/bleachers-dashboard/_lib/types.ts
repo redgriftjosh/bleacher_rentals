@@ -1,3 +1,4 @@
+import { Tables } from "../../../../../database.types";
 import { AddressData } from "./useCurrentEventStore";
 
 export type DashboardBleacher = {
@@ -15,6 +16,7 @@ export type DashboardBleacher = {
   };
   events: DashboardEvent[];
   blocks: DashboardBlock[];
+  relatedWorkTrackers: { workTrackerId: number; date: string }[];
 };
 
 export type DashboardBlock = {

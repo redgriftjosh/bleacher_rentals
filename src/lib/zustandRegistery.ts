@@ -12,6 +12,7 @@ import { Database } from "../../database.types";
 import { useTasksStore } from "@/state/tasksStore";
 import { useTaskStatusesStore } from "@/state/taskStatusesStore";
 import { useTaskTypesStore } from "@/state/taskTypesStore";
+import { useWorkTrackersStore } from "@/state/workTrackersStore";
 
 export type TableName = keyof Database["public"]["Tables"];
 
@@ -31,4 +32,5 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   UserRoles: () => useUserRolesStore.getState().setStale(true),
   UserStatuses: () => useUserStatusesStore.getState().setStale(true),
   Users: () => useUsersStore.getState().setStale(true),
+  WorkTrackers: () => useWorkTrackersStore.getState().setStale(true),
 };
