@@ -4,9 +4,6 @@ import { DashboardEvent } from "../../types";
 import { SetupTeardownBlock } from "./SetupTeardownBlockModal";
 import { useFilterDashboardStore } from "../../useFilterDashboardStore";
 import { confirmedHsl, setupTeardownHsl } from "@/types/Constants";
-import { useWorkTrackersStore } from "@/state/workTrackersStore";
-import { useBleacherEventsStore } from "@/state/bleacherEventStore";
-import { getWorkTracker } from "../../db/setupTeardownBlock/getWorkTracker";
 
 type EventRendererProps = {
   event: DashboardEvent;

@@ -374,70 +374,83 @@ export async function saveWorkTracker(
 
 export async function saveSetupTeardownBlock(
   block: SetupTeardownBlock | null,
-  workTracker: Tables<"WorkTrackers"> | null,
-  pickUpAddress: AddressData | null,
-  dropOffAddress: AddressData | null,
   token: string | null
 ): Promise<void> {
   if (!token) {
-    createErrorToast(["No authentication token found"]);
+    console.warn("No token found");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No token found"],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error("No authentication token found");
   }
 
   if (!block) {
-    createErrorToast(["No setup block provided for save"]);
-  }
-
-  let workTrackerId: number | null = null;
-  let pickUpAddressId: number | null = null;
-  let dropOffAddressId: number | null = null;
-  if (workTracker) {
-    workTrackerId = workTracker.work_tracker_id;
-    pickUpAddressId = workTracker.pickup_address_id;
-    dropOffAddressId = workTracker.dropoff_address_id;
+    console.error("No setup block provided for save");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No setup block provided for save"],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error("No setup block selected to save.");
   }
 
   const supabase = await getSupabaseClient(token);
-  console.log("workTracker:", workTracker);
-  console.log("pickupAddressId:", pickUpAddressId);
-  console.log("pickUpAddress:", pickUpAddress);
-
-  pickUpAddressId = await saveAddress(pickUpAddress, pickUpAddressId, supabase);
-  console.log("pickupAddressId2:", pickUpAddressId);
-  dropOffAddressId = await saveAddress(dropOffAddress, dropOffAddressId, supabase);
-
-  workTrackerId = await saveWorkTracker(
-    workTracker,
-    workTrackerId,
-    pickUpAddressId,
-    dropOffAddressId,
-    supabase
-  );
-
   if (block.bleacherEventId) {
     const data =
       block.type === "setup"
         ? {
             setup_text: block.text,
             setup_confirmed: block.confirmed,
-            setup_work_tracker_id: workTrackerId,
           }
         : {
             teardown_text: block.text,
             teardown_confirmed: block.confirmed,
-            teardown_work_tracker_id: workTrackerId,
           };
     const { error } = await supabase
       .from("BleacherEvents")
       .update(data)
       .eq("bleacher_event_id", block.bleacherEventId);
     if (error) {
-      createErrorToast([`Failed to update ${block.type} block`, error.message]);
+      console.error("Failed to update BleacherEvent:", error);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: [`Failed to update ${block.type} block`, error.message],
+          }),
+        { duration: 10000 }
+      );
+      throw new Error(`Failed to update ${block.type} block: ${error.message}`);
     }
   } else {
-    createErrorToast([`Failed to update ${block.type} block: No BleacherEventId provided.`]);
+    console.error(`Failed to update ${block.type} block: No BleacherEventId provided.`);
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: [`Failed to update ${block.type} block: No BleacherEventId provided.`],
+        }),
+      { duration: 10000 }
+    );
+    throw new Error(`Failed to update ${block.type} block: No BleacherEventId provided.`);
   }
-  createSuccessToast(["Setup Block saved"]);
-  updateDataBase(["BleacherEvents", "WorkTrackers"]);
+  toast.custom(
+    (t) =>
+      React.createElement(SuccessToast, {
+        id: t,
+        lines: ["Setup Block saved"],
+      }),
+    { duration: 10000 }
+  );
+  updateDataBase(["BleacherEvents"]);
 }
 
 export async function saveBlock(block: EditBlock | null, token: string | null): Promise<void> {

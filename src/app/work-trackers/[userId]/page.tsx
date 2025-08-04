@@ -1,11 +1,14 @@
+"use client";
+import { useParams } from "next/navigation";
 import { WeekList } from "../_lib/components/WeekList";
 
-type Props = {
-  params: { userId: string };
-};
+// type Props = {
+//   params: { userId: string };
+// };
 
-export default function WorkTrackersForUserPage({ params }: Props) {
-  const { userId } = params;
+export default function WorkTrackersForUserPage() {
+  const params = useParams();
+  const userId = params.userId as string;
 
   return (
     <table className="min-w-full border-collapse border border-gray-200">

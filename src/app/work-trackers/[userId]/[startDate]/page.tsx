@@ -5,13 +5,6 @@ import { useParams } from "next/navigation";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 
-// type Props = {
-//   params: {
-//     userId: string;
-//     startDate: string;
-//   };
-// };
-
 export default function WorkTrackersForUserPage() {
   // const { userId, startDate } = params;
   const params = useParams();
