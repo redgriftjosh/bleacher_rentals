@@ -26,7 +26,7 @@ export async function insertUser(
       first_name: firstName,
       last_name: lastName,
       role: roleId,
-      status: roleId === ROLES.driver ? STATUSES : STATUSES.invited,
+      status: roleId === ROLES.driver ? STATUSES.active : STATUSES.invited,
     })
     .select("user_id") // 👈 ensure we get back the inserted user_id
     .single(); // 👈 safely assume only one user is inserted
