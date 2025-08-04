@@ -12,12 +12,25 @@ import SetupRenderer from "./SetupRenderer";
 import TeardownRenderer from "./TeardownRenderer";
 import SetupBlockModal, { SetupTeardownBlock } from "./SetupTeardownBlockModal";
 import SetupTeardownBlockModal from "./SetupTeardownBlockModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Check, Ellipsis, Trash, Truck, X } from "lucide-react";
+import Block from "./Block";
+import WorkTrackerModal from "./WorkTrackerModal";
+import { Tables } from "../../../../../../../database.types";
+import { createErrorToast } from "@/components/toasts/ErrorToast";
 
 export type EditBlock = {
+  key: string;
   blockId: number | null;
   bleacherId: number;
   date: string;
   text: string;
+  workTrackerId: number | null;
 };
 
 type MainScrollableGridProps = {
@@ -52,6 +65,7 @@ export default function MainScrollableGrid({
   const [selectedBlock, setSelectedBlock] = useState<EditBlock | null>(null);
   const [selectedSetupTeardownBlock, setSelectedSetupTeardownBlock] =
     useState<SetupTeardownBlock | null>(null);
+  const [workTracker, setWorkTracker] = useState<Tables<"WorkTrackers"> | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollLeftRef = useRef(0);
@@ -118,6 +132,45 @@ export default function MainScrollableGrid({
   }, [isFormExpanded, eventId]);
   // console.log("Rendering yAxis", yAxis);
 
+  const handleSelectWorkTracker = async (
+    bleacherId: number,
+    date: string,
+    workTrackerId: number | null
+  ) => {
+    console.log("handleSelectWorkTracker", bleacherId, date);
+    if (!date) {
+      createErrorToast(["Failed to select work tracker. No date provided."]);
+    }
+    if (!bleacherId) {
+      createErrorToast(["Failed to select work tracker. No bleacher id provided."]);
+    }
+    // setSelectedBlock({
+    //   key,
+    //   blockId: block?.blockId ?? null,
+    //   bleacherId: bleachers[rowIndex].bleacherId,
+    //   date: dates[columnIndex],
+    //   text: block?.text ?? "",
+    //   workTrackerId: workTracker?.workTrackerId ?? null,
+    // });
+    setWorkTracker({
+      work_tracker_id: workTrackerId ?? -1,
+      bleacher_id: bleacherId,
+      created_at: "",
+      date: date,
+      dropoff_address_id: null,
+      dropoff_poc: null,
+      dropoff_time: null,
+      notes: null,
+      pay_cents: null,
+      pickup_address_id: null,
+      pickup_poc: null,
+      pickup_time: null,
+      user_id: null,
+    });
+
+    // console.log("workTracker", workTracker);
+  };
+
   if (bleachers === null || bleachers.length === 0) {
     return null;
   }
@@ -131,10 +184,15 @@ export default function MainScrollableGrid({
         overflow: "hidden",
       }}
     >
-      <BlockModal selectedBlock={selectedBlock} setSelectedBlock={setSelectedBlock} />
+      {/* <BlockModal selectedBlock={selectedBlock} setSelectedBlock={setSelectedBlock} /> */}
       <SetupTeardownBlockModal
         selectedBlock={selectedSetupTeardownBlock}
         setSelectedBlock={setSelectedSetupTeardownBlock}
+      />
+      <WorkTrackerModal
+        selectedWorkTracker={workTracker}
+        setSelectedWorkTracker={setWorkTracker}
+        setSelectedBlock={setSelectedBlock}
       />
       <Grid
         ref={gridRef}
@@ -150,30 +208,61 @@ export default function MainScrollableGrid({
         overscanRowCount={5}
         cellRenderer={({ rowIndex, columnIndex, key, style }) => {
           const isFirstVisibleColumn = columnIndex === firstVisibleColumnRef.current;
+          const block = bleachers[rowIndex].blocks.find(
+            (b) => DateTime.fromISO(b.date).toISODate() === dates[columnIndex]
+          );
+          const workTracker = bleachers[rowIndex].relatedWorkTrackers.find(
+            (wt) => wt.date === dates[columnIndex]
+          );
           return (
             <div
               key={key}
               style={style}
               className={clsx(
-                "relative flex justify-center items-center text-sm w-full h-full border-r border-b bg-white",
+                "relative flex justify-center items-center text-sm w-full h-full border-r border-b bg-white group",
                 {
-                  "hover:bg-gray-50 cursor-pointer": yAxis === "Bleachers",
+                  "hover:bg-gray-50 cursor-pointer":
+                    yAxis === "Bleachers" && selectedBlock?.key !== key,
                 }
               )}
-              onClick={() => {
+              onClick={(e) => {
                 if (yAxis === "Bleachers") {
-                  const block = bleachers[rowIndex].blocks.find(
-                    (b) => DateTime.fromISO(b.date).toISODate() === dates[columnIndex]
-                  );
                   setSelectedBlock({
+                    key,
                     blockId: block?.blockId ?? null,
                     bleacherId: bleachers[rowIndex].bleacherId,
                     date: dates[columnIndex],
                     text: block?.text ?? "",
+                    workTrackerId: workTracker?.workTrackerId ?? null,
                   });
                 }
               }}
             >
+              {workTracker && (
+                <div className="absolute top-0 right-0 p-1 z-[5]">
+                  <Truck
+                    className=" h-4 w-4 hover:h-5 hover:w-5 transition-all"
+                    color="darkBlue"
+                    onClick={(e) => {
+                      e.stopPropagation();
+
+                      handleSelectWorkTracker(
+                        bleachers[rowIndex].bleacherId,
+                        dates[columnIndex],
+                        workTracker.workTrackerId
+                      );
+                    }}
+                  />
+                </div>
+              )}
+              {selectedBlock?.key === key && (
+                <Block
+                  selectedBlock={selectedBlock}
+                  setSelectedBlock={setSelectedBlock}
+                  setWorkTracker={setWorkTracker}
+                  ROW_HEIGHT={ROW_HEIGHT}
+                />
+              )}
               {yAxis === "Bleachers" ? (
                 <>
                   {bleachers[rowIndex].events.map((event: DashboardEvent, eventIndex: number) => (

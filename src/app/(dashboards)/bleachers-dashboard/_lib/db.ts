@@ -6,12 +6,12 @@ import {
   checkEventFormRules,
   isUserPermitted,
 } from "./functions";
-import { TablesInsert } from "../../../../../database.types";
+import { Tables, TablesInsert } from "../../../../../database.types";
 import { toast } from "sonner";
 import React from "react";
-import { ErrorToast } from "@/components/toasts/ErrorToast";
-import { SuccessToast } from "@/components/toasts/SuccessToast";
-import { CurrentEventStore } from "./useCurrentEventStore";
+import { createErrorToast, ErrorToast } from "@/components/toasts/ErrorToast";
+import { createSuccessToast, SuccessToast } from "@/components/toasts/SuccessToast";
+import { AddressData, CurrentEventStore } from "./useCurrentEventStore";
 import { useAddressesStore } from "@/state/addressesStore";
 import { useEventsStore } from "@/state/eventsStore";
 import { DashboardBleacher, DashboardBlock, DashboardEvent } from "./types";
@@ -23,6 +23,8 @@ import { updateDataBase } from "@/app/actions/db.actions";
 import { useBlocksStore } from "@/state/blocksStore";
 import { EditBlock } from "./_components/dashboard/MainScrollableGrid";
 import { SetupTeardownBlock } from "./_components/dashboard/SetupTeardownBlockModal";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { useWorkTrackersStore } from "@/state/workTrackersStore";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -37,6 +39,7 @@ export function fetchBleachers() {
   const events = useEventsStore((s) => s.events);
   const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
   const blocks = useBlocksStore((s) => s.blocks);
+  const workTrackers = useWorkTrackersStore((s) => s.workTrackers);
 
   const eventAlerts = calculateEventAlerts(events, bleacherEvents);
   // console.log("eventAlerts", eventAlerts);
@@ -50,6 +53,10 @@ export function fetchBleachers() {
         const homeBase = homeBases.find((base) => base.home_base_id === bleacher.home_base_id);
         const winterHomeBase = homeBases.find(
           (base) => base.home_base_id === bleacher.winter_home_base_id
+        );
+
+        const relatedWorkTrackers = workTrackers.filter(
+          (wt) => wt.bleacher_id === bleacher.bleacher_id
         );
 
         const relatedBlocks: DashboardBlock[] = blocks
@@ -135,6 +142,10 @@ export function fetchBleachers() {
           },
           events: relatedEvents,
           blocks: relatedBlocks,
+          relatedWorkTrackers: relatedWorkTrackers.map((wt) => ({
+            workTrackerId: wt.work_tracker_id,
+            date: wt.date ?? "",
+          })),
         };
       })
       .sort((a, b) => b.bleacherNumber - a.bleacherNumber);
@@ -209,6 +220,156 @@ export function fetchDashboardEvents() {
     });
     return dashboardEvents;
   }, [events, addresses, bleacherEvents]);
+}
+
+async function saveAddress(
+  address: AddressData | null,
+  addressId: number | null,
+  supabase: SupabaseClient
+): Promise<number | null> {
+  if (!address) return null;
+
+  if (addressId) {
+    const { error: addressError } = await supabase
+      .from("Addresses")
+      .update({
+        city: address.city ?? "",
+        state_province: address.state ?? "",
+        street: address.address ?? "",
+        zip_postal: address.postalCode ?? "",
+      })
+      .eq("address_id", addressId);
+
+    if (addressError) {
+      createErrorToast(["Failed to update address.", addressError?.message ?? ""]);
+    }
+    return addressId;
+  } else {
+    const { data: addressData, error: addressError } = await supabase
+      .from("Addresses")
+      .insert({
+        city: address.city ?? "",
+        state_province: address.state ?? "",
+        street: address.address ?? "",
+        zip_postal: address.postalCode ?? "",
+      })
+      .select("address_id")
+      .single();
+
+    if (addressError || !addressData) {
+      createErrorToast(["Failed to insert address.", addressError?.message ?? ""]);
+    }
+    if (!addressData?.address_id) {
+      createErrorToast(["Inserted an address, but no address_id returned."]);
+    }
+    return addressData?.address_id;
+  }
+}
+
+export function getAddressFromId(addressId: number | null): AddressData | null {
+  const addresses = useAddressesStore.getState().addresses;
+  if (!addressId) return null;
+  const address = addresses.find((a) => a.address_id === addressId);
+  if (!address) return null;
+  return {
+    addressId: address.address_id,
+    address: address.street,
+    city: address.city,
+    state: address.state_province,
+    postalCode: address.zip_postal ?? undefined,
+  };
+}
+
+export async function fetchAddressFromId(
+  id: number,
+  supabase: SupabaseClient,
+  isServer?: boolean
+): Promise<Tables<"Addresses"> | null> {
+  const { data, error } = await supabase
+    .from("Addresses")
+    .select("*")
+    .eq("address_id", id)
+    .single();
+
+  if (error) {
+    if (isServer) {
+      throw new Error(["Failed to fetch address.", error.message].join("\n"));
+    }
+    createErrorToast(["Failed to fetch address.", error.message]);
+  }
+  // console.log("fetchAddressFromId", data);
+  return data;
+}
+
+export async function saveWorkTracker(
+  workTracker: Tables<"WorkTrackers"> | null,
+  pickUpAddress: AddressData | null,
+  dropOffAddress: AddressData | null,
+  token: string | null
+): Promise<void> {
+  if (!token) {
+    createErrorToast(["No authentication token found"]);
+  }
+  if (!workTracker) {
+    createErrorToast(["Failed to save work tracker. No work tracker provided."]);
+  }
+  const supabase = await getSupabaseClient(token);
+  // const payCents = Math.round(payInput * 100);
+
+  let pickUpAddressId: number | null = workTracker.pickup_address_id;
+  let dropOffAddressId: number | null = workTracker.dropoff_address_id;
+  pickUpAddressId = await saveAddress(pickUpAddress, pickUpAddressId, supabase);
+  dropOffAddressId = await saveAddress(dropOffAddress, dropOffAddressId, supabase);
+
+  if (workTracker.work_tracker_id !== -1) {
+    const { error: workTrackerError } = await supabase
+      .from("WorkTrackers")
+      .update({
+        user_id: workTracker.user_id,
+        date: workTracker.date,
+        pickup_address_id: pickUpAddressId,
+        pickup_poc: workTracker.pickup_poc,
+        pickup_time: workTracker.pickup_time,
+        dropoff_address_id: dropOffAddressId,
+        dropoff_poc: workTracker.dropoff_poc,
+        dropoff_time: workTracker.dropoff_time,
+        notes: workTracker.notes,
+        pay_cents: workTracker.pay_cents,
+        bleacher_id: workTracker.bleacher_id,
+      })
+      .eq("work_tracker_id", workTracker.work_tracker_id);
+
+    if (workTrackerError) {
+      createErrorToast(["Failed to update work tracker.", workTrackerError?.message ?? ""]);
+    }
+  } else {
+    const { data: workTrackerData, error: workTrackerError } = await supabase
+      .from("WorkTrackers")
+      .insert({
+        user_id: workTracker.user_id,
+        date: workTracker.date,
+        pickup_address_id: pickUpAddressId,
+        pickup_poc: workTracker.pickup_poc,
+        pickup_time: workTracker.pickup_time,
+        dropoff_address_id: dropOffAddressId,
+        dropoff_poc: workTracker.dropoff_poc,
+        dropoff_time: workTracker.dropoff_time,
+        notes: workTracker.notes,
+        pay_cents: workTracker.pay_cents,
+        bleacher_id: workTracker.bleacher_id,
+      })
+      .select("work_tracker_id")
+      .single();
+
+    if (workTrackerError || !workTrackerData) {
+      createErrorToast(["Failed to insert work tracker.", workTrackerError?.message ?? ""]);
+    }
+    if (!workTrackerData?.work_tracker_id) {
+      createErrorToast(["Inserted a work tracker, but no work_tracker_id returned."]);
+    }
+  }
+  updateDataBase(["WorkTrackers", "Addresses"]);
+  createSuccessToast(["Work Tracker saved"]);
 }
 
 export async function saveSetupTeardownBlock(

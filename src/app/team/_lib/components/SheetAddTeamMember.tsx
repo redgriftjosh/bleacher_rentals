@@ -11,6 +11,7 @@ import {
   checkEmailRules,
   checkInsertUserFormRules,
   deleteInviteUserEmail,
+  filterUserRoles,
   sendInviteUserEmail,
 } from "../functions";
 import { useUsersStore } from "@/state/userStore";
@@ -33,6 +34,7 @@ import { TriangleAlert } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ExistingUser } from "../../page";
 import { SuccessToast } from "@/components/toasts/SuccessToast";
+import { ROLES, STATUSES } from "../constants";
 
 export function SheetAddTeamMember({
   isOpen,
@@ -46,7 +48,8 @@ export function SheetAddTeamMember({
   setExistingUser: (user: ExistingUser) => void;
 }) {
   const { getToken } = useAuth();
-  const userRoles = useUserRolesStore((s) => s.userRoles);
+  let userRoles = useUserRolesStore((s) => s.userRoles);
+  userRoles = filterUserRoles(userRoles, existingUser);
   const users = useUsersStore((s) => s.users);
   const homeBaseOptions = getHomeBaseOptions();
 
@@ -73,7 +76,7 @@ export function SheetAddTeamMember({
 
   useEffect(() => {
     if (existingUser) {
-      setEmail(existingUser.email);
+      setEmail(existingUser.email.toLowerCase());
       setFirstName(existingUser.first_name);
       setLastName(existingUser.last_name);
       setRoleId(existingUser.role);
@@ -115,6 +118,11 @@ export function SheetAddTeamMember({
       } else {
         // insert user
         await insertUser(email!, firstName!, lastName!, roleId!, homeBaseIds, token!);
+        if (roleId === ROLES.driver) {
+          setSubmitting(false);
+          setIsOpen(false);
+          return;
+        }
         const success = await sendInviteUserEmail(email!);
         if (success) {
           setSubmitting(false);
@@ -211,6 +219,9 @@ export function SheetAddTeamMember({
     }
   };
 
+  const allowResend =
+    existingUser && existingUser.status === STATUSES.invited && existingUser.role !== ROLES.driver;
+
   return (
     <>
       <PrimaryButton onClick={() => setIsOpen(true)}>+ Invite Team Member</PrimaryButton>
@@ -274,7 +285,7 @@ export function SheetAddTeamMember({
                     id="email"
                     type="email"
                     value={email ?? ""}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value.toLowerCase())}
                     className="col-span-3 px-3 py-2 border rounded text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                   />
                 </div>
@@ -283,7 +294,7 @@ export function SheetAddTeamMember({
                 <div className="grid grid-cols-5 items-center gap-4">
                   <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
                     <label htmlFor="name">Role</label>
-                    {roleId === 2 && (
+                    {roleId === ROLES.admin && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -292,6 +303,31 @@ export function SheetAddTeamMember({
                           <TooltipContent>
                             <p>Admins can do anything!</p>
                             <p>Make sure you trust this user.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+
+                    {roleId === ROLES.driver && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <TriangleAlert className="h-4 w-4 text-yellow-500" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Driver's don't get access to this app at all.</p>
+                            <p>
+                              Adding a driver just allows you to create work trackers for them but{" "}
+                              <br />
+                              you'll still need to export the PDF and send to the driver manually.
+                            </p>
+                            <p>
+                              {/* intentionally left blank for spacing */}
+                              <br />
+                            </p>
+                            <p>
+                              In the future, we will add a 'Driver App' to automate this process.
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -310,7 +346,21 @@ export function SheetAddTeamMember({
                   </div>
                 </div>
               </div>
-              {roleId === 1 && (
+              {roleId === ROLES.driver && (
+                <div className="text-xs text-black/50 mt-2">
+                  <p>Driver's don't get access to this app at all.</p>
+                  <p>
+                    Adding a driver just allows you to create work trackers for them but you'll
+                    still need to export the PDF and send to the driver manually.
+                  </p>
+                  <p>
+                    {/* intentionally left blank for spacing */}
+                    <br />
+                  </p>
+                  <p>In the future, we will add a 'Driver App' to automate this process.</p>
+                </div>
+              )}
+              {roleId === ROLES.accountManager && (
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-5 items-center gap-4">
                     <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
@@ -346,7 +396,7 @@ export function SheetAddTeamMember({
                   </div>
                 </div>
               )}
-              {existingUser && existingUser.status === 1 && (
+              {allowResend && (
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-5 items-end gap-4">
                     <div className="col-span-2 flex items-center"></div>
@@ -370,7 +420,7 @@ export function SheetAddTeamMember({
                 Send Invite
               </PrimaryButton> */}
 
-              {existingUser && existingUser.status === 2 && (
+              {existingUser && existingUser.status === STATUSES.active && (
                 <div className="mr-2">
                   <PrimaryButton
                     className="bg-red-800 hover:bg-red-900"
@@ -382,7 +432,7 @@ export function SheetAddTeamMember({
                   </PrimaryButton>
                 </div>
               )}
-              {existingUser && existingUser.status === 1 && (
+              {existingUser && existingUser.status === STATUSES.invited && (
                 <div className="mr-2">
                   <PrimaryButton
                     className="bg-red-800 hover:bg-red-900"
@@ -394,7 +444,7 @@ export function SheetAddTeamMember({
                   </PrimaryButton>
                 </div>
               )}
-              {existingUser && existingUser.status === 3 && (
+              {existingUser && existingUser.status === STATUSES.inactive && (
                 <div className="mr-2">
                   <PrimaryButton
                     className="bg-green-800 hover:bg-green-700"
@@ -407,7 +457,7 @@ export function SheetAddTeamMember({
                 </div>
               )}
 
-              {roleId === 2 ? (
+              {roleId === ROLES.admin ? (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <PrimaryButton loading={submitting} loadingText="Sending...">
@@ -446,7 +496,11 @@ export function SheetAddTeamMember({
                 </AlertDialog>
               ) : (
                 <PrimaryButton loading={submitting} loadingText="Sending..." onClick={handleSubmit}>
-                  {existingUser ? "Update User" : "Send Invite"}
+                  {existingUser
+                    ? "Update User"
+                    : roleId === ROLES.driver
+                    ? "Create User"
+                    : "Send Invite"}
                 </PrimaryButton>
               )}
             </div>

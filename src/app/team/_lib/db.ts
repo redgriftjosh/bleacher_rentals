@@ -6,6 +6,7 @@ import { useUserRolesStore } from "@/state/userRolesStore";
 import { useUserStatusesStore } from "@/state/userStatusesStore";
 import { useUsersStore } from "@/state/userStore";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
+import { ROLES, STATUSES } from "./constants";
 
 export async function insertUser(
   email: string,
@@ -25,7 +26,7 @@ export async function insertUser(
       first_name: firstName,
       last_name: lastName,
       role: roleId,
-      status: 1,
+      status: roleId === ROLES.driver ? STATUSES : STATUSES.invited,
     })
     .select("user_id") // 👈 ensure we get back the inserted user_id
     .single(); // 👈 safely assume only one user is inserted

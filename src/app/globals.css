@@ -10,6 +10,7 @@
 @theme inline {
   --color-darkBlue: #10365a;
   --color-lightBlue: #1d62a3;
+  --color-lighterBlue: #5392cf;
   --color-greenAccent: #3a8b61;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -125,5 +126,49 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  @keyframes scale-bounce-in {
+    0% {
+      opacity: 0;
+      transform: scale(0);
+    }
+    40% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+    60% {
+      transform: scale(0.95);
+    }
+    80% {
+      transform: scale(1.05);
+    }
+    90% {
+      transform: scale(0.98);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .animate-scale-bounce-in {
+    animation: scale-bounce-in 600ms cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  }
+}
+
+@layer utilities {
+  @keyframes scale-in {
+    0% {
+      transform: scale(0);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .animate-scale-in {
+    animation: scale-in 300ms;
   }
 }
