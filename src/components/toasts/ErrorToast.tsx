@@ -40,3 +40,17 @@ export function createErrorToast(lines: string[]): never {
   );
   throw new Error(lines.join("\n"));
 }
+
+export function createErrorToastNoThrow(lines: string[]) {
+  console.error(lines.join("\n"));
+  toast.custom(
+    (t) =>
+      React.createElement(ErrorToast, {
+        id: t,
+        lines,
+      }),
+    { duration: 10000 }
+  );
+  // not throwing an error here. hehe xD rofl
+  // throw new Error(lines.join("\n"));
+}

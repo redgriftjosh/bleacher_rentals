@@ -75,18 +75,51 @@ export async function fetchWorkTrackerWeeks(
   return dates;
 }
 
+export type WorkTrackersResult = {
+  workTrackers: {
+    workTracker: Tables<"WorkTrackers">;
+    pickup_address: Tables<"Addresses"> | null;
+    dropoff_address: Tables<"Addresses"> | null;
+  }[];
+  driverTax: number;
+};
+
+async function fetchDriverTaxByIdServer(
+  userId: number,
+  supabaseClient: SupabaseClient
+): Promise<number> {
+  const { data, error } = await supabaseClient
+    .from("Drivers")
+    .select("tax")
+    .eq("user_id", userId)
+    .single();
+  if (error && error.code === "PGRST116") {
+    const insertError = await insertDriverServer(userId, 0, supabaseClient);
+    if (insertError) {
+      return 0;
+    }
+    return 0;
+  }
+  return data?.tax ?? 0;
+}
+
+async function insertDriverServer(userId: number, tax: number, supabaseClient: SupabaseClient) {
+  const { error } = await supabaseClient.from("Drivers").insert({
+    user_id: userId,
+    tax,
+  });
+  if (error) {
+    throw error;
+  }
+  return null;
+}
+
 export async function fetchWorkTrackersForUserIdAndStartDate(
   token: string | null,
   userId: string,
   startDate: string,
   supabaseClient?: SupabaseClient // if supplied this is being called from the server
-): Promise<
-  {
-    workTracker: Tables<"WorkTrackers">;
-    pickup_address: Tables<"Addresses"> | null;
-    dropoff_address: Tables<"Addresses"> | null;
-  }[]
-> {
+): Promise<WorkTrackersResult> {
   // console.log("supabaseClient", supabaseClient);
   if (!supabaseClient && !token) {
     createErrorToast(["No token found"]);
@@ -143,5 +176,7 @@ export async function fetchWorkTrackersForUserIdAndStartDate(
     })
   );
 
-  return result;
+  const driverTax = await fetchDriverTaxByIdServer(Number(userId), supabase);
+
+  return { workTrackers: result, driverTax };
 }
