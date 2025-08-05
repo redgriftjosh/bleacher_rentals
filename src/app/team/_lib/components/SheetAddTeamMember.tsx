@@ -3,7 +3,14 @@ import { useEffect, useState } from "react";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
-import { deactivateUser, deleteUser, insertUser, reactivateUser, updateUser } from "../db";
+import {
+  deactivateUser,
+  deleteUser,
+  fetchDriverTaxById,
+  insertUser,
+  reactivateUser,
+  updateUser,
+} from "../db";
 import { Dropdown } from "@/components/DropDown";
 import { useUserRolesStore } from "@/state/userRolesStore";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -35,6 +42,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { ExistingUser } from "../../page";
 import { SuccessToast } from "@/components/toasts/SuccessToast";
 import { ROLES, STATUSES } from "../constants";
+import { useQuery } from "@tanstack/react-query";
 
 export function SheetAddTeamMember({
   isOpen,
@@ -60,7 +68,27 @@ export function SheetAddTeamMember({
   const [homeBaseIds, setHomeBaseIds] = useState<number[]>(
     existingUser?.homeBases.map((hb) => hb.id) ?? []
   );
+  const [tax, setTax] = useState<number | undefined>();
   const [submitting, setSubmitting] = useState(false);
+
+  const {
+    data: taxData,
+    isLoading: isTaxLoading,
+    isError: isTaxError,
+  } = useQuery({
+    queryKey: ["driverTax", existingUser?.user_id],
+    queryFn: async () => {
+      const token = await getToken({ template: "supabase" });
+      return fetchDriverTaxById(existingUser!.user_id, token);
+    },
+    enabled: !!existingUser && existingUser.role === ROLES.driver,
+  });
+
+  useEffect(() => {
+    if (isTaxLoading) return;
+    if (isTaxError) return;
+    setTax(taxData);
+  }, [isTaxLoading, isTaxError, taxData]);
 
   // useEffect to set all back to default
   useEffect(() => {
@@ -344,6 +372,22 @@ export function SheetAddTeamMember({
                       placeholder="Select Role"
                     />
                   </div>
+                </div>
+              </div>
+              <div className="space-y-4 pt-2">
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
+                    Tax
+                  </label>
+                  <input
+                    type="number"
+                    className="col-span-3 px-3 py-2 border rounded text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                    step="1"
+                    min="0"
+                    value={tax ?? 0}
+                    onChange={(e) => setTax(Number(e.target.value))}
+                    placeholder="0.00"
+                  />
                 </div>
               </div>
               {roleId === ROLES.driver && (

@@ -7,6 +7,40 @@ import { useUserStatusesStore } from "@/state/userStatusesStore";
 import { useUsersStore } from "@/state/userStore";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { ROLES, STATUSES } from "./constants";
+import { createErrorToast, createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
+import { SupabaseClient } from "@supabase/supabase-js";
+
+export async function fetchDriverTaxById(userId: number, token: string | null): Promise<number> {
+  if (!token) {
+    createErrorToast(["No token found"]);
+  }
+  const supabase = await getSupabaseClient(token);
+  const { data, error } = await supabase
+    .from("Drivers")
+    .select("tax")
+    .eq("user_id", userId)
+    .single();
+  if (error && error.code === "PGRST116") {
+    const insertError = await insertDriver(userId, 0, supabase);
+    if (insertError) {
+      return 0;
+    }
+    return 0;
+  }
+  return data?.tax ?? 0;
+}
+
+async function insertDriver(userId: number, tax: number, supabaseClient: SupabaseClient) {
+  const { error } = await supabaseClient.from("Drivers").insert({
+    user_id: userId,
+    tax,
+  });
+  if (error) {
+    createErrorToastNoThrow(["Failed to insert driver.", error.message]);
+    return error;
+  }
+  return null;
+}
 
 export async function insertUser(
   email: string,
