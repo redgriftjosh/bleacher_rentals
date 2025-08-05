@@ -17,6 +17,7 @@ export function calculateFinancialTotals(WorkTrackersResult: WorkTrackersResult)
   const driverTax = WorkTrackersResult.driverTax / 100;
   const tax = Math.round(subtotal * driverTax);
   const total = Math.round(subtotal + tax);
+  const taxPercent = WorkTrackersResult.driverTax;
 
-  return { subtotal, tax, total };
+  return { subtotal, tax, taxPercent, total };
 }

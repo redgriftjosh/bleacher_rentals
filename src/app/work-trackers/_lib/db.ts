@@ -5,7 +5,6 @@ import { USER_ROLES } from "@/types/Constants";
 import { DateTime } from "luxon";
 import { fetchAddressFromId } from "@/app/(dashboards)/bleachers-dashboard/_lib/db";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { fetchDriverTaxById } from "@/app/team/_lib/db";
 
 export async function fetchDrivers(token: string | null): Promise<{
   drivers: Tables<"Users">[] | null;
@@ -85,6 +84,36 @@ export type WorkTrackersResult = {
   driverTax: number;
 };
 
+async function fetchDriverTaxByIdServer(
+  userId: number,
+  supabaseClient: SupabaseClient
+): Promise<number> {
+  const { data, error } = await supabaseClient
+    .from("Drivers")
+    .select("tax")
+    .eq("user_id", userId)
+    .single();
+  if (error && error.code === "PGRST116") {
+    const insertError = await insertDriverServer(userId, 0, supabaseClient);
+    if (insertError) {
+      return 0;
+    }
+    return 0;
+  }
+  return data?.tax ?? 0;
+}
+
+async function insertDriverServer(userId: number, tax: number, supabaseClient: SupabaseClient) {
+  const { error } = await supabaseClient.from("Drivers").insert({
+    user_id: userId,
+    tax,
+  });
+  if (error) {
+    throw error;
+  }
+  return null;
+}
+
 export async function fetchWorkTrackersForUserIdAndStartDate(
   token: string | null,
   userId: string,
@@ -147,7 +176,7 @@ export async function fetchWorkTrackersForUserIdAndStartDate(
     })
   );
 
-  const driverTax = await fetchDriverTaxById(Number(userId), token);
+  const driverTax = await fetchDriverTaxByIdServer(Number(userId), supabase);
 
   return { workTrackers: result, driverTax };
 }
