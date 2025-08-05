@@ -7,6 +7,44 @@ import { useUserStatusesStore } from "@/state/userStatusesStore";
 import { useUsersStore } from "@/state/userStore";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { ROLES, STATUSES } from "./constants";
+import { createErrorToast, createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { createSuccessToast } from "@/components/toasts/SuccessToast";
+
+export async function fetchDriverTaxById(userId: number, token: string | null): Promise<number> {
+  if (!token) {
+    createErrorToast(["No token found"]);
+  }
+  const supabase = await getSupabaseClient(token);
+  const { data, error } = await supabase
+    .from("Drivers")
+    .select("tax")
+    .eq("user_id", userId)
+    .single();
+  if (error && error.code === "PGRST116") {
+    const insertError = await insertDriver(userId, 0, supabase);
+    if (insertError) {
+      return 0;
+    }
+    return 0;
+  } else if (error) {
+    createErrorToastNoThrow(["Failed to fetch driver tax.", error.message]);
+    return 0;
+  }
+  return data?.tax ?? 0;
+}
+
+async function insertDriver(userId: number, tax: number, supabaseClient: SupabaseClient) {
+  const { error } = await supabaseClient.from("Drivers").insert({
+    user_id: userId,
+    tax,
+  });
+  if (error) {
+    createErrorToastNoThrow(["Failed to insert driver.", error.message]);
+    return error;
+  }
+  return null;
+}
 
 export async function insertUser(
   email: string,
@@ -14,6 +52,7 @@ export async function insertUser(
   lastName: string,
   roleId: number,
   homeBaseIds: number[],
+  tax: number | null,
   token: string
 ) {
   // console.log("Inserting user", token);
@@ -35,6 +74,13 @@ export async function insertUser(
     console.error("Insert failed:", userError?.message);
     return;
   }
+  if (roleId === ROLES.driver) {
+    const insertError = await insertDriver(userData.user_id, tax ?? 0, supabase);
+    if (insertError) {
+      createErrorToastNoThrow(["Failed to insert driver.", insertError.message]);
+      return;
+    }
+  }
 
   // console.log("Inserted invited user:", userData);
 
@@ -51,6 +97,7 @@ export async function insertUser(
     console.error("Failed to link user to home bases:", linkError.message);
   } else {
     // console.log("Linked user to home bases:", homeBaseIds);
+    createSuccessToast(["User Created"]);
     updateDataBase(["Users", "UserHomeBases", "UserRoles", "UserStatuses"]);
   }
 }
@@ -63,6 +110,7 @@ export async function updateUser(
     lastName,
     roleId,
     homeBaseIds,
+    tax,
     token,
   }: {
     email: string | null;
@@ -70,6 +118,7 @@ export async function updateUser(
     lastName: string | null;
     roleId: number | null;
     homeBaseIds: number[];
+    tax: number | null;
     token: string;
   }
 ) {
@@ -100,6 +149,17 @@ export async function updateUser(
 
     await supabase.from("UserHomeBases").insert(inserts);
   }
+  if (roleId === ROLES.driver) {
+    const taxValue = tax ?? 0;
+    const { error: driverError } = await supabase
+      .from("Drivers")
+      .update({ tax: taxValue })
+      .eq("user_id", userId);
+    if (driverError) {
+      createErrorToastNoThrow(["Failed to update driver tax.", driverError.message]);
+    }
+  }
+  createSuccessToast(["User Updated"]);
 
   updateDataBase(["Users", "UserHomeBases", "UserRoles", "UserStatuses"]);
 }

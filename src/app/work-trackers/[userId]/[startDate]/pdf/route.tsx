@@ -36,7 +36,7 @@ export async function GET(
 
   const stream = await renderToStream(
     <MyDocument
-      workTrackers={data}
+      workTrackers={data.workTrackers}
       header={{ dateRange, driverName: driverName }}
       financialTotals={financialTotals}
     />

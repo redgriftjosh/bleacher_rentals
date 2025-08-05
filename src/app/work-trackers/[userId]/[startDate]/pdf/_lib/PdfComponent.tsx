@@ -99,6 +99,7 @@ type MyDocumentProps = {
   financialTotals: {
     subtotal: number;
     tax: number;
+    taxPercent: number;
     total: number;
   };
 };
@@ -196,7 +197,9 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
         </View>
         {/* HST row */}
         <View style={styles.tableRow}>
-          <Text style={[styles.bodyCellBold, { width: columnWidths[0] }]}>HST (13%)</Text>
+          <Text
+            style={[styles.bodyCellBold, { width: columnWidths[0] }]}
+          >{`HST (${financialTotals.taxPercent}%)`}</Text>
           <Text style={[styles.bodyCell, { width: columnWidths[1] }]}></Text>
           <Text style={[styles.bodyCell, { width: columnWidths[2] }]}></Text>
           <Text style={[styles.bodyCell, { width: columnWidths[3] }]}></Text>

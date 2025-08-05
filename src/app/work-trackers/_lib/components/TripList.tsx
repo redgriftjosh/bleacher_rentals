@@ -52,7 +52,7 @@ export function TripList({ userId, startDate }: Props) {
   const classNameBold = "py-1 text-center text-xs font-bold border-r";
   return (
     <tbody>
-      {data?.map((row, index) => (
+      {data?.workTrackers.map((row, index) => (
         <tr
           key={index}
           className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer"
@@ -86,7 +86,7 @@ export function TripList({ userId, startDate }: Props) {
         <th className={` ${className}`}></th>
       </tr>
       <tr className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer">
-        <th className={`w-[8%] ${classNameBold}`}>HST (13%)</th>
+        <th className={`w-[8%] ${classNameBold}`}>{`HST (${data?.driverTax}%)`}</th>
         <th className={`w-[8%] ${className}`}></th>
         <th className={`w-[12%] ${className}`}></th>
         <th className={`w-[8%] ${className}`}></th>
