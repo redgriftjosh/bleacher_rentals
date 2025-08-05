@@ -13,6 +13,10 @@
   "dependencies": {
     "@clerk/backend": "^1.26.0",
     "@clerk/nextjs": "^6.19.5",
+    "@pixi/display": "^7.4.3",
+    "@pixi/graphics": "^7.4.3",
+    "@pixi/react": "^8.0.0-beta.25",
+    "@pixi/text": "^7.4.3",
     "@radix-ui/react-alert-dialog": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.13",
     "@radix-ui/react-dropdown-menu": "^2.1.15",
@@ -33,6 +37,7 @@
     "lucide-react": "^0.487.0",
     "luxon": "^3.6.1",
     "next": "15.2.4",
+    "pixi.js": "^8.12.0",
     "pusher": "^5.2.0",
     "pusher-js": "^8.4.0",
     "react": "^19.0.0",
