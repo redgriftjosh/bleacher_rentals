@@ -37,12 +37,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { MultiSelect } from "@/components/MultiSelect";
 import { getHomeBaseOptions } from "@/app/(dashboards)/bleachers-dashboard/_lib/functions";
-import { TriangleAlert } from "lucide-react";
+import { Info, TriangleAlert } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ExistingUser } from "../../page";
 import { SuccessToast } from "@/components/toasts/SuccessToast";
 import { ROLES, STATUSES } from "../constants";
 import { useQuery } from "@tanstack/react-query";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import InputPercents from "@/components/InputPercents";
 
 export function SheetAddTeamMember({
   isOpen,
@@ -74,6 +76,7 @@ export function SheetAddTeamMember({
   const {
     data: taxData,
     isLoading: isTaxLoading,
+    isFetching: isTaxFetching,
     isError: isTaxError,
   } = useQuery({
     queryKey: ["driverTax", existingUser?.user_id],
@@ -85,9 +88,9 @@ export function SheetAddTeamMember({
   });
 
   useEffect(() => {
-    if (isTaxLoading) return;
-    if (isTaxError) return;
-    setTax(taxData);
+    if (taxData) {
+      setTax(taxData);
+    }
   }, [isTaxLoading, isTaxError, taxData]);
 
   // useEffect to set all back to default
@@ -99,6 +102,7 @@ export function SheetAddTeamMember({
       setRoleId(null);
       setHomeBaseIds([]);
       setExistingUser(null);
+      setTax(undefined);
     }
   }, [isOpen]);
 
@@ -139,13 +143,14 @@ export function SheetAddTeamMember({
           lastName,
           roleId,
           homeBaseIds,
+          tax: tax ?? null,
           token: token!,
         });
         setSubmitting(false);
         setIsOpen(false);
       } else {
         // insert user
-        await insertUser(email!, firstName!, lastName!, roleId!, homeBaseIds, token!);
+        await insertUser(email!, firstName!, lastName!, roleId!, homeBaseIds, tax ?? null, token!);
         if (roleId === ROLES.driver) {
           setSubmitting(false);
           setIsOpen(false);
@@ -249,6 +254,16 @@ export function SheetAddTeamMember({
 
   const allowResend =
     existingUser && existingUser.status === STATUSES.invited && existingUser.role !== ROLES.driver;
+
+  if (isTaxFetching)
+    return (
+      <div
+        onMouseDown={() => setIsOpen(false)}
+        className="fixed inset-0 z-[2000] bg-black/0 backdrop-blur-xs flex items-center justify-center"
+      >
+        <LoadingSpinner />
+      </div>
+    );
 
   return (
     <>
@@ -374,22 +389,56 @@ export function SheetAddTeamMember({
                   </div>
                 </div>
               </div>
-              <div className="space-y-4 pt-2">
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
-                    Tax
-                  </label>
-                  <input
-                    type="number"
-                    className="col-span-3 px-3 py-2 border rounded text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                    step="1"
-                    min="0"
-                    value={tax ?? 0}
-                    onChange={(e) => setTax(Number(e.target.value))}
-                    placeholder="0.00"
-                  />
+              {roleId === ROLES.driver && (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-5 items-center gap-4">
+                    <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
+                      <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
+                        Tax
+                      </label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-gray-500" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Does this driver charge tax?</p>
+                            <p>This field is the amount of tax that the driver charges.</p>
+                            <p>
+                              If they make $1000 on their work tracker and this field is 10% then
+                            </p>
+                            <p>the driver will get paid $1100.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <InputPercents value={tax ?? 0} setValue={setTax} />
+                    {/* <input
+                      type="string"
+                      className="col-span-3 px-3 py-2 border rounded text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                      step="1"
+                      min="0"
+                      max="100"
+                      value={taxRaw}
+                      onChange={(e) => {
+                        let value = e.target.value;
+
+                        // Remove all leading zeros (but keep a single "0" if that's all there is)
+                        if (/^0\d+/.test(value)) {
+                          value = value.replace(/^0+/, "");
+                        }
+
+                        // If user deletes everything, treat as 0
+                        if (value === "") value = "0";
+
+                        setTaxRaw(value);
+                        setTax(Number(value));
+                      }}
+                      placeholder="0%"
+                    /> */}
+                  </div>
                 </div>
-              </div>
+              )}
               {roleId === ROLES.driver && (
                 <div className="text-xs text-black/50 mt-2">
                   <p>Driver's don't get access to this app at all.</p>
