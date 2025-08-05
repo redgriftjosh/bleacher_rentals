@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function InputPercents({
   value,
@@ -12,6 +12,9 @@ export default function InputPercents({
   placeholder?: string;
 }) {
   const [valueRaw, setValueRaw] = useState<string>(value.toString() + "%");
+  useEffect(() => {
+    setValueRaw(`${value}%`);
+  }, [value]);
   return (
     <input
       type="string"

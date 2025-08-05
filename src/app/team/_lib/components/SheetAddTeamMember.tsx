@@ -255,7 +255,7 @@ export function SheetAddTeamMember({
   const allowResend =
     existingUser && existingUser.status === STATUSES.invited && existingUser.role !== ROLES.driver;
 
-  if (isTaxFetching)
+  if (isTaxLoading)
     return (
       <div
         onMouseDown={() => setIsOpen(false)}

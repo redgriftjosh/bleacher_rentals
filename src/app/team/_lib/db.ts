@@ -27,6 +27,9 @@ export async function fetchDriverTaxById(userId: number, token: string | null): 
       return 0;
     }
     return 0;
+  } else if (error) {
+    createErrorToastNoThrow(["Failed to fetch driver tax.", error.message]);
+    return 0;
   }
   return data?.tax ?? 0;
 }
