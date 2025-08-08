@@ -96,3 +96,5 @@ export const PROVINCES = [
 
 export const setupTeardownHsl = "hsl(54, 90%, 60%)";
 export const confirmedHsl = "hsl(0, 0%, 80%)";
+export const EVENT_SATURATION = 60;
+export const EVENT_LIGHTNESS = 60;

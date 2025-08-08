@@ -55,4 +55,5 @@ export type DashboardEvent = {
   mustBeClean: boolean;
   bleacherIds: number[];
   goodshuffleUrl: string | null;
+  poc: string | null;
 };

@@ -123,6 +123,7 @@ export function fetchBleachers() {
                 .filter((be) => be.event_id === event.event_id)
                 .map((be) => be.bleacher_id), // find all bleachers linked to this event
               goodshuffleUrl: event.goodshuffle_url ?? null,
+              poc: event.poc,
             };
           })
           .filter((e) => e !== null) as DashboardEvent[]; // filter out nulls
@@ -208,6 +209,7 @@ export function fetchDashboardEvents() {
           .filter((be) => be.event_id === event.event_id)
           .map((be) => be.bleacher_id),
         goodshuffleUrl: event.goodshuffle_url ?? null,
+        poc: event.poc,
       };
     });
     // console.log("dashboardEvents", dashboardEvents);
@@ -336,6 +338,10 @@ export async function saveWorkTracker(
         notes: workTracker.notes,
         pay_cents: workTracker.pay_cents,
         bleacher_id: workTracker.bleacher_id,
+        pickup_event_id: workTracker.pickup_event_id,
+        dropoff_event_id: workTracker.dropoff_event_id,
+        pickup_poc_override: workTracker.pickup_poc_override,
+        dropoff_poc_override: workTracker.dropoff_poc_override,
       })
       .eq("work_tracker_id", workTracker.work_tracker_id);
 
@@ -357,6 +363,10 @@ export async function saveWorkTracker(
         notes: workTracker.notes,
         pay_cents: workTracker.pay_cents,
         bleacher_id: workTracker.bleacher_id,
+        pickup_event_id: workTracker.pickup_event_id,
+        dropoff_event_id: workTracker.dropoff_event_id,
+        pickup_poc_override: workTracker.pickup_poc_override,
+        dropoff_poc_override: workTracker.dropoff_poc_override,
       })
       .select("work_tracker_id")
       .single();
@@ -655,6 +665,7 @@ export async function createEvent(
     hsl_hue: state.hslHue,
     must_be_clean: state.mustBeClean,
     goodshuffle_url: state.goodshuffleUrl ?? null,
+    poc: state.poc ?? null,
   };
 
   const { data: eventData, error: eventError } = await supabase

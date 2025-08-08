@@ -165,6 +165,14 @@ export const CoreTab = () => {
           value={currentEventStore.goodshuffleUrl ?? ""}
           onChange={(e) => currentEventStore.setField("goodshuffleUrl", e.target.value)}
         />
+        <label className="block text-sm font-medium text-gray-700 mt-1">Point of Contact</label>
+        <input
+          type="text"
+          className="w-full p-2 border rounded"
+          placeholder="Enter POC"
+          value={currentEventStore.poc ?? ""}
+          onChange={(e) => currentEventStore.setField("poc", e.target.value)}
+        />
       </div>
     </div>
   );

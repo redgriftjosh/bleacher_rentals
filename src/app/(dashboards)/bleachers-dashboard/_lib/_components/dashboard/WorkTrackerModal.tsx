@@ -12,6 +12,10 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchWorkTrackerById } from "../../db/setupTeardownBlock/fetchWorkTracker";
 import { EditBlock } from "./MainScrollableGrid";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import LinkEventButton from "./LinkEventButton/LinkEventButton";
+import { EventForWorkTracker } from "./LinkEventButton/types";
+import OverridablePOCInput from "./LinkEventButton/OverridablePOCInput";
+import AddressInput from "./LinkEventButton/AddressInput";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -39,6 +43,7 @@ export default function WorkTrackerModal({
   );
 
   useEffect(() => {
+    console.log("selectedWorkTracker", selectedWorkTracker);
     setWorkTracker(selectedWorkTracker);
     setPayInput(
       selectedWorkTracker?.pay_cents != null
@@ -46,14 +51,6 @@ export default function WorkTrackerModal({
         : ""
     );
   }, [selectedWorkTracker]);
-
-  // useEffect(() => {
-  //   if (workTracker?.pay_cents != null) {
-  //     setPayInput((workTracker.pay_cents / 100).toFixed(2));
-  //   }
-  // }, [workTracker?.pay_cents]);
-
-  console.log("selectedWorkTracker WorkTrackerModal", selectedWorkTracker);
 
   const {
     data: fetchedWorkTracker,
@@ -102,13 +99,17 @@ export default function WorkTrackerModal({
   const handleSaveWorkTracker = async () => {
     const token = await getToken({ template: "supabase" });
     try {
-      await saveWorkTracker(workTracker, pickUpAddress, dropOffAddress, token);
+      await saveWorkTracker(workTracker!, pickUpAddress, dropOffAddress, token);
       setSelectedWorkTracker(null);
       setSelectedBlock(null);
     } catch (error) {
       createErrorToast(["Failed to Save Work Tracker:", String(error)]);
     }
   };
+
+  useEffect(() => {
+    console.log("workTracker", workTracker);
+  }, [workTracker]);
 
   function handlePayChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value;
@@ -134,7 +135,7 @@ export default function WorkTrackerModal({
       }));
     }
   }
-
+  const titleClassName = "block text-lg font-bold text-gray-700 -mt-1";
   const labelClassName = "block text-sm font-medium text-gray-700 mt-1";
   const inputClassName = "w-full p-2 border rounded bg-white";
 
@@ -224,8 +225,22 @@ export default function WorkTrackerModal({
                 />
               </div>
               {/* Column 2: Pickup */}
-              <div className="flex-1">
-                <label className={labelClassName}>Pickup Time</label>
+              <div className="flex-1 min-w-0">
+                <label className={titleClassName}>Pick Up</label>
+                <LinkEventButton
+                  date={workTracker?.date ?? ""}
+                  bleacherId={workTracker?.bleacher_id ?? 0}
+                  pickUpOrDropOff="pickup"
+                  setSelectedEventId={(eventId: number | null) => {
+                    setWorkTracker((prev) => ({
+                      ...prev!,
+                      pickup_event_id: eventId,
+                      pickup_poc_override: false,
+                    }));
+                  }}
+                  initialEventId={workTracker?.pickup_event_id ?? null}
+                />
+                <label className={labelClassName}> Time</label>
                 <input
                   type="text"
                   className={inputClassName}
@@ -238,8 +253,8 @@ export default function WorkTrackerModal({
                     }))
                   }
                 />
-                <label className={labelClassName}>Pickup POC</label>
-                <input
+                <label className={labelClassName}>Point of Contact</label>
+                {/* <input
                   type="text"
                   className={inputClassName}
                   placeholder="Pickup POC"
@@ -250,25 +265,59 @@ export default function WorkTrackerModal({
                       pickup_poc: e.target.value,
                     }))
                   }
+                /> */}
+                <OverridablePOCInput
+                  eventId={workTracker?.pickup_event_id ?? null}
+                  override={workTracker?.pickup_poc_override ?? false}
+                  poc={workTracker?.pickup_poc ?? null}
+                  setOverride={(override) =>
+                    setWorkTracker((prev) => ({
+                      ...prev!,
+                      pickup_poc_override: override,
+                    }))
+                  }
+                  setPoc={(poc) =>
+                    setWorkTracker((prev) => ({
+                      ...prev!,
+                      pickup_poc: poc,
+                    }))
+                  }
                 />
-                <label className={labelClassName}>Pickup Address</label>
-                <div className="flex flex-row gap-2 items-center">
-                  <AddressAutocomplete
-                    className="bg-white"
-                    onAddressSelect={(data) =>
-                      setPickUpAddress({
-                        ...data,
-                        addressId: pickUpAddress?.addressId ?? null,
-                      })
-                    }
-                    initialValue={pickUpAddress?.address || ""}
-                  />
-                  <Link className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer" />
-                </div>
+                <label className={labelClassName}> Address</label>
+                <AddressInput
+                  eventId={workTracker?.pickup_event_id ?? null}
+                  address={pickUpAddress}
+                  setAddress={setPickUpAddress}
+                />
+                {/* <AddressAutocomplete
+                  className="bg-white"
+                  onAddressSelect={(data) =>
+                    setPickUpAddress({
+                      ...data,
+                      addressId: pickUpAddress?.addressId ?? null,
+                    })
+                  }
+                  initialValue={pickUpAddress?.address || ""}
+                /> */}
+                {/* <label className={labelClassName}>Link Event</label> */}
               </div>
               {/* Column 3: Dropoff */}
-              <div className="flex-1">
-                <label className={labelClassName}>Dropoff Time</label>
+              <div className="flex-1 min-w-0">
+                <label className={titleClassName}>Drop Off</label>
+                <LinkEventButton
+                  date={workTracker?.date ?? ""}
+                  bleacherId={workTracker?.bleacher_id ?? 0}
+                  pickUpOrDropOff="dropoff"
+                  setSelectedEventId={(eventId: number | null) => {
+                    setWorkTracker((prev) => ({
+                      ...prev!,
+                      dropoff_event_id: eventId,
+                      dropoff_poc_override: false,
+                    }));
+                  }}
+                  initialEventId={workTracker?.dropoff_event_id ?? null}
+                />
+                <label className={labelClassName}>Time</label>
                 <input
                   type="text"
                   className={inputClassName}
@@ -281,8 +330,25 @@ export default function WorkTrackerModal({
                     }))
                   }
                 />
-                <label className={labelClassName}>Dropoff POC</label>
-                <input
+                <label className={labelClassName}>Point of Contact</label>
+                <OverridablePOCInput
+                  eventId={workTracker?.dropoff_event_id ?? null}
+                  override={workTracker?.dropoff_poc_override ?? false}
+                  poc={workTracker?.dropoff_poc ?? null}
+                  setOverride={(override) =>
+                    setWorkTracker((prev) => ({
+                      ...prev!,
+                      dropoff_poc_override: override,
+                    }))
+                  }
+                  setPoc={(poc) =>
+                    setWorkTracker((prev) => ({
+                      ...prev!,
+                      dropoff_poc: poc,
+                    }))
+                  }
+                />
+                {/* <input
                   type="text"
                   className={inputClassName}
                   placeholder="Dropoff POC"
@@ -293,9 +359,14 @@ export default function WorkTrackerModal({
                       dropoff_poc: e.target.value,
                     }))
                   }
+                /> */}
+                <label className={labelClassName}> Address</label>
+                <AddressInput
+                  eventId={workTracker?.dropoff_event_id ?? null}
+                  address={dropOffAddress}
+                  setAddress={setDropOffAddress}
                 />
-                <label className={labelClassName}>Dropoff Address</label>
-                <AddressAutocomplete
+                {/* <AddressAutocomplete
                   className="bg-white"
                   onAddressSelect={(data) =>
                     setDropOffAddress({
@@ -304,7 +375,7 @@ export default function WorkTrackerModal({
                     })
                   }
                   initialValue={dropOffAddress?.address || ""}
-                />
+                /> */}
               </div>
             </div>
             <div className="mt-3 flex justify-end items-center gap-2">

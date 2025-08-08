@@ -89,7 +89,7 @@ export async function fetchWorkTrackerById(
     dropoffAddress = await fetchAddressFromId(workTracker.dropoff_address_id, supabase);
   }
 
-  console.log("data", workTracker, pickupAddress, dropoffAddress);
+  // console.log("data", workTracker, pickupAddress, dropoffAddress);
   return { workTracker, pickupAddress, dropoffAddress };
 }
 

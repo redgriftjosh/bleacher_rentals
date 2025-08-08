@@ -3,6 +3,7 @@ import { DashboardEvent } from "../../types";
 import { CurrentEventState, useCurrentEventStore } from "../../useCurrentEventStore";
 import { Sparkles } from "lucide-react";
 import GoodShuffleLogo from "../GSLogo";
+import { EVENT_LIGHTNESS, EVENT_SATURATION } from "@/types/Constants";
 type EventRendererProps = {
   event: DashboardEvent;
   dates: string[];
@@ -30,7 +31,9 @@ export default function EventRenderer({
   const currentDate = DateTime.fromISO(dates[columnIndex]);
   const eventStartDate = DateTime.fromISO(event.eventStart);
   const eventEndDate = DateTime.fromISO(event.eventEnd);
-  const eventHsl = event.hslHue ? `hsl(${event.hslHue.toString()}, 60%, 60%)` : "hsl(0, 0%, 50%)";
+  const eventHsl = event.hslHue
+    ? `hsl(${event.hslHue.toString()}, ${EVENT_SATURATION}%, ${EVENT_LIGHTNESS}%)`
+    : "hsl(0, 0%, 50%)";
   const setField = useCurrentEventStore((s) => s.setField);
 
   let shouldDisplayEvent = currentDate.toISODate() === eventStartDate.toISODate();
@@ -108,6 +111,7 @@ export default function EventRenderer({
     setField("hslHue", event.hslHue);
     // setField("alerts", event.alerts);
     setField("goodshuffleUrl", event.goodshuffleUrl);
+    setField("poc", event.poc);
   };
 
   if (!isFirstVisibleColumn && !shouldDisplayEvent) return null;
@@ -158,6 +162,7 @@ export default function EventRenderer({
               hslHue: event.hslHue,
               alerts: [], // will be calculated on load
               goodshuffleUrl: event.goodshuffleUrl,
+              poc: event.poc,
             });
           }}
         >
