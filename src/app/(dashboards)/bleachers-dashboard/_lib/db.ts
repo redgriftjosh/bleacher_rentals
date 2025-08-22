@@ -267,21 +267,6 @@ async function saveAddress(
     return addressData?.address_id;
   }
 }
-
-export function getAddressFromId(addressId: number | null): AddressData | null {
-  const addresses = useAddressesStore.getState().addresses;
-  if (!addressId) return null;
-  const address = addresses.find((a) => a.address_id === addressId);
-  if (!address) return null;
-  return {
-    addressId: address.address_id,
-    address: address.street,
-    city: address.city,
-    state: address.state_province,
-    postalCode: address.zip_postal ?? undefined,
-  };
-}
-
 export async function fetchAddressFromId(
   id: number,
   supabase: SupabaseClient,

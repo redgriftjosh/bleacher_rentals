@@ -20,9 +20,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Check, Ellipsis, Trash, Truck, X } from "lucide-react";
 import Block from "./Block";
-import WorkTrackerModal from "./WorkTrackerModal";
+import WorkTrackerModal from "../../../../../../features/workTrackers/ui/modals/WorkTrackerModal";
 import { Tables } from "../../../../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
+import { WorkTrackerIsOpen } from "@/features/workTrackers/types";
 
 export type EditBlock = {
   key: string;
@@ -65,7 +66,7 @@ export default function MainScrollableGrid({
   const [selectedBlock, setSelectedBlock] = useState<EditBlock | null>(null);
   const [selectedSetupTeardownBlock, setSelectedSetupTeardownBlock] =
     useState<SetupTeardownBlock | null>(null);
-  const [workTracker, setWorkTracker] = useState<Tables<"WorkTrackers"> | null>(null);
+  const [workTrackerIsOpen, setWorkTrackerIsOpen] = useState<WorkTrackerIsOpen | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollLeftRef = useRef(0);
@@ -132,47 +133,19 @@ export default function MainScrollableGrid({
   }, [isFormExpanded, eventId]);
   // console.log("Rendering yAxis", yAxis);
 
-  const handleSelectWorkTracker = async (
-    bleacherId: number,
-    date: string,
-    workTrackerId: number | null
-  ) => {
-    console.log("handleSelectWorkTracker", bleacherId, date);
-    if (!date) {
+  const handleSelectWorkTracker = async (workTrackerIsOpen: WorkTrackerIsOpen) => {
+    console.log("handleSelectWorkTracker", workTrackerIsOpen.bleacherId, workTrackerIsOpen.date);
+    if (!workTrackerIsOpen.date) {
       createErrorToast(["Failed to select work tracker. No date provided."]);
     }
-    if (!bleacherId) {
+    if (!workTrackerIsOpen.bleacherId) {
       createErrorToast(["Failed to select work tracker. No bleacher id provided."]);
     }
-    // setSelectedBlock({
-    //   key,
-    //   blockId: block?.blockId ?? null,
-    //   bleacherId: bleachers[rowIndex].bleacherId,
-    //   date: dates[columnIndex],
-    //   text: block?.text ?? "",
-    //   workTrackerId: workTracker?.workTrackerId ?? null,
-    // });
-    setWorkTracker({
-      work_tracker_id: workTrackerId ?? -1,
-      bleacher_id: bleacherId,
-      created_at: "",
-      date: date,
-      dropoff_address_id: null,
-      dropoff_event_id: null,
-      dropoff_poc: null,
-      dropoff_poc_override: false,
-      dropoff_time: null,
-      notes: null,
-      pay_cents: null,
-      pickup_address_id: null,
-      pickup_event_id: null,
-      pickup_poc: null,
-      pickup_poc_override: false,
-      pickup_time: null,
-      user_id: null,
+    setWorkTrackerIsOpen({
+      date: workTrackerIsOpen.date,
+      bleacherId: workTrackerIsOpen.bleacherId,
+      workTrackerId: workTrackerIsOpen.workTrackerId,
     });
-
-    // console.log("workTracker", workTracker);
   };
 
   if (bleachers === null || bleachers.length === 0) {
@@ -194,8 +167,8 @@ export default function MainScrollableGrid({
         setSelectedBlock={setSelectedSetupTeardownBlock}
       />
       <WorkTrackerModal
-        selectedWorkTracker={workTracker}
-        setSelectedWorkTracker={setWorkTracker}
+        selectedWorkTrackerIsOpen={workTrackerIsOpen}
+        setSelectedWorkTrackerIsOpen={setWorkTrackerIsOpen}
         setSelectedBlock={setSelectedBlock}
       />
       <Grid
@@ -250,11 +223,11 @@ export default function MainScrollableGrid({
                     onClick={(e) => {
                       e.stopPropagation();
 
-                      handleSelectWorkTracker(
-                        bleachers[rowIndex].bleacherId,
-                        dates[columnIndex],
-                        workTracker.workTrackerId
-                      );
+                      handleSelectWorkTracker({
+                        bleacherId: bleachers[rowIndex].bleacherId,
+                        date: dates[columnIndex],
+                        workTrackerId: workTracker.workTrackerId,
+                      });
                     }}
                   />
                 </div>
@@ -263,7 +236,7 @@ export default function MainScrollableGrid({
                 <Block
                   selectedBlock={selectedBlock}
                   setSelectedBlock={setSelectedBlock}
-                  setWorkTracker={setWorkTracker}
+                  setWorkTrackerIsOpen={setWorkTrackerIsOpen}
                   ROW_HEIGHT={ROW_HEIGHT}
                 />
               )}

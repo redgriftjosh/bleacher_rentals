@@ -1,11 +1,11 @@
 import { EVENT_LIGHTNESS, EVENT_SATURATION } from "@/types/Constants";
-import { EventForWorkTracker } from "./types";
 import { Star } from "lucide-react";
+import { WorkTrackerEvent } from "../../types";
 
 interface ListItemProps {
-  event: EventForWorkTracker;
+  event: WorkTrackerEvent;
   pickUpOrDropOff: "pickup" | "dropoff";
-  setEvent: (event: EventForWorkTracker | null) => void;
+  setEvent: (event: WorkTrackerEvent | null) => void;
 }
 
 export default function ListItem({ event, pickUpOrDropOff, setEvent }: ListItemProps) {

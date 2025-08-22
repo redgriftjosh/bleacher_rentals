@@ -1,11 +1,11 @@
 "use client";
 import { EVENT_LIGHTNESS, EVENT_SATURATION } from "@/types/Constants";
-import { EventForWorkTracker } from "./types";
-import { Link, Star, Unlink } from "lucide-react";
+import { Unlink } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { WorkTrackerEvent } from "@/features/workTrackers/types";
 
 type SelectedEventProps = {
-  event: EventForWorkTracker;
+  event: WorkTrackerEvent;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   unlinkEvent: () => void;
 };

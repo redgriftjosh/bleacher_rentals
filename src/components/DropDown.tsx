@@ -17,6 +17,10 @@ type DropdownProps<T> = {
   selected?: T;
   className?: string;
   formatSelectedLabel?: (label: string) => string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  selectedLabelOverride?: string;
+  menuContent?: (close: () => void) => React.ReactNode;
 };
 
 export function Dropdown<T>({
@@ -26,8 +30,16 @@ export function Dropdown<T>({
   selected,
   className = "",
   formatSelectedLabel,
+  open,
+  onOpenChange,
+  selectedLabelOverride,
+  menuContent,
 }: DropdownProps<T>) {
-  const [isOpen, setIsOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  // const [isOpen, setIsOpen] = useState(false);
+  const isOpen = isControlled ? open! : internalOpen;
+
   const ref = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; width: number }>({
@@ -36,10 +48,15 @@ export function Dropdown<T>({
     width: 0,
   });
 
+  const setOpen = (next: boolean) => {
+    if (!isControlled) setInternalOpen(next);
+    onOpenChange?.(next);
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        setOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -58,18 +75,21 @@ export function Dropdown<T>({
   }, [isOpen]);
 
   const rawLabel = options.find((option) => option.value === selected)?.label;
-  const selectedLabel = rawLabel
-    ? formatSelectedLabel
-      ? formatSelectedLabel(rawLabel)
-      : rawLabel
-    : placeholder;
+  // const selectedLabel = rawLabel
+  //   ? formatSelectedLabel
+  //     ? formatSelectedLabel(rawLabel)
+  //     : rawLabel
+  //   : placeholder;
+  const selectedLabel =
+    selectedLabelOverride ??
+    (rawLabel ? (formatSelectedLabel ? formatSelectedLabel(rawLabel) : rawLabel) : placeholder);
 
   return (
     <>
       <div ref={ref} className={`relative w-full ${className}`}>
         <button
           ref={buttonRef}
-          onClick={() => setIsOpen((prev) => !prev)}
+          onClick={() => setOpen(!isOpen)}
           className="w-full h-[40px] flex items-center text-sm text-muted-foreground font-medium cursor-pointer justify-between bg-white border rounded px-2 py-2 text-left hover:shadow transition-all"
         >
           <span>{selectedLabel}</span>
@@ -99,18 +119,20 @@ export function Dropdown<T>({
                   width: dropdownPos.width,
                 }}
               >
-                {options.map((option) => (
-                  <li
-                    key={String(option.value)}
-                    onClick={() => {
-                      onSelect(option.value);
-                      setIsOpen(false);
-                    }}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                  >
-                    {option.label}
-                  </li>
-                ))}
+                {menuContent
+                  ? menuContent(() => setOpen(false))
+                  : options.map((option) => (
+                      <li
+                        key={String(option.value)}
+                        onClick={() => {
+                          onSelect(option.value);
+                          setOpen(false);
+                        }}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                      >
+                        {option.label}
+                      </li>
+                    ))}
               </motion.ul>
             )}
           </AnimatePresence>,

@@ -1,46 +1,23 @@
 "use client";
-import { CircleAlert, Link, LoaderCircle, Unlink } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@clerk/nextjs";
-import { fetchEventAddressForWorkTracker, fetchEventPocForWorkTracker } from "./db";
 import { EVENT_LIGHTNESS, EVENT_SATURATION } from "@/types/Constants";
-import { useEffect } from "react";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import AddressAutocomplete from "@/app/(dashboards)/_lib/_components/AddressAutoComplete";
-import { AddressData } from "../../../useCurrentEventStore";
+import { AddressData } from "../../../../app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
+import { WorkTrackerEvent } from "../../types";
 
 export default function AddressInput({
-  eventId,
+  event,
   address,
   setAddress,
 }: {
-  eventId: number | null;
+  event: WorkTrackerEvent | null;
   address: AddressData | null;
   setAddress: (address: AddressData) => void;
 }) {
-  const { getToken } = useAuth();
-  const {
-    data: data,
-    isLoading: isLoading,
-    isError: isError,
-  } = useQuery({
-    queryKey: ["eventPocAddressForWorkTracker", eventId],
-    queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchEventAddressForWorkTracker(eventId!, token);
-    },
-    enabled: !!eventId,
-    // refetchOnWindowFocus: false,
-  });
-  useEffect(() => {
-    console.log("OverridablePOCInput data", data);
-  }, [data]);
-
-  const eventHsl = data
-    ? `hsl(${data.hslHue}, ${EVENT_SATURATION}%, ${EVENT_LIGHTNESS}%)`
+  const eventHsl = event
+    ? `hsl(${event.hslHue}, ${EVENT_SATURATION}%, ${EVENT_LIGHTNESS}%)`
     : `hsl(0, ${EVENT_SATURATION}%, ${EVENT_LIGHTNESS}%)`;
-  if (!eventId) {
+  if (!event) {
     return (
       <AddressAutocomplete
         className="bg-white"
@@ -53,12 +30,6 @@ export default function AddressInput({
         initialValue={address?.address || ""}
       />
     );
-  }
-  if (isLoading) {
-    return <LoaderCircle className="text-greenAccent animate-spin" />;
-  }
-  if (isError) {
-    return <CircleAlert className="text-red-700" />;
   }
   return (
     <div>
@@ -75,12 +46,12 @@ export default function AddressInput({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="mt-0.5 text-black whitespace-nowrap overflow-hidden text-ellipsis truncate max-w-full">
-                    {data?.address?.address ?? ""}
+                    {event?.address?.address ?? ""}
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{data?.address?.address ?? ""}</p>
-                  <p>Linked from event</p>
+                  <p>{event?.address?.address ?? ""}</p>
+                  <p>{`Linked from event: ${event.name}`}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

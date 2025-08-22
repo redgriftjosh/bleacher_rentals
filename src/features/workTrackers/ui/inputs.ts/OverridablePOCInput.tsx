@@ -1,48 +1,27 @@
 "use client";
-import { CircleAlert, Link, LoaderCircle, Unlink } from "lucide-react";
+import { Link, Unlink } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@clerk/nextjs";
-import { fetchEventPocForWorkTracker } from "./db";
 import { EVENT_LIGHTNESS, EVENT_SATURATION } from "@/types/Constants";
-import { useEffect } from "react";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import { WorkTrackerEvent } from "../../types";
 
 export default function OverridablePOCInput({
-  eventId,
+  event,
   override,
   poc,
   setOverride,
   setPoc,
 }: {
-  eventId: number | null;
+  event: WorkTrackerEvent | null;
   override: boolean;
   poc: string | null;
   setOverride: (override: boolean) => void;
   setPoc: (poc: string) => void;
 }) {
-  const { getToken } = useAuth();
-  const {
-    data: data,
-    isLoading: isLoading,
-    isError: isError,
-  } = useQuery({
-    queryKey: ["eventPocForWorkTracker", eventId],
-    queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchEventPocForWorkTracker(eventId!, token);
-    },
-    enabled: !!eventId && !override,
-    // refetchOnWindowFocus: false,
-  });
-  // useEffect(() => {
-  //   console.log("OverridablePOCInput data", data);
-  // }, [data]);
-
-  const eventHsl = data
-    ? `hsl(${data.hslHue}, ${EVENT_SATURATION}%, ${EVENT_LIGHTNESS}%)`
+  const eventHsl = event
+    ? `hsl(${event.hslHue}, ${EVENT_SATURATION}%, ${EVENT_LIGHTNESS}%)`
     : `hsl(0, ${EVENT_SATURATION}%, ${EVENT_LIGHTNESS}%)`;
-  if (!eventId || override) {
+
+  if (!event || override) {
     return (
       <div className="flex flex-row gap-2 items-center w-full">
         <input
@@ -52,7 +31,7 @@ export default function OverridablePOCInput({
           value={poc ?? ""}
           onChange={(e) => setPoc(e.target.value)}
         />
-        {eventId && (
+        {event && (
           <Link
             className="h-4 w-4 hover:h-5 hover:w-5 transition-all cursor-pointer mb-0"
             onClick={() => setOverride(false)}
@@ -60,12 +39,6 @@ export default function OverridablePOCInput({
         )}
       </div>
     );
-  }
-  if (isLoading) {
-    return <LoaderCircle className="text-greenAccent animate-spin" />;
-  }
-  if (isError) {
-    return <CircleAlert className="text-red-700" />;
   }
   return (
     <div>
@@ -82,11 +55,11 @@ export default function OverridablePOCInput({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="mt-0.5 text-black whitespace-nowrap overflow-hidden text-ellipsis truncate max-w-full">
-                    {data?.poc ?? ""}
+                    {event?.poc ?? "N/A"}
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{data?.poc ?? ""}</p>
+                  <p>{event?.poc ?? ""}</p>
                   <p>Linked from event</p>
                 </TooltipContent>
               </Tooltip>

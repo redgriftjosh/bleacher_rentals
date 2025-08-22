@@ -1,30 +1,28 @@
 "use client";
-import { EVENT_LIGHTNESS, EVENT_SATURATION } from "@/types/Constants";
 import { useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { Link, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { fetchEventsForWorkTracker } from "./db";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import ListItem from "./ListItem";
-import { filterEventsByName } from "./util";
-import { EventForWorkTracker } from "./types";
-import SelectedEvent from "./SelectedEvent";
+import ListItem from "../components/ListItem";
+import { filterEventsByName } from "../../util";
+import SelectedEvent from "../components/SelectedEvent";
+import { WorkTrackerEvent } from "../../types";
+import { fetchEventsForWorkTracker } from "../../db/fetchEventsForWorkTracker";
 
 export default function LinkEventButton({
   date,
   bleacherId,
   pickUpOrDropOff,
-  setSelectedEventId,
-  initialEventId,
+  setSelectedEvent,
+  selectedEvent,
 }: {
   date: string;
   bleacherId: number;
   pickUpOrDropOff: "pickup" | "dropoff";
-  setSelectedEventId: (eventId: number | null) => void;
-  initialEventId: number | null;
+  setSelectedEvent: (eventId: WorkTrackerEvent | null) => void;
+  selectedEvent: WorkTrackerEvent | null;
 }) {
   const { getToken } = useAuth();
   const ref = useRef<HTMLDivElement>(null);
@@ -35,7 +33,7 @@ export default function LinkEventButton({
     width: 0,
   });
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState<EventForWorkTracker | null>(null);
+  // const [selectedEvent, setSelectedEvent] = useState<EventForWorkTracker | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -63,10 +61,6 @@ export default function LinkEventButton({
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    setSelectedEventId(selectedEvent?.id ?? null);
-  }, [selectedEvent]);
-
   const {
     data: data,
     isLoading: isLoading,
@@ -77,17 +71,8 @@ export default function LinkEventButton({
       const token = await getToken({ template: "supabase" });
       return fetchEventsForWorkTracker(date, bleacherId, pickUpOrDropOff, token);
     },
-    enabled: !!date && !!bleacherId && !!pickUpOrDropOff,
-    // refetchOnWindowFocus: false,
+    enabled: !!date && !!bleacherId && !!pickUpOrDropOff && isOpen,
   });
-
-  useEffect(() => {
-    console.log("LinkEventButton initialEventId", initialEventId);
-    // console.log("LinkEventButton data", data);
-    if (initialEventId == null) return;
-    setSelectedEvent(data?.find((e) => e.id === initialEventId) ?? null);
-    // setSelectedEventId(initialEventId);
-  }, [initialEventId, data]);
 
   return (
     <div>

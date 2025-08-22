@@ -5,18 +5,19 @@ import { deleteBlock, saveBlock } from "../../db";
 import { useEffect, useRef, useState } from "react";
 import { Tables } from "../../../../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
+import { WorkTrackerIsOpen } from "@/features/workTrackers/types";
 
 type BlockProps = {
   selectedBlock: EditBlock | null;
   setSelectedBlock: (block: EditBlock | null) => void;
-  setWorkTracker: (workTracker: Tables<"WorkTrackers"> | null) => void;
+  setWorkTrackerIsOpen: (workTrackerIsOpen: WorkTrackerIsOpen) => void;
   ROW_HEIGHT: number;
 };
 
 export default function Block({
   selectedBlock,
   setSelectedBlock,
-  setWorkTracker,
+  setWorkTrackerIsOpen,
   ROW_HEIGHT,
 }: BlockProps) {
   const [currectBlock, setCurrectBlock] = useState<EditBlock | null>(selectedBlock);
@@ -31,11 +32,6 @@ export default function Block({
     }
   }, []);
 
-  //   useEffect(() => {
-  //     // setCurrectBlock(selectedBlock);
-  //     console.log("workTracker", workTracker);
-  //   }, [workTracker]);
-
   const handleSelectWorkTracker = async () => {
     if (!currectBlock?.date) {
       createErrorToast(["Failed to select work tracker. No date provided."]);
@@ -43,20 +39,10 @@ export default function Block({
     if (!currectBlock?.bleacherId) {
       createErrorToast(["Failed to select work tracker. No bleacher id provided."]);
     }
-    setWorkTracker({
-      work_tracker_id: selectedBlock?.workTrackerId ?? -1,
-      bleacher_id: currectBlock.bleacherId,
-      created_at: "",
+    setWorkTrackerIsOpen({
       date: currectBlock.date,
-      dropoff_address_id: null,
-      dropoff_poc: null,
-      dropoff_time: null,
-      notes: null,
-      pay_cents: null,
-      pickup_address_id: null,
-      pickup_poc: null,
-      pickup_time: null,
-      user_id: null,
+      bleacherId: currectBlock.bleacherId,
+      workTrackerId: selectedBlock?.workTrackerId ?? null,
     });
 
     // console.log("workTracker", workTracker);
