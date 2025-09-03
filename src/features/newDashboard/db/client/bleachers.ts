@@ -20,5 +20,11 @@ export async function FetchDashboardBleachers(token: string | null): Promise<Ble
   if (error) {
     createErrorToast(["Failed to fetch Dashboard Bleachers.", error.message]);
   }
+
+  // const testData: Bleacher[] = [];
+  // for (let i = 0; i < 100000000; i++) {
+  //   testData.push({ bleacher_number: i });
+  // }
+  // return { bleachers: testData };
   return { bleachers: data ?? [] };
 }

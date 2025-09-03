@@ -23,7 +23,7 @@ export default function DashboardApp({ bleachers }: BleachersResponse) {
         background: "#ffffff",
         resolution: Math.min(2, window.devicePixelRatio || 1),
         autoDensity: true,
-        antialias: false, // hairline grid uses 0.5 trick; keep this off
+        antialias: false,
       });
 
       if (destroyed || appRef.current !== app) return;
