@@ -44,22 +44,10 @@ export function horizontalScrollbar(app: Application) {
 
   function applyContentX(next: number) {
     contentX = clamp(next, 0, contentMax);
-    // derive thumb from content
     thumbX = contentMax > 0 ? (contentX / contentMax) * maxX : 0;
-
-    // draw (you can round for crisp pixels, but keep 'contentX' float!)
     thumb.position.x = Math.round(thumbX);
-
-    // Emit either ratio or thumb pixels — your grid knows how to map it
-    app.stage.emit("hscroll:nx", thumbX); // if your grid expects thumb space
-    // OR: app.stage.emit("hscroll:ratio", contentMax ? contentX / contentMax : 0);
+    app.stage.emit("hscroll:nx", thumbX);
   }
-
-  // const setScrollX = (x: number) => {
-  //   scrollX = clamp(Math.round(x), 0, maxX); // shift pattern like normal scroll
-  //   app.stage.emit("hscroll:nx", scrollX); // keep the thumb in sync (if it listens)
-  // };
-
   // Keep two floats: content scroll + derived thumb pos
   let contentX = 0; // content pixels (float)
   let thumbX = 0; // track pixels (float)
@@ -112,12 +100,7 @@ export function horizontalScrollbar(app: Application) {
     if (e.deltaMode === 1) dx *= 16;
     else if (e.deltaMode === 2) dx *= 100;
 
-    // Optional: invert if you prefer the other "natural" direction
     const DIR = 1; // set to -1 to invert
-    // const contentDelta = DIR * dx;
-    // const scale = contentMax > 0 ? maxX / contentMax : 0; // mapping factor
-    // const thumbDelta = contentDelta * scale; // convert to thumb pixels
-    // setScrollX(scrollX + thumbDelta);
     const nextContent = contentX + DIR * dx; // accumulate FRACTIONAL content px
     applyContentX(nextContent);
 

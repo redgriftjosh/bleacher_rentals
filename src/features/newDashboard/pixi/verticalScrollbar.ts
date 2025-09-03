@@ -1,8 +1,7 @@
 import { Application, Container, FederatedWheelEvent, Graphics, Point } from "pixi.js";
-import { getGridSize, getVerticalScrollbarXPosition } from "../values/dynamic";
+import { getGridSize } from "../values/dynamic";
 import {
   CELL_HEIGHT,
-  DASHBOARD_PADDING_Y,
   SCROLLBAR_THICKNESS,
   THUMB_LENGTH,
   THUMB_THICKNESS,
@@ -42,13 +41,8 @@ export function verticalScrollbar(app: Application, bleachers: Bleacher[]) {
     contentY = clamp(next, 0, contentMax);
     // derive thumb from content
     thumbY = contentMax > 0 ? (contentY / contentMax) * maxY : 0;
-
-    // draw (you can round for crisp pixels, but keep 'contentX' float!)
     thumb.position.y = Math.round(thumbY);
-
-    // Emit either ratio or thumb pixels — your grid knows how to map it
-    app.stage.emit("hscroll:ny", thumbY); // if your grid expects thumb space
-    // OR: app.stage.emit("hscroll:ratio", contentMax ? contentX / contentMax : 0);
+    app.stage.emit("hscroll:ny", thumbY);
   }
 
   let contentY = 0; // content pixels (float)
