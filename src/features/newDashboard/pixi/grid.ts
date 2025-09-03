@@ -39,23 +39,39 @@ export function grid(app: Application) {
   const mainScrollableGrid = new TilingSprite({
     texture: tile,
     width: gridWidth - CELL_WIDTH,
-    height: gridHeight,
-    position: { x: CELL_WIDTH, y: 0 },
+    height: gridHeight - CELL_HEIGHT,
+    position: { x: CELL_WIDTH, y: CELL_HEIGHT },
   });
 
   const stickyLeftColumn = new TilingSprite({
     texture: tile,
     width: CELL_WIDTH,
-    height: gridHeight,
+    height: gridHeight - CELL_HEIGHT,
+    position: { x: 0, y: CELL_HEIGHT },
+  });
+
+  const stickyTopRow = new TilingSprite({
+    texture: tile,
+    width: gridWidth - CELL_WIDTH,
+    height: CELL_HEIGHT,
+    position: { x: CELL_WIDTH, y: 0 },
+  });
+
+  const stickyTopLeftCell = new TilingSprite({
+    texture: tile,
+    width: CELL_WIDTH,
+    height: CELL_HEIGHT,
+    position: { x: 0, y: 0 },
   });
 
   // container for the grid & border
   const gridContainer = new Container();
   gridContainer.position.set(DASHBOARD_PADDING_X, DASHBOARD_PADDING_Y);
-  gridContainer.addChild(mainScrollableGrid, stickyLeftColumn);
+  gridContainer.addChild(mainScrollableGrid, stickyLeftColumn, stickyTopRow, stickyTopLeftCell);
 
   app.stage.on("hscroll:nx", (v: number) => {
     mainScrollableGrid.tilePosition.x = -v;
+    stickyTopRow.tilePosition.x = -v;
   });
 
   app.stage.on("hscroll:ny", (v: number) => {
