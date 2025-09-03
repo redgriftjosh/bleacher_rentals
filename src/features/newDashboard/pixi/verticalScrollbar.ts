@@ -37,7 +37,6 @@ export function verticalScrollbar(app: Application) {
   const setScrollY = (y: number) => {
     scrollY = clamp(Math.round(y), 0, maxY); // shift pattern like normal scroll
     app.stage.emit("hscroll:ny", scrollY); // keep the thumb in sync (if it listens)
-    console.log("scrollY", scrollY);
   };
 
   let dragging = false;

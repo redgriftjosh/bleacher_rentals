@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, RenderTexture, TilingSprite } from "pixi.js";
+import { Application, Container, Graphics, RenderTexture, TilingSprite, Text } from "pixi.js";
 import {
   CELL_HEIGHT,
   CELL_WIDTH,
@@ -6,8 +6,9 @@ import {
   DASHBOARD_PADDING_Y,
 } from "../values/constants";
 import { getGridSize } from "../values/dynamic";
+import { Bleacher } from "../db/client/bleachers";
 
-export function grid(app: Application) {
+export function grid(app: Application, bleachers: Bleacher[]) {
   const { gridWidth, gridHeight } = getGridSize(app);
   // maker object
   const cellObj = new Graphics()
@@ -68,6 +69,30 @@ export function grid(app: Application) {
   const gridContainer = new Container();
   gridContainer.addChild(mainScrollableGrid, stickyLeftColumn, stickyTopRow, stickyTopLeftCell);
 
+  // ====== DATA → labels in sticky left column ======
+  const rows = bleachers.length;
+  const dataHeight = rows * CELL_HEIGHT;
+
+  // make the grid only as tall as the data
+  stickyLeftColumn.height = dataHeight;
+  mainScrollableGrid.height = dataHeight;
+
+  // labels layer (sticks horizontally, scrolls vertically)
+  const leftLabels = new Container();
+  leftLabels.position.set(0, CELL_HEIGHT); // start under header
+  gridContainer.addChild(leftLabels);
+
+  // one label per row
+  for (let r = 0; r < rows; r++) {
+    const t = new Text({
+      text: String(bleachers[r].bleacher_number),
+      style: { fill: 0x333333, fontSize: 14, align: "center" },
+    });
+    t.anchor.set(0.5);
+    t.position.set(CELL_WIDTH / 2, r * CELL_HEIGHT + CELL_HEIGHT / 2);
+    leftLabels.addChild(t);
+  }
+
   app.stage.on("hscroll:nx", (v: number) => {
     mainScrollableGrid.tilePosition.x = -v;
     stickyTopRow.tilePosition.x = -v;
@@ -76,6 +101,7 @@ export function grid(app: Application) {
   app.stage.on("hscroll:ny", (v: number) => {
     mainScrollableGrid.tilePosition.y = -v;
     stickyLeftColumn.tilePosition.y = -v;
+    leftLabels.y = CELL_HEIGHT - v;
   });
 
   const border = new Graphics()

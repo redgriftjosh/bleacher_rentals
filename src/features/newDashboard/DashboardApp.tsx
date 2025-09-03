@@ -3,8 +3,9 @@
 import { Application } from "pixi.js";
 import { useEffect, useRef } from "react";
 import { dashboard } from "./pixi/dashboard";
+import { BleachersResponse } from "./db/client/bleachers";
 
-export default function DashboardApp() {
+export default function DashboardApp({ bleachers }: BleachersResponse) {
   const hostRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const initedRef = useRef(false);
@@ -28,7 +29,7 @@ export default function DashboardApp() {
       if (destroyed || appRef.current !== app) return;
 
       host.appendChild(app.canvas);
-      dashboard(app);
+      dashboard(app, bleachers);
       initedRef.current = true;
     })();
 
