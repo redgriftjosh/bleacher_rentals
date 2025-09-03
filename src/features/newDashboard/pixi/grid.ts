@@ -1,10 +1,14 @@
 import { Application, Container, Graphics, RenderTexture, TilingSprite } from "pixi.js";
-import { CELL_HEIGHT, CELL_WIDTH, DASHBOARD_PADDING_X, DASHBOARD_PADDING_Y } from "../values";
+import {
+  CELL_HEIGHT,
+  CELL_WIDTH,
+  DASHBOARD_PADDING_X,
+  DASHBOARD_PADDING_Y,
+} from "../values/constants";
+import { getGridSize } from "../values/dynamic";
 
 export function grid(app: Application) {
-  const gridW = app.screen.width - DASHBOARD_PADDING_X * 2;
-  const gridH = app.screen.height - DASHBOARD_PADDING_Y * 2;
-
+  const { gridWidth, gridHeight } = getGridSize(app);
   // maker object
   const cellObj = new Graphics()
     .moveTo(CELL_WIDTH, 0)
@@ -34,8 +38,8 @@ export function grid(app: Application) {
   // Make sure it's as wide as the screen minus the padding * 2 so looks like uniform padding all around.
   const grid = new TilingSprite({
     texture: tile,
-    width: gridW,
-    height: gridH,
+    width: gridWidth,
+    height: gridHeight,
   });
 
   // container for the grid & border
@@ -45,8 +49,13 @@ export function grid(app: Application) {
   // add to stage
   gridContainer.addChild(grid);
 
+  app.stage.on("hscroll:nx", (v: number) => {
+    grid.tilePosition.x = -v; // move the pattern
+    // move any content layer too: content.x = -scrollX;
+  });
+
   const border = new Graphics()
-    .rect(0, 0, gridW, gridH)
+    .rect(0, 0, gridWidth, gridHeight)
     .stroke({ width: 1, color: 0x000000, alpha: 0.15, alignment: 0 }); // inside stroke
   gridContainer.addChild(border);
   app.stage.addChild(gridContainer);
