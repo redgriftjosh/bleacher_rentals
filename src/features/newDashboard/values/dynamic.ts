@@ -17,3 +17,14 @@ export function getHorizontalScrollbarYPosition(app: Application): number {
     DASHBOARD_PADDING_Y + gridHeight + (DASHBOARD_PADDING_Y - SCROLLBAR_THICKNESS) / 2;
   return scrollbarY;
 }
+
+/**
+ * The vertical scrollbar should always be to the right of the grid.
+ * The padding on the left and right of the dashboard are the same.  The scrollbar should be centered within that padding.
+ */
+export function getVerticalScrollbarXPosition(app: Application): number {
+  const { gridWidth } = getGridSize(app);
+  const scrollbarX =
+    DASHBOARD_PADDING_X + gridWidth + (DASHBOARD_PADDING_X - SCROLLBAR_THICKNESS) / 2;
+  return scrollbarX;
+}

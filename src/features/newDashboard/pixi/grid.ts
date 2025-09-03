@@ -14,7 +14,7 @@ export function grid(app: Application) {
     .moveTo(CELL_WIDTH, 0)
     .lineTo(CELL_WIDTH, CELL_HEIGHT - 1) // right line inside
     .moveTo(0, CELL_HEIGHT - 1)
-    .lineTo(CELL_WIDTH - 1, CELL_HEIGHT - 1) // bottom line inside
+    .lineTo(CELL_WIDTH, CELL_HEIGHT - 1) // bottom line inside
     .stroke({ width: 1, color: 0x000000, alpha: 0.15, alignment: 0 });
 
   // blank tile with same size as cell
@@ -36,22 +36,31 @@ export function grid(app: Application) {
 
   // create a TilingSprite from the tile
   // Make sure it's as wide as the screen minus the padding * 2 so looks like uniform padding all around.
-  const grid = new TilingSprite({
+  const mainScrollableGrid = new TilingSprite({
     texture: tile,
-    width: gridWidth,
+    width: gridWidth - CELL_WIDTH,
+    height: gridHeight,
+    position: { x: CELL_WIDTH, y: 0 },
+  });
+
+  const stickyLeftColumn = new TilingSprite({
+    texture: tile,
+    width: CELL_WIDTH,
     height: gridHeight,
   });
 
   // container for the grid & border
   const gridContainer = new Container();
   gridContainer.position.set(DASHBOARD_PADDING_X, DASHBOARD_PADDING_Y);
-
-  // add to stage
-  gridContainer.addChild(grid);
+  gridContainer.addChild(mainScrollableGrid, stickyLeftColumn);
 
   app.stage.on("hscroll:nx", (v: number) => {
-    grid.tilePosition.x = -v; // move the pattern
-    // move any content layer too: content.x = -scrollX;
+    mainScrollableGrid.tilePosition.x = -v;
+  });
+
+  app.stage.on("hscroll:ny", (v: number) => {
+    mainScrollableGrid.tilePosition.y = -v;
+    stickyLeftColumn.tilePosition.y = -v;
   });
 
   const border = new Graphics()

@@ -1,48 +1,42 @@
 import { Application, Container, FederatedWheelEvent, Graphics, Point } from "pixi.js";
+import { getGridSize, getVerticalScrollbarXPosition } from "../values/dynamic";
 import {
-  DASHBOARD_PADDING_X,
+  DASHBOARD_PADDING_Y,
   SCROLLBAR_THICKNESS,
   THUMB_LENGTH,
   THUMB_THICKNESS,
 } from "../values/constants";
-import { getGridSize, getHorizontalScrollbarYPosition } from "../values/dynamic";
 import { clamp } from "../util/scrollbar";
 
-export function horizontalScrollbar(app: Application) {
+export function verticalScrollbar(app: Application) {
   app.stage.eventMode = "static"; // allow pointer events
   app.stage.hitArea = app.screen; // allow pointer events anywhere on the stage
 
-  // values
-  const { gridWidth } = getGridSize(app);
-  const scrollbarY = getHorizontalScrollbarYPosition(app);
+  const { gridHeight } = getGridSize(app);
+  const scrollbarX = getVerticalScrollbarXPosition(app);
 
-  // container for entire scrollbar
   const scrollbarContainer = new Container();
-  scrollbarContainer.position.set(DASHBOARD_PADDING_X, scrollbarY);
+  scrollbarContainer.position.set(scrollbarX, DASHBOARD_PADDING_Y);
 
   const track = new Graphics()
-    .rect(0, 0, gridWidth, SCROLLBAR_THICKNESS)
+    .rect(0, 0, SCROLLBAR_THICKNESS, gridHeight)
     .fill({ color: 0x000000, alpha: 0.15 });
   scrollbarContainer.addChild(track);
 
   const thumb = new Graphics()
-    .rect(0, 0, THUMB_LENGTH, THUMB_THICKNESS)
+    .rect(0, 0, THUMB_THICKNESS, THUMB_LENGTH)
     .fill({ color: 0x000000, alpha: 0.15 });
   thumb.eventMode = "static";
   scrollbarContainer.addChild(thumb);
 
   app.stage.addChild(scrollbarContainer);
 
-  /*
-  Dragging Logic
-  */
+  const maxY = Math.max(0, gridHeight - THUMB_LENGTH);
+  let scrollY = 0;
 
-  const maxX = Math.max(0, gridWidth - THUMB_LENGTH);
-  let scrollX = 0;
-
-  const setScrollX = (x: number) => {
-    scrollX = clamp(Math.round(x), 0, maxX); // shift pattern like normal scroll
-    app.stage.emit("hscroll:nx", scrollX); // keep the thumb in sync (if it listens)
+  const setScrollY = (y: number) => {
+    scrollY = clamp(Math.round(y), 0, maxY); // shift pattern like normal scroll
+    app.stage.emit("hscroll:ny", scrollY); // keep the thumb in sync (if it listens)
   };
 
   let dragging = false;
@@ -53,9 +47,9 @@ export function horizontalScrollbar(app: Application) {
     // Convert pointer to the rect's parent space
     if (!thumb.parent) return;
     const p = thumb.parent.toLocal(e.global);
-    const nx = clamp(p.x - offset.x, 0, maxX); // <-- clamp here
-    thumb.position.set(nx, 0);
-    setScrollX(nx);
+    const ny = clamp(0, p.y - offset.y, maxY); // <-- clamp here
+    thumb.position.set(0, ny);
+    setScrollY(ny);
   };
 
   const onUp = () => {
@@ -69,7 +63,7 @@ export function horizontalScrollbar(app: Application) {
     dragging = true;
     if (!thumb.parent) return;
     const p = thumb.parent.toLocal(e.global);
-    offset.set(p.x - thumb.x, 0);
+    offset.set(0, p.y - thumb.y);
 
     // listen on stage so we don’t lose the drag
     app.stage.on("pointermove", onMove);
@@ -77,20 +71,17 @@ export function horizontalScrollbar(app: Application) {
     app.stage.on("pointerupoutside", onUp);
   });
 
-  /*
-  Trackpad Scrolling Logic
-  */
   app.stage.on("wheel", (e: FederatedWheelEvent) => {
     // Use horizontal delta; fall back to vertical when Shift is held (common UX)
-    let dx = Math.abs(e.deltaX) >= Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
+    let dy = e.deltaY;
 
     // Normalize deltaMode: 0=pixels, 1=lines, 2=pages
-    if (e.deltaMode === 1) dx *= 16;
-    else if (e.deltaMode === 2) dx *= 100;
+    if (e.deltaMode === 1) dy *= 16;
+    else if (e.deltaMode === 2) dy *= 100;
 
     // Optional: invert if you prefer the other "natural" direction
     const DIR = 1; // set to -1 to invert
-    setScrollX(scrollX + DIR * dx);
+    setScrollY(scrollY + DIR * dy);
 
     e.preventDefault(); // prevent page from scrolling horizontally
   });
