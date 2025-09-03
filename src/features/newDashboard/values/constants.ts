@@ -8,5 +8,5 @@ export const DASHBOARD_PADDING_Y = 50;
 
 // scrollbar
 export const SCROLLBAR_THICKNESS = 20;
-export const THUMB_THICKNESS = 15;
+export const THUMB_THICKNESS = 20;
 export const THUMB_LENGTH = 50;

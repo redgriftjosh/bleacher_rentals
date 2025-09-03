@@ -16,7 +16,7 @@ export function verticalScrollbar(app: Application) {
   const scrollbarX = getVerticalScrollbarXPosition(app);
 
   const scrollbarContainer = new Container();
-  scrollbarContainer.position.set(scrollbarX, DASHBOARD_PADDING_Y);
+  scrollbarContainer.position.set(app.screen.width - SCROLLBAR_THICKNESS, 0);
 
   const track = new Graphics()
     .rect(0, 0, SCROLLBAR_THICKNESS, gridHeight)
@@ -37,17 +37,22 @@ export function verticalScrollbar(app: Application) {
   const setScrollY = (y: number) => {
     scrollY = clamp(Math.round(y), 0, maxY); // shift pattern like normal scroll
     app.stage.emit("hscroll:ny", scrollY); // keep the thumb in sync (if it listens)
+    console.log("scrollY", scrollY);
   };
 
   let dragging = false;
   const offset = new Point();
 
+  app.stage.on("hscroll:ny", (v: number) => {
+    if (dragging) return;
+    thumb.position.set(0, v);
+  });
+
   const onMove = (e: any) => {
     if (!dragging) return;
-    // Convert pointer to the rect's parent space
     if (!thumb.parent) return;
     const p = thumb.parent.toLocal(e.global);
-    const ny = clamp(0, p.y - offset.y, maxY); // <-- clamp here
+    const ny = clamp(p.y - offset.y, 0, maxY); // <-- clamp here
     thumb.position.set(0, ny);
     setScrollY(ny);
   };

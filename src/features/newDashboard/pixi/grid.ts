@@ -66,7 +66,6 @@ export function grid(app: Application) {
 
   // container for the grid & border
   const gridContainer = new Container();
-  gridContainer.position.set(DASHBOARD_PADDING_X, DASHBOARD_PADDING_Y);
   gridContainer.addChild(mainScrollableGrid, stickyLeftColumn, stickyTopRow, stickyTopLeftCell);
 
   app.stage.on("hscroll:nx", (v: number) => {

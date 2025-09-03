@@ -18,7 +18,7 @@ export function horizontalScrollbar(app: Application) {
 
   // container for entire scrollbar
   const scrollbarContainer = new Container();
-  scrollbarContainer.position.set(DASHBOARD_PADDING_X, scrollbarY);
+  scrollbarContainer.position.set(0, app.screen.height - SCROLLBAR_THICKNESS);
 
   const track = new Graphics()
     .rect(0, 0, gridWidth, SCROLLBAR_THICKNESS)
@@ -48,9 +48,13 @@ export function horizontalScrollbar(app: Application) {
   let dragging = false;
   const offset = new Point();
 
+  app.stage.on("hscroll:nx", (v: number) => {
+    if (dragging) return;
+    thumb.position.set(v, 0);
+  });
+
   const onMove = (e: any) => {
     if (!dragging) return;
-    // Convert pointer to the rect's parent space
     if (!thumb.parent) return;
     const p = thumb.parent.toLocal(e.global);
     const nx = clamp(p.x - offset.x, 0, maxX); // <-- clamp here

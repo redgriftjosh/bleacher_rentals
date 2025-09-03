@@ -47,5 +47,10 @@ export default function DashboardApp() {
     };
   }, []);
 
-  return <div ref={hostRef} className="w-full h-full" />;
+  return (
+    // add padding to parent div
+    <div className="w-full h-full pt-2 pl-2 ">
+      <div ref={hostRef} className="w-full h-full border-l border-t border-gray-300" />
+    </div>
+  );
 }

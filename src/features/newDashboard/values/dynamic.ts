@@ -2,8 +2,8 @@ import { Application } from "pixi.js";
 import { DASHBOARD_PADDING_X, DASHBOARD_PADDING_Y, SCROLLBAR_THICKNESS } from "./constants";
 
 export function getGridSize(app: Application) {
-  const gridWidth = app.screen.width - DASHBOARD_PADDING_X * 2;
-  const gridHeight = app.screen.height - DASHBOARD_PADDING_Y * 2;
+  const gridWidth = app.screen.width - SCROLLBAR_THICKNESS;
+  const gridHeight = app.screen.height - SCROLLBAR_THICKNESS;
   return { gridWidth, gridHeight };
 }
 
