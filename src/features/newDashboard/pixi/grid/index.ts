@@ -19,7 +19,7 @@ export function grid(app: Application, bleachers: Bleacher[]) {
   const { columns, dates } = getColumnsAndDates();
   const viewportW = gridWidth - CELL_WIDTH; // visible to the right of sticky left column
   const contentW = columns * CELL_WIDTH; // total scrollable content width
-  const xThumbTravel = Math.max(1, viewportW - THUMB_LENGTH);
+  const xThumbTravel = Math.max(1, gridWidth - THUMB_LENGTH);
   const xContentMax = Math.max(0, contentW - viewportW);
   const visibleColumns = Math.min(columns, Math.ceil(viewportW / CELL_WIDTH) + 2);
 
@@ -42,7 +42,7 @@ export function grid(app: Application, bleachers: Bleacher[]) {
   const rows = bleachers.length;
   const viewportH = gridHeight - CELL_HEIGHT; // visible area under header
   const contentH = rows * CELL_HEIGHT; // total scrollable content height
-  const yThumbTravel = Math.max(1, viewportH - THUMB_LENGTH);
+  const yThumbTravel = Math.max(1, gridHeight - THUMB_LENGTH);
   const yContentMax = Math.max(0, contentH - viewportH);
   const visibleRows = Math.min(rows, Math.ceil(viewportH / CELL_HEIGHT) + 2);
 
