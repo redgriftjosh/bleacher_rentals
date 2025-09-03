@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Point } from "pixi.js";
+import { Application, Container, FederatedWheelEvent, Graphics, Point } from "pixi.js";
 import {
   DASHBOARD_PADDING_X,
   SCROLLBAR_THICKNESS,
@@ -40,6 +40,11 @@ export function horizontalScrollbar(app: Application) {
 
   const clamp = (v: number, min: number, max: number) => (v < min ? min : v > max ? max : v);
 
+  const setScrollX = (x: number) => {
+    scrollX = clamp(Math.round(x), 0, maxX); // shift pattern like normal scroll
+    app.stage.emit("hscroll:nx", scrollX); // keep the thumb in sync (if it listens)
+  };
+
   let dragging = false;
   const offset = new Point();
 
@@ -51,7 +56,7 @@ export function horizontalScrollbar(app: Application) {
     const nx = clamp(p.x - offset.x, 0, maxX); // <-- clamp here
     thumb.position.set(nx, 0);
     console.log("nx:", nx);
-    app.stage.emit("hscroll:nx", nx);
+    setScrollX(nx);
   };
 
   const onUp = () => {
@@ -71,5 +76,23 @@ export function horizontalScrollbar(app: Application) {
     app.stage.on("pointermove", onMove);
     app.stage.on("pointerup", onUp);
     app.stage.on("pointerupoutside", onUp);
+  });
+
+  /*
+  Trackpad Scrolling Logic
+  */
+  app.stage.on("wheel", (e: FederatedWheelEvent) => {
+    // Use horizontal delta; fall back to vertical when Shift is held (common UX)
+    let dx = Math.abs(e.deltaX) >= Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
+
+    // Normalize deltaMode: 0=pixels, 1=lines, 2=pages
+    if (e.deltaMode === 1) dx *= 16;
+    else if (e.deltaMode === 2) dx *= 100;
+
+    // Optional: invert if you prefer the other "natural" direction
+    const DIR = 1; // set to -1 to invert
+    setScrollX(scrollX + DIR * dx);
+
+    e.preventDefault(); // prevent page from scrolling horizontally
   });
 }
