@@ -10,3 +10,5 @@ export const DASHBOARD_PADDING_Y = 50;
 export const SCROLLBAR_THICKNESS = 20;
 export const THUMB_THICKNESS = 20;
 export const THUMB_LENGTH = 50;
+
+export const DATE_RANGE = 1000;
