@@ -1,12 +1,12 @@
 import { Application, Container, FederatedWheelEvent, Graphics, Point } from "pixi.js";
 import {
-  DASHBOARD_PADDING_X,
+  CELL_WIDTH,
   SCROLLBAR_THICKNESS,
   THUMB_LENGTH,
   THUMB_THICKNESS,
 } from "../values/constants";
-import { getGridSize, getHorizontalScrollbarYPosition } from "../values/dynamic";
-import { clamp } from "../util/scrollbar";
+import { getGridSize } from "../values/dynamic";
+import { clamp, getColumnsAndDates } from "../util/scrollbar";
 
 export function horizontalScrollbar(app: Application) {
   app.stage.eventMode = "static"; // allow pointer events
@@ -14,7 +14,10 @@ export function horizontalScrollbar(app: Application) {
 
   // values
   const { gridWidth } = getGridSize(app);
-  const scrollbarY = getHorizontalScrollbarYPosition(app);
+  const { columns } = getColumnsAndDates();
+  const viewportW = gridWidth - CELL_WIDTH; // visible to the right of the sticky column
+  const contentW = columns * CELL_WIDTH;
+  // const scrollbarY = getHorizontalScrollbarYPosition(app);
 
   // container for entire scrollbar
   const scrollbarContainer = new Container();
@@ -38,28 +41,57 @@ export function horizontalScrollbar(app: Application) {
   */
 
   const maxX = Math.max(0, gridWidth - THUMB_LENGTH);
+  const contentMax = Math.max(0, contentW - viewportW);
   let scrollX = 0;
 
-  const setScrollX = (x: number) => {
-    scrollX = clamp(Math.round(x), 0, maxX); // shift pattern like normal scroll
-    app.stage.emit("hscroll:nx", scrollX); // keep the thumb in sync (if it listens)
-  };
+  const clampf = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
+  function applyContentX(next: number) {
+    contentX = clampf(next, 0, contentMax);
+    // derive thumb from content
+    thumbX = contentMax > 0 ? (contentX / contentMax) * maxX : 0;
+
+    // draw (you can round for crisp pixels, but keep 'contentX' float!)
+    thumb.position.x = Math.round(thumbX);
+
+    // Emit either ratio or thumb pixels — your grid knows how to map it
+    app.stage.emit("hscroll:nx", thumbX); // if your grid expects thumb space
+    // OR: app.stage.emit("hscroll:ratio", contentMax ? contentX / contentMax : 0);
+  }
+
+  // const setScrollX = (x: number) => {
+  //   scrollX = clamp(Math.round(x), 0, maxX); // shift pattern like normal scroll
+  //   app.stage.emit("hscroll:nx", scrollX); // keep the thumb in sync (if it listens)
+  // };
+
+  // Keep two floats: content scroll + derived thumb pos
+  let contentX = 0; // content pixels (float)
+  let thumbX = 0; // track pixels (float)
   let dragging = false;
   const offset = new Point();
 
   app.stage.on("hscroll:nx", (v: number) => {
     if (dragging) return;
-    thumb.position.set(v, 0);
+    // thumb.position.set(v, 0);
+    thumbX = clampf(v, 0, maxX);
+    contentX = contentMax > 0 ? (thumbX / maxX) * contentMax : 0;
+    thumb.position.x = Math.round(thumbX);
   });
 
+  // const onMove = (e: any) => {
+  //   if (!dragging) return;
+  //   if (!thumb.parent) return;
+  //   const p = thumb.parent.toLocal(e.global);
+  //   const nx = clamp(p.x - offset.x, 0, maxX); // <-- clamp here
+  //   thumb.position.set(nx, 0);
+  //   setScrollX(nx);
+  // };
   const onMove = (e: any) => {
-    if (!dragging) return;
-    if (!thumb.parent) return;
+    if (!dragging || !thumb.parent) return;
     const p = thumb.parent.toLocal(e.global);
-    const nx = clamp(p.x - offset.x, 0, maxX); // <-- clamp here
-    thumb.position.set(nx, 0);
-    setScrollX(nx);
+    const nx = clampf(p.x - offset.x, 0, maxX);
+    const nextContent = contentMax > 0 ? (nx / maxX) * contentMax : 0;
+    applyContentX(nextContent);
   };
 
   const onUp = () => {
@@ -94,7 +126,12 @@ export function horizontalScrollbar(app: Application) {
 
     // Optional: invert if you prefer the other "natural" direction
     const DIR = 1; // set to -1 to invert
-    setScrollX(scrollX + DIR * dx);
+    // const contentDelta = DIR * dx;
+    // const scale = contentMax > 0 ? maxX / contentMax : 0; // mapping factor
+    // const thumbDelta = contentDelta * scale; // convert to thumb pixels
+    // setScrollX(scrollX + thumbDelta);
+    const nextContent = contentX + DIR * dx; // accumulate FRACTIONAL content px
+    applyContentX(nextContent);
 
     e.preventDefault(); // prevent page from scrolling horizontally
   });

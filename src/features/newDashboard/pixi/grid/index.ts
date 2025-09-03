@@ -1,9 +1,9 @@
 import { Application, Container, Text } from "pixi.js";
-import { CELL_HEIGHT, CELL_WIDTH, DATE_RANGE, THUMB_LENGTH } from "../../values/constants";
+import { CELL_HEIGHT, CELL_WIDTH, THUMB_LENGTH } from "../../values/constants";
 import { getGridSize } from "../../values/dynamic";
 import { Bleacher } from "../../db/client/bleachers";
 import { createGridTilingSprites } from "./createGridTilingSprites";
-import { DateTime } from "luxon";
+import { getColumnsAndDates } from "../../util/scrollbar";
 
 export function grid(app: Application, bleachers: Bleacher[]) {
   const { gridWidth, gridHeight } = getGridSize(app);
@@ -16,12 +16,7 @@ export function grid(app: Application, bleachers: Bleacher[]) {
   gridContainer.addChild(mainScrollableGrid, stickyLeftColumn, stickyTopRow, stickyTopLeftCell);
 
   // ====== DATES ======
-  const dates: string[] = Array.from({ length: DATE_RANGE * 2 + 1 }, (_, i) =>
-    DateTime.now()
-      .plus({ days: i - DATE_RANGE })
-      .toISODate()
-  );
-  const columns = dates.length;
+  const { columns, dates } = getColumnsAndDates();
   const viewportW = gridWidth - CELL_WIDTH; // visible to the right of sticky left column
   const contentW = columns * CELL_WIDTH; // total scrollable content width
   const xThumbTravel = Math.max(1, viewportW - THUMB_LENGTH);
@@ -93,11 +88,11 @@ export function grid(app: Application, bleachers: Bleacher[]) {
   function xUpdateLabels(contentX: number) {
     // wrap grid pattern so UVs stay small (no shimmer)
     const wrapped = ((contentX % CELL_WIDTH) + CELL_WIDTH) % CELL_WIDTH;
-    mainScrollableGrid.tilePosition.x = wrapped;
-    stickyTopRow.tilePosition.x = wrapped;
+    mainScrollableGrid.tilePosition.x = -wrapped;
+    stickyTopRow.tilePosition.x = -wrapped;
 
     // position label layer by phase only…
-    topLabels.x = CELL_WIDTH + wrapped;
+    topLabels.x = CELL_WIDTH + -wrapped;
 
     // …and compute which data rows are visible
     const first = Math.floor(contentX / CELL_WIDTH);
