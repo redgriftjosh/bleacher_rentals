@@ -17,7 +17,6 @@ export function horizontalScrollbar(app: Application) {
   const { columns } = getColumnsAndDates();
   const viewportW = gridWidth - CELL_WIDTH; // visible to the right of the sticky column
   const contentW = columns * CELL_WIDTH;
-  // const scrollbarY = getHorizontalScrollbarYPosition(app);
 
   // container for entire scrollbar
   const scrollbarContainer = new Container();
@@ -42,12 +41,9 @@ export function horizontalScrollbar(app: Application) {
 
   const maxX = Math.max(0, gridWidth - THUMB_LENGTH);
   const contentMax = Math.max(0, contentW - viewportW);
-  let scrollX = 0;
-
-  const clampf = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
   function applyContentX(next: number) {
-    contentX = clampf(next, 0, contentMax);
+    contentX = clamp(next, 0, contentMax);
     // derive thumb from content
     thumbX = contentMax > 0 ? (contentX / contentMax) * maxX : 0;
 
@@ -73,23 +69,15 @@ export function horizontalScrollbar(app: Application) {
   app.stage.on("hscroll:nx", (v: number) => {
     if (dragging) return;
     // thumb.position.set(v, 0);
-    thumbX = clampf(v, 0, maxX);
+    thumbX = clamp(v, 0, maxX);
     contentX = contentMax > 0 ? (thumbX / maxX) * contentMax : 0;
     thumb.position.x = Math.round(thumbX);
   });
 
-  // const onMove = (e: any) => {
-  //   if (!dragging) return;
-  //   if (!thumb.parent) return;
-  //   const p = thumb.parent.toLocal(e.global);
-  //   const nx = clamp(p.x - offset.x, 0, maxX); // <-- clamp here
-  //   thumb.position.set(nx, 0);
-  //   setScrollX(nx);
-  // };
   const onMove = (e: any) => {
     if (!dragging || !thumb.parent) return;
     const p = thumb.parent.toLocal(e.global);
-    const nx = clampf(p.x - offset.x, 0, maxX);
+    const nx = clamp(p.x - offset.x, 0, maxX);
     const nextContent = contentMax > 0 ? (nx / maxX) * contentMax : 0;
     applyContentX(nextContent);
   };

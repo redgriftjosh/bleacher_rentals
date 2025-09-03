@@ -1,7 +1,7 @@
 import { DateTime } from "luxon";
 import { DATE_RANGE } from "../values/constants";
 
-export const clamp = (v: number, min: number, max: number) => (v < min ? min : v > max ? max : v);
+export const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
 export function getColumnsAndDates() {
   const dates: string[] = Array.from({ length: DATE_RANGE * 2 + 1 }, (_, i) =>

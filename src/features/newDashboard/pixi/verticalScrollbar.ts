@@ -1,19 +1,23 @@
 import { Application, Container, FederatedWheelEvent, Graphics, Point } from "pixi.js";
 import { getGridSize, getVerticalScrollbarXPosition } from "../values/dynamic";
 import {
+  CELL_HEIGHT,
   DASHBOARD_PADDING_Y,
   SCROLLBAR_THICKNESS,
   THUMB_LENGTH,
   THUMB_THICKNESS,
 } from "../values/constants";
 import { clamp } from "../util/scrollbar";
+import { Bleacher } from "../db/client/bleachers";
 
-export function verticalScrollbar(app: Application) {
+export function verticalScrollbar(app: Application, bleachers: Bleacher[]) {
   app.stage.eventMode = "static"; // allow pointer events
   app.stage.hitArea = app.screen; // allow pointer events anywhere on the stage
 
   const { gridHeight } = getGridSize(app);
-  const scrollbarX = getVerticalScrollbarXPosition(app);
+  const viewportH = gridHeight - CELL_HEIGHT; // visible to the right of the sticky column
+  const rows = bleachers.length;
+  const contentH = rows * CELL_HEIGHT;
 
   const scrollbarContainer = new Container();
   scrollbarContainer.position.set(app.screen.width - SCROLLBAR_THICKNESS, 0);
@@ -32,28 +36,39 @@ export function verticalScrollbar(app: Application) {
   app.stage.addChild(scrollbarContainer);
 
   const maxY = Math.max(0, gridHeight - THUMB_LENGTH);
-  let scrollY = 0;
+  const contentMax = Math.max(0, contentH - viewportH);
 
-  const setScrollY = (y: number) => {
-    scrollY = clamp(Math.round(y), 0, maxY); // shift pattern like normal scroll
-    app.stage.emit("hscroll:ny", scrollY); // keep the thumb in sync (if it listens)
-  };
+  function applyContentY(next: number) {
+    contentY = clamp(next, 0, contentMax);
+    // derive thumb from content
+    thumbY = contentMax > 0 ? (contentY / contentMax) * maxY : 0;
 
+    // draw (you can round for crisp pixels, but keep 'contentX' float!)
+    thumb.position.y = Math.round(thumbY);
+
+    // Emit either ratio or thumb pixels — your grid knows how to map it
+    app.stage.emit("hscroll:ny", thumbY); // if your grid expects thumb space
+    // OR: app.stage.emit("hscroll:ratio", contentMax ? contentX / contentMax : 0);
+  }
+
+  let contentY = 0; // content pixels (float)
+  let thumbY = 0; // track pixels (float)
   let dragging = false;
   const offset = new Point();
 
   app.stage.on("hscroll:ny", (v: number) => {
     if (dragging) return;
-    thumb.position.set(0, v);
+    thumbY = clamp(v, 0, maxY);
+    contentY = contentMax > 0 ? (thumbY / maxY) * contentMax : 0;
+    thumb.position.y = Math.round(thumbY);
   });
 
   const onMove = (e: any) => {
-    if (!dragging) return;
-    if (!thumb.parent) return;
+    if (!dragging || !thumb.parent) return;
     const p = thumb.parent.toLocal(e.global);
     const ny = clamp(p.y - offset.y, 0, maxY); // <-- clamp here
-    thumb.position.set(0, ny);
-    setScrollY(ny);
+    const nextContent = contentMax > 0 ? (ny / maxY) * contentMax : 0;
+    applyContentY(nextContent);
   };
 
   const onUp = () => {
@@ -85,7 +100,8 @@ export function verticalScrollbar(app: Application) {
 
     // Optional: invert if you prefer the other "natural" direction
     const DIR = 1; // set to -1 to invert
-    setScrollY(scrollY + DIR * dy);
+    const nextContent = contentY + DIR * dy; // accumulate FRACTIONAL content px
+    applyContentY(nextContent);
 
     e.preventDefault(); // prevent page from scrolling horizontally
   });

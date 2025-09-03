@@ -2,7 +2,7 @@
 
 import { Application } from "pixi.js";
 import { useEffect, useRef } from "react";
-import { dashboard } from "./pixi/dashboard";
+import { main } from "./pixi/main";
 import { BleachersResponse } from "./db/client/bleachers";
 
 export default function DashboardApp({ bleachers }: BleachersResponse) {
@@ -29,7 +29,7 @@ export default function DashboardApp({ bleachers }: BleachersResponse) {
       if (destroyed || appRef.current !== app) return;
 
       host.appendChild(app.canvas);
-      dashboard(app, bleachers);
+      main(app, bleachers);
       initedRef.current = true;
     })();
 
