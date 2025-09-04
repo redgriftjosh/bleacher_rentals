@@ -4,19 +4,33 @@ import { Tables } from "../../../../../database.types";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 
 export type Bleacher = {
-  bleacher_number: number;
-  bleacher_rows: number;
-  bleacher_seats: number;
-  summer_home_base: string;
-  winter_home_base: string;
+  bleacherNumber: number;
+  bleacherRows: number;
+  bleacherSeats: number;
+  summerHomeBase: string;
+  winterHomeBase: string;
+  bleacherEvents: BleacherEvent[];
 };
 
-type RowRaw = {
+export type BleacherEvent = {
+  eventName: string;
+  eventStart: string;
+  eventEnd: string;
+};
+
+type Row = {
   bleacher_number: number;
   bleacher_rows: number;
   bleacher_seats: number;
   summer: { home_base_name: string } | null;
   winter: { home_base_name: string } | null;
+  bleacher_events: {
+    event: {
+      event_name: string;
+      event_start: string;
+      event_end: string;
+    };
+  }[];
 };
 
 export async function FetchDashboardBleachers(
@@ -35,23 +49,36 @@ export async function FetchDashboardBleachers(
       bleacher_rows,
       bleacher_seats,
       summer:HomeBases!Bleachers_home_base_id_fkey(home_base_name),
-      winter:HomeBases!Bleachers_winter_home_base_id_fkey(home_base_name)
+      winter:HomeBases!Bleachers_winter_home_base_id_fkey(home_base_name),
+      bleacher_events:BleacherEvents!BleacherEvents_bleacher_id_fkey(
+        event:Events!BleacherEvents_event_id_fkey(
+          event_name,
+          event_start,
+          event_end
+        )
+      )
       `
     )
-    .overrideTypes<RowRaw[], { merge: false }>();
+    .overrideTypes<Row[], { merge: false }>();
 
   if (error) {
     createErrorToast(["Failed to fetch Dashboard Bleachers.", error.message]);
   }
+  // console.log("data", data);
   const bleachers: Bleacher[] = (data ?? []).map((r) => ({
-    bleacher_number: r.bleacher_number,
-    bleacher_rows: r.bleacher_rows,
-    bleacher_seats: r.bleacher_seats,
-    summer_home_base: r.summer?.home_base_name ?? "",
-    winter_home_base: r.winter?.home_base_name ?? "",
+    bleacherNumber: r.bleacher_number,
+    bleacherRows: r.bleacher_rows,
+    bleacherSeats: r.bleacher_seats,
+    summerHomeBase: r.summer?.home_base_name ?? "",
+    winterHomeBase: r.winter?.home_base_name ?? "",
+    bleacherEvents: r.bleacher_events.map((be) => ({
+      eventName: be.event.event_name,
+      eventStart: be.event.event_start,
+      eventEnd: be.event.event_end,
+    })),
   }));
 
-  // console.log("data", data);
+  console.log("bleachers", bleachers);
 
   return { bleachers };
 }
