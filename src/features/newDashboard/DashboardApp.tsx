@@ -3,9 +3,9 @@
 import { Application } from "pixi.js";
 import { useEffect, useRef } from "react";
 import { main } from "./pixi/main";
-import { BleachersResponse } from "./db/client/bleachers";
+import { Bleacher } from "./db/client/bleachers";
 
-export default function DashboardApp({ bleachers }: BleachersResponse) {
+export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const initedRef = useRef(false);

@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import { Container, Graphics, Text } from "pixi.js";
+import { CELL_WIDTH, HEADER_ROW_HEIGHT } from "../../values/constants";
 
 export type HeaderCellTheme = {
   bgWeekday: number;
@@ -28,29 +29,25 @@ export class HeaderCell extends Container {
 
   private _w: number;
   private _h: number;
-  private theme: HeaderCellTheme;
-  constructor(
-    cellWidth: number,
-    cellHeight: number,
-    theme: HeaderCellTheme = DEFAULT_HEADER_THEME
-  ) {
+  private theme: HeaderCellTheme = DEFAULT_HEADER_THEME;
+  constructor() {
     super();
-    this._w = cellWidth;
-    this._h = cellHeight;
-    this.theme = theme;
+    this._w = CELL_WIDTH;
+    this._h = HEADER_ROW_HEIGHT;
+    // this.theme = theme;
 
     this.bg = new Graphics();
     this.addChild(this.bg);
 
     this.top = new Text({
       text: "",
-      style: { fill: theme.textMain, fontSize: 13, fontWeight: "600", align: "center" },
+      style: { fill: this.theme.textMain, fontSize: 13, fontWeight: "600", align: "center" },
     });
     this.top.anchor.set(0.5);
 
     this.sub = new Text({
       text: "",
-      style: { fill: theme.textSub, fontSize: 11, fontWeight: "300", align: "center" },
+      style: { fill: this.theme.textSub, fontSize: 11, fontWeight: "300", align: "center" },
     });
     this.sub.anchor.set(0.5);
 
