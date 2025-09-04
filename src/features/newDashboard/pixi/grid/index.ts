@@ -50,6 +50,7 @@ export function grid(app: Application, bleachers: Bleacher[]) {
     topLabels.addChild(t);
     xPool.push(t);
   }
+  xUpdateLabels(0);
 
   // ====== DATA → labels in sticky left column ======
   const rows = bleachers.length;
@@ -74,6 +75,7 @@ export function grid(app: Application, bleachers: Bleacher[]) {
     leftLabels.addChild(t);
     yPool.push(t);
   }
+  yUpdateLabels(0);
 
   function yUpdateLabels(contentY: number) {
     // wrap grid pattern so UVs stay small (no shimmer)
