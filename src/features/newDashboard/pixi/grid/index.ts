@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, Text } from "pixi.js";
-import { CELL_HEIGHT, CELL_WIDTH, THUMB_LENGTH } from "../../values/constants";
+import { CELL_HEIGHT, CELL_WIDTH, HEADER_ROW_HEIGHT, THUMB_LENGTH } from "../../values/constants";
 import { getGridSize } from "../../values/dynamic";
 import { Bleacher } from "../../db/client/bleachers";
 import { createGridTilingSprites } from "./createGridTilingSprites";
@@ -18,13 +18,13 @@ export function grid(app: Application, bleachers: Bleacher[]) {
   gridContainer.addChild(mainScrollableGrid, stickyLeftColumn, stickyTopRow, stickyTopLeftCell);
 
   const stickyTopRowMask = new Graphics()
-    .rect(0, 0, gridWidth - CELL_WIDTH, CELL_HEIGHT)
+    .rect(0, 0, gridWidth - CELL_WIDTH, HEADER_ROW_HEIGHT)
     .fill(0xffffff);
   stickyTopRow.addChild(stickyTopRowMask);
   stickyTopRow.mask = stickyTopRowMask;
 
   const stickyLeftColumnMask = new Graphics()
-    .rect(0, CELL_HEIGHT, CELL_WIDTH, gridHeight - CELL_HEIGHT)
+    .rect(0, HEADER_ROW_HEIGHT, CELL_WIDTH, gridHeight - HEADER_ROW_HEIGHT)
     .fill(0xffffff);
   stickyTopRow.addChild(stickyTopRowMask);
   stickyTopRow.mask = stickyTopRowMask;
@@ -42,6 +42,9 @@ export function grid(app: Application, bleachers: Bleacher[]) {
   topLabels.position.set(CELL_WIDTH, 0); // start under header
   gridContainer.addChild(topLabels);
   topLabels.mask = stickyTopRowMask;
+  let lastFirstCol = -1;
+  let lastFirstRow = -1;
+  const todayISO = DateTime.now().toISODate();
 
   const xPool: HeaderCell[] = [];
   for (let i = 0; i < visibleColumns; i++) {
@@ -49,7 +52,7 @@ export function grid(app: Application, bleachers: Bleacher[]) {
     // t.anchor.set(0.5);
     // t.x = i * CELL_WIDTH + CELL_WIDTH / 2;
     // t.y = CELL_HEIGHT / 2;
-    const cell = new HeaderCell(CELL_WIDTH, CELL_HEIGHT);
+    const cell = new HeaderCell(CELL_WIDTH, HEADER_ROW_HEIGHT);
     cell.x = i * CELL_WIDTH; // container’s local x, y
     cell.y = 0;
     topLabels.addChild(cell);
@@ -87,12 +90,12 @@ export function grid(app: Application, bleachers: Bleacher[]) {
     const wrapped = ((contentY % CELL_HEIGHT) + CELL_HEIGHT) % CELL_HEIGHT;
     mainScrollableGrid.tilePosition.y = -wrapped;
     stickyLeftColumn.tilePosition.y = -wrapped;
+    leftLabels.y = HEADER_ROW_HEIGHT - wrapped;
 
-    // position label layer by phase only…
-    leftLabels.y = CELL_HEIGHT - wrapped;
+    const first = Math.floor(contentY / CELL_WIDTH);
+    if (first === lastFirstRow) return; // <- early out, nothing to rebind
+    lastFirstRow = first;
 
-    // …and compute which data rows are visible
-    const first = Math.floor(contentY / CELL_HEIGHT);
     for (let i = 0; i < yPool.length; i++) {
       const row = first + i;
       const t = yPool[i];
@@ -114,7 +117,8 @@ export function grid(app: Application, bleachers: Bleacher[]) {
     topLabels.x = CELL_WIDTH + -wrapped;
 
     const first = Math.floor(contentX / CELL_WIDTH);
-    const todayISO = DateTime.now().toISODate();
+    if (first === lastFirstCol) return; // <- early out, nothing to rebind
+    lastFirstCol = first;
 
     for (let i = 0; i < xPool.length; i++) {
       const col = first + i;

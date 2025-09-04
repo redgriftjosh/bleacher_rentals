@@ -10,7 +10,7 @@ export type HeaderCellTheme = {
 };
 
 export const DEFAULT_HEADER_THEME: HeaderCellTheme = {
-  bgToday: 0xfde68a, // yellow-300
+  bgToday: 0xffe020, // yellow-300
   bgWeekend: 0xd1d5db, // gray-300
   bgWeekday: 0xe5e7eb, // gray-200
   textMain: 0x111827, // gray-900-ish
