@@ -1,4 +1,4 @@
-import { Application, Container, Text } from "pixi.js";
+import { Application, Container, Graphics, Text } from "pixi.js";
 import { CELL_HEIGHT, CELL_WIDTH, THUMB_LENGTH } from "../../values/constants";
 import { getGridSize } from "../../values/dynamic";
 import { Bleacher } from "../../db/client/bleachers";
@@ -15,6 +15,18 @@ export function grid(app: Application, bleachers: Bleacher[]) {
     createGridTilingSprites(app, gridWidth, gridHeight);
   gridContainer.addChild(mainScrollableGrid, stickyLeftColumn, stickyTopRow, stickyTopLeftCell);
 
+  const stickyTopRowMask = new Graphics()
+    .rect(0, 0, gridWidth - CELL_WIDTH, CELL_HEIGHT)
+    .fill(0xffffff);
+  stickyTopRow.addChild(stickyTopRowMask);
+  stickyTopRow.mask = stickyTopRowMask;
+
+  const stickyLeftColumnMask = new Graphics()
+    .rect(0, CELL_HEIGHT, CELL_WIDTH, gridHeight - CELL_HEIGHT)
+    .fill(0xffffff);
+  stickyTopRow.addChild(stickyTopRowMask);
+  stickyTopRow.mask = stickyTopRowMask;
+
   // ====== DATES ======
   const { columns, dates } = getColumnsAndDates();
   const viewportW = gridWidth - CELL_WIDTH; // visible to the right of sticky left column
@@ -27,6 +39,7 @@ export function grid(app: Application, bleachers: Bleacher[]) {
   const topLabels = new Container();
   topLabels.position.set(CELL_WIDTH, 0); // start under header
   gridContainer.addChild(topLabels);
+  topLabels.mask = stickyTopRowMask;
 
   const xPool: Text[] = [];
   for (let i = 0; i < visibleColumns; i++) {
@@ -50,6 +63,7 @@ export function grid(app: Application, bleachers: Bleacher[]) {
   const leftLabels = new Container();
   leftLabels.position.set(0, CELL_HEIGHT); // start under header
   gridContainer.addChild(leftLabels);
+  leftLabels.mask = stickyLeftColumnMask;
 
   const yPool: Text[] = [];
   for (let i = 0; i < visibleRows; i++) {
