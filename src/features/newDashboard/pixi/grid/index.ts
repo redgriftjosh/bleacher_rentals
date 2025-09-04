@@ -4,6 +4,8 @@ import { getGridSize } from "../../values/dynamic";
 import { Bleacher } from "../../db/client/bleachers";
 import { createGridTilingSprites } from "./createGridTilingSprites";
 import { getColumnsAndDates } from "../../util/scrollbar";
+import { HeaderCell } from "../ui/HeaderCell";
+import { DateTime } from "luxon";
 
 export function grid(app: Application, bleachers: Bleacher[]) {
   const { gridWidth, gridHeight } = getGridSize(app);
@@ -41,14 +43,17 @@ export function grid(app: Application, bleachers: Bleacher[]) {
   gridContainer.addChild(topLabels);
   topLabels.mask = stickyTopRowMask;
 
-  const xPool: Text[] = [];
+  const xPool: HeaderCell[] = [];
   for (let i = 0; i < visibleColumns; i++) {
-    const t = new Text({ text: "", style: { fill: 0x333333, fontSize: 14, align: "center" } });
-    t.anchor.set(0.5);
-    t.x = i * CELL_WIDTH + CELL_WIDTH / 2;
-    t.y = CELL_HEIGHT / 2;
-    topLabels.addChild(t);
-    xPool.push(t);
+    // const t = new Text({ text: "", style: { fill: 0x333333, fontSize: 14, align: "center" } });
+    // t.anchor.set(0.5);
+    // t.x = i * CELL_WIDTH + CELL_WIDTH / 2;
+    // t.y = CELL_HEIGHT / 2;
+    const cell = new HeaderCell(CELL_WIDTH, CELL_HEIGHT);
+    cell.x = i * CELL_WIDTH; // container’s local x, y
+    cell.y = 0;
+    topLabels.addChild(cell);
+    xPool.push(cell);
   }
   xUpdateLabels(0);
 
@@ -106,21 +111,21 @@ export function grid(app: Application, bleachers: Bleacher[]) {
     const wrapped = ((contentX % CELL_WIDTH) + CELL_WIDTH) % CELL_WIDTH;
     mainScrollableGrid.tilePosition.x = -wrapped;
     stickyTopRow.tilePosition.x = -wrapped;
-
-    // position label layer by phase only…
     topLabels.x = CELL_WIDTH + -wrapped;
 
-    // …and compute which data rows are visible
     const first = Math.floor(contentX / CELL_WIDTH);
+    const todayISO = DateTime.now().toISODate();
+
     for (let i = 0; i < xPool.length; i++) {
       const col = first + i;
-      const t = xPool[i];
+      const cell = xPool[i];
       if (col < 0 || col >= columns) {
-        t.visible = false;
+        cell.visible = false;
         continue;
       }
-      t.visible = true;
-      t.text = dates[col];
+      cell.visible = true;
+      cell.setDateISO(dates[col], todayISO);
+      // t.text = dates[col];
       // t.y stays at i*CELL_HEIGHT + CELL_HEIGHT/2 (we’re moving the container instead)
     }
   }
