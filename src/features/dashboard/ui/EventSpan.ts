@@ -38,6 +38,7 @@ export class EventSpan extends Container {
     wrappedX: number
   ) {
     this.currentSpan = span;
+    const cssColour = span.ev.hslHue ? `hsl(${span.ev.hslHue}, 60%, 60%)` : "hsl(0, 0%, 50%)";
 
     const drawStart = Math.max(span.start, visibleStartColumn);
     const drawEnd = Math.min(span.end, visibleEndColumn);
@@ -52,7 +53,7 @@ export class EventSpan extends Container {
     const height = CELL_HEIGHT - 1;
 
     this.g.clear();
-    this.g.rect(x, y, width, height).fill(0x3277a8);
+    this.g.rect(x, y, width, height).fill(cssColour);
 
     if (this.needsPin(visibleStartColumn, wrappedX)) {
       this.updatePinnedLabel(0, wrappedX);

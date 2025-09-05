@@ -16,6 +16,7 @@ export type BleacherEvent = {
   eventName: string;
   eventStart: string;
   eventEnd: string;
+  hslHue: number | null;
 };
 
 type Row = {
@@ -29,6 +30,7 @@ type Row = {
       event_name: string;
       event_start: string;
       event_end: string;
+      hsl_hue: number | null;
     };
   }[];
 };
@@ -54,7 +56,8 @@ export async function FetchDashboardBleachers(
         event:Events!BleacherEvents_event_id_fkey(
           event_name,
           event_start,
-          event_end
+          event_end,
+          hsl_hue
         )
       )
       `
@@ -75,6 +78,7 @@ export async function FetchDashboardBleachers(
       eventName: be.event.event_name,
       eventStart: be.event.event_start,
       eventEnd: be.event.event_end,
+      hslHue: be.event.hsl_hue,
     })),
   }));
 
