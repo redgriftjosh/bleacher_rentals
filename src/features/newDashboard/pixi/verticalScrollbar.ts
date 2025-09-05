@@ -2,6 +2,7 @@ import { Application, Container, FederatedWheelEvent, Graphics, Point } from "pi
 import { getGridSize } from "../values/dynamic";
 import {
   CELL_HEIGHT,
+  HEADER_ROW_HEIGHT,
   SCROLLBAR_THICKNESS,
   THUMB_LENGTH,
   THUMB_THICKNESS,
@@ -14,7 +15,7 @@ export function verticalScrollbar(app: Application, bleachers: Bleacher[]) {
   app.stage.hitArea = app.screen; // allow pointer events anywhere on the stage
 
   const { gridHeight } = getGridSize(app);
-  const viewportH = gridHeight - CELL_HEIGHT; // visible to the right of the sticky column
+  const viewportH = gridHeight - HEADER_ROW_HEIGHT; // visible to the right of the sticky column
   const rows = bleachers.length;
   const contentH = rows * CELL_HEIGHT;
 
