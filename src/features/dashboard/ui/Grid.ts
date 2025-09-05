@@ -1,11 +1,12 @@
 import { Application, Container } from "pixi.js";
-import { Bleacher } from "../../db/client/bleachers";
-import { getGridSize } from "../../values/dynamic";
-import { getColumnsAndDates } from "../../util/scrollbar";
-import { CELL_HEIGHT, CELL_WIDTH, THUMB_LENGTH } from "../../values/constants";
 import { StickyLeftColumn } from "./StickyLeftColumn";
 import { StickyTopRow } from "./StickyTopRow";
 import { MainScrollableGrid } from "./MainScrollableGrid";
+import { StickyTopLeftCell } from "./StickyTopLeftCell";
+import { Bleacher } from "../db/client/bleachers";
+import { getGridSize } from "../values/dynamic";
+import { getColumnsAndDates } from "../util/scrollbar";
+import { CELL_HEIGHT, CELL_WIDTH, THUMB_LENGTH } from "../values/constants";
 
 export class Grid {
   constructor(app: Application, bleachers: Bleacher[]) {
@@ -30,6 +31,9 @@ export class Grid {
 
     const xContentMax = Math.max(0, contentW - viewportW);
     const yContentMax = Math.max(0, contentH - viewportH);
+
+    const stickyTopLeftCell = new StickyTopLeftCell(app);
+    gridContainer.addChild(stickyTopLeftCell);
 
     const stickyLeftColumn = new StickyLeftColumn(app, gridHeight, bleachers, visibleRows);
     gridContainer.addChild(stickyLeftColumn);

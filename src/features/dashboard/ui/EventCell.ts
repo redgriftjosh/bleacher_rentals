@@ -1,5 +1,5 @@
 import { Container, Text } from "pixi.js";
-import { CELL_HEIGHT, CELL_WIDTH } from "../../values/constants";
+import { CELL_HEIGHT, CELL_WIDTH } from "../values/constants";
 
 export class EventCell extends Container {
   private labelText: Text;

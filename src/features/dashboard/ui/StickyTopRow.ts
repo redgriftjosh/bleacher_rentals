@@ -1,8 +1,8 @@
 import { Application, Container, Graphics, TilingSprite } from "pixi.js";
 import { HeaderCell } from "./HeaderCell";
 import { Tile } from "./Tile";
-import { BLEACHER_COLUMN_WIDTH, CELL_WIDTH, HEADER_ROW_HEIGHT } from "../../values/constants";
 import { DateTime } from "luxon";
+import { BLEACHER_COLUMN_WIDTH, CELL_WIDTH, HEADER_ROW_HEIGHT } from "../values/constants";
 
 export class StickyTopRow extends Container {
   private background: TilingSprite;

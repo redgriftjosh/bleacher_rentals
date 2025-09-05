@@ -5,8 +5,8 @@ import {
   CELL_HEIGHT,
   CELL_WIDTH,
   HEADER_ROW_HEIGHT,
-} from "../../values/constants";
-import { Bleacher, BleacherEvent } from "../../db/client/bleachers";
+} from "../values/constants";
+import { Bleacher, BleacherEvent } from "../db/client/bleachers";
 import { DateTime } from "luxon";
 import { EventCell } from "./EventCell";
 

@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
 import { Container, Graphics, Text } from "pixi.js";
-import { CELL_WIDTH, HEADER_ROW_HEIGHT } from "../../values/constants";
+import { CELL_WIDTH, HEADER_ROW_HEIGHT } from "../values/constants";
 
 export type HeaderCellTheme = {
   bgWeekday: number;

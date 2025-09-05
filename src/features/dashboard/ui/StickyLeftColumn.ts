@@ -1,8 +1,8 @@
 import { Application, Container, Graphics, TilingSprite } from "pixi.js";
 import { Tile } from "./Tile";
-import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT, HEADER_ROW_HEIGHT } from "../../values/constants";
+import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT, HEADER_ROW_HEIGHT } from "../values/constants";
 import { BleacherCell } from "./BleacherCell";
-import { Bleacher } from "../../db/client/bleachers";
+import { Bleacher } from "../db/client/bleachers";
 
 export class StickyLeftColumn extends Container {
   private background: TilingSprite;

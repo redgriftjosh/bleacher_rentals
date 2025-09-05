@@ -10,6 +10,7 @@ import {
 import { clamp } from "../util/scrollbar";
 import { Bleacher } from "../db/client/bleachers";
 
+/** THIS NEEDS TO BE TURNED INTO A CLASS */
 export function verticalScrollbar(app: Application, bleachers: Bleacher[]) {
   app.stage.eventMode = "static"; // allow pointer events
   app.stage.hitArea = app.screen; // allow pointer events anywhere on the stage

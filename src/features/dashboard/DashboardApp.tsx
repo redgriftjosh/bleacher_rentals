@@ -2,7 +2,7 @@
 
 import { Application } from "pixi.js";
 import { useEffect, useRef } from "react";
-import { main } from "./pixi/main";
+import { main } from "./main";
 import { Bleacher } from "./db/client/bleachers";
 
 export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
