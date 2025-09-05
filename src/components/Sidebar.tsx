@@ -21,7 +21,7 @@ const menuItems: MenuItem[] = [
     roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
   },
   {
-    label: "New Dashboard",
+    label: "Dashboard v2 (Testing)",
     href: "/new-dashboard",
     icon: CalendarIcon,
     roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
