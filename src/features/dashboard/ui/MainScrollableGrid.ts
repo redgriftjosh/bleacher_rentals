@@ -130,26 +130,15 @@ export class MainScrollableGrid extends Container {
         const poolIdx = r * this.visibleColumns + c;
         const cell = this.labelPool[poolIdx];
 
-        //   if (c < 0 || c >= columns) {
-        //   cell.visible = false;
-        //   continue;
-        // }
-
-        // cell.visible = true;
-
         // Lookup by ISO date
         const dateISO = this.dates[colIdx];
         const ev = rowMap?.get(dateISO);
 
         if (ev) {
           cell.visible = true;
-          cell.setText(ev.eventName); // show event
-          // (optional) style for “has event”
-          // cell.setHighlighted(true);
+          cell.setText(ev.eventName);
         } else {
-          // cell.setText(""); // or hide if you prefer
           cell.visible = false;
-          // cell.setHighlighted(false);
         }
       }
     }

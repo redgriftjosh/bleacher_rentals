@@ -1,7 +1,7 @@
 "use client";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import DashboardApp from "@/features/newDashboard/DashboardApp";
-import { FetchDashboardBleachers } from "@/features/newDashboard/db/client/bleachers";
+import DashboardApp from "@/features/dashboard/DashboardApp";
+import { FetchDashboardBleachers } from "@/features/dashboard/db/client/bleachers";
 import { useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 
