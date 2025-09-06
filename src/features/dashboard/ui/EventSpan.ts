@@ -19,9 +19,6 @@ export class EventSpan extends Container {
       style: {
         fontSize: 12,
         fontWeight: "400",
-        fill: 0xffffff, // white text
-        // wordWrap: true,
-        // wordWrapWidth: CELL_WIDTH,
         align: "left",
       },
     });
