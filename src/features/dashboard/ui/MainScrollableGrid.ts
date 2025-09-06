@@ -150,7 +150,7 @@ export class MainScrollableGrid extends Container {
     const firstVisibleRow = Math.floor(contentY / CELL_HEIGHT);
     if (firstVisibleRow === this.prevFirstVisibleRow) {
       // no rebind; just update the pinned label positions
-      this.updatePinnedLabels();
+      // this.updatePinnedLabels();
       return;
     }
     this.prevFirstVisibleRow = firstVisibleRow;
