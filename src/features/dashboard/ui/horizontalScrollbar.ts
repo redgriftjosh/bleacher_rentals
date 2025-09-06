@@ -89,6 +89,12 @@ export function horizontalScrollbar(app: Application) {
     app.stage.on("pointerupoutside", onUp);
   });
 
+  // Halfway on mount (defer 1 tick so listeners are attached)
+  app.ticker.addOnce(() => {
+    const initialRatio = 0.5;
+    applyContentX(initialRatio * contentMax);
+  });
+
   /*
   Trackpad Scrolling Logic
   */
