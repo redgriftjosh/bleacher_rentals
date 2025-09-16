@@ -24,6 +24,7 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
         resolution: Math.min(2, window.devicePixelRatio || 1),
         autoDensity: true,
         antialias: false,
+        powerPreference: "high-performance",
       });
 
       if (destroyed || appRef.current !== app) return;
