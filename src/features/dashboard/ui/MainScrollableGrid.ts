@@ -6,7 +6,7 @@ import {
   CELL_WIDTH,
   HEADER_ROW_HEIGHT,
 } from "../values/constants";
-import { Bleacher, BleacherEvent } from "../db/client/bleachers";
+import { Bleacher } from "../db/client/bleachers";
 import { DateTime } from "luxon";
 import { EventSpan, EventSpanType } from "./EventSpan";
 
@@ -16,11 +16,6 @@ export class MainScrollableGrid extends Container {
   private prevFirstVisibleRow = -1;
   private visibleRows: number;
   private visibleColumns: number;
-  private eventsByRow: Map<string, BleacherEvent>[];
-  private dates: string[];
-
-  // private labels: Container;
-  // private labelPool: EventCell[] = [];
 
   private spansLayer: Container;
   private rowSpanPools: EventSpan[][] = [];
@@ -42,7 +37,6 @@ export class MainScrollableGrid extends Container {
     super();
     this.visibleRows = visibleRows;
     this.visibleColumns = visibleColumns;
-    this.dates = dates;
     this.dateToIndex = new Map(dates.map((d, i) => [d, i]));
 
     const tile = new Tile(app, { width: CELL_WIDTH, height: CELL_HEIGHT }).texture;
@@ -62,27 +56,7 @@ export class MainScrollableGrid extends Container {
         gridHeight - HEADER_ROW_HEIGHT
       )
       .fill(0xffffff);
-    this.background.addChild(this.background);
     this.background.mask = mask;
-
-    // this.labels = new Container();
-    // this.labels.position.set(BLEACHER_COLUMN_WIDTH, HEADER_ROW_HEIGHT);
-    // this.labels.mask = mask;
-
-    this.eventsByRow = bleachers.map((b) => {
-      const m = new Map<string, BleacherEvent>();
-
-      for (const ev of b.bleacherEvents ?? []) {
-        const days = getEventDays(ev.eventStart, ev.eventEnd);
-        if (!days) continue;
-
-        for (const dayKey of days) {
-          if (!m.has(dayKey)) m.set(dayKey, ev);
-        }
-      }
-
-      return m;
-    });
 
     this.spansByRow = bleachers.map((b) => {
       const spans: EventSpanType[] = [];
@@ -101,22 +75,22 @@ export class MainScrollableGrid extends Container {
       return spans;
     });
 
-    function getEventDays(startISO: string, endISO: string): string[] | undefined {
-      const start = DateTime.fromISO(startISO).startOf("day");
-      const end = DateTime.fromISO(endISO).startOf("day");
-      if (!start.isValid || !end.isValid) return;
+    // function getEventDays(startISO: string, endISO: string): string[] | undefined {
+    //   const start = DateTime.fromISO(startISO).startOf("day");
+    //   const end = DateTime.fromISO(endISO).startOf("day");
+    //   if (!start.isValid || !end.isValid) return;
 
-      // If end is before start, you can swap or just bail; here we bail
-      if (end.toMillis() < start.toMillis()) return;
+    //   // If end is before start, you can swap or just bail; here we bail
+    //   if (end.toMillis() < start.toMillis()) return;
 
-      const days: string[] = [];
-      let d = start;
-      while (d.toMillis() <= end.toMillis()) {
-        days.push(d.toISODate());
-        d = d.plus({ days: 1 });
-      }
-      return days;
-    }
+    //   const days: string[] = [];
+    //   let d = start;
+    //   while (d.toMillis() <= end.toMillis()) {
+    //     days.push(d.toISODate());
+    //     d = d.plus({ days: 1 });
+    //   }
+    //   return days;
+    // }
 
     this.spansLayer = new Container();
     this.spansLayer.position.set(BLEACHER_COLUMN_WIDTH, HEADER_ROW_HEIGHT);
@@ -192,7 +166,7 @@ export class MainScrollableGrid extends Container {
       for (const es of pool) {
         // if (es.visible) es.updatePinnedLabel(0, this.wrappedX);
         if (es.needsPin(visStart, w)) {
-          es.updatePinnedLabel(0, w);
+          es.updatePinnedLabel(0, w, r * CELL_HEIGHT);
         }
       }
     }
@@ -231,7 +205,7 @@ export class MainScrollableGrid extends Container {
 
         // Immediately pin if needed on this rebind
         if (es.needsPin(visStart, this.wrappedX)) {
-          es.updatePinnedLabel(0, this.wrappedX);
+          es.updatePinnedLabel(0, this.wrappedX, r * CELL_HEIGHT);
         }
       }
 

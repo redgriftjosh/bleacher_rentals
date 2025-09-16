@@ -53,7 +53,7 @@ export class EventSpan extends Container {
     this.g.rect(x, y, width, height).fill(cssColour);
 
     if (this.needsPin(visibleStartColumn, wrappedX)) {
-      this.updatePinnedLabel(0, wrappedX);
+      this.updatePinnedLabel(0, wrappedX, rowY);
     } else {
       // Update label text & position
 
@@ -65,10 +65,10 @@ export class EventSpan extends Container {
     this.visible = true;
   }
 
-  updatePinnedLabel(labelOffsetPx: number, wrappedX: number) {
+  updatePinnedLabel(labelOffsetPx: number, wrappedX: number, rowY: number) {
     if (!this.visible) return;
     this.eventLabel.x = labelOffsetPx + wrappedX;
-    // this.eventLabel.y = this.lastRect.y;
+    this.eventLabel.y = rowY;
   }
 
   /** True if the span's real beginning is off the left edge of the viewport. */

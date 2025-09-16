@@ -7,9 +7,10 @@ import { Bleacher } from "../db/client/bleachers";
 import { getGridSize } from "../values/dynamic";
 import { getColumnsAndDates } from "../util/scrollbar";
 import { CELL_HEIGHT, CELL_WIDTH, THUMB_LENGTH } from "../values/constants";
+import { MicroProfiler } from "../util/MicroProfiler";
 
 export class Grid {
-  constructor(app: Application, bleachers: Bleacher[]) {
+  constructor(app: Application, bleachers: Bleacher[], profiler: MicroProfiler) {
     const { gridWidth, gridHeight } = getGridSize(app);
     const { columns, dates } = getColumnsAndDates();
     const rows = bleachers.length;
@@ -35,7 +36,13 @@ export class Grid {
     const stickyTopLeftCell = new StickyTopLeftCell(app);
     gridContainer.addChild(stickyTopLeftCell);
 
-    const stickyLeftColumn = new StickyLeftColumn(app, gridHeight, bleachers, visibleRows);
+    const stickyLeftColumn = new StickyLeftColumn(
+      app,
+      gridHeight,
+      bleachers,
+      visibleRows,
+      profiler
+    );
     gridContainer.addChild(stickyLeftColumn);
 
     const stickyTopRow = new StickyTopRow(app, gridWidth, columns, dates, visibleColumns);
@@ -56,16 +63,24 @@ export class Grid {
       const ratio = thumbY / yThumbTravel;
       const contentY = Math.round(ratio * yContentMax);
 
-      stickyLeftColumn.updateY(contentY);
-      mainScrollableGrid.updateY(contentY);
+      // stickyLeftColumn.updateY(contentY);
+      // mainScrollableGrid.updateY(contentY);
+      profiler.begin("scrollY");
+      profiler.pf("stickyLeftColumn.updateY", () => stickyLeftColumn.updateY(contentY));
+      profiler.pf("grid.updateY", () => mainScrollableGrid.updateY(contentY));
+      profiler.end("scrollY");
     });
 
     app.stage.on("hscroll:nx", (thumbX: number) => {
       const ratio = thumbX / xThumbTravel;
       const contentX = Math.round(ratio * xContentMax);
 
-      stickyTopRow.updateX(contentX);
-      mainScrollableGrid.updateX(contentX);
+      // stickyTopRow.updateX(contentX);
+      // mainScrollableGrid.updateX(contentX);
+      profiler.begin("scrollX");
+      profiler.pf("stickyTopRow.updateX", () => stickyTopRow.updateX(contentX));
+      profiler.pf("grid.updateX", () => mainScrollableGrid.updateX(contentX));
+      profiler.end("scrollX");
     });
   }
 }
