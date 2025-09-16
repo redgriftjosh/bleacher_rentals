@@ -13,6 +13,7 @@ export type Bleacher = {
 };
 
 export type BleacherEvent = {
+  bleacherEventId: number;
   eventName: string;
   eventStart: string;
   eventEnd: string;
@@ -26,6 +27,7 @@ type Row = {
   summer: { home_base_name: string } | null;
   winter: { home_base_name: string } | null;
   bleacher_events: {
+    bleacher_event_id: number;
     event: {
       event_name: string;
       event_start: string;
@@ -53,6 +55,7 @@ export async function FetchDashboardBleachers(
       summer:HomeBases!Bleachers_home_base_id_fkey(home_base_name),
       winter:HomeBases!Bleachers_winter_home_base_id_fkey(home_base_name),
       bleacher_events:BleacherEvents!BleacherEvents_bleacher_id_fkey(
+        bleacher_event_id,
         event:Events!BleacherEvents_event_id_fkey(
           event_name,
           event_start,
@@ -75,6 +78,7 @@ export async function FetchDashboardBleachers(
     summerHomeBase: r.summer?.home_base_name ?? "",
     winterHomeBase: r.winter?.home_base_name ?? "",
     bleacherEvents: r.bleacher_events.map((be) => ({
+      bleacherEventId: be.bleacher_event_id,
       eventName: be.event.event_name,
       eventStart: be.event.event_start,
       eventEnd: be.event.event_end,
@@ -82,7 +86,7 @@ export async function FetchDashboardBleachers(
     })),
   }));
 
-  console.log("bleachers", bleachers);
+  // console.log("bleachers", bleachers);
 
   return { bleachers };
 }
