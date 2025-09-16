@@ -9,6 +9,7 @@ import {
 import { Bleacher } from "../db/client/bleachers";
 import { DateTime } from "luxon";
 import { EventSpan, EventSpanType } from "./EventSpan";
+import { Baker } from "../util/Baker";
 
 export class MainScrollableGrid extends Container {
   private background: TilingSprite;
@@ -22,6 +23,8 @@ export class MainScrollableGrid extends Container {
 
   private spansByRow: EventSpanType[][];
   private dateToIndex: Map<string, number>;
+
+  private spanBaker: Baker;
 
   private wrappedX = 0;
 
@@ -38,6 +41,8 @@ export class MainScrollableGrid extends Container {
     this.visibleRows = visibleRows;
     this.visibleColumns = visibleColumns;
     this.dateToIndex = new Map(dates.map((d, i) => [d, i]));
+
+    this.spanBaker = new Baker(app);
 
     const tile = new Tile(app, { width: CELL_WIDTH, height: CELL_HEIGHT }).texture;
 
@@ -191,10 +196,16 @@ export class MainScrollableGrid extends Container {
       // ensure pool has enough instances
       const pool = this.rowSpanPools[r];
       while (pool.length < needed) {
-        const es = new EventSpan();
+        const es = new EventSpan(this.spanBaker);
         this.spansLayer.addChild(es);
         pool.push(es);
       }
+
+      // while (pool.length < needed) {
+      //   const es = new EventSpan();
+      //   this.spansLayer.addChild(es);
+      //   pool.push(es);
+      // }
 
       // draw the visible spans
       let used = 0;
