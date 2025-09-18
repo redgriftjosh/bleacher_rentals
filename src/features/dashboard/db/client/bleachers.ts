@@ -4,6 +4,7 @@ import { Tables } from "../../../../../database.types";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 
 export type Bleacher = {
+  bleacherId: number;
   bleacherNumber: number;
   bleacherRows: number;
   bleacherSeats: number;
@@ -21,6 +22,7 @@ export type BleacherEvent = {
 };
 
 type Row = {
+  bleacher_id: number;
   bleacher_number: number;
   bleacher_rows: number;
   bleacher_seats: number;
@@ -49,6 +51,7 @@ export async function FetchDashboardBleachers(
     .from("Bleachers")
     .select(
       `
+      bleacher_id,
       bleacher_number,
       bleacher_rows,
       bleacher_seats,
@@ -72,6 +75,7 @@ export async function FetchDashboardBleachers(
   }
   // console.log("data", data);
   const bleachers: Bleacher[] = (data ?? []).map((r) => ({
+    bleacherId: r.bleacher_id,
     bleacherNumber: r.bleacher_number,
     bleacherRows: r.bleacher_rows,
     bleacherSeats: r.bleacher_seats,

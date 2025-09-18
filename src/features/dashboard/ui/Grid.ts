@@ -1,4 +1,4 @@
-import { Application, Container } from "pixi.js";
+import { Application, Container, Text } from "pixi.js";
 import { StickyLeftColumn } from "./StickyLeftColumn";
 import { StickyTopRow } from "./StickyTopRow";
 import { MainScrollableGrid } from "./MainScrollableGrid";
@@ -7,10 +7,10 @@ import { Bleacher } from "../db/client/bleachers";
 import { getGridSize } from "../values/dynamic";
 import { getColumnsAndDates } from "../util/scrollbar";
 import { CELL_HEIGHT, CELL_WIDTH, THUMB_LENGTH } from "../values/constants";
-import { MicroProfiler } from "../util/MicroProfiler";
+import { CurrentEventState } from "@/app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
 
 export class Grid {
-  constructor(app: Application, bleachers: Bleacher[], profiler: MicroProfiler) {
+  constructor(app: Application, bleachers: Bleacher[]) {
     const { gridWidth, gridHeight } = getGridSize(app);
     const { columns, dates } = getColumnsAndDates();
     const rows = bleachers.length;
@@ -36,13 +36,7 @@ export class Grid {
     const stickyTopLeftCell = new StickyTopLeftCell(app);
     gridContainer.addChild(stickyTopLeftCell);
 
-    const stickyLeftColumn = new StickyLeftColumn(
-      app,
-      gridHeight,
-      bleachers,
-      visibleRows,
-      profiler
-    );
+    const stickyLeftColumn = new StickyLeftColumn(app, gridHeight, bleachers, visibleRows);
     gridContainer.addChild(stickyLeftColumn);
 
     const stickyTopRow = new StickyTopRow(app, gridWidth, columns, dates, visibleColumns);
@@ -63,24 +57,16 @@ export class Grid {
       const ratio = thumbY / yThumbTravel;
       const contentY = Math.round(ratio * yContentMax);
 
-      // stickyLeftColumn.updateY(contentY);
-      // mainScrollableGrid.updateY(contentY);
-      profiler.begin("scrollY");
-      profiler.pf("stickyLeftColumn.updateY", () => stickyLeftColumn.updateY(contentY));
-      profiler.pf("grid.updateY", () => mainScrollableGrid.updateY(contentY));
-      profiler.end("scrollY");
+      stickyLeftColumn.updateY(contentY);
+      mainScrollableGrid.updateY(contentY);
     });
 
     app.stage.on("hscroll:nx", (thumbX: number) => {
       const ratio = thumbX / xThumbTravel;
       const contentX = Math.round(ratio * xContentMax);
 
-      // stickyTopRow.updateX(contentX);
-      // mainScrollableGrid.updateX(contentX);
-      profiler.begin("scrollX");
-      profiler.pf("stickyTopRow.updateX", () => stickyTopRow.updateX(contentX));
-      profiler.pf("grid.updateX", () => mainScrollableGrid.updateX(contentX));
-      profiler.end("scrollX");
+      stickyTopRow.updateX(contentX);
+      mainScrollableGrid.updateX(contentX);
     });
   }
 }
