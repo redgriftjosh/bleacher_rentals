@@ -21,7 +21,7 @@ export class EventSpanBody extends Container {
 
   constructor(baker: Baker) {
     super();
-    this.eventMode = "none";
+    // this.eventMode = "none";
 
     // lazily bake shared textures once per process/style
     if (!EventSpanBody.texLeft || !EventSpanBody.texCenter || !EventSpanBody.texRight) {

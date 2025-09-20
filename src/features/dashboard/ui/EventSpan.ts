@@ -1,9 +1,13 @@
 import { Container } from "pixi.js";
 import type { BleacherEvent } from "../db/client/bleachers";
-import { CELL_HEIGHT, CELL_WIDTH, BLEACHER_COLUMN_WIDTH } from "../values/constants";
+import { CELL_HEIGHT, CELL_WIDTH } from "../values/constants";
 import { Baker } from "../util/Baker";
 import { EventSpanLabel } from "./EventSpanLabel";
 import { EventSpanBody } from "./EventSpanBody";
+import { useCurrentEventStore } from "../../../app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
+import { useEventsStore } from "../../../state/eventsStore";
+import { useBleacherEventsStore } from "../../../state/bleacherEventStore";
+import { useAddressesStore } from "../../../state/addressesStore";
 
 export type EventSpanType = { start: number; end: number; ev: BleacherEvent };
 
@@ -18,13 +22,17 @@ export class EventSpan extends Container {
 
   constructor(baker: Baker) {
     super();
-    this.eventMode = "none";
+    this.eventMode = "static";
+    this.cursor = "pointer";
 
     this.body = new EventSpanBody(baker);
     this.spanLabel = new EventSpanLabel(baker);
 
     // body should be under label so text draws above
     this.addChild(this.body, this.spanLabel);
+
+    // Add click handler
+    this.on("pointerdown", this.handleClick.bind(this));
 
     this.visible = false;
   }
@@ -92,6 +100,83 @@ export class EventSpan extends Container {
     this.body.hide();
     this.spanLabel.hide();
     this.currentSpan = undefined;
+  }
+
+  private handleClick() {
+    if (!this.currentSpan) return;
+
+    const event = this.currentSpan.ev;
+    this.handleLoadEvent(event);
+  }
+
+  private handleLoadEvent(bleacherEvent: BleacherEvent) {
+    const store = useCurrentEventStore.getState();
+    const setField = store.setField;
+
+    // Get the full event data from stores
+    const events = useEventsStore.getState().events;
+    const bleacherEvents = useBleacherEventsStore.getState().bleacherEvents;
+    const addresses = useAddressesStore.getState().addresses;
+
+    // Find the BleacherEvent record to get the event_id
+    const bleacherEventRecord = bleacherEvents.find(
+      (be) => be.bleacher_event_id === bleacherEvent.bleacherEventId
+    );
+
+    if (!bleacherEventRecord) {
+      console.warn("Could not find bleacher event record");
+      return;
+    }
+
+    // Find the full event data
+    const fullEvent = events.find((e) => e.event_id === bleacherEventRecord.event_id);
+
+    if (!fullEvent) {
+      console.warn("Could not find full event data");
+      return;
+    }
+
+    // Find the address data
+    const address = addresses.find((a) => a.address_id === fullEvent.address_id);
+
+    // Get all bleacher IDs for this event
+    const eventBleacherIds = bleacherEvents
+      .filter((be) => be.event_id === fullEvent.event_id)
+      .map((be) => be.bleacher_id);
+
+    // Load all event data into the store, similar to EventRenderer
+    setField("eventId", fullEvent.event_id);
+    setField("eventName", fullEvent.event_name);
+    setField(
+      "addressData",
+      address
+        ? {
+            addressId: address.address_id,
+            address: address.street,
+            city: address.city,
+            state: address.state_province,
+            postalCode: address.zip_postal ?? undefined,
+          }
+        : null
+    );
+    setField("seats", fullEvent.total_seats);
+    setField("sevenRow", fullEvent.seven_row);
+    setField("tenRow", fullEvent.ten_row);
+    setField("fifteenRow", fullEvent.fifteen_row);
+    setField("setupStart", fullEvent.setup_start ?? "");
+    setField("sameDaySetup", !fullEvent.setup_start);
+    setField("eventStart", fullEvent.event_start);
+    setField("eventEnd", fullEvent.event_end);
+    setField("teardownEnd", fullEvent.teardown_end ?? "");
+    setField("sameDayTeardown", !fullEvent.teardown_end);
+    setField("lenient", fullEvent.lenient);
+    setField("selectedStatus", fullEvent.booked ? "Booked" : "Quoted");
+    setField("notes", fullEvent.notes ?? "");
+    setField("mustBeClean", fullEvent.must_be_clean);
+    setField("bleacherIds", eventBleacherIds);
+    setField("isFormExpanded", true); // Open the configuration panel
+    setField("hslHue", fullEvent.hsl_hue);
+    setField("goodshuffleUrl", fullEvent.goodshuffle_url);
   }
 }
 
