@@ -1,17 +1,25 @@
 "use client";
 
 import { Application } from "pixi.js";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { main } from "./main";
 import { Bleacher } from "./db/client/bleachers";
 import { Baker } from "./util/Baker";
 import { EventSpanBody } from "./ui/EventSpanBody";
+import { HorizontalScrollbar } from "./ui/HorizontalScrollbar";
+import { VerticalScrollbar } from "./ui/VerticalScrollbar";
 
 export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const initedRef = useRef(false);
   const isFirstRenderRef = useRef(true);
+
+  const runtimeRef = useRef<{ hscroll: HorizontalScrollbar; vscroll: VerticalScrollbar } | null>(
+    null
+  );
+  const lastContentXRef = useRef<number | null>(null);
+  const lastContentYRef = useRef<number | null>(null);
 
   useEffect(() => {
     const app = new Application();
@@ -74,19 +82,33 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
         //   }
         // }, 10);
         if (!destroyed && appRef.current === app) {
-          main(app, bleachers);
+          console.log("not first render, lastContentXRef.current:", lastContentXRef.current);
+          const runtime = main(app, bleachers, lastContentXRef.current, lastContentYRef.current);
+          runtimeRef.current = runtime;
           initedRef.current = true;
         }
       } else {
         // First render - no delay needed
-        main(app, bleachers);
+        console.log("First render lastContentXRef.current:", lastContentXRef.current);
+        const runtime = main(app, bleachers, lastContentXRef.current, lastContentYRef.current);
         initedRef.current = true;
+        runtimeRef.current = runtime;
       }
 
       isFirstRenderRef.current = false;
     })();
 
     return () => {
+      // ⬅️ capture latest scroll BEFORE destroying Pixi
+      const current = runtimeRef.current?.hscroll?.getContentX?.();
+      const currentY = runtimeRef.current?.vscroll?.getContentY?.();
+      console.log("current", current);
+      if (typeof current === "number") {
+        lastContentXRef.current = current;
+      }
+      if (typeof currentY === "number") {
+        lastContentYRef.current = currentY;
+      }
       destroyed = true;
       const app = appRef.current;
       appRef.current = null;

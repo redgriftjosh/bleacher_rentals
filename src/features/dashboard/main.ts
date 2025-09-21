@@ -1,11 +1,17 @@
 import { Application } from "pixi.js";
 import { Bleacher } from "./db/client/bleachers";
 import { Grid } from "./ui/Grid";
-import { horizontalScrollbar } from "./ui/horizontalScrollbar";
-import { verticalScrollbar } from "./ui/verticalScrollbar";
+import { VerticalScrollbar } from "./ui/VerticalScrollbar";
+import { HorizontalScrollbar } from "./ui/HorizontalScrollbar";
 
-export function main(app: Application, bleachers: Bleacher[]) {
+export function main(
+  app: Application,
+  bleachers: Bleacher[],
+  initialScrollX: number | null,
+  initialScrollY: number | null
+) {
   new Grid(app, bleachers);
-  horizontalScrollbar(app);
-  verticalScrollbar(app, bleachers);
+  const hscroll = new HorizontalScrollbar(app, initialScrollX);
+  const vscroll = new VerticalScrollbar(app, bleachers, initialScrollY);
+  return { hscroll, vscroll };
 }
