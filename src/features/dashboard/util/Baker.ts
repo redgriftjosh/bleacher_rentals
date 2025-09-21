@@ -1,4 +1,4 @@
-import { Application, Container, RenderTexture, Text } from "pixi.js";
+import { Application, Container, RenderTexture } from "pixi.js";
 
 /**
  * Bakes arbitrary Pixi display content into a cached {@link RenderTexture}
@@ -34,6 +34,7 @@ import { Application, Container, RenderTexture, Text } from "pixi.js";
 export class Baker {
   private app: Application;
   private cache = new Map<string | number, RenderTexture>();
+  private static allInstances = new Set<Baker>();
 
   /**
    * Creates a new baker bound to the renderer in `app`.
@@ -41,6 +42,7 @@ export class Baker {
    */
   constructor(app: Application) {
     this.app = app;
+    Baker.allInstances.add(this);
   }
 
   /**
@@ -60,23 +62,40 @@ export class Baker {
     build: (container: Container) => void
   ) {
     const existing = this.cache.get(key);
-    if (existing) return existing;
+    if (existing && !existing.destroyed) return existing;
 
-    // Build offscreen content and render once
-    const off = new Container();
-    build(off);
+    // Remove destroyed texture from cache if it exists
+    if (existing && existing.destroyed) {
+      this.cache.delete(key);
+    }
 
-    const rt = RenderTexture.create({
-      width: size.width,
-      height: size.height,
-      resolution: this.app.renderer.resolution,
-    });
+    // Check if renderer is still valid
+    if (!this.app.renderer) {
+      console.warn("Baker: Cannot create texture, renderer is null");
+      return RenderTexture.create({ width: size.width, height: size.height });
+    }
 
-    this.app.renderer.render({ container: off, target: rt, clear: true });
-    off.destroy({ children: true });
+    try {
+      // Build offscreen content and render once
+      const off = new Container();
+      build(off);
 
-    this.cache.set(key, rt);
-    return rt;
+      const rt = RenderTexture.create({
+        width: size.width,
+        height: size.height,
+        resolution: this.app.renderer.resolution,
+      });
+
+      this.app.renderer.render({ container: off, target: rt, clear: true });
+      off.destroy({ children: true });
+
+      this.cache.set(key, rt);
+      return rt;
+    } catch (error) {
+      console.warn("Baker: Error creating texture:", error);
+      // Return a fallback texture
+      return RenderTexture.create({ width: size.width, height: size.height });
+    }
   }
 
   /**
@@ -97,7 +116,31 @@ export class Baker {
    * Call this on teardown or when switching themes/fonts globally.
    */
   destroyAll() {
-    for (const rt of this.cache.values()) rt.destroy(true);
+    try {
+      for (const rt of this.cache.values()) {
+        if (rt && !rt.destroyed) {
+          rt.destroy(true);
+        }
+      }
+    } catch (error) {
+      console.warn("Error destroying Baker cache:", error);
+    }
     this.cache.clear();
+    Baker.allInstances.delete(this);
+  }
+
+  /**
+   * Destroys all Baker instances and their caches.
+   * Call this when recreating the PIXI app to prevent stale references.
+   */
+  static destroyAllInstances() {
+    try {
+      for (const baker of Baker.allInstances) {
+        baker.destroyAll();
+      }
+      Baker.allInstances.clear();
+    } catch (error) {
+      console.warn("Error destroying all Baker instances:", error);
+    }
   }
 }

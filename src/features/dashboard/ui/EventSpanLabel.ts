@@ -27,40 +27,64 @@ export class EventSpanLabel extends Container {
   }
 
   setEvent(ev: BleacherEvent) {
+    // Defensive checks
+    if (!ev || !ev.eventName || !this.sprite) {
+      this.visible = false;
+      return;
+    }
+
     const key = `eventLabel:${ev.bleacherEventId}:v1`;
 
-    // Measure once to pick a reasonable RT width (cache miss only).
-    const tmp = new Text({
-      text: ev.eventName,
-      style: { fontSize: 12, fontWeight: "400", align: "left" },
-    });
-    const targetW = Math.min(
-      EventSpanLabel.MAX_W,
-      Math.ceil(tmp.width) + EventSpanLabel.PADDING_X * 2
-    );
-    tmp.destroy(); // free temporary Text object
-
-    const tex = this.baker.getTexture(key, { width: targetW, height: CELL_HEIGHT }, (c) => {
-      const t = new Text({
+    try {
+      // Measure once to pick a reasonable RT width (cache miss only).
+      const tmp = new Text({
         text: ev.eventName,
         style: { fontSize: 12, fontWeight: "400", align: "left" },
       });
-      t.position.set(EventSpanLabel.PADDING_X, 2);
-      c.addChild(t);
-    });
+      const targetW = Math.min(
+        EventSpanLabel.MAX_W,
+        Math.ceil(tmp.width) + EventSpanLabel.PADDING_X * 2
+      );
+      tmp.destroy(); // free temporary Text object
 
-    this.sprite.texture = tex;
-    this.visible = true;
+      const tex = this.baker.getTexture(key, { width: targetW, height: CELL_HEIGHT }, (c) => {
+        const t = new Text({
+          text: ev.eventName,
+          style: { fontSize: 12, fontWeight: "400", align: "left" },
+        });
+        t.position.set(EventSpanLabel.PADDING_X, 2);
+        c.addChild(t);
+      });
+
+      // Check if texture is valid before assigning
+      if (tex && !tex.destroyed && this.sprite) {
+        this.sprite.texture = tex;
+        this.visible = true;
+      } else {
+        this.visible = false;
+      }
+    } catch (error) {
+      console.warn("Error setting EventSpanLabel:", error);
+      this.visible = false;
+    }
   }
 
   placeUnpinned(x: number, y: number) {
-    this.position.set(x, y);
-    this.pinned = false;
+    try {
+      this.position.set(x, y);
+      this.pinned = false;
+    } catch (error) {
+      console.warn("Error placing unpinned label:", error);
+    }
   }
 
   placePinned(leftX: number, y: number) {
-    this.position.set(leftX, y);
-    this.pinned = true;
+    try {
+      this.position.set(leftX, y);
+      this.pinned = true;
+    } catch (error) {
+      console.warn("Error placing pinned label:", error);
+    }
   }
 
   isPinned() {

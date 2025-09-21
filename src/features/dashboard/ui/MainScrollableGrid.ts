@@ -197,6 +197,7 @@ export class MainScrollableGrid extends Container {
       const pool = this.rowSpanPools[r];
       while (pool.length < needed) {
         const es = new EventSpan(this.spanBaker);
+        // es.hide();
         this.spansLayer.addChild(es);
         pool.push(es);
       }
@@ -212,17 +213,35 @@ export class MainScrollableGrid extends Container {
       for (const s of spans) {
         if (s.end < visStart || s.start > visEnd) continue;
         const es = pool[used++];
-        es.draw(s, visStart, visEnd, r * CELL_HEIGHT, this.wrappedX);
 
-        // Immediately pin if needed on this rebind
-        if (es.needsPin(visStart, this.wrappedX)) {
-          es.updatePinnedLabel(0, this.wrappedX, r * CELL_HEIGHT);
+        // Defensive check before drawing
+        if (es && typeof es.draw === "function") {
+          try {
+            es.draw(s, visStart, visEnd, r * CELL_HEIGHT, this.wrappedX);
+
+            // Immediately pin if needed on this rebind
+            if (es.needsPin(visStart, this.wrappedX)) {
+              es.updatePinnedLabel(0, this.wrappedX, r * CELL_HEIGHT);
+            }
+          } catch (error) {
+            console.warn("Error drawing EventSpan:", error);
+            if (es && typeof es.hide === "function") {
+              es.hide();
+            }
+          }
         }
       }
 
       // hide any unused pooled spans this frame
       for (let i = used; i < pool.length; i++) {
-        pool[i].hide();
+        const es = pool[i];
+        if (es && typeof es.hide === "function") {
+          try {
+            es.hide();
+          } catch (error) {
+            console.warn("Error hiding EventSpan:", error);
+          }
+        }
       }
     }
   }

@@ -45,6 +45,12 @@ export class EventSpan extends Container {
     rowY: number,
     wrappedX: number
   ) {
+    // Defensive check for valid span data and components
+    if (!span || !span.ev || !this.body || !this.spanLabel) {
+      this.hide();
+      return;
+    }
+
     this.currentSpan = span;
 
     // clip horizontally to viewport
@@ -67,16 +73,31 @@ export class EventSpan extends Container {
     const showLeftCap = span.start >= visibleStartColumn && wrappedX === 0;
     const showRightCap = span.end <= visibleEndColumn;
 
-    this.body.draw(x, y, width, height, tint, showLeftCap, showRightCap);
+    // Defensive check before drawing body
+    if (this.body && typeof this.body.draw === "function") {
+      try {
+        this.body.draw(x, y, width, height, tint, showLeftCap, showRightCap);
+      } catch (error) {
+        console.warn("Error drawing EventSpan body:", error);
+        this.hide();
+        return;
+      }
+    }
 
     // spanLabel: bake once per event, then place pinned/unpinned
-    this.spanLabel.setEvent(span.ev);
-    if (this.needsPin(visibleStartColumn, wrappedX)) {
-      // Pinned: sits at left edge of the viewport; X is offset by wrappedX
-      this.updatePinnedLabel(0, wrappedX, y);
-    } else {
-      // Unpinned: scrolls with the body and starts at the clipped rect x
-      this.spanLabel.placeUnpinned(x, y);
+    if (this.spanLabel && typeof this.spanLabel.setEvent === "function") {
+      try {
+        this.spanLabel.setEvent(span.ev);
+        if (this.needsPin(visibleStartColumn, wrappedX)) {
+          // Pinned: sits at left edge of the viewport; X is offset by wrappedX
+          this.updatePinnedLabel(0, wrappedX, y);
+        } else {
+          // Unpinned: scrolls with the body and starts at the clipped rect x
+          this.spanLabel.placeUnpinned(x, y);
+        }
+      } catch (error) {
+        console.warn("Error setting EventSpan label:", error);
+      }
     }
 
     this.visible = true;
@@ -91,14 +112,28 @@ export class EventSpan extends Container {
 
   /** For your existing updatePinnedLabels() path: nudge the spanLabel while pinned. */
   updatePinnedLabel(labelOffsetPx: number, wrappedX: number, rowY: number) {
-    if (!this.visible) return;
-    this.spanLabel.placePinned(labelOffsetPx + wrappedX, rowY);
+    if (!this.visible || !this.spanLabel) return;
+    try {
+      if (typeof this.spanLabel.placePinned === "function") {
+        this.spanLabel.placePinned(labelOffsetPx + wrappedX, rowY);
+      }
+    } catch (error) {
+      console.warn("Error updating pinned label:", error);
+    }
   }
 
   hide() {
     this.visible = false;
-    this.body.hide();
-    this.spanLabel.hide();
+    try {
+      if (this.body && typeof this.body.hide === "function") {
+        this.body.hide();
+      }
+      if (this.spanLabel && typeof this.spanLabel.hide === "function") {
+        this.spanLabel.hide();
+      }
+    } catch (error) {
+      console.warn("Error hiding EventSpan:", error);
+    }
     this.currentSpan = undefined;
   }
 

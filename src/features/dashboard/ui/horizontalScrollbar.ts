@@ -8,7 +8,7 @@ import {
 import { getGridSize } from "../values/dynamic";
 import { clamp, getColumnsAndDates } from "../util/scrollbar";
 
-export function horizontalScrollbar(app: Application) {
+export function horizontalScrollbar(app: Application, initialScrollX?: number) {
   app.stage.eventMode = "static"; // allow pointer events
   app.stage.hitArea = app.screen; // allow pointer events anywhere on the stage
 
@@ -46,6 +46,8 @@ export function horizontalScrollbar(app: Application) {
     contentX = clamp(next, 0, contentMax);
     thumbX = contentMax > 0 ? (contentX / contentMax) * maxX : 0;
     thumb.position.x = Math.round(thumbX);
+    console.log("thumbX", thumbX);
+    console.log("contentX", contentX);
     app.stage.emit("hscroll:nx", thumbX);
   }
   // Keep two floats: content scroll + derived thumb pos
