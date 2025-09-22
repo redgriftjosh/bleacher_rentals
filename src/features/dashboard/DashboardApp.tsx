@@ -1,13 +1,14 @@
 "use client";
 
 import { Application } from "pixi.js";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { main } from "./main";
 import { Bleacher } from "./db/client/bleachers";
 import { Baker } from "./util/Baker";
 import { EventSpanBody } from "./ui/EventSpanBody";
 import { HorizontalScrollbar } from "./ui/HorizontalScrollbar";
 import { VerticalScrollbar } from "./ui/VerticalScrollbar";
+import { useCurrentEventStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
 
 export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -20,6 +21,28 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
   );
   const lastContentXRef = useRef<number | null>(null);
   const lastContentYRef = useRef<number | null>(null);
+  const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [resizeTrigger, setResizeTrigger] = useState(false);
+
+  const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
+
+  const handleResize = useCallback(() => {
+    // Cancel any pending flip
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+    }
+    // Schedule a new flip exactly 1000ms after the *last* call
+    resizeTimeoutRef.current = setTimeout(() => {
+      // functional update avoids stale closure on `resizeTrigger`
+      setResizeTrigger((v) => !v);
+      resizeTimeoutRef.current = null;
+    }, 1000);
+  }, []);
+
+  useEffect(() => {
+    console.log("isFormExpanded");
+    handleResize();
+  }, [isFormExpanded, handleResize]);
 
   useEffect(() => {
     const app = new Application();
@@ -98,7 +121,10 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
       isFirstRenderRef.current = false;
     })();
 
+    window.addEventListener("resize", handleResize);
+
     return () => {
+      window.removeEventListener("resize", handleResize);
       // ⬅️ capture latest scroll BEFORE destroying Pixi
       const current = runtimeRef.current?.hscroll?.getContentX?.();
       const currentY = runtimeRef.current?.vscroll?.getContentY?.();
@@ -121,11 +147,12 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
         }
       }
     };
-  }, [bleachers]);
+  }, [bleachers, resizeTrigger, handleResize]);
 
   return (
     // add padding to parent div
-    <div className="w-full h-[calc(100%-57px)] pl-2">
+    // [calc(100%-57px)]
+    <div className="w-full h-full pl-2">
       <div ref={hostRef} className="w-full h-full border-l border-t border-gray-300" />
     </div>
   );

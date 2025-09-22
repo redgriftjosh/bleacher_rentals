@@ -34,13 +34,17 @@ export default function Page() {
   }
 
   return (
-    <div className="h-full">
-      <div className="flex justify-between items-center pt-2 pl-2 pr-2">
-        <FilterDashboard />
-        <CreateEventButton />
+    <div className="h-full grid grid-rows-[auto_1fr] gap-2">
+      <div>
+        <div className="flex justify-between items-center pt-2 pl-2 pr-2">
+          <FilterDashboard />
+          <CreateEventButton />
+        </div>
+        <EventConfiguration />
       </div>
-      <EventConfiguration />
-      <DashboardApp bleachers={data.bleachers} />
+      <div className="min-h-0">
+        <DashboardApp bleachers={data.bleachers} />
+      </div>
     </div>
   );
 }

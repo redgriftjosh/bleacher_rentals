@@ -38,6 +38,7 @@ export const EventConfiguration = () => {
     const token = await getToken({ template: "supabase" });
     try {
       await createEvent(state, token, user ?? null);
+      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachers"] });
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to create event:", error);
@@ -66,6 +67,7 @@ export const EventConfiguration = () => {
     const token = await getToken({ template: "supabase" });
     try {
       await deleteEvent(state.eventId, state.addressData?.state ?? "", token, user ?? null);
+      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachers"] });
       currentEventStore.resetForm();
       setLoading(false);
     } catch (error) {
