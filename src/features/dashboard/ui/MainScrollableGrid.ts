@@ -80,23 +80,6 @@ export class MainScrollableGrid extends Container {
       return spans;
     });
 
-    // function getEventDays(startISO: string, endISO: string): string[] | undefined {
-    //   const start = DateTime.fromISO(startISO).startOf("day");
-    //   const end = DateTime.fromISO(endISO).startOf("day");
-    //   if (!start.isValid || !end.isValid) return;
-
-    //   // If end is before start, you can swap or just bail; here we bail
-    //   if (end.toMillis() < start.toMillis()) return;
-
-    //   const days: string[] = [];
-    //   let d = start;
-    //   while (d.toMillis() <= end.toMillis()) {
-    //     days.push(d.toISODate());
-    //     d = d.plus({ days: 1 });
-    //   }
-    //   return days;
-    // }
-
     this.spansLayer = new Container();
     this.spansLayer.position.set(BLEACHER_COLUMN_WIDTH, HEADER_ROW_HEIGHT);
     this.spansLayer.mask = mask;
@@ -197,6 +180,7 @@ export class MainScrollableGrid extends Container {
       const pool = this.rowSpanPools[r];
       while (pool.length < needed) {
         const es = new EventSpan(this.spanBaker);
+        // es.hide();
         this.spansLayer.addChild(es);
         pool.push(es);
       }
@@ -212,17 +196,35 @@ export class MainScrollableGrid extends Container {
       for (const s of spans) {
         if (s.end < visStart || s.start > visEnd) continue;
         const es = pool[used++];
-        es.draw(s, visStart, visEnd, r * CELL_HEIGHT, this.wrappedX);
 
-        // Immediately pin if needed on this rebind
-        if (es.needsPin(visStart, this.wrappedX)) {
-          es.updatePinnedLabel(0, this.wrappedX, r * CELL_HEIGHT);
+        // Defensive check before drawing
+        if (es && typeof es.draw === "function") {
+          try {
+            es.draw(s, visStart, visEnd, r * CELL_HEIGHT, this.wrappedX);
+
+            // Immediately pin if needed on this rebind
+            if (es.needsPin(visStart, this.wrappedX)) {
+              es.updatePinnedLabel(0, this.wrappedX, r * CELL_HEIGHT);
+            }
+          } catch (error) {
+            console.warn("Error drawing EventSpan:", error);
+            if (es && typeof es.hide === "function") {
+              es.hide();
+            }
+          }
         }
       }
 
       // hide any unused pooled spans this frame
       for (let i = used; i < pool.length; i++) {
-        pool[i].hide();
+        const es = pool[i];
+        if (es && typeof es.hide === "function") {
+          try {
+            es.hide();
+          } catch (error) {
+            console.warn("Error hiding EventSpan:", error);
+          }
+        }
       }
     }
   }

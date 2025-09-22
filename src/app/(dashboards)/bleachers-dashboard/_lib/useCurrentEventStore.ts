@@ -1,3 +1,5 @@
+"use client";
+
 import { create } from "zustand";
 import { useEventsStore } from "@/state/eventsStore";
 import { calculateBestHue, updateCurrentEventAlerts } from "./functions";
