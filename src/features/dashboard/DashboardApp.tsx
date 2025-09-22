@@ -6,8 +6,8 @@ import { main } from "./main";
 import { Bleacher } from "./db/client/bleachers";
 import { Baker } from "./util/Baker";
 import { EventSpanBody } from "./ui/EventSpanBody";
-import { HorizontalScrollbar } from "./ui/HorizontalScrollbar";
-import { VerticalScrollbar } from "./ui/VerticalScrollbar";
+import { HorizontalScrollbar } from "./ui/HorizontalScroll";
+import { VerticalScrollbar } from "./ui/VerticalScroll";
 import { useCurrentEventStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
 
 export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {

@@ -1,8 +1,8 @@
 import { Application } from "pixi.js";
 import { Bleacher } from "./db/client/bleachers";
 import { Grid } from "./ui/Grid";
-import { VerticalScrollbar } from "./ui/VerticalScrollbar";
-import { HorizontalScrollbar } from "./ui/HorizontalScrollbar";
+import { VerticalScrollbar } from "./ui/VerticalScroll";
+import { HorizontalScrollbar } from "./ui/HorizontalScroll";
 
 export function main(
   app: Application,
