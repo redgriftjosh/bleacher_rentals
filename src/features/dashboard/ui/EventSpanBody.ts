@@ -137,9 +137,7 @@ export class EventSpanBody extends Container {
       const width = Math.max(1, Math.floor(opts.outlineWidth ?? 1)); // 1px logical
       this.border.clear();
       // Draw a crisp rectangle; align stroke fully inside to avoid bleeding
-      this.border
-        .rect(x + 0.5, y + 0.5, Math.max(0, w - 1), Math.max(0, h - 1))
-        .stroke({ width, color });
+      this.border.rect(x, y, Math.max(0, w), Math.max(0, h)).stroke({ width, color });
       this.border.visible = true;
     } else if (this.border) {
       this.border.visible = false;
