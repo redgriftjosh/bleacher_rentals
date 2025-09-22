@@ -1,4 +1,4 @@
-import { Container } from "pixi.js";
+import { Container, Graphics } from "pixi.js";
 import type { BleacherEvent } from "../db/client/bleachers";
 import { CELL_HEIGHT, CELL_WIDTH } from "../values/constants";
 import { Baker } from "../util/Baker";
@@ -19,6 +19,7 @@ export class EventSpan extends Container {
   private spanLabel: EventSpanLabel;
   private body: EventSpanBody;
   private currentSpan?: EventSpanType;
+  private labelMask?: Graphics;
 
   constructor(baker: Baker) {
     super();
@@ -33,6 +34,10 @@ export class EventSpan extends Container {
 
     // Add click handler
     this.on("pointerdown", this.handleClick.bind(this));
+
+    this.labelMask = new Graphics();
+    this.addChild(this.labelMask);
+    this.spanLabel.mask = this.labelMask;
 
     this.visible = false;
   }
@@ -100,6 +105,11 @@ export class EventSpan extends Container {
       }
     }
 
+    if (this.labelMask) {
+      this.labelMask.clear();
+      this.labelMask.rect(x, y, Math.max(0, width), Math.max(0, height)).fill(0xffffff);
+    }
+
     this.visible = true;
   }
 
@@ -131,6 +141,8 @@ export class EventSpan extends Container {
       if (this.spanLabel && typeof this.spanLabel.hide === "function") {
         this.spanLabel.hide();
       }
+
+      if (this.labelMask) this.labelMask.clear();
     } catch (error) {
       console.warn("Error hiding EventSpan:", error);
     }

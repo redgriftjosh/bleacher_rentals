@@ -80,23 +80,6 @@ export class MainScrollableGrid extends Container {
       return spans;
     });
 
-    // function getEventDays(startISO: string, endISO: string): string[] | undefined {
-    //   const start = DateTime.fromISO(startISO).startOf("day");
-    //   const end = DateTime.fromISO(endISO).startOf("day");
-    //   if (!start.isValid || !end.isValid) return;
-
-    //   // If end is before start, you can swap or just bail; here we bail
-    //   if (end.toMillis() < start.toMillis()) return;
-
-    //   const days: string[] = [];
-    //   let d = start;
-    //   while (d.toMillis() <= end.toMillis()) {
-    //     days.push(d.toISODate());
-    //     d = d.plus({ days: 1 });
-    //   }
-    //   return days;
-    // }
-
     this.spansLayer = new Container();
     this.spansLayer.position.set(BLEACHER_COLUMN_WIDTH, HEADER_ROW_HEIGHT);
     this.spansLayer.mask = mask;
