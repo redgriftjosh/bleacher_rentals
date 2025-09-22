@@ -1,4 +1,4 @@
-import { Container, Sprite, Text, Texture } from "pixi.js";
+import { Container, Sprite, Text, TextStyle, Texture } from "pixi.js";
 import type { BleacherEvent } from "../db/client/bleachers";
 import { Baker } from "../util/Baker";
 import { CELL_HEIGHT, CELL_WIDTH } from "../values/constants";
@@ -13,7 +13,7 @@ export class EventSpanLabel extends Container {
   private pinned = false;
 
   // cap label width to something reasonable; it will be masked by the grid anyway
-  private static readonly MAX_W = CELL_WIDTH * 3; // tweak as desired
+  private static readonly MAX_W = CELL_WIDTH * 10; // tweak as desired
   private static readonly PADDING_X = 4;
 
   constructor(baker: Baker) {
@@ -34,26 +34,44 @@ export class EventSpanLabel extends Container {
     }
 
     const key = `eventLabel:${ev.bleacherEventId}:v1`;
+    const nameTextStyle = new TextStyle({
+      fontFamily: "Helvetica",
+      fontSize: 14,
+      fontWeight: "500",
+      align: "left",
+    });
+    const addressTextStyle = new TextStyle({
+      fontFamily: "Helvetica",
+      fontSize: 12,
+      fontWeight: "300",
+      align: "left",
+    });
 
     try {
-      // Measure once to pick a reasonable RT width (cache miss only).
-      const tmp = new Text({
-        text: ev.eventName,
-        style: { fontSize: 12, fontWeight: "400", align: "left" },
-      });
+      // Measure both texts to pick a reasonable RT width
+      const nameText = new Text({ text: ev.eventName, style: nameTextStyle });
+      const addressText = new Text({ text: ev.address || "", style: addressTextStyle });
+
       const targetW = Math.min(
         EventSpanLabel.MAX_W,
-        Math.ceil(tmp.width) + EventSpanLabel.PADDING_X * 2
+        Math.max(Math.ceil(nameText.width), Math.ceil(addressText.width)) +
+          EventSpanLabel.PADDING_X * 2
       );
-      tmp.destroy(); // free temporary Text object
+
+      nameText.destroy();
+      addressText.destroy();
 
       const tex = this.baker.getTexture(key, { width: targetW, height: CELL_HEIGHT }, (c) => {
-        const t = new Text({
+        const nameT = new Text({
           text: ev.eventName,
-          style: { fontSize: 12, fontWeight: "400", align: "left" },
+          style: nameTextStyle,
         });
-        t.position.set(EventSpanLabel.PADDING_X, 2);
-        c.addChild(t);
+        nameT.position.set(EventSpanLabel.PADDING_X, 2);
+
+        const addressT = new Text({ text: ev.address || "", style: addressTextStyle });
+        addressT.position.set(EventSpanLabel.PADDING_X, 18);
+
+        c.addChild(nameT, addressT);
       });
 
       // Check if texture is valid before assigning

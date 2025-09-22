@@ -16,6 +16,7 @@ export type Bleacher = {
 export type BleacherEvent = {
   bleacherEventId: number;
   eventName: string;
+  address: string;
   eventStart: string;
   eventEnd: string;
   hslHue: number | null;
@@ -35,6 +36,7 @@ type Row = {
       event_start: string;
       event_end: string;
       hsl_hue: number | null;
+      address: { street: string } | null;
     };
   }[];
 };
@@ -63,7 +65,10 @@ export async function FetchDashboardBleachers(
           event_name,
           event_start,
           event_end,
-          hsl_hue
+          hsl_hue,
+          address:Addresses!Events_address_id_fkey(
+            street
+          )
         )
       )
       `
@@ -87,6 +92,7 @@ export async function FetchDashboardBleachers(
       eventStart: be.event.event_start,
       eventEnd: be.event.event_end,
       hslHue: be.event.hsl_hue,
+      address: be.event.address?.street ?? "",
     })),
   }));
 
