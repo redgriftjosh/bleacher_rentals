@@ -19,9 +19,13 @@ export class EventSpanBody extends Container {
   private center?: EventSpanBodyCenter;
   private right?: EventSpanBodyRight;
 
+  private border?: Graphics;
+
   constructor(baker: Baker) {
     super();
     // this.eventMode = "none";
+
+    this.border = new Graphics(); // NEW
 
     try {
       // lazily bake shared textures once per process/style
@@ -41,6 +45,7 @@ export class EventSpanBody extends Container {
       this.right = new EventSpanBodyRight(EventSpanBody.texRight);
 
       this.addChild(this.left, this.center, this.right);
+      this.addChild(this.border);
       this.visible = false;
     } catch (error) {
       console.warn("Error creating EventSpanBody:", error);
@@ -55,16 +60,18 @@ export class EventSpanBody extends Container {
     h: number,
     tint: number,
     showLeftCap: boolean,
-    showRightCap: boolean
+    showRightCap: boolean,
+    opts?: { outlined?: boolean; outlineColor?: number; outlineWidth?: number }
   ) {
-    if (w <= 0 || h <= 0) {
-      this.visible = false;
-      return;
-    }
+    // if (w <= 0 || h <= 0) {
+    //   this.visible = false;
+    //   return;
+    // }
 
     // Defensive check for destroyed components
-    if (!this.left || !this.center || !this.right) {
+    if (w <= 0 || h <= 0 || !this.left || !this.center || !this.right) {
       this.visible = false;
+      if (this.border) this.border.visible = false;
       return;
     }
 
@@ -124,10 +131,28 @@ export class EventSpanBody extends Container {
     } else if (this.center) {
       this.center.visible = false;
     }
+
+    if (opts?.outlined && this.border) {
+      const color = opts.outlineColor ?? 0x000000;
+      const width = Math.max(1, Math.floor(opts.outlineWidth ?? 1)); // 1px logical
+      this.border.clear();
+      // Draw a crisp rectangle; align stroke fully inside to avoid bleeding
+      this.border
+        .rect(x + 0.5, y + 0.5, Math.max(0, w - 1), Math.max(0, h - 1))
+        .stroke({ width, color });
+      this.border.visible = true;
+    } else if (this.border) {
+      this.border.visible = false;
+      this.border.clear();
+    }
   }
 
   hide() {
     this.visible = false;
+    if (this.border) {
+      this.border.visible = false;
+      this.border.clear();
+    }
   }
 
   /** Bake neutral (white) pieces once; you can customize shape, border, shadows here. */

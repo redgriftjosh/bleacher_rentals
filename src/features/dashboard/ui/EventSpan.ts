@@ -72,7 +72,9 @@ export class EventSpan extends Container {
     const height = CELL_HEIGHT - 1;
 
     // tint color (from hslHue, default gray)
-    const tint = span.ev.hslHue != null ? hslToRgbInt(span.ev.hslHue, 60, 60) : 0x808080;
+    // const tint = span.ev.hslHue != null ? hslToRgbInt(span.ev.hslHue, 60, 60) : 0x808080;
+    const isBooked = !!span.ev.booked;
+    const eventColor = span.ev.hslHue != null ? hslToRgbInt(span.ev.hslHue, 60, 60) : 0x808080;
 
     // show caps only if true edges are visible
     const showLeftCap = span.start >= visibleStartColumn && wrappedX === 0;
@@ -81,7 +83,29 @@ export class EventSpan extends Container {
     // Defensive check before drawing body
     if (this.body && typeof this.body.draw === "function") {
       try {
-        this.body.draw(x, y, width, height, tint, showLeftCap, showRightCap);
+        // this.body.draw(x, y, width, height, tint, showLeftCap, showRightCap);
+        if (isBooked) {
+          this.body.draw(
+            x,
+            y,
+            width,
+            height,
+            eventColor, // fill = event color
+            showLeftCap,
+            showRightCap
+          );
+        } else {
+          this.body.draw(
+            x,
+            y,
+            width,
+            height,
+            0xffffff, // fill = white
+            showLeftCap,
+            showRightCap,
+            { outlined: true, outlineColor: eventColor, outlineWidth: 1 } // thin border in event color
+          );
+        }
       } catch (error) {
         console.warn("Error drawing EventSpan body:", error);
         this.hide();
@@ -90,9 +114,11 @@ export class EventSpan extends Container {
     }
 
     // spanLabel: bake once per event, then place pinned/unpinned
+    const labelColor = isBooked ? 0x000000 : eventColor;
     if (this.spanLabel && typeof this.spanLabel.setEvent === "function") {
       try {
-        this.spanLabel.setEvent(span.ev);
+        // this.spanLabel.setEvent(span.ev);
+        this.spanLabel.setEvent(span.ev, labelColor);
         if (this.needsPin(visibleStartColumn, wrappedX)) {
           // Pinned: sits at left edge of the viewport; X is offset by wrappedX
           this.updatePinnedLabel(0, wrappedX, y);

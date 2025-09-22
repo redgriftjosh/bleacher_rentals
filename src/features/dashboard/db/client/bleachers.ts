@@ -20,6 +20,7 @@ export type BleacherEvent = {
   eventStart: string;
   eventEnd: string;
   hslHue: number | null;
+  booked: boolean;
 };
 
 type Row = {
@@ -36,6 +37,7 @@ type Row = {
       event_start: string;
       event_end: string;
       hsl_hue: number | null;
+      booked: boolean;
       address: { street: string } | null;
     };
   }[];
@@ -66,6 +68,7 @@ export async function FetchDashboardBleachers(
           event_start,
           event_end,
           hsl_hue,
+          booked,
           address:Addresses!Events_address_id_fkey(
             street
           )
@@ -92,6 +95,7 @@ export async function FetchDashboardBleachers(
       eventStart: be.event.event_start,
       eventEnd: be.event.event_end,
       hslHue: be.event.hsl_hue,
+      booked: be.event.booked,
       address: be.event.address?.street ?? "",
     })),
   }));

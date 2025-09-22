@@ -26,25 +26,29 @@ export class EventSpanLabel extends Container {
     this.visible = false;
   }
 
-  setEvent(ev: BleacherEvent) {
+  setEvent(ev: BleacherEvent, textColor?: number) {
     // Defensive checks
     if (!ev || !ev.eventName || !this.sprite) {
       this.visible = false;
       return;
     }
 
-    const key = `eventLabel:${ev.bleacherEventId}:v1`;
+    // const key = `eventLabel:${ev.bleacherEventId}:v1`;
+    const color = textColor ?? 0x000000;
+    const key = `eventLabel:${ev.bleacherEventId}:v2:${color.toString(16)}`;
     const nameTextStyle = new TextStyle({
       fontFamily: "Helvetica",
       fontSize: 14,
       fontWeight: "500",
       align: "left",
+      fill: color,
     });
     const addressTextStyle = new TextStyle({
       fontFamily: "Helvetica",
       fontSize: 12,
       fontWeight: "300",
       align: "left",
+      fill: color,
     });
 
     try {
