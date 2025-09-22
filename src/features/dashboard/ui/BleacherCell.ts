@@ -3,6 +3,7 @@ import { Container, Sprite, Text } from "pixi.js";
 import { Baker } from "../util/Baker";
 import { Bleacher } from "../db/client/bleachers";
 import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT } from "../values/constants";
+import { BleacherCellToggle } from "./BleacherCellToggle";
 
 /**
  * A lightweight, scroll-friendly **row widget** for the sticky left column.
@@ -36,6 +37,9 @@ import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT } from "../values/constants";
 export class BleacherCell extends Container {
   private sprite: Sprite;
   private baker: Baker;
+  private toggle: BleacherCellToggle;
+  private bleacherId?: number; // reuse-safe id
+  private onToggle?: (bleacherId: number) => void;
 
   /**
    * Creates a cell that renders to a single `Sprite` using textures from `baker`.
@@ -46,9 +50,26 @@ export class BleacherCell extends Container {
     this.baker = baker;
 
     this.sprite = new Sprite();
-    this.sprite.eventMode = "none";
+    // this.sprite.eventMode = "none";
     this.addChild(this.sprite);
-    this.eventMode = "none";
+    // this.eventMode = "none";
+
+    // --- add the plus button (hidden by default) ---
+    this.toggle = new BleacherCellToggle(baker);
+    this.toggle.setMode("plus");
+    // this.toggle.setButton();
+    // this.toggle.visible = true;
+
+    // position near top-right with a little padding
+    const pad = 6;
+    this.toggle.x = BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - pad;
+    this.toggle.y = Math.max(2, (CELL_HEIGHT - this.toggle.buttonSize) / 2 - 2); // roughly centered vertically
+    this.toggle.visible = false; // default hidden
+    this.addChild(this.toggle);
+
+    this.toggle.on("pointertap", () => {
+      if (this.bleacherId != null && this.onToggle) this.onToggle(this.bleacherId);
+    });
   }
 
   /**
@@ -60,7 +81,8 @@ export class BleacherCell extends Container {
    * @param b - Bleacher data model for this row.
    */
   setBleacher(b: Bleacher) {
-    const key = b.bleacherNumber;
+    this.bleacherId = b.bleacherId;
+    const key = b.bleacherId;
 
     // Builds each cell once and stores as a texture in memory
     const rt = this.baker.getTexture(
@@ -70,6 +92,39 @@ export class BleacherCell extends Container {
     );
 
     this.sprite.texture = rt;
+  }
+
+  /** Called by the parent to wire the toggle callback once. */
+  setToggleHandler(fn: (bleacherId: number) => void) {
+    this.onToggle = fn;
+  }
+
+  // /** Call this when `isFormExpanded` changes. */
+  // setFormExpanded(expanded: boolean) {
+  //   this.toggle.visible = expanded;
+  // }
+
+  /** Called by the parent when `isFormExpanded` changes. */
+  setFormExpanded(expanded: boolean) {
+    const targetX = expanded
+      ? BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - 6 // slide in
+      : BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - 6 - 40; // slide left 40px
+
+    // ensure visibility before animating in; hide after animating out
+    if (expanded) {
+      this.toggle.visible = true;
+      this.toggle.animateX(targetX, 220);
+    } else {
+      // move immediately then hide to match your React effect,
+      // or animate then hide in a callback if you prefer
+      this.toggle.x = targetX;
+      this.toggle.visible = false;
+    }
+  }
+
+  /** Called by the parent when the selection set changes. */
+  setSelected(selected: boolean) {
+    this.toggle.setMode(selected ? "minus" : "plus");
   }
 
   /**

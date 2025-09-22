@@ -17,10 +17,10 @@ import { createEvent, deleteEvent } from "../../db";
 import { CoreTab } from "./tabs/CoreTab";
 import { DetailsTab } from "./tabs/DetailsTab";
 import { AlertsTab } from "./tabs/AlertsTab";
-import { isUserPermitted } from "../../functions";
 import { updateEvent } from "../../db/updateEvent";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import clsx from "clsx";
+import { useQueryClient } from "@tanstack/react-query";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
@@ -31,12 +31,14 @@ export const EventConfiguration = () => {
   const { getToken } = useAuth();
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
+  const qc = useQueryClient();
 
   const handleCreateEvent = async () => {
     const state = useCurrentEventStore.getState();
     const token = await getToken({ template: "supabase" });
     try {
       await createEvent(state, token, user ?? null);
+      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachers"] });
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to create event:", error);
@@ -50,6 +52,7 @@ export const EventConfiguration = () => {
     const token = await getToken({ template: "supabase" });
     try {
       await updateEvent(state, token, user ?? null, bleacherEvents);
+      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachers"] });
       currentEventStore.resetForm();
       setLoading(false);
     } catch (error) {
@@ -64,6 +67,7 @@ export const EventConfiguration = () => {
     const token = await getToken({ template: "supabase" });
     try {
       await deleteEvent(state.eventId, state.addressData?.state ?? "", token, user ?? null);
+      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachers"] });
       currentEventStore.resetForm();
       setLoading(false);
     } catch (error) {
@@ -74,7 +78,7 @@ export const EventConfiguration = () => {
 
   return (
     <div
-      className={`overflow-hidden transition-all duration-1000 ease-in-out ${
+      className={`overflow-hidden transition-all duration-1000 ease-in-out ml-2 ${
         currentEventStore.isFormExpanded ? "max-h-[500px] mb-2" : "max-h-0"
       }`}
     >
