@@ -9,6 +9,9 @@ import { EventSpanBody } from "./ui/EventSpanBody";
 import { HorizontalScrollbar } from "./ui/HorizontalScroll";
 import { VerticalScrollbar } from "./ui/VerticalScroll";
 import { useCurrentEventStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
+import CellEditor from "./components/CellEditor";
+import WorkTrackerModal from "@/app/(dashboards)/bleachers-dashboard/_lib/_components/dashboard/WorkTrackerModal";
+import { Tables } from "../../../database.types";
 
 export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -23,6 +26,11 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
   const lastContentYRef = useRef<number | null>(null);
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [resizeTrigger, setResizeTrigger] = useState(false);
+
+  // State for work tracker modal
+  const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
+    null
+  );
 
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
 
@@ -149,11 +157,28 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
     };
   }, [bleachers, resizeTrigger, handleResize]);
 
+  const handleWorkTrackerOpen = (workTracker: Tables<"WorkTrackers">) => {
+    setSelectedWorkTracker(workTracker);
+  };
+
+  // return (
+  //   // add padding to parent div
+  //   // [calc(100%-57px)]
+  //   <div className="w-full h-full pl-2">
+  //     <div ref={hostRef} className="w-full h-full border-l border-t border-gray-300" />
+  //   </div>
+  // );
   return (
-    // add padding to parent div
-    // [calc(100%-57px)]
-    <div className="w-full h-full pl-2">
+    <div className="w-full h-full pl-2 relative">
       <div ref={hostRef} className="w-full h-full border-l border-t border-gray-300" />
+
+      {/* Modal components */}
+      <CellEditor onWorkTrackerOpen={handleWorkTrackerOpen} />
+      <WorkTrackerModal
+        selectedWorkTracker={selectedWorkTracker}
+        setSelectedWorkTracker={setSelectedWorkTracker}
+        setSelectedBlock={() => {}} // Not used in PixiJS version
+      />
     </div>
   );
 }

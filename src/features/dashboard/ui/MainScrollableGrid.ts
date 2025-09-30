@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, TilingSprite } from "pixi.js";
+import { Application, Container, FederatedPointerEvent, Graphics, TilingSprite } from "pixi.js";
 import { Tile } from "./Tile";
 import {
   BLEACHER_COLUMN_WIDTH,
@@ -10,9 +10,11 @@ import { Bleacher } from "../db/client/bleachers";
 import { DateTime } from "luxon";
 import { EventSpan, EventSpanType } from "./EventSpan";
 import { Baker } from "../util/Baker";
+import { useSelectedBlockStore } from "../state/useSelectedBlock";
 
 export class MainScrollableGrid extends Container {
   private background: TilingSprite;
+  private currentHoverCell: { row: number; col: number } | null = null;
   private prevFirstVisibleColumn = -1;
   private prevFirstVisibleRow = -1;
   private visibleRows: number;
@@ -28,6 +30,10 @@ export class MainScrollableGrid extends Container {
 
   private wrappedX = 0;
 
+  // Store bleachers and dates for cell editor
+  private bleachers: Bleacher[];
+  private dates: string[];
+
   constructor(
     app: Application,
     gridWidth: number,
@@ -41,6 +47,15 @@ export class MainScrollableGrid extends Container {
     this.visibleRows = visibleRows;
     this.visibleColumns = visibleColumns;
     this.dateToIndex = new Map(dates.map((d, i) => [d, i]));
+
+    // Store for cell editor
+    this.bleachers = bleachers;
+    this.dates = dates;
+
+    this.eventMode = "static";
+
+    // Add click handler
+    this.on("pointerup", this.onPointerUp.bind(this, app));
 
     this.spanBaker = new Baker(app);
 
@@ -89,16 +104,60 @@ export class MainScrollableGrid extends Container {
       this.rowSpanPools.push([]);
     }
 
-    this.addChild(
-      this.background,
-      mask,
-      this.spansLayer
-      // this.labels
-    );
+    this.addChild(this.background, mask, this.spansLayer);
     // this.mask = mask;
 
     this.updateY(0);
     this.updateX(0);
+  }
+
+  private onPointerUp(app: Application, e: FederatedPointerEvent) {
+    // Convert to CSS pixels relative to the canvas
+    console.log("onPointerDown", e);
+    const rect = app.canvas.getBoundingClientRect();
+    const cx = e.clientX ?? e.global?.x ?? 0;
+    const cy = e.clientY ?? e.global?.y ?? 0;
+
+    const x = cx - rect.left;
+    const y = cy - rect.top;
+
+    // Calculate which cell was clicked
+    const localPos = this.toLocal(e.global);
+    const adjustedX = localPos.x - BLEACHER_COLUMN_WIDTH + this.background.tilePosition.x;
+    const adjustedY = localPos.y - HEADER_ROW_HEIGHT + this.background.tilePosition.y;
+
+    const col = Math.floor(adjustedX / CELL_WIDTH);
+    const row = Math.floor(adjustedY / CELL_HEIGHT);
+
+    // Get the actual row and column indices accounting for scroll
+    const actualRow = this.prevFirstVisibleRow + row;
+    const actualCol = this.prevFirstVisibleColumn + col;
+
+    console.log("Clicked cell - row:", actualRow, "col:", actualCol);
+
+    // Open the cell editor
+    this.handleLoadBlock(actualRow, actualCol);
+  }
+
+  private handleLoadBlock(rowIndex: number, columnIndex: number) {
+    // TODO: Implement logic to get block/workTracker data for the cell
+    // For now, create a basic block structure
+    const store = useSelectedBlockStore.getState();
+
+    // Generate a key for this cell
+    const key = `${rowIndex}-${columnIndex}`;
+
+    // Get the actual bleacher and date
+    const bleacher = this.bleachers[rowIndex];
+    const date = this.dates[columnIndex];
+
+    store.setField("isOpen", true);
+    store.setField("key", key);
+    store.setField("blockId", null); // Set to actual block ID if it exists
+    store.setField("bleacherId", bleacher?.bleacherId || rowIndex + 1);
+    store.setField("date", date || "2025-01-01");
+    store.setField("text", ""); // TODO: Get actual text if block exists
+    store.setField("workTrackerId", null); // TODO: Get actual work tracker ID if it exists
   }
 
   /** Call every time vertical content scroll changes (in pixels). */
@@ -106,13 +165,10 @@ export class MainScrollableGrid extends Container {
     const wrapped = ((contentY % CELL_HEIGHT) + CELL_HEIGHT) % CELL_HEIGHT;
 
     this.background.tilePosition.y = -wrapped;
-    // this.labels.y = HEADER_ROW_HEIGHT - wrapped;
     this.spansLayer.y = HEADER_ROW_HEIGHT - wrapped;
 
     const firstVisibleRow = Math.floor(contentY / CELL_HEIGHT);
     if (firstVisibleRow === this.prevFirstVisibleRow) {
-      // no rebind; just update the pinned label positions
-      // this.updatePinnedLabels();
       return;
     }
     this.prevFirstVisibleRow = firstVisibleRow;
@@ -128,12 +184,10 @@ export class MainScrollableGrid extends Container {
     const wrapped = ((contentX % CELL_WIDTH) + CELL_WIDTH) % CELL_WIDTH;
     this.wrappedX = wrapped;
     this.background.tilePosition.x = -wrapped;
-    // this.labels.x = BLEACHER_COLUMN_WIDTH - wrapped;
     this.spansLayer.x = BLEACHER_COLUMN_WIDTH - wrapped;
 
     const firstVisibleColumn = Math.floor(contentX / CELL_WIDTH);
     if (firstVisibleColumn === this.prevFirstVisibleColumn) {
-      // no rebind; just update the pinned label positions
       this.updatePinnedLabels();
       return;
     }
