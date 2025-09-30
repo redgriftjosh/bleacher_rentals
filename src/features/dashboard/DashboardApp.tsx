@@ -79,51 +79,94 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
           // Stop the ticker temporarily to prevent rendering during cleanup
           app.ticker.stop();
 
-          // Destroy all Baker instances to clear texture caches
+          // More aggressive cleanup for subsequent renders
+          // 1. Destroy all Baker instances first
           Baker.destroyAllInstances();
 
-          // Clear static textures from EventSpanBody
+          // 2. Clear static textures from EventSpanBody
           EventSpanBody.clearStaticTextures();
 
-          // Remove all children and destroy them
-          while (app.stage.children.length > 0) {
-            const child = app.stage.children[0];
-            app.stage.removeChild(child);
-            if (child && typeof child.destroy === "function") {
-              child.destroy({ children: true });
+          // 3. Recursively destroy all children and their textures
+          const destroyChildrenRecursively = (container: any) => {
+            while (container.children && container.children.length > 0) {
+              const child = container.children[0];
+
+              // If it has children, destroy them first
+              if (child.children && child.children.length > 0) {
+                destroyChildrenRecursively(child);
+              }
+
+              // Remove from parent first
+              container.removeChild(child);
+
+              // Then destroy with all options
+              if (child && typeof child.destroy === "function") {
+                child.destroy({
+                  children: true,
+                  texture: true,
+                  textureSource: true,
+                  context: true,
+                });
+              }
             }
+          };
+
+          destroyChildrenRecursively(app.stage);
+
+          // 4. Clear any remaining stage references
+          app.stage.removeChildren();
+
+          // 5. Force garbage collection of textures
+          if (app.renderer && (app.renderer as any).texture && (app.renderer as any).texture.gc) {
+            (app.renderer as any).texture.gc();
           }
 
-          // Force a render to clear any pending operations
-          app.renderer.render(app.stage);
+          // 6. Wait a frame before restarting
+          await new Promise((resolve) => setTimeout(resolve, 16));
 
           // Restart the ticker
           app.ticker.start();
         } catch (error) {
           console.warn("Error clearing PIXI stage:", error);
+          // Even if cleanup fails, restart the ticker
+          try {
+            app.ticker.start();
+          } catch (tickerError) {
+            console.warn("Error restarting ticker:", tickerError);
+          }
         }
       }
 
       // Small delay to ensure cleanup is complete before recreating (only on subsequent renders)
       if (!isFirstRenderRef.current) {
-        // setTimeout(() => {
-        //   if (!destroyed && appRef.current === app) {
-        //     main(app, bleachers);
-        //     initedRef.current = true;
-        //   }
-        // }, 10);
-        if (!destroyed && appRef.current === app) {
-          console.log("not first render, lastContentXRef.current:", lastContentXRef.current);
-          const runtime = main(app, bleachers, lastContentXRef.current, lastContentYRef.current);
-          runtimeRef.current = runtime;
-          initedRef.current = true;
-        }
+        // Add a longer delay to ensure all cleanup is complete
+        setTimeout(() => {
+          if (!destroyed && appRef.current === app) {
+            console.log("not first render, lastContentXRef.current:", lastContentXRef.current);
+            try {
+              const runtime = main(
+                app,
+                bleachers,
+                lastContentXRef.current,
+                lastContentYRef.current
+              );
+              runtimeRef.current = runtime;
+              initedRef.current = true;
+            } catch (error) {
+              console.error("Error initializing PIXI main:", error);
+            }
+          }
+        }, 50); // Increased delay
       } else {
         // First render - no delay needed
         console.log("First render lastContentXRef.current:", lastContentXRef.current);
-        const runtime = main(app, bleachers, lastContentXRef.current, lastContentYRef.current);
-        initedRef.current = true;
-        runtimeRef.current = runtime;
+        try {
+          const runtime = main(app, bleachers, lastContentXRef.current, lastContentYRef.current);
+          initedRef.current = true;
+          runtimeRef.current = runtime;
+        } catch (error) {
+          console.error("Error initializing PIXI main on first render:", error);
+        }
       }
 
       isFirstRenderRef.current = false;
@@ -146,12 +189,34 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
       destroyed = true;
       const app = appRef.current;
       appRef.current = null;
+      initedRef.current = false;
 
-      if (app && initedRef.current && (app as any).renderer) {
+      if (app && (app as any).renderer) {
         try {
+          // More thorough cleanup on unmount
+          app.ticker.stop();
+
+          // Destroy all Baker instances
+          Baker.destroyAllInstances();
+
+          // Clear static textures
+          EventSpanBody.clearStaticTextures();
+
+          // Force garbage collection
+          if (app.renderer && (app.renderer as any).texture && (app.renderer as any).texture.gc) {
+            (app.renderer as any).texture.gc();
+          }
+
+          // Destroy the application
           app.destroy({ removeView: true }, { children: true, texture: true, textureSource: true });
-        } catch {
-          // swallow – double-destroy-safe
+        } catch (error) {
+          console.warn("Error during PIXI cleanup:", error);
+          // Even if cleanup fails, try basic destroy
+          try {
+            app.destroy();
+          } catch (destroyError) {
+            console.warn("Error during basic PIXI destroy:", destroyError);
+          }
         }
       }
     };

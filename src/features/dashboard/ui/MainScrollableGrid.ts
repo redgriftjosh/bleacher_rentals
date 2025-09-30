@@ -19,6 +19,7 @@ export class MainScrollableGrid extends Container {
   private prevFirstVisibleRow = -1;
   private visibleRows: number;
   private visibleColumns: number;
+  public destroyed = false; // Add destroyed flag for defensive checks
 
   private spansLayer: Container;
   private rowSpanPools: EventSpan[][] = [];
@@ -215,6 +216,12 @@ export class MainScrollableGrid extends Container {
   }
 
   rebindEvents(firstVisibleRow: number, firstVisibleCol: number) {
+    // Add defensive check to prevent operations on destroyed objects
+    if (this.destroyed || !this.spansLayer || this.spansLayer.destroyed) {
+      console.warn("MainScrollableGrid: Attempting to rebind events on destroyed object");
+      return;
+    }
+
     // 2) draw span rectangles (one Graphics per visible row)
     const visStart = firstVisibleCol;
     const visEnd = firstVisibleCol + this.visibleColumns - 1;
@@ -232,11 +239,20 @@ export class MainScrollableGrid extends Container {
 
       // ensure pool has enough instances
       const pool = this.rowSpanPools[r];
+      if (!pool) continue; // Defensive check
+
       while (pool.length < needed) {
-        const es = new EventSpan(this.spanBaker);
-        // es.hide();
-        this.spansLayer.addChild(es);
-        pool.push(es);
+        try {
+          const es = new EventSpan(this.spanBaker);
+          // es.hide();
+          if (this.spansLayer && !this.spansLayer.destroyed) {
+            this.spansLayer.addChild(es);
+            pool.push(es);
+          }
+        } catch (error) {
+          console.warn("Error creating EventSpan:", error);
+          break;
+        }
       }
 
       // while (pool.length < needed) {
@@ -252,18 +268,28 @@ export class MainScrollableGrid extends Container {
         const es = pool[used++];
 
         // Defensive check before drawing
-        if (es && typeof es.draw === "function") {
+        if (es && typeof es.draw === "function" && !es.destroyed) {
           try {
             es.draw(s, visStart, visEnd, r * CELL_HEIGHT, this.wrappedX);
 
             // Immediately pin if needed on this rebind
-            if (es.needsPin(visStart, this.wrappedX)) {
-              es.updatePinnedLabel(0, this.wrappedX, r * CELL_HEIGHT);
+            if (
+              es.needsPin &&
+              typeof es.needsPin === "function" &&
+              es.needsPin(visStart, this.wrappedX)
+            ) {
+              if (es.updatePinnedLabel && typeof es.updatePinnedLabel === "function") {
+                es.updatePinnedLabel(0, this.wrappedX, r * CELL_HEIGHT);
+              }
             }
           } catch (error) {
             console.warn("Error drawing EventSpan:", error);
             if (es && typeof es.hide === "function") {
-              es.hide();
+              try {
+                es.hide();
+              } catch (hideError) {
+                console.warn("Error hiding EventSpan after draw error:", hideError);
+              }
             }
           }
         }
@@ -272,7 +298,7 @@ export class MainScrollableGrid extends Container {
       // hide any unused pooled spans this frame
       for (let i = used; i < pool.length; i++) {
         const es = pool[i];
-        if (es && typeof es.hide === "function") {
+        if (es && typeof es.hide === "function" && !es.destroyed) {
           try {
             es.hide();
           } catch (error) {
@@ -280,6 +306,59 @@ export class MainScrollableGrid extends Container {
           }
         }
       }
+    }
+  }
+
+  destroy(options?: Parameters<Container["destroy"]>[0]) {
+    if (this.destroyed) return;
+
+    this.destroyed = true;
+
+    // Clean up EventSpan pools
+    for (const pool of this.rowSpanPools) {
+      for (const es of pool) {
+        if (es && typeof es.destroy === "function" && !es.destroyed) {
+          try {
+            es.destroy();
+          } catch (error) {
+            console.warn("Error destroying EventSpan from pool:", error);
+          }
+        }
+      }
+    }
+    this.rowSpanPools = [];
+
+    // Clean up spans layer
+    if (
+      this.spansLayer &&
+      typeof this.spansLayer.destroy === "function" &&
+      !this.spansLayer.destroyed
+    ) {
+      try {
+        this.spansLayer.destroy({ children: true });
+      } catch (error) {
+        console.warn("Error destroying spans layer:", error);
+      }
+    }
+
+    // Clean up background
+    if (
+      this.background &&
+      typeof this.background.destroy === "function" &&
+      !this.background.destroyed
+    ) {
+      try {
+        this.background.destroy();
+      } catch (error) {
+        console.warn("Error destroying background:", error);
+      }
+    }
+
+    // Call parent destroy
+    try {
+      super.destroy(options);
+    } catch (error) {
+      console.warn("Error in parent destroy:", error);
     }
   }
 }
