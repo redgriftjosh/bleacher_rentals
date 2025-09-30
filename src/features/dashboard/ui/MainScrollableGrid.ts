@@ -6,11 +6,12 @@ import {
   CELL_WIDTH,
   HEADER_ROW_HEIGHT,
 } from "../values/constants";
-import { Bleacher } from "../db/client/bleachers";
+import { Bleacher, BleacherBlock } from "../db/client/bleachers";
 import { DateTime } from "luxon";
 import { EventSpan, EventSpanType } from "./EventSpan";
 import { Baker } from "../util/Baker";
 import { useSelectedBlockStore } from "../state/useSelectedBlock";
+import { BlockText } from "./BlockText";
 
 export class MainScrollableGrid extends Container {
   private background: TilingSprite;
@@ -28,6 +29,10 @@ export class MainScrollableGrid extends Container {
   private dateToIndex: Map<string, number>;
 
   private spanBaker: Baker;
+
+  // Block rendering
+  private blocksLayer: Container;
+  private rowBlockPools: BlockText[][] = [];
 
   private wrappedX = 0;
 
@@ -100,12 +105,18 @@ export class MainScrollableGrid extends Container {
     this.spansLayer.position.set(BLEACHER_COLUMN_WIDTH, HEADER_ROW_HEIGHT);
     this.spansLayer.mask = mask;
 
+    // Initialize blocks layer
+    this.blocksLayer = new Container();
+    this.blocksLayer.position.set(BLEACHER_COLUMN_WIDTH, HEADER_ROW_HEIGHT);
+    this.blocksLayer.mask = mask;
+
     // Create one Graphics per visible row to reuse
     for (let r = 0; r < this.visibleRows; r++) {
       this.rowSpanPools.push([]);
+      this.rowBlockPools.push([]); // Initialize block pools
     }
 
-    this.addChild(this.background, mask, this.spansLayer);
+    this.addChild(this.background, mask, this.spansLayer, this.blocksLayer);
     // this.mask = mask;
 
     this.updateY(0);
@@ -167,11 +178,12 @@ export class MainScrollableGrid extends Container {
 
     this.background.tilePosition.y = -wrapped;
     this.spansLayer.y = HEADER_ROW_HEIGHT - wrapped;
+    this.blocksLayer.y = HEADER_ROW_HEIGHT - wrapped;
 
     const firstVisibleRow = Math.floor(contentY / CELL_HEIGHT);
-    if (firstVisibleRow === this.prevFirstVisibleRow) {
-      return;
-    }
+    // if (firstVisibleRow === this.prevFirstVisibleRow) {
+    //   return;
+    // }
     this.prevFirstVisibleRow = firstVisibleRow;
 
     this.rebindEvents(
@@ -186,18 +198,19 @@ export class MainScrollableGrid extends Container {
     this.wrappedX = wrapped;
     this.background.tilePosition.x = -wrapped;
     this.spansLayer.x = BLEACHER_COLUMN_WIDTH - wrapped;
+    this.blocksLayer.x = BLEACHER_COLUMN_WIDTH - wrapped;
 
     const firstVisibleColumn = Math.floor(contentX / CELL_WIDTH);
-    if (firstVisibleColumn === this.prevFirstVisibleColumn) {
-      this.updatePinnedLabels();
-      return;
-    }
     this.prevFirstVisibleColumn = firstVisibleColumn;
 
     this.rebindEvents(
       this.prevFirstVisibleRow < 0 ? 0 : this.prevFirstVisibleRow,
       this.prevFirstVisibleColumn
     );
+    if (firstVisibleColumn === this.prevFirstVisibleColumn) {
+      this.updatePinnedLabels();
+      return;
+    }
   }
 
   private updatePinnedLabels() {
@@ -307,6 +320,91 @@ export class MainScrollableGrid extends Container {
         }
       }
     }
+
+    // 3) Render blocks in visible cells
+    this.renderBlocks(firstVisibleRow, firstVisibleCol, visStart, visEnd);
+  }
+
+  private renderBlocks(
+    firstVisibleRow: number,
+    firstVisibleCol: number,
+    visStart: number,
+    visEnd: number
+  ) {
+    // Add defensive check for blocks layer
+    if (this.destroyed || !this.blocksLayer || this.blocksLayer.destroyed) {
+      console.warn("MainScrollableGrid: Attempting to render blocks on destroyed object");
+      return;
+    }
+
+    for (let r = 0; r < this.visibleRows; r++) {
+      const rowIdx = firstVisibleRow + r;
+      const bleacher = this.bleachers[rowIdx];
+      if (!bleacher) continue;
+
+      // Find blocks for this row that are in visible columns
+      const visibleBlocks: { block: BleacherBlock; colIdx: number }[] = [];
+
+      for (let c = visStart; c <= visEnd; c++) {
+        const dateStr = this.dates[c];
+        if (!dateStr) continue;
+
+        // Find block for this date using DateTime comparison like in Tanstack version
+        const block = bleacher.blocks.find(
+          (b) => DateTime.fromISO(b.date).toISODate() === DateTime.fromISO(dateStr).toISODate()
+        );
+
+        if (block) {
+          visibleBlocks.push({ block, colIdx: c });
+        }
+      }
+
+      // Get block pool for this row
+      const blockPool = this.rowBlockPools[r];
+      if (!blockPool) continue;
+
+      // Ensure we have enough BlockText instances in the pool
+      while (blockPool.length < visibleBlocks.length) {
+        try {
+          const blockText = new BlockText();
+          if (this.blocksLayer && !this.blocksLayer.destroyed) {
+            this.blocksLayer.addChild(blockText);
+            blockPool.push(blockText);
+          }
+        } catch (error) {
+          console.warn("Error creating BlockText:", error);
+          break;
+        }
+      }
+
+      // Show visible blocks
+      let blockUsed = 0;
+      for (const { block, colIdx } of visibleBlocks) {
+        const blockText = blockPool[blockUsed++];
+        if (blockText && !blockText.destroyed) {
+          try {
+            // Position relative to blocksLayer (which handles smooth scrolling)
+            const x = (colIdx - visStart) * CELL_WIDTH;
+            const y = r * CELL_HEIGHT;
+            blockText.show(block, x, y);
+          } catch (error) {
+            console.warn("Error showing BlockText:", error);
+          }
+        }
+      }
+
+      // Hide unused blocks
+      for (let i = blockUsed; i < blockPool.length; i++) {
+        const blockText = blockPool[i];
+        if (blockText && !blockText.destroyed) {
+          try {
+            blockText.hide();
+          } catch (error) {
+            console.warn("Error hiding BlockText:", error);
+          }
+        }
+      }
+    }
   }
 
   destroy(options?: Parameters<Container["destroy"]>[0]) {
@@ -328,6 +426,20 @@ export class MainScrollableGrid extends Container {
     }
     this.rowSpanPools = [];
 
+    // Clean up BlockText pools
+    for (const pool of this.rowBlockPools) {
+      for (const blockText of pool) {
+        if (blockText && typeof blockText.destroy === "function" && !blockText.destroyed) {
+          try {
+            blockText.destroy();
+          } catch (error) {
+            console.warn("Error destroying BlockText from pool:", error);
+          }
+        }
+      }
+    }
+    this.rowBlockPools = [];
+
     // Clean up spans layer
     if (
       this.spansLayer &&
@@ -338,6 +450,19 @@ export class MainScrollableGrid extends Container {
         this.spansLayer.destroy({ children: true });
       } catch (error) {
         console.warn("Error destroying spans layer:", error);
+      }
+    }
+
+    // Clean up blocks layer
+    if (
+      this.blocksLayer &&
+      typeof this.blocksLayer.destroy === "function" &&
+      !this.blocksLayer.destroyed
+    ) {
+      try {
+        this.blocksLayer.destroy({ children: true });
+      } catch (error) {
+        console.warn("Error destroying blocks layer:", error);
       }
     }
 

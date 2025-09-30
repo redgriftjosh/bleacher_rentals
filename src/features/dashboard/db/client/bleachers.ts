@@ -11,6 +11,7 @@ export type Bleacher = {
   summerHomeBase: string;
   winterHomeBase: string;
   bleacherEvents: BleacherEvent[];
+  blocks: BleacherBlock[];
 };
 
 export type BleacherEvent = {
@@ -21,6 +22,12 @@ export type BleacherEvent = {
   eventEnd: string;
   hslHue: number | null;
   booked: boolean;
+};
+
+export type BleacherBlock = {
+  blockId: number;
+  text: string;
+  date: string;
 };
 
 type Row = {
@@ -40,6 +47,11 @@ type Row = {
       booked: boolean;
       address: { street: string } | null;
     };
+  }[];
+  blocks: {
+    block_id: number;
+    text: string | null;
+    date: string | null;
   }[];
 };
 
@@ -73,6 +85,11 @@ export async function FetchDashboardBleachers(
             street
           )
         )
+      ),
+      blocks:Blocks!Block_bleacher_id_fkey(
+        block_id,
+        text,
+        date
       )
       `
     )
@@ -97,6 +114,11 @@ export async function FetchDashboardBleachers(
       hslHue: be.event.hsl_hue,
       booked: be.event.booked,
       address: be.event.address?.street ?? "",
+    })),
+    blocks: r.blocks.map((block) => ({
+      blockId: block.block_id,
+      text: block.text ?? "",
+      date: block.date ?? "",
     })),
   }));
 
