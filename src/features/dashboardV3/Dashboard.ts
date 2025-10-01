@@ -2,6 +2,7 @@ import { Application } from "pixi.js";
 import { Grid } from "./util/Grid";
 import { MainScrollableGridCellRenderer } from "./cellRenderers/MainScrollableGridCellRenderer";
 import { StickyLeftColumnCellRenderer } from "./cellRenderers/StickyLeftColumnCellRenderer";
+import { StickyTopRowCellRenderer } from "./cellRenderers/StickyTopRowCellRenderer";
 import {
   CELL_HEIGHT,
   CELL_WIDTH,
@@ -9,6 +10,7 @@ import {
   BLEACHER_COLUMN_WIDTH,
 } from "../dashboard/values/constants";
 import { Bleacher } from "../dashboard/db/client/bleachers";
+import { getColumnsAndDates } from "../dashboard/util/scrollbar";
 
 export class Dashboard {
   private stickyTopLeftCell: Grid;
@@ -19,14 +21,15 @@ export class Dashboard {
   constructor(app: Application, bleachers: Bleacher[]) {
     const cellRenderer = new MainScrollableGridCellRenderer(app);
     const leftColumnCellRenderer = new StickyLeftColumnCellRenderer(app, bleachers);
+    const topRowCellRenderer = new StickyTopRowCellRenderer(app);
 
     // Calculate viewport dimensions
     const viewportWidth = app.screen.width - BLEACHER_COLUMN_WIDTH;
     const viewportHeight = app.screen.height - HEADER_ROW_HEIGHT;
 
-    // Use real bleacher count for row dimensions
+    // Use real bleacher count for row dimensions and real date count for columns
     const bleacherCount = bleachers.length;
-    const contentColumns = 40000; // Keep columns hardcoded as requested
+    const { columns: contentColumns } = getColumnsAndDates(); // Use actual date range
 
     // Create the 4-quadrant sticky grid layout
 
@@ -54,7 +57,7 @@ export class Dashboard {
       cellHeight: HEADER_ROW_HEIGHT,
       gridWidth: viewportWidth,
       gridHeight: HEADER_ROW_HEIGHT,
-      cellRenderer,
+      cellRenderer: topRowCellRenderer, // Use specialized renderer for date headers
       x: BLEACHER_COLUMN_WIDTH,
       y: 0,
       showScrollbar: false, // Hide scrollbars for sticky sections
