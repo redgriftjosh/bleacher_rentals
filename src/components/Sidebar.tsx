@@ -26,6 +26,12 @@ const menuItems: MenuItem[] = [
     icon: CalendarIcon,
     roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
   },
+  {
+    label: "Dashboard v3 (Testing)",
+    href: "/dashboard-v3",
+    icon: CalendarIcon,
+    roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
+  },
   { label: "Team", href: "/team", icon: UsersIcon, roles: [USER_ROLES.ADMIN] },
   { label: "Assets", href: "/assets", icon: TruckIcon, roles: [USER_ROLES.ADMIN] },
   { label: "Work Trackers", href: "/work-trackers", icon: TruckIcon, roles: [USER_ROLES.ADMIN] },
