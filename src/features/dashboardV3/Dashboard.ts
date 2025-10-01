@@ -1,12 +1,14 @@
 import { Application } from "pixi.js";
 import { Grid } from "./util/Grid";
-import { RedCenterCellRenderer } from "./cellRenderers/RedCenterCellRenderer";
+import { MainScrollableGridCellRenderer } from "./cellRenderers/MainScrollableGridCellRenderer";
+import { StickyLeftColumnCellRenderer } from "./cellRenderers/StickyLeftColumnCellRenderer";
 import {
   CELL_HEIGHT,
   CELL_WIDTH,
   HEADER_ROW_HEIGHT,
   BLEACHER_COLUMN_WIDTH,
 } from "../dashboard/values/constants";
+import { Bleacher } from "../dashboard/db/client/bleachers";
 
 export class Dashboard {
   private stickyTopLeftCell: Grid;
@@ -14,12 +16,17 @@ export class Dashboard {
   private stickyLeftColumn: Grid;
   private mainScrollableGrid: Grid;
 
-  constructor(app: Application) {
-    const cellRenderer = new RedCenterCellRenderer(app);
+  constructor(app: Application, bleachers: Bleacher[]) {
+    const cellRenderer = new MainScrollableGridCellRenderer(app);
+    const leftColumnCellRenderer = new StickyLeftColumnCellRenderer(app, bleachers);
 
     // Calculate viewport dimensions
     const viewportWidth = app.screen.width - BLEACHER_COLUMN_WIDTH;
     const viewportHeight = app.screen.height - HEADER_ROW_HEIGHT;
+
+    // Use real bleacher count for row dimensions
+    const bleacherCount = bleachers.length;
+    const contentColumns = 40000; // Keep columns hardcoded as requested
 
     // Create the 4-quadrant sticky grid layout
 
@@ -42,7 +49,7 @@ export class Dashboard {
     this.stickyTopRow = new Grid({
       app,
       rows: 1,
-      cols: 40000, // Content columns
+      cols: contentColumns,
       cellWidth: CELL_WIDTH,
       cellHeight: HEADER_ROW_HEIGHT,
       gridWidth: viewportWidth,
@@ -56,13 +63,13 @@ export class Dashboard {
     // Bottom-left: Sticky left column (vertical scrollable)
     this.stickyLeftColumn = new Grid({
       app,
-      rows: 40000, // Content rows (match main grid)
+      rows: bleacherCount, // Dynamic based on actual bleacher data
       cols: 1,
       cellWidth: BLEACHER_COLUMN_WIDTH,
       cellHeight: CELL_HEIGHT,
       gridWidth: BLEACHER_COLUMN_WIDTH,
       gridHeight: viewportHeight,
-      cellRenderer,
+      cellRenderer: leftColumnCellRenderer, // Use specialized renderer for bleacher data
       x: 0,
       y: HEADER_ROW_HEIGHT,
       showScrollbar: false, // Hide scrollbars for sticky sections
@@ -71,8 +78,8 @@ export class Dashboard {
     // Bottom-right: Main scrollable content
     this.mainScrollableGrid = new Grid({
       app,
-      rows: 40000,
-      cols: 40000,
+      rows: bleacherCount, // Dynamic based on actual bleacher data
+      cols: contentColumns, // Keep columns hardcoded as requested
       cellWidth: CELL_WIDTH,
       cellHeight: CELL_HEIGHT,
       gridWidth: viewportWidth,

@@ -4,13 +4,13 @@ import { Tile } from "../ui/Tile";
 import { RedTile } from "../ui/RedTile";
 
 /**
- * CellRenderer that renders a red tile at row 3, col 3
+ * CellRenderer for the main scrollable grid area
  * Demonstrates coordinate-based conditional rendering using UI components
  *
  * This renderer BUILDS cell content by composing UI components from src/features/dashboardV3/ui/
  * The Grid handles automatic baking and caching for performance
  */
-export class RedCenterCellRenderer implements ICellRenderer {
+export class MainScrollableGridCellRenderer implements ICellRenderer {
   private app: Application;
 
   constructor(app: Application) {
