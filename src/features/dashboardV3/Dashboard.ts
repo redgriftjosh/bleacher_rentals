@@ -19,7 +19,10 @@ export class Dashboard {
   private mainScrollableGrid: Grid;
 
   constructor(app: Application, bleachers: Bleacher[]) {
-    const cellRenderer = new MainScrollableGridCellRenderer(app);
+    // Get dates for event calculations
+    const { columns: contentColumns, dates } = getColumnsAndDates();
+
+    const cellRenderer = new MainScrollableGridCellRenderer(app, bleachers, dates);
     const leftColumnCellRenderer = new StickyLeftColumnCellRenderer(app, bleachers);
     const topRowCellRenderer = new StickyTopRowCellRenderer(app);
 
@@ -29,7 +32,6 @@ export class Dashboard {
 
     // Use real bleacher count for row dimensions and real date count for columns
     const bleacherCount = bleachers.length;
-    const { columns: contentColumns } = getColumnsAndDates(); // Use actual date range
 
     // Create the 4-quadrant sticky grid layout
 
