@@ -1,7 +1,8 @@
-import { Application, Container, Graphics, FederatedWheelEvent } from "pixi.js";
+import { Application, Container, Graphics, FederatedWheelEvent, Sprite } from "pixi.js";
 import { ICellRenderer } from "../interfaces/ICellRenderer";
 import { SCROLLBAR_THICKNESS, VerticalScrollbar } from "./VerticalScrollbar";
 import { HORIZONTAL_SCROLLBAR_THICKNESS, HorizontalScrollbar } from "./HorizontalScrollbar";
+import { Baker } from "./Baker";
 
 export interface GridOptions {
   app: Application;
@@ -36,6 +37,7 @@ export class Grid extends Container {
   private horizontalScrollbar?: HorizontalScrollbar;
   private gridContainer: Container; // Container for the actual grid cells
   private contentMask?: Graphics; // Mask to prevent content from overlapping scrollbars
+  private baker: Baker; // Baker for texture caching
 
   // Virtualization properties
   private visibleRows: number;
@@ -43,6 +45,7 @@ export class Grid extends Container {
   private prevFirstVisibleRow = -1;
   private prevFirstVisibleCol = -1;
   private cellPool: Container[][] = []; // Pool of reusable cell containers
+  private cellPoolData: { row: number; col: number }[][] = []; // Track what each pool cell currently shows
   private currentScrollX = 0;
   private currentScrollY = 0;
 
@@ -58,6 +61,9 @@ export class Grid extends Container {
     this.gridHeight = options.gridHeight;
     this.cellRenderer = options.cellRenderer;
     this.showScrollbar = options.showScrollbar ?? true; // Default to true
+
+    // Initialize Baker for texture caching
+    this.baker = new Baker(this.app);
 
     // Calculate visible cells for virtualization
     this.visibleRows = Math.ceil(this.gridHeight / this.cellHeight) + 2; // +2 for buffer
@@ -87,8 +93,8 @@ export class Grid extends Container {
     // Initialize cell pool for virtualization
     this.initializeCellPool();
 
-    // Create and render the grid
-    this.renderGrid();
+    // initialize the grid at 0, 0
+    this.updateVirtualizedCells(0, 0);
 
     // Create scrollbars if needed
     this.createScrollbars();
@@ -106,26 +112,23 @@ export class Grid extends Container {
     // Create a 2D pool of Container instances that we can reuse
     for (let r = 0; r < this.visibleRows; r++) {
       this.cellPool[r] = [];
+      this.cellPoolData[r] = [];
       for (let c = 0; c < this.visibleCols; c++) {
         const cellContainer = new Container();
         // Initially hidden until we have content to render
         cellContainer.visible = false;
         this.gridContainer.addChild(cellContainer);
         this.cellPool[r][c] = cellContainer;
+
+        // Initialize with invalid coordinates to force initial rendering
+        this.cellPoolData[r][c] = { row: -1, col: -1 };
       }
     }
   }
 
   /**
-   * Render the grid using virtualization (only visible cells)
-   */
-  private renderGrid() {
-    // Render the initial visible area
-    this.updateVirtualizedCells(0, 0);
-  }
-
-  /**
    * Update virtualized cells based on scroll position
+   * OPTIMIZED: Only recreates cell content when coordinates actually change
    */
   private updateVirtualizedCells(scrollX: number, scrollY: number) {
     // Calculate which cells are currently visible
@@ -143,45 +146,66 @@ export class Grid extends Container {
     this.prevFirstVisibleRow = firstVisibleRow;
     this.prevFirstVisibleCol = firstVisibleCol;
 
-    // Clear existing cell contents from pool containers
-    for (let r = 0; r < this.visibleRows; r++) {
-      for (let c = 0; c < this.visibleCols; c++) {
-        const poolContainer = this.cellPool[r][c];
-        poolContainer.removeChildren();
-        poolContainer.visible = false;
-      }
-    }
-
-    // Render cells for the visible area
+    // Update cells for the visible area
     for (let r = 0; r < this.visibleRows; r++) {
       for (let c = 0; c < this.visibleCols; c++) {
         const actualRow = firstVisibleRow + r;
         const actualCol = firstVisibleCol + c;
+        const poolContainer = this.cellPool[r][c];
+        const currentData = this.cellPoolData[r][c];
 
-        // Skip if outside grid bounds
+        // Skip if outside grid bounds - hide the container
         if (actualRow >= this.rows || actualCol >= this.cols || actualRow < 0 || actualCol < 0) {
+          poolContainer.visible = false;
+          currentData.row = -1;
+          currentData.col = -1;
           continue;
         }
 
-        // Get the pooled container
-        const poolContainer = this.cellPool[r][c];
+        // Check if this container already shows the correct cell
+        if (currentData.row === actualRow && currentData.col === actualCol) {
+          // Already showing correct content, just ensure position and visibility
+          poolContainer.position.set(actualCol * this.cellWidth, actualRow * this.cellHeight);
+          poolContainer.visible = true;
+          continue;
+        }
 
-        // Ask the CellRenderer what to render at this coordinate
-        const cellContent = this.cellRenderer.renderCell(
+        // Need to update cell content - only recreate if coordinates changed
+        poolContainer.removeChildren();
+
+        // Generate cache key for this cell
+        const cacheKey = this.cellRenderer.getCacheKey(
           actualRow,
           actualCol,
           this.cellWidth,
           this.cellHeight
         );
 
-        // Add the rendered content to our pooled container
-        poolContainer.addChild(cellContent);
+        // Get baked texture from cache or create it
+        const bakedTexture = this.baker.getTexture(
+          cacheKey,
+          { width: this.cellWidth, height: this.cellHeight },
+          (container) => {
+            // Build cell content using the CellRenderer
+            const cellContent = this.cellRenderer.buildCell(
+              actualRow,
+              actualCol,
+              this.cellWidth,
+              this.cellHeight
+            );
+            container.addChild(cellContent);
+          }
+        );
 
-        // Position the container
+        // Create sprite from baked texture
+        const cellSprite = new Sprite(bakedTexture);
+        poolContainer.addChild(cellSprite);
         poolContainer.position.set(actualCol * this.cellWidth, actualRow * this.cellHeight);
-
-        // Make it visible
         poolContainer.visible = true;
+
+        // Update tracking data
+        currentData.row = actualRow;
+        currentData.col = actualCol;
       }
     }
   }
@@ -387,6 +411,11 @@ export class Grid extends Container {
   destroy(options?: Parameters<Container["destroy"]>[0]) {
     // Remove wheel event listener
     this.app.stage.off("wheel", this.onWheel);
+
+    // Clean up baker textures
+    if (this.baker) {
+      this.baker.destroyAll();
+    }
 
     // Clean up scrollbars
     if (this.verticalScrollbar) {
