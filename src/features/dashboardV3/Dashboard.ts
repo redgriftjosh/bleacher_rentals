@@ -1,57 +1,120 @@
 import { Application } from "pixi.js";
 import { Grid } from "./util/Grid";
 import { RedCenterCellRenderer } from "./cellRenderers/RedCenterCellRenderer";
-import { CELL_HEIGHT, CELL_WIDTH } from "../dashboard/values/constants";
+import {
+  CELL_HEIGHT,
+  CELL_WIDTH,
+  HEADER_ROW_HEIGHT,
+  BLEACHER_COLUMN_WIDTH,
+} from "../dashboard/values/constants";
 
 export class Dashboard {
-  private headerGrid: Grid;
-  private mainGrid: Grid;
+  private stickyTopLeftCell: Grid;
+  private stickyTopRow: Grid;
+  private stickyLeftColumn: Grid;
+  private mainScrollableGrid: Grid;
 
   constructor(app: Application) {
     const cellRenderer = new RedCenterCellRenderer(app);
 
-    // Calculate dimensions
-    const headerHeight = CELL_HEIGHT; // One cell tall
-    const mainGridHeight = app.screen.height - headerHeight;
+    // Calculate viewport dimensions
+    const viewportWidth = app.screen.width - BLEACHER_COLUMN_WIDTH;
+    const viewportHeight = app.screen.height - HEADER_ROW_HEIGHT;
 
-    // Create header grid - 1 row tall, same width as main grid
-    this.headerGrid = new Grid({
+    // Create the 4-quadrant sticky grid layout
+
+    // Top-left: Fixed corner cell (1x1)
+    this.stickyTopLeftCell = new Grid({
       app,
       rows: 1,
-      cols: 40,
-      cellWidth: CELL_WIDTH,
-      cellHeight: CELL_HEIGHT,
-      gridWidth: app.screen.width,
-      gridHeight: headerHeight,
+      cols: 1,
+      cellWidth: BLEACHER_COLUMN_WIDTH,
+      cellHeight: HEADER_ROW_HEIGHT,
+      gridWidth: BLEACHER_COLUMN_WIDTH,
+      gridHeight: HEADER_ROW_HEIGHT,
       cellRenderer,
       x: 0,
       y: 0,
       showScrollbar: false,
     });
 
-    // Create main grid positioned below header
-    this.mainGrid = new Grid({
+    // Top-right: Sticky header row (horizontal scrollable)
+    this.stickyTopRow = new Grid({
+      app,
+      rows: 1,
+      cols: 40, // Content columns
+      cellWidth: CELL_WIDTH,
+      cellHeight: HEADER_ROW_HEIGHT,
+      gridWidth: viewportWidth,
+      gridHeight: HEADER_ROW_HEIGHT,
+      cellRenderer,
+      x: BLEACHER_COLUMN_WIDTH,
+      y: 0,
+      showScrollbar: false, // Hide scrollbars for sticky sections
+    });
+
+    // Bottom-left: Sticky left column (vertical scrollable)
+    this.stickyLeftColumn = new Grid({
+      app,
+      rows: 40, // Content rows
+      cols: 1,
+      cellWidth: BLEACHER_COLUMN_WIDTH,
+      cellHeight: CELL_HEIGHT,
+      gridWidth: BLEACHER_COLUMN_WIDTH,
+      gridHeight: viewportHeight,
+      cellRenderer,
+      x: 0,
+      y: HEADER_ROW_HEIGHT,
+      showScrollbar: false, // Hide scrollbars for sticky sections
+    });
+
+    // Bottom-right: Main scrollable content
+    this.mainScrollableGrid = new Grid({
       app,
       rows: 40,
       cols: 40,
       cellWidth: CELL_WIDTH,
       cellHeight: CELL_HEIGHT,
-      gridWidth: app.screen.width,
-      gridHeight: mainGridHeight,
+      gridWidth: viewportWidth,
+      gridHeight: viewportHeight,
       cellRenderer,
-      x: 0,
-      y: headerHeight,
+      x: BLEACHER_COLUMN_WIDTH,
+      y: HEADER_ROW_HEIGHT,
+      showScrollbar: true, // Only main grid shows scrollbars
     });
 
-    app.stage.addChild(this.headerGrid);
-    app.stage.addChild(this.mainGrid);
+    // Add grids in bottom-to-top stacking order
+    app.stage.addChild(this.mainScrollableGrid);
+    app.stage.addChild(this.stickyLeftColumn);
+    app.stage.addChild(this.stickyTopRow);
+    app.stage.addChild(this.stickyTopLeftCell);
+
+    // Set up scroll synchronization
+    this.setupScrollSynchronization();
+  }
+
+  /**
+   * Synchronize scrolling between the quadrants
+   */
+  private setupScrollSynchronization() {
+    // When main grid scrolls vertically, sync the left column
+    this.mainScrollableGrid.on("grid:scroll-vertical", (scrollY: number) => {
+      this.stickyLeftColumn.setVerticalScroll(scrollY);
+    });
+
+    // When main grid scrolls horizontally, sync the top row
+    this.mainScrollableGrid.on("grid:scroll-horizontal", (scrollX: number) => {
+      this.stickyTopRow.setHorizontalScroll(scrollX);
+    });
   }
 
   /**
    * Clean up resources
    */
   destroy() {
-    this.headerGrid.destroy();
-    this.mainGrid.destroy();
+    this.stickyTopLeftCell.destroy();
+    this.stickyTopRow.destroy();
+    this.stickyLeftColumn.destroy();
+    this.mainScrollableGrid.destroy();
   }
 }

@@ -279,6 +279,20 @@ export class Grid extends Container {
   }
 
   /**
+   * Manually set vertical scroll position (for synchronization)
+   */
+  public setVerticalScroll(scrollY: number) {
+    this.updateY(scrollY);
+  }
+
+  /**
+   * Manually set horizontal scroll position (for synchronization)
+   */
+  public setHorizontalScroll(scrollX: number) {
+    this.updateX(scrollX);
+  }
+
+  /**
    * Clean up resources
    */
   destroy(options?: Parameters<Container["destroy"]>[0]) {
