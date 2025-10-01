@@ -8,7 +8,7 @@ export class Dashboard {
 
   constructor(app: Application) {
     const cellRenderer = new RedCenterCellRenderer(app);
-    this.grid = new Grid(app, 10, 5, CELL_WIDTH, CELL_HEIGHT, cellRenderer);
+    this.grid = new Grid(app, 40, 40, CELL_WIDTH, CELL_HEIGHT, cellRenderer);
 
     app.stage.addChild(this.grid);
   }

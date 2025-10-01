@@ -1,7 +1,7 @@
 import { Application, Container, FederatedWheelEvent, Graphics, Point } from "pixi.js";
 
-const SCROLLBAR_THICKNESS = 20;
-const THUMB_THICKNESS = 16;
+export const SCROLLBAR_THICKNESS = 14;
+const THUMB_THICKNESS = 10;
 const THUMB_LENGTH = 40;
 
 /**
@@ -40,16 +40,16 @@ export class VerticalScrollbar {
     this.scrollbarContainer = new Container();
     this.scrollbarContainer.position.set(this.app.screen.width - SCROLLBAR_THICKNESS, 0);
 
-    // Scrollbar track (background)
+    // Scrollbar track (background) - make it more visible
     const track = new Graphics()
       .rect(0, 0, SCROLLBAR_THICKNESS, this.app.screen.height)
       .fill({ color: 0x000000, alpha: 0.1 });
     this.scrollbarContainer.addChild(track);
 
-    // Scrollbar thumb (draggable part)
+    // Scrollbar thumb (draggable part) - make it more visible with pill shape
     this.thumb = new Graphics()
-      .rect(2, 0, THUMB_THICKNESS, THUMB_LENGTH)
-      .fill({ color: 0x000000, alpha: 0.3 });
+      .roundRect(2, 0, THUMB_THICKNESS, THUMB_LENGTH, THUMB_THICKNESS / 2)
+      .fill({ color: 0x666666, alpha: 0.4 });
     this.thumb.eventMode = "static";
     this.scrollbarContainer.addChild(this.thumb);
 

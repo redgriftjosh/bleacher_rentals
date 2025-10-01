@@ -1,6 +1,6 @@
-import { Application, Container } from "pixi.js";
+import { Application, Container, Graphics } from "pixi.js";
 import { ICellRenderer } from "../interfaces/ICellRenderer";
-import { VerticalScrollbar } from "./VerticalScrollbar";
+import { SCROLLBAR_THICKNESS, VerticalScrollbar } from "./VerticalScrollbar";
 
 /**
  * Generic Grid class that depends on a CellRenderer for rendering logic
@@ -16,6 +16,7 @@ export class Grid extends Container {
   private cellRenderer: ICellRenderer;
   private scrollbar?: VerticalScrollbar;
   private gridContainer: Container; // Container for the actual grid cells
+  private contentMask?: Graphics; // Mask to prevent content from overlapping scrollbar
 
   constructor(
     app: Application,
@@ -41,6 +42,9 @@ export class Grid extends Container {
     // Create container for grid cells
     this.gridContainer = new Container();
     this.addChild(this.gridContainer);
+
+    // Create content mask to prevent overlap with scrollbar
+    this.createContentMask();
 
     // Create and render the grid
     this.renderGrid();
@@ -76,6 +80,30 @@ export class Grid extends Container {
         this.gridContainer.addChild(cellContainer);
       }
     }
+  }
+
+  /**
+   * Create mask to prevent grid content from overlapping with scrollbar
+   * Only applies if scrollbar is actually visible
+   */
+  private createContentMask() {
+    const contentHeight = this.getContentHeight();
+    const viewportHeight = this.app.screen.height;
+
+    // Only create mask if scrollbar will be visible (content > viewport)
+    if (contentHeight > viewportHeight) {
+      // const SCROLLBAR_THICKNESS = 20; // Should match the constant in VerticalScrollbar
+      const maskWidth = this.app.screen.width - SCROLLBAR_THICKNESS;
+      const maskHeight = this.app.screen.height;
+
+      this.contentMask = new Graphics()
+        .rect(0, 0, maskWidth, maskHeight)
+        .fill({ color: 0xffffff, alpha: 1 });
+
+      this.addChild(this.contentMask);
+      this.gridContainer.mask = this.contentMask;
+    }
+    // If no scrollbar needed, no mask needed - content can use full width
   }
 
   /**
@@ -118,6 +146,11 @@ export class Grid extends Container {
     // Clean up scrollbar
     if (this.scrollbar) {
       this.scrollbar.destroy();
+    }
+    // Clean up mask (only exists if scrollbar was needed)
+    if (this.contentMask) {
+      this.gridContainer.mask = null;
+      this.contentMask.destroy();
     }
     // Remove scroll listener
     this.off("grid:scroll", this.updateY);
