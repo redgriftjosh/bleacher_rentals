@@ -193,7 +193,7 @@ export class Grid extends Container {
    * Set up scroll event listening
    */
   private setupScrolling() {
-    this.on("grid:scroll", this.updateY);
+    this.on("grid:scroll-vertical", this.updateY);
     this.on("grid:scroll-horizontal", this.updateX);
 
     // Set up wheel event coordination
@@ -218,6 +218,7 @@ export class Grid extends Container {
 
   /**
    * Coordinate wheel events between vertical and horizontal scrollbars
+   * Supports diagonal scrolling by handling both directions simultaneously
    */
   private onWheel = (e: FederatedWheelEvent) => {
     let deltaY = e.deltaY;
@@ -232,26 +233,34 @@ export class Grid extends Container {
       deltaX *= 100;
     }
 
-    // Handle shift+wheel for horizontal scrolling
-    if (e.shiftKey) {
+    let handled = false;
+
+    // Handle shift+wheel for horizontal scrolling (maps vertical wheel to horizontal)
+    if (e.shiftKey && Math.abs(deltaY) > 0) {
       if (this.horizontalScrollbar) {
         this.horizontalScrollbar.handleWheel(deltaY); // Use deltaY when shift is pressed
-        e.preventDefault();
+        handled = true;
       }
     }
-    // Handle horizontal wheel events
-    else if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    // Handle horizontal wheel events (trackpad horizontal scrolling)
+    else if (Math.abs(deltaX) > 0) {
       if (this.horizontalScrollbar) {
         this.horizontalScrollbar.handleWheel(deltaX);
-        e.preventDefault();
+        handled = true;
       }
     }
-    // Handle vertical wheel events
-    else if (Math.abs(deltaY) >= Math.abs(deltaX)) {
+
+    // Handle vertical wheel events (can happen simultaneously with horizontal)
+    if (Math.abs(deltaY) > 0 && !e.shiftKey) {
       if (this.verticalScrollbar) {
         this.verticalScrollbar.handleWheel(deltaY);
-        e.preventDefault();
+        handled = true;
       }
+    }
+
+    // Prevent default browser scrolling if we handled any scrolling
+    if (handled) {
+      e.preventDefault();
     }
   };
 
@@ -289,7 +298,7 @@ export class Grid extends Container {
       this.contentMask.destroy();
     }
     // Remove scroll listeners
-    this.off("grid:scroll", this.updateY);
+    this.off("grid:scroll-vertical", this.updateY);
     this.off("grid:scroll-horizontal", this.updateX);
     super.destroy(options);
     console.log("Grid destroyed");

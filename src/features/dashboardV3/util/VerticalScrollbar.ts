@@ -158,7 +158,7 @@ export class VerticalScrollbar {
     }
 
     // Emit scroll event for Grid to listen to
-    this.grid.emit("grid:scroll", this.contentY);
+    this.grid.emit("grid:scroll-vertical", this.contentY);
   }
   private clamp(value: number, min: number, max: number): number {
     return Math.min(Math.max(value, min), max);
