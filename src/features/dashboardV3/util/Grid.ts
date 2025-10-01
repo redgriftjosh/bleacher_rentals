@@ -1,11 +1,12 @@
-import { Application, Container, Graphics } from "pixi.js";
+import { Application, Container, Graphics, FederatedWheelEvent } from "pixi.js";
 import { ICellRenderer } from "../interfaces/ICellRenderer";
 import { SCROLLBAR_THICKNESS, VerticalScrollbar } from "./VerticalScrollbar";
+import { HORIZONTAL_SCROLLBAR_THICKNESS, HorizontalScrollbar } from "./HorizontalScrollbar";
 
 /**
  * Generic Grid class that depends on a CellRenderer for rendering logic
  * Grid handles positioning and cell dimensions, CellRenderer handles what to render at each coordinate
- * Includes built-in vertical scrolling with VerticalScrollbar
+ * Includes built-in horizontal and vertical scrolling
  */
 export class Grid extends Container {
   private app: Application;
@@ -14,9 +15,10 @@ export class Grid extends Container {
   private cellWidth: number;
   private cellHeight: number;
   private cellRenderer: ICellRenderer;
-  private scrollbar?: VerticalScrollbar;
+  private verticalScrollbar?: VerticalScrollbar;
+  private horizontalScrollbar?: HorizontalScrollbar;
   private gridContainer: Container; // Container for the actual grid cells
-  private contentMask?: Graphics; // Mask to prevent content from overlapping scrollbar
+  private contentMask?: Graphics; // Mask to prevent content from overlapping scrollbars
 
   constructor(
     app: Application,
@@ -43,14 +45,14 @@ export class Grid extends Container {
     this.gridContainer = new Container();
     this.addChild(this.gridContainer);
 
-    // Create content mask to prevent overlap with scrollbar
+    // Create content mask to prevent overlap with scrollbars
     this.createContentMask();
 
     // Create and render the grid
     this.renderGrid();
 
-    // Create scrollbar if needed
-    this.createScrollbar();
+    // Create scrollbars if needed
+    this.createScrollbars();
 
     // Listen for scroll events
     this.setupScrolling();
@@ -83,18 +85,30 @@ export class Grid extends Container {
   }
 
   /**
-   * Create mask to prevent grid content from overlapping with scrollbar
-   * Only applies if scrollbar is actually visible
+   * Create mask to prevent grid content from overlapping with scrollbars
+   * Only applies if scrollbars are actually visible
    */
   private createContentMask() {
     const contentHeight = this.getContentHeight();
+    const contentWidth = this.getContentWidth();
     const viewportHeight = this.app.screen.height;
+    const viewportWidth = this.app.screen.width;
 
-    // Only create mask if scrollbar will be visible (content > viewport)
-    if (contentHeight > viewportHeight) {
-      // const SCROLLBAR_THICKNESS = 20; // Should match the constant in VerticalScrollbar
-      const maskWidth = this.app.screen.width - SCROLLBAR_THICKNESS;
-      const maskHeight = this.app.screen.height;
+    const needsVerticalScrollbar = contentHeight > viewportHeight;
+    const needsHorizontalScrollbar = contentWidth > viewportWidth;
+
+    // Only create mask if at least one scrollbar will be visible
+    if (needsVerticalScrollbar || needsHorizontalScrollbar) {
+      let maskWidth = this.app.screen.width;
+      let maskHeight = this.app.screen.height;
+
+      // Reduce mask dimensions based on which scrollbars are present
+      if (needsVerticalScrollbar) {
+        maskWidth -= SCROLLBAR_THICKNESS;
+      }
+      if (needsHorizontalScrollbar) {
+        maskHeight -= HORIZONTAL_SCROLLBAR_THICKNESS;
+      }
 
       this.contentMask = new Graphics()
         .rect(0, 0, maskWidth, maskHeight)
@@ -103,18 +117,41 @@ export class Grid extends Container {
       this.addChild(this.contentMask);
       this.gridContainer.mask = this.contentMask;
     }
-    // If no scrollbar needed, no mask needed - content can use full width
+    // If no scrollbars needed, no mask needed - content can use full dimensions
   }
 
   /**
-   * Create scrollbar if content is larger than viewport
+   * Create scrollbars if content is larger than viewport
    */
-  private createScrollbar() {
+  private createScrollbars() {
     const contentHeight = this.getContentHeight();
+    const contentWidth = this.getContentWidth();
     const viewportHeight = this.app.screen.height;
+    const viewportWidth = this.app.screen.width;
 
-    if (contentHeight > viewportHeight) {
-      this.scrollbar = new VerticalScrollbar(this.app, contentHeight, viewportHeight, this);
+    const needsVerticalScrollbar = contentHeight > viewportHeight;
+    const needsHorizontalScrollbar = contentWidth > viewportWidth;
+
+    // Create vertical scrollbar if needed, with info about horizontal scrollbar
+    if (needsVerticalScrollbar) {
+      this.verticalScrollbar = new VerticalScrollbar(
+        this.app,
+        contentHeight,
+        viewportHeight,
+        this,
+        needsHorizontalScrollbar
+      );
+    }
+
+    // Create horizontal scrollbar if needed, with info about vertical scrollbar
+    if (needsHorizontalScrollbar) {
+      this.horizontalScrollbar = new HorizontalScrollbar(
+        this.app,
+        contentWidth,
+        viewportWidth,
+        this,
+        needsVerticalScrollbar
+      );
     }
   }
 
@@ -123,13 +160,65 @@ export class Grid extends Container {
    */
   private setupScrolling() {
     this.on("grid:scroll", this.updateY);
+    this.on("grid:scroll-horizontal", this.updateX);
+
+    // Set up wheel event coordination
+    this.app.stage.eventMode = "static";
+    this.app.stage.hitArea = this.app.screen;
+    this.app.stage.on("wheel", this.onWheel);
   }
 
   /**
-   * Update the Y position of the grid content based on scroll
+   * Update the Y position of the grid content based on vertical scroll
    */
   private updateY = (scrollY: number) => {
     this.gridContainer.position.y = -scrollY;
+  };
+
+  /**
+   * Update the X position of the grid content based on horizontal scroll
+   */
+  private updateX = (scrollX: number) => {
+    this.gridContainer.position.x = -scrollX;
+  };
+
+  /**
+   * Coordinate wheel events between vertical and horizontal scrollbars
+   */
+  private onWheel = (e: FederatedWheelEvent) => {
+    let deltaY = e.deltaY;
+    let deltaX = e.deltaX;
+
+    // Normalize deltas based on mode
+    if (e.deltaMode === 1) {
+      deltaY *= 16; // Lines to pixels
+      deltaX *= 16;
+    } else if (e.deltaMode === 2) {
+      deltaY *= 100; // Pages to pixels
+      deltaX *= 100;
+    }
+
+    // Handle shift+wheel for horizontal scrolling
+    if (e.shiftKey) {
+      if (this.horizontalScrollbar) {
+        this.horizontalScrollbar.handleWheel(deltaY); // Use deltaY when shift is pressed
+        e.preventDefault();
+      }
+    }
+    // Handle horizontal wheel events
+    else if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (this.horizontalScrollbar) {
+        this.horizontalScrollbar.handleWheel(deltaX);
+        e.preventDefault();
+      }
+    }
+    // Handle vertical wheel events
+    else if (Math.abs(deltaY) >= Math.abs(deltaX)) {
+      if (this.verticalScrollbar) {
+        this.verticalScrollbar.handleWheel(deltaY);
+        e.preventDefault();
+      }
+    }
   };
 
   /**
@@ -140,20 +229,34 @@ export class Grid extends Container {
   }
 
   /**
+   * Get the total width of the grid content
+   */
+  public getContentWidth(): number {
+    return this.cols * this.cellWidth;
+  }
+
+  /**
    * Clean up resources
    */
   destroy(options?: Parameters<Container["destroy"]>[0]) {
-    // Clean up scrollbar
-    if (this.scrollbar) {
-      this.scrollbar.destroy();
+    // Remove wheel event listener
+    this.app.stage.off("wheel", this.onWheel);
+
+    // Clean up scrollbars
+    if (this.verticalScrollbar) {
+      this.verticalScrollbar.destroy();
     }
-    // Clean up mask (only exists if scrollbar was needed)
+    if (this.horizontalScrollbar) {
+      this.horizontalScrollbar.destroy();
+    }
+    // Clean up mask (only exists if scrollbars were needed)
     if (this.contentMask) {
       this.gridContainer.mask = null;
       this.contentMask.destroy();
     }
-    // Remove scroll listener
+    // Remove scroll listeners
     this.off("grid:scroll", this.updateY);
+    this.off("grid:scroll-horizontal", this.updateX);
     super.destroy(options);
     console.log("Grid destroyed");
   }
