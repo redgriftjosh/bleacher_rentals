@@ -37,6 +37,15 @@ export class Grid extends Container {
   private gridContainer: Container; // Container for the actual grid cells
   private contentMask?: Graphics; // Mask to prevent content from overlapping scrollbars
 
+  // Virtualization properties
+  private visibleRows: number;
+  private visibleCols: number;
+  private prevFirstVisibleRow = -1;
+  private prevFirstVisibleCol = -1;
+  private cellPool: Container[][] = []; // Pool of reusable cell containers
+  private currentScrollX = 0;
+  private currentScrollY = 0;
+
   constructor(options: GridOptions) {
     super();
 
@@ -50,6 +59,10 @@ export class Grid extends Container {
     this.cellRenderer = options.cellRenderer;
     this.showScrollbar = options.showScrollbar ?? true; // Default to true
 
+    // Calculate visible cells for virtualization
+    this.visibleRows = Math.ceil(this.gridHeight / this.cellHeight) + 2; // +2 for buffer
+    this.visibleCols = Math.ceil(this.gridWidth / this.cellWidth) + 2; // +2 for buffer
+
     // Set position if provided
     if (options.x !== undefined) this.position.x = options.x;
     if (options.y !== undefined) this.position.y = options.y;
@@ -61,6 +74,8 @@ export class Grid extends Container {
       `Grid viewport: ${this.gridWidth}x${this.gridHeight}px at (${this.position.x}, ${this.position.y})`
     );
     console.log(`Scrollbars visible: ${this.showScrollbar}`);
+    console.log(`Virtualization: enabled (default)`);
+    console.log(`Visible cells: ${this.visibleRows}x${this.visibleCols} (includes buffer)`);
 
     // Create container for grid cells
     this.gridContainer = new Container();
@@ -68,6 +83,9 @@ export class Grid extends Container {
 
     // Create content mask to prevent overlap with scrollbars
     this.createContentMask();
+
+    // Initialize cell pool for virtualization
+    this.initializeCellPool();
 
     // Create and render the grid
     this.renderGrid();
@@ -82,25 +100,88 @@ export class Grid extends Container {
   }
 
   /**
-   * Render the grid by asking CellRenderer what to render at each coordinate
+   * Initialize cell pool for virtualization
+   */
+  private initializeCellPool() {
+    // Create a 2D pool of Container instances that we can reuse
+    for (let r = 0; r < this.visibleRows; r++) {
+      this.cellPool[r] = [];
+      for (let c = 0; c < this.visibleCols; c++) {
+        const cellContainer = new Container();
+        // Initially hidden until we have content to render
+        cellContainer.visible = false;
+        this.gridContainer.addChild(cellContainer);
+        this.cellPool[r][c] = cellContainer;
+      }
+    }
+  }
+
+  /**
+   * Render the grid using virtualization (only visible cells)
    */
   private renderGrid() {
-    // Create grid by calling cellRenderer for each position
-    for (let row = 0; row < this.rows; row++) {
-      for (let col = 0; col < this.cols; col++) {
-        // Ask the CellRenderer what to render at this coordinate with our dimensions
-        const cellContainer = this.cellRenderer.renderCell(
-          row,
-          col,
+    // Render the initial visible area
+    this.updateVirtualizedCells(0, 0);
+  }
+
+  /**
+   * Update virtualized cells based on scroll position
+   */
+  private updateVirtualizedCells(scrollX: number, scrollY: number) {
+    // Calculate which cells are currently visible
+    const firstVisibleRow = Math.floor(scrollY / this.cellHeight);
+    const firstVisibleCol = Math.floor(scrollX / this.cellWidth);
+
+    // Only update if the visible area has changed
+    if (
+      firstVisibleRow === this.prevFirstVisibleRow &&
+      firstVisibleCol === this.prevFirstVisibleCol
+    ) {
+      return;
+    }
+
+    this.prevFirstVisibleRow = firstVisibleRow;
+    this.prevFirstVisibleCol = firstVisibleCol;
+
+    // Clear existing cell contents from pool containers
+    for (let r = 0; r < this.visibleRows; r++) {
+      for (let c = 0; c < this.visibleCols; c++) {
+        const poolContainer = this.cellPool[r][c];
+        poolContainer.removeChildren();
+        poolContainer.visible = false;
+      }
+    }
+
+    // Render cells for the visible area
+    for (let r = 0; r < this.visibleRows; r++) {
+      for (let c = 0; c < this.visibleCols; c++) {
+        const actualRow = firstVisibleRow + r;
+        const actualCol = firstVisibleCol + c;
+
+        // Skip if outside grid bounds
+        if (actualRow >= this.rows || actualCol >= this.cols || actualRow < 0 || actualCol < 0) {
+          continue;
+        }
+
+        // Get the pooled container
+        const poolContainer = this.cellPool[r][c];
+
+        // Ask the CellRenderer what to render at this coordinate
+        const cellContent = this.cellRenderer.renderCell(
+          actualRow,
+          actualCol,
           this.cellWidth,
           this.cellHeight
         );
 
-        // Position the container in the grid using our dimensions
-        cellContainer.position.set(col * this.cellWidth, row * this.cellHeight);
+        // Add the rendered content to our pooled container
+        poolContainer.addChild(cellContent);
 
-        // Add to grid container
-        this.gridContainer.addChild(cellContainer);
+        // Position the container
+        poolContainer.position.set(actualCol * this.cellWidth, actualRow * this.cellHeight);
+
+        // Make it visible
+        poolContainer.visible = true;
       }
     }
   }
@@ -206,14 +287,22 @@ export class Grid extends Container {
    * Update the Y position of the grid content based on vertical scroll
    */
   private updateY = (scrollY: number) => {
+    this.currentScrollY = scrollY;
     this.gridContainer.position.y = -scrollY;
+
+    // Update virtualized cells
+    this.updateVirtualizedCells(this.currentScrollX, this.currentScrollY);
   };
 
   /**
    * Update the X position of the grid content based on horizontal scroll
    */
   private updateX = (scrollX: number) => {
+    this.currentScrollX = scrollX;
     this.gridContainer.position.x = -scrollX;
+
+    // Update virtualized cells
+    this.updateVirtualizedCells(this.currentScrollX, this.currentScrollY);
   };
 
   /**
@@ -306,6 +395,19 @@ export class Grid extends Container {
     if (this.horizontalScrollbar) {
       this.horizontalScrollbar.destroy();
     }
+
+    // Clean up cell pool
+    if (this.cellPool) {
+      for (const row of this.cellPool) {
+        for (const cell of row) {
+          if (cell && !cell.destroyed) {
+            cell.destroy({ children: true });
+          }
+        }
+      }
+      this.cellPool = [];
+    }
+
     // Clean up mask (only exists if scrollbars were needed)
     if (this.contentMask) {
       this.gridContainer.mask = null;

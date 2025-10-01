@@ -8,7 +8,14 @@ export class RedTile {
   public texture: RenderTexture;
 
   constructor(app: Application, dimensions: { width: number; height: number }) {
+    // ARTIFICIAL DELAY FOR TESTING - Remove this in production!
+    // const start = Date.now();
+    // while (Date.now() - start < 1000) {
+    //   // Busy wait for 1 second
+    // }
     // Create graphics for the tile
+
+    console.log("RedTile constructor", dimensions);
     const tileGraphics = new Graphics();
 
     // Draw red tile background (hardcoded)

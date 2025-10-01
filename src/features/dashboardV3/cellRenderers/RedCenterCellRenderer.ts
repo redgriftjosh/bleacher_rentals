@@ -17,8 +17,18 @@ export class RedCenterCellRenderer implements ICellRenderer {
   /**
    * Render a cell based on coordinates and dimensions provided by Grid
    * Future: This is where we'll look up bleachers by row, dates by col, check for events, etc.
+   *
+   * WARNING: Artificial 1-second delay added for testing purposes!
    */
   renderCell(row: number, col: number, cellWidth: number, cellHeight: number): Container {
+    // // ARTIFICIAL DELAY FOR TESTING - Remove this in production!
+    // const start = Date.now();
+    // while (Date.now() - start < 10) {
+    //   // Busy wait for 1 second
+    // }
+
+    // console.log("RedCenterCellRenderer renderCell", row, col);
+
     const cellContainer = new Container();
     const dimensions = { width: cellWidth, height: cellHeight };
 

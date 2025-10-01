@@ -42,7 +42,7 @@ export class Dashboard {
     this.stickyTopRow = new Grid({
       app,
       rows: 1,
-      cols: 40, // Content columns
+      cols: 40000, // Content columns
       cellWidth: CELL_WIDTH,
       cellHeight: HEADER_ROW_HEIGHT,
       gridWidth: viewportWidth,
@@ -56,7 +56,7 @@ export class Dashboard {
     // Bottom-left: Sticky left column (vertical scrollable)
     this.stickyLeftColumn = new Grid({
       app,
-      rows: 40, // Content rows
+      rows: 40000, // Content rows (match main grid)
       cols: 1,
       cellWidth: BLEACHER_COLUMN_WIDTH,
       cellHeight: CELL_HEIGHT,
@@ -71,8 +71,8 @@ export class Dashboard {
     // Bottom-right: Main scrollable content
     this.mainScrollableGrid = new Grid({
       app,
-      rows: 40,
-      cols: 40,
+      rows: 40000,
+      cols: 40000,
       cellWidth: CELL_WIDTH,
       cellHeight: CELL_HEIGHT,
       gridWidth: viewportWidth,
