@@ -5,8 +5,8 @@ import { Dashboard } from "./Dashboard";
 
 /**
  * Simple main entry point for DashboardV3
- * Just creates a 5x5 grid of tiles
+ * Creates a scrollable 30x30 grid with vertical scrollbar
  */
 export function main(app: Application, bleachers: Bleacher[]) {
-  new Dashboard(app);
+  return new Dashboard(app);
 }

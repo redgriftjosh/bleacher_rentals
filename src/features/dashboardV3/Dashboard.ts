@@ -4,14 +4,19 @@ import { RedCenterCellRenderer } from "./cellRenderers/RedCenterCellRenderer";
 import { CELL_HEIGHT, CELL_WIDTH } from "../dashboard/values/constants";
 
 export class Dashboard {
+  private grid: Grid;
+
   constructor(app: Application) {
-    // Create a CellRenderer with red-at-center logic
     const cellRenderer = new RedCenterCellRenderer(app);
+    this.grid = new Grid(app, 10, 5, CELL_WIDTH, CELL_HEIGHT, cellRenderer);
 
-    // Create 5x5 grid with specific cell dimensions that uses the CellRenderer
-    const grid = new Grid(app, 30, 30, CELL_WIDTH, CELL_HEIGHT, cellRenderer);
+    app.stage.addChild(this.grid);
+  }
 
-    // Add to stage
-    app.stage.addChild(grid);
+  /**
+   * Clean up resources
+   */
+  destroy() {
+    this.grid.destroy();
   }
 }

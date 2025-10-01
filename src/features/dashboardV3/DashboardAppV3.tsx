@@ -11,6 +11,7 @@ import { main } from "./main";
 export default function DashboardAppV3({ bleachers }: { bleachers: Bleacher[] }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
+  const dashboardRef = useRef<any>(null); // Store dashboard instance for cleanup
   const initedRef = useRef(false);
   const isFirstRenderRef = useRef(true);
 
@@ -58,6 +59,12 @@ export default function DashboardAppV3({ bleachers }: { bleachers: Bleacher[] })
         try {
           // Stop the ticker temporarily to prevent rendering during cleanup
           app.ticker.stop();
+
+          // Clean up previous dashboard instance
+          if (dashboardRef.current && typeof dashboardRef.current.destroy === "function") {
+            dashboardRef.current.destroy();
+            dashboardRef.current = null;
+          }
 
           // 3. Recursively destroy all children and their textures
           const destroyChildrenRecursively = (container: any) => {
@@ -117,8 +124,8 @@ export default function DashboardAppV3({ bleachers }: { bleachers: Bleacher[] })
           if (!destroyed && appRef.current === app) {
             console.log("not first render, lastContentXRef.current:", lastContentXRef.current);
             try {
-              const runtime = main(app, bleachers);
-              //   runtimeRef.current = runtime;
+              const dashboard = main(app, bleachers);
+              dashboardRef.current = dashboard;
               initedRef.current = true;
             } catch (error) {
               console.error("Error initializing PIXI main:", error);
@@ -129,9 +136,9 @@ export default function DashboardAppV3({ bleachers }: { bleachers: Bleacher[] })
         // First render - no delay needed
         console.log("First render lastContentXRef.current:", lastContentXRef.current);
         try {
-          const runtime = main(app, bleachers);
+          const dashboard = main(app, bleachers);
+          dashboardRef.current = dashboard;
           initedRef.current = true;
-          //   runtimeRef.current = runtime;
         } catch (error) {
           console.error("Error initializing PIXI main on first render:", error);
         }
@@ -145,6 +152,13 @@ export default function DashboardAppV3({ bleachers }: { bleachers: Bleacher[] })
     return () => {
       window.removeEventListener("resize", handleResize);
       destroyed = true;
+
+      // Clean up dashboard first
+      if (dashboardRef.current && typeof dashboardRef.current.destroy === "function") {
+        dashboardRef.current.destroy();
+        dashboardRef.current = null;
+      }
+
       const app = appRef.current;
       appRef.current = null;
       initedRef.current = false;

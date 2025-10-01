@@ -1,9 +1,11 @@
 import { Application, Container } from "pixi.js";
 import { ICellRenderer } from "../interfaces/ICellRenderer";
+import { VerticalScrollbar } from "./VerticalScrollbar";
 
 /**
  * Generic Grid class that depends on a CellRenderer for rendering logic
  * Grid handles positioning and cell dimensions, CellRenderer handles what to render at each coordinate
+ * Includes built-in vertical scrolling with VerticalScrollbar
  */
 export class Grid extends Container {
   private app: Application;
@@ -12,6 +14,8 @@ export class Grid extends Container {
   private cellWidth: number;
   private cellHeight: number;
   private cellRenderer: ICellRenderer;
+  private scrollbar?: VerticalScrollbar;
+  private gridContainer: Container; // Container for the actual grid cells
 
   constructor(
     app: Application,
@@ -34,10 +38,20 @@ export class Grid extends Container {
       `Creating ${rows}x${cols} grid with ${cellWidth}x${cellHeight} cells using ${cellRenderer.constructor.name}`
     );
 
+    // Create container for grid cells
+    this.gridContainer = new Container();
+    this.addChild(this.gridContainer);
+
     // Create and render the grid
     this.renderGrid();
 
-    console.log("✅ Grid created with CellRenderer");
+    // Create scrollbar if needed
+    this.createScrollbar();
+
+    // Listen for scroll events
+    this.setupScrolling();
+
+    console.log("✅ Grid created with CellRenderer and built-in scroll support");
   }
 
   /**
@@ -58,16 +72,55 @@ export class Grid extends Container {
         // Position the container in the grid using our dimensions
         cellContainer.position.set(col * this.cellWidth, row * this.cellHeight);
 
-        // Add to grid
-        this.addChild(cellContainer);
+        // Add to grid container
+        this.gridContainer.addChild(cellContainer);
       }
     }
+  }
+
+  /**
+   * Create scrollbar if content is larger than viewport
+   */
+  private createScrollbar() {
+    const contentHeight = this.getContentHeight();
+    const viewportHeight = this.app.screen.height;
+
+    if (contentHeight > viewportHeight) {
+      this.scrollbar = new VerticalScrollbar(this.app, contentHeight, viewportHeight, this);
+    }
+  }
+
+  /**
+   * Set up scroll event listening
+   */
+  private setupScrolling() {
+    this.on("grid:scroll", this.updateY);
+  }
+
+  /**
+   * Update the Y position of the grid content based on scroll
+   */
+  private updateY = (scrollY: number) => {
+    this.gridContainer.position.y = -scrollY;
+  };
+
+  /**
+   * Get the total height of the grid content
+   */
+  public getContentHeight(): number {
+    return this.rows * this.cellHeight;
   }
 
   /**
    * Clean up resources
    */
   destroy(options?: Parameters<Container["destroy"]>[0]) {
+    // Clean up scrollbar
+    if (this.scrollbar) {
+      this.scrollbar.destroy();
+    }
+    // Remove scroll listener
+    this.off("grid:scroll", this.updateY);
     super.destroy(options);
     console.log("Grid destroyed");
   }
