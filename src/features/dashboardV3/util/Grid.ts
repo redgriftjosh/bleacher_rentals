@@ -3,6 +3,20 @@ import { ICellRenderer } from "../interfaces/ICellRenderer";
 import { SCROLLBAR_THICKNESS, VerticalScrollbar } from "./VerticalScrollbar";
 import { HORIZONTAL_SCROLLBAR_THICKNESS, HorizontalScrollbar } from "./HorizontalScrollbar";
 
+export interface GridOptions {
+  app: Application;
+  rows: number;
+  cols: number;
+  cellWidth: number;
+  cellHeight: number;
+  gridWidth: number;
+  gridHeight: number;
+  cellRenderer: ICellRenderer;
+  x?: number;
+  y?: number;
+  showScrollbar?: boolean;
+}
+
 /**
  * Generic Grid class that depends on a CellRenderer for rendering logic
  * Grid handles positioning and cell dimensions, CellRenderer handles what to render at each coordinate
@@ -14,32 +28,39 @@ export class Grid extends Container {
   private cols: number;
   private cellWidth: number;
   private cellHeight: number;
+  private gridWidth: number;
+  private gridHeight: number;
   private cellRenderer: ICellRenderer;
+  private showScrollbar: boolean;
   private verticalScrollbar?: VerticalScrollbar;
   private horizontalScrollbar?: HorizontalScrollbar;
   private gridContainer: Container; // Container for the actual grid cells
   private contentMask?: Graphics; // Mask to prevent content from overlapping scrollbars
 
-  constructor(
-    app: Application,
-    rows: number,
-    cols: number,
-    cellWidth: number,
-    cellHeight: number,
-    cellRenderer: ICellRenderer
-  ) {
+  constructor(options: GridOptions) {
     super();
 
-    this.app = app;
-    this.rows = rows;
-    this.cols = cols;
-    this.cellWidth = cellWidth;
-    this.cellHeight = cellHeight;
-    this.cellRenderer = cellRenderer;
+    this.app = options.app;
+    this.rows = options.rows;
+    this.cols = options.cols;
+    this.cellWidth = options.cellWidth;
+    this.cellHeight = options.cellHeight;
+    this.gridWidth = options.gridWidth;
+    this.gridHeight = options.gridHeight;
+    this.cellRenderer = options.cellRenderer;
+    this.showScrollbar = options.showScrollbar ?? true; // Default to true
+
+    // Set position if provided
+    if (options.x !== undefined) this.position.x = options.x;
+    if (options.y !== undefined) this.position.y = options.y;
 
     console.log(
-      `Creating ${rows}x${cols} grid with ${cellWidth}x${cellHeight} cells using ${cellRenderer.constructor.name}`
+      `Creating ${this.rows}x${this.cols} grid with ${this.cellWidth}x${this.cellHeight} cells using ${this.cellRenderer.constructor.name}`
     );
+    console.log(
+      `Grid viewport: ${this.gridWidth}x${this.gridHeight}px at (${this.position.x}, ${this.position.y})`
+    );
+    console.log(`Scrollbars visible: ${this.showScrollbar}`);
 
     // Create container for grid cells
     this.gridContainer = new Container();
@@ -91,18 +112,18 @@ export class Grid extends Container {
   private createContentMask() {
     const contentHeight = this.getContentHeight();
     const contentWidth = this.getContentWidth();
-    const viewportHeight = this.app.screen.height;
-    const viewportWidth = this.app.screen.width;
+    const viewportHeight = this.gridHeight;
+    const viewportWidth = this.gridWidth;
 
     const needsVerticalScrollbar = contentHeight > viewportHeight;
     const needsHorizontalScrollbar = contentWidth > viewportWidth;
 
-    // Only create mask if at least one scrollbar will be visible
-    if (needsVerticalScrollbar || needsHorizontalScrollbar) {
-      let maskWidth = this.app.screen.width;
-      let maskHeight = this.app.screen.height;
+    // Only create mask if at least one scrollbar will be visible AND showScrollbar is true
+    if ((needsVerticalScrollbar || needsHorizontalScrollbar) && this.showScrollbar) {
+      let maskWidth = this.gridWidth;
+      let maskHeight = this.gridHeight;
 
-      // Reduce mask dimensions based on which scrollbars are present
+      // Reduce mask dimensions based on which scrollbars are present and visible
       if (needsVerticalScrollbar) {
         maskWidth -= SCROLLBAR_THICKNESS;
       }
@@ -117,7 +138,7 @@ export class Grid extends Container {
       this.addChild(this.contentMask);
       this.gridContainer.mask = this.contentMask;
     }
-    // If no scrollbars needed, no mask needed - content can use full dimensions
+    // If showScrollbar is false or no scrollbars needed, no mask needed - content can use full dimensions
   }
 
   /**
@@ -126,31 +147,44 @@ export class Grid extends Container {
   private createScrollbars() {
     const contentHeight = this.getContentHeight();
     const contentWidth = this.getContentWidth();
-    const viewportHeight = this.app.screen.height;
-    const viewportWidth = this.app.screen.width;
+    const viewportHeight = this.gridHeight;
+    const viewportWidth = this.gridWidth;
 
     const needsVerticalScrollbar = contentHeight > viewportHeight;
     const needsHorizontalScrollbar = contentWidth > viewportWidth;
 
-    // Create vertical scrollbar if needed, with info about horizontal scrollbar
+    // Get grid's world position for scrollbar positioning
+    const gridWorldPos = this.getGlobalPosition();
+
+    // Create vertical scrollbar if needed, but only show it if showScrollbar is true
     if (needsVerticalScrollbar) {
       this.verticalScrollbar = new VerticalScrollbar(
         this.app,
         contentHeight,
         viewportHeight,
         this,
-        needsHorizontalScrollbar
+        needsHorizontalScrollbar,
+        gridWorldPos.x,
+        gridWorldPos.y,
+        this.gridWidth,
+        this.gridHeight,
+        this.showScrollbar
       );
     }
 
-    // Create horizontal scrollbar if needed, with info about vertical scrollbar
+    // Create horizontal scrollbar if needed, but only show it if showScrollbar is true
     if (needsHorizontalScrollbar) {
       this.horizontalScrollbar = new HorizontalScrollbar(
         this.app,
         contentWidth,
         viewportWidth,
         this,
-        needsVerticalScrollbar
+        needsVerticalScrollbar,
+        gridWorldPos.x,
+        gridWorldPos.y,
+        this.gridWidth,
+        this.gridHeight,
+        this.showScrollbar
       );
     }
   }

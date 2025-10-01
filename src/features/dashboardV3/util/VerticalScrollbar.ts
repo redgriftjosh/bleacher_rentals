@@ -27,30 +27,43 @@ export class VerticalScrollbar {
     contentHeight: number,
     viewportHeight: number,
     grid: Container,
-    hasHorizontalScrollbar: boolean = false
+    hasHorizontalScrollbar: boolean = false,
+    gridX: number = 0,
+    gridY: number = 0,
+    gridWidth: number = app.screen.width,
+    gridHeight: number = app.screen.height,
+    showScrollbar: boolean = true
   ) {
     this.app = app;
     this.grid = grid;
 
     // Calculate scroll bounds, accounting for horizontal scrollbar if present
-    const availableHeight = hasHorizontalScrollbar ? app.screen.height - 14 : app.screen.height; // 14 = HORIZONTAL_SCROLLBAR_THICKNESS
+    const availableHeight = hasHorizontalScrollbar ? gridHeight - 14 : gridHeight; // 14 = HORIZONTAL_SCROLLBAR_THICKNESS
     this.maxContentY = Math.max(0, contentHeight - viewportHeight);
     this.maxThumbY = Math.max(0, availableHeight - THUMB_LENGTH);
 
     // Only create scrollbar if content is larger than viewport
     if (this.maxContentY > 0) {
-      this.createScrollbar(hasHorizontalScrollbar);
+      // Only create visual scrollbar if showScrollbar is true
+      if (showScrollbar) {
+        this.createScrollbar(hasHorizontalScrollbar, gridX, gridY, gridWidth, gridHeight);
+      }
       this.setupEvents();
     }
   }
-  private createScrollbar(hasHorizontalScrollbar: boolean = false) {
+  private createScrollbar(
+    hasHorizontalScrollbar: boolean = false,
+    gridX: number = 0,
+    gridY: number = 0,
+    gridWidth: number = this.app.screen.width,
+    gridHeight: number = this.app.screen.height
+  ) {
     this.scrollbarContainer = new Container();
-    this.scrollbarContainer.position.set(this.app.screen.width - SCROLLBAR_THICKNESS, 0);
+    // Position scrollbar at the right edge of the grid
+    this.scrollbarContainer.position.set(gridX + gridWidth - SCROLLBAR_THICKNESS, gridY);
 
     // Calculate track height, leaving space for horizontal scrollbar if present
-    const trackHeight = hasHorizontalScrollbar
-      ? this.app.screen.height - 14
-      : this.app.screen.height; // 14 = HORIZONTAL_SCROLLBAR_THICKNESS
+    const trackHeight = hasHorizontalScrollbar ? gridHeight - 14 : gridHeight; // 14 = HORIZONTAL_SCROLLBAR_THICKNESS
 
     // Scrollbar track (background) - make it more visible
     const track = new Graphics()
