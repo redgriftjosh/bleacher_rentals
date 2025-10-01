@@ -1,7 +1,7 @@
 import { Application } from "pixi.js";
-import { Grid } from "./ui/Grid";
+import { Grid } from "./util/Grid";
 import { Bleacher } from "../dashboard/db/client/bleachers";
-import { Dashboard } from "./ui/Dashboard";
+import { Dashboard } from "./Dashboard";
 
 /**
  * Simple main entry point for DashboardV3

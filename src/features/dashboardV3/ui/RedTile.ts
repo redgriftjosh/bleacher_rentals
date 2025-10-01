@@ -1,18 +1,18 @@
 import { Application, Graphics, RenderTexture } from "pixi.js";
 
 /**
- * Simple default tile for grid background
- * Just creates a basic light gray tile
+ * Red tile for special grid cells
+ * Hardcoded red background instead of conditional logic
  */
-export class Tile {
+export class RedTile {
   public texture: RenderTexture;
 
   constructor(app: Application, dimensions: { width: number; height: number }) {
     // Create graphics for the tile
     const tileGraphics = new Graphics();
 
-    // Draw tile background (light gray)
-    tileGraphics.rect(0, 0, dimensions.width, dimensions.height).fill(0xf8f9fa);
+    // Draw red tile background (hardcoded)
+    tileGraphics.rect(0, 0, dimensions.width, dimensions.height).fill(0xff0000);
 
     // Draw border (slightly darker gray)
     tileGraphics

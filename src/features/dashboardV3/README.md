@@ -1,49 +1,67 @@
-# DashboardV3 - Simple Grid
+# DashboardV3 - Simple Grid with CellRenderer
 
-Super simple grid system for DashboardV3.
+Super simple grid system for DashboardV3 with clean separation of concerns.
 
 ## Structure
 
-- **`DashboardAppV3.tsx`** - Main app component (unchanged)
-- **`main.ts`** - Simple entry point that creates a 5x5 grid
-- **`ui/Grid.ts`** - Simple grid that repeats a tile
-- **`ui/Tile.ts`** - Basic tile component
+- **`DashboardAppV3.tsx`** - React component that mounts PixiJS app
+- **`main.ts`** - Entry point that creates Dashboard class
+- **`ui/Grid.ts`** - Grid that uses CellRenderer to determine tiles
+- **`ui/CellRenderer.ts`** - Contains conditional logic for tile selection
+- **`ui/Tile.ts`** - Default light gray tile
+- **`ui/RedTile.ts`** - Red tile for special cells
 
 ## Usage
 
 ```typescript
 import { main } from "./main";
 
-// Creates a simple 5x5 grid
+// Creates a simple 5x5 grid with conditional red tile at (3,3)
 const { grid } = main(app);
 ```
 
-That's it! No complex configurations, no cell renderers, just a simple grid of tiles.
+## Architecture
 
-## Files
+### Grid Flow:
 
-### main.ts
+1. Grid creates CellRenderer
+2. For each position, Grid asks CellRenderer which tile to use
+3. CellRenderer returns appropriate tile texture based on position logic
+4. Grid creates Sprite with that texture
 
-- Takes just the PixiJS app
+### Files
+
+#### main.ts
+
+- Entry point for PixiJS app
 - Creates a 5x5 grid
-- Returns the grid instance
 
-### Grid.ts
+#### Grid.ts
 
 - Takes app, rows, and columns
-- Uses the existing Tile class
-- Creates Sprite instances for each cell
-- Positions them in a grid pattern
+- Creates CellRenderer instance
+- Uses CellRenderer to get tile textures for each position
+- Positions sprites in grid pattern
 
-### Tile.ts
+#### CellRenderer.ts
 
-- Creates a simple textured tile
-- **NEW**: Accepts position parameters for conditional styling
-- Row 3, Col 3 gets a red background!
-- Used by Grid to create each uniquely styled cell
+- **Contains all conditional logic**
+- `getTileTexture(row, col)` method
+- Returns RedTile for row 3, col 3
+- Returns default Tile for all other positions
+
+#### Tile.ts
+
+- Simple default tile with light gray background
+- No conditional logic, just basic tile rendering
+
+#### RedTile.ts
+
+- Hardcoded red background tile
+- Duplicate of Tile but with red color
 
 ## Conditional Styling
 
-The tile at row 3, column 3 will have a red background instead of the default light gray. This demonstrates how to add position-based conditional styling to tiles.
+The CellRenderer contains the logic: `if (row === 3 && col === 3)` then use RedTile, otherwise use default Tile.
 
-Very straightforward and easy to understand!
+This separates the conditional logic from the tile rendering, making it easy to add more tile types and conditions in the future!
