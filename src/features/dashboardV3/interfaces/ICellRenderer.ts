@@ -31,16 +31,4 @@ export interface ICellRenderer {
     viewportLabelLayer?: Container,
     firstVisibleColumn?: number
   ): Container;
-
-  /**
-   * Generate a unique cache key for this cell
-   * Used by Baker to cache rendered textures. Should include all data that affects appearance.
-   *
-   * @param row The row coordinate
-   * @param col The column coordinate
-   * @param cellWidth The width this cell should occupy
-   * @param cellHeight The height this cell should occupy
-   * @returns Unique string key for Baker caching
-   */
-  getCacheKey(row: number, col: number, cellWidth: number, cellHeight: number): string;
 }

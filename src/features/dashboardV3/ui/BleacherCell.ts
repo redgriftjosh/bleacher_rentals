@@ -59,7 +59,7 @@ export class BleacherCell extends Container {
    */
   setBleacher(b: Bleacher) {
     this.bleacherId = b.bleacherId;
-    const key = b.bleacherId;
+    const key = b.bleacherId.toString();
 
     // Builds each cell once and stores as a texture in memory
     const rt = this.baker.getTexture(

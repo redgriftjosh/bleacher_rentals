@@ -13,6 +13,7 @@ import {
 import { Bleacher } from "../dashboard/db/client/bleachers";
 import { getColumnsAndDates } from "../dashboard/util/scrollbar";
 import { SCROLLBAR_THICKNESS } from "./util/VerticalScrollbar";
+import { TopLeftCellRenderer } from "./cellRenderers/TopLeftCellRenderer";
 
 export class Dashboard {
   // Grids
@@ -34,6 +35,7 @@ export class Dashboard {
     this.mainGridPinYCellRenderer = new PinnedYCellRenderer(app, bleachers, dates);
     const leftColumnCellRenderer = new StickyLeftColumnCellRenderer(app, bleachers);
     const topRowCellRenderer = new StickyTopRowCellRenderer(app);
+    const topLeftCellRenderer = new TopLeftCellRenderer(app);
 
     // Calculate viewport dimensions
     const viewportWidth = app.screen.width - BLEACHER_COLUMN_WIDTH;
@@ -51,7 +53,7 @@ export class Dashboard {
       cellHeight: HEADER_ROW_HEIGHT,
       gridWidth: BLEACHER_COLUMN_WIDTH,
       gridHeight: HEADER_ROW_HEIGHT,
-      cellRenderer: this.mainGridCellRenderer,
+      cellRenderer: topLeftCellRenderer,
       x: 0,
       y: 0,
       showScrollbar: false,

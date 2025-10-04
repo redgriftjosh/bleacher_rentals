@@ -1,4 +1,4 @@
-import { Application, Container, RenderTexture } from "pixi.js";
+import { Application, Container, RenderTexture, Sprite } from "pixi.js";
 
 /**
  * Bakes arbitrary Pixi display content into a cached {@link RenderTexture}
@@ -57,10 +57,29 @@ export class Baker {
    * @returns The baked (and cached) RenderTexture.
    */
   getTexture(
-    key: string | number,
+    key: string,
     size: { width: number; height: number },
     build: (container: Container) => void
   ) {
+    const existing = this.checkExisting(key, { width: size.width, height: size.height });
+    if (existing) return existing;
+
+    return this.bakeContainer(key, size, build);
+  }
+
+  getSprite(
+    key: string,
+    size: { width: number; height: number },
+    build: (container: Container) => void
+  ): Sprite {
+    const tex = this.getTexture(key, size, build);
+    return new Sprite(tex);
+  }
+
+  private checkExisting(
+    key: string,
+    size: { width: number; height: number }
+  ): RenderTexture | undefined {
     const existing = this.cache.get(key);
     if (existing && !existing.destroyed) return existing;
 
@@ -74,20 +93,24 @@ export class Baker {
       console.warn("Baker: Cannot create texture, renderer is null");
       return RenderTexture.create({ width: size.width, height: size.height });
     }
+  }
 
+  private bakeContainer(
+    key: string,
+    size: { width: number; height: number },
+    build: (container: Container) => void
+  ): RenderTexture {
     try {
-      // Build offscreen content and render once
-      const off = new Container();
-      build(off);
-
+      const container = new Container();
+      build(container);
       const rt = RenderTexture.create({
         width: size.width,
         height: size.height,
         resolution: this.app.renderer.resolution,
       });
 
-      this.app.renderer.render({ container: off, target: rt, clear: true });
-      off.destroy({ children: true });
+      this.app.renderer.render({ container, target: rt, clear: true });
+      container.destroy({ children: true });
 
       this.cache.set(key, rt);
       return rt;

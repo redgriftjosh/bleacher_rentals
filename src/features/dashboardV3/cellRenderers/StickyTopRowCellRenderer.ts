@@ -4,6 +4,7 @@ import { ICellRenderer } from "../interfaces/ICellRenderer";
 import { HeaderCell } from "../ui/HeaderCell";
 import { Tile } from "../ui/Tile";
 import { getColumnsAndDates } from "../../dashboard/util/scrollbar";
+import { Baker } from "../util/Baker";
 
 /**
  * CellRenderer for the sticky top row that displays date headers
@@ -16,9 +17,11 @@ export class StickyTopRowCellRenderer implements ICellRenderer {
   private app: Application;
   private dates: string[];
   private todayISO: string;
+  private baker: Baker;
 
   constructor(app: Application) {
     this.app = app;
+    this.baker = new Baker(app);
 
     // Get dates using the utility function
     const { dates } = getColumnsAndDates();
@@ -34,38 +37,22 @@ export class StickyTopRowCellRenderer implements ICellRenderer {
     const cellContainer = new Container();
     const dimensions = { width: cellWidth, height: cellHeight };
 
-    // Add background tile first (behind the HeaderCell)
-    const backgroundTile = new Tile(this.app, dimensions);
-    const tileSprite = new Sprite(backgroundTile.texture);
-    cellContainer.addChild(tileSprite);
+    const headerCellTexture = this.baker.getSprite(`headerCellTexture${col}`, dimensions, (c) => {
+      // Add background tile first (behind the HeaderCell)
+      const tileSprite = new Tile(dimensions, this.baker);
+      c.addChild(tileSprite);
 
-    // Get the date for this column
-    const dateISO = this.dates[col];
+      // Get the date for this column
+      const dateISO = this.dates[col];
 
-    if (dateISO) {
-      // Create a HeaderCell and set the date (on top of the tile)
-      const headerCell = new HeaderCell();
-      headerCell.setDateISO(dateISO, this.todayISO);
-      cellContainer.addChild(headerCell);
-    }
-
+      if (dateISO) {
+        // Create a HeaderCell and set the date (on top of the tile)
+        const headerCell = new HeaderCell();
+        headerCell.setDateISO(dateISO, this.todayISO);
+        c.addChild(headerCell);
+      }
+    });
+    cellContainer.addChild(headerCellTexture);
     return cellContainer;
-  }
-
-  /**
-   * Generate unique cache key for Baker
-   * Include date and dimensions in the cache key
-   */
-  getCacheKey(row: number, col: number, cellWidth: number, cellHeight: number): string {
-    const dateISO = this.dates[col];
-    if (dateISO) {
-      // Include whether it's today for proper caching of different styles
-      const isToday = dateISO === this.todayISO;
-      const dt = DateTime.fromISO(dateISO);
-      const isWeekend = dt.weekday >= 6;
-      const dateType = isToday ? "today" : isWeekend ? "weekend" : "weekday";
-      return `header:${dateISO}:${dateType}:${cellWidth}x${cellHeight}`;
-    }
-    return `header:empty:${col}:${cellWidth}x${cellHeight}`;
   }
 }

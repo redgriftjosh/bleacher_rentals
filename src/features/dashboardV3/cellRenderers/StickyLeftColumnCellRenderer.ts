@@ -39,8 +39,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     const dimensions = { width: cellWidth, height: cellHeight };
 
     // Add background tile first (behind the BleacherCell)
-    const backgroundTile = new Tile(this.app, dimensions);
-    const tileSprite = new Sprite(backgroundTile.texture);
+    const tileSprite = new Tile(dimensions, this.baker);
     cellContainer.addChild(tileSprite);
 
     // Get the bleacher data for this row
@@ -54,18 +53,6 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     }
 
     return cellContainer;
-  }
-
-  /**
-   * Generate unique cache key for Baker
-   * Include bleacher ID and dimensions in the cache key
-   */
-  getCacheKey(row: number, col: number, cellWidth: number, cellHeight: number): string {
-    const bleacher = this.bleachers[row];
-    if (bleacher) {
-      return `bleacher:${bleacher.bleacherId}:${cellWidth}x${cellHeight}`;
-    }
-    return `empty:${row}:${cellWidth}x${cellHeight}`;
   }
 
   /**

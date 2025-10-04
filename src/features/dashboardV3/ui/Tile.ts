@@ -1,43 +1,23 @@
-import { Application, Graphics, RenderTexture } from "pixi.js";
+import { Graphics, Sprite } from "pixi.js";
+import { Baker } from "../util/Baker";
 
-/**
- * Simple default tile for grid background
- * Just creates a basic light gray tile
- */
-export class Tile {
-  public texture: RenderTexture;
+export class Tile extends Sprite {
+  constructor(dimensions: { width: number; height: number }, baker: Baker) {
+    super();
 
-  constructor(app: Application, dimensions: { width: number; height: number }) {
-    // Create graphics for the tile
-    const tileGraphics = new Graphics();
+    const tileTexture = baker.getTexture(`tile`, dimensions, (c) => {
+      const tileGraphics = new Graphics();
 
-    // Draw tile background (light gray)
-    tileGraphics.rect(0, 0, dimensions.width, dimensions.height).fill(0xf8f9fa);
+      // Draw tile background (light gray)
+      tileGraphics.rect(0, 0, dimensions.width, dimensions.height).fill(0xf8f9fa);
 
-    // Draw border (slightly darker gray)
-    tileGraphics
-      .rect(0, 0, dimensions.width, dimensions.height)
-      .stroke({ color: 0xe9ecef, width: 1 });
-
-    // Create render texture
-    this.texture = RenderTexture.create({
-      width: dimensions.width,
-      height: dimensions.height,
+      // Draw border (slightly darker gray)
+      tileGraphics
+        .rect(0, 0, dimensions.width, dimensions.height)
+        .stroke({ color: 0xe9ecef, width: 1 });
+      c.addChild(tileGraphics);
     });
 
-    // Render the graphics to the texture
-    app.renderer.render({
-      container: tileGraphics,
-      target: this.texture,
-    });
-
-    // Clean up the graphics object
-    tileGraphics.destroy();
-  }
-
-  destroy() {
-    if (this.texture) {
-      this.texture.destroy();
-    }
+    this.texture = tileTexture;
   }
 }

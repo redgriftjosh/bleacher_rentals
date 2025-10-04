@@ -8,6 +8,14 @@ export type EventSpanType = {
   rowIndex: number;
 };
 
+export type EventInfo = {
+  hasEvent: boolean;
+  span?: EventSpanType;
+  isStart: boolean;
+  isEnd: boolean;
+  isMiddle: boolean;
+};
+
 export class EventsUtil {
   /**
    * Check if there's a pinned event for this row
@@ -109,13 +117,7 @@ export class EventsUtil {
     row: number,
     col: number,
     spansByRow: EventSpanType[][]
-  ): {
-    hasEvent: boolean;
-    span?: EventSpanType;
-    isStart: boolean;
-    isEnd: boolean;
-    isMiddle: boolean;
-  } {
+  ): EventInfo {
     const spans = spansByRow[row] ?? [];
 
     for (const span of spans) {

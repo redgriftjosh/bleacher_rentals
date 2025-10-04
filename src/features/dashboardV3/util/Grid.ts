@@ -184,29 +184,6 @@ export class Grid extends Container {
         // Need to update cell content - only recreate if coordinates changed
         poolContainer.removeChildren();
 
-        // Generate cache key for this cell
-        const cacheKey = this.cellRenderer.getCacheKey(
-          actualRow,
-          actualCol,
-          this.cellWidth,
-          this.cellHeight
-        );
-
-        // Get baked texture from cache or create it
-        // const bakedTexture = this.baker.getTexture(
-        //   cacheKey,
-        //   { width: this.cellWidth, height: this.cellHeight },
-        //   (container) => {
-        //     // Build cell content using the CellRenderer
-        //     const cellContent = this.cellRenderer.buildCell(
-        //       actualRow,
-        //       actualCol,
-        //       this.cellWidth,
-        //       this.cellHeight
-        //     );
-        //     container.addChild(cellContent);
-        //   }
-        // );
         const cellContent = this.cellRenderer.buildCell(
           actualRow,
           actualCol,
@@ -214,9 +191,8 @@ export class Grid extends Container {
           this.cellHeight,
           poolContainer,
           this.viewportLabelLayer,
-          firstVisibleCol // Pass for MainGridCellRenderer timing fix
+          firstVisibleCol
         );
-        //     container.addChild(cellContent);
 
         // // Create sprite from baked texture
         // const cellSprite = new Sprite(bakedTexture);
