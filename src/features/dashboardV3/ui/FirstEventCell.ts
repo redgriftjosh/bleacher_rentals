@@ -21,7 +21,8 @@ export class FirstEventCell extends Sprite {
 
     const texture = baker.getTexture(
       `FirstEventCell:${eventInfo.span?.ev.bleacherEventId}`,
-      dimensions,
+      // { width: dimensions.width * 2, height: dimensions.height },
+      null,
       (c) => {
         const eventCell = new EventBody(eventInfo, baker, dimensions);
         c.addChild(eventCell);

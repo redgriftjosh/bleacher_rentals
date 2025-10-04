@@ -10,7 +10,7 @@ export class StaticEventLabel extends Container {
     super();
 
     const label = new Text({
-      text: `firstVisibel:${firstVisibleColIndex} current:${currentColIndex}`,
+      text: `${eventInfo.ev.eventName}`,
       style: {
         fontFamily: "Helvetica",
         fontSize: 14,

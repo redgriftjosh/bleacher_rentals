@@ -58,6 +58,7 @@ export class MainGridCellRenderer implements ICellRenderer {
   ): Container {
     const cellContainer = new Container();
     const dimensions = { width: cellWidth, height: cellHeight };
+    parent.zIndex = 0;
 
     // Check if this cell has an event
     const eventInfo = EventsUtil.getCellEventInfo(row, col, this.spansByRow);
@@ -88,7 +89,7 @@ export class MainGridCellRenderer implements ICellRenderer {
         cellContainer.addChild(firstCell);
       } else {
         // PINNED EVENT OR EVENT BODY: Use separate caching strategy
-        parent.zIndex = 0;
+        // parent.zIndex = 0;
 
         const eventSprite = this.baker.getSprite(
           `eventId:${eventInfo.span.ev.bleacherEventId}`,

@@ -1,3 +1,4 @@
+import { CELL_HEIGHT, CELL_WIDTH } from "@/features/dashboard/values/constants";
 import { Application, Container, RenderTexture, Sprite } from "pixi.js";
 
 /**
@@ -58,10 +59,13 @@ export class Baker {
    */
   getTexture(
     key: string,
-    size: { width: number; height: number },
+    size: { width: number; height: number } | null = null,
     build: (container: Container) => void
   ) {
-    const existing = this.checkExisting(key, { width: size.width, height: size.height });
+    const existing = this.checkExisting(key, {
+      width: size?.width ?? CELL_WIDTH,
+      height: size?.height ?? CELL_HEIGHT,
+    });
     if (existing) return existing;
 
     return this.bakeContainer(key, size, build);
@@ -97,15 +101,15 @@ export class Baker {
 
   private bakeContainer(
     key: string,
-    size: { width: number; height: number },
+    size: { width: number; height: number } | null = null,
     build: (container: Container) => void
   ): RenderTexture {
     try {
       const container = new Container();
       build(container);
       const rt = RenderTexture.create({
-        width: size.width,
-        height: size.height,
+        width: size?.width ?? container.width,
+        height: size?.height ?? container.height,
         resolution: this.app.renderer.resolution,
       });
 
@@ -117,7 +121,10 @@ export class Baker {
     } catch (error) {
       console.warn("Baker: Error creating texture:", error);
       // Return a fallback texture
-      return RenderTexture.create({ width: size.width, height: size.height });
+      return RenderTexture.create({
+        width: size?.width ?? CELL_WIDTH,
+        height: size?.height ?? CELL_HEIGHT,
+      });
     }
   }
 
