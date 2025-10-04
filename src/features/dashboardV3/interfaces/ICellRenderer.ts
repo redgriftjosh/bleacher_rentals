@@ -17,9 +17,20 @@ export interface ICellRenderer {
    * @param col The column coordinate (future: date index)
    * @param cellWidth The width this cell should occupy
    * @param cellHeight The height this cell should occupy
+   * @param parent The parent container
+   * @param viewportLabelLayer Optional viewport label layer
+   * @param firstVisibleColumn Optional current first visible column for scroll timing
    * @returns Container with the complete cell content (will be baked by Grid)
    */
-  buildCell(row: number, col: number, cellWidth: number, cellHeight: number): Container;
+  buildCell(
+    row: number,
+    col: number,
+    cellWidth: number,
+    cellHeight: number,
+    parent: Container,
+    viewportLabelLayer?: Container,
+    firstVisibleColumn?: number
+  ): Container;
 
   /**
    * Generate a unique cache key for this cell

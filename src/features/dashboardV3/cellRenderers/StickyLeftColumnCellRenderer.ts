@@ -27,7 +27,14 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
    * Build cell content using BleacherCell component
    * This creates the actual visual content that will be baked into a texture by Grid
    */
-  buildCell(row: number, col: number, cellWidth: number, cellHeight: number): Container {
+  buildCell(
+    row: number,
+    col: number,
+    cellWidth: number,
+    cellHeight: number,
+    parent: Container,
+    viewportLabelLayer?: Container
+  ): Container {
     const cellContainer = new Container();
     const dimensions = { width: cellWidth, height: cellHeight };
 

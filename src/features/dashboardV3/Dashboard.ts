@@ -1,8 +1,9 @@
-import { Application } from "pixi.js";
+import { Application, Graphics } from "pixi.js";
 import { Grid } from "./util/Grid";
-import { MainScrollableGridCellRenderer } from "./cellRenderers/MainScrollableGridCellRenderer";
+import { MainGridCellRenderer } from "./cellRenderers/MainGridCellRenderer";
 import { StickyLeftColumnCellRenderer } from "./cellRenderers/StickyLeftColumnCellRenderer";
 import { StickyTopRowCellRenderer } from "./cellRenderers/StickyTopRowCellRenderer";
+import { PinnedYCellRenderer } from "./cellRenderers/PinnedYCellRenderer";
 import {
   CELL_HEIGHT,
   CELL_WIDTH,
@@ -11,18 +12,26 @@ import {
 } from "../dashboard/values/constants";
 import { Bleacher } from "../dashboard/db/client/bleachers";
 import { getColumnsAndDates } from "../dashboard/util/scrollbar";
+import { SCROLLBAR_THICKNESS } from "./util/VerticalScrollbar";
 
 export class Dashboard {
+  // Grids
   private stickyTopLeftCell: Grid;
   private stickyTopRow: Grid;
   private stickyLeftColumn: Grid;
-  private mainScrollableGrid: Grid;
+  private mainGrid: Grid;
+  private mainGridPinnedYAxis: Grid;
+
+  // Renderers
+  private mainGridPinYCellRenderer: PinnedYCellRenderer; // Store reference for scroll updates
+  private mainGridCellRenderer: MainGridCellRenderer; // Store reference for scroll updates
 
   constructor(app: Application, bleachers: Bleacher[]) {
     // Get dates for event calculations
     const { columns: contentColumns, dates } = getColumnsAndDates();
 
-    const cellRenderer = new MainScrollableGridCellRenderer(app, bleachers, dates);
+    this.mainGridCellRenderer = new MainGridCellRenderer(app, bleachers, dates);
+    this.mainGridPinYCellRenderer = new PinnedYCellRenderer(app, bleachers, dates);
     const leftColumnCellRenderer = new StickyLeftColumnCellRenderer(app, bleachers);
     const topRowCellRenderer = new StickyTopRowCellRenderer(app);
 
@@ -33,8 +42,6 @@ export class Dashboard {
     // Use real bleacher count for row dimensions and real date count for columns
     const bleacherCount = bleachers.length;
 
-    // Create the 4-quadrant sticky grid layout
-
     // Top-left: Fixed corner cell (1x1)
     this.stickyTopLeftCell = new Grid({
       app,
@@ -44,7 +51,7 @@ export class Dashboard {
       cellHeight: HEADER_ROW_HEIGHT,
       gridWidth: BLEACHER_COLUMN_WIDTH,
       gridHeight: HEADER_ROW_HEIGHT,
-      cellRenderer,
+      cellRenderer: this.mainGridCellRenderer,
       x: 0,
       y: 0,
       showScrollbar: false,
@@ -59,7 +66,7 @@ export class Dashboard {
       cellHeight: HEADER_ROW_HEIGHT,
       gridWidth: viewportWidth,
       gridHeight: HEADER_ROW_HEIGHT,
-      cellRenderer: topRowCellRenderer, // Use specialized renderer for date headers
+      cellRenderer: topRowCellRenderer,
       x: BLEACHER_COLUMN_WIDTH,
       y: 0,
       showScrollbar: false, // Hide scrollbars for sticky sections
@@ -81,7 +88,7 @@ export class Dashboard {
     });
 
     // Bottom-right: Main scrollable content
-    this.mainScrollableGrid = new Grid({
+    this.mainGrid = new Grid({
       app,
       rows: bleacherCount, // Dynamic based on actual bleacher data
       cols: contentColumns, // Keep columns hardcoded as requested
@@ -89,34 +96,66 @@ export class Dashboard {
       cellHeight: CELL_HEIGHT,
       gridWidth: viewportWidth,
       gridHeight: viewportHeight,
-      cellRenderer,
+      cellRenderer: this.mainGridCellRenderer,
       x: BLEACHER_COLUMN_WIDTH,
       y: HEADER_ROW_HEIGHT,
       showScrollbar: true, // Only main grid shows scrollbars
     });
 
+    // another grid in front of main grid that renders the pinned y axis
+    this.mainGridPinnedYAxis = new Grid({
+      app,
+      rows: bleacherCount,
+      cols: 1,
+      cellWidth: viewportWidth,
+      cellHeight: CELL_HEIGHT,
+      gridWidth: viewportWidth,
+      gridHeight: viewportHeight,
+      cellRenderer: this.mainGridPinYCellRenderer,
+      x: BLEACHER_COLUMN_WIDTH,
+      y: HEADER_ROW_HEIGHT,
+      showScrollbar: false,
+    });
+
+    // When main grid completes a cell update cycle, update the pinned Y axis
+    this.mainGrid.on("grid:firstVisibleColIndexChanged", (firstVisibleCol: number) => {
+      // Update the pinned Y renderer with the main grid's first visible column
+      this.mainGridPinYCellRenderer.setMainGridFirstVisibleColumn(firstVisibleCol);
+      this.mainGridPinnedYAxis.forceUpdate();
+    });
+
     // Add grids in bottom-to-top stacking order
-    app.stage.addChild(this.mainScrollableGrid);
+    app.stage.addChild(this.mainGrid);
+    app.stage.addChild(this.mainGridPinnedYAxis);
     app.stage.addChild(this.stickyLeftColumn);
     app.stage.addChild(this.stickyTopRow);
     app.stage.addChild(this.stickyTopLeftCell);
 
     // Set up scroll synchronization
     this.setupScrollSynchronization();
+
+    // Initialize both renderers with starting scroll position
+    this.mainGridPinYCellRenderer.updateScrollPosition(0, CELL_WIDTH);
+    this.mainGridCellRenderer.updateScrollPosition(0, CELL_WIDTH);
   }
 
   /**
    * Synchronize scrolling between the quadrants
    */
   private setupScrollSynchronization() {
-    // When main grid scrolls vertically, sync the left column
-    this.mainScrollableGrid.on("grid:scroll-vertical", (scrollY: number) => {
+    // When main grid scrolls vertically, sync the left column and pinned Y axis
+    this.mainGrid.on("grid:scroll-vertical", (scrollY: number) => {
       this.stickyLeftColumn.setVerticalScroll(scrollY);
+      this.mainGridPinnedYAxis.setVerticalScroll(scrollY);
     });
 
-    // When main grid scrolls horizontally, sync the top row
-    this.mainScrollableGrid.on("grid:scroll-horizontal", (scrollX: number) => {
+    // When main grid scrolls horizontally, sync the top row and update both renderers
+    this.mainGrid.on("grid:scroll-horizontal", (scrollX: number) => {
       this.stickyTopRow.setHorizontalScroll(scrollX);
+
+      // Update both renderers with current scroll position
+      this.mainGridPinYCellRenderer.updateScrollPosition(scrollX, CELL_WIDTH);
+      this.mainGridCellRenderer.updateScrollPosition(scrollX, CELL_WIDTH);
     });
   }
 
@@ -127,6 +166,6 @@ export class Dashboard {
     this.stickyTopLeftCell.destroy();
     this.stickyTopRow.destroy();
     this.stickyLeftColumn.destroy();
-    this.mainScrollableGrid.destroy();
+    this.mainGrid.destroy();
   }
 }

@@ -36,6 +36,7 @@ export class Grid extends Container {
   private verticalScrollbar?: VerticalScrollbar;
   private horizontalScrollbar?: HorizontalScrollbar;
   private gridContainer: Container; // Container for the actual grid cells
+  private viewportLabelLayer: Container; // Layer for viewport-positioned labels (doesn't scroll)
   private contentMask?: Graphics; // Mask to prevent content from overlapping scrollbars
   private baker: Baker; // Baker for texture caching
 
@@ -73,19 +74,23 @@ export class Grid extends Container {
     if (options.x !== undefined) this.position.x = options.x;
     if (options.y !== undefined) this.position.y = options.y;
 
-    console.log(
-      `Creating ${this.rows}x${this.cols} grid with ${this.cellWidth}x${this.cellHeight} cells using ${this.cellRenderer.constructor.name}`
-    );
-    console.log(
-      `Grid viewport: ${this.gridWidth}x${this.gridHeight}px at (${this.position.x}, ${this.position.y})`
-    );
-    console.log(`Scrollbars visible: ${this.showScrollbar}`);
-    console.log(`Virtualization: enabled (default)`);
-    console.log(`Visible cells: ${this.visibleRows}x${this.visibleCols} (includes buffer)`);
+    // console.log(
+    //   `Creating ${this.rows}x${this.cols} grid with ${this.cellWidth}x${this.cellHeight} cells using ${this.cellRenderer.constructor.name}`
+    // );
+    // console.log(
+    //   `Grid viewport: ${this.gridWidth}x${this.gridHeight}px at (${this.position.x}, ${this.position.y})`
+    // );
+    // console.log(`Scrollbars visible: ${this.showScrollbar}`);
+    // console.log(`Virtualization: enabled (default)`);
+    // console.log(`Visible cells: ${this.visibleRows}x${this.visibleCols} (includes buffer)`);
 
     // Create container for grid cells
     this.gridContainer = new Container();
     this.addChild(this.gridContainer);
+
+    // Create viewport label layer (doesn't scroll with content)
+    this.viewportLabelLayer = new Container();
+    this.addChild(this.viewportLabelLayer);
 
     // Create content mask to prevent overlap with scrollbars
     this.createContentMask();
@@ -130,7 +135,7 @@ export class Grid extends Container {
    * Update virtualized cells based on scroll position
    * OPTIMIZED: Only recreates cell content when coordinates actually change
    */
-  private updateVirtualizedCells(scrollX: number, scrollY: number) {
+  private updateVirtualizedCells(scrollX: number, scrollY: number, force: boolean = false) {
     // Calculate which cells are currently visible
     const firstVisibleRow = Math.floor(scrollY / this.cellHeight);
     const firstVisibleCol = Math.floor(scrollX / this.cellWidth);
@@ -140,7 +145,10 @@ export class Grid extends Container {
       firstVisibleRow === this.prevFirstVisibleRow &&
       firstVisibleCol === this.prevFirstVisibleCol
     ) {
-      return;
+      // ...Unless the user wants to force
+      if (!force) {
+        return;
+      }
     }
 
     this.prevFirstVisibleRow = firstVisibleRow;
@@ -167,7 +175,10 @@ export class Grid extends Container {
           // Already showing correct content, just ensure position and visibility
           poolContainer.position.set(actualCol * this.cellWidth, actualRow * this.cellHeight);
           poolContainer.visible = true;
-          continue;
+          // ...Unless the user wants to force it
+          if (!force) {
+            continue;
+          }
         }
 
         // Need to update cell content - only recreate if coordinates changed
@@ -182,24 +193,34 @@ export class Grid extends Container {
         );
 
         // Get baked texture from cache or create it
-        const bakedTexture = this.baker.getTexture(
-          cacheKey,
-          { width: this.cellWidth, height: this.cellHeight },
-          (container) => {
-            // Build cell content using the CellRenderer
-            const cellContent = this.cellRenderer.buildCell(
-              actualRow,
-              actualCol,
-              this.cellWidth,
-              this.cellHeight
-            );
-            container.addChild(cellContent);
-          }
+        // const bakedTexture = this.baker.getTexture(
+        //   cacheKey,
+        //   { width: this.cellWidth, height: this.cellHeight },
+        //   (container) => {
+        //     // Build cell content using the CellRenderer
+        //     const cellContent = this.cellRenderer.buildCell(
+        //       actualRow,
+        //       actualCol,
+        //       this.cellWidth,
+        //       this.cellHeight
+        //     );
+        //     container.addChild(cellContent);
+        //   }
+        // );
+        const cellContent = this.cellRenderer.buildCell(
+          actualRow,
+          actualCol,
+          this.cellWidth,
+          this.cellHeight,
+          poolContainer,
+          this.viewportLabelLayer,
+          firstVisibleCol // Pass for MainGridCellRenderer timing fix
         );
+        //     container.addChild(cellContent);
 
-        // Create sprite from baked texture
-        const cellSprite = new Sprite(bakedTexture);
-        poolContainer.addChild(cellSprite);
+        // // Create sprite from baked texture
+        // const cellSprite = new Sprite(bakedTexture);
+        poolContainer.addChild(cellContent);
         poolContainer.position.set(actualCol * this.cellWidth, actualRow * this.cellHeight);
         poolContainer.visible = true;
 
@@ -208,6 +229,9 @@ export class Grid extends Container {
         currentData.col = actualCol;
       }
     }
+
+    // Emit event when virtualized cells update is complete
+    this.emit("grid:firstVisibleColIndexChanged", firstVisibleCol);
   }
 
   /**
@@ -314,6 +338,9 @@ export class Grid extends Container {
     this.currentScrollY = scrollY;
     this.gridContainer.position.y = -scrollY;
 
+    // Sync viewport label layer's Y position to scroll vertically with grid
+    this.viewportLabelLayer.position.y = -scrollY;
+
     // Update virtualized cells
     this.updateVirtualizedCells(this.currentScrollX, this.currentScrollY);
   };
@@ -324,6 +351,9 @@ export class Grid extends Container {
   private updateX = (scrollX: number) => {
     this.currentScrollX = scrollX;
     this.gridContainer.position.x = -scrollX;
+
+    // Keep viewport label layer fixed horizontally (don't sync X position)
+    // this.viewportLabelLayer.position.x stays at 0
 
     // Update virtualized cells
     this.updateVirtualizedCells(this.currentScrollX, this.currentScrollY);
@@ -403,6 +433,14 @@ export class Grid extends Container {
    */
   public setHorizontalScroll(scrollX: number) {
     this.updateX(scrollX);
+  }
+
+  /**
+   * Force a complete re-render of all visible cells
+   * Bypasses the coordinate change checks and forces cell content rebuilding
+   */
+  public forceUpdate() {
+    this.updateVirtualizedCells(this.currentScrollX, this.currentScrollY, true);
   }
 
   /**
