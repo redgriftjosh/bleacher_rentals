@@ -2,9 +2,9 @@ import { Application, Container, Sprite } from "pixi.js";
 import { ICellRenderer } from "../interfaces/ICellRenderer";
 import { Baker } from "../util/Baker";
 import { Bleacher } from "../../dashboard/db/client/bleachers";
-import { StaticEventLabel } from "../ui/StaticEventLabel";
-import { AnimatedTriangle } from "../ui/AnimatedTriangle";
 import { EventSpanType, EventsUtil } from "../util/Events";
+import { LabelText } from "../ui/event/LabelText";
+import { PinnableSection } from "../ui/event/PinnableSection";
 
 export class PinnedYCellRenderer implements ICellRenderer {
   private app: Application;
@@ -70,31 +70,17 @@ export class PinnedYCellRenderer implements ICellRenderer {
     if (pinnedEventSpan) {
       // Cache the static label
       const labelCacheKey = `pinned-label:${pinnedEventSpan.ev.bleacherEventId}:${currentFirstVisibleColumn}:${cellWidth}x${cellHeight}`;
-      const labelTexture = this.baker.getTexture(
+      const pinnedTexture = this.baker.getTexture(
         labelCacheKey,
         { width: cellWidth, height: cellHeight },
         (container) => {
-          const staticLabel = new StaticEventLabel(pinnedEventSpan, currentFirstVisibleColumn, 0);
-          container.addChild(staticLabel);
+          const pinnableSection = new PinnableSection(pinnedEventSpan, this.app, this.baker);
+          container.addChild(pinnableSection);
         }
       );
 
-      const labelSprite = new Sprite(labelTexture);
+      const labelSprite = new Sprite(pinnedTexture);
       cellContainer.addChild(labelSprite);
-
-      // Add the animated triangle as a live component
-      const animatedTriangle = new AnimatedTriangle(this.app);
-
-      // Position the triangle correctly relative to the cached label
-      const tempLabel = new StaticEventLabel(pinnedEventSpan, currentFirstVisibleColumn, 0);
-      const labelDimensions = tempLabel.getLabelDimensions();
-      tempLabel.destroy(); // Clean up temp label
-
-      animatedTriangle.position.set(
-        labelDimensions.width + 8 + 6, // 8px padding + 6px for pivot offset
-        (labelDimensions.height - 12) / 2 + 6 // Centered vertically + 6px for pivot offset
-      );
-      cellContainer.addChild(animatedTriangle);
     }
     // If no pinned event, return empty container (transparent)
 

@@ -2,10 +2,10 @@ import { Application, Container, Text } from "pixi.js";
 import { ICellRenderer } from "../interfaces/ICellRenderer";
 import { Baker } from "../util/Baker";
 import { Bleacher } from "../../dashboard/db/client/bleachers";
-import { EventBody } from "../ui/EventBody";
+import { EventBody } from "../ui/event/EventBody";
 import { EventSpanType, EventsUtil } from "../util/Events";
-import { FirstEventCell } from "../ui/FirstEventCell";
 import { Tile } from "../ui/Tile";
+import { FirstCellNotPinned } from "../ui/event/FirstCellNotPinned";
 
 /**
  * CellRenderer for the main scrollable grid area
@@ -77,7 +77,7 @@ export class MainGridCellRenderer implements ICellRenderer {
         // UNPINNED EVENT: Cache the entire container for maximum performance
         parent.zIndex = 1000;
 
-        const firstCell = new FirstEventCell(
+        const firstCell = new FirstCellNotPinned(
           eventInfo,
           currentFirstVisibleColumn,
           col,

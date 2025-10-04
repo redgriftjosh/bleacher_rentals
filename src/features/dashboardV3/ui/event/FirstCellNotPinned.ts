@@ -1,14 +1,14 @@
-import { Application, Container, Sprite, Text } from "pixi.js";
-import { EventInfo, EventSpanType } from "../util/Events";
+import { Application, Sprite } from "pixi.js";
+import { EventInfo } from "../../util/Events";
 import { EventBody } from "./EventBody";
-import { EventCellLabel } from "./EventCellLabel";
-import { Baker } from "../util/Baker";
+import { Baker } from "../../util/Baker";
+import { PinnableSection } from "./PinnableSection";
 
 /**
  * Static event label component without any interactive elements
  * This can be safely baked into a RenderTexture for performance
  */
-export class FirstEventCell extends Sprite {
+export class FirstCellNotPinned extends Sprite {
   constructor(
     eventInfo: EventInfo,
     firstVisibleColIndex: number,
@@ -27,13 +27,7 @@ export class FirstEventCell extends Sprite {
         const eventCell = new EventBody(eventInfo, baker, dimensions);
         c.addChild(eventCell);
 
-        const eventCellLabel = new EventCellLabel(
-          eventInfo.span!,
-          firstVisibleColIndex,
-          currentColIndex,
-          app,
-          "dynamic" // Use dynamic mode for baking (includes triangle)
-        );
+        const eventCellLabel = new PinnableSection(eventInfo.span!, app, baker);
         c.addChild(eventCellLabel);
       }
     );

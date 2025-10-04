@@ -1,4 +1,4 @@
-import { Application, Graphics } from "pixi.js";
+import { Application, Assets, Graphics, Sprite } from "pixi.js";
 import { Grid } from "./util/Grid";
 import { MainGridCellRenderer } from "./cellRenderers/MainGridCellRenderer";
 import { StickyLeftColumnCellRenderer } from "./cellRenderers/StickyLeftColumnCellRenderer";
@@ -14,6 +14,7 @@ import { Bleacher } from "../dashboard/db/client/bleachers";
 import { getColumnsAndDates } from "../dashboard/util/scrollbar";
 import { SCROLLBAR_THICKNESS } from "./util/VerticalScrollbar";
 import { TopLeftCellRenderer } from "./cellRenderers/TopLeftCellRenderer";
+import { PngManager } from "./util/PngManager";
 
 export class Dashboard {
   // Grids
@@ -30,6 +31,24 @@ export class Dashboard {
   constructor(app: Application, bleachers: Bleacher[]) {
     // Get dates for event calculations
     const { columns: contentColumns, dates } = getColumnsAndDates();
+
+    // const fallbackGraphics = new Graphics();
+    // fallbackGraphics.fill({ color: 0x4a90e2 }); // Nice blue color
+    // fallbackGraphics.roundRect(0, 0, 160, 160, 3); // Rounded rectangle
+    // fallbackGraphics.fill();
+    // app.stage.addChild(fallbackGraphics);
+
+    // this.loadTexture(app);
+    //  try {
+    //   const texture = await Assets.load("/GSLogo.png");
+    //   const sprite = new Sprite(texture);
+    //   app.stage.addChild(sprite);
+    // } catch (error) {
+    //   console.error("Failed to load texture:", error);
+    // }
+
+    // const sprite = PngManager.getSprite("GSLogo");
+    // app.stage.addChild(sprite);
 
     this.mainGridCellRenderer = new MainGridCellRenderer(app, bleachers, dates);
     this.mainGridPinYCellRenderer = new PinnedYCellRenderer(app, bleachers, dates);
@@ -139,6 +158,16 @@ export class Dashboard {
     // Initialize both renderers with starting scroll position
     this.mainGridPinYCellRenderer.updateScrollPosition(0, CELL_WIDTH);
     this.mainGridCellRenderer.updateScrollPosition(0, CELL_WIDTH);
+  }
+
+  private async loadTexture(app: Application) {
+    try {
+      const texture = await Assets.load("/GSLogo.png");
+      const sprite = new Sprite(texture);
+      app.stage.addChild(sprite);
+    } catch (error) {
+      console.error("Failed to load texture:", error);
+    }
   }
 
   /**

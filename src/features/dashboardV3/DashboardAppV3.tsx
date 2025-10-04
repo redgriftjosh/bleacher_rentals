@@ -1,12 +1,13 @@
 "use client";
 
-import { Application } from "pixi.js";
+import { Application, Assets, Graphics, Sprite, Texture } from "pixi.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCurrentEventStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
 import WorkTrackerModal from "@/app/(dashboards)/bleachers-dashboard/_lib/_components/dashboard/WorkTrackerModal";
 import { Tables } from "../../../database.types";
 import { Bleacher } from "../dashboard/db/client/bleachers";
 import { main } from "./main";
+import bunny from "./GSLogo.png";
 
 export default function DashboardAppV3({ bleachers }: { bleachers: Bleacher[] }) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -49,6 +50,24 @@ export default function DashboardAppV3({ bleachers }: { bleachers: Bleacher[] })
         antialias: false,
         powerPreference: "high-performance",
       });
+
+      // const fallbackGraphics = new Graphics();
+      // fallbackGraphics.fill({ color: 0x4a90e2 }); // Nice blue color
+      // fallbackGraphics.roundRect(0, 0, 160, 160, 3); // Rounded rectangle
+      // fallbackGraphics.fill();
+      // app.stage.addChild(fallbackGraphics);
+
+      // const texture = Texture.from("https://pixijs.io/examples/examples/assets/bunny.png");
+      // const bunny = new Sprite(texture);
+
+      // bunny.anchor.set(0.5);
+      // bunny.x = app.screen.width / 2;
+      // bunny.y = app.screen.height / 2;
+      // app.stage.addChild(bunny);
+
+      // const texture = await Assets.load("/GSLogo.png");
+      // const sprite = new Sprite(texture);
+      // app.stage.addChild(sprite);
 
       if (destroyed || appRef.current !== app) return;
 

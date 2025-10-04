@@ -1,7 +1,7 @@
 import { Container, Graphics, Sprite } from "pixi.js";
-import { EventSpanType, EventsUtil } from "../util/Events";
+import { EventSpanType, EventsUtil } from "../../util/Events";
 import { CELL_HEIGHT, CELL_WIDTH } from "@/features/dashboard/values/constants";
-import { Baker } from "../util/Baker";
+import { Baker } from "../../util/Baker";
 
 export class EventBody extends Sprite {
   constructor(
