@@ -19,6 +19,7 @@ export class LabelText extends Container {
       },
     });
     this.addChild(label);
+    console.log("LabelText");
   }
 
   /**

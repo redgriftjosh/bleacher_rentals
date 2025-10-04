@@ -20,7 +20,7 @@ export class FirstCellNotPinned extends Sprite {
     super();
 
     const texture = baker.getTexture(
-      `FirstEventCell:${eventInfo.span?.ev.bleacherEventId}`,
+      `FirstCellNotPinned:${eventInfo.span?.ev.eventId}`,
       // { width: dimensions.width * 2, height: dimensions.height },
       null,
       (c) => {
@@ -29,6 +29,7 @@ export class FirstCellNotPinned extends Sprite {
 
         const eventCellLabel = new PinnableSection(eventInfo.span!, app, baker);
         c.addChild(eventCellLabel);
+        console.log("FirstEventCell");
       }
     );
 

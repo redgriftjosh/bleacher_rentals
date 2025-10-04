@@ -135,6 +135,7 @@ export class BleacherCell extends Container {
    * @internal
    */
   private buildBleacherContainer(c: Container, b: Bleacher) {
+    console.log("buildBleacherContainer");
     const bleacherNumber = new Text({
       text: String(b.bleacherNumber),
       style: { fill: 0xf0b000, fontSize: 16, fontWeight: "bold" },

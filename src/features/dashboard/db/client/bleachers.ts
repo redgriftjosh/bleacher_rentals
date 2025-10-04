@@ -15,6 +15,7 @@ export type Bleacher = {
 };
 
 export type BleacherEvent = {
+  eventId: number;
   bleacherEventId: number;
   eventName: string;
   address: string;
@@ -40,6 +41,7 @@ type Row = {
   bleacher_events: {
     bleacher_event_id: number;
     event: {
+      event_id: number;
       event_name: string;
       event_start: string;
       event_end: string;
@@ -76,6 +78,7 @@ export async function FetchDashboardBleachers(
       bleacher_events:BleacherEvents!BleacherEvents_bleacher_id_fkey(
         bleacher_event_id,
         event:Events!BleacherEvents_event_id_fkey(
+          event_id,
           event_name,
           event_start,
           event_end,
@@ -107,6 +110,7 @@ export async function FetchDashboardBleachers(
     summerHomeBase: r.summer?.home_base_name ?? "",
     winterHomeBase: r.winter?.home_base_name ?? "",
     bleacherEvents: r.bleacher_events.map((be) => ({
+      eventId: be.event.event_id,
       bleacherEventId: be.bleacher_event_id,
       eventName: be.event.event_name,
       eventStart: be.event.event_start,

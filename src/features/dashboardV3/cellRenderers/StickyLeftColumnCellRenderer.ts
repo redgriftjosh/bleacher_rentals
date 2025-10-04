@@ -36,7 +36,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
   ): Container {
     // PERFORMANCE CRITICAL: Reuse existing container
     parent.removeChildren();
-    
+
     const dimensions = { width: cellWidth, height: cellHeight };
 
     // Add background tile first (behind the BleacherCell)

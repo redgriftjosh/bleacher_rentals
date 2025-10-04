@@ -70,7 +70,7 @@ export class PinnedYCellRenderer implements ICellRenderer {
 
     if (pinnedEventSpan) {
       // Cache the static label
-      const labelCacheKey = `pinned-label:${pinnedEventSpan.ev.bleacherEventId}:${currentFirstVisibleColumn}:${cellWidth}x${cellHeight}`;
+      const labelCacheKey = `PinnableSection:${pinnedEventSpan.ev.eventId}`;
       const pinnedTexture = this.baker.getTexture(
         labelCacheKey,
         { width: cellWidth, height: cellHeight },

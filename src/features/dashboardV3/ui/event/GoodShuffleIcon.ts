@@ -25,11 +25,12 @@ export class GoodShuffleIcon extends Sprite {
       logoSprite.width = 16;
       logoSprite.height = 16;
       c.addChild(logoSprite);
+      console.log("GoodShuffleIcon created from scratch");
     });
 
     this.texture = texture;
     this.position.set(-5, -20);
-    console.log("GoodShuffleIcon created with cached texture");
+    // console.log("GoodShuffleIcon created with cached texture");
   }
 
   private createFallbackTexture(baker: Baker) {

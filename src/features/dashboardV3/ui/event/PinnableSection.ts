@@ -26,6 +26,7 @@ export class PinnableSection extends Container {
     );
 
     this.addChild(this.labelText, gsLogo);
+    console.log("PinnableSection");
   }
 
   /**

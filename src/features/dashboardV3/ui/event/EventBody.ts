@@ -16,20 +16,17 @@ export class EventBody extends Sprite {
     dimensions: { width: number; height: number }
   ) {
     super();
-    const texture = baker.getTexture(
-      `EventBody:${eventInfo.span?.ev.bleacherEventId}`,
-      dimensions,
-      (c) => {
-        const eventColor =
-          eventInfo.span && eventInfo.span.ev.hslHue != null
-            ? EventsUtil.hslToRgbInt(eventInfo.span.ev.hslHue, 60, 60)
-            : 0x808080;
+    const texture = baker.getTexture(`EventBody:${eventInfo.span?.ev.eventId}`, dimensions, (c) => {
+      const eventColor =
+        eventInfo.span && eventInfo.span.ev.hslHue != null
+          ? EventsUtil.hslToRgbInt(eventInfo.span.ev.hslHue, 60, 60)
+          : 0x808080;
 
-        const g = new Graphics();
-        g.rect(0, 0, CELL_WIDTH, CELL_HEIGHT - 1).fill(eventColor); // Use actual cell dimensions and apply color
-        c.addChild(g);
-      }
-    );
+      const g = new Graphics();
+      g.rect(0, 0, CELL_WIDTH, CELL_HEIGHT - 1).fill(eventColor); // Use actual cell dimensions and apply color
+      c.addChild(g);
+      console.log("EventBody");
+    });
     this.texture = texture;
   }
 }

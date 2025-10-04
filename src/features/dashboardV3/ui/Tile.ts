@@ -16,6 +16,7 @@ export class Tile extends Sprite {
         .rect(0, 0, dimensions.width, dimensions.height)
         .stroke({ color: 0xe9ecef, width: 1 });
       c.addChild(tileGraphics);
+      console.log("tile");
     });
 
     this.texture = tileTexture;
