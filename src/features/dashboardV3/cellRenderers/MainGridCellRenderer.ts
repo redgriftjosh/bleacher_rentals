@@ -58,7 +58,20 @@ export class MainGridCellRenderer implements ICellRenderer {
     // PERFORMANCE CRITICAL: Reuse existing container instead of creating new one
     // Clear existing children efficiently
     parent.removeChildren();
-    
+
+    // parent.eventMode = "static";
+    // parent.cursor = "pointer";
+
+    // parent.on("pointerenter", () => {
+    //   console.log("Logo Hovered");
+    //   // this.startAnimation();
+    // });
+
+    // parent.on("pointerleave", () => {
+    //   console.log("Logo Unhovered");
+    //   // this.stopAnimation();
+    // });
+
     const dimensions = { width: cellWidth, height: cellHeight };
     parent.zIndex = 0;
 
