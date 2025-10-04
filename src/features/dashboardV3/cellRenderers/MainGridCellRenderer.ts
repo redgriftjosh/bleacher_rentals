@@ -55,7 +55,10 @@ export class MainGridCellRenderer implements ICellRenderer {
     parent: Container,
     firstVisibleColumn?: number
   ): Container {
-    const cellContainer = new Container();
+    // PERFORMANCE CRITICAL: Reuse existing container instead of creating new one
+    // Clear existing children efficiently
+    parent.removeChildren();
+    
     const dimensions = { width: cellWidth, height: cellHeight };
     parent.zIndex = 0;
 
@@ -85,7 +88,7 @@ export class MainGridCellRenderer implements ICellRenderer {
           this.baker,
           dimensions
         );
-        cellContainer.addChild(firstCell);
+        parent.addChild(firstCell);
       } else {
         // PINNED EVENT OR EVENT BODY: Use separate caching strategy
         // parent.zIndex = 0;
@@ -98,13 +101,13 @@ export class MainGridCellRenderer implements ICellRenderer {
             c.addChild(eventCell);
           }
         );
-        cellContainer.addChild(eventSprite);
+        parent.addChild(eventSprite);
       }
     } else {
       const tile = new Tile(dimensions, this.baker);
-      cellContainer.addChild(tile);
+      parent.addChild(tile);
     }
-    return cellContainer;
+    return parent;
   }
 
   /**

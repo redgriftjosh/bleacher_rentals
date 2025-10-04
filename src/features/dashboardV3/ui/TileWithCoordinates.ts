@@ -12,7 +12,7 @@ export class TileWithCoordinates extends Container {
   ) {
     super();
 
-    const defaultTile = new Tile(app, dimensions);
+    const defaultTile = new Tile(dimensions, baker);
     const tileSprite = new Sprite(defaultTile.texture);
 
     const coordinates = new Text({

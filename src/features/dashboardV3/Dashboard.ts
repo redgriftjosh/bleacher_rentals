@@ -32,24 +32,6 @@ export class Dashboard {
     // Get dates for event calculations
     const { columns: contentColumns, dates } = getColumnsAndDates();
 
-    // const fallbackGraphics = new Graphics();
-    // fallbackGraphics.fill({ color: 0x4a90e2 }); // Nice blue color
-    // fallbackGraphics.roundRect(0, 0, 160, 160, 3); // Rounded rectangle
-    // fallbackGraphics.fill();
-    // app.stage.addChild(fallbackGraphics);
-
-    // this.loadTexture(app);
-    //  try {
-    //   const texture = await Assets.load("/GSLogo.png");
-    //   const sprite = new Sprite(texture);
-    //   app.stage.addChild(sprite);
-    // } catch (error) {
-    //   console.error("Failed to load texture:", error);
-    // }
-
-    // const sprite = PngManager.getSprite("GSLogo");
-    // app.stage.addChild(sprite);
-
     this.mainGridCellRenderer = new MainGridCellRenderer(app, bleachers, dates);
     this.mainGridPinYCellRenderer = new PinnedYCellRenderer(app, bleachers, dates);
     const leftColumnCellRenderer = new StickyLeftColumnCellRenderer(app, bleachers);
@@ -121,6 +103,7 @@ export class Dashboard {
       x: BLEACHER_COLUMN_WIDTH,
       y: HEADER_ROW_HEIGHT,
       showScrollbar: true, // Only main grid shows scrollbars
+      allowScrolling: true,
     });
 
     // another grid in front of main grid that renders the pinned y axis
@@ -136,6 +119,7 @@ export class Dashboard {
       x: BLEACHER_COLUMN_WIDTH,
       y: HEADER_ROW_HEIGHT,
       showScrollbar: false,
+      onlyUpdateWhenScrollStops: false, // 🚀 PERFORMANCE: Only update cells when scrolling stops
     });
 
     // When main grid completes a cell update cycle, update the pinned Y axis

@@ -55,7 +55,8 @@ export class PinnedYCellRenderer implements ICellRenderer {
     parent: Container,
     firstVisibleColumn?: number
   ): Container {
-    const cellContainer = new Container();
+    // PERFORMANCE CRITICAL: Reuse existing container
+    parent.removeChildren();
 
     // Use the main grid's first visible column for pinning calculations
     const currentFirstVisibleColumn = this.mainGridFirstVisibleColumn;
@@ -80,11 +81,11 @@ export class PinnedYCellRenderer implements ICellRenderer {
       );
 
       const labelSprite = new Sprite(pinnedTexture);
-      cellContainer.addChild(labelSprite);
+      parent.addChild(labelSprite);
     }
     // If no pinned event, return empty container (transparent)
 
-    return cellContainer;
+    return parent;
   }
 
   /**

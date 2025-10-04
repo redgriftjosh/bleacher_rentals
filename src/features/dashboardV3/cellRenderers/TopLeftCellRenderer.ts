@@ -29,13 +29,13 @@ export class TopLeftCellRenderer implements ICellRenderer {
     parent: Container,
     firstVisibleColumn?: number
   ): Container {
-    const cellContainer = new Container();
+    parent.removeChildren();
     const dimensions = { width: cellWidth, height: cellHeight };
 
     // const tile = new BakedTile(dimensions, this.baker);
     const tile = new TopLeftCell(dimensions, this.baker);
-    cellContainer.addChild(tile);
-    return cellContainer;
+    parent.addChild(tile);
+    return parent;
   }
 
   /**

@@ -16,6 +16,8 @@ export interface GridOptions {
   x?: number;
   y?: number;
   showScrollbar?: boolean;
+  allowScrolling?: boolean;
+  onlyUpdateWhenScrollStops?: boolean;
 }
 
 /**
@@ -38,6 +40,10 @@ export class Grid extends Container {
   private gridContainer: Container; // Container for the actual grid cells
   private contentMask?: Graphics; // Mask to prevent content from overlapping scrollbars
   private baker: Baker; // Baker for texture caching
+  private onlyUpdateWhenScrollStops: boolean;
+  private isScrolling = false;
+  private scrollStopTimeout: ReturnType<typeof setTimeout> | null = null;
+  private scrollStopDelay = 100; // ms to wait after scroll stops
 
   // Virtualization properties
   private visibleRows: number;
@@ -61,6 +67,8 @@ export class Grid extends Container {
     this.gridHeight = options.gridHeight;
     this.cellRenderer = options.cellRenderer;
     this.showScrollbar = options.showScrollbar ?? true; // Default to true
+
+    this.onlyUpdateWhenScrollStops = options.onlyUpdateWhenScrollStops ?? false;
 
     // Initialize Baker for texture caching
     this.baker = new Baker(this.app);
@@ -97,10 +105,14 @@ export class Grid extends Container {
     this.updateVirtualizedCells(0, 0);
 
     // Create scrollbars if needed
-    this.createScrollbars();
+    if (options.showScrollbar) {
+      this.createScrollbars();
+    }
 
     // Listen for scroll events
-    this.setupScrolling();
+    if (options.allowScrolling) {
+      this.setupScrolling();
+    }
 
     console.log("✅ Grid created with CellRenderer and built-in scroll support");
   }
@@ -177,9 +189,8 @@ export class Grid extends Container {
         }
 
         // Need to update cell content - only recreate if coordinates changed
-        poolContainer.removeChildren();
-
-        const cellContent = this.cellRenderer.buildCell(
+        // PERFORMANCE CRITICAL: Reuse existing container instead of removing/adding children
+        this.cellRenderer.buildCell(
           actualRow,
           actualCol,
           this.cellWidth,
@@ -188,9 +199,6 @@ export class Grid extends Container {
           firstVisibleCol
         );
 
-        // // Create sprite from baked texture
-        // const cellSprite = new Sprite(bakedTexture);
-        poolContainer.addChild(cellContent);
         poolContainer.position.set(actualCol * this.cellWidth, actualRow * this.cellHeight);
         poolContainer.visible = true;
 
@@ -307,9 +315,23 @@ export class Grid extends Container {
   private updateY = (scrollY: number) => {
     this.currentScrollY = scrollY;
     this.gridContainer.position.y = -scrollY;
+    this.isScrolling = true;
 
-    // Update virtualized cells
-    this.updateVirtualizedCells(this.currentScrollX, this.currentScrollY);
+    if (this.onlyUpdateWhenScrollStops) {
+      // Clear existing timeout and set a new one
+      if (this.scrollStopTimeout) {
+        clearTimeout(this.scrollStopTimeout);
+      }
+
+      this.scrollStopTimeout = setTimeout(() => {
+        this.isScrolling = false;
+        this.updateVirtualizedCells(this.currentScrollX, this.currentScrollY);
+        this.scrollStopTimeout = null;
+      }, this.scrollStopDelay);
+    } else {
+      // Update immediately if not using scroll-stop optimization
+      this.updateVirtualizedCells(this.currentScrollX, this.currentScrollY);
+    }
   };
 
   /**
@@ -318,13 +340,28 @@ export class Grid extends Container {
   private updateX = (scrollX: number) => {
     this.currentScrollX = scrollX;
     this.gridContainer.position.x = -scrollX;
+    this.isScrolling = true;
 
-    // Keep viewport label layer fixed horizontally (don't sync X position)
-    // this.viewportLabelLayer.position.x stays at 0
+    if (this.onlyUpdateWhenScrollStops) {
+      // Clear existing timeout and set a new one
+      if (this.scrollStopTimeout) {
+        clearTimeout(this.scrollStopTimeout);
+      }
 
-    // Update virtualized cells
-    this.updateVirtualizedCells(this.currentScrollX, this.currentScrollY);
+      this.scrollStopTimeout = setTimeout(() => {
+        this.isScrolling = false;
+        this.updateVirtualizedCells(this.currentScrollX, this.currentScrollY);
+        this.scrollStopTimeout = null;
+      }, this.scrollStopDelay);
+    } else {
+      // Update immediately if not using scroll-stop optimization
+      this.updateVirtualizedCells(this.currentScrollX, this.currentScrollY);
+    }
   };
+
+  private getIsScrolling(scrollX: number, scrollY: number): boolean {
+    return scrollX !== this.currentScrollX || scrollY !== this.currentScrollY;
+  }
 
   /**
    * Coordinate wheel events between vertical and horizontal scrollbars
@@ -416,6 +453,12 @@ export class Grid extends Container {
   destroy(options?: Parameters<Container["destroy"]>[0]) {
     // Remove wheel event listener
     this.app.stage.off("wheel", this.onWheel);
+
+    // Clear any pending scroll stop timeout
+    if (this.scrollStopTimeout) {
+      clearTimeout(this.scrollStopTimeout);
+      this.scrollStopTimeout = null;
+    }
 
     // Clean up baker textures
     if (this.baker) {

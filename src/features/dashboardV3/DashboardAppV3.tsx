@@ -45,29 +45,13 @@ export default function DashboardAppV3({ bleachers }: { bleachers: Bleacher[] })
       await app.init({
         resizeTo: host,
         background: "#ffffff",
-        resolution: Math.min(2, window.devicePixelRatio || 1),
+        // resolution: Math.min(2, window.devicePixelRatio || 1),
+        resolution: window.devicePixelRatio,
         autoDensity: true,
         antialias: false,
         powerPreference: "high-performance",
+        roundPixels: false,
       });
-
-      // const fallbackGraphics = new Graphics();
-      // fallbackGraphics.fill({ color: 0x4a90e2 }); // Nice blue color
-      // fallbackGraphics.roundRect(0, 0, 160, 160, 3); // Rounded rectangle
-      // fallbackGraphics.fill();
-      // app.stage.addChild(fallbackGraphics);
-
-      // const texture = Texture.from("https://pixijs.io/examples/examples/assets/bunny.png");
-      // const bunny = new Sprite(texture);
-
-      // bunny.anchor.set(0.5);
-      // bunny.x = app.screen.width / 2;
-      // bunny.y = app.screen.height / 2;
-      // app.stage.addChild(bunny);
-
-      // const texture = await Assets.load("/GSLogo.png");
-      // const sprite = new Sprite(texture);
-      // app.stage.addChild(sprite);
 
       if (destroyed || appRef.current !== app) return;
 

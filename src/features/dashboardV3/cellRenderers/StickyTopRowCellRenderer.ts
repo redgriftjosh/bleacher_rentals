@@ -33,8 +33,15 @@ export class StickyTopRowCellRenderer implements ICellRenderer {
    * Build cell content using HeaderCell component with Tile background
    * This creates the actual visual content that will be baked into a texture by Grid
    */
-  buildCell(row: number, col: number, cellWidth: number, cellHeight: number): Container {
-    const cellContainer = new Container();
+  buildCell(
+    row: number,
+    col: number,
+    cellWidth: number,
+    cellHeight: number,
+    parent: Container,
+    firstVisibleColumn?: number
+  ): Container {
+    parent.removeChildren();
     const dimensions = { width: cellWidth, height: cellHeight };
 
     const headerCellTexture = this.baker.getSprite(`headerCellTexture${col}`, dimensions, (c) => {
@@ -52,7 +59,7 @@ export class StickyTopRowCellRenderer implements ICellRenderer {
         c.addChild(headerCell);
       }
     });
-    cellContainer.addChild(headerCellTexture);
-    return cellContainer;
+    parent.addChild(headerCellTexture);
+    return parent;
   }
 }

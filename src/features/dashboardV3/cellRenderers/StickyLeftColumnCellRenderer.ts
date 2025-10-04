@@ -34,12 +34,14 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     cellHeight: number,
     parent: Container
   ): Container {
-    const cellContainer = new Container();
+    // PERFORMANCE CRITICAL: Reuse existing container
+    parent.removeChildren();
+    
     const dimensions = { width: cellWidth, height: cellHeight };
 
     // Add background tile first (behind the BleacherCell)
     const tileSprite = new Tile(dimensions, this.baker);
-    cellContainer.addChild(tileSprite);
+    parent.addChild(tileSprite);
 
     // Get the bleacher data for this row
     const bleacher = this.bleachers[row];
@@ -48,10 +50,10 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
       // Create a BleacherCell and set the bleacher data (on top of the tile)
       const bleacherCell = new BleacherCell(this.baker);
       bleacherCell.setBleacher(bleacher);
-      cellContainer.addChild(bleacherCell);
+      parent.addChild(bleacherCell);
     }
 
-    return cellContainer;
+    return parent;
   }
 
   /**
