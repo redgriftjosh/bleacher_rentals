@@ -179,6 +179,23 @@ export class HorizontalScrollbar {
     return this.contentX;
   }
 
+  /**
+   * Set the scroll position without triggering events (for initialization)
+   */
+  public setScrollPositionSilent(newContentX: number) {
+    // Clamp content position
+    this.contentX = this.clamp(newContentX, 0, this.maxContentX);
+
+    // Update thumb position
+    this.thumbX = this.maxContentX > 0 ? (this.contentX / this.maxContentX) * this.maxThumbX : 0;
+
+    if (this.thumb) {
+      this.thumb.position.x = Math.round(this.thumbX);
+    }
+
+    // Don't emit events - this is for silent initialization
+  }
+
   public destroy() {
     // Note: No wheel event to remove since Grid handles wheel events
     if (this.scrollbarContainer) {

@@ -28,7 +28,11 @@ export class Dashboard {
   private mainGridPinYCellRenderer: PinnedYCellRenderer; // Store reference for scroll updates
   private mainGridCellRenderer: MainGridCellRenderer; // Store reference for scroll updates
 
+  // Store app reference for centering calculations
+  private app: Application;
+
   constructor(app: Application, bleachers: Bleacher[]) {
+    this.app = app;
     // Get dates for event calculations
     const { columns: contentColumns, dates } = getColumnsAndDates();
 
@@ -138,20 +142,33 @@ export class Dashboard {
 
     // Set up scroll synchronization
     this.setupScrollSynchronization();
-
-    // Initialize both renderers with starting scroll position
-    this.mainGridPinYCellRenderer.updateScrollPosition(0, CELL_WIDTH);
-    this.mainGridCellRenderer.updateScrollPosition(0, CELL_WIDTH);
   }
 
-  private async loadTexture(app: Application) {
-    try {
-      const texture = await Assets.load("/GSLogo.png");
-      const sprite = new Sprite(texture);
-      app.stage.addChild(sprite);
-    } catch (error) {
-      console.error("Failed to load texture:", error);
-    }
+  /**
+   * Center the horizontal scroll position on initial load
+   * Returns the calculated center position
+   */
+  private centerHorizontalScroll(): number {
+    // Calculate the center position based on content width and viewport width
+    const contentWidth = this.mainGrid.getContentWidth();
+    const viewportWidth = this.app.screen.width - BLEACHER_COLUMN_WIDTH;
+
+    // Calculate center position (content width / 2 - viewport width / 2)
+    const centerX = Math.max(0, (contentWidth - viewportWidth) / 2);
+
+    console.log(
+      `Centering horizontal scroll: contentWidth=${contentWidth}, viewportWidth=${viewportWidth}, centerX=${centerX}`
+    );
+
+    // Set the horizontal scroll on ALL grids that need horizontal centering
+    this.mainGrid.setHorizontalScroll(centerX);
+    this.stickyTopRow.setHorizontalScroll(centerX);
+
+    // Update the scrollbar positions to match (only main grid has visible scrollbar)
+    this.mainGrid.updateHorizontalScrollbarPosition(centerX);
+
+    // Return the center position so we can use it for renderer initialization
+    return centerX;
   }
 
   /**
@@ -172,6 +189,9 @@ export class Dashboard {
       this.mainGridPinYCellRenderer.updateScrollPosition(scrollX, CELL_WIDTH);
       this.mainGridCellRenderer.updateScrollPosition(scrollX, CELL_WIDTH);
     });
+
+    // Center the horizontal scroll on initial load
+    this.centerHorizontalScroll();
   }
 
   /**

@@ -440,6 +440,15 @@ export class Grid extends Container {
   }
 
   /**
+   * Update the horizontal scrollbar position without triggering events (for initialization)
+   */
+  public updateHorizontalScrollbarPosition(scrollX: number) {
+    if (this.horizontalScrollbar) {
+      this.horizontalScrollbar.setScrollPositionSilent(scrollX);
+    }
+  }
+
+  /**
    * Force a complete re-render of all visible cells
    * Bypasses the coordinate change checks and forces cell content rebuilding
    */
