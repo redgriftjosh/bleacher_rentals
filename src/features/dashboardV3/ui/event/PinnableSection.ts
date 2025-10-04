@@ -19,27 +19,18 @@ export class PinnableSection extends Container {
 
     // Always create the static label
     this.labelText = new LabelText(eventInfo);
-    const gsLogo = new GoodShuffleIcon(baker);
-    const labelDimensions = this.labelText.getLabelDimensions();
-    gsLogo.position.set(
-      labelDimensions.width + 4, // 8px padding + 6px for pivot offset
-      0 // Centered vertically + 6px for pivot offset
-    );
+    if (eventInfo.ev.goodshuffleUrl) {
+      const labelDimensions = this.labelText.getLabelDimensions();
+      const gsLogo = new GoodShuffleIcon(baker, eventInfo.ev.goodshuffleUrl);
+      gsLogo.position.set(
+        labelDimensions.width + 4, // 8px padding + 6px for pivot offset
+        0 // Centered vertically + 6px for pivot offset
+      );
+      this.addChild(gsLogo);
+    }
+    this.addChild(this.labelText);
 
-    this.addChild(this.labelText, gsLogo);
     console.log("PinnableSection");
-
-    // Add hover functionality (will only work when this component is live, not baked)
-    // this.eventMode = "static";
-    // this.cursor = "pointer";
-
-    // this.on("pointerenter", () => {
-    //   console.log("PinnableSection Hovered");
-    // });
-
-    // this.on("pointerleave", () => {
-    //   console.log("PinnableSection Unhovered");
-    // });
   }
 
   /**

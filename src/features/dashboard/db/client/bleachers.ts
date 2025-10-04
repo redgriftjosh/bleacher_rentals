@@ -23,6 +23,7 @@ export type BleacherEvent = {
   eventEnd: string;
   hslHue: number | null;
   booked: boolean;
+  goodshuffleUrl: string | null;
 };
 
 export type BleacherBlock = {
@@ -48,6 +49,7 @@ type Row = {
       hsl_hue: number | null;
       booked: boolean;
       address: { street: string } | null;
+      goodshuffle_url: string | null;
     };
   }[];
   blocks: {
@@ -84,6 +86,7 @@ export async function FetchDashboardBleachers(
           event_end,
           hsl_hue,
           booked,
+          goodshuffle_url,
           address:Addresses!Events_address_id_fkey(
             street
           )
@@ -117,6 +120,7 @@ export async function FetchDashboardBleachers(
       eventEnd: be.event.event_end,
       hslHue: be.event.hsl_hue,
       booked: be.event.booked,
+      goodshuffleUrl: be.event.goodshuffle_url ?? null,
       address: be.event.address?.street ?? "",
     })),
     blocks: r.blocks.map((block) => ({

@@ -8,9 +8,12 @@ export class GoodShuffleIcon extends Container {
   private isAnimating = false;
   private originalScale = 1;
   private isHovering = false; // Track hover state to prevent stuck states
+  private goodshuffleUrl: string;
 
-  constructor(baker: Baker) {
+  constructor(baker: Baker, goodshuffleUrl: string) {
     super();
+
+    this.goodshuffleUrl = goodshuffleUrl;
 
     // Create shadow graphics (initially hidden)
     this.shadowGraphics = new Graphics();
@@ -37,6 +40,7 @@ export class GoodShuffleIcon extends Container {
     this.cursor = "pointer";
     this.on("pointerenter", this.onHoverStart.bind(this));
     this.on("pointerleave", this.onHoverEnd.bind(this));
+    this.on("pointerup", this.onPointerUp.bind(this));
 
     // Initialize shadow graphics
     this.updateShadow();
@@ -54,6 +58,13 @@ export class GoodShuffleIcon extends Container {
     console.log("GoodShuffleIcon Unhovered");
     this.isHovering = false;
     this.animateHover(false);
+  }
+
+  private onPointerUp() {
+    console.log("GoodShuffleIcon clicked, opening URL:", this.goodshuffleUrl);
+    if (this.goodshuffleUrl) {
+      window.open(this.goodshuffleUrl, "_blank");
+    }
   }
 
   private animateHover(isHovering: boolean) {
@@ -137,6 +148,7 @@ export class GoodShuffleIcon extends Container {
     // Clean up hover event listeners
     this.off("pointerenter");
     this.off("pointerleave");
+    this.off("pointerup");
 
     // Reset state before destroying
     this.resetHoverState();
