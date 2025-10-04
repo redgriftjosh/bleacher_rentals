@@ -16,7 +16,7 @@ export class EventBody extends Sprite {
     dimensions: { width: number; height: number }
   ) {
     super();
-    const texture = baker.getTexture(`EventBody:${eventInfo.span?.ev.eventId}`, dimensions, (c) => {
+    const texture = baker.getTexture(`EventBody:${eventInfo.span?.ev.eventId}`, null, (c) => {
       const eventColor =
         eventInfo.span && eventInfo.span.ev.hslHue != null
           ? EventsUtil.hslToRgbInt(eventInfo.span.ev.hslHue, 60, 60)
