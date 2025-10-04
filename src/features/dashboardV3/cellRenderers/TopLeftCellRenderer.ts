@@ -27,7 +27,6 @@ export class TopLeftCellRenderer implements ICellRenderer {
     cellWidth: number,
     cellHeight: number,
     parent: Container,
-    viewportLabelLayer?: Container,
     firstVisibleColumn?: number
   ): Container {
     const cellContainer = new Container();

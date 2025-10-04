@@ -36,7 +36,6 @@ export class Grid extends Container {
   private verticalScrollbar?: VerticalScrollbar;
   private horizontalScrollbar?: HorizontalScrollbar;
   private gridContainer: Container; // Container for the actual grid cells
-  private viewportLabelLayer: Container; // Layer for viewport-positioned labels (doesn't scroll)
   private contentMask?: Graphics; // Mask to prevent content from overlapping scrollbars
   private baker: Baker; // Baker for texture caching
 
@@ -87,10 +86,6 @@ export class Grid extends Container {
     // Create container for grid cells
     this.gridContainer = new Container();
     this.addChild(this.gridContainer);
-
-    // Create viewport label layer (doesn't scroll with content)
-    this.viewportLabelLayer = new Container();
-    this.addChild(this.viewportLabelLayer);
 
     // Create content mask to prevent overlap with scrollbars
     this.createContentMask();
@@ -190,7 +185,6 @@ export class Grid extends Container {
           this.cellWidth,
           this.cellHeight,
           poolContainer,
-          this.viewportLabelLayer,
           firstVisibleCol
         );
 
@@ -313,9 +307,6 @@ export class Grid extends Container {
   private updateY = (scrollY: number) => {
     this.currentScrollY = scrollY;
     this.gridContainer.position.y = -scrollY;
-
-    // Sync viewport label layer's Y position to scroll vertically with grid
-    this.viewportLabelLayer.position.y = -scrollY;
 
     // Update virtualized cells
     this.updateVirtualizedCells(this.currentScrollX, this.currentScrollY);

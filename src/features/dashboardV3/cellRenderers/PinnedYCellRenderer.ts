@@ -53,7 +53,6 @@ export class PinnedYCellRenderer implements ICellRenderer {
     cellWidth: number,
     cellHeight: number,
     parent: Container,
-    viewportLabelLayer?: Container,
     firstVisibleColumn?: number
   ): Container {
     const cellContainer = new Container();

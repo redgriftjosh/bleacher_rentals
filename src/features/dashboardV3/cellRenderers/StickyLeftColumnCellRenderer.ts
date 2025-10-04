@@ -32,8 +32,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     col: number,
     cellWidth: number,
     cellHeight: number,
-    parent: Container,
-    viewportLabelLayer?: Container
+    parent: Container
   ): Container {
     const cellContainer = new Container();
     const dimensions = { width: cellWidth, height: cellHeight };
