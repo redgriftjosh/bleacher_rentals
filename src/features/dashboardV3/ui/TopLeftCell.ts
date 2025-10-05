@@ -7,7 +7,7 @@ export class TopLeftCell extends Sprite {
     super();
 
     const texture = baker.getTexture(`TopLeftTile`, dimensions, (c) => {
-      const tile = new Tile(dimensions, baker);
+      const tile = new Tile(dimensions, baker, 0, 0);
       const label = new Text({
         text: "Bleachers",
         style: { fill: 0x333333, fontSize: 16, align: "center", fontWeight: "bold" },

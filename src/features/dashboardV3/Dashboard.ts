@@ -15,6 +15,7 @@ import { getColumnsAndDates } from "../dashboard/util/scrollbar";
 import { SCROLLBAR_THICKNESS } from "./util/VerticalScrollbar";
 import { TopLeftCellRenderer } from "./cellRenderers/TopLeftCellRenderer";
 import { PngManager } from "./util/PngManager";
+import { CellEditor } from "./util/CellEditor";
 
 export class Dashboard {
   // Grids
@@ -27,6 +28,9 @@ export class Dashboard {
   // Renderers
   private mainGridPinYCellRenderer: PinnedYCellRenderer; // Store reference for scroll updates
   private mainGridCellRenderer: MainGridCellRenderer; // Store reference for scroll updates
+
+  // Cell editor
+  private cellEditor: CellEditor;
 
   // Store app reference for centering calculations
   private app: Application;
@@ -140,6 +144,19 @@ export class Dashboard {
     app.stage.addChild(this.stickyTopRow);
     app.stage.addChild(this.stickyTopLeftCell);
 
+    // Initialize cell editor for the main grid
+    this.cellEditor = new CellEditor({
+      app,
+      grid: this.mainGrid,
+      cellWidth: CELL_WIDTH,
+      cellHeight: CELL_HEIGHT,
+      gridOffsetX: BLEACHER_COLUMN_WIDTH, // Main grid's X offset
+      gridOffsetY: HEADER_ROW_HEIGHT, // Main grid's Y offset
+    });
+
+    // Connect cell editor to the main grid renderer
+    this.mainGridCellRenderer.setCellEditor(this.cellEditor);
+
     // Set up scroll synchronization
     this.setupScrollSynchronization();
   }
@@ -166,6 +183,9 @@ export class Dashboard {
 
     // Update the scrollbar positions to match (only main grid has visible scrollbar)
     this.mainGrid.updateHorizontalScrollbarPosition(centerX);
+
+    // Update the cell editor with the new scroll position
+    this.cellEditor.setScrollPosition(centerX, 0);
 
     // Return the center position so we can use it for renderer initialization
     return centerX;
@@ -198,6 +218,7 @@ export class Dashboard {
    * Clean up resources
    */
   destroy() {
+    this.cellEditor.destroy();
     this.stickyTopLeftCell.destroy();
     this.stickyTopRow.destroy();
     this.stickyLeftColumn.destroy();

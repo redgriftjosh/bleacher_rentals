@@ -46,7 +46,7 @@ export class StickyTopRowCellRenderer implements ICellRenderer {
 
     const headerCellTexture = this.baker.getSprite(`headerCellTexture${col}`, dimensions, (c) => {
       // Add background tile first (behind the HeaderCell)
-      const tileSprite = new Tile(dimensions, this.baker);
+      const tileSprite = new Tile(dimensions, this.baker, row, col);
       c.addChild(tileSprite);
 
       // Get the date for this column

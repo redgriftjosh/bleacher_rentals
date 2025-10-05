@@ -6,6 +6,7 @@ import { EventBody } from "../ui/event/EventBody";
 import { EventSpanType, EventsUtil } from "../util/Events";
 import { Tile } from "../ui/Tile";
 import { FirstCellNotPinned } from "../ui/event/FirstCellNotPinned";
+import { CellEditor } from "../util/CellEditor";
 
 /**
  * CellRenderer for the main scrollable grid area
@@ -22,6 +23,7 @@ export class MainGridCellRenderer implements ICellRenderer {
   private dates: string[];
   private currentScrollX: number = 0;
   private cellWidth: number = 0; // Store the cell width from main grid
+  private cellEditor?: CellEditor; // Cell editor instance
 
   constructor(app: Application, bleachers: Bleacher[], dates: string[]) {
     this.app = app;
@@ -32,6 +34,13 @@ export class MainGridCellRenderer implements ICellRenderer {
     // Calculate event spans once during construction
     const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, dates);
     this.spansByRow = spansByRow;
+  }
+
+  /**
+   * Set the cell editor instance
+   */
+  setCellEditor(cellEditor: CellEditor) {
+    this.cellEditor = cellEditor;
   }
 
   /**
@@ -58,19 +67,6 @@ export class MainGridCellRenderer implements ICellRenderer {
     // PERFORMANCE CRITICAL: Reuse existing container instead of creating new one
     // Clear existing children efficiently
     parent.removeChildren();
-
-    // parent.eventMode = "static";
-    // parent.cursor = "pointer";
-
-    // parent.on("pointerenter", () => {
-    //   console.log("Logo Hovered");
-    //   // this.startAnimation();
-    // });
-
-    // parent.on("pointerleave", () => {
-    //   console.log("Logo Unhovered");
-    //   // this.stopAnimation();
-    // });
 
     const dimensions = { width: cellWidth, height: cellHeight };
     parent.zIndex = 0;
@@ -110,7 +106,21 @@ export class MainGridCellRenderer implements ICellRenderer {
         parent.addChild(eventSprite);
       }
     } else {
-      const tile = new Tile(dimensions, this.baker);
+      const tile = new Tile(dimensions, this.baker, row, col);
+
+      // Set up click listener for cell editing
+      tile.on("cell:edit-request", (data: { row: number; col: number }) => {
+        console.log(
+          `🔗 89 MainGridCellRenderer received cell:edit-request for (${data.row}, ${data.col})`
+        );
+        if (this.cellEditor) {
+          console.log(`📝 89 Cell editor exists, calling editCell`);
+          this.cellEditor.editCell(data.row, data.col);
+        } else {
+          console.log(`❌ 89 No cell editor available!`);
+        }
+      });
+
       parent.addChild(tile);
     }
     return parent;

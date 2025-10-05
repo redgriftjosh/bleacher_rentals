@@ -40,7 +40,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     const dimensions = { width: cellWidth, height: cellHeight };
 
     // Add background tile first (behind the BleacherCell)
-    const tileSprite = new Tile(dimensions, this.baker);
+    const tileSprite = new Tile(dimensions, this.baker, row, col);
     parent.addChild(tileSprite);
 
     // Get the bleacher data for this row

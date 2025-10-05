@@ -449,6 +449,20 @@ export class Grid extends Container {
   }
 
   /**
+   * Get current horizontal scroll position
+   */
+  public getCurrentScrollX(): number {
+    return this.currentScrollX;
+  }
+
+  /**
+   * Get current vertical scroll position
+   */
+  public getCurrentScrollY(): number {
+    return this.currentScrollY;
+  }
+
+  /**
    * Force a complete re-render of all visible cells
    * Bypasses the coordinate change checks and forces cell content rebuilding
    */

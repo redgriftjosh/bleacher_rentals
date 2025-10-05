@@ -26,7 +26,7 @@ export class HoverableBakedSprite extends Container {
   private cacheKey: string;
   private contentBuilder: (container: Container) => void;
   private isShowingLive = false;
-  private dimensions?: { width: number; height: number };
+  protected dimensions?: { width: number; height: number };
 
   constructor(
     baker: Baker,
@@ -41,6 +41,7 @@ export class HoverableBakedSprite extends Container {
     this.dimensions = dimensions;
 
     this.eventMode = "static";
+    this.cursor = "pointer";
 
     // Create baked texture for performance
     const texture = baker.getTexture(this.cacheKey, this.dimensions || null, (c) =>
@@ -73,10 +74,17 @@ export class HoverableBakedSprite extends Container {
     // Hide baked sprite
     this.bakedSprite.visible = false;
 
-    // Create live content using the provided builder
+    // Create live content using the provided builder or override
     this.liveContent.removeChildren();
-    this.contentBuilder(this.liveContent);
+    this.buildLiveContent(this.liveContent);
     this.addChild(this.liveContent);
+  }
+
+  /**
+   * Build live content - can be overridden by subclasses for custom behavior
+   */
+  protected buildLiveContent(container: Container) {
+    this.contentBuilder(container);
   }
 
   /**

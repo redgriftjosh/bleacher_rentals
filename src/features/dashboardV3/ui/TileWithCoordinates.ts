@@ -12,8 +12,8 @@ export class TileWithCoordinates extends Container {
   ) {
     super();
 
-    const defaultTile = new Tile(dimensions, baker);
-    const tileSprite = new Sprite(defaultTile.texture);
+    // const defaultTile = new Tile(dimensions, baker);
+    // const tileSprite = new Sprite(defaultTile.texture);
 
     const coordinates = new Text({
       text: `${row}, ${col}`,
@@ -26,6 +26,6 @@ export class TileWithCoordinates extends Container {
       },
     });
 
-    this.addChild(tileSprite, coordinates);
+    this.addChild(coordinates);
   }
 }
