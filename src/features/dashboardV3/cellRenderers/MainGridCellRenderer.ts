@@ -104,7 +104,7 @@ export class MainGridCellRenderer implements ICellRenderer {
         parent.addChild(firstCell);
       } else {
         // PINNED EVENT OR EVENT BODY: Use separate caching strategy
-        // parent.zIndex = 0;
+        parent.zIndex = 100;
 
         const eventSprite = new EventBody(eventInfo, this.baker, dimensions);
         parent.addChild(eventSprite);

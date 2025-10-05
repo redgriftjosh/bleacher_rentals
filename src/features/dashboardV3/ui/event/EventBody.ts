@@ -55,25 +55,35 @@ export class EventBody extends Sprite {
         //   },
         // });
 
+        const borderWidth = 1;
+        const alignment = 1;
+        const L = 0;
+        const T = 1;
+        const R = CELL_WIDTH;
+        const B = CELL_HEIGHT;
+
+        const W = CELL_WIDTH;
+        const H = CELL_HEIGHT;
+
         if (isBooked) {
           // Booked events: solid fill
-          fill.rect(0, 0, CELL_WIDTH, CELL_HEIGHT - 1).fill(eventColor);
+          fill.rect(L, T, W, H).fill(eventColor);
         } else {
           // Quoted events: white background with selective borders
-          fill.rect(0, 0, CELL_WIDTH, CELL_HEIGHT - 1).fill(0xffffff); // White background
-
-          const borderWidth = 2;
+          fill.rect(L, T, W, H).fill(0xffffff); // White background
 
           // Draw borders based on position in span
           if (eventInfo.isStart) {
             // Start cell: top, left, and bottom borders
-            g.moveTo(0, 0).lineTo(CELL_WIDTH, 0).stroke({ width: borderWidth, color: eventColor }); // Top
-            g.moveTo(0, 0)
-              .lineTo(0, CELL_HEIGHT - 1)
-              .stroke({ width: borderWidth, color: eventColor }); // Left
-            g.moveTo(0, CELL_HEIGHT - 1)
-              .lineTo(CELL_WIDTH, CELL_HEIGHT - 1)
-              .stroke({ width: borderWidth, color: eventColor }); // Bottom
+            g.moveTo(L, T)
+              .lineTo(R, T)
+              .stroke({ width: borderWidth, color: eventColor, alignment }); // Top
+            g.moveTo(L, T)
+              .lineTo(L, B)
+              .stroke({ width: borderWidth, color: eventColor, alignment }); // Left
+            g.moveTo(L, B)
+              .lineTo(R, B)
+              .stroke({ width: borderWidth, color: eventColor, alignment }); // Bottom
 
             // test.text = "Start";
             // const tileGraphics = new Graphics();
@@ -81,20 +91,25 @@ export class EventBody extends Sprite {
             // Draw tile background (light gray)
           } else if (eventInfo.isEnd) {
             // End cell: top, right, and bottom borders
-            g.moveTo(0, 0).lineTo(CELL_WIDTH, 0).stroke({ width: borderWidth, color: eventColor }); // Top
-            g.moveTo(CELL_WIDTH, 0)
-              .lineTo(CELL_WIDTH, CELL_HEIGHT - 1)
-              .stroke({ width: borderWidth, color: eventColor }); // Right
-            g.moveTo(0, CELL_HEIGHT - 1)
-              .lineTo(CELL_WIDTH, CELL_HEIGHT - 1)
-              .stroke({ width: borderWidth, color: eventColor }); // Bottom
+            const r = R - 1;
+            g.moveTo(L, T)
+              .lineTo(r, T)
+              .stroke({ width: borderWidth, color: eventColor, alignment }); // Top
+            g.moveTo(r, T)
+              .lineTo(r, B)
+              .stroke({ width: borderWidth, color: eventColor, alignment }); // Right
+            g.moveTo(L, B)
+              .lineTo(r, B)
+              .stroke({ width: borderWidth, color: eventColor, alignment }); // Bottom
             // test.text = "End";
           } else {
             // Middle cell: only top and bottom borders
-            g.moveTo(0, 0).lineTo(CELL_WIDTH, 0).stroke({ width: borderWidth, color: eventColor }); // Top
-            g.moveTo(0, CELL_HEIGHT - 1)
-              .lineTo(CELL_WIDTH, CELL_HEIGHT - 1)
-              .stroke({ width: borderWidth, color: eventColor }); // Bottom
+            g.moveTo(L, T)
+              .lineTo(R, T)
+              .stroke({ width: borderWidth, color: eventColor, alignment }); // Top
+            g.moveTo(L, B)
+              .lineTo(R, B)
+              .stroke({ width: borderWidth, color: eventColor, alignment }); // Bottom
             // test.text = "Middle";
           }
         }
