@@ -106,14 +106,7 @@ export class MainGridCellRenderer implements ICellRenderer {
         // PINNED EVENT OR EVENT BODY: Use separate caching strategy
         // parent.zIndex = 0;
 
-        const eventSprite = this.baker.getSprite(
-          `eventId:${eventInfo.span.ev.bleacherEventId}`,
-          dimensions,
-          (c) => {
-            const eventCell = new EventBody(eventInfo, this.baker, dimensions);
-            c.addChild(eventCell);
-          }
-        );
+        const eventSprite = new EventBody(eventInfo, this.baker, dimensions);
         parent.addChild(eventSprite);
       }
     } else {
