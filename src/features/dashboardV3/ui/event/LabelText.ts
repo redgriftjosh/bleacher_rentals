@@ -6,6 +6,9 @@ import { EventSpanType } from "../../util/Events";
  * This can be safely baked into a RenderTexture for performance
  */
 export class LabelText extends Container {
+  private nameLabel: Text;
+  private addressLabel?: Text;
+
   constructor(eventInfo: EventSpanType) {
     super();
 
@@ -16,7 +19,7 @@ export class LabelText extends Container {
     const textColor = isBooked ? 0x000000 : eventColor;
 
     // Event name (main label)
-    const nameLabel = new Text({
+    this.nameLabel = new Text({
       text: `${eventInfo.ev.eventName}`,
       style: {
         fontFamily: "Helvetica",
@@ -26,12 +29,12 @@ export class LabelText extends Container {
         fill: textColor,
       },
     });
-    nameLabel.position.set(0, 2);
-    this.addChild(nameLabel);
+    this.nameLabel.position.set(0, 2);
+    this.addChild(this.nameLabel);
 
     // Address (secondary label)
     if (eventInfo.ev.address) {
-      const addressLabel = new Text({
+      this.addressLabel = new Text({
         text: eventInfo.ev.address,
         style: {
           fontFamily: "Helvetica",
@@ -41,8 +44,8 @@ export class LabelText extends Container {
           fill: textColor,
         },
       });
-      addressLabel.position.set(0, 18);
-      this.addChild(addressLabel);
+      this.addressLabel.position.set(0, 18);
+      this.addChild(this.addressLabel);
     }
 
     console.log("LabelText");
@@ -73,10 +76,18 @@ export class LabelText extends Container {
   }
 
   /**
-   * Get the dimensions needed for positioning additional elements
+   * Get the dimensions needed for positioning additional elements (entire container)
    */
   public getLabelDimensions(): { width: number; height: number } {
     const bounds = this.getBounds();
+    return { width: bounds.width, height: bounds.height };
+  }
+
+  /**
+   * Get the dimensions of just the name label (excluding address)
+   */
+  public getNameLabelDimensions(): { width: number; height: number } {
+    const bounds = this.nameLabel.getBounds();
     return { width: bounds.width, height: bounds.height };
   }
 }
