@@ -1,12 +1,14 @@
 "use client";
 
 import { Application, Assets, Graphics, Sprite, Texture } from "pixi.js";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useCurrentEventStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import WorkTrackerModal from "@/app/(dashboards)/bleachers-dashboard/_lib/_components/dashboard/WorkTrackerModal";
 import { Tables } from "../../../database.types";
 import { Bleacher } from "../dashboard/db/client/bleachers";
 import { main } from "./main";
+import { useFilterDashboardStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useFilterDashboardStore";
+import { filterSortPixiBleachers } from "./util/filterPixiBleachers";
+import { useCurrentEventStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
 import bunny from "./GSLogo.png";
 
 type DashboardAppV3Props = {
@@ -19,6 +21,26 @@ type DashboardAppV3Props = {
 };
 
 export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: DashboardAppV3Props) {
+  // Filtering state from existing dashboard stores
+  const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
+  const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
+  const rows = useFilterDashboardStore((s) => s.rows);
+  const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
+  const selectedBleacherIds = useCurrentEventStore((s) => s.bleacherIds);
+
+  // Memoize filtered bleachers so reference changes only when inputs do
+  const filteredBleachers = useMemo(
+    () =>
+      filterSortPixiBleachers(
+        homeBaseIds,
+        winterHomeBaseIds,
+        rows,
+        bleachers,
+        selectedBleacherIds,
+        isFormExpanded
+      ),
+    [homeBaseIds, winterHomeBaseIds, rows, bleachers, selectedBleacherIds, isFormExpanded]
+  );
   const hostRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const dashboardRef = useRef<any>(null); // Store dashboard instance for cleanup
@@ -136,7 +158,7 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
           if (!destroyed && appRef.current === app) {
             console.log("not first render, lastContentXRef.current:", lastContentXRef.current);
             try {
-              const dashboard = main(app, bleachers, { onWorkTrackerSelect });
+              const dashboard = main(app, filteredBleachers, { onWorkTrackerSelect });
               dashboardRef.current = dashboard;
               initedRef.current = true;
             } catch (error) {
@@ -148,7 +170,7 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
         // First render - no delay needed
         console.log("First render lastContentXRef.current:", lastContentXRef.current);
         try {
-          const dashboard = main(app, bleachers, { onWorkTrackerSelect });
+          const dashboard = main(app, filteredBleachers, { onWorkTrackerSelect });
           dashboardRef.current = dashboard;
           initedRef.current = true;
         } catch (error) {
@@ -196,7 +218,7 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
         }
       }
     };
-  }, [bleachers, resizeTrigger, handleResize]);
+  }, [filteredBleachers, resizeTrigger, handleResize, onWorkTrackerSelect]);
   return (
     <div className="w-full h-full pl-2 relative">
       <div ref={hostRef} className="w-full h-full border-l border-t border-gray-300" />
