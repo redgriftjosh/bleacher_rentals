@@ -106,7 +106,7 @@ export class MainGridCellRenderer implements ICellRenderer {
         parent.addChild(eventSprite);
       }
     } else {
-      const tile = new Tile(dimensions, this.baker, row, col);
+      const tile = new Tile(dimensions, this.baker, row, col, true);
 
       // Set up click listener for cell editing
       tile.on("cell:edit-request", (data: { row: number; col: number }) => {

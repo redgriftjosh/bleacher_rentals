@@ -1,8 +1,12 @@
-import { Graphics, Sprite } from "pixi.js";
+import { Container, Graphics, Sprite } from "pixi.js";
 import { Baker } from "../util/Baker";
-import { HoverableBakedSprite } from "../util/HoverableBakedSprite";
 
-export class Tile extends HoverableBakedSprite {
+export class Tile extends Container {
+  private dimensions: { width: number; height: number };
+  private bakedSprite: Sprite;
+  private isHovering = false;
+  private isAnimating = false;
+  private hoverOverlay: Graphics | null = null; // Create this on demand
   private row: number;
   private col: number;
 
@@ -10,70 +14,160 @@ export class Tile extends HoverableBakedSprite {
     dimensions: { width: number; height: number },
     baker: Baker,
     row: number,
-    col: number
+    col: number,
+    isClickable?: boolean
   ) {
-    super(
-      baker,
-      `tile-${dimensions.width}x${dimensions.height}`,
-      (c) => {
-        // Normal tile content (baked version)
-        const cellObj = new Graphics()
-          .moveTo(dimensions.width, 0)
-          .lineTo(dimensions.width, dimensions.height - 1) // right line inside
-          .moveTo(0, dimensions.height - 1)
-          .lineTo(dimensions.width, dimensions.height - 1) // bottom line inside
-          .stroke({ width: 1, color: 0x000000, alpha: 0.15, alignment: 0 });
-
-        // Draw tile background (light gray)
-        const fill = new Graphics().rect(0, 0, dimensions.width, dimensions.height).fill(0xffffff);
-
-        c.addChild(fill, cellObj);
-        console.log("tile baked");
-      },
-      dimensions
-    );
-
+    super();
     this.row = row;
     this.col = col;
+    this.dimensions = dimensions;
+    const texture = baker.getTexture("TestTile", dimensions, (c) => {
+      this.buildTile(c);
+    });
 
-    // Add click listener
-    this.on("pointerup", this.handleClick.bind(this));
+    // Create baked sprite
+    this.bakedSprite = new Sprite(texture);
+    this.addChild(this.bakedSprite);
+
+    if (isClickable) {
+      this.eventMode = "static";
+      // this.cursor = "pointer";
+
+      // Add hover listeners - but use the same pattern as GoodShuffleIcon
+      this.on("pointerenter", this.onHoverStart.bind(this));
+      this.on("pointerleave", this.onHoverEnd.bind(this));
+      this.on("pointerup", this.handleClick.bind(this));
+    }
   }
 
-  /**
-   * Handle click events on the tile
-   */
   private handleClick(): void {
     // Emit cell edit request with coordinates
     this.emit("cell:edit-request", { row: this.row, col: this.col });
     console.log(`Tile clicked: (${this.row}, ${this.col})`);
   }
 
-  /**
-   * Override the content builder to provide hover animation
-   */
-  protected buildLiveContent(container: any) {
-    const dimensions = this.dimensions;
-    if (!dimensions) return;
-
-    // Create the same tile content as baked version
-    const fill = new Graphics().rect(0, 0, dimensions.width, dimensions.height).fill(0xffffff);
-
+  private buildTile(c: Container) {
     const cellObj = new Graphics()
-      .moveTo(dimensions.width, 0)
-      .lineTo(dimensions.width, dimensions.height - 1)
-      .moveTo(0, dimensions.height - 1)
-      .lineTo(dimensions.width, dimensions.height - 1)
+      .moveTo(this.dimensions.width, 0)
+      .lineTo(this.dimensions.width, this.dimensions.height - 1) // right line inside
+      .moveTo(0, this.dimensions.height - 1)
+      .lineTo(this.dimensions.width, this.dimensions.height - 1) // bottom line inside
       .stroke({ width: 1, color: 0x000000, alpha: 0.15, alignment: 0 });
 
-    // Create hover overlay for darkening effect (starts invisible)
-    const hoverOverlay = new Graphics();
-    hoverOverlay
-      .rect(0, 0, dimensions.width, dimensions.height)
-      .fill({ color: 0x000000, alpha: 0.03 }); // Set to target alpha immediately
+    // Draw tile background (light gray) - no reference needed
+    const fill = new Graphics()
+      .rect(0, 0, this.dimensions.width, this.dimensions.height)
+      .fill(0xffffff);
 
-    container.addChild(fill, cellObj, hoverOverlay);
+    c.addChild(fill, cellObj);
+    console.log("tile baked");
+  }
 
-    console.log("tile live with hover animation");
+  private onHoverStart() {
+    console.log("🟢 onHoverStart called", {
+      isAnimating: this.isAnimating,
+      isHovering: this.isHovering,
+    });
+    if (this.isAnimating || this.isHovering) return;
+    this.isHovering = true;
+
+    // Create hover overlay only when we hover
+    if (!this.hoverOverlay) {
+      this.hoverOverlay = new Graphics();
+      this.hoverOverlay.rect(0, 0, this.dimensions.width, this.dimensions.height);
+      this.hoverOverlay.fill({ color: 0x000000, alpha: 1 }); // Red with full alpha in the fill
+      this.hoverOverlay.alpha = 0; // But start the container alpha at 0
+      this.hoverOverlay.zIndex = 1000; // Make sure it's on top
+
+      this.addChild(this.hoverOverlay);
+      //   console.log("✅ Created RED hover overlay", {
+      //     width: this.dimensions.width,
+      //     height: this.dimensions.height,
+      //     overlayAlpha: this.hoverOverlay.alpha,
+      //     children: this.children.length,
+      //   });
+    }
+
+    this.animateHover(true);
+  }
+
+  private onHoverEnd() {
+    console.log("🔴 onHoverEnd called", { isHovering: this.isHovering });
+    if (!this.isHovering) return;
+    this.isHovering = false;
+    this.animateHover(false);
+  }
+
+  private animateHover(isHovering: boolean) {
+    console.log("🎬 animateHover called", { isHovering, hoverOverlay: !!this.hoverOverlay });
+    if (!this.hoverOverlay) return; // Safety check
+
+    this.isAnimating = true;
+
+    const targetAlpha = isHovering ? 0.05 : 0; // Full opacity for maximum visibility
+    const duration = 200; // 3 seconds for easy testing
+    const startAlpha = this.hoverOverlay.alpha;
+
+    // console.log("🎯 Animation setup", {
+    //   startAlpha,
+    //   targetAlpha,
+    //   duration,
+    //   isHovering,
+    //   alphaDifference: targetAlpha - startAlpha,
+    // });
+
+    const startTime = Date.now();
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Smooth easing function (ease out)
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+
+      // Calculate current alpha - this was the bug!
+      const currentAlpha = startAlpha + (targetAlpha - startAlpha) * easeOut;
+
+      if (this.hoverOverlay) {
+        this.hoverOverlay.alpha = currentAlpha;
+
+        // Log more frequently for debugging
+        // if (elapsed % 200 < 16) {
+        //   // Log roughly every 200ms
+        //   console.log(
+        //     `🔄 Animation: ${(progress * 100).toFixed(1)}% | Alpha: ${startAlpha.toFixed(
+        //       2
+        //     )} → ${currentAlpha.toFixed(3)} → ${targetAlpha.toFixed(2)}`
+        //   );
+        // }
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        this.isAnimating = false;
+        // console.log("✅ Animation complete!", {
+        //   finalAlpha: currentAlpha,
+        //   isHovering,
+        //   overlayExists: !!this.hoverOverlay,
+        // });
+
+        // Clean up overlay when animation ends and we're not hovering
+        if (!isHovering && this.hoverOverlay) {
+          this.removeChild(this.hoverOverlay);
+          this.hoverOverlay = null;
+          //   console.log("🗑️ Removed hover overlay after hover end animation");
+          // revert to baked texture
+          this.refreshBakedTexture();
+        }
+      }
+    };
+
+    animate();
+  }
+
+  private refreshBakedTexture() {
+    this.removeChildren();
+    this.addChild(this.bakedSprite);
   }
 }
