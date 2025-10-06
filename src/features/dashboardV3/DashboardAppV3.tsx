@@ -11,7 +11,11 @@ import bunny from "./GSLogo.png";
 
 type DashboardAppV3Props = {
   bleachers: Bleacher[];
-  onWorkTrackerSelect?: (workTracker: { work_tracker_id: number; bleacher_id: number; date: string }) => void;
+  onWorkTrackerSelect?: (workTracker: {
+    work_tracker_id: number;
+    bleacher_id: number;
+    date: string;
+  }) => void;
 };
 
 export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: DashboardAppV3Props) {

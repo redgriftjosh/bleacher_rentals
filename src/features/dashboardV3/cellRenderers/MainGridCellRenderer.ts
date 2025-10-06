@@ -38,7 +38,13 @@ export class MainGridCellRenderer implements ICellRenderer {
     app: Application,
     bleachers: Bleacher[],
     dates: string[],
-    opts?: { onWorkTrackerSelect?: (workTracker: { work_tracker_id: number; bleacher_id: number; date: string }) => void }
+    opts?: {
+      onWorkTrackerSelect?: (workTracker: {
+        work_tracker_id: number;
+        bleacher_id: number;
+        date: string;
+      }) => void;
+    }
   ) {
     this.app = app;
     this.baker = new Baker(app);
@@ -162,7 +168,12 @@ export class MainGridCellRenderer implements ICellRenderer {
                 date,
               });
             } else {
-              console.log("Truck icon clicked (no callback) bleacher", bleacher.bleacherId, "date", date);
+              console.log(
+                "Truck icon clicked (no callback) bleacher",
+                bleacher.bleacherId,
+                "date",
+                date
+              );
             }
           });
           const size = Math.min(cellWidth, cellHeight) * 0.55; // bigger for clarity

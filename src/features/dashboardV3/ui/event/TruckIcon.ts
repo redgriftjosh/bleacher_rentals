@@ -36,7 +36,7 @@ export class TruckIcon extends Container {
     this.cursor = "pointer";
     this.on("pointerenter", this.onHoverStart, this);
     this.on("pointerleave", this.onHoverEnd, this);
-  this.on("pointerup", this.onPointerUp, this);
+    this.on("pointerup", this.onPointerUp, this);
 
     this.updateShadow();
   }

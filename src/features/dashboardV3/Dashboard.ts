@@ -38,7 +38,13 @@ export class Dashboard {
   constructor(
     app: Application,
     bleachers: Bleacher[],
-    opts?: { onWorkTrackerSelect?: (workTracker: { work_tracker_id: number; bleacher_id: number; date: string }) => void }
+    opts?: {
+      onWorkTrackerSelect?: (workTracker: {
+        work_tracker_id: number;
+        bleacher_id: number;
+        date: string;
+      }) => void;
+    }
   ) {
     this.app = app;
     // Get dates for event calculations

@@ -11,7 +11,13 @@ import { PngManager } from "./util/PngManager";
 export function main(
   app: Application,
   bleachers: Bleacher[],
-  opts?: { onWorkTrackerSelect?: (workTracker: { work_tracker_id: number; bleacher_id: number; date: string }) => void }
+  opts?: {
+    onWorkTrackerSelect?: (workTracker: {
+      work_tracker_id: number;
+      bleacher_id: number;
+      date: string;
+    }) => void;
+  }
 ) {
   PngManager.fetchAndCachePng(app);
   return new Dashboard(app, bleachers, { onWorkTrackerSelect: opts?.onWorkTrackerSelect });

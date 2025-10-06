@@ -45,7 +45,11 @@ export default function Page() {
     return <div>No Bleachers!</div>;
   }
 
-  const handleWorkTrackerSelectFromPixi = (wt: { work_tracker_id: number; bleacher_id: number; date: string }) => {
+  const handleWorkTrackerSelectFromPixi = (wt: {
+    work_tracker_id: number;
+    bleacher_id: number;
+    date: string;
+  }) => {
     setSelectedWorkTracker({
       work_tracker_id: wt.work_tracker_id,
       bleacher_id: wt.bleacher_id,
@@ -79,7 +83,10 @@ export default function Page() {
         <EventConfiguration />
       </div>
       <div className="min-h-0">
-        <DashboardAppV3 bleachers={data.bleachers} onWorkTrackerSelect={handleWorkTrackerSelectFromPixi} />
+        <DashboardAppV3
+          bleachers={data.bleachers}
+          onWorkTrackerSelect={handleWorkTrackerSelectFromPixi}
+        />
       </div>
     </div>
   );
