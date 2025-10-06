@@ -43,7 +43,19 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
       if (selectedChanged) this.selectedBleacherIds = s.bleacherIds.slice();
 
       // Defer UI updates to next tick to avoid mid-build churn
-      this.app.ticker.addOnce(() => {
+      const ticker = (this.app as any)?.ticker;
+      if (ticker && typeof ticker.addOnce === "function") {
+        ticker.addOnce(() => {
+          for (const [row, cell] of this.cellPool.entries()) {
+            if (expandedChanged) cell.setFormExpanded(this.isFormExpanded);
+            if (selectedChanged) {
+              const b = this.bleachers[row];
+              if (b) cell.setSelected(this.selectedBleacherIds.includes(b.bleacherId));
+            }
+          }
+        });
+      } else {
+        // Fallback: update immediately if ticker missing (likely during teardown)
         for (const [row, cell] of this.cellPool.entries()) {
           if (expandedChanged) cell.setFormExpanded(this.isFormExpanded);
           if (selectedChanged) {
@@ -51,7 +63,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
             if (b) cell.setSelected(this.selectedBleacherIds.includes(b.bleacherId));
           }
         }
-      });
+      }
     });
   }
 

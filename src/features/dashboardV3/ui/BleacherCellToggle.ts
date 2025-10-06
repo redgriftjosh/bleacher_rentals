@@ -13,6 +13,7 @@ export class BleacherCellToggle extends Container {
   private size: number = 22;
   private baker: Baker;
   private _mode: ToggleMode | null = null;
+  private _isDestroyed = false;
 
   constructor(baker: Baker) {
     super();
@@ -62,6 +63,7 @@ export class BleacherCellToggle extends Container {
   }
 
   animateX(to: number, durationMs = 220) {
+    if (this._isDestroyed) return;
     const start = this.x;
     const diff = to - start;
     if (diff === 0) return;
@@ -71,7 +73,9 @@ export class BleacherCellToggle extends Container {
       elapsed += Ticker.shared.deltaMS;
       const p = Math.min(1, elapsed / durationMs);
       const eased = 1 - Math.pow(1 - p, 3);
-      this.x = start + diff * eased;
+      if (!this._isDestroyed) {
+        this.x = start + diff * eased;
+      }
       if (p >= 1) Ticker.shared.remove(tick);
     };
     Ticker.shared.add(tick);
@@ -79,5 +83,10 @@ export class BleacherCellToggle extends Container {
 
   get buttonSize() {
     return this.size;
+  }
+
+  override destroy(options?: any) {
+    this._isDestroyed = true;
+    super.destroy(options);
   }
 }

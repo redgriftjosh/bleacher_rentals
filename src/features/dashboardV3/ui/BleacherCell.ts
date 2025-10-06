@@ -92,16 +92,21 @@ export class BleacherCell extends Container {
   }
 
   setFormExpanded(expanded: boolean) {
+    if (!this.toggle) return; // defensive
     const targetX = expanded
       ? BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - 6
       : BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - 6 - 40;
 
     if (expanded) {
-      this.toggle.visible = true;
-      this.toggle.animateX(targetX, 220);
+      if (!this.toggle.destroyed) {
+        this.toggle.visible = true;
+        this.toggle.animateX(targetX, 220);
+      }
     } else {
-      this.toggle.x = targetX;
-      this.toggle.visible = false;
+      if (!this.toggle.destroyed) {
+        this.toggle.x = targetX;
+        this.toggle.visible = false;
+      }
     }
   }
 
