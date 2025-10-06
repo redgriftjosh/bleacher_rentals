@@ -102,7 +102,7 @@ export async function FetchDashboardBleachers(
           )
         )
       ),
-      blocks:Blocks!Block_bleacher_id_fkey(
+      blocks:Blocks!block_bleacher_id_fkey(
         block_id,
         text,
         date
