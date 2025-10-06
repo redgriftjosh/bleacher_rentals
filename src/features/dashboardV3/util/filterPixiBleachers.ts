@@ -17,7 +17,11 @@ export function filterSortPixiBleachers(
   const matchesFilter = (b: Bleacher) => {
     const summerId = getHomeBaseIdByName(b.summerHomeBase) ?? -1;
     const winterId = getHomeBaseIdByName(b.winterHomeBase) ?? -1;
-    return homeBaseIds.includes(summerId) && winterHomeBaseIds.includes(winterId) && rows.includes(b.bleacherRows);
+    return (
+      homeBaseIds.includes(summerId) &&
+      winterHomeBaseIds.includes(winterId) &&
+      rows.includes(b.bleacherRows)
+    );
   };
 
   const alwaysInclude = (b: Bleacher) => alwaysIncludeBleacherIds.includes(b.bleacherId);
@@ -26,8 +30,14 @@ export function filterSortPixiBleachers(
     ? bleachers.filter((b) => matchesFilter(b) || alwaysInclude(b))
     : bleachers.filter(matchesFilter);
 
-  const selected = filtered.filter(alwaysInclude).sort((a, b) => a.bleacherNumber - b.bleacherNumber);
-  const rest = filtered.filter((b) => !alwaysInclude(b)).sort((a, b) => a.bleacherNumber - b.bleacherNumber);
+  const selected = filtered
+    .filter(alwaysInclude)
+    .sort((a, b) => a.bleacherNumber - b.bleacherNumber);
+  const rest = filtered
+    .filter((b) => !alwaysInclude(b))
+    .sort((a, b) => a.bleacherNumber - b.bleacherNumber);
 
-  return isFormExpanded ? [...selected, ...rest] : rest.concat(selected).sort((a, b) => a.bleacherNumber - b.bleacherNumber);
+  return isFormExpanded
+    ? [...selected, ...rest]
+    : rest.concat(selected).sort((a, b) => a.bleacherNumber - b.bleacherNumber);
 }
