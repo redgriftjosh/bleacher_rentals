@@ -20,9 +20,15 @@ const menuItems: MenuItem[] = [
     icon: CalendarIcon,
     roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
   },
+  // {
+  //   label: "Dashboard v2 (Testing)",
+  //   href: "/new-dashboard",
+  //   icon: CalendarIcon,
+  //   roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
+  // },
   {
-    label: "Dashboard v2 (Testing)",
-    href: "/new-dashboard",
+    label: "Dashboard v3 (Testing)",
+    href: "/dashboard-v3",
     icon: CalendarIcon,
     roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
   },

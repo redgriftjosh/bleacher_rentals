@@ -108,6 +108,7 @@ export default function EventRenderer({
     setField("hslHue", event.hslHue);
     // setField("alerts", event.alerts);
     setField("goodshuffleUrl", event.goodshuffleUrl);
+    setField("ownerUserId", event.ownerUserId);
   };
 
   if (!isFirstVisibleColumn && !shouldDisplayEvent) return null;
@@ -158,6 +159,7 @@ export default function EventRenderer({
               hslHue: event.hslHue,
               alerts: [], // will be calculated on load
               goodshuffleUrl: event.goodshuffleUrl,
+              ownerUserId: event.ownerUserId,
             });
           }}
         >

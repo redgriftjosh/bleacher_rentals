@@ -106,19 +106,22 @@ export class BleacherCell extends Container {
 
   /** Called by the parent when `isFormExpanded` changes. */
   setFormExpanded(expanded: boolean) {
+    if (!this.toggle) return;
     const targetX = expanded
       ? BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - 6 // slide in
       : BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - 6 - 40; // slide left 40px
 
     // ensure visibility before animating in; hide after animating out
     if (expanded) {
-      this.toggle.visible = true;
-      this.toggle.animateX(targetX, 220);
+      if (!this.toggle.destroyed) {
+        this.toggle.visible = true;
+        this.toggle.animateX(targetX, 220);
+      }
     } else {
-      // move immediately then hide to match your React effect,
-      // or animate then hide in a callback if you prefer
-      this.toggle.x = targetX;
-      this.toggle.visible = false;
+      if (!this.toggle.destroyed) {
+        this.toggle.x = targetX;
+        this.toggle.visible = false;
+      }
     }
   }
 
@@ -135,6 +138,7 @@ export class BleacherCell extends Container {
    * @internal
    */
   private buildBleacherContainer(c: Container, b: Bleacher) {
+    console.log("buildBleacherContainer");
     const bleacherNumber = new Text({
       text: String(b.bleacherNumber),
       style: { fill: 0xf0b000, fontSize: 16, fontWeight: "bold" },

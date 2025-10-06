@@ -11,9 +11,12 @@ export type Bleacher = {
   summerHomeBase: string;
   winterHomeBase: string;
   bleacherEvents: BleacherEvent[];
+  blocks: BleacherBlock[];
+  workTrackers: BleacherWorkTracker[];
 };
 
 export type BleacherEvent = {
+  eventId: number;
   bleacherEventId: number;
   eventName: string;
   address: string;
@@ -21,6 +24,18 @@ export type BleacherEvent = {
   eventEnd: string;
   hslHue: number | null;
   booked: boolean;
+  goodshuffleUrl: string | null;
+};
+
+export type BleacherBlock = {
+  blockId: number;
+  text: string;
+  date: string;
+};
+
+export type BleacherWorkTracker = {
+  workTrackerId: number;
+  date: string;
 };
 
 type Row = {
@@ -33,13 +48,24 @@ type Row = {
   bleacher_events: {
     bleacher_event_id: number;
     event: {
+      event_id: number;
       event_name: string;
       event_start: string;
       event_end: string;
       hsl_hue: number | null;
       booked: boolean;
       address: { street: string } | null;
+      goodshuffle_url: string | null;
     };
+  }[];
+  blocks: {
+    block_id: number;
+    text: string | null;
+    date: string | null;
+  }[];
+  work_trackers: {
+    work_tracker_id: number;
+    date: string | null;
   }[];
 };
 
@@ -64,15 +90,26 @@ export async function FetchDashboardBleachers(
       bleacher_events:BleacherEvents!BleacherEvents_bleacher_id_fkey(
         bleacher_event_id,
         event:Events!BleacherEvents_event_id_fkey(
+          event_id,
           event_name,
           event_start,
           event_end,
           hsl_hue,
           booked,
+          goodshuffle_url,
           address:Addresses!Events_address_id_fkey(
             street
           )
         )
+      ),
+      blocks:Blocks!Block_bleacher_id_fkey(
+        block_id,
+        text,
+        date
+      ),
+      work_trackers:WorkTrackers!WorkTrackers_bleacher_id_fkey(
+        work_tracker_id,
+        date
       )
       `
     )
@@ -90,13 +127,24 @@ export async function FetchDashboardBleachers(
     summerHomeBase: r.summer?.home_base_name ?? "",
     winterHomeBase: r.winter?.home_base_name ?? "",
     bleacherEvents: r.bleacher_events.map((be) => ({
+      eventId: be.event.event_id,
       bleacherEventId: be.bleacher_event_id,
       eventName: be.event.event_name,
       eventStart: be.event.event_start,
       eventEnd: be.event.event_end,
       hslHue: be.event.hsl_hue,
       booked: be.event.booked,
+      goodshuffleUrl: be.event.goodshuffle_url ?? null,
       address: be.event.address?.street ?? "",
+    })),
+    blocks: r.blocks.map((block) => ({
+      blockId: block.block_id,
+      text: block.text ?? "",
+      date: block.date ?? "",
+    })),
+    workTrackers: (r.work_trackers ?? []).map((wt) => ({
+      workTrackerId: wt.work_tracker_id,
+      date: wt.date ?? "",
     })),
   }));
 

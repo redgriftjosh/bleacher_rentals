@@ -111,12 +111,21 @@ export class StickyLeftColumn extends Container {
       if (changedExpanded) this.lastExpanded = s.isFormExpanded;
       if (changedIds) this.lastIds = s.bleacherIds;
 
-      app.ticker.addOnce(() => {
+      const ticker: any = (app as any)?.ticker;
+      if (ticker && typeof ticker.addOnce === "function") {
+        ticker.addOnce(() => {
+          if (changedExpanded) {
+            for (const cell of this.labelPool) cell.setFormExpanded(this.lastExpanded);
+          }
+          if (changedIds) this.applySelectionToVisible();
+        });
+      } else {
+        // App likely tearing down; apply immediately
         if (changedExpanded) {
           for (const cell of this.labelPool) cell.setFormExpanded(this.lastExpanded);
         }
         if (changedIds) this.applySelectionToVisible();
-      });
+      }
     });
   }
 

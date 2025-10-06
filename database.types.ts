@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -175,11 +175,41 @@ export type Database = {
           },
         ]
       }
+      Drivers: {
+        Row: {
+          created_at: string
+          driver_id: number
+          tax: number
+          user_id: number
+        }
+        Insert: {
+          created_at?: string
+          driver_id?: number
+          tax?: number
+          user_id: number
+        }
+        Update: {
+          created_at?: string
+          driver_id?: number
+          tax?: number
+          user_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Drivers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       Events: {
         Row: {
           address_id: number
           booked: boolean
           created_at: string
+          created_by_user_id: number | null
           event_end: string
           event_id: number
           event_name: string
@@ -200,6 +230,7 @@ export type Database = {
           address_id: number
           booked?: boolean
           created_at?: string
+          created_by_user_id?: number | null
           event_end: string
           event_id?: number
           event_name: string
@@ -220,6 +251,7 @@ export type Database = {
           address_id?: number
           booked?: boolean
           created_at?: string
+          created_by_user_id?: number | null
           event_end?: string
           event_id?: number
           event_name?: string
@@ -243,6 +275,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "Addresses"
             referencedColumns: ["address_id"]
+          },
+          {
+            foreignKeyName: "Events_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["user_id"]
           },
         ]
       }
