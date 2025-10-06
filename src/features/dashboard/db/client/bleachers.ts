@@ -107,7 +107,7 @@ export async function FetchDashboardBleachers(
         text,
         date
       ),
-      work_trackers:WorkTrackers!WorkTrackers_bleacher_id_fkey(
+      work_trackers:WorkTrackers!worktrackers_bleacher_id_fkey(
         work_tracker_id,
         date
       )
