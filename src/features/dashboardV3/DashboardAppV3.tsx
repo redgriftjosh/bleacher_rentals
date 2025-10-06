@@ -9,7 +9,12 @@ import { Bleacher } from "../dashboard/db/client/bleachers";
 import { main } from "./main";
 import bunny from "./GSLogo.png";
 
-export default function DashboardAppV3({ bleachers }: { bleachers: Bleacher[] }) {
+type DashboardAppV3Props = {
+  bleachers: Bleacher[];
+  onWorkTrackerSelect?: (workTracker: { work_tracker_id: number; bleacher_id: number; date: string }) => void;
+};
+
+export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: DashboardAppV3Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const dashboardRef = useRef<any>(null); // Store dashboard instance for cleanup
@@ -127,7 +132,7 @@ export default function DashboardAppV3({ bleachers }: { bleachers: Bleacher[] })
           if (!destroyed && appRef.current === app) {
             console.log("not first render, lastContentXRef.current:", lastContentXRef.current);
             try {
-              const dashboard = main(app, bleachers);
+              const dashboard = main(app, bleachers, { onWorkTrackerSelect });
               dashboardRef.current = dashboard;
               initedRef.current = true;
             } catch (error) {
@@ -139,7 +144,7 @@ export default function DashboardAppV3({ bleachers }: { bleachers: Bleacher[] })
         // First render - no delay needed
         console.log("First render lastContentXRef.current:", lastContentXRef.current);
         try {
-          const dashboard = main(app, bleachers);
+          const dashboard = main(app, bleachers, { onWorkTrackerSelect });
           dashboardRef.current = dashboard;
           initedRef.current = true;
         } catch (error) {

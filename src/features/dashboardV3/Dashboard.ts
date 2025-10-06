@@ -35,12 +35,18 @@ export class Dashboard {
   // Store app reference for centering calculations
   private app: Application;
 
-  constructor(app: Application, bleachers: Bleacher[]) {
+  constructor(
+    app: Application,
+    bleachers: Bleacher[],
+    opts?: { onWorkTrackerSelect?: (workTracker: { work_tracker_id: number; bleacher_id: number; date: string }) => void }
+  ) {
     this.app = app;
     // Get dates for event calculations
     const { columns: contentColumns, dates } = getColumnsAndDates();
 
-    this.mainGridCellRenderer = new MainGridCellRenderer(app, bleachers, dates);
+    this.mainGridCellRenderer = new MainGridCellRenderer(app, bleachers, dates, {
+      onWorkTrackerSelect: opts?.onWorkTrackerSelect,
+    });
     this.mainGridPinYCellRenderer = new PinnedYCellRenderer(app, bleachers, dates);
     const leftColumnCellRenderer = new StickyLeftColumnCellRenderer(app, bleachers);
     const topRowCellRenderer = new StickyTopRowCellRenderer(app);

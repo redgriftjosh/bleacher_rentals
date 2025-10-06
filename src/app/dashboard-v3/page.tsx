@@ -45,6 +45,24 @@ export default function Page() {
     return <div>No Bleachers!</div>;
   }
 
+  const handleWorkTrackerSelectFromPixi = (wt: { work_tracker_id: number; bleacher_id: number; date: string }) => {
+    setSelectedWorkTracker({
+      work_tracker_id: wt.work_tracker_id,
+      bleacher_id: wt.bleacher_id,
+      date: wt.date,
+      created_at: "",
+      dropoff_address_id: null,
+      dropoff_poc: null,
+      dropoff_time: null,
+      notes: null,
+      pay_cents: null,
+      pickup_address_id: null,
+      pickup_poc: null,
+      pickup_time: null,
+      user_id: null,
+    } as Tables<"WorkTrackers">);
+  };
+
   return (
     <div className="h-full grid grid-rows-[auto_1fr] gap-2 overflow-hidden">
       <CellEditor onWorkTrackerOpen={handleWorkTrackerOpen} />
@@ -61,7 +79,7 @@ export default function Page() {
         <EventConfiguration />
       </div>
       <div className="min-h-0">
-        <DashboardAppV3 bleachers={data.bleachers} />
+        <DashboardAppV3 bleachers={data.bleachers} onWorkTrackerSelect={handleWorkTrackerSelectFromPixi} />
       </div>
     </div>
   );

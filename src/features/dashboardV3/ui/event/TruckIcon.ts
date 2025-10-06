@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, Texture, BlurFilter } from "pixi.js";
+import { Container, Graphics, Sprite, Texture, BlurFilter, FederatedPointerEvent } from "pixi.js";
 import { Baker } from "../../util/Baker";
 import { PngManager } from "../../util/PngManager";
 
@@ -36,7 +36,7 @@ export class TruckIcon extends Container {
     this.cursor = "pointer";
     this.on("pointerenter", this.onHoverStart, this);
     this.on("pointerleave", this.onHoverEnd, this);
-    this.on("pointerup", this.onPointerUp, this);
+  this.on("pointerup", this.onPointerUp, this);
 
     this.updateShadow();
   }
@@ -94,7 +94,9 @@ export class TruckIcon extends Container {
     this.animateHover(false);
   }
 
-  private onPointerUp() {
+  private onPointerUp(e: FederatedPointerEvent) {
+    // Prevent tile click from also firing
+    e.stopPropagation();
     if (this.clickCallback) this.clickCallback();
   }
 

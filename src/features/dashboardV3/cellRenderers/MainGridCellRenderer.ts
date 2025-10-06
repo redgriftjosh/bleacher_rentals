@@ -28,11 +28,23 @@ export class MainGridCellRenderer implements ICellRenderer {
   private cellWidth: number = 0; // Store the cell width from main grid
   private cellEditor?: CellEditor; // Cell editor instance
 
-  constructor(app: Application, bleachers: Bleacher[], dates: string[]) {
+  private onWorkTrackerSelect?: (workTracker: {
+    work_tracker_id: number;
+    bleacher_id: number;
+    date: string;
+  }) => void;
+
+  constructor(
+    app: Application,
+    bleachers: Bleacher[],
+    dates: string[],
+    opts?: { onWorkTrackerSelect?: (workTracker: { work_tracker_id: number; bleacher_id: number; date: string }) => void }
+  ) {
     this.app = app;
     this.baker = new Baker(app);
     this.bleachers = bleachers;
     this.dates = dates;
+    this.onWorkTrackerSelect = opts?.onWorkTrackerSelect;
 
     // Calculate event spans once during construction
     const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, dates);
@@ -141,8 +153,17 @@ export class MainGridCellRenderer implements ICellRenderer {
         const workTracker = bleacher.workTrackers?.find((wt) => wt.date === date);
         if (workTracker) {
           const icon = new TruckIcon(this.baker, () => {
-            // Placeholder click callback; integrate modal or navigation here
-            console.log("Truck icon clicked for bleacher", bleacher.bleacherId, "date", date);
+            // Stop block editor from opening when clicking truck icon
+            // Instead open WorkTracker modal via callback if provided
+            if (this.onWorkTrackerSelect) {
+              this.onWorkTrackerSelect({
+                work_tracker_id: workTracker.workTrackerId ?? -1,
+                bleacher_id: bleacher.bleacherId,
+                date,
+              });
+            } else {
+              console.log("Truck icon clicked (no callback) bleacher", bleacher.bleacherId, "date", date);
+            }
           });
           const size = Math.min(cellWidth, cellHeight) * 0.55; // bigger for clarity
           icon.scale.set(size / 16); // base baked size 16
@@ -154,8 +175,9 @@ export class MainGridCellRenderer implements ICellRenderer {
 
       // Set up click listener for cell editing (after adding children)
       tile.on("cell:edit-request", (data: { row: number; col: number }) => {
+        // If the click originated from a truck icon interaction, the callback will already have fired.
+        // We rely on event stopping at the icon level; proceed with block load otherwise.
         this.handleLoadBlock(data.row, data.col);
-        console.log("handleLoadBlock clicked", data);
       });
     }
     return parent;
