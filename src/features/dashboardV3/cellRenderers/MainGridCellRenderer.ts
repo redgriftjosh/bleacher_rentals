@@ -8,6 +8,8 @@ import { Tile } from "../ui/Tile";
 import { FirstCellNotPinned } from "../ui/event/FirstCellNotPinned";
 import { CellEditor } from "../util/CellEditor";
 import { useSelectedBlockStore } from "@/features/dashboard/state/useSelectedBlock";
+import { Graphics, Sprite } from "pixi.js";
+import { TruckIcon } from "../ui/event/TruckIcon";
 
 /**
  * CellRenderer for the main scrollable grid area
@@ -134,6 +136,20 @@ export class MainGridCellRenderer implements ICellRenderer {
           textSprite.eventMode = "none"; // ensure it does not capture events itself
           tile.addChild(textSprite);
         }
+
+        // Work tracker indicator (truck icon substitute) if a work tracker exists for this date
+        const workTracker = bleacher.workTrackers?.find((wt) => wt.date === date);
+        if (workTracker) {
+          const icon = new TruckIcon(this.baker, () => {
+            // Placeholder click callback; integrate modal or navigation here
+            console.log("Truck icon clicked for bleacher", bleacher.bleacherId, "date", date);
+          });
+          const size = Math.min(cellWidth, cellHeight) * 0.55; // bigger for clarity
+          icon.scale.set(size / 16); // base baked size 16
+          icon.position.set(cellWidth - size + 4, 2); // top-right padding
+          icon.zIndex = 500; // above text
+          tile.addChild(icon);
+        }
       }
 
       // Set up click listener for cell editing (after adding children)
@@ -163,7 +179,9 @@ export class MainGridCellRenderer implements ICellRenderer {
     store.setField("date", date);
     store.setField("text", existingBlock?.text ?? "");
     // Work tracker integration not yet wired in this data set
-    store.setField("workTrackerId", null);
+    // Attach workTrackerId if it exists for this bleacher/date
+    const workTracker = bleacher.workTrackers?.find((wt) => wt.date === date);
+    store.setField("workTrackerId", workTracker?.workTrackerId ?? null);
   }
 
   /**

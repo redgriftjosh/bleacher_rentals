@@ -12,6 +12,7 @@ export type Bleacher = {
   winterHomeBase: string;
   bleacherEvents: BleacherEvent[];
   blocks: BleacherBlock[];
+  workTrackers: BleacherWorkTracker[];
 };
 
 export type BleacherEvent = {
@@ -29,6 +30,11 @@ export type BleacherEvent = {
 export type BleacherBlock = {
   blockId: number;
   text: string;
+  date: string;
+};
+
+export type BleacherWorkTracker = {
+  workTrackerId: number;
   date: string;
 };
 
@@ -55,6 +61,10 @@ type Row = {
   blocks: {
     block_id: number;
     text: string | null;
+    date: string | null;
+  }[];
+  work_trackers: {
+    work_tracker_id: number;
     date: string | null;
   }[];
 };
@@ -96,6 +106,10 @@ export async function FetchDashboardBleachers(
         block_id,
         text,
         date
+      ),
+      work_trackers:WorkTrackers!WorkTrackers_bleacher_id_fkey(
+        work_tracker_id,
+        date
       )
       `
     )
@@ -127,6 +141,10 @@ export async function FetchDashboardBleachers(
       blockId: block.block_id,
       text: block.text ?? "",
       date: block.date ?? "",
+    })),
+    workTrackers: (r.work_trackers ?? []).map((wt) => ({
+      workTrackerId: wt.work_tracker_id,
+      date: wt.date ?? "",
     })),
   }));
 
