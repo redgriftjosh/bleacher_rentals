@@ -8,8 +8,15 @@ import { EventConfiguration } from "../(dashboards)/bleachers-dashboard/_lib/_co
 import { CreateEventButton } from "../(dashboards)/bleachers-dashboard/_lib/_components/event-configuration/CreateEventButton";
 import FilterDashboard from "../(dashboards)/bleachers-dashboard/_lib/_components/FilterDashboard";
 import DashboardAppV3 from "@/features/dashboardV3/DashboardAppV3";
+import WorkTrackerModal from "../(dashboards)/bleachers-dashboard/_lib/_components/dashboard/WorkTrackerModal";
+import CellEditor from "@/features/dashboard/components/CellEditor";
+import { useState } from "react";
+import { Tables } from "../../../database.types";
 
 export default function Page() {
+  const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
+    null
+  );
   const { getToken } = useAuth();
   const { data, isLoading, error } = useQuery({
     queryKey: ["FetchDashboardBleachers"],
@@ -18,6 +25,10 @@ export default function Page() {
       return FetchDashboardBleachers(token);
     },
   });
+
+  const handleWorkTrackerOpen = (workTracker: Tables<"WorkTrackers">) => {
+    setSelectedWorkTracker(workTracker);
+  };
 
   if (error) {
     return <div>Uh Oh, Something went wrong... 😬</div>;
@@ -36,6 +47,12 @@ export default function Page() {
 
   return (
     <div className="h-full grid grid-rows-[auto_1fr] gap-2 overflow-hidden">
+      <CellEditor onWorkTrackerOpen={handleWorkTrackerOpen} />
+      <WorkTrackerModal
+        selectedWorkTracker={selectedWorkTracker}
+        setSelectedWorkTracker={setSelectedWorkTracker}
+        setSelectedBlock={() => {}} // Not used in PixiJS version
+      />
       <div>
         <div className="flex justify-between items-center pt-2 pl-2 pr-2">
           <FilterDashboard />

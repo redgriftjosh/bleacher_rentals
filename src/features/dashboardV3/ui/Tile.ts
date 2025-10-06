@@ -31,7 +31,7 @@ export class Tile extends Container {
 
     if (isClickable) {
       this.eventMode = "static";
-      // this.cursor = "pointer";
+      this.cursor = "pointer";
 
       // Add hover listeners - but use the same pattern as GoodShuffleIcon
       this.on("pointerenter", this.onHoverStart.bind(this));
@@ -60,14 +60,14 @@ export class Tile extends Container {
       .fill(0xffffff);
 
     c.addChild(fill, cellObj);
-    console.log("tile baked");
+    // console.log("tile baked");
   }
 
   private onHoverStart() {
-    console.log("🟢 onHoverStart called", {
-      isAnimating: this.isAnimating,
-      isHovering: this.isHovering,
-    });
+    // console.log("🟢 onHoverStart called", {
+    //   isAnimating: this.isAnimating,
+    //   isHovering: this.isHovering,
+    // });
     if (this.isAnimating || this.isHovering) return;
     this.isHovering = true;
 
@@ -92,14 +92,14 @@ export class Tile extends Container {
   }
 
   private onHoverEnd() {
-    console.log("🔴 onHoverEnd called", { isHovering: this.isHovering });
+    // console.log("🔴 onHoverEnd called", { isHovering: this.isHovering });
     if (!this.isHovering) return;
     this.isHovering = false;
     this.animateHover(false);
   }
 
   private animateHover(isHovering: boolean) {
-    console.log("🎬 animateHover called", { isHovering, hoverOverlay: !!this.hoverOverlay });
+    // console.log("🎬 animateHover called", { isHovering, hoverOverlay: !!this.hoverOverlay });
     if (!this.hoverOverlay) return; // Safety check
 
     this.isAnimating = true;
@@ -167,7 +167,16 @@ export class Tile extends Container {
   }
 
   private refreshBakedTexture() {
-    this.removeChildren();
-    this.addChild(this.bakedSprite);
+    // Previously we removed ALL children which also nuked dynamic content (e.g. block text)
+    // Now just ensure the baked sprite exists and sits at the bottom (index 0)
+    if (this.bakedSprite.parent !== this) {
+      this.addChildAt(this.bakedSprite, 0);
+    } else {
+      const currentIndex = this.getChildIndex(this.bakedSprite);
+      if (currentIndex !== 0) {
+        this.setChildIndex(this.bakedSprite, 0);
+      }
+    }
+    // Leave any other children (text, overlays created later, etc.) intact
   }
 }

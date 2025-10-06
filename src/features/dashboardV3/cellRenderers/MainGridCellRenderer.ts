@@ -7,6 +7,7 @@ import { EventSpanType, EventsUtil } from "../util/Events";
 import { Tile } from "../ui/Tile";
 import { FirstCellNotPinned } from "../ui/event/FirstCellNotPinned";
 import { CellEditor } from "../util/CellEditor";
+import { useSelectedBlockStore } from "@/features/dashboard/state/useSelectedBlock";
 
 /**
  * CellRenderer for the main scrollable grid area
@@ -124,30 +125,45 @@ export class MainGridCellRenderer implements ICellRenderer {
                 text: block.text,
                 style: { fill: 0x1f2937, fontSize: 12, fontWeight: "500", align: "center" },
               });
-              // center within cell bounds
               txt.anchor.set(0.5);
               txt.position.set(cellWidth / 2, cellHeight / 2);
               c.addChild(txt);
             }
           );
-          parent.addChild(textSprite);
+          // IMPORTANT: add text inside the tile so pointer events bubble to tile
+          textSprite.eventMode = "none"; // ensure it does not capture events itself
+          tile.addChild(textSprite);
         }
       }
 
-      // Set up click listener for cell editing (after block text so overlay can be above if needed)
+      // Set up click listener for cell editing (after adding children)
       tile.on("cell:edit-request", (data: { row: number; col: number }) => {
-        console.log(
-          `🔗 89 MainGridCellRenderer received cell:edit-request for (${data.row}, ${data.col})`
-        );
-        if (this.cellEditor) {
-          console.log(`📝 89 Cell editor exists, calling editCell`);
-          this.cellEditor.editCell(data.row, data.col);
-        } else {
-          console.log(`❌ 89 No cell editor available!`);
-        }
+        this.handleLoadBlock(data.row, data.col);
+        console.log("handleLoadBlock clicked", data);
       });
     }
     return parent;
+  }
+
+  private handleLoadBlock(rowIndex: number, columnIndex: number) {
+    // TODO: Implement logic to get block/workTracker data for the cell
+    // For now, create a basic block structure
+    const store = useSelectedBlockStore.getState();
+
+    // Generate a key for this cell
+    const key = `${rowIndex}-${columnIndex}`;
+
+    // Get the actual bleacher and date
+    const bleacher = this.bleachers[rowIndex];
+    const date = this.dates[columnIndex];
+
+    store.setField("isOpen", true);
+    store.setField("key", key);
+    store.setField("blockId", null); // Set to actual block ID if it exists
+    store.setField("bleacherId", bleacher?.bleacherId || rowIndex + 1);
+    store.setField("date", date || "2025-01-01");
+    store.setField("text", ""); // TODO: Get actual text if block exists
+    store.setField("workTrackerId", null); // TODO: Get actual work tracker ID if it exists
   }
 
   /**

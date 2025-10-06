@@ -7,12 +7,14 @@ import { useSelectedBlockStore } from "../state/useSelectedBlock";
 import { Tables } from "../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { saveBlock, deleteBlock } from "@/app/(dashboards)/bleachers-dashboard/_lib/db";
+import { useQueryClient } from "@tanstack/react-query";
 
 type CellEditorProps = {
   onWorkTrackerOpen?: (workTracker: Tables<"WorkTrackers">) => void;
 };
 
 export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
+  const qc = useQueryClient();
   const { getToken } = useAuth();
   const { isOpen, key, blockId, bleacherId, date, text, workTrackerId, setField, resetForm } =
     useSelectedBlockStore();
@@ -42,6 +44,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         workTrackerId,
       };
       await saveBlock(editBlock, token);
+      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachers"] });
       resetForm();
     } catch (error) {
       console.error("Failed to Save Block:", error);
