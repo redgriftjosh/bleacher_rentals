@@ -655,6 +655,8 @@ export async function createEvent(
     hsl_hue: state.hslHue,
     must_be_clean: state.mustBeClean,
     goodshuffle_url: state.goodshuffleUrl ?? null,
+    created_by_user_id: state.ownerUserId ?? null,
+    // NOTE: ownerUserId not persisted yet; add column (e.g., owner_user_id INT FK -> Users.user_id) if needed.
   };
 
   const { data: eventData, error: eventError } = await supabase
@@ -765,6 +767,7 @@ export async function deleteEvent(
     .from("BleacherEvents")
     .delete()
     .eq("event_id", eventId);
+  // NOTE: ownerUserId not persisted yet; requires schema change to store owner.
 
   if (bleacherEventError) {
     console.error("Failed to delete bleacher-event links:", bleacherEventError);

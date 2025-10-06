@@ -67,6 +67,7 @@ export async function updateEvent(
     hsl_hue: state.hslHue,
     must_be_clean: state.mustBeClean,
     goodshuffle_url: state.goodshuffleUrl ?? null,
+    created_by_user_id: state.ownerUserId ?? null,
   };
 
   const { error: eventError } = await supabase

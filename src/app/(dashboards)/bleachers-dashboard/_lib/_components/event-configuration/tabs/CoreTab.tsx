@@ -2,7 +2,9 @@
 import { Toggle } from "../Toggle";
 import React, { useEffect } from "react";
 import AddressAutocomplete from "@/app/(dashboards)/_lib/_components/AddressAutoComplete";
-import { useCurrentEventStore } from "../../../useCurrentEventStore";
+import { EventStatus, useCurrentEventStore } from "../../../useCurrentEventStore";
+import { useUsersStore } from "@/state/userStore";
+import { Dropdown } from "@/components/DropDown";
 
 type Props = {
   showSetupTeardown: boolean;
@@ -10,6 +12,29 @@ type Props = {
 
 export const CoreTab = ({ showSetupTeardown }: Props) => {
   const currentEventStore = useCurrentEventStore();
+  const users = useUsersStore((s) => s.users);
+  const ownerOptions = users.map((u) => ({
+    label: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.email,
+    value: String(u.user_id),
+  }));
+
+  // Ensure ownerUserId defaults when users load and it's still null
+  useEffect(() => {
+    // Only auto-fill for brand new unsaved events where user has just opened the form.
+    if (
+      currentEventStore.isFormExpanded &&
+      currentEventStore.eventId === null &&
+      !currentEventStore.ownerUserId &&
+      users.length > 0
+    ) {
+      currentEventStore.setField("ownerUserId", users[0].user_id);
+    }
+  }, [
+    users,
+    currentEventStore.ownerUserId,
+    currentEventStore.eventId,
+    currentEventStore.isFormExpanded,
+  ]);
 
   // Helper to clamp or auto-adjust invalid dates
   useEffect(() => {
@@ -172,6 +197,21 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
           placeholder="Enter goodshuffle url"
           value={currentEventStore.goodshuffleUrl ?? ""}
           onChange={(e) => currentEventStore.setField("goodshuffleUrl", e.target.value)}
+        />
+        <label className="block text-sm font-medium text-gray-700 mt-1">Owner</label>
+        <Dropdown
+          options={ownerOptions}
+          selected={
+            currentEventStore.ownerUserId ? String(currentEventStore.ownerUserId) : undefined
+          }
+          onSelect={(val) => {
+            if (!val) {
+              currentEventStore.setField("ownerUserId", null);
+            } else {
+              currentEventStore.setField("ownerUserId", parseInt(val as string, 10));
+            }
+          }}
+          placeholder="Select owner"
         />
       </div>
     </div>
