@@ -41,6 +41,8 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
       ),
     [homeBaseIds, winterHomeBaseIds, rows, bleachers, selectedBleacherIds, isFormExpanded]
   );
+  // Debounced version used to actually drive Pixi re-instantiation
+  const [committedBleachers, setCommittedBleachers] = useState(filteredBleachers);
   const hostRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const dashboardRef = useRef<any>(null); // Store dashboard instance for cleanup
@@ -54,6 +56,25 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
   const savedScrollYRef = useRef<number | null>(null);
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [resizeTrigger, setResizeTrigger] = useState(false);
+  // Debounce timer for committing bleachers
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounce filtered bleachers to avoid immediate rebuild on every transient change (e.g., isFormExpanded)
+  useEffect(() => {
+    // On first run (when committed === filtered) skip delay
+    if (committedBleachers === filteredBleachers) return;
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      setCommittedBleachers(filteredBleachers);
+      debounceTimerRef.current = null;
+    }, 1000);
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
+  }, [filteredBleachers, committedBleachers]);
 
   const handleResize = useCallback(() => {
     // Cancel any pending flip
@@ -172,7 +193,7 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
           if (!destroyed && appRef.current === app) {
             console.log("not first render, lastContentXRef.current:", lastContentXRef.current);
             try {
-              const dashboard = main(app, filteredBleachers, {
+              const dashboard = main(app, committedBleachers, {
                 onWorkTrackerSelect,
                 initialScrollX: savedScrollXRef.current,
                 initialScrollY: savedScrollYRef.current,
@@ -188,7 +209,7 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
         // First render - no delay needed
         console.log("First render lastContentXRef.current:", lastContentXRef.current);
         try {
-          const dashboard = main(app, filteredBleachers, {
+          const dashboard = main(app, committedBleachers, {
             onWorkTrackerSelect,
             initialScrollX: savedScrollXRef.current,
             initialScrollY: savedScrollYRef.current,
@@ -208,6 +229,12 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
     return () => {
       window.removeEventListener("resize", handleResize);
       destroyed = true;
+
+      // Clear pending debounce commit if unmounting
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
 
       // Clean up dashboard first
       if (dashboardRef.current) {
@@ -251,7 +278,7 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
         }
       }
     };
-  }, [filteredBleachers, resizeTrigger, handleResize, onWorkTrackerSelect]);
+  }, [committedBleachers, resizeTrigger, handleResize, onWorkTrackerSelect]);
   return (
     <div className="w-full h-full pl-2 relative">
       <div ref={hostRef} className="w-full h-full border-l border-t border-gray-300" />
