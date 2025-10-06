@@ -3,6 +3,7 @@ import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { useBleachersStore } from "@/state/bleachersStore";
 import { useBlocksStore } from "@/state/blocksStore";
 import { useEventsStore } from "@/state/eventsStore";
+import { useDriversStore } from "@/state/driversStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
 import { useUserRolesStore } from "@/state/userRolesStore";
@@ -23,6 +24,7 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   BleacherEvents: () => useBleacherEventsStore.getState().setStale(true),
   Bleachers: () => useBleachersStore.getState().setStale(true),
   Blocks: () => useBlocksStore.getState().setStale(true),
+  Drivers: () => useDriversStore.getState().setStale(true),
   Events: () => useEventsStore.getState().setStale(true),
   Tasks: () => useTasksStore.getState().setStale(true),
   TaskStatuses: () => useTaskStatusesStore.getState().setStale(true),

@@ -123,6 +123,7 @@ export function fetchBleachers() {
                 .filter((be) => be.event_id === event.event_id)
                 .map((be) => be.bleacher_id), // find all bleachers linked to this event
               goodshuffleUrl: event.goodshuffle_url ?? null,
+              ownerUserId: event.created_by_user_id ?? null,
             };
           })
           .filter((e) => e !== null) as DashboardEvent[]; // filter out nulls
@@ -208,6 +209,7 @@ export function fetchDashboardEvents() {
           .filter((be) => be.event_id === event.event_id)
           .map((be) => be.bleacher_id),
         goodshuffleUrl: event.goodshuffle_url ?? null,
+        ownerUserId: event.created_by_user_id ?? null,
       };
     });
     // console.log("dashboardEvents", dashboardEvents);

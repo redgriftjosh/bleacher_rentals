@@ -220,7 +220,6 @@ export type Database = {
           lenient: boolean
           must_be_clean: boolean
           notes: string | null
-          poc: string | null
           setup_start: string | null
           seven_row: number | null
           teardown_end: string | null
@@ -242,7 +241,6 @@ export type Database = {
           lenient: boolean
           must_be_clean?: boolean
           notes?: string | null
-          poc?: string | null
           setup_start?: string | null
           seven_row?: number | null
           teardown_end?: string | null
@@ -264,7 +262,6 @@ export type Database = {
           lenient?: boolean
           must_be_clean?: boolean
           notes?: string | null
-          poc?: string | null
           setup_start?: string | null
           seven_row?: number | null
           teardown_end?: string | null
@@ -514,16 +511,12 @@ export type Database = {
           created_at: string
           date: string | null
           dropoff_address_id: number | null
-          dropoff_event_id: number | null
           dropoff_poc: string | null
-          dropoff_poc_override: boolean
           dropoff_time: string | null
           notes: string | null
           pay_cents: number | null
           pickup_address_id: number | null
-          pickup_event_id: number | null
           pickup_poc: string | null
-          pickup_poc_override: boolean
           pickup_time: string | null
           user_id: number | null
           work_tracker_id: number
@@ -533,16 +526,12 @@ export type Database = {
           created_at?: string
           date?: string | null
           dropoff_address_id?: number | null
-          dropoff_event_id?: number | null
           dropoff_poc?: string | null
-          dropoff_poc_override?: boolean
           dropoff_time?: string | null
           notes?: string | null
           pay_cents?: number | null
           pickup_address_id?: number | null
-          pickup_event_id?: number | null
           pickup_poc?: string | null
-          pickup_poc_override?: boolean
           pickup_time?: string | null
           user_id?: number | null
           work_tracker_id?: number
@@ -552,16 +541,12 @@ export type Database = {
           created_at?: string
           date?: string | null
           dropoff_address_id?: number | null
-          dropoff_event_id?: number | null
           dropoff_poc?: string | null
-          dropoff_poc_override?: boolean
           dropoff_time?: string | null
           notes?: string | null
           pay_cents?: number | null
           pickup_address_id?: number | null
-          pickup_event_id?: number | null
           pickup_poc?: string | null
-          pickup_poc_override?: boolean
           pickup_time?: string | null
           user_id?: number | null
           work_tracker_id?: number
@@ -582,25 +567,11 @@ export type Database = {
             referencedColumns: ["address_id"]
           },
           {
-            foreignKeyName: "WorkTrackers_dropoff_event_id_fkey"
-            columns: ["dropoff_event_id"]
-            isOneToOne: false
-            referencedRelation: "Events"
-            referencedColumns: ["event_id"]
-          },
-          {
             foreignKeyName: "WorkTrackers_pickup_address_id_fkey"
             columns: ["pickup_address_id"]
             isOneToOne: false
             referencedRelation: "Addresses"
             referencedColumns: ["address_id"]
-          },
-          {
-            foreignKeyName: "WorkTrackers_pickup_event_id_fkey"
-            columns: ["pickup_event_id"]
-            isOneToOne: false
-            referencedRelation: "Events"
-            referencedColumns: ["event_id"]
           },
           {
             foreignKeyName: "WorkTrackers_user_id_fkey"
