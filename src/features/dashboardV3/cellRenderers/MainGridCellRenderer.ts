@@ -107,8 +107,34 @@ export class MainGridCellRenderer implements ICellRenderer {
       }
     } else {
       const tile = new Tile(dimensions, this.baker, row, col, true);
+      parent.addChild(tile);
 
-      // Set up click listener for cell editing
+      // Attempt to find a block for this bleacher + date
+      const bleacher = this.bleachers[row];
+      const date = this.dates[col];
+      if (bleacher && date) {
+        const block = bleacher.blocks.find((b) => b.date === date);
+        if (block && block.text) {
+          const labelKey = `block:${bleacher.bleacherId}:${date}:${block.text}`;
+          const textSprite = this.baker.getSprite(
+            labelKey,
+            { width: cellWidth, height: cellHeight },
+            (c) => {
+              const txt = new Text({
+                text: block.text,
+                style: { fill: 0x1f2937, fontSize: 12, fontWeight: "500", align: "center" },
+              });
+              // center within cell bounds
+              txt.anchor.set(0.5);
+              txt.position.set(cellWidth / 2, cellHeight / 2);
+              c.addChild(txt);
+            }
+          );
+          parent.addChild(textSprite);
+        }
+      }
+
+      // Set up click listener for cell editing (after block text so overlay can be above if needed)
       tile.on("cell:edit-request", (data: { row: number; col: number }) => {
         console.log(
           `🔗 89 MainGridCellRenderer received cell:edit-request for (${data.row}, ${data.col})`
@@ -120,8 +146,6 @@ export class MainGridCellRenderer implements ICellRenderer {
           console.log(`❌ 89 No cell editor available!`);
         }
       });
-
-      parent.addChild(tile);
     }
     return parent;
   }
