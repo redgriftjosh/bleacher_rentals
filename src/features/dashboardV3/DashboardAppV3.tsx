@@ -49,6 +49,9 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
 
   const lastContentXRef = useRef<number | null>(null);
   const lastContentYRef = useRef<number | null>(null);
+  // Persist scroll across rebuilds/filters
+  const savedScrollXRef = useRef<number | null>(null);
+  const savedScrollYRef = useRef<number | null>(null);
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [resizeTrigger, setResizeTrigger] = useState(false);
 
@@ -95,8 +98,19 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
           app.ticker.stop();
 
           // Clean up previous dashboard instance
-          if (dashboardRef.current && typeof dashboardRef.current.destroy === "function") {
-            dashboardRef.current.destroy();
+          if (dashboardRef.current) {
+            try {
+              if (typeof dashboardRef.current.getScrollPositions === "function") {
+                const { x, y } = dashboardRef.current.getScrollPositions();
+                savedScrollXRef.current = x;
+                savedScrollYRef.current = y;
+              }
+            } catch {}
+            try {
+              if (typeof dashboardRef.current.destroy === "function") {
+                dashboardRef.current.destroy();
+              }
+            } catch {}
             dashboardRef.current = null;
           }
 
@@ -158,7 +172,11 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
           if (!destroyed && appRef.current === app) {
             console.log("not first render, lastContentXRef.current:", lastContentXRef.current);
             try {
-              const dashboard = main(app, filteredBleachers, { onWorkTrackerSelect });
+              const dashboard = main(app, filteredBleachers, {
+                onWorkTrackerSelect,
+                initialScrollX: savedScrollXRef.current,
+                initialScrollY: savedScrollYRef.current,
+              });
               dashboardRef.current = dashboard;
               initedRef.current = true;
             } catch (error) {
@@ -170,7 +188,11 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
         // First render - no delay needed
         console.log("First render lastContentXRef.current:", lastContentXRef.current);
         try {
-          const dashboard = main(app, filteredBleachers, { onWorkTrackerSelect });
+          const dashboard = main(app, filteredBleachers, {
+            onWorkTrackerSelect,
+            initialScrollX: savedScrollXRef.current,
+            initialScrollY: savedScrollYRef.current,
+          });
           dashboardRef.current = dashboard;
           initedRef.current = true;
         } catch (error) {
@@ -188,8 +210,19 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
       destroyed = true;
 
       // Clean up dashboard first
-      if (dashboardRef.current && typeof dashboardRef.current.destroy === "function") {
-        dashboardRef.current.destroy();
+      if (dashboardRef.current) {
+        try {
+          if (typeof dashboardRef.current.getScrollPositions === "function") {
+            const { x, y } = dashboardRef.current.getScrollPositions();
+            savedScrollXRef.current = x;
+            savedScrollYRef.current = y;
+          }
+        } catch {}
+        try {
+          if (typeof dashboardRef.current.destroy === "function") {
+            dashboardRef.current.destroy();
+          }
+        } catch {}
         dashboardRef.current = null;
       }
 

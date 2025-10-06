@@ -44,6 +44,8 @@ export class Dashboard {
         bleacher_id: number;
         date: string;
       }) => void;
+      initialScrollX?: number | null;
+      initialScrollY?: number | null;
     }
   ) {
     this.app = app;
@@ -171,6 +173,24 @@ export class Dashboard {
 
     // Set up scroll synchronization
     this.setupScrollSynchronization();
+
+    // Apply initial scroll positions if provided (after grids created & listeners bound)
+    const hasX = typeof opts?.initialScrollX === "number" && opts.initialScrollX! >= 0;
+    const hasY = typeof opts?.initialScrollY === "number" && opts.initialScrollY! >= 0;
+    if (hasX) {
+      this.mainGrid.setHorizontalScroll(opts!.initialScrollX!);
+      this.stickyTopRow.setHorizontalScroll(opts!.initialScrollX!);
+      this.mainGrid.updateHorizontalScrollbarPosition(opts!.initialScrollX!);
+      this.cellEditor.setScrollPosition(opts!.initialScrollX!, 0);
+    } else {
+      // Center horizontally only if no saved X
+      this.centerHorizontalScroll();
+    }
+    if (hasY) {
+      this.mainGrid.setVerticalScroll(opts!.initialScrollY!);
+      this.stickyLeftColumn.setVerticalScroll(opts!.initialScrollY!);
+      this.mainGridPinnedYAxis.setVerticalScroll(opts!.initialScrollY!);
+    }
   }
 
   /**
@@ -222,8 +242,14 @@ export class Dashboard {
       this.mainGridCellRenderer.updateScrollPosition(scrollX, CELL_WIDTH);
     });
 
-    // Center the horizontal scroll on initial load
-    this.centerHorizontalScroll();
+    // Horizontal centering moved to constructor after potential initialScrollX check
+  }
+
+  /** Current scroll positions (content px) */
+  public getScrollPositions(): { x: number; y: number } {
+    const x = (this.mainGrid as any)?.getCurrentScrollX?.() ?? 0;
+    const y = (this.mainGrid as any)?.getCurrentScrollY?.() ?? 0;
+    return { x, y };
   }
 
   /**
