@@ -146,24 +146,24 @@ export class MainGridCellRenderer implements ICellRenderer {
   }
 
   private handleLoadBlock(rowIndex: number, columnIndex: number) {
-    // TODO: Implement logic to get block/workTracker data for the cell
-    // For now, create a basic block structure
     const store = useSelectedBlockStore.getState();
-
-    // Generate a key for this cell
     const key = `${rowIndex}-${columnIndex}`;
-
-    // Get the actual bleacher and date
     const bleacher = this.bleachers[rowIndex];
     const date = this.dates[columnIndex];
 
+    if (!bleacher || !date) return;
+
+    // Find existing block for this date (exact match)
+    const existingBlock = bleacher.blocks.find((b) => b.date === date);
+
     store.setField("isOpen", true);
     store.setField("key", key);
-    store.setField("blockId", null); // Set to actual block ID if it exists
-    store.setField("bleacherId", bleacher?.bleacherId || rowIndex + 1);
-    store.setField("date", date || "2025-01-01");
-    store.setField("text", ""); // TODO: Get actual text if block exists
-    store.setField("workTrackerId", null); // TODO: Get actual work tracker ID if it exists
+    store.setField("blockId", existingBlock?.blockId ?? null);
+    store.setField("bleacherId", bleacher.bleacherId);
+    store.setField("date", date);
+    store.setField("text", existingBlock?.text ?? "");
+    // Work tracker integration not yet wired in this data set
+    store.setField("workTrackerId", null);
   }
 
   /**

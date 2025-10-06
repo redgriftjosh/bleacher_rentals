@@ -65,6 +65,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         workTrackerId,
       };
       await deleteBlock(editBlock, token);
+      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachers"] });
       resetForm();
     } catch (error) {
       console.error("Failed to Delete Block:", error);
