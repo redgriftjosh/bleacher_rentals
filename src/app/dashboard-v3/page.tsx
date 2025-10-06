@@ -35,7 +35,7 @@ export default function Page() {
   }
 
   return (
-    <div className="h-full grid grid-rows-[auto_1fr] gap-2">
+    <div className="h-full grid grid-rows-[auto_1fr] gap-2 overflow-hidden">
       <div>
         <div className="flex justify-between items-center pt-2 pl-2 pr-2">
           <FilterDashboard />

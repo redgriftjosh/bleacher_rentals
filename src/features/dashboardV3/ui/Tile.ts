@@ -77,7 +77,7 @@ export class Tile extends Container {
       this.hoverOverlay.rect(0, 0, this.dimensions.width, this.dimensions.height);
       this.hoverOverlay.fill({ color: 0x000000, alpha: 1 }); // Red with full alpha in the fill
       this.hoverOverlay.alpha = 0; // But start the container alpha at 0
-      this.hoverOverlay.zIndex = 1000; // Make sure it's on top
+      // this.hoverOverlay.zIndex = 1000; // Make sure it's on top
 
       this.addChild(this.hoverOverlay);
       //   console.log("✅ Created RED hover overlay", {

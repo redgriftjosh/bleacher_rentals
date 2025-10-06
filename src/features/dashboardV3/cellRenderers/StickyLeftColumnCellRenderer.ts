@@ -1,9 +1,10 @@
-import { Application, Container, Sprite } from "pixi.js";
+import { Application, Container } from "pixi.js";
 import { ICellRenderer } from "../interfaces/ICellRenderer";
 import { BleacherCell } from "../ui/BleacherCell";
 import { Tile } from "../ui/Tile";
 import { Baker } from "../util/Baker";
 import { Bleacher } from "../../dashboard/db/client/bleachers";
+import { useCurrentEventStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
 
 /**
  * CellRenderer for the sticky left column that displays bleacher information
@@ -17,10 +18,67 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
   private baker: Baker;
   private bleachers: Bleacher[];
 
+  // Maintain a pool keyed by row index so per-row toggle state can persist across rebuilds
+  private cellPool: Map<number, BleacherCell> = new Map();
+  private unsub?: () => void;
+  private isFormExpanded = false;
+  private selectedBleacherIds: number[] = [];
+
   constructor(app: Application, bleachers: Bleacher[]) {
     this.app = app;
     this.baker = new Baker(app);
     this.bleachers = bleachers;
+    this.bootstrapStateSync();
+  }
+
+  private bootstrapStateSync() {
+    const st = useCurrentEventStore.getState();
+    this.isFormExpanded = !!st.isFormExpanded;
+    this.selectedBleacherIds = st.bleacherIds.slice();
+    this.unsub = useCurrentEventStore.subscribe((s) => {
+      const expandedChanged = s.isFormExpanded !== this.isFormExpanded;
+      const selectedChanged = s.bleacherIds !== this.selectedBleacherIds;
+      if (!expandedChanged && !selectedChanged) return;
+      if (expandedChanged) this.isFormExpanded = s.isFormExpanded;
+      if (selectedChanged) this.selectedBleacherIds = s.bleacherIds.slice();
+
+      // Defer UI updates to next tick to avoid mid-build churn
+      this.app.ticker.addOnce(() => {
+        for (const [row, cell] of this.cellPool.entries()) {
+          if (expandedChanged) cell.setFormExpanded(this.isFormExpanded);
+          if (selectedChanged) {
+            const b = this.bleachers[row];
+            if (b) cell.setSelected(this.selectedBleacherIds.includes(b.bleacherId));
+          }
+        }
+      });
+    });
+  }
+
+  private getOrCreateCell(row: number): BleacherCell {
+    let cell = this.cellPool.get(row);
+    if (!cell) {
+      cell = new BleacherCell(this.baker);
+      const bleacher = this.bleachers[row];
+      if (bleacher) cell.setBleacher(bleacher);
+
+      // Wire toggle handler
+      cell.setToggleHandler((id) => {
+        const st = useCurrentEventStore.getState();
+        if (!st.isFormExpanded) return;
+        const selected = st.bleacherIds;
+        const updated = selected.includes(id)
+          ? selected.filter((n) => n !== id)
+          : [...selected, id];
+        st.setField("bleacherIds", updated);
+      });
+
+      // Initial state application
+      cell.setFormExpanded(this.isFormExpanded);
+      if (bleacher) cell.setSelected(this.selectedBleacherIds.includes(bleacher.bleacherId));
+      this.cellPool.set(row, cell);
+    }
+    return cell;
   }
 
   /**
@@ -34,25 +92,19 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     cellHeight: number,
     parent: Container
   ): Container {
-    // PERFORMANCE CRITICAL: Reuse existing container
     parent.removeChildren();
 
     const dimensions = { width: cellWidth, height: cellHeight };
-
-    // Add background tile first (behind the BleacherCell)
     const tileSprite = new Tile(dimensions, this.baker, row, col);
     parent.addChild(tileSprite);
 
-    // Get the bleacher data for this row
     const bleacher = this.bleachers[row];
-
     if (bleacher) {
-      // Create a BleacherCell and set the bleacher data (on top of the tile)
-      const bleacherCell = new BleacherCell(this.baker);
-      bleacherCell.setBleacher(bleacher);
-      parent.addChild(bleacherCell);
+      const cell = this.getOrCreateCell(row);
+      // Ensure bleacher data is up to date (in case data changed externally)
+      cell.setBleacher(bleacher);
+      parent.addChild(cell);
     }
-
     return parent;
   }
 
@@ -60,6 +112,11 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
    * Clean up resources
    */
   destroy() {
+    try {
+      this.unsub?.();
+    } catch {}
+    this.unsub = undefined;
+    this.cellPool.clear();
     this.baker.destroyAll();
   }
 }

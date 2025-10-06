@@ -2,6 +2,7 @@ import { Container, Sprite, Text } from "pixi.js";
 import { Baker } from "../util/Baker";
 import { Bleacher } from "../../dashboard/db/client/bleachers";
 import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT } from "../../dashboard/values/constants";
+import { BleacherCellToggle } from "./BleacherCellToggle";
 
 /**
  * A lightweight, scroll-friendly **row widget** for the sticky left column.
@@ -36,6 +37,8 @@ export class BleacherCell extends Container {
   private sprite: Sprite;
   private baker: Baker;
   private bleacherId?: number; // reuse-safe id
+  private toggle: BleacherCellToggle; // added toggle
+  private onToggle?: (bleacherId: number) => void;
 
   /**
    * Creates a cell that renders to a single `Sprite` using textures from `baker`.
@@ -47,6 +50,19 @@ export class BleacherCell extends Container {
 
     this.sprite = new Sprite();
     this.addChild(this.sprite);
+
+    // toggle setup
+    this.toggle = new BleacherCellToggle(baker);
+    this.toggle.setMode("plus");
+    const pad = 6;
+    this.toggle.x = BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - pad;
+    this.toggle.y = Math.max(2, (CELL_HEIGHT - this.toggle.buttonSize) / 2 - 2);
+    this.toggle.visible = false;
+    this.addChild(this.toggle);
+
+    this.toggle.on("pointertap", () => {
+      if (this.bleacherId != null && this.onToggle) this.onToggle(this.bleacherId);
+    });
   }
 
   /**
@@ -69,6 +85,28 @@ export class BleacherCell extends Container {
     );
 
     this.sprite.texture = rt;
+  }
+
+  setToggleHandler(fn: (bleacherId: number) => void) {
+    this.onToggle = fn;
+  }
+
+  setFormExpanded(expanded: boolean) {
+    const targetX = expanded
+      ? BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - 6
+      : BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - 6 - 40;
+
+    if (expanded) {
+      this.toggle.visible = true;
+      this.toggle.animateX(targetX, 220);
+    } else {
+      this.toggle.x = targetX;
+      this.toggle.visible = false;
+    }
+  }
+
+  setSelected(selected: boolean) {
+    this.toggle.setMode(selected ? "minus" : "plus");
   }
 
   /**
