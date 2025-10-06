@@ -2,10 +2,39 @@
 import { Toggle } from "../Toggle";
 import React, { useEffect } from "react";
 import AddressAutocomplete from "@/app/(dashboards)/_lib/_components/AddressAutoComplete";
-import { useCurrentEventStore } from "../../../useCurrentEventStore";
+import { EventStatus, useCurrentEventStore } from "../../../useCurrentEventStore";
+import { useUsersStore } from "@/state/userStore";
+import { Dropdown } from "@/components/DropDown";
 
-export const CoreTab = () => {
+type Props = {
+  showSetupTeardown: boolean;
+};
+
+export const CoreTab = ({ showSetupTeardown }: Props) => {
   const currentEventStore = useCurrentEventStore();
+  const users = useUsersStore((s) => s.users);
+  const ownerOptions = users.map((u) => ({
+    label: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.email,
+    value: String(u.user_id),
+  }));
+
+  // Ensure ownerUserId defaults when users load and it's still null
+  useEffect(() => {
+    // Only auto-fill for brand new unsaved events where user has just opened the form.
+    if (
+      currentEventStore.isFormExpanded &&
+      currentEventStore.eventId === null &&
+      !currentEventStore.ownerUserId &&
+      users.length > 0
+    ) {
+      currentEventStore.setField("ownerUserId", users[0].user_id);
+    }
+  }, [
+    users,
+    currentEventStore.ownerUserId,
+    currentEventStore.eventId,
+    currentEventStore.isFormExpanded,
+  ]);
 
   // Helper to clamp or auto-adjust invalid dates
   useEffect(() => {
@@ -55,7 +84,11 @@ export const CoreTab = () => {
   ]);
 
   return (
-    <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-4">
+    <div
+      className={`grid ${
+        showSetupTeardown ? "grid-cols-[1fr_1fr_1fr_1fr]" : "grid-cols-[1fr_1fr_1fr]"
+      } gap-4`}
+    >
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Event Name</label>
         <input
@@ -94,68 +127,72 @@ export const CoreTab = () => {
           min={currentEventStore.eventStart || undefined}
         />
       </div>
-      <div>
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1 flex-1 ">
-              Setup Start
-            </label>
-            <input
-              type="date"
-              className={`w-full p-2 border rounded flex-1 ${
-                currentEventStore.sameDaySetup ? "bg-gray-100 text-gray-100 cursor-not-allowed" : ""
-              }`}
-              value={currentEventStore.setupStart}
-              onChange={(e) => currentEventStore.setField("setupStart", e.target.value)}
-              disabled={currentEventStore.sameDaySetup}
-              max={
-                currentEventStore.eventStart
-                  ? new Date(new Date(currentEventStore.eventStart).getTime() - 86400000) // 1 day before
-                      .toISOString()
-                      .split("T")[0]
-                  : undefined
-              }
-            />
-          </div>
-          <Toggle
-            label="Same-Day"
-            tooltip={false}
-            checked={currentEventStore.sameDaySetup}
-            onChange={(e) => currentEventStore.setField("sameDaySetup", e)}
-          />
-        </div>
-        <div className="flex gap-4 mt-1">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 flex-1">Teardown End</label>
-            <input
-              type="date"
-              className={`w-full p-2 border rounded flex-1 ${
-                currentEventStore.sameDayTeardown
-                  ? "bg-gray-100 text-gray-100 cursor-not-allowed"
-                  : ""
-              }`}
-              value={currentEventStore.teardownEnd ?? ""}
-              onChange={(e) => currentEventStore.setField("teardownEnd", e.target.value)}
-              disabled={currentEventStore.sameDayTeardown}
-              min={
-                currentEventStore.eventEnd
-                  ? new Date(new Date(currentEventStore.eventEnd).getTime() + 86400000) // 1 day after
-                      .toISOString()
-                      .split("T")[0]
-                  : undefined
-              }
-            />
-          </div>
-          <div className="mt-5 mr-6">
+      {showSetupTeardown && (
+        <div>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex-1 ">
+                Setup Start
+              </label>
+              <input
+                type="date"
+                className={`w-full p-2 border rounded flex-1 ${
+                  currentEventStore.sameDaySetup
+                    ? "bg-gray-100 text-gray-100 cursor-not-allowed"
+                    : ""
+                }`}
+                value={currentEventStore.setupStart}
+                onChange={(e) => currentEventStore.setField("setupStart", e.target.value)}
+                disabled={currentEventStore.sameDaySetup}
+                max={
+                  currentEventStore.eventStart
+                    ? new Date(new Date(currentEventStore.eventStart).getTime() - 86400000) // 1 day before
+                        .toISOString()
+                        .split("T")[0]
+                    : undefined
+                }
+              />
+            </div>
             <Toggle
-              label=""
+              label="Same-Day"
               tooltip={false}
-              checked={currentEventStore.sameDayTeardown}
-              onChange={(e) => currentEventStore.setField("sameDayTeardown", e)}
+              checked={currentEventStore.sameDaySetup}
+              onChange={(e) => currentEventStore.setField("sameDaySetup", e)}
             />
           </div>
+          <div className="flex gap-4 mt-1">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 flex-1">Teardown End</label>
+              <input
+                type="date"
+                className={`w-full p-2 border rounded flex-1 ${
+                  currentEventStore.sameDayTeardown
+                    ? "bg-gray-100 text-gray-100 cursor-not-allowed"
+                    : ""
+                }`}
+                value={currentEventStore.teardownEnd ?? ""}
+                onChange={(e) => currentEventStore.setField("teardownEnd", e.target.value)}
+                disabled={currentEventStore.sameDayTeardown}
+                min={
+                  currentEventStore.eventEnd
+                    ? new Date(new Date(currentEventStore.eventEnd).getTime() + 86400000) // 1 day after
+                        .toISOString()
+                        .split("T")[0]
+                    : undefined
+                }
+              />
+            </div>
+            <div className="mt-5 mr-6">
+              <Toggle
+                label=""
+                tooltip={false}
+                checked={currentEventStore.sameDayTeardown}
+                onChange={(e) => currentEventStore.setField("sameDayTeardown", e)}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Good Shuffle</label>
         <input
@@ -164,6 +201,21 @@ export const CoreTab = () => {
           placeholder="Enter goodshuffle url"
           value={currentEventStore.goodshuffleUrl ?? ""}
           onChange={(e) => currentEventStore.setField("goodshuffleUrl", e.target.value)}
+        />
+        <label className="block text-sm font-medium text-gray-700 mt-1">Owner</label>
+        <Dropdown
+          options={ownerOptions}
+          selected={
+            currentEventStore.ownerUserId ? String(currentEventStore.ownerUserId) : undefined
+          }
+          onSelect={(val) => {
+            if (!val) {
+              currentEventStore.setField("ownerUserId", null);
+            } else {
+              currentEventStore.setField("ownerUserId", parseInt(val as string, 10));
+            }
+          }}
+          placeholder="Select owner"
         />
       </div>
     </div>

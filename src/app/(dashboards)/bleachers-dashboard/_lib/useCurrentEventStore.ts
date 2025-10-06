@@ -17,6 +17,8 @@ export type EventStatus = "Quoted" | "Booked";
 
 export type CurrentEventState = {
   eventId: number | null;
+  // User who created/owns the event (will default to current logged in user on open)
+  ownerUserId: number | null;
   eventName: string;
   addressData: AddressData | null;
   seats: number | null;
@@ -51,6 +53,7 @@ export type CurrentEventStore = CurrentEventState & {
 
 const initialState: CurrentEventState = {
   eventId: null,
+  ownerUserId: null,
   eventName: "",
   addressData: null,
   seats: 0,
@@ -58,11 +61,11 @@ const initialState: CurrentEventState = {
   tenRow: 0,
   fifteenRow: 0,
   setupStart: "",
-  sameDaySetup: false,
+  sameDaySetup: true,
   eventStart: "",
   eventEnd: "",
   teardownEnd: "",
-  sameDayTeardown: false,
+  sameDayTeardown: true,
   lenient: false,
   selectedStatus: "Quoted",
   notes: "",

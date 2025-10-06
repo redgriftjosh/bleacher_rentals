@@ -25,7 +25,11 @@ import { useQueryClient } from "@tanstack/react-query";
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
 
-export const EventConfiguration = () => {
+type Props = {
+  showSetupTeardown: boolean;
+};
+
+export const EventConfiguration = ({ showSetupTeardown }: Props) => {
   const currentEventStore = useCurrentEventStore();
   const [activeTab, setActiveTab] = useState<Tab>("Core");
   const { getToken } = useAuth();
@@ -198,7 +202,7 @@ export const EventConfiguration = () => {
             )}
           </div>
         </div>
-        {activeTab === "Core" && <CoreTab />}
+        {activeTab === "Core" && <CoreTab showSetupTeardown={showSetupTeardown} />}
         {activeTab === "Details" && <DetailsTab />}
         {activeTab === "Alerts" && <AlertsTab />}
       </div>

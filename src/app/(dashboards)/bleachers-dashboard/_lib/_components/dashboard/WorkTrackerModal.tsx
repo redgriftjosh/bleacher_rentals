@@ -2,7 +2,7 @@ import { Link, X } from "lucide-react";
 import { Tables } from "../../../../../../../database.types";
 import { Dropdown } from "@/components/DropDown";
 import { getDrivers } from "../../db/getDrivers";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import AddressAutocomplete from "@/app/(dashboards)/_lib/_components/AddressAutoComplete";
 import { fetchAddressFromId, getAddressFromId, saveWorkTracker } from "../../db";
 import { AddressData } from "../../useCurrentEventStore";
@@ -138,6 +138,20 @@ export default function WorkTrackerModal({
   const labelClassName = "block text-sm font-medium text-gray-700 mt-1";
   const inputClassName = "w-full p-2 border rounded bg-white";
 
+  // Track whether the initial mousedown began on the backdrop so we only close when both down & up occur there
+  const mouseDownOnBackdrop = useRef(false);
+
+  const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    mouseDownOnBackdrop.current = e.target === e.currentTarget; // only true if directly on backdrop
+  };
+
+  const handleBackdropMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (mouseDownOnBackdrop.current && e.target === e.currentTarget) {
+      setSelectedWorkTracker(null);
+    }
+    mouseDownOnBackdrop.current = false;
+  };
+
   if (isWorkTrackerLoading)
     return (
       <div
@@ -151,7 +165,8 @@ export default function WorkTrackerModal({
     <>
       {selectedWorkTracker !== null && (
         <div
-          onMouseDown={() => setSelectedWorkTracker(null)}
+          onMouseDown={handleBackdropMouseDown}
+          onMouseUp={handleBackdropMouseUp}
           className="fixed inset-0 z-[2000] bg-black/30 backdrop-blur-xs flex items-center justify-center"
         >
           <div

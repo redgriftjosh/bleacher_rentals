@@ -123,6 +123,7 @@ export function fetchBleachers() {
                 .filter((be) => be.event_id === event.event_id)
                 .map((be) => be.bleacher_id), // find all bleachers linked to this event
               goodshuffleUrl: event.goodshuffle_url ?? null,
+              ownerUserId: event.created_by_user_id ?? null,
             };
           })
           .filter((e) => e !== null) as DashboardEvent[]; // filter out nulls
@@ -208,6 +209,7 @@ export function fetchDashboardEvents() {
           .filter((be) => be.event_id === event.event_id)
           .map((be) => be.bleacher_id),
         goodshuffleUrl: event.goodshuffle_url ?? null,
+        ownerUserId: event.created_by_user_id ?? null,
       };
     });
     // console.log("dashboardEvents", dashboardEvents);
@@ -655,6 +657,8 @@ export async function createEvent(
     hsl_hue: state.hslHue,
     must_be_clean: state.mustBeClean,
     goodshuffle_url: state.goodshuffleUrl ?? null,
+    created_by_user_id: state.ownerUserId ?? null,
+    // NOTE: ownerUserId not persisted yet; add column (e.g., owner_user_id INT FK -> Users.user_id) if needed.
   };
 
   const { data: eventData, error: eventError } = await supabase
@@ -765,6 +769,7 @@ export async function deleteEvent(
     .from("BleacherEvents")
     .delete()
     .eq("event_id", eventId);
+  // NOTE: ownerUserId not persisted yet; requires schema change to store owner.
 
   if (bleacherEventError) {
     console.error("Failed to delete bleacher-event links:", bleacherEventError);

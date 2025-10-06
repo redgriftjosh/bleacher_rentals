@@ -152,6 +152,7 @@ export default function MainScrollableGrid({
     //   text: block?.text ?? "",
     //   workTrackerId: workTracker?.workTrackerId ?? null,
     // });
+
     setWorkTracker({
       work_tracker_id: workTrackerId ?? -1,
       bleacher_id: bleacherId,
@@ -167,6 +168,26 @@ export default function MainScrollableGrid({
       pickup_time: null,
       user_id: null,
     });
+
+    // setWorkTracker({
+    //   work_tracker_id: workTrackerId ?? -1,
+    //   bleacher_id: bleacherId,
+    //   created_at: "",
+    //   date: date,
+    //   dropoff_address_id: null,
+    //   dropoff_event_id: null,
+    //   dropoff_poc: null,
+    //   dropoff_poc_override: false,
+    //   dropoff_time: null,
+    //   notes: null,
+    //   pay_cents: null,
+    //   pickup_address_id: null,
+    //   pickup_event_id: null,
+    //   pickup_poc: null,
+    //   pickup_poc_override: false,
+    //   pickup_time: null,
+    //   user_id: null,
+    // });
 
     // console.log("workTracker", workTracker);
   };

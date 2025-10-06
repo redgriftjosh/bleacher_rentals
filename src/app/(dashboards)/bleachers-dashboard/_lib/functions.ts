@@ -44,31 +44,34 @@ export function checkEventFormRules(
   if (!createEventPayload.eventEnd || createEventPayload.eventEnd == "") {
     missingFields.push("Missing: Event End");
   }
-  if (!createEventPayload.setupStart || createEventPayload.setupStart == "") {
-    if (!createEventPayload.sameDaySetup) {
-      missingFields.push("Missing: Setup Start");
-    }
-  }
-  if (!createEventPayload.teardownEnd || createEventPayload.teardownEnd == "") {
-    if (!createEventPayload.sameDayTeardown) {
-      missingFields.push("Missing: Teardown End");
-    }
-  }
+  // if (!createEventPayload.setupStart || createEventPayload.setupStart == "") {
+  //   if (!createEventPayload.sameDaySetup) {
+  //     missingFields.push("Missing: Setup Start");
+  //   }
+  // }
+  // if (!createEventPayload.teardownEnd || createEventPayload.teardownEnd == "") {
+  //   if (!createEventPayload.sameDayTeardown) {
+  //     missingFields.push("Missing: Teardown End");
+  //   }
+  // }
 
   // Lenient Conditions
-  if (createEventPayload.lenient) {
-    if (!createEventPayload.seats || createEventPayload.seats == 0) {
-      missingFields.push("Need at least one seat");
-    }
-  } else {
-    const totalBleachers =
-      (createEventPayload.sevenRow || 0) +
-      (createEventPayload.tenRow || 0) +
-      (createEventPayload.fifteenRow || 0);
+  // if (createEventPayload.lenient) {
+  //   if (!createEventPayload.seats || createEventPayload.seats == 0) {
+  //     missingFields.push("Need at least one seat");
+  //   }
+  // } else {
+  //   const totalBleachers =
+  //     (createEventPayload.sevenRow || 0) +
+  //     (createEventPayload.tenRow || 0) +
+  //     (createEventPayload.fifteenRow || 0);
 
-    if (totalBleachers == 0) {
-      missingFields.push("Select at least one bleacher");
-    }
+  //   if (totalBleachers == 0) {
+  //     missingFields.push("Select at least one bleacher");
+  //   }
+  // }
+  if (createEventPayload.bleacherIds.length === 0) {
+    missingFields.push("Select at least one bleacher");
   }
   if (missingFields.length > 0) {
     toast.custom(

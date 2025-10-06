@@ -17,7 +17,7 @@ const BleachersDashboardPage = () => {
         <FilterDashboard />
         <CreateEventButton />
       </div>
-      <EventConfiguration />
+      <EventConfiguration showSetupTeardown={true} />
       <Dashboard yAxis={yAxis} />
     </div>
   );

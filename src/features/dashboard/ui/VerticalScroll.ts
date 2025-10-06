@@ -125,11 +125,18 @@ export class VerticalScrollbar {
 
   private setInitialScrollY(initialScrollY: number | null) {
     // Halfway on mount (defer 1 tick so listeners are attached)
-    this.app.ticker.addOnce(() => {
+    const ticker: any = (this.app as any)?.ticker;
+    if (ticker && typeof ticker.addOnce === "function") {
+      ticker.addOnce(() => {
+        const initialRatio = 0;
+        this.contentY = initialScrollY ?? initialRatio * this.contentMax;
+        this.applyContentY(this.contentY);
+      });
+    } else {
       const initialRatio = 0;
       this.contentY = initialScrollY ?? initialRatio * this.contentMax;
       this.applyContentY(this.contentY);
-    });
+    }
   }
 
   public getContentY(): number {

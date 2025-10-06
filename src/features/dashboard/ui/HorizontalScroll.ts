@@ -98,11 +98,19 @@ export class HorizontalScrollbar {
 
   private setInitialScrollX(initialScrollX: number | null) {
     // Halfway on mount (defer 1 tick so listeners are attached)
-    this.app.ticker.addOnce(() => {
+    const ticker: any = (this.app as any)?.ticker;
+    if (ticker && typeof ticker.addOnce === "function") {
+      ticker.addOnce(() => {
+        const initialRatio = 0.5;
+        this.contentX = initialScrollX ?? initialRatio * this.contentMax;
+        this.applyContentX(this.contentX);
+      });
+    } else {
+      // Fallback immediate
       const initialRatio = 0.5;
       this.contentX = initialScrollX ?? initialRatio * this.contentMax;
       this.applyContentX(this.contentX);
-    });
+    }
   }
 
   private listenToScrollWheel() {
