@@ -84,7 +84,13 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
   ]);
 
   return (
-    <div className="grid grid-cols-[1fr_1fr_1fr] gap-4">
+    <div
+      className={`grid ${
+        showSetupTeardown
+          ? "grid-cols-[1fr_1fr_1fr_1fr]"
+          : "grid-cols-[1fr_1fr_1fr]"
+      } gap-4`}
+    >
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Event Name</label>
         <input
