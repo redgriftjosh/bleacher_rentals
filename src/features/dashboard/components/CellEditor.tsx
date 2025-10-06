@@ -97,6 +97,20 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     onWorkTrackerOpen?.(workTracker);
   };
 
+  // Track whether the initial mousedown began on the backdrop so we only close when both down & up occur there
+  const mouseDownOnBackdrop = useRef(false);
+
+  const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    mouseDownOnBackdrop.current = e.target === e.currentTarget; // only true if directly on backdrop
+  };
+
+  const handleBackdropMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (mouseDownOnBackdrop.current && e.target === e.currentTarget) {
+      handleClose();
+    }
+    mouseDownOnBackdrop.current = false;
+  };
+
   const handleClose = () => {
     resetForm();
   };
@@ -105,7 +119,9 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
 
   return (
     <div
-      onMouseDown={handleClose}
+      // onMouseDown={handleClose}
+      onMouseDown={handleBackdropMouseDown}
+      onMouseUp={handleBackdropMouseUp}
       className="fixed inset-0 z-[1000] bg-black/30 backdrop-blur-xs flex items-center justify-center"
     >
       <div
