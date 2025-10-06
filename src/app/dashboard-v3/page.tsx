@@ -80,7 +80,7 @@ export default function Page() {
           <FilterDashboard />
           <CreateEventButton />
         </div>
-        <EventConfiguration />
+        <EventConfiguration showSetupTeardown={false} />
       </div>
       <div className="min-h-0">
         <DashboardAppV3

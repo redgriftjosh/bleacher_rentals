@@ -4,7 +4,11 @@ import React, { useEffect } from "react";
 import AddressAutocomplete from "@/app/(dashboards)/_lib/_components/AddressAutoComplete";
 import { useCurrentEventStore } from "../../../useCurrentEventStore";
 
-export const CoreTab = () => {
+type Props = {
+  showSetupTeardown: boolean;
+};
+
+export const CoreTab = ({ showSetupTeardown }: Props) => {
   const currentEventStore = useCurrentEventStore();
 
   // Helper to clamp or auto-adjust invalid dates
@@ -55,7 +59,7 @@ export const CoreTab = () => {
   ]);
 
   return (
-    <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-4">
+    <div className="grid grid-cols-[1fr_1fr_1fr] gap-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Event Name</label>
         <input
@@ -94,68 +98,72 @@ export const CoreTab = () => {
           min={currentEventStore.eventStart || undefined}
         />
       </div>
-      <div>
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1 flex-1 ">
-              Setup Start
-            </label>
-            <input
-              type="date"
-              className={`w-full p-2 border rounded flex-1 ${
-                currentEventStore.sameDaySetup ? "bg-gray-100 text-gray-100 cursor-not-allowed" : ""
-              }`}
-              value={currentEventStore.setupStart}
-              onChange={(e) => currentEventStore.setField("setupStart", e.target.value)}
-              disabled={currentEventStore.sameDaySetup}
-              max={
-                currentEventStore.eventStart
-                  ? new Date(new Date(currentEventStore.eventStart).getTime() - 86400000) // 1 day before
-                      .toISOString()
-                      .split("T")[0]
-                  : undefined
-              }
-            />
-          </div>
-          <Toggle
-            label="Same-Day"
-            tooltip={false}
-            checked={currentEventStore.sameDaySetup}
-            onChange={(e) => currentEventStore.setField("sameDaySetup", e)}
-          />
-        </div>
-        <div className="flex gap-4 mt-1">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 flex-1">Teardown End</label>
-            <input
-              type="date"
-              className={`w-full p-2 border rounded flex-1 ${
-                currentEventStore.sameDayTeardown
-                  ? "bg-gray-100 text-gray-100 cursor-not-allowed"
-                  : ""
-              }`}
-              value={currentEventStore.teardownEnd ?? ""}
-              onChange={(e) => currentEventStore.setField("teardownEnd", e.target.value)}
-              disabled={currentEventStore.sameDayTeardown}
-              min={
-                currentEventStore.eventEnd
-                  ? new Date(new Date(currentEventStore.eventEnd).getTime() + 86400000) // 1 day after
-                      .toISOString()
-                      .split("T")[0]
-                  : undefined
-              }
-            />
-          </div>
-          <div className="mt-5 mr-6">
+      {showSetupTeardown && (
+        <div>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex-1 ">
+                Setup Start
+              </label>
+              <input
+                type="date"
+                className={`w-full p-2 border rounded flex-1 ${
+                  currentEventStore.sameDaySetup
+                    ? "bg-gray-100 text-gray-100 cursor-not-allowed"
+                    : ""
+                }`}
+                value={currentEventStore.setupStart}
+                onChange={(e) => currentEventStore.setField("setupStart", e.target.value)}
+                disabled={currentEventStore.sameDaySetup}
+                max={
+                  currentEventStore.eventStart
+                    ? new Date(new Date(currentEventStore.eventStart).getTime() - 86400000) // 1 day before
+                        .toISOString()
+                        .split("T")[0]
+                    : undefined
+                }
+              />
+            </div>
             <Toggle
-              label=""
+              label="Same-Day"
               tooltip={false}
-              checked={currentEventStore.sameDayTeardown}
-              onChange={(e) => currentEventStore.setField("sameDayTeardown", e)}
+              checked={currentEventStore.sameDaySetup}
+              onChange={(e) => currentEventStore.setField("sameDaySetup", e)}
             />
           </div>
+          <div className="flex gap-4 mt-1">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 flex-1">Teardown End</label>
+              <input
+                type="date"
+                className={`w-full p-2 border rounded flex-1 ${
+                  currentEventStore.sameDayTeardown
+                    ? "bg-gray-100 text-gray-100 cursor-not-allowed"
+                    : ""
+                }`}
+                value={currentEventStore.teardownEnd ?? ""}
+                onChange={(e) => currentEventStore.setField("teardownEnd", e.target.value)}
+                disabled={currentEventStore.sameDayTeardown}
+                min={
+                  currentEventStore.eventEnd
+                    ? new Date(new Date(currentEventStore.eventEnd).getTime() + 86400000) // 1 day after
+                        .toISOString()
+                        .split("T")[0]
+                    : undefined
+                }
+              />
+            </div>
+            <div className="mt-5 mr-6">
+              <Toggle
+                label=""
+                tooltip={false}
+                checked={currentEventStore.sameDayTeardown}
+                onChange={(e) => currentEventStore.setField("sameDayTeardown", e)}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Good Shuffle</label>
         <input
