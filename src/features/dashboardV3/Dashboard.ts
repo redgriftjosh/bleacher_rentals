@@ -11,6 +11,9 @@ import {
   BLEACHER_COLUMN_WIDTH,
 } from "../dashboard/values/constants";
 import { Bleacher } from "../dashboard/db/client/bleachers";
+import { DashboardEvent } from "@/app/(dashboards)/bleachers-dashboard/_lib/types";
+import { useFilterDashboardStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useFilterDashboardStore";
+// import { EventLeftColumnCellRenderer } from "./cellRenderers/EventLeftColumnCellRenderer";
 import { getColumnsAndDates } from "../dashboard/util/scrollbar";
 import { SCROLLBAR_THICKNESS } from "./util/VerticalScrollbar";
 import { TopLeftCellRenderer } from "./cellRenderers/TopLeftCellRenderer";
@@ -35,9 +38,13 @@ export class Dashboard {
   // Store app reference for centering calculations
   private app: Application;
 
+  private yAxis: "Bleachers" | "Events";
+
   constructor(
     app: Application,
     bleachers: Bleacher[],
+    events: DashboardEvent[],
+    yAxis: "Bleachers" | "Events",
     opts?: {
       onWorkTrackerSelect?: (workTracker: {
         work_tracker_id: number;
@@ -51,12 +58,19 @@ export class Dashboard {
     this.app = app;
     // Get dates for event calculations
     const { columns: contentColumns, dates } = getColumnsAndDates();
+    this.yAxis = yAxis;
+    console.log("Events", events);
 
-    this.mainGridCellRenderer = new MainGridCellRenderer(app, bleachers, dates, {
+    this.mainGridCellRenderer = new MainGridCellRenderer(app, bleachers, events, dates, yAxis, {
       onWorkTrackerSelect: opts?.onWorkTrackerSelect,
     });
     this.mainGridPinYCellRenderer = new PinnedYCellRenderer(app, bleachers, dates);
-    const leftColumnCellRenderer = new StickyLeftColumnCellRenderer(app, bleachers);
+    const leftColumnCellRenderer = new StickyLeftColumnCellRenderer(
+      app,
+      bleachers,
+      this.yAxis,
+      events
+    );
     const topRowCellRenderer = new StickyTopRowCellRenderer(app);
     const topLeftCellRenderer = new TopLeftCellRenderer(app);
 
@@ -100,7 +114,7 @@ export class Dashboard {
     // Bottom-left: Sticky left column (vertical scrollable)
     this.stickyLeftColumn = new Grid({
       app,
-      rows: bleacherCount, // Dynamic based on actual bleacher data
+      rows: this.yAxis === "Bleachers" ? bleacherCount : events.length, // Dynamic based on actual bleacher data
       cols: 1,
       cellWidth: BLEACHER_COLUMN_WIDTH,
       cellHeight: CELL_HEIGHT,
@@ -115,7 +129,7 @@ export class Dashboard {
     // Bottom-right: Main scrollable content
     this.mainGrid = new Grid({
       app,
-      rows: bleacherCount, // Dynamic based on actual bleacher data
+      rows: this.yAxis === "Bleachers" ? bleacherCount : events.length, // Dynamic based on actual bleacher data
       cols: contentColumns, // Keep columns hardcoded as requested
       cellWidth: CELL_WIDTH,
       cellHeight: CELL_HEIGHT,
@@ -146,14 +160,19 @@ export class Dashboard {
 
     // When main grid completes a cell update cycle, update the pinned Y axis
     this.mainGrid.on("grid:firstVisibleColIndexChanged", (firstVisibleCol: number) => {
-      // Update the pinned Y renderer with the main grid's first visible column
-      this.mainGridPinYCellRenderer.setMainGridFirstVisibleColumn(firstVisibleCol);
-      this.mainGridPinnedYAxis.forceUpdate();
+      // Update the pinned Y renderer with the main grid's first visible column (bleachers mode only)
+      if (this.yAxis === "Bleachers") {
+        this.mainGridPinYCellRenderer.setMainGridFirstVisibleColumn(firstVisibleCol);
+        this.mainGridPinnedYAxis.forceUpdate();
+      }
     });
 
     // Add grids in bottom-to-top stacking order
     app.stage.addChild(this.mainGrid);
-    app.stage.addChild(this.mainGridPinnedYAxis);
+    // Only show pinned Y axis when viewing by bleachers
+    if (this.yAxis === "Bleachers") {
+      app.stage.addChild(this.mainGridPinnedYAxis);
+    }
     app.stage.addChild(this.stickyLeftColumn);
     app.stage.addChild(this.stickyTopRow);
     app.stage.addChild(this.stickyTopLeftCell);

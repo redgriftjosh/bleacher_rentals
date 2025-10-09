@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import WorkTrackerModal from "@/app/(dashboards)/bleachers-dashboard/_lib/_components/dashboard/WorkTrackerModal";
 import { Tables } from "../../../database.types";
 import { Bleacher } from "../dashboard/db/client/bleachers";
+import { DashboardEvent } from "@/app/(dashboards)/bleachers-dashboard/_lib/types";
 import { main } from "./main";
 import { useFilterDashboardStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useFilterDashboardStore";
 import { filterSortPixiBleachers } from "./util/filterPixiBleachers";
@@ -13,6 +14,7 @@ import bunny from "./GSLogo.png";
 
 type DashboardAppV3Props = {
   bleachers: Bleacher[];
+  events: DashboardEvent[];
   onWorkTrackerSelect?: (workTracker: {
     work_tracker_id: number;
     bleacher_id: number;
@@ -20,13 +22,18 @@ type DashboardAppV3Props = {
   }) => void;
 };
 
-export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: DashboardAppV3Props) {
+export default function DashboardAppV3({
+  bleachers,
+  events,
+  onWorkTrackerSelect,
+}: DashboardAppV3Props) {
   // Filtering state from existing dashboard stores
   const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
   const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
   const rows = useFilterDashboardStore((s) => s.rows);
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
   const selectedBleacherIds = useCurrentEventStore((s) => s.bleacherIds);
+  const yAxis = useFilterDashboardStore((s) => s.yAxis);
 
   // Memoize filtered bleachers so reference changes only when inputs do
   const filteredBleachers = useMemo(
@@ -193,7 +200,7 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
           if (!destroyed && appRef.current === app) {
             console.log("not first render, lastContentXRef.current:", lastContentXRef.current);
             try {
-              const dashboard = main(app, committedBleachers, {
+              const dashboard = main(app, committedBleachers, events, yAxis, {
                 onWorkTrackerSelect,
                 initialScrollX: savedScrollXRef.current,
                 initialScrollY: savedScrollYRef.current,
@@ -209,7 +216,7 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
         // First render - no delay needed
         console.log("First render lastContentXRef.current:", lastContentXRef.current);
         try {
-          const dashboard = main(app, committedBleachers, {
+          const dashboard = main(app, committedBleachers, events, yAxis, {
             onWorkTrackerSelect,
             initialScrollX: savedScrollXRef.current,
             initialScrollY: savedScrollYRef.current,
@@ -278,7 +285,7 @@ export default function DashboardAppV3({ bleachers, onWorkTrackerSelect }: Dashb
         }
       }
     };
-  }, [committedBleachers, resizeTrigger, handleResize, onWorkTrackerSelect]);
+  }, [committedBleachers, resizeTrigger, handleResize, onWorkTrackerSelect, events, yAxis]);
   return (
     <div className="w-full h-full pl-2 relative">
       <div ref={hostRef} className="w-full h-full border-l border-t border-gray-300" />

@@ -42,7 +42,7 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
     const token = await getToken({ template: "supabase" });
     try {
       await createEvent(state, token, user ?? null);
-      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachers"] });
+      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachersAndEvents"] });
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to create event:", error);
@@ -56,7 +56,7 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
     const token = await getToken({ template: "supabase" });
     try {
       await updateEvent(state, token, user ?? null, bleacherEvents);
-      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachers"] });
+      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachersAndEvents"] });
       currentEventStore.resetForm();
       setLoading(false);
     } catch (error) {
@@ -71,7 +71,7 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
     const token = await getToken({ template: "supabase" });
     try {
       await deleteEvent(state.eventId, state.addressData?.state ?? "", token, user ?? null);
-      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachers"] });
+      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachersAndEvents"] });
       currentEventStore.resetForm();
       setLoading(false);
     } catch (error) {
