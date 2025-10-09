@@ -13,19 +13,22 @@ import WorkTrackerModal from "../(dashboards)/bleachers-dashboard/_lib/_componen
 import CellEditor from "@/features/dashboard/components/CellEditor";
 import { useState } from "react";
 import { Tables } from "../../../database.types";
+import { useFilterDashboardStore } from "../(dashboards)/bleachers-dashboard/_lib/useFilterDashboardStore";
 
 export default function Page() {
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
     null
   );
-  const { getToken } = useAuth();
+  const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
+  const { isLoaded, userId, getToken } = useAuth();
   const { data, isLoading, error } = useQuery({
-    queryKey: ["FetchDashboardBleachersAndEvents"],
+    queryKey: ["FetchDashboardBleachersAndEvents", { onlyShowMyEvents, userId }],
+    enabled: isLoaded && !!userId,
     queryFn: async () => {
       const token = await getToken({ template: "supabase" });
       const [b, e] = await Promise.all([
         FetchDashboardBleachers(token),
-        FetchDashboardEvents(token),
+        FetchDashboardEvents(token, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
       ]);
       return { bleachers: b.bleachers, events: e.events };
     },

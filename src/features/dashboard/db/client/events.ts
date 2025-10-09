@@ -1,52 +1,47 @@
 "use client";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { Tables } from "../../../../../database.types";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { DashboardEvent } from "@/app/(dashboards)/bleachers-dashboard/_lib/types";
 
-// Fetch Events into DashboardEvent shape (similar to legacy fetchDashboardEvents)
-// Includes address, basic fields, and bleacherIds via BleacherEvents. Setup/Teardown-specific text/flags unused default.
+type Row = {
+  event_id: number;
+  event_name: string;
+  event_start: string;
+  event_end: string;
+  hsl_hue: number | null;
+  booked: boolean;
+  goodshuffle_url: string | null;
+  lenient: boolean;
+  notes: string | null;
+  total_seats: number | null;
+  seven_row: number | null;
+  ten_row: number | null;
+  fifteen_row: number | null;
+  setup_start: string | null;
+  teardown_end: string | null;
+  must_be_clean: boolean;
+  created_by_user_id: number | null;
+  address: {
+    address_id: number;
+    street: string;
+    city: string;
+    state_province: string;
+    zip_postal: string | null;
+  } | null;
+  bleacher_events: { bleacher_id: number }[];
+};
 
+// Fetch Events into DashboardEvent shape (similar to legacy fetchDashboardEvents)
+// Includes address, basic fields, and bleacherIds via BleacherEvents. Setup/Teardown-specific text/flags use defaults.
 export async function FetchDashboardEvents(
-  token: string | null
+  token: string | null,
+  opts?: { onlyMine?: boolean; clerkUserId?: string | null }
 ): Promise<{ events: DashboardEvent[] }> {
   if (!token) {
     createErrorToast(["No token found"]);
   }
 
-  const supabase = await getSupabaseClient(token);
-  type Row = {
-    event_id: number;
-    event_name: string;
-    event_start: string;
-    event_end: string;
-    hsl_hue: number | null;
-    booked: boolean;
-    goodshuffle_url: string | null;
-    lenient: boolean;
-    notes: string | null;
-    total_seats: number | null;
-    seven_row: number | null;
-    ten_row: number | null;
-    fifteen_row: number | null;
-    setup_start: string | null;
-    teardown_end: string | null;
-    must_be_clean: boolean;
-    created_by_user_id: number | null;
-    address: {
-      address_id: number;
-      street: string;
-      city: string;
-      state_province: string;
-      zip_postal: string | null;
-    } | null;
-    bleacher_events: { bleacher_id: number }[];
-  };
-
-  const { data, error } = await supabase
-    .from("Events")
-    .select(
-      `
+  const queryString = `
       event_id,
       event_name,
       event_start,
@@ -74,17 +69,32 @@ export async function FetchDashboardEvents(
       bleacher_events:BleacherEvents!BleacherEvents_event_id_fkey(
         bleacher_id
       )
-      `
-    )
+      `;
+
+  const supabase = await getSupabaseClient(token);
+
+  let builder = supabase.from("Events").select(queryString);
+  if (opts?.onlyMine) {
+    const clerkUserId = opts.clerkUserId ?? null;
+    if (clerkUserId) {
+      const { data: userRow, error: userErr } = await supabase
+        .from("Users")
+        .select("user_id")
+        .eq("clerk_user_id", clerkUserId)
+        .maybeSingle();
+      if (!userErr && userRow?.user_id) {
+        builder = builder.eq("created_by_user_id", userRow.user_id);
+      }
+    }
+  }
+  const { data: finalData, error } = await builder
     .order("event_start", { ascending: true })
     .overrideTypes<Row[], { merge: false }>();
-  console.log("FetchDashboardEvents data", data);
-
   if (error) {
     createErrorToast(["Failed to fetch Dashboard Events.", error.message]);
   }
 
-  const events: DashboardEvent[] = (data ?? []).map((e) => ({
+  const events: DashboardEvent[] = (finalData ?? []).map((e) => ({
     eventId: e.event_id,
     bleacherEventId: -1,
     eventName: e.event_name,
