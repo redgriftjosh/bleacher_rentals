@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
 import { getHomeBaseOptions, getRowOptions, getStateProvOptions } from "../functions";
+import { Toggle } from "./event-configuration/Toggle";
 
 export default function FilterDashboard() {
   const yAxis = useFilterDashboardStore((s) => s.yAxis);
@@ -19,6 +20,7 @@ export default function FilterDashboard() {
   const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
   const rows = useFilterDashboardStore((s) => s.rows);
   const stateProvinces = useFilterDashboardStore((s) => s.stateProvinces);
+  const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
 
   const [updated, setUpdated] = useState(false);
   useEffect(() => {
@@ -101,7 +103,7 @@ export default function FilterDashboard() {
         </>
       )}
       {yAxis === "Events" && (
-        <div>
+        <div className="flex items-center gap-3 whitespace-nowrap">
           <MultiSelect
             options={stateProvOptions}
             onValueChange={(value) => setField("stateProvinces", value)}
@@ -110,6 +112,14 @@ export default function FilterDashboard() {
             placeholder="States & Provinces"
             variant="inverted"
             maxCount={1}
+            className="w-auto"
+          />
+          <Toggle
+            label="Only Show My Events"
+            tooltip={false}
+            checked={onlyShowMyEvents}
+            onChange={(e) => setField("onlyShowMyEvents", e)}
+            inline
           />
         </div>
       )}
