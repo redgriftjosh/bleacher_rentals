@@ -5,6 +5,8 @@ import { Tile } from "../ui/Tile";
 import { Baker } from "../util/Baker";
 import { Bleacher } from "../../dashboard/db/client/bleachers";
 import { useCurrentEventStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
+import { DashboardEvent } from "@/app/(dashboards)/bleachers-dashboard/_lib/types";
+import { EventLeftColumnCell } from "../ui/EventLeftColumnCell";
 
 /**
  * CellRenderer for the sticky left column that displays bleacher information
@@ -24,10 +26,20 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
   private isFormExpanded = false;
   private selectedBleacherIds: number[] = [];
 
-  constructor(app: Application, bleachers: Bleacher[]) {
+  private yAxis: "Bleachers" | "Events" = "Bleachers";
+  private events: DashboardEvent[];
+
+  constructor(
+    app: Application,
+    bleachers: Bleacher[],
+    yAxis: "Bleachers" | "Events",
+    events: DashboardEvent[]
+  ) {
     this.app = app;
     this.baker = new Baker(app);
     this.bleachers = bleachers;
+    this.yAxis = yAxis;
+    this.events = events;
     this.bootstrapStateSync();
   }
 
@@ -107,6 +119,15 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     parent.removeChildren();
 
     const dimensions = { width: cellWidth, height: cellHeight };
+    if (this.yAxis === "Events") {
+      const event = this.events[row];
+      if (event) {
+        const cell = new EventLeftColumnCell(dimensions, this.baker, event);
+        parent.addChild(cell);
+        return parent;
+      }
+    }
+
     const tileSprite = new Tile(dimensions, this.baker, row, col);
     parent.addChild(tileSprite);
 

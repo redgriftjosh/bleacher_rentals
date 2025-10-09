@@ -10,6 +10,8 @@ import { CellEditor } from "../util/CellEditor";
 import { useSelectedBlockStore } from "@/features/dashboard/state/useSelectedBlock";
 import { Graphics, Sprite } from "pixi.js";
 import { TruckIcon } from "../ui/event/TruckIcon";
+import { DashboardEvent } from "@/app/(dashboards)/bleachers-dashboard/_lib/types";
+import { DateTime } from "luxon";
 
 /**
  * CellRenderer for the main scrollable grid area
@@ -23,10 +25,12 @@ export class MainGridCellRenderer implements ICellRenderer {
   private baker: Baker;
   private spansByRow: EventSpanType[][];
   private bleachers: Bleacher[];
+  private events?: DashboardEvent[];
   private dates: string[];
   private currentScrollX: number = 0;
   private cellWidth: number = 0; // Store the cell width from main grid
   private cellEditor?: CellEditor; // Cell editor instance
+  private yAxis: "Bleachers" | "Events" = "Bleachers";
 
   private onWorkTrackerSelect?: (workTracker: {
     work_tracker_id: number;
@@ -37,7 +41,9 @@ export class MainGridCellRenderer implements ICellRenderer {
   constructor(
     app: Application,
     bleachers: Bleacher[],
+    events: DashboardEvent[],
     dates: string[],
+    yAxis: "Bleachers" | "Events",
     opts?: {
       onWorkTrackerSelect?: (workTracker: {
         work_tracker_id: number;
@@ -49,12 +55,50 @@ export class MainGridCellRenderer implements ICellRenderer {
     this.app = app;
     this.baker = new Baker(app);
     this.bleachers = bleachers;
+    this.events = events;
     this.dates = dates;
     this.onWorkTrackerSelect = opts?.onWorkTrackerSelect;
+    this.yAxis = yAxis;
 
-    // Calculate event spans once during construction
-    const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, dates);
-    this.spansByRow = spansByRow;
+    // Calculate event spans once during construction depending on yAxis
+    if (yAxis === "Bleachers") {
+      const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, dates);
+      this.spansByRow = spansByRow;
+    } else {
+      this.spansByRow = this.calculateSpansByEvents(events, dates);
+    }
+  }
+
+  /**
+   * When yAxis = "Events", build spans per event row using DashboardEvent
+   */
+  private calculateSpansByEvents(events: DashboardEvent[], dates: string[]): EventSpanType[][] {
+    const dateToIndex = new Map(dates.map((d, i) => [d, i]));
+    return events.map((ev, rowIndex) => {
+      const spans: EventSpanType[] = [];
+      const startISO = DateTime.fromISO(ev.eventStart).toISODate();
+      const endISO = DateTime.fromISO(ev.eventEnd).toISODate();
+      if (!startISO || !endISO) return spans;
+      const startCol = dateToIndex.get(startISO);
+      const endCol = dateToIndex.get(endISO);
+      if (startCol === undefined || endCol === undefined) return spans;
+
+      // Map DashboardEvent to BleacherEvent-like object (only needed fields)
+      const be = {
+        eventId: ev.eventId,
+        bleacherEventId: ev.bleacherEventId ?? -1,
+        eventName: ev.eventName,
+        address: ev.addressData?.address ?? "",
+        eventStart: ev.eventStart,
+        eventEnd: ev.eventEnd,
+        hslHue: ev.hslHue ?? null,
+        booked: (ev.status ?? ev.selectedStatus) === "Booked",
+        goodshuffleUrl: ev.goodshuffleUrl ?? null,
+      } as any; // compatible with BleacherEvent used by EventBody
+
+      spans.push({ start: startCol, end: endCol, ev: be, rowIndex });
+      return spans;
+    });
   }
 
   /**
@@ -92,7 +136,7 @@ export class MainGridCellRenderer implements ICellRenderer {
     const dimensions = { width: cellWidth, height: cellHeight };
     parent.zIndex = 0;
 
-    // Check if this cell has an event
+    // Check if this cell has an event (bleachers or events mode)
     const eventInfo = EventsUtil.getCellEventInfo(row, col, this.spansByRow);
 
     if (eventInfo.hasEvent && eventInfo.span) {
@@ -127,13 +171,13 @@ export class MainGridCellRenderer implements ICellRenderer {
         parent.addChild(eventSprite);
       }
     } else {
-      const tile = new Tile(dimensions, this.baker, row, col, true);
+      const tile = new Tile(dimensions, this.baker, row, col, this.yAxis === "Bleachers");
       parent.addChild(tile);
 
-      // Attempt to find a block for this bleacher + date
+      // Attempt to find a block (bleachers mode only)
       const bleacher = this.bleachers[row];
       const date = this.dates[col];
-      if (bleacher && date) {
+      if (this.yAxis === "Bleachers" && bleacher && date) {
         const block = bleacher.blocks.find((b) => b.date === date);
         if (block && block.text) {
           const labelKey = `block:${bleacher.bleacherId}:${date}:${block.text}`;
@@ -185,11 +229,13 @@ export class MainGridCellRenderer implements ICellRenderer {
       }
 
       // Set up click listener for cell editing (after adding children)
-      tile.on("cell:edit-request", (data: { row: number; col: number }) => {
-        // If the click originated from a truck icon interaction, the callback will already have fired.
-        // We rely on event stopping at the icon level; proceed with block load otherwise.
-        this.handleLoadBlock(data.row, data.col);
-      });
+      if (this.yAxis === "Bleachers") {
+        tile.on("cell:edit-request", (data: { row: number; col: number }) => {
+          // If the click originated from a truck icon interaction, the callback will already have fired.
+          // We rely on event stopping at the icon level; proceed with block load otherwise.
+          this.handleLoadBlock(data.row, data.col);
+        });
+      }
     }
     return parent;
   }

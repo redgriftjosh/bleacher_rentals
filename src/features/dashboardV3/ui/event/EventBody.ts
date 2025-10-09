@@ -7,6 +7,7 @@ import { BleacherEvent } from "@/features/dashboard/db/client/bleachers";
 import { useEventsStore } from "@/state/eventsStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { useAddressesStore } from "@/state/addressesStore";
+import { useFilterDashboardStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useFilterDashboardStore";
 
 export class EventBody extends Sprite {
   private currentSpan?: EventSpanType;
@@ -128,8 +129,8 @@ export class EventBody extends Sprite {
 
   private handleClick() {
     if (!this.currentSpan) return;
-
     const event = this.currentSpan.ev;
+    console.log("EventBody clicked: ", event);
     this.handleLoadEvent(event);
   }
 
@@ -147,13 +148,10 @@ export class EventBody extends Sprite {
       (be) => be.bleacher_event_id === bleacherEvent.bleacherEventId
     );
 
-    if (!bleacherEventRecord) {
-      console.warn("Could not find bleacher event record");
-      return;
-    }
-
-    // Find the full event data
-    const fullEvent = events.find((e) => e.event_id === bleacherEventRecord.event_id);
+    // Find the full event data using either bleacher_event link or direct eventId fallback
+    const fullEvent = bleacherEventRecord
+      ? events.find((e) => e.event_id === bleacherEventRecord.event_id)
+      : events.find((e) => e.event_id === (bleacherEvent as any).eventId);
 
     if (!fullEvent) {
       console.warn("Could not find full event data");
@@ -207,5 +205,11 @@ export class EventBody extends Sprite {
     } else {
       setField("ownerUserId", null);
     }
+
+    // Ensure the dashboard flips to Bleachers view and highlights selected bleachers
+    try {
+      const filterStore = useFilterDashboardStore.getState();
+      filterStore.setField("yAxis", "Bleachers");
+    } catch {}
   }
 }
