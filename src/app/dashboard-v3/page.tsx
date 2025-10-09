@@ -2,6 +2,7 @@
 import LoadingSpinner from "@/components/LoadingSpinner";
 import DashboardApp from "@/features/dashboard/DashboardApp";
 import { FetchDashboardBleachers } from "@/features/dashboard/db/client/bleachers";
+import { FetchDashboardEvents } from "@/features/dashboard/db/client/events";
 import { useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 import { EventConfiguration } from "../(dashboards)/bleachers-dashboard/_lib/_components/event-configuration/EventConfiguration";
@@ -19,10 +20,14 @@ export default function Page() {
   );
   const { getToken } = useAuth();
   const { data, isLoading, error } = useQuery({
-    queryKey: ["FetchDashboardBleachers"],
+    queryKey: ["FetchDashboardBleachersAndEvents"],
     queryFn: async () => {
       const token = await getToken({ template: "supabase" });
-      return FetchDashboardBleachers(token);
+      const [b, e] = await Promise.all([
+        FetchDashboardBleachers(token),
+        FetchDashboardEvents(token),
+      ]);
+      return { bleachers: b.bleachers, events: e.events };
     },
   });
 
@@ -85,6 +90,7 @@ export default function Page() {
       <div className="min-h-0">
         <DashboardAppV3
           bleachers={data.bleachers}
+          events={data.events}
           onWorkTrackerSelect={handleWorkTrackerSelectFromPixi}
         />
       </div>

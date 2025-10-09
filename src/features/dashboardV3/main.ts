@@ -1,6 +1,7 @@
 import { Application } from "pixi.js";
 import { Grid } from "./util/Grid";
 import { Bleacher } from "../dashboard/db/client/bleachers";
+import { DashboardEvent } from "@/app/(dashboards)/bleachers-dashboard/_lib/types";
 import { Dashboard } from "./Dashboard";
 import { PngManager } from "./util/PngManager";
 
@@ -11,6 +12,8 @@ import { PngManager } from "./util/PngManager";
 export function main(
   app: Application,
   bleachers: Bleacher[],
+  events: DashboardEvent[],
+  yAxis: "Bleachers" | "Events",
   opts?: {
     onWorkTrackerSelect?: (workTracker: {
       work_tracker_id: number;
@@ -22,7 +25,7 @@ export function main(
   }
 ) {
   PngManager.fetchAndCachePng(app);
-  return new Dashboard(app, bleachers, {
+  return new Dashboard(app, bleachers, events, yAxis, {
     onWorkTrackerSelect: opts?.onWorkTrackerSelect,
     initialScrollX: opts?.initialScrollX ?? null,
     initialScrollY: opts?.initialScrollY ?? null,
