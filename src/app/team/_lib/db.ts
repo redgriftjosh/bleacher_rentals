@@ -54,7 +54,7 @@ export async function insertUser(
   homeBaseIds: number[],
   tax: number | null,
   token: string
-) {
+): Promise<number | null> {
   // console.log("Inserting user", token);
   const supabase = await getSupabaseClient(token);
 
@@ -72,13 +72,13 @@ export async function insertUser(
 
   if (userError || !userData) {
     console.error("Insert failed:", userError?.message);
-    return;
+    return null;
   }
   if (roleId === ROLES.driver) {
     const insertError = await insertDriver(userData.user_id, tax ?? 0, supabase);
     if (insertError) {
       createErrorToastNoThrow(["Failed to insert driver.", insertError.message]);
-      return;
+      return null;
     }
   }
 
@@ -100,6 +100,8 @@ export async function insertUser(
     createSuccessToast(["User Created"]);
     updateDataBase(["Users", "UserHomeBases", "UserRoles", "UserStatuses"]);
   }
+
+  return userId;
 }
 
 export async function updateUser(
@@ -162,6 +164,82 @@ export async function updateUser(
   createSuccessToast(["User Updated"]);
 
   updateDataBase(["Users", "UserHomeBases", "UserRoles", "UserStatuses"]);
+}
+
+// ------- BleacherUsers helpers -------
+
+export type SimpleOption = { id: number; label: string };
+
+export async function fetchBleachersForOptions(token: string | null): Promise<SimpleOption[]> {
+  if (!token) {
+    createErrorToast(["No token found"]);
+  }
+  const supabase = await getSupabaseClient(token);
+  const { data, error } = await supabase
+    .from("Bleachers")
+    .select("bleacher_id, bleacher_number")
+    .order("bleacher_number", { ascending: true });
+  if (error) {
+    createErrorToastNoThrow(["Failed to fetch bleachers.", error.message]);
+    return [];
+  }
+  return (data ?? []).map((b: any) => ({ id: b.bleacher_id, label: String(b.bleacher_number) }));
+}
+
+export async function fetchUserBleacherAssignments(
+  userId: number,
+  token: string | null
+): Promise<{ summer: number[]; winter: number[] }> {
+  if (!token) {
+    createErrorToast(["No token found"]);
+  }
+  const supabase = await getSupabaseClient(token);
+  const { data, error } = await supabase
+    .from("BleacherUsers")
+    .select("bleacher_id, season")
+    .eq("user_id", userId);
+  if (error) {
+    createErrorToastNoThrow(["Failed to fetch bleacher assignments.", error.message]);
+    return { summer: [], winter: [] };
+  }
+  const summer = (data ?? [])
+    .filter((r: any) => r.season === "SUMMER")
+    .map((r: any) => r.bleacher_id);
+  const winter = (data ?? [])
+    .filter((r: any) => r.season === "WINTER")
+    .map((r: any) => r.bleacher_id);
+  return { summer, winter };
+}
+
+export async function upsertUserBleacherAssignments(
+  userId: number,
+  summerIds: number[],
+  winterIds: number[],
+  token: string | null
+): Promise<void> {
+  if (!token) {
+    createErrorToast(["No token found"]);
+  }
+  const supabase = await getSupabaseClient(token);
+
+  // Replace strategy: delete then insert
+  const { error: delError } = await supabase.from("BleacherUsers").delete().eq("user_id", userId);
+  if (delError) {
+    createErrorToastNoThrow(["Failed to clear previous assignments.", delError.message]);
+    return;
+  }
+
+  const rows = [
+    ...summerIds.map((id) => ({ user_id: userId, bleacher_id: id, season: "SUMMER" })),
+    ...winterIds.map((id) => ({ user_id: userId, bleacher_id: id, season: "WINTER" })),
+  ];
+  if (rows.length > 0) {
+    const { error: insError } = await supabase.from("BleacherUsers").insert(rows);
+    if (insError) {
+      createErrorToastNoThrow(["Failed to save bleacher assignments.", insError.message]);
+      return;
+    }
+  }
 }
 
 export async function deactivateUser(userId: number, token: string) {
