@@ -21,6 +21,7 @@ export default function FilterDashboard() {
   const rows = useFilterDashboardStore((s) => s.rows);
   const stateProvinces = useFilterDashboardStore((s) => s.stateProvinces);
   const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
+  const optimizationMode = useFilterDashboardStore((s) => s.optimizationMode);
 
   const [updated, setUpdated] = useState(false);
   useEffect(() => {
@@ -100,6 +101,13 @@ export default function FilterDashboard() {
               maxCount={1}
             />
           </div>
+          <Toggle
+            label="Optimization Mode"
+            tooltip={false}
+            checked={optimizationMode}
+            onChange={(e) => setField("optimizationMode", e)}
+            inline
+          />
         </>
       )}
       {yAxis === "Events" && (

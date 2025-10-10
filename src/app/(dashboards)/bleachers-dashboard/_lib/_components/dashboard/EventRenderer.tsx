@@ -156,6 +156,7 @@ export default function EventRenderer({
               mustBeClean: event.mustBeClean,
               bleacherIds: bleacherIds,
               isFormExpanded: true,
+              isFormMinimized: false,
               hslHue: event.hslHue,
               alerts: [], // will be calculated on load
               goodshuffleUrl: event.goodshuffleUrl,

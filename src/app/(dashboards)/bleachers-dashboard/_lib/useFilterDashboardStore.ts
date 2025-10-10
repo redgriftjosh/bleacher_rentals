@@ -9,6 +9,7 @@ export type FilterDashboardState = {
   rows: number[];
   stateProvinces: number[];
   onlyShowMyEvents: boolean;
+  optimizationMode: boolean;
 };
 
 // Me take event form stuff, add tools to change it.
@@ -27,6 +28,7 @@ const initialState: FilterDashboardState = {
   rows: [],
   stateProvinces: [],
   onlyShowMyEvents: true,
+  optimizationMode: false,
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.

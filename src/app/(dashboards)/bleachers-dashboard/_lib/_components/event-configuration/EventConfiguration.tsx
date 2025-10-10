@@ -80,10 +80,11 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
     }
   };
 
+  const showPanel = currentEventStore.isFormExpanded && !currentEventStore.isFormMinimized;
   return (
     <div
       className={`overflow-hidden transition-all duration-1000 ease-in-out ml-2 ${
-        currentEventStore.isFormExpanded ? "max-h-[500px] mb-2" : "max-h-0"
+        showPanel ? "max-h-[500px] mb-2" : "max-h-0"
       }`}
     >
       <div className="bg-white p-4 shadow-lg border border-gray-200">
