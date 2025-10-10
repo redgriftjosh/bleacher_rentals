@@ -12,8 +12,14 @@ export function filterSortPixiBleachers(
   rows: number[],
   bleachers: Bleacher[],
   alwaysIncludeBleacherIds: number[],
-  isFormExpanded: boolean
+  isFormExpanded: boolean,
+  optimizationMode: boolean
 ): Bleacher[] {
+  // If filters haven't been initialized yet, show all bleachers in a stable order.
+  const filtersReady = homeBaseIds.length > 0 && winterHomeBaseIds.length > 0 && rows.length > 0;
+  if (!filtersReady) {
+    return [...bleachers].sort((a, b) => a.bleacherNumber - b.bleacherNumber);
+  }
   const matchesFilter = (b: Bleacher) => {
     const summerId = getHomeBaseIdByName(b.summerHomeBase) ?? -1;
     const winterId = getHomeBaseIdByName(b.winterHomeBase) ?? -1;
@@ -25,6 +31,12 @@ export function filterSortPixiBleachers(
   };
 
   const alwaysInclude = (b: Bleacher) => alwaysIncludeBleacherIds.includes(b.bleacherId);
+
+  // When optimizationMode is ON, selection should not affect inclusion or ordering.
+  // We also want the rows to sit in their "normal" places (by bleacherNumber).
+  if (optimizationMode) {
+    return bleachers.filter(matchesFilter).sort((a, b) => a.bleacherNumber - b.bleacherNumber);
+  }
 
   const filtered = isFormExpanded
     ? bleachers.filter((b) => matchesFilter(b) || alwaysInclude(b))

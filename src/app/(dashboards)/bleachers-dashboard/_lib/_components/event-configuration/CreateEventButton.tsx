@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { Minus, Plus, X } from "lucide-react";
 import { useCurrentEventStore } from "../../useCurrentEventStore";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useUser } from "@clerk/nextjs";
@@ -25,17 +25,53 @@ export const CreateEventButton = () => {
   };
 
   return currentEventStore.isFormExpanded ? (
-    <button
-      onClick={() => {
-        // Collapse form: clear owner and reset form state
-        currentEventStore.setField("isFormExpanded", false);
-        currentEventStore.resetForm();
-        useCurrentEventStore.getState().setField("ownerUserId", null);
-      }}
-      className="px-2 py-2 bg-transparent font-light rounded mb-2 hover:bg-gray-100 hover:border-darkBlue border-transparent border transition text-gray-500 hover:text-darkBlue text-3xl cursor-pointer"
-    >
-      <X />
-    </button>
+    <div className="flex items-center justify-end gap-2">
+      {!currentEventStore.isFormMinimized ? (
+        // Expanded and not minimized: show minus and close
+        <>
+          <button
+            onClick={() => {
+              currentEventStore.setField("isFormMinimized", true);
+            }}
+            className="px-2 py-2 bg-transparent font-light rounded mb-2 hover:bg-gray-100 hover:border-darkBlue border-transparent border transition text-gray-500 hover:text-darkBlue text-3xl cursor-pointer"
+          >
+            <Minus />
+          </button>
+          <button
+            onClick={() => {
+              currentEventStore.setField("isFormExpanded", false);
+              currentEventStore.resetForm();
+              useCurrentEventStore.getState().setField("ownerUserId", null);
+            }}
+            className="px-2 py-2 bg-transparent font-light rounded mb-2 hover:bg-gray-100 hover:border-darkBlue border-transparent border transition text-gray-500 hover:text-darkBlue text-3xl cursor-pointer"
+          >
+            <X />
+          </button>
+        </>
+      ) : (
+        // Expanded but minimized: show plus (restore) and close
+        <>
+          <button
+            onClick={() => {
+              currentEventStore.setField("isFormMinimized", false);
+            }}
+            className="px-2 py-2 bg-transparent font-light rounded mb-2 hover:bg-gray-100 hover:border-darkBlue border-transparent border transition text-gray-500 hover:text-darkBlue text-3xl cursor-pointer"
+          >
+            <Plus />
+          </button>
+          <button
+            onClick={() => {
+              currentEventStore.setField("isFormExpanded", false);
+              currentEventStore.resetForm();
+              useCurrentEventStore.getState().setField("ownerUserId", null);
+            }}
+            className="px-2 py-2 bg-transparent font-light rounded mb-2 hover:bg-gray-100 hover:border-darkBlue border-transparent border transition text-gray-500 hover:text-darkBlue text-3xl cursor-pointer"
+          >
+            <X />
+          </button>
+        </>
+      )}
+    </div>
   ) : (
     // <button
     //   onClick={() => {
@@ -45,10 +81,15 @@ export const CreateEventButton = () => {
     // >
     //   Configure Event
     // </button>
-    <div className="-pt-2 pb-2">
+    <div className="-pt-2 pb-2 flex items-center justify-end">
       <PrimaryButton
         onClick={() => {
-          currentEventStore.setField("isFormExpanded", !currentEventStore.isFormExpanded);
+          const next = !currentEventStore.isFormExpanded;
+          currentEventStore.setField("isFormExpanded", next);
+          if (next) {
+            // ensure not minimized on expand
+            currentEventStore.setField("isFormMinimized", false);
+          }
           if (!currentEventStore.ownerUserId) {
             const resolved = resolveCurrentUserId();
             if (resolved) {

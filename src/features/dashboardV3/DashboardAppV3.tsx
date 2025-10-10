@@ -32,22 +32,33 @@ export default function DashboardAppV3({
   const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
   const rows = useFilterDashboardStore((s) => s.rows);
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
+  const isFormMinimized = useCurrentEventStore((s) => s.isFormMinimized);
   const selectedBleacherIds = useCurrentEventStore((s) => s.bleacherIds);
   const yAxis = useFilterDashboardStore((s) => s.yAxis);
+  const optimizationMode = useFilterDashboardStore((s) => s.optimizationMode);
 
   // Memoize filtered bleachers so reference changes only when inputs do
-  const filteredBleachers = useMemo(
-    () =>
-      filterSortPixiBleachers(
-        homeBaseIds,
-        winterHomeBaseIds,
-        rows,
-        bleachers,
-        selectedBleacherIds,
-        isFormExpanded
-      ),
-    [homeBaseIds, winterHomeBaseIds, rows, bleachers, selectedBleacherIds, isFormExpanded]
-  );
+  const filteredBleachers = useMemo(() => {
+    // If optimization mode is ON, selection must not influence ordering.
+    // We still pass selection into the function signature only when mode is OFF.
+    return filterSortPixiBleachers(
+      homeBaseIds,
+      winterHomeBaseIds,
+      rows,
+      bleachers,
+      optimizationMode ? [] : selectedBleacherIds,
+      isFormExpanded,
+      optimizationMode
+    );
+  }, [
+    homeBaseIds,
+    winterHomeBaseIds,
+    rows,
+    bleachers,
+    isFormExpanded,
+    optimizationMode,
+    optimizationMode ? undefined : selectedBleacherIds,
+  ]);
   // Debounced version used to actually drive Pixi re-instantiation
   const [committedBleachers, setCommittedBleachers] = useState(filteredBleachers);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -70,6 +81,9 @@ export default function DashboardAppV3({
   useEffect(() => {
     // On first run (when committed === filtered) skip delay
     if (committedBleachers === filteredBleachers) return;
+    // If optimizationMode is ON and only selection changed, avoid rebuild entirely.
+    // The memo above already removed selection from deps when optimizationMode is true,
+    // so we arrive here only when filters/homebase/rows/bleachers actually changed.
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = setTimeout(() => {
       setCommittedBleachers(filteredBleachers);
@@ -95,6 +109,13 @@ export default function DashboardAppV3({
       resizeTimeoutRef.current = null;
     }, 1000);
   }, []);
+
+  // When the form is minimized or restored, the vertical layout changes.
+  // Reuse the same 1000ms debounced resize path used for window resizes.
+  useEffect(() => {
+    handleResize();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFormMinimized]);
 
   useEffect(() => {
     const app = new Application();

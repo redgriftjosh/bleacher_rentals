@@ -37,6 +37,7 @@ export type CurrentEventState = {
   mustBeClean: boolean;
   bleacherIds: number[];
   isFormExpanded: boolean;
+  isFormMinimized: boolean;
   hslHue: number | null;
   alerts: string[];
   goodshuffleUrl: string | null;
@@ -72,6 +73,7 @@ const initialState: CurrentEventState = {
   mustBeClean: false,
   bleacherIds: [],
   isFormExpanded: false,
+  isFormMinimized: false,
   hslHue: null,
   alerts: [],
   goodshuffleUrl: null,
