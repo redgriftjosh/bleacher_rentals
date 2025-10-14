@@ -206,11 +206,17 @@ export class Dashboard {
       this.centerHorizontalScroll();
     }
     if (hasY) {
-      this.mainGrid.setVerticalScroll(opts!.initialScrollY!);
-      this.stickyLeftColumn.setVerticalScroll(opts!.initialScrollY!);
-      this.mainGridPinnedYAxis.setVerticalScroll(opts!.initialScrollY!);
+      // Clamp the saved Y to content bounds: 0..maxContentY
+      const contentHeight = this.mainGrid.getContentHeight();
+      const viewportHeight = this.mainGrid.getViewportHeight();
+      const maxContentY = Math.max(0, contentHeight - viewportHeight);
+      const targetY = Math.min(Math.max(opts!.initialScrollY!, 0), maxContentY);
+
+      this.mainGrid.setVerticalScroll(targetY);
+      this.stickyLeftColumn.setVerticalScroll(targetY);
+      this.mainGridPinnedYAxis.setVerticalScroll(targetY);
       // Update the vertical scrollbar silently to reflect current contentY without emitting events
-      this.mainGrid.updateVerticalScrollbarPosition(opts!.initialScrollY!);
+      this.mainGrid.updateVerticalScrollbarPosition(targetY);
     }
   }
 

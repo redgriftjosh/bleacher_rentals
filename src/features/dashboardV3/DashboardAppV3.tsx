@@ -126,7 +126,7 @@ export default function DashboardAppV3({
   useEffect(() => {
     handleResize();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isFormMinimized]);
+  }, [isFormMinimized, isFormExpanded]);
 
   useEffect(() => {
     const app = new Application();

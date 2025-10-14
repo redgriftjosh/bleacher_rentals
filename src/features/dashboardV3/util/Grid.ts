@@ -419,6 +419,13 @@ export class Grid extends Container {
   }
 
   /**
+   * Get the viewport height (visible grid height)
+   */
+  public getViewportHeight(): number {
+    return this.gridHeight;
+  }
+
+  /**
    * Get the total width of the grid content
    */
   public getContentWidth(): number {
