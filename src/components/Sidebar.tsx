@@ -14,12 +14,12 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  {
-    label: "Dashboard",
-    href: "/bleachers-dashboard",
-    icon: CalendarIcon,
-    roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
-  },
+  // {
+  //   label: "Dashboard",
+  //   href: "/bleachers-dashboard",
+  //   icon: CalendarIcon,
+  //   roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
+  // },
   // {
   //   label: "Dashboard v2 (Testing)",
   //   href: "/new-dashboard",
@@ -27,7 +27,7 @@ const menuItems: MenuItem[] = [
   //   roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
   // },
   {
-    label: "Dashboard v3 (Testing)",
+    label: "Dashboard",
     href: "/dashboard-v3",
     icon: CalendarIcon,
     roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],

@@ -141,13 +141,13 @@ export class BleacherCell extends Container {
     bleacherSeats.position.set(40, 18);
 
     const summerHomeBase = new Text({
-      text: b.summerHomeBase ?? "",
+      text: b.summerHomeBase?.name ?? "",
       style: { fill: 0xfe9900, fontSize: 11 },
     });
     summerHomeBase.position.set(3, 30);
 
     const winterHomeBase = new Text({
-      text: b.winterHomeBase ?? "",
+      text: b.winterHomeBase?.name ?? "",
       style: { fill: 0x2b80ff, fontSize: 11 },
     });
     // place winter right after summer

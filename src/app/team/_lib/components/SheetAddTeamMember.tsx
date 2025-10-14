@@ -10,6 +10,9 @@ import {
   insertUser,
   reactivateUser,
   updateUser,
+  fetchBleachersForOptions,
+  fetchUserBleacherAssignments,
+  upsertUserBleacherAssignments,
 } from "../db";
 import { Dropdown } from "@/components/DropDown";
 import { useUserRolesStore } from "@/state/userRolesStore";
@@ -72,6 +75,8 @@ export function SheetAddTeamMember({
   );
   const [tax, setTax] = useState<number | undefined>();
   const [submitting, setSubmitting] = useState(false);
+  const [summerBleacherIds, setSummerBleacherIds] = useState<number[]>([]);
+  const [winterBleacherIds, setWinterBleacherIds] = useState<number[]>([]);
 
   const {
     data: taxData,
@@ -87,11 +92,45 @@ export function SheetAddTeamMember({
     enabled: !!existingUser && existingUser.role === ROLES.driver,
   });
 
+  // Bleacher options for pickers
+  const {
+    data: bleacherOptions,
+    isLoading: isBleachersLoading,
+    isError: isBleachersError,
+  } = useQuery({
+    queryKey: ["bleacherOptions"],
+    queryFn: async () => {
+      const token = await getToken({ template: "supabase" });
+      return fetchBleachersForOptions(token);
+    },
+  });
+
+  // Existing user's assignments
+  const {
+    data: assignments,
+    isLoading: isAssignmentsLoading,
+    isFetching: isAssignmentsFetching,
+  } = useQuery({
+    queryKey: ["bleacherAssignments", existingUser?.user_id],
+    queryFn: async () => {
+      const token = await getToken({ template: "supabase" });
+      return fetchUserBleacherAssignments(existingUser!.user_id, token);
+    },
+    enabled: !!existingUser,
+  });
+
   useEffect(() => {
     if (taxData) {
       setTax(taxData);
     }
   }, [isTaxLoading, isTaxError, taxData]);
+
+  useEffect(() => {
+    if (assignments) {
+      setSummerBleacherIds(assignments.summer ?? []);
+      setWinterBleacherIds(assignments.winter ?? []);
+    }
+  }, [isAssignmentsLoading, isAssignmentsFetching, assignments]);
 
   // useEffect to set all back to default
   useEffect(() => {
@@ -103,6 +142,8 @@ export function SheetAddTeamMember({
       setHomeBaseIds([]);
       setExistingUser(null);
       setTax(undefined);
+      setSummerBleacherIds([]);
+      setWinterBleacherIds([]);
     }
   }, [isOpen]);
 
@@ -146,11 +187,35 @@ export function SheetAddTeamMember({
           tax: tax ?? null,
           token: token!,
         });
+        // Save bleacher assignments for existing user
+        await upsertUserBleacherAssignments(
+          existingUser.user_id,
+          summerBleacherIds,
+          winterBleacherIds,
+          token
+        );
         setSubmitting(false);
         setIsOpen(false);
       } else {
         // insert user
-        await insertUser(email!, firstName!, lastName!, roleId!, homeBaseIds, tax ?? null, token!);
+        const newUserId = await insertUser(
+          email!,
+          firstName!,
+          lastName!,
+          roleId!,
+          homeBaseIds,
+          tax ?? null,
+          token!
+        );
+        if (newUserId) {
+          // Save bleacher assignments for new user
+          await upsertUserBleacherAssignments(
+            newUserId,
+            summerBleacherIds,
+            winterBleacherIds,
+            token
+          );
+        }
         if (roleId === ROLES.driver) {
           setSubmitting(false);
           setIsOpen(false);
@@ -489,6 +554,52 @@ export function SheetAddTeamMember({
                   </div>
                 </div>
               )}
+
+              {/* Summer / Winter bleacher assignments */}
+              <div className="space-y-4 pt-2">
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
+                    <label>Summer Bleachers</label>
+                  </div>
+                  <div className="col-span-3">
+                    <MultiSelect
+                      options={(bleacherOptions ?? []).map((o) => ({
+                        label: o.label,
+                        value: o.id,
+                      }))}
+                      color="bg-greenAccent"
+                      onValueChange={(value) => setSummerBleacherIds(value)}
+                      forceSelectedValues={summerBleacherIds}
+                      placeholder={isBleachersLoading ? "Loading..." : "Select Bleachers"}
+                      variant="inverted"
+                      maxCount={3}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4 pt-2">
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
+                    <label>Winter Bleachers</label>
+                  </div>
+                  <div className="col-span-3">
+                    <MultiSelect
+                      options={(bleacherOptions ?? []).map((o) => ({
+                        label: o.label,
+                        value: o.id,
+                      }))}
+                      color="bg-greenAccent"
+                      onValueChange={(value) => setWinterBleacherIds(value)}
+                      forceSelectedValues={winterBleacherIds}
+                      placeholder={isBleachersLoading ? "Loading..." : "Select Bleachers"}
+                      variant="inverted"
+                      maxCount={3}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+              </div>
               {allowResend && (
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-5 items-end gap-4">

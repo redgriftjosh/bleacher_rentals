@@ -81,7 +81,7 @@ export const CreateEventButton = () => {
     // >
     //   Configure Event
     // </button>
-    <div className="-pt-2 pb-2 flex items-center justify-end">
+    <div className="-pt-2 flex items-center justify-end">
       <PrimaryButton
         onClick={() => {
           const next = !currentEventStore.isFormExpanded;
@@ -98,7 +98,7 @@ export const CreateEventButton = () => {
           }
         }}
       >
-        Configure Event
+        + New Event
       </PrimaryButton>
     </div>
   );

@@ -143,6 +143,45 @@ export type Database = {
           },
         ]
       }
+      BleacherUsers: {
+        Row: {
+          bleacher_id: number
+          bleacher_user_id: number
+          created_at: string
+          season: string
+          user_id: number
+        }
+        Insert: {
+          bleacher_id: number
+          bleacher_user_id?: number
+          created_at?: string
+          season: string
+          user_id: number
+        }
+        Update: {
+          bleacher_id?: number
+          bleacher_user_id?: number
+          created_at?: string
+          season?: string
+          user_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "BleacherUsers_bleacher_id_fkey"
+            columns: ["bleacher_id"]
+            isOneToOne: false
+            referencedRelation: "Bleachers"
+            referencedColumns: ["bleacher_id"]
+          },
+          {
+            foreignKeyName: "BleacherUsers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       Blocks: {
         Row: {
           bleacher_id: number | null
@@ -167,7 +206,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "Block_bleacher_id_fkey"
+            foreignKeyName: "block_bleacher_id_fkey"
             columns: ["bleacher_id"]
             isOneToOne: false
             referencedRelation: "Bleachers"
@@ -553,28 +592,28 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "WorkTrackers_bleacher_id_fkey"
+            foreignKeyName: "worktrackers_bleacher_id_fkey"
             columns: ["bleacher_id"]
             isOneToOne: false
             referencedRelation: "Bleachers"
             referencedColumns: ["bleacher_id"]
           },
           {
-            foreignKeyName: "WorkTrackers_dropoff_address_id_fkey"
+            foreignKeyName: "worktrackers_dropoff_address_id_fkey"
             columns: ["dropoff_address_id"]
             isOneToOne: false
             referencedRelation: "Addresses"
             referencedColumns: ["address_id"]
           },
           {
-            foreignKeyName: "WorkTrackers_pickup_address_id_fkey"
+            foreignKeyName: "worktrackers_pickup_address_id_fkey"
             columns: ["pickup_address_id"]
             isOneToOne: false
             referencedRelation: "Addresses"
             referencedColumns: ["address_id"]
           },
           {
-            foreignKeyName: "WorkTrackers_user_id_fkey"
+            foreignKeyName: "worktrackers_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "Users"
