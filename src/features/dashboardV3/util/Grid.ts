@@ -419,6 +419,13 @@ export class Grid extends Container {
   }
 
   /**
+   * Get the viewport height (visible grid height)
+   */
+  public getViewportHeight(): number {
+    return this.gridHeight;
+  }
+
+  /**
    * Get the total width of the grid content
    */
   public getContentWidth(): number {
@@ -445,6 +452,15 @@ export class Grid extends Container {
   public updateHorizontalScrollbarPosition(scrollX: number) {
     if (this.horizontalScrollbar) {
       this.horizontalScrollbar.setScrollPositionSilent(scrollX);
+    }
+  }
+
+  /**
+   * Update the vertical scrollbar position without triggering events (for initialization)
+   */
+  public updateVerticalScrollbarPosition(scrollY: number) {
+    if (this.verticalScrollbar) {
+      this.verticalScrollbar.setScrollPositionSilent(scrollY);
     }
   }
 

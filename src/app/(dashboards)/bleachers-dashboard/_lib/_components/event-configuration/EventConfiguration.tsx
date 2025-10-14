@@ -21,6 +21,7 @@ import { updateEvent } from "../../db/updateEvent";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import clsx from "clsx";
 import { useQueryClient } from "@tanstack/react-query";
+import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
@@ -36,13 +37,16 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
+  const bumpRefresh = useDataRefreshTokenStore((s) => s.bump);
 
   const handleCreateEvent = async () => {
     const state = useCurrentEventStore.getState();
     const token = await getToken({ template: "supabase" });
     try {
       await createEvent(state, token, user ?? null);
+      // Invalidate & immediately refetch dashboard data so UI reflects new event
       await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachersAndEvents"] });
+      bumpRefresh();
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to create event:", error);
@@ -57,6 +61,7 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
     try {
       await updateEvent(state, token, user ?? null, bleacherEvents);
       await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachersAndEvents"] });
+      bumpRefresh();
       currentEventStore.resetForm();
       setLoading(false);
     } catch (error) {
@@ -72,6 +77,7 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
     try {
       await deleteEvent(state.eventId, state.addressData?.state ?? "", token, user ?? null);
       await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachersAndEvents"] });
+      bumpRefresh();
       currentEventStore.resetForm();
       setLoading(false);
     } catch (error) {

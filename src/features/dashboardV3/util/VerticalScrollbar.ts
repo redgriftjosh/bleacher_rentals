@@ -168,6 +168,23 @@ export class VerticalScrollbar {
     return this.contentY;
   }
 
+  /**
+   * Set the scroll position without triggering events (for initialization)
+   */
+  public setScrollPositionSilent(newContentY: number) {
+    // Clamp content position
+    this.contentY = this.clamp(newContentY, 0, this.maxContentY);
+
+    // Update thumb position
+    this.thumbY = this.maxContentY > 0 ? (this.contentY / this.maxContentY) * this.maxThumbY : 0;
+
+    if (this.thumb) {
+      this.thumb.position.y = Math.round(this.thumbY);
+    }
+
+    // Don't emit events - this is for silent initialization
+  }
+
   public destroy() {
     // Note: No wheel event to remove since Grid handles wheel events
     if (this.scrollbarContainer) {
