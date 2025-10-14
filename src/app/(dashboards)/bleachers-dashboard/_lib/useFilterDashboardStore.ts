@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 export type YAxis = "Bleachers" | "Events";
+export type Season = "SUMMER" | "WINTER" | null; // null = Don't Filter (both)
 
 export type FilterDashboardState = {
   yAxis: YAxis;
@@ -10,6 +11,7 @@ export type FilterDashboardState = {
   stateProvinces: number[];
   onlyShowMyEvents: boolean;
   optimizationMode: boolean;
+  season: Season; // nullable: null => Don't Filter (both)
 };
 
 // Me take event form stuff, add tools to change it.
@@ -29,6 +31,7 @@ const initialState: FilterDashboardState = {
   stateProvinces: [],
   onlyShowMyEvents: true,
   optimizationMode: false,
+  season: "SUMMER", // default to SUMMER per request
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.

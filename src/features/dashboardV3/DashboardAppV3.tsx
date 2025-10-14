@@ -8,13 +8,16 @@ import { Bleacher } from "../dashboard/db/client/bleachers";
 import { DashboardEvent } from "@/app/(dashboards)/bleachers-dashboard/_lib/types";
 import { main } from "./main";
 import { useFilterDashboardStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useFilterDashboardStore";
-import { filterSortPixiBleachers } from "./util/filterPixiBleachers";
+import { filterSortPixiBleachers, filterSortPixiBleachersV2 } from "./util/filterPixiBleachers";
 import { useCurrentEventStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
+import { filterEvents } from "@/app/(dashboards)/bleachers-dashboard/_lib/functions";
 import bunny from "./GSLogo.png";
 
 type DashboardAppV3Props = {
   bleachers: Bleacher[];
   events: DashboardEvent[];
+  summerAssignedBleacherIds?: number[];
+  winterAssignedBleacherIds?: number[];
   onWorkTrackerSelect?: (workTracker: {
     work_tracker_id: number;
     bleacher_id: number;
@@ -25,6 +28,8 @@ type DashboardAppV3Props = {
 export default function DashboardAppV3({
   bleachers,
   events,
+  summerAssignedBleacherIds = [],
+  winterAssignedBleacherIds = [],
   onWorkTrackerSelect,
 }: DashboardAppV3Props) {
   // Filtering state from existing dashboard stores
@@ -36,29 +41,34 @@ export default function DashboardAppV3({
   const selectedBleacherIds = useCurrentEventStore((s) => s.bleacherIds);
   const yAxis = useFilterDashboardStore((s) => s.yAxis);
   const optimizationMode = useFilterDashboardStore((s) => s.optimizationMode);
+  const season = useFilterDashboardStore((s) => s.season);
+  const stateProvinces = useFilterDashboardStore((s) => s.stateProvinces);
 
-  // Memoize filtered bleachers so reference changes only when inputs do
-  const filteredBleachers = useMemo(() => {
-    // If optimization mode is ON, selection must not influence ordering.
-    // We still pass selection into the function signature only when mode is OFF.
-    return filterSortPixiBleachers(
-      homeBaseIds,
-      winterHomeBaseIds,
-      rows,
-      bleachers,
-      optimizationMode ? [] : selectedBleacherIds,
-      isFormExpanded,
-      optimizationMode
-    );
-  }, [
+  const filteredBleachers = filterSortPixiBleachers(
     homeBaseIds,
     winterHomeBaseIds,
     rows,
     bleachers,
+    optimizationMode ? [] : selectedBleacherIds,
     isFormExpanded,
     optimizationMode,
-    optimizationMode ? undefined : selectedBleacherIds,
-  ]);
+    season,
+    summerAssignedBleacherIds,
+    winterAssignedBleacherIds
+  );
+
+  const sameByIds = (a: Bleacher[], b: Bleacher[]) => {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i].bleacherId !== b[i].bleacherId) return false;
+    return true;
+  };
+  // Filter events by selected states/provinces when yAxis is Events
+  const filteredEvents = useMemo(() => {
+    if (yAxis !== "Events") return events;
+    // If no regions selected, intentionally show nothing (parity with legacy behavior)
+    if (!stateProvinces || stateProvinces.length === 0) return [];
+    return filterEvents(events, stateProvinces);
+  }, [events, stateProvinces, yAxis]);
   // Debounced version used to actually drive Pixi re-instantiation
   const [committedBleachers, setCommittedBleachers] = useState(filteredBleachers);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -80,7 +90,8 @@ export default function DashboardAppV3({
   // Debounce filtered bleachers to avoid immediate rebuild on every transient change (e.g., isFormExpanded)
   useEffect(() => {
     // On first run (when committed === filtered) skip delay
-    if (committedBleachers === filteredBleachers) return;
+    // if (committedBleachers === filteredBleachers) return;
+    if (sameByIds(filteredBleachers, committedBleachers)) return;
     // If optimizationMode is ON and only selection changed, avoid rebuild entirely.
     // The memo above already removed selection from deps when optimizationMode is true,
     // so we arrive here only when filters/homebase/rows/bleachers actually changed.
@@ -221,7 +232,7 @@ export default function DashboardAppV3({
           if (!destroyed && appRef.current === app) {
             console.log("not first render, lastContentXRef.current:", lastContentXRef.current);
             try {
-              const dashboard = main(app, committedBleachers, events, yAxis, {
+              const dashboard = main(app, committedBleachers, filteredEvents, yAxis, {
                 onWorkTrackerSelect,
                 initialScrollX: savedScrollXRef.current,
                 initialScrollY: savedScrollYRef.current,
@@ -237,7 +248,7 @@ export default function DashboardAppV3({
         // First render - no delay needed
         console.log("First render lastContentXRef.current:", lastContentXRef.current);
         try {
-          const dashboard = main(app, committedBleachers, events, yAxis, {
+          const dashboard = main(app, committedBleachers, filteredEvents, yAxis, {
             onWorkTrackerSelect,
             initialScrollX: savedScrollXRef.current,
             initialScrollY: savedScrollYRef.current,
@@ -306,7 +317,7 @@ export default function DashboardAppV3({
         }
       }
     };
-  }, [committedBleachers, resizeTrigger, handleResize, onWorkTrackerSelect, events, yAxis]);
+  }, [committedBleachers, resizeTrigger, handleResize, onWorkTrackerSelect, filteredEvents, yAxis]);
   return (
     <div className="w-full h-full pl-2 relative">
       <div ref={hostRef} className="w-full h-full border-l border-t border-gray-300" />

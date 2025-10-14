@@ -14,6 +14,9 @@ import CellEditor from "@/features/dashboard/components/CellEditor";
 import { useState } from "react";
 import { Tables } from "../../../database.types";
 import { useFilterDashboardStore } from "../(dashboards)/bleachers-dashboard/_lib/useFilterDashboardStore";
+import { DashboardOptions } from "../(dashboards)/bleachers-dashboard/_lib/_components/DashboardOptions";
+import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
+import { fetchUserBleacherAssignmentsForSeason } from "@/features/dashboard/db/client/bleacherUsers";
 
 export default function Page() {
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
@@ -30,7 +33,18 @@ export default function Page() {
         FetchDashboardBleachers(token),
         FetchDashboardEvents(token, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
       ]);
-      return { bleachers: b.bleachers, events: e.events };
+
+      // Fetch BleacherUsers assignments for the logged-in user
+      const supabase = await getSupabaseClient(token!);
+      const { summerAssignedBleacherIds, winterAssignedBleacherIds } =
+        await fetchUserBleacherAssignmentsForSeason(supabase, userId!);
+
+      return {
+        bleachers: b.bleachers,
+        events: e.events,
+        summerAssignedBleacherIds,
+        winterAssignedBleacherIds,
+      };
     },
   });
 
@@ -85,7 +99,7 @@ export default function Page() {
       />
       <div>
         <div className="flex justify-between items-center pt-2 pl-2 pr-2">
-          <FilterDashboard />
+          <DashboardOptions />
           <CreateEventButton />
         </div>
         <EventConfiguration showSetupTeardown={false} />
@@ -94,6 +108,8 @@ export default function Page() {
         <DashboardAppV3
           bleachers={data.bleachers}
           events={data.events}
+          summerAssignedBleacherIds={data.summerAssignedBleacherIds}
+          winterAssignedBleacherIds={data.winterAssignedBleacherIds}
           onWorkTrackerSelect={handleWorkTrackerSelectFromPixi}
         />
       </div>
