@@ -209,6 +209,8 @@ export class Dashboard {
       this.mainGrid.setVerticalScroll(opts!.initialScrollY!);
       this.stickyLeftColumn.setVerticalScroll(opts!.initialScrollY!);
       this.mainGridPinnedYAxis.setVerticalScroll(opts!.initialScrollY!);
+      // Update the vertical scrollbar silently to reflect current contentY without emitting events
+      this.mainGrid.updateVerticalScrollbarPosition(opts!.initialScrollY!);
     }
   }
 
@@ -279,6 +281,7 @@ export class Dashboard {
     this.stickyTopLeftCell.destroy();
     this.stickyTopRow.destroy();
     this.stickyLeftColumn.destroy();
+    this.mainGridPinnedYAxis.destroy();
     this.mainGrid.destroy();
   }
 }

@@ -449,6 +449,15 @@ export class Grid extends Container {
   }
 
   /**
+   * Update the vertical scrollbar position without triggering events (for initialization)
+   */
+  public updateVerticalScrollbarPosition(scrollY: number) {
+    if (this.verticalScrollbar) {
+      this.verticalScrollbar.setScrollPositionSilent(scrollY);
+    }
+  }
+
+  /**
    * Get current horizontal scroll position
    */
   public getCurrentScrollX(): number {
