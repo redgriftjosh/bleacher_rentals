@@ -31,7 +31,7 @@ const initialState: FilterDashboardState = {
   stateProvinces: [],
   onlyShowMyEvents: true,
   optimizationMode: false,
-  season: "SUMMER", // default to SUMMER per request
+  season: null, // default to SUMMER per request
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.

@@ -7,7 +7,7 @@ export default async function Home() {
   const { userId } = await auth();
 
   if (userId) {
-    redirect("/bleachers-dashboard");
+    redirect("/dashboard-v3");
   }
 
   return (
