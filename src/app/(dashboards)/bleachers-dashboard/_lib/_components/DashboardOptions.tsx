@@ -132,6 +132,14 @@ export function DashboardOptions() {
             >
               Only Show My Events
             </MenubarCheckboxItem>
+            <MenubarSeparator />
+            <MenubarItem
+              inset
+              // when clicked go to /bleachers-dashboard
+              onClick={() => (window.location.href = "/bleachers-dashboard")}
+            >
+              Old Dashboard
+            </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
       </Menubar>
