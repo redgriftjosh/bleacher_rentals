@@ -49,7 +49,7 @@ export default function DashboardAppV3({
     winterHomeBaseIds,
     rows,
     bleachers,
-    optimizationMode ? [] : selectedBleacherIds,
+    selectedBleacherIds,
     isFormExpanded,
     optimizationMode,
     season,

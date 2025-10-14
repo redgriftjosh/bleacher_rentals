@@ -216,8 +216,9 @@ export function filterSortPixiBleachers(
     filteredIds.push(b.bleacherId);
   }
 
-  // 2) If form expanded, ensure always-include IDs are present (override filters)
-  if (isFormExpanded) {
+  // 2) Ensure always-include IDs are present when form expanded OR optimization mode is ON
+  // In optimization mode we include them but do not promote them to the top (ordering handled below)
+  if (isFormExpanded || optimizationMode) {
     const present = new Set(filteredIds);
     for (const id of alwaysSet) {
       if (!present.has(id) && byId.has(id)) {
@@ -232,7 +233,8 @@ export function filterSortPixiBleachers(
   // If form expanded AND NOT optimizationMode, move always-include to the top (still stable).
   const finalSet = new Set(filteredIds);
 
-  if (isFormExpanded && !optimizationMode) {
+  // If optimization mode is OFF, promote always-includes to the top (regardless of form expansion)
+  if (!optimizationMode) {
     // Always-includes first (in original order), then the rest (in original order)
     const top: Bleacher[] = [];
     const rest: Bleacher[] = [];
