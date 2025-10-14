@@ -36,7 +36,7 @@ export class Tile extends Container {
       // Add hover listeners - but use the same pattern as GoodShuffleIcon
       this.on("pointerenter", this.onHoverStart.bind(this));
       this.on("pointerleave", this.onHoverEnd.bind(this));
-      this.on("pointerup", this.handleClick.bind(this));
+      this.on("click", this.handleClick.bind(this));
     }
   }
 
