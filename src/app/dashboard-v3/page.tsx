@@ -14,6 +14,7 @@ import CellEditor from "@/features/dashboard/components/CellEditor";
 import { useState } from "react";
 import { Tables } from "../../../database.types";
 import { useFilterDashboardStore } from "../(dashboards)/bleachers-dashboard/_lib/useFilterDashboardStore";
+import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
 import { DashboardOptions } from "../(dashboards)/bleachers-dashboard/_lib/_components/DashboardOptions";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { fetchUserBleacherAssignmentsForSeason } from "@/features/dashboard/db/client/bleacherUsers";
@@ -23,9 +24,10 @@ export default function Page() {
     null
   );
   const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
+  const refreshToken = useDataRefreshTokenStore((s) => s.token);
   const { isLoaded, userId, getToken } = useAuth();
   const { data, isLoading, error } = useQuery({
-    queryKey: ["FetchDashboardBleachersAndEvents", { onlyShowMyEvents, userId }],
+    queryKey: ["FetchDashboardBleachersAndEvents", { onlyShowMyEvents, userId, refreshToken }],
     enabled: isLoaded && !!userId,
     queryFn: async () => {
       const token = await getToken({ template: "supabase" });
