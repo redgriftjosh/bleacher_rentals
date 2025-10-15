@@ -6,8 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { useSelectedBlockStore } from "../state/useSelectedBlock";
 import { Tables } from "../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { saveBlock, deleteBlock } from "@/app/(dashboards)/bleachers-dashboard/_lib/db";
 import { useQueryClient } from "@tanstack/react-query";
+import { deleteBlock, saveBlock } from "../db/client/db";
 
 type CellEditorProps = {
   onWorkTrackerOpen?: (workTracker: Tables<"WorkTrackers">) => void;

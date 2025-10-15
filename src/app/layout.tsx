@@ -37,7 +37,7 @@ export default function RootLayout({
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-hidden`}>
           <SignedOut>
             <div className="flex items-center justify-center min-h-screen">
-              <SignIn routing="hash" forceRedirectUrl="/dashboard-v3" />
+              <SignIn routing="hash" forceRedirectUrl="/dashboard" />
             </div>
           </SignedOut>
           <Script

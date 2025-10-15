@@ -1,10 +1,7 @@
 "use client";
 
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
-// lib/fetchTableAndSetStore.ts
-import { supabaseClient } from "@/utils/supabase/supabaseClient";
 import { type GetToken } from "@clerk/types";
-// import { createClient } from "@supabase/supabase-js";
 
 /**
  * Fetches data from any Supabase table updates a Zustand store and caches it.

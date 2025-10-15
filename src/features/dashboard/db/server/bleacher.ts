@@ -1,6 +1,6 @@
 import { BleachersResponse } from "@/app/api/dashboard/bleachers/route";
 
-export type Bleacher = { bleacher_number: number };
+type Bleacher = { bleacher_number: number };
 
 export async function fetchBleachers(): Promise<Bleacher[]> {
   const res = await fetch("/api/dashboard/bleachers", { cache: "no-store" });

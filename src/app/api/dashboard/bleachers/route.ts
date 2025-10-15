@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { Tables } from "../../../../../database.types";
 
-export type Bleacher = Pick<Tables<"Bleachers">, "bleacher_number">;
+type Bleacher = Pick<Tables<"Bleachers">, "bleacher_number">;
 export type BleachersResponse = { bleachers: Bleacher[] };
 
 export async function GET(req: NextRequest) {

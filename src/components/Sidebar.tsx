@@ -16,7 +16,7 @@ type MenuItem = {
 const menuItems: MenuItem[] = [
   // {
   //   label: "Dashboard",
-  //   href: "/bleachers-dashboard",
+  //   href: "/old-dashboard",
   //   icon: CalendarIcon,
   //   roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
   // },
@@ -28,7 +28,7 @@ const menuItems: MenuItem[] = [
   // },
   {
     label: "Dashboard",
-    href: "/dashboard-v3",
+    href: "/dashboard",
     icon: CalendarIcon,
     roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
   },

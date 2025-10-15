@@ -1,17 +1,31 @@
 import { Application } from "pixi.js";
-import { Bleacher } from "./db/client/bleachers";
-import { Grid } from "./ui/Grid";
-import { VerticalScrollbar } from "./ui/VerticalScroll";
-import { HorizontalScrollbar } from "./ui/HorizontalScroll";
+import { Dashboard } from "./Dashboard";
+import { PngManager } from "./util/PngManager";
+import { Bleacher, DashboardEvent } from "./types";
 
+/**
+ * Main entry point for dashboard
+ * Creates a 4-quadrant sticky grid layout with real bleacher data
+ */
 export function main(
   app: Application,
   bleachers: Bleacher[],
-  initialScrollX: number | null,
-  initialScrollY: number | null
+  events: DashboardEvent[],
+  yAxis: "Bleachers" | "Events",
+  opts?: {
+    onWorkTrackerSelect?: (workTracker: {
+      work_tracker_id: number;
+      bleacher_id: number;
+      date: string;
+    }) => void;
+    initialScrollX?: number | null;
+    initialScrollY?: number | null;
+  }
 ) {
-  new Grid(app, bleachers);
-  const hscroll = new HorizontalScrollbar(app, initialScrollX);
-  const vscroll = new VerticalScrollbar(app, bleachers, initialScrollY);
-  return { hscroll, vscroll };
+  PngManager.fetchAndCachePng(app);
+  return new Dashboard(app, bleachers, events, yAxis, {
+    onWorkTrackerSelect: opts?.onWorkTrackerSelect,
+    initialScrollX: opts?.initialScrollX ?? null,
+    initialScrollY: opts?.initialScrollY ?? null,
+  });
 }

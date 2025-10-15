@@ -1,4 +1,5 @@
 import { useHomeBasesStore } from "@/state/homeBaseStore";
+import { SelectHomeBase } from "@/types/tables/HomeBases";
 import { redirect } from "next/navigation";
 
 /**
@@ -20,4 +21,13 @@ export function getHomeBaseIdByName(name: string): number | null {
   );
 
   return match?.home_base_id ?? null;
+}
+
+export function getHomeBaseOptions() {
+  const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
+
+  return homeBases.map((homeBase) => ({
+    value: homeBase.home_base_id,
+    label: homeBase.home_base_name,
+  }));
 }
