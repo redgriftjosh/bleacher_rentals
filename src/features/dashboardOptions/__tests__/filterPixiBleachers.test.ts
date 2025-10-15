@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { filterSortPixiBleachers } from "../../../dashboardOptions/util";
-import type { Bleacher } from "../../db/client/bleachers";
+import { filterSortPixiBleachers } from "../util";
+import { Bleacher } from "../../dashboard/types";
 
 function makeBleacher(partial: Partial<Bleacher>): Bleacher {
   return {
