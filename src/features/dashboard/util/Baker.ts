@@ -1,4 +1,5 @@
-import { Application, Container, RenderTexture } from "pixi.js";
+import { CELL_HEIGHT, CELL_WIDTH } from "@/features/dashboard/values/constants";
+import { Application, Container, RenderTexture, Sprite } from "pixi.js";
 
 /**
  * Bakes arbitrary Pixi display content into a cached {@link RenderTexture}
@@ -23,7 +24,7 @@ import { Application, Container, RenderTexture } from "pixi.js";
  * ```
  *
  * @remarks
- * - Returned textures are **transparent** where you don’t draw; the target is
+ * - Returned textures are **transparent** where you don't draw; the target is
  *   cleared before rendering.
  * - Results are cached by `key` until you call {@link invalidate} or {@link destroyAll}.
  * - The `build` callback should be **pure**: populate only the provided
@@ -57,10 +58,32 @@ export class Baker {
    * @returns The baked (and cached) RenderTexture.
    */
   getTexture(
-    key: string | number,
-    size: { width: number; height: number },
+    key: string,
+    size: { width: number; height: number } | null = null,
     build: (container: Container) => void
   ) {
+    const existing = this.checkExisting(key, {
+      width: size?.width ?? CELL_WIDTH,
+      height: size?.height ?? CELL_HEIGHT,
+    });
+    if (existing) return existing;
+
+    return this.bakeContainer(key, size, build);
+  }
+
+  getSprite(
+    key: string,
+    size: { width: number; height: number },
+    build: (container: Container) => void
+  ): Sprite {
+    const tex = this.getTexture(key, size, build);
+    return new Sprite(tex);
+  }
+
+  private checkExisting(
+    key: string,
+    size: { width: number; height: number }
+  ): RenderTexture | undefined {
     const existing = this.cache.get(key);
     if (existing && !existing.destroyed) return existing;
 
@@ -74,27 +97,34 @@ export class Baker {
       console.warn("Baker: Cannot create texture, renderer is null");
       return RenderTexture.create({ width: size.width, height: size.height });
     }
+  }
 
+  private bakeContainer(
+    key: string,
+    size: { width: number; height: number } | null = null,
+    build: (container: Container) => void
+  ): RenderTexture {
     try {
-      // Build offscreen content and render once
-      const off = new Container();
-      build(off);
-
+      const container = new Container();
+      build(container);
       const rt = RenderTexture.create({
-        width: size.width,
-        height: size.height,
+        width: size?.width ?? container.width,
+        height: size?.height ?? container.height,
         resolution: this.app.renderer.resolution,
       });
 
-      this.app.renderer.render({ container: off, target: rt, clear: true });
-      off.destroy({ children: true });
+      this.app.renderer.render({ container, target: rt, clear: true });
+      container.destroy({ children: true });
 
       this.cache.set(key, rt);
       return rt;
     } catch (error) {
       console.warn("Baker: Error creating texture:", error);
       // Return a fallback texture
-      return RenderTexture.create({ width: size.width, height: size.height });
+      return RenderTexture.create({
+        width: size?.width ?? CELL_WIDTH,
+        height: size?.height ?? CELL_HEIGHT,
+      });
     }
   }
 

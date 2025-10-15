@@ -5,7 +5,7 @@ export const UNAUTHENTICATED_ROUTES = [
   "/create-account",
 ];
 export const AUTHENTICATED_ROUTES = [
-  "/bleachers-dashboard",
+  "/old-dashboard",
   "/events-dashboard",
   "/team",
   "/assets",

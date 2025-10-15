@@ -3,8 +3,8 @@ import { Tables } from "../../../../database.types";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { USER_ROLES } from "@/types/Constants";
 import { DateTime } from "luxon";
-import { fetchAddressFromId } from "@/app/(dashboards)/bleachers-dashboard/_lib/db";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { fetchAddressFromId } from "@/features/dashboard/db/client/db";
 
 export async function fetchDrivers(token: string | null): Promise<{
   drivers: Tables<"Users">[] | null;

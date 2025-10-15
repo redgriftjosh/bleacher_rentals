@@ -2,41 +2,7 @@
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { Tables } from "../../../../../database.types";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
-
-export type Bleacher = {
-  bleacherId: number;
-  bleacherNumber: number;
-  bleacherRows: number;
-  bleacherSeats: number;
-  summerHomeBase: { name: string; id: number } | null;
-  winterHomeBase: { name: string; id: number } | null;
-  bleacherEvents: BleacherEvent[];
-  blocks: BleacherBlock[];
-  workTrackers: BleacherWorkTracker[];
-};
-
-export type BleacherEvent = {
-  eventId: number;
-  bleacherEventId: number;
-  eventName: string;
-  address: string;
-  eventStart: string;
-  eventEnd: string;
-  hslHue: number | null;
-  booked: boolean;
-  goodshuffleUrl: string | null;
-};
-
-export type BleacherBlock = {
-  blockId: number;
-  text: string;
-  date: string;
-};
-
-export type BleacherWorkTracker = {
-  workTrackerId: number;
-  date: string;
-};
+import { Bleacher } from "../../types";
 
 type Row = {
   bleacher_id: number;

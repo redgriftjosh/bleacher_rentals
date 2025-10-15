@@ -1,6 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 
-export type UserBleacherAssignments = {
+type UserBleacherAssignments = {
   summerAssignedBleacherIds: number[];
   winterAssignedBleacherIds: number[];
 };

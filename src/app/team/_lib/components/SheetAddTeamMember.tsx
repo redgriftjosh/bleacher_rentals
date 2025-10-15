@@ -39,7 +39,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { MultiSelect } from "@/components/MultiSelect";
-import { getHomeBaseOptions } from "@/app/(dashboards)/bleachers-dashboard/_lib/functions";
 import { Info, TriangleAlert } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ExistingUser } from "../../page";
@@ -48,6 +47,7 @@ import { ROLES, STATUSES } from "../constants";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import InputPercents from "@/components/InputPercents";
+import { getHomeBaseOptions } from "@/utils/utils";
 
 export function SheetAddTeamMember({
   isOpen,

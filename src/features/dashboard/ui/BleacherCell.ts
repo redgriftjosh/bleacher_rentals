@@ -1,9 +1,8 @@
 import { Container, Sprite, Text } from "pixi.js";
-// import { RenderTexture } from "pixi.js";
 import { Baker } from "../util/Baker";
-import { Bleacher } from "../db/client/bleachers";
-import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT } from "../values/constants";
 import { BleacherCellToggle } from "./BleacherCellToggle";
+import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT } from "../values/constants";
+import { Bleacher } from "../types";
 
 /**
  * A lightweight, scroll-friendly **row widget** for the sticky left column.
@@ -37,8 +36,8 @@ import { BleacherCellToggle } from "./BleacherCellToggle";
 export class BleacherCell extends Container {
   private sprite: Sprite;
   private baker: Baker;
-  private toggle: BleacherCellToggle;
   private bleacherId?: number; // reuse-safe id
+  private toggle: BleacherCellToggle; // added toggle
   private onToggle?: (bleacherId: number) => void;
 
   /**
@@ -50,21 +49,15 @@ export class BleacherCell extends Container {
     this.baker = baker;
 
     this.sprite = new Sprite();
-    // this.sprite.eventMode = "none";
     this.addChild(this.sprite);
-    // this.eventMode = "none";
 
-    // --- add the plus button (hidden by default) ---
+    // toggle setup
     this.toggle = new BleacherCellToggle(baker);
     this.toggle.setMode("plus");
-    // this.toggle.setButton();
-    // this.toggle.visible = true;
-
-    // position near top-right with a little padding
     const pad = 6;
     this.toggle.x = BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - pad;
-    this.toggle.y = Math.max(2, (CELL_HEIGHT - this.toggle.buttonSize) / 2 - 2); // roughly centered vertically
-    this.toggle.visible = false; // default hidden
+    this.toggle.y = Math.max(2, (CELL_HEIGHT - this.toggle.buttonSize) / 2 - 2);
+    this.toggle.visible = false;
     this.addChild(this.toggle);
 
     this.toggle.on("pointertap", () => {
@@ -75,14 +68,14 @@ export class BleacherCell extends Container {
   /**
    * Sets the bleacher content for this cell.
    * On cache miss, uses the shared {@link Baker} to **bake** the label into a
-   * `RenderTexture`; on hit, reuses the cached texture. Either way, the sprite’s
+   * `RenderTexture`; on hit, reuses the cached texture. Either way, the sprite's
    * texture is swapped—no live `Text` objects remain in the scene.
    *
    * @param b - Bleacher data model for this row.
    */
   setBleacher(b: Bleacher) {
     this.bleacherId = b.bleacherId;
-    const key = b.bleacherId;
+    const key = b.bleacherId.toString();
 
     // Builds each cell once and stores as a texture in memory
     const rt = this.baker.getTexture(
@@ -94,24 +87,16 @@ export class BleacherCell extends Container {
     this.sprite.texture = rt;
   }
 
-  /** Called by the parent to wire the toggle callback once. */
   setToggleHandler(fn: (bleacherId: number) => void) {
     this.onToggle = fn;
   }
 
-  // /** Call this when `isFormExpanded` changes. */
-  // setFormExpanded(expanded: boolean) {
-  //   this.toggle.visible = expanded;
-  // }
-
-  /** Called by the parent when `isFormExpanded` changes. */
   setFormExpanded(expanded: boolean) {
-    if (!this.toggle) return;
+    if (!this.toggle) return; // defensive
     const targetX = expanded
-      ? BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - 6 // slide in
-      : BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - 6 - 40; // slide left 40px
+      ? BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - 6
+      : BLEACHER_COLUMN_WIDTH - this.toggle.buttonSize - 6 - 40;
 
-    // ensure visibility before animating in; hide after animating out
     if (expanded) {
       if (!this.toggle.destroyed) {
         this.toggle.visible = true;
@@ -125,20 +110,18 @@ export class BleacherCell extends Container {
     }
   }
 
-  /** Called by the parent when the selection set changes. */
   setSelected(selected: boolean) {
     this.toggle.setMode(selected ? "minus" : "plus");
   }
 
   /**
-   * Builds the offscreen display hierarchy used for baking this cell’s texture.
+   * Builds the offscreen display hierarchy used for baking this cell's texture.
    * This runs **only on cache miss**; the container is destroyed after rendering.
    * @param c - Offscreen container to populate with display objects.
    * @param b - Bleacher data to render.
    * @internal
    */
   private buildBleacherContainer(c: Container, b: Bleacher) {
-    console.log("buildBleacherContainer");
     const bleacherNumber = new Text({
       text: String(b.bleacherNumber),
       style: { fill: 0xf0b000, fontSize: 16, fontWeight: "bold" },
@@ -158,13 +141,13 @@ export class BleacherCell extends Container {
     bleacherSeats.position.set(40, 18);
 
     const summerHomeBase = new Text({
-      text: b.summerHomeBase ?? "",
+      text: b.summerHomeBase?.name ?? "",
       style: { fill: 0xfe9900, fontSize: 11 },
     });
     summerHomeBase.position.set(3, 30);
 
     const winterHomeBase = new Text({
-      text: b.winterHomeBase ?? "",
+      text: b.winterHomeBase?.name ?? "",
       style: { fill: 0x2b80ff, fontSize: 11 },
     });
     // place winter right after summer

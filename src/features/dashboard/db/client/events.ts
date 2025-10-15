@@ -1,7 +1,7 @@
 "use client";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
-import { DashboardEvent } from "@/app/(dashboards)/bleachers-dashboard/_lib/types";
+import { DashboardEvent } from "../../types";
 
 type Row = {
   event_id: number;

@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { Tables } from "../../database.types";
-import { updateCurrentEventAlerts } from "@/app/(dashboards)/bleachers-dashboard/_lib/functions";
+import { updateCurrentEventAlerts } from "@/features/oldDashboard/functions";
 
 type Store = {
   events: Tables<"Events">[];

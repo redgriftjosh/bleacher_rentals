@@ -1,38 +1,108 @@
 "use client";
 
-import { Application } from "pixi.js";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Application, Assets, Graphics, Sprite, Texture } from "pixi.js";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { main } from "./main";
-import { Bleacher } from "./db/client/bleachers";
-import { Baker } from "./util/Baker";
-import { EventSpanBody } from "./ui/EventSpanBody";
-import { HorizontalScrollbar } from "./ui/HorizontalScroll";
-import { VerticalScrollbar } from "./ui/VerticalScroll";
-import { useCurrentEventStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
-import CellEditor from "./components/CellEditor";
-import WorkTrackerModal from "@/app/(dashboards)/bleachers-dashboard/_lib/_components/dashboard/WorkTrackerModal";
-import { Tables } from "../../../database.types";
+import { filterEvents, filterSortPixiBleachers } from "../dashboardOptions/util";
+import bunny from "./GSLogo.png";
+import { Bleacher, DashboardEvent } from "./types";
+import { useFilterDashboardStore } from "../dashboardOptions/useFilterDashboardStore";
+import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEventStore";
 
-export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
+type DashboardAppV3Props = {
+  bleachers: Bleacher[];
+  events: DashboardEvent[];
+  summerAssignedBleacherIds?: number[];
+  winterAssignedBleacherIds?: number[];
+  onWorkTrackerSelect?: (workTracker: {
+    work_tracker_id: number;
+    bleacher_id: number;
+    date: string;
+  }) => void;
+};
+
+export default function DashboardAppV3({
+  bleachers,
+  events,
+  summerAssignedBleacherIds = [],
+  winterAssignedBleacherIds = [],
+  onWorkTrackerSelect,
+}: DashboardAppV3Props) {
+  // Filtering state from existing dashboard stores
+  const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
+  const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
+  const rows = useFilterDashboardStore((s) => s.rows);
+  const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
+  const isFormMinimized = useCurrentEventStore((s) => s.isFormMinimized);
+  const selectedBleacherIds = useCurrentEventStore((s) => s.bleacherIds);
+  const yAxis = useFilterDashboardStore((s) => s.yAxis);
+  const optimizationMode = useFilterDashboardStore((s) => s.optimizationMode);
+  const season = useFilterDashboardStore((s) => s.season);
+  const stateProvinces = useFilterDashboardStore((s) => s.stateProvinces);
+
+  const filteredBleachers = filterSortPixiBleachers(
+    homeBaseIds,
+    winterHomeBaseIds,
+    rows,
+    bleachers,
+    selectedBleacherIds,
+    isFormExpanded,
+    optimizationMode,
+    season,
+    summerAssignedBleacherIds,
+    winterAssignedBleacherIds
+  );
+
+  const sameByIds = (a: Bleacher[], b: Bleacher[]) => {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i].bleacherId !== b[i].bleacherId) return false;
+    return true;
+  };
+  // Filter events by selected states/provinces when yAxis is Events
+  const filteredEvents = useMemo(() => {
+    if (yAxis !== "Events") return events;
+    // If no regions selected, intentionally show nothing (parity with legacy behavior)
+    if (!stateProvinces || stateProvinces.length === 0) return [];
+    return filterEvents(events, stateProvinces);
+  }, [events, stateProvinces, yAxis]);
+  // Debounced version used to actually drive Pixi re-instantiation
+  const [committedBleachers, setCommittedBleachers] = useState(filteredBleachers);
   const hostRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
+  const dashboardRef = useRef<any>(null); // Store dashboard instance for cleanup
   const initedRef = useRef(false);
   const isFirstRenderRef = useRef(true);
 
-  const runtimeRef = useRef<{ hscroll: HorizontalScrollbar; vscroll: VerticalScrollbar } | null>(
-    null
-  );
   const lastContentXRef = useRef<number | null>(null);
   const lastContentYRef = useRef<number | null>(null);
+  // Persist scroll across rebuilds/filters
+  const savedScrollXRef = useRef<number | null>(null);
+  const savedScrollYRef = useRef<number | null>(null);
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [resizeTrigger, setResizeTrigger] = useState(false);
+  // Debounce timer for committing bleachers
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // State for work tracker modal
-  const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
-    null
-  );
-
-  const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
+  // Debounce filtered bleachers to avoid immediate rebuild on every transient change (e.g., isFormExpanded)
+  useEffect(() => {
+    // On first run (when committed === filtered) skip delay
+    // if (committedBleachers === filteredBleachers) return;
+    if (sameByIds(filteredBleachers, committedBleachers)) return;
+    // If optimizationMode is ON and only selection changed, avoid rebuild entirely.
+    // The memo above already removed selection from deps when optimizationMode is true,
+    // so we arrive here only when filters/homebase/rows/bleachers actually changed.
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      setCommittedBleachers(filteredBleachers);
+      debounceTimerRef.current = null;
+    }, 1000);
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
+  }, [filteredBleachers, committedBleachers]);
 
   const handleResize = useCallback(() => {
     // Cancel any pending flip
@@ -47,10 +117,12 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
     }, 1000);
   }, []);
 
+  // When the form is minimized or restored, the vertical layout changes.
+  // Reuse the same 1000ms debounced resize path used for window resizes.
   useEffect(() => {
-    console.log("isFormExpanded");
     handleResize();
-  }, [isFormExpanded, handleResize]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFormMinimized, isFormExpanded]);
 
   useEffect(() => {
     const app = new Application();
@@ -63,10 +135,12 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
       await app.init({
         resizeTo: host,
         background: "#ffffff",
-        resolution: Math.min(2, window.devicePixelRatio || 1),
+        // resolution: Math.min(2, window.devicePixelRatio || 1),
+        resolution: window.devicePixelRatio,
         autoDensity: true,
         antialias: false,
         powerPreference: "high-performance",
+        roundPixels: false,
       });
 
       if (destroyed || appRef.current !== app) return;
@@ -79,12 +153,22 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
           // Stop the ticker temporarily to prevent rendering during cleanup
           app.ticker.stop();
 
-          // More aggressive cleanup for subsequent renders
-          // 1. Destroy all Baker instances first
-          Baker.destroyAllInstances();
-
-          // 2. Clear static textures from EventSpanBody
-          EventSpanBody.clearStaticTextures();
+          // Clean up previous dashboard instance
+          if (dashboardRef.current) {
+            try {
+              if (typeof dashboardRef.current.getScrollPositions === "function") {
+                const { x, y } = dashboardRef.current.getScrollPositions();
+                savedScrollXRef.current = x;
+                savedScrollYRef.current = y;
+              }
+            } catch {}
+            try {
+              if (typeof dashboardRef.current.destroy === "function") {
+                dashboardRef.current.destroy();
+              }
+            } catch {}
+            dashboardRef.current = null;
+          }
 
           // 3. Recursively destroy all children and their textures
           const destroyChildrenRecursively = (container: any) => {
@@ -144,13 +228,12 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
           if (!destroyed && appRef.current === app) {
             console.log("not first render, lastContentXRef.current:", lastContentXRef.current);
             try {
-              const runtime = main(
-                app,
-                bleachers,
-                lastContentXRef.current,
-                lastContentYRef.current
-              );
-              runtimeRef.current = runtime;
+              const dashboard = main(app, committedBleachers, filteredEvents, yAxis, {
+                onWorkTrackerSelect,
+                initialScrollX: savedScrollXRef.current,
+                initialScrollY: savedScrollYRef.current,
+              });
+              dashboardRef.current = dashboard;
               initedRef.current = true;
             } catch (error) {
               console.error("Error initializing PIXI main:", error);
@@ -161,9 +244,13 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
         // First render - no delay needed
         console.log("First render lastContentXRef.current:", lastContentXRef.current);
         try {
-          const runtime = main(app, bleachers, lastContentXRef.current, lastContentYRef.current);
+          const dashboard = main(app, committedBleachers, filteredEvents, yAxis, {
+            onWorkTrackerSelect,
+            initialScrollX: savedScrollXRef.current,
+            initialScrollY: savedScrollYRef.current,
+          });
+          dashboardRef.current = dashboard;
           initedRef.current = true;
-          runtimeRef.current = runtime;
         } catch (error) {
           console.error("Error initializing PIXI main on first render:", error);
         }
@@ -176,17 +263,31 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      // ⬅️ capture latest scroll BEFORE destroying Pixi
-      const current = runtimeRef.current?.hscroll?.getContentX?.();
-      const currentY = runtimeRef.current?.vscroll?.getContentY?.();
-      console.log("current", current);
-      if (typeof current === "number") {
-        lastContentXRef.current = current;
-      }
-      if (typeof currentY === "number") {
-        lastContentYRef.current = currentY;
-      }
       destroyed = true;
+
+      // Clear pending debounce commit if unmounting
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+
+      // Clean up dashboard first
+      if (dashboardRef.current) {
+        try {
+          if (typeof dashboardRef.current.getScrollPositions === "function") {
+            const { x, y } = dashboardRef.current.getScrollPositions();
+            savedScrollXRef.current = x;
+            savedScrollYRef.current = y;
+          }
+        } catch {}
+        try {
+          if (typeof dashboardRef.current.destroy === "function") {
+            dashboardRef.current.destroy();
+          }
+        } catch {}
+        dashboardRef.current = null;
+      }
+
       const app = appRef.current;
       appRef.current = null;
       initedRef.current = false;
@@ -195,14 +296,6 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
         try {
           // More thorough cleanup on unmount
           app.ticker.stop();
-
-          // Destroy all Baker instances
-          Baker.destroyAllInstances();
-
-          // Clear static textures
-          EventSpanBody.clearStaticTextures();
-
-          // Force garbage collection
           if (app.renderer && (app.renderer as any).texture && (app.renderer as any).texture.gc) {
             (app.renderer as any).texture.gc();
           }
@@ -220,30 +313,10 @@ export default function DashboardApp({ bleachers }: { bleachers: Bleacher[] }) {
         }
       }
     };
-  }, [bleachers, resizeTrigger, handleResize]);
-
-  const handleWorkTrackerOpen = (workTracker: Tables<"WorkTrackers">) => {
-    setSelectedWorkTracker(workTracker);
-  };
-
-  // return (
-  //   // add padding to parent div
-  //   // [calc(100%-57px)]
-  //   <div className="w-full h-full pl-2">
-  //     <div ref={hostRef} className="w-full h-full border-l border-t border-gray-300" />
-  //   </div>
-  // );
+  }, [committedBleachers, resizeTrigger, handleResize, onWorkTrackerSelect, filteredEvents, yAxis]);
   return (
     <div className="w-full h-full pl-2 relative">
       <div ref={hostRef} className="w-full h-full border-l border-t border-gray-300" />
-
-      {/* Modal components */}
-      <CellEditor onWorkTrackerOpen={handleWorkTrackerOpen} />
-      <WorkTrackerModal
-        selectedWorkTracker={selectedWorkTracker}
-        setSelectedWorkTracker={setSelectedWorkTracker}
-        setSelectedBlock={() => {}} // Not used in PixiJS version
-      />
     </div>
   );
 }
