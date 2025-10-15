@@ -1,17 +1,17 @@
 import { Link, X } from "lucide-react";
 import { Dropdown } from "@/components/DropDown";
-import { getDrivers } from "../../../dashboard/db/client/getDrivers";
+import { getDrivers } from "../../dashboard/db/client/getDrivers";
 import { useEffect, useState, useRef } from "react";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
-import { getAddressFromId, saveWorkTracker } from "../../../dashboard/db/client/db";
-import { AddressData } from "../../../eventConfiguration/state/useCurrentEventStore";
+import { getAddressFromId, saveWorkTracker } from "../../dashboard/db/client/db";
+import { AddressData } from "../../eventConfiguration/state/useCurrentEventStore";
 import { useAuth } from "@clerk/nextjs";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { useQuery } from "@tanstack/react-query";
-import { fetchWorkTrackerById } from "../../db/setupTeardownBlock/fetchWorkTracker";
-import { EditBlock } from "./MainScrollableGrid";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchWorkTrackerById } from "../../oldDashboard/db/setupTeardownBlock/fetchWorkTracker";
+import { EditBlock } from "../../oldDashboard/_components/dashboard/MainScrollableGrid";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { Tables } from "../../../../../database.types";
+import { Tables } from "../../../../database.types";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -25,6 +25,7 @@ export default function WorkTrackerModal({
   setSelectedBlock,
 }: WorkTrackerModalProps) {
   const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   const drivers = getDrivers();
   const [workTracker, setWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
     selectedWorkTracker
@@ -103,6 +104,8 @@ export default function WorkTrackerModal({
     const token = await getToken({ template: "supabase" });
     try {
       await saveWorkTracker(workTracker, pickUpAddress, dropOffAddress, token);
+      // Refresh any active work tracker queries (all user/week variants)
+      await queryClient.invalidateQueries({ queryKey: ["work-trackers"], refetchType: "active" });
       setSelectedWorkTracker(null);
       setSelectedBlock(null);
     } catch (error) {

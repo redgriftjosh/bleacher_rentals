@@ -1,10 +1,29 @@
 import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { Tables } from "../../../../database.types";
+import { Tables } from "../../../database.types";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { USER_ROLES } from "@/types/Constants";
 import { DateTime } from "luxon";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { fetchAddressFromId } from "@/features/dashboard/db/client/db";
+
+export async function fetchDriverName(
+  userId: string,
+  supabaseClient: SupabaseClient
+): Promise<string> {
+  const { data, error } = await supabaseClient
+    .from("Users")
+    .select("first_name, last_name")
+    .eq("user_id", userId)
+    .single();
+  // console.log("data", data);
+
+  if (error) {
+    throw new Error(["Failed to fetch work trackers", error.message].join("\n"));
+    // return [];
+  }
+  const name = data?.first_name + " " + data?.last_name;
+  return name;
+}
 
 export async function fetchDrivers(token: string | null): Promise<{
   drivers: Tables<"Users">[] | null;

@@ -1,6 +1,6 @@
-import { Tables } from "../../../../../../../database.types";
 import { Page, Text, View, Document, StyleSheet } from "@react-pdf/renderer";
 import { Color } from "@/types/Color";
+import { Tables } from "../../../../database.types";
 const darkBlue = Color.DARK_BLUE;
 
 const styles = StyleSheet.create({

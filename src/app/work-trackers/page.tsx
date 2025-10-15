@@ -1,5 +1,5 @@
 "use client";
-import { DriverList } from "./_lib/components/DriverList";
+import { DriverList } from "../../features/workTrackers/components/DriverList";
 
 export default function WorkTrackersPage() {
   return (

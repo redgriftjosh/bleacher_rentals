@@ -1,6 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
-import { WeekList } from "../_lib/components/WeekList";
+import { WeekList } from "../../../features/workTrackers/components/WeekList";
 
 // type Props = {
 //   params: { userId: string };

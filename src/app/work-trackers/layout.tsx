@@ -3,7 +3,7 @@ import { Color } from "@/types/Color";
 import { useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { fetchUserById } from "./_lib/db";
+import { fetchUserById } from "../../features/workTrackers/db";
 import { DateTime } from "luxon";
 
 export default function WorkTrackersLayout({ children }: { children: React.ReactNode }) {

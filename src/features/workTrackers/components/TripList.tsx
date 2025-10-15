@@ -1,18 +1,19 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { fetchDrivers, fetchWorkTrackersForUserIdAndStartDate } from "../db";
+import { fetchWorkTrackersForUserIdAndStartDate } from "../db";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { useRouter } from "next/navigation";
-import { calculateFinancialTotals } from "../../[userId]/[startDate]/pdf/_lib/util";
+import { Tables } from "../../../../database.types";
+import { calculateFinancialTotals } from "../util";
 
 type Props = {
   userId: string;
   startDate: string;
+  onSelectWorkTracker?: (workTracker: Tables<"WorkTrackers">) => void;
 };
 
-export function TripList({ userId, startDate }: Props) {
+export function TripList({ userId, startDate, onSelectWorkTracker }: Props) {
   const { getToken } = useAuth();
   const { data, isLoading, error } = useQuery({
     queryKey: ["work-trackers", userId, startDate],
@@ -55,6 +56,7 @@ export function TripList({ userId, startDate }: Props) {
       {data?.workTrackers.map((row, index) => (
         <tr
           key={index}
+          onClick={() => onSelectWorkTracker && onSelectWorkTracker(row.workTracker)}
           className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer"
         >
           <th className={`w-[8%] ${className}`}>{row.workTracker.date}</th>
@@ -71,7 +73,7 @@ export function TripList({ userId, startDate }: Props) {
           <th className={` ${className}`}>{row.workTracker.notes}</th>
         </tr>
       ))}
-      <tr className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer">
+      <tr className="border-b h-12 border-gray-200 ">
         <th className={`w-[8%] ${classNameBold}`}>SubTotal</th>
         <th className={`w-[8%] ${className}`}></th>
         <th className={`w-[12%] ${className}`}></th>
@@ -85,7 +87,7 @@ export function TripList({ userId, startDate }: Props) {
         </th>
         <th className={` ${className}`}></th>
       </tr>
-      <tr className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer">
+      <tr className="border-b h-12 border-gray-200 ">
         <th className={`w-[8%] ${classNameBold}`}>{`HST (${data?.driverTax}%)`}</th>
         <th className={`w-[8%] ${className}`}></th>
         <th className={`w-[12%] ${className}`}></th>
@@ -99,7 +101,7 @@ export function TripList({ userId, startDate }: Props) {
         </th>
         <th className={` ${className}`}></th>
       </tr>
-      <tr className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer">
+      <tr className="border-b h-12 border-gray-200 ">
         <th className={`w-[8%] ${classNameBold}`}>Total Amount To Be Paid</th>
         <th className={`w-[8%] ${className}`}></th>
         <th className={`w-[12%] ${className}`}></th>

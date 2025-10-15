@@ -1,12 +1,14 @@
-import { fetchWorkTrackersForUserIdAndStartDate } from "@/app/work-trackers/_lib/db";
+import {
+  fetchDriverName,
+  fetchWorkTrackersForUserIdAndStartDate,
+} from "@/features/workTrackers/db";
 import { getSupabaseServer } from "@/utils/supabase/getSupabaseServer";
 import { headers } from "next/headers";
 import React from "react";
 import { renderToStream } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
-import { MyDocument } from "./_lib/PdfComponent";
-import { calculateFinancialTotals, getDateRange } from "./_lib/util";
-import { fetchDriverName } from "./_lib/db";
+import { calculateFinancialTotals, getDateRange } from "@/features/workTrackers/util";
+import { MyDocument } from "@/features/workTrackers/components/PdfComponent";
 
 export async function GET(
   request: Request,

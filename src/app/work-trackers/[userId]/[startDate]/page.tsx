@@ -1,9 +1,12 @@
 "use client";
 import { useAuth } from "@clerk/nextjs";
-import { TripList } from "../../_lib/components/TripList";
+import { TripList } from "../../../../features/workTrackers/components/TripList";
+import WorkTrackerModal from "../../../../features/workTrackers/components/WorkTrackerModal";
 import { useParams } from "next/navigation";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
+import { useState } from "react";
+import { Tables } from "../../../../../database.types";
 
 export default function WorkTrackersForUserPage() {
   // const { userId, startDate } = params;
@@ -12,6 +15,9 @@ export default function WorkTrackersForUserPage() {
   const startDate = params.startDate as string;
   const className = "py-2 text-center text-xs font-semibold border-r";
   const { getToken } = useAuth();
+  const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
+    null
+  );
 
   const handleDownload = async () => {
     const token = await getToken({ template: "supabase" });
@@ -74,9 +80,19 @@ export default function WorkTrackersForUserPage() {
             <th className={` ${className}`}>Notes</th>
           </tr>
         </thead>
-
-        <TripList userId={userId} startDate={startDate} />
+        <TripList
+          userId={userId}
+          startDate={startDate}
+          onSelectWorkTracker={(wt) => setSelectedWorkTracker(wt)}
+        />
       </table>
+
+      {/* Modal lives outside the table for proper semantics */}
+      <WorkTrackerModal
+        selectedWorkTracker={selectedWorkTracker}
+        setSelectedWorkTracker={setSelectedWorkTracker}
+        setSelectedBlock={() => {}}
+      />
     </div>
   );
 }
