@@ -58,7 +58,7 @@ export function TripList({ userId, startDate }: Props) {
           className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer"
         >
           <th className={`w-[8%] ${className}`}>{row.workTracker.date}</th>
-          <th className={`w-[8%] ${className}`}>{row.workTracker.bleacher_id}</th>
+          <th className={`w-[8%] ${className}`}>{row.bleacherNumber}</th>
           <th className={`w-[12%] ${className}`}>{row.pickup_address?.street ?? ""}</th>
           <th className={`w-[8%] ${className}`}>{row.workTracker.pickup_poc}</th>
           <th className={`w-[7%] ${className}`}>{row.workTracker.pickup_time}</th>

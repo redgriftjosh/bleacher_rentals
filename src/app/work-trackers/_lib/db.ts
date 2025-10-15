@@ -78,6 +78,7 @@ export async function fetchWorkTrackerWeeks(
 export type WorkTrackersResult = {
   workTrackers: {
     workTracker: Tables<"WorkTrackers">;
+    bleacherNumber: number | null;
     pickup_address: Tables<"Addresses"> | null;
     dropoff_address: Tables<"Addresses"> | null;
   }[];
@@ -139,9 +140,19 @@ export async function fetchWorkTrackersForUserIdAndStartDate(
   // console.log("userId", userId);
   // console.log("startDate", startDate);
   // console.log("supabase", supabase);
+  // Join the related Bleachers row to fetch bleacher_number in one query
+  type WorkTrackerWithBleacher = Tables<"WorkTrackers"> & {
+    bleacher: { bleacher_number: number } | null;
+  };
+
   const { data, error } = await supabase
     .from("WorkTrackers")
-    .select("*")
+    .select(
+      `
+      *,
+      bleacher:Bleachers(bleacher_number)
+    `
+    )
     .eq("user_id", userId)
     .gte("date", startDate)
     .lt("date", DateTime.fromISO(startDate).plus({ days: 7 }).toISODate());
@@ -158,7 +169,7 @@ export async function fetchWorkTrackersForUserIdAndStartDate(
   }
 
   const result = await Promise.all(
-    (data || []).map(async (tracker) => {
+    ((data || []) as WorkTrackerWithBleacher[]).map(async (tracker) => {
       const pickup =
         tracker.pickup_address_id != null
           ? await fetchAddressFromId(tracker.pickup_address_id, supabase, supabaseClient != null)
@@ -169,7 +180,8 @@ export async function fetchWorkTrackersForUserIdAndStartDate(
           : null;
 
       return {
-        workTracker: tracker,
+        workTracker: tracker as Tables<"WorkTrackers">,
+        bleacherNumber: tracker.bleacher?.bleacher_number ?? null,
         pickup_address: pickup,
         dropoff_address: dropoff,
       };
