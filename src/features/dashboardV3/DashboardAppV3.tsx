@@ -8,7 +8,7 @@ import { Bleacher } from "../dashboard/db/client/bleachers";
 import { DashboardEvent } from "@/app/(dashboards)/bleachers-dashboard/_lib/types";
 import { main } from "./main";
 import { useFilterDashboardStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useFilterDashboardStore";
-import { filterSortPixiBleachers, filterSortPixiBleachersV2 } from "./util/filterPixiBleachers";
+import { filterSortPixiBleachers } from "./util/filterPixiBleachers";
 import { useCurrentEventStore } from "@/app/(dashboards)/bleachers-dashboard/_lib/useCurrentEventStore";
 import { filterEvents } from "@/app/(dashboards)/bleachers-dashboard/_lib/functions";
 import bunny from "./GSLogo.png";
