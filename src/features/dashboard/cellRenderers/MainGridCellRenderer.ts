@@ -219,6 +219,13 @@ export class MainGridCellRenderer implements ICellRenderer {
               );
             }
           });
+          // Prevent click/tap propagation from icon to tile so CellEditor doesn't open
+          icon.eventMode = "static";
+          icon.cursor = "pointer";
+          icon.on("pointerdown", (e: any) => e.stopPropagation());
+          icon.on("pointerup", (e: any) => e.stopPropagation());
+          icon.on("pointertap", (e: any) => e.stopPropagation());
+          icon.on("click", (e: any) => e.stopPropagation());
           const size = Math.min(cellWidth, cellHeight) * 0.55; // bigger for clarity
           icon.scale.set(size / 16); // base baked size 16
           icon.position.set(cellWidth - size + 4, 2); // top-right padding
