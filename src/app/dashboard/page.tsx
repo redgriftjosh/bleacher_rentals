@@ -12,7 +12,7 @@ import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { fetchUserBleacherAssignmentsForSeason } from "@/features/dashboard/db/client/bleacherUsers";
 import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
-import WorkTrackerModal from "@/features/oldDashboard/_components/dashboard/WorkTrackerModal";
+import WorkTrackerModal from "@/features/workTrackers/components/WorkTrackerModal";
 import { DashboardOptions } from "@/features/dashboardOptions/DashboardOptions";
 import { CreateEventButton } from "@/features/eventConfiguration/components/CreateEventButton";
 import { EventConfiguration } from "@/features/eventConfiguration/components/EventConfiguration";

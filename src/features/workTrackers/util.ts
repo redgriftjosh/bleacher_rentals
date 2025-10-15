@@ -1,6 +1,5 @@
 import { DateTime } from "luxon";
-import { Tables } from "../../../../../../../database.types";
-import { WorkTrackersResult } from "@/app/work-trackers/_lib/db";
+import { WorkTrackersResult } from "@/features/workTrackers/db";
 
 export function getDateRange(startDate: string): string {
   const start = DateTime.fromISO(startDate, { zone: "utc" });

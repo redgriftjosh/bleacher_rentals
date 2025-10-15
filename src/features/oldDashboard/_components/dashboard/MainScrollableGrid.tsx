@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Check, Ellipsis, Trash, Truck, X } from "lucide-react";
 import Block from "./Block";
-import WorkTrackerModal from "./WorkTrackerModal";
+import WorkTrackerModal from "../../../workTrackers/components/WorkTrackerModal";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { DashboardBleacher, DashboardEvent } from "@/features/dashboard/types";
 import { Tables } from "../../../../../database.types";
