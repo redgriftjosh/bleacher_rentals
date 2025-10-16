@@ -3,11 +3,8 @@
 import { Application } from "pixi.js";
 import { useEffect, useRef } from "react";
 import { main } from "./main";
-import { useFilterDashboardStore } from "../dashboardOptions/useFilterDashboardStore";
 
 type Props = {
-  summerAssignedBleacherIds?: number[];
-  winterAssignedBleacherIds?: number[];
   onWorkTrackerSelect?: (workTracker: {
     work_tracker_id: number;
     bleacher_id: number;
@@ -15,24 +12,10 @@ type Props = {
   }) => void;
 };
 
-export default function DashboardApp({
-  summerAssignedBleacherIds = [],
-  winterAssignedBleacherIds = [],
-  onWorkTrackerSelect,
-}: Props) {
+export default function DashboardAppSimple({ onWorkTrackerSelect }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const dashboardRef = useRef<any>(null);
-
-  // Store assignment IDs into filter store for downstream filtering logic
-  useEffect(() => {
-    useFilterDashboardStore
-      .getState()
-      .setField("summerAssignedBleacherIds", summerAssignedBleacherIds);
-    useFilterDashboardStore
-      .getState()
-      .setField("winterAssignedBleacherIds", winterAssignedBleacherIds);
-  }, [summerAssignedBleacherIds, winterAssignedBleacherIds]);
 
   useEffect(() => {
     const app = new Application();
@@ -50,10 +33,8 @@ export default function DashboardApp({
         powerPreference: "high-performance",
         roundPixels: false,
       });
-
       if (destroyed || appRef.current !== app) return;
       host.appendChild(app.canvas);
-
       try {
         const dashboard = main(app, { onWorkTrackerSelect });
         dashboardRef.current = dashboard;
@@ -66,9 +47,7 @@ export default function DashboardApp({
       destroyed = true;
       if (dashboardRef.current) {
         try {
-          if (typeof dashboardRef.current.destroy === "function") {
-            dashboardRef.current.destroy();
-          }
+          dashboardRef.current.destroy?.();
         } catch {}
         dashboardRef.current = null;
       }
@@ -82,7 +61,6 @@ export default function DashboardApp({
           }
           app.destroy({ removeView: true }, { children: true, texture: true, textureSource: true });
         } catch (error) {
-          console.warn("Error during PIXI cleanup:", error);
           try {
             app.destroy();
           } catch {}

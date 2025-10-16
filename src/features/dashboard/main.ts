@@ -1,7 +1,6 @@
 import { Application } from "pixi.js";
 import { Dashboard } from "./Dashboard";
 import { PngManager } from "./util/PngManager";
-import { Bleacher, DashboardEvent } from "./types";
 
 /**
  * Main entry point for dashboard
@@ -9,9 +8,6 @@ import { Bleacher, DashboardEvent } from "./types";
  */
 export function main(
   app: Application,
-  bleachers: Bleacher[],
-  events: DashboardEvent[],
-  yAxis: "Bleachers" | "Events",
   opts?: {
     onWorkTrackerSelect?: (workTracker: {
       work_tracker_id: number;
@@ -23,7 +19,7 @@ export function main(
   }
 ) {
   PngManager.fetchAndCachePng(app);
-  return new Dashboard(app, bleachers, events, yAxis, {
+  return new Dashboard(app, {
     onWorkTrackerSelect: opts?.onWorkTrackerSelect,
     initialScrollX: opts?.initialScrollX ?? null,
     initialScrollY: opts?.initialScrollY ?? null,

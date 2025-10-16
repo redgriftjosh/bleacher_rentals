@@ -4,7 +4,7 @@ import { FetchDashboardBleachers } from "@/features/dashboard/db/client/bleacher
 import { FetchDashboardEvents } from "@/features/dashboard/db/client/events";
 import { useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
-import DashboardAppV3 from "@/features/dashboard/DashboardApp";
+import DashboardApp from "@/features/dashboard/DashboardApp";
 import CellEditor from "@/features/dashboard/components/CellEditor";
 import { useState } from "react";
 import { Tables } from "../../../database.types";
@@ -105,12 +105,9 @@ export default function Page() {
         <EventConfiguration showSetupTeardown={false} />
       </div>
       <div className="min-h-0">
-        <DashboardAppV3
-          bleachers={data.bleachers}
-          events={data.events}
+        <DashboardApp
           summerAssignedBleacherIds={data.summerAssignedBleacherIds}
           winterAssignedBleacherIds={data.winterAssignedBleacherIds}
-          refreshToken={refreshToken}
           onWorkTrackerSelect={handleWorkTrackerSelectFromPixi}
         />
       </div>
