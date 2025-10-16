@@ -8,21 +8,16 @@ import { useFilterDashboardStore } from "../dashboardOptions/useFilterDashboardS
 type Props = {
   summerAssignedBleacherIds?: number[];
   winterAssignedBleacherIds?: number[];
-  onWorkTrackerSelect?: (workTracker: {
-    work_tracker_id: number;
-    bleacher_id: number;
-    date: string;
-  }) => void;
 };
 
 export default function DashboardApp({
   summerAssignedBleacherIds = [],
   winterAssignedBleacherIds = [],
-  onWorkTrackerSelect,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const dashboardRef = useRef<any>(null);
+  // No callback plumbing; click handling writes to a zustand store from inside Pixi
 
   // Store assignment IDs into filter store for downstream filtering logic
   useEffect(() => {
@@ -55,7 +50,7 @@ export default function DashboardApp({
       host.appendChild(app.canvas);
 
       try {
-        const dashboard = main(app, { onWorkTrackerSelect });
+        const dashboard = main(app, {});
         dashboardRef.current = dashboard;
       } catch (error) {
         console.error("Error initializing PIXI main:", error);
@@ -89,7 +84,7 @@ export default function DashboardApp({
         }
       }
     };
-  }, [onWorkTrackerSelect]);
+  }, []);
 
   return (
     <div className="w-full h-full pl-2 relative">

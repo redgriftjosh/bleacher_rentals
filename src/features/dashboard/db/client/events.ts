@@ -135,7 +135,7 @@ export async function FetchDashboardEvents(
     goodshuffleUrl: e.goodshuffle_url ?? null,
     ownerUserId: e.created_by_user_id ?? null,
   }));
-  console.log("FetchDashboardEvents events", events);
+  // console.log("FetchDashboardEvents events", events);
 
   // Push into zustand store so Pixi can subscribe live
   try {

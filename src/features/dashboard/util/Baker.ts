@@ -34,7 +34,7 @@ import { Application, Container, RenderTexture, Sprite } from "pixi.js";
  */
 export class Baker {
   private app: Application;
-  private cache = new Map<string | number, RenderTexture>();
+  private cache = new Map<string, RenderTexture>();
   private static allInstances = new Set<Baker>();
 
   /**
@@ -133,7 +133,7 @@ export class Baker {
    * next `getTexture` for the same key will re-bake it.
    * @param id - Cache key previously passed to {@link getTexture}.
    */
-  invalidate(id: string | number) {
+  invalidate(id: string) {
     const rt = this.cache.get(id);
     if (rt) {
       rt.destroy(true);

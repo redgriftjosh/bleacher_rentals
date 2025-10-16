@@ -27,6 +27,13 @@ export class PinnedYCellRenderer implements ICellRenderer {
     this.spansByRow = spansByRow;
   }
 
+  /** Update underlying bleacher array and recompute spans */
+  public setData(bleachers: Bleacher[]) {
+    this.bleachers = bleachers;
+    const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, this.dates);
+    this.spansByRow = spansByRow;
+  }
+
   /**
    * Update the current scroll position and cell width from the main grid
    * This should be called whenever the main grid scrolls horizontally

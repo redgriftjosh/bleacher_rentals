@@ -58,7 +58,7 @@ export class StickyTopRowCellRenderer implements ICellRenderer {
         headerCell.setDateISO(dateISO, this.todayISO);
         c.addChild(headerCell);
       }
-      console.log("headerCellTexture");
+      // console.log("headerCellTexture");
     });
     parent.addChild(headerCellTexture);
     return parent;

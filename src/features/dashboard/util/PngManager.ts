@@ -22,7 +22,7 @@ export class PngManager {
     if (texture) {
       return new Sprite(texture);
     }
-    console.log("Texture not found in cache:", key);
+    // console.log("Texture not found in cache:", key);
     // Return empty sprite as fallback
     return new Sprite();
   }
@@ -62,11 +62,11 @@ export class PngManager {
 
   private static async loadAndCachePng(app: Application, pngPath: string, key: string) {
     try {
-      console.log(`Loading PNG: ${pngPath} with key: ${key}`);
+      // console.log(`Loading PNG: ${pngPath} with key: ${key}`);
 
       // Load the texture using PixiJS Assets API
       const texture = await Assets.load(pngPath);
-      console.log(`Successfully loaded PNG: ${key}`, texture);
+      // console.log(`Successfully loaded PNG: ${key}`, texture);
 
       // Cache the loaded texture (not a RenderTexture)
       PngManager.cache.set(key, texture);
@@ -84,7 +84,7 @@ export class PngManager {
         PngManager.listeners.delete(key);
       }
 
-      console.log(`PNG cached with key: ${key}, cache size: ${PngManager.cache.size}`);
+      // console.log(`PNG cached with key: ${key}, cache size: ${PngManager.cache.size}`);
     } catch (error) {
       console.error(`Failed to load PNG ${pngPath}:`, error);
     }

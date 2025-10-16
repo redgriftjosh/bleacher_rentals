@@ -18,6 +18,6 @@ export const useDashboardBleachersStore = create<DashboardBleachersStore>((set) 
 }));
 
 // subscribe to this store and log to console the new values
-useDashboardBleachersStore.subscribe((state) => {
-  console.log("DashboardBleachersStore updated:", state);
-});
+// useDashboardBleachersStore.subscribe((state) => {
+//   console.log("DashboardBleachersStore updated:", state);
+// });

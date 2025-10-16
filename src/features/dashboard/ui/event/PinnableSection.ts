@@ -30,7 +30,7 @@ export class PinnableSection extends Container {
     }
     this.addChild(this.labelText);
 
-    console.log("PinnableSection");
+    // console.log("PinnableSection");
   }
 
   /**

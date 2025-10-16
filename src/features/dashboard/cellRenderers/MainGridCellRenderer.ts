@@ -12,6 +12,7 @@ import { DateTime } from "luxon";
 import { Bleacher, DashboardEvent } from "../types";
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
 import { useSelectedBlockStore } from "../state/useSelectedBlock";
+import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useWorkTrackerSelectionStore";
 
 /**
  * CellRenderer for the main scrollable grid area
@@ -41,11 +42,7 @@ export class MainGridCellRenderer implements ICellRenderer {
   // Always-up-to-date bleacher snapshot from the store, keyed by id
   private latestBleachersById: Map<number, Bleacher>;
 
-  private onWorkTrackerSelect?: (workTracker: {
-    work_tracker_id: number;
-    bleacher_id: number;
-    date: string;
-  }) => void;
+  // No external callback; selection is pushed to a zustand store
 
   constructor(
     app: Application,
@@ -53,20 +50,13 @@ export class MainGridCellRenderer implements ICellRenderer {
     events: DashboardEvent[],
     dates: string[],
     yAxis: "Bleachers" | "Events",
-    opts?: {
-      onWorkTrackerSelect?: (workTracker: {
-        work_tracker_id: number;
-        bleacher_id: number;
-        date: string;
-      }) => void;
-    }
+    opts?: undefined
   ) {
     this.app = app;
     this.baker = new Baker(app);
     this.bleachers = bleachers;
     this.events = events;
     this.dates = dates;
-    this.onWorkTrackerSelect = opts?.onWorkTrackerSelect;
     this.yAxis = yAxis;
     // Stable mapping for rows
     this.rowBleacherIds = bleachers.map((b) => b.bleacherId);
@@ -142,6 +132,27 @@ export class MainGridCellRenderer implements ICellRenderer {
         this.latestBleachersById = new Map(nextData.map((b) => [b.bleacherId, b] as const));
       });
     } catch {}
+  }
+
+  /**
+   * Update underlying data and recompute spans without recreating the renderer
+   * Call Grid.forceUpdate() after this to refresh visible cells.
+   */
+  public setData(bleachers: Bleacher[], events: DashboardEvent[], yAxis: "Bleachers" | "Events") {
+    console.log("setData MainScrollableGridCellRenderer");
+    this.baker.destroyAll();
+    this.bleachers = bleachers;
+    this.events = events;
+    this.yAxis = yAxis;
+    this.rowBleacherIds = bleachers.map((b) => b.bleacherId);
+    this.latestBleachersById = new Map(bleachers.map((b) => [b.bleacherId, b] as const));
+
+    if (yAxis === "Bleachers") {
+      const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, this.dates);
+      this.spansByRow = spansByRow;
+    } else {
+      this.spansByRow = this.calculateSpansByEvents(events, this.dates);
+    }
   }
 
   /**
@@ -289,20 +300,12 @@ export class MainGridCellRenderer implements ICellRenderer {
           const icon = new TruckIcon(this.baker, () => {
             // Stop block editor from opening when clicking truck icon
             // Instead open WorkTracker modal via callback if provided
-            if (this.onWorkTrackerSelect) {
-              this.onWorkTrackerSelect({
-                work_tracker_id: workTracker.workTrackerId ?? -1,
-                bleacher_id: bleacher.bleacherId,
-                date,
-              });
-            } else {
-              console.log(
-                "Truck icon clicked (no callback) bleacher",
-                bleacher.bleacherId,
-                "date",
-                date
-              );
-            }
+            // Write selection to store to open modal without causing React rerender of dashboard
+            useWorkTrackerSelectionStore.getState().setSelected({
+              work_tracker_id: workTracker.workTrackerId ?? -1,
+              bleacher_id: bleacher.bleacherId,
+              date,
+            });
           });
           // Prevent click/tap propagation from icon to tile so CellEditor doesn't open
           icon.eventMode = "static";

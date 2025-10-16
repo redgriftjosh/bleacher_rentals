@@ -6,7 +6,8 @@ import { useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 import DashboardApp from "@/features/dashboard/DashboardApp";
 import CellEditor from "@/features/dashboard/components/CellEditor";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useWorkTrackerSelectionStore";
 import { Tables } from "../../../database.types";
 import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
@@ -52,6 +53,31 @@ export default function Page() {
     setSelectedWorkTracker(workTracker);
   };
 
+  // Subscribe to selection store without changing DashboardApp props
+  // Important: keep hooks above any early returns to preserve hook order across renders
+  useEffect(() => {
+    const unsub = useWorkTrackerSelectionStore.subscribe((s) => {
+      const wt = s.selected;
+      if (!wt) return;
+      setSelectedWorkTracker({
+        work_tracker_id: wt.work_tracker_id,
+        bleacher_id: wt.bleacher_id,
+        date: wt.date,
+        created_at: "",
+        dropoff_address_id: null,
+        dropoff_poc: null,
+        dropoff_time: null,
+        notes: null,
+        pay_cents: null,
+        pickup_address_id: null,
+        pickup_poc: null,
+        pickup_time: null,
+        user_id: null,
+      } as Tables<"WorkTrackers">);
+    });
+    return () => unsub();
+  }, []);
+
   if (error) {
     return <div>Uh Oh, Something went wrong... 😬</div>;
   }
@@ -66,28 +92,6 @@ export default function Page() {
   if (!data?.bleachers || data.bleachers.length === 0) {
     return <div>No Bleachers!</div>;
   }
-
-  const handleWorkTrackerSelectFromPixi = (wt: {
-    work_tracker_id: number;
-    bleacher_id: number;
-    date: string;
-  }) => {
-    setSelectedWorkTracker({
-      work_tracker_id: wt.work_tracker_id,
-      bleacher_id: wt.bleacher_id,
-      date: wt.date,
-      created_at: "",
-      dropoff_address_id: null,
-      dropoff_poc: null,
-      dropoff_time: null,
-      notes: null,
-      pay_cents: null,
-      pickup_address_id: null,
-      pickup_poc: null,
-      pickup_time: null,
-      user_id: null,
-    } as Tables<"WorkTrackers">);
-  };
 
   return (
     <div className="h-full grid grid-rows-[auto_1fr] gap-2 overflow-hidden">
@@ -108,7 +112,6 @@ export default function Page() {
         <DashboardApp
           summerAssignedBleacherIds={data.summerAssignedBleacherIds}
           winterAssignedBleacherIds={data.winterAssignedBleacherIds}
-          onWorkTrackerSelect={handleWorkTrackerSelectFromPixi}
         />
       </div>
     </div>

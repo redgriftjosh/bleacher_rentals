@@ -47,15 +47,12 @@ export class Dashboard {
   private events: DashboardEvent[] = [];
   private dates: string[] = [];
   private contentColumns = 0;
+  // Track minimal signature of spans per bleacher to detect when recomputation is needed
+  private spanSignaturesByBleacherId: Map<number, string> = new Map();
 
   constructor(
     app: Application,
     opts?: {
-      onWorkTrackerSelect?: (workTracker: {
-        work_tracker_id: number;
-        bleacher_id: number;
-        date: string;
-      }) => void;
       initialScrollX?: number | null;
       initialScrollY?: number | null;
     }
@@ -72,13 +69,14 @@ export class Dashboard {
     const allEvents = useDashboardEventsStore.getState().data;
     const filters = useFilterDashboardStore.getState();
     const currentEvent = useCurrentEventStore.getState();
+    const selectedIdsForFilter = filters.optimizationMode ? currentEvent.bleacherIds ?? [] : [];
     const filteredBleachers = filterSortPixiBleachers(
       filters.homeBaseIds,
       filters.winterHomeBaseIds,
       filters.rows,
       allBleachers,
-      currentEvent.bleacherIds ?? [],
-      !!currentEvent.isFormExpanded,
+      selectedIdsForFilter,
+      false,
       filters.optimizationMode,
       filters.season,
       filters.summerAssignedBleacherIds ?? [],
@@ -93,21 +91,35 @@ export class Dashboard {
 
     this.initGrids(opts);
 
-    // Live subscriptions: recompute filtered data and force visible cell rebuilds
-    const recompute = () => {
+    // Helper to compute span signatures by bleacherId
+    const computeSpanSignatures = (bleachers: Bleacher[]): Map<number, string> => {
+      const map = new Map<number, string>();
+      for (const b of bleachers) {
+        const sig = (b.bleacherEvents || [])
+          .map((ev: any) => `${ev.eventId}:${ev.eventStart}:${ev.eventEnd}`)
+          .sort()
+          .join("|");
+        map.set(b.bleacherId, sig);
+      }
+      return map;
+    };
+
+    // Filters or current event selection changes can alter row sets or axis
+    const handleFilterRelatedChange = () => {
       const filters = useFilterDashboardStore.getState();
       const prevYAxis = this.yAxis;
       this.yAxis = filters.yAxis;
       const allBleachers = useDashboardBleachersStore.getState().data;
       const allEvents = useDashboardEventsStore.getState().data;
       const currentEvent = useCurrentEventStore.getState();
+      const selectedIdsForFilter = filters.optimizationMode ? currentEvent.bleacherIds ?? [] : [];
       const filteredBleachers = filterSortPixiBleachers(
         filters.homeBaseIds,
         filters.winterHomeBaseIds,
         filters.rows,
         allBleachers,
-        currentEvent.bleacherIds ?? [],
-        !!currentEvent.isFormExpanded,
+        selectedIdsForFilter,
+        false,
         filters.optimizationMode,
         filters.season,
         filters.summerAssignedBleacherIds ?? [],
@@ -117,6 +129,7 @@ export class Dashboard {
         this.yAxis === "Events" && filters.stateProvinces.length > 0
           ? filterEvents(allEvents, filters.stateProvinces)
           : allEvents;
+
       const prevIds = this.bleachers.map((b) => b.bleacherId).join(",");
       const nextIds = filteredBleachers.map((b) => b.bleacherId).join(",");
       const yAxisChanged = prevYAxis !== this.yAxis;
@@ -130,7 +143,9 @@ export class Dashboard {
       if (yAxisChanged || rowCountChanged || prevIds !== nextIds) {
         this.rebuildGrids();
       } else {
-        // Trigger re-render of visible cells across relevant grids
+        // No structural changes: spans might change due to events filtering; refresh renderers
+        this.mainGridCellRenderer.setData(this.bleachers, this.events, this.yAxis);
+        this.mainGridPinYCellRenderer.setData(this.bleachers);
         this.mainGrid.forceUpdate();
         this.stickyLeftColumn.forceUpdate();
         if (this.yAxis === "Bleachers") {
@@ -139,13 +154,100 @@ export class Dashboard {
       }
     };
 
+    // Events change: affects spans in both y-axes
+    const handleEventsChange = () => {
+      const filters = useFilterDashboardStore.getState();
+      const allEvents = useDashboardEventsStore.getState().data;
+      const filteredEvents =
+        this.yAxis === "Events" && filters.stateProvinces.length > 0
+          ? filterEvents(allEvents, filters.stateProvinces)
+          : allEvents;
+      this.events = filteredEvents;
+      // Update renderers without structural rebuild
+      this.mainGridCellRenderer.setData(this.bleachers, this.events, this.yAxis);
+      this.mainGrid.forceUpdate();
+      if (this.yAxis === "Events") {
+        // row count may have changed; check and rebuild if needed
+        const rowsCountChanged = this.events.length !== (this as any).mainGrid?.rows;
+        if (rowsCountChanged) {
+          this.rebuildGrids();
+          return;
+        }
+      }
+    };
+
+    // Bleachers change: Only recompute if spans signature changed; otherwise do nothing and let renderer's own subscription patch visible cells (blocks/workTrackers)
+    const handleBleachersChange = () => {
+      console.log("handleBleachersChange");
+      const filters = useFilterDashboardStore.getState();
+      const allBleachers = useDashboardBleachersStore.getState().data;
+      const currentEvent = useCurrentEventStore.getState();
+      const selectedIdsForFilter = filters.optimizationMode ? currentEvent.bleacherIds ?? [] : [];
+      const filteredBleachers = filterSortPixiBleachers(
+        filters.homeBaseIds,
+        filters.winterHomeBaseIds,
+        filters.rows,
+        allBleachers,
+        selectedIdsForFilter,
+        false,
+        filters.optimizationMode,
+        filters.season,
+        filters.summerAssignedBleacherIds ?? [],
+        filters.winterAssignedBleacherIds ?? []
+      );
+
+      const prevIds = this.bleachers.map((b) => b.bleacherId).join(",");
+      const nextIds = filteredBleachers.map((b) => b.bleacherId).join(",");
+      if (prevIds !== nextIds) {
+        console.log("Bleacher IDS changed");
+        // Row set changed (rare on WT save) -> rebuild
+        this.bleachers = filteredBleachers;
+        this.rebuildGrids();
+        return;
+      }
+
+      if (this.yAxis === "Bleachers") {
+        const nextSig = computeSpanSignatures(filteredBleachers);
+        // Compare with previous signatures; if any changed, update spans
+        let spansChanged = false;
+        for (const b of filteredBleachers) {
+          if (this.spanSignaturesByBleacherId.get(b.bleacherId) !== nextSig.get(b.bleacherId)) {
+            spansChanged = true;
+            break;
+          }
+        }
+        // Update cache
+        this.spanSignaturesByBleacherId = nextSig;
+        this.bleachers = filteredBleachers;
+        if (spansChanged) {
+          console.log("spansChanged");
+          this.mainGridCellRenderer.setData(this.bleachers, this.events, this.yAxis);
+          this.mainGridPinYCellRenderer.setData(this.bleachers);
+          this.mainGrid.forceUpdate();
+          this.stickyLeftColumn.forceUpdate();
+          this.mainGridPinnedYAxis.forceUpdate();
+        }
+        // else: do nothing; renderer internal subscribers will update the changed cells
+      } else {
+        // yAxis = Events: bleachers changes don't affect rows; ignore here
+        this.bleachers = filteredBleachers;
+      }
+    };
+
+    // console.log("is this thing on?");
+
+    // Initialize span signatures for current rows
+    this.spanSignaturesByBleacherId = computeSpanSignatures(this.bleachers);
+
     try {
-      this.unsubBleachers = useDashboardBleachersStore.subscribe(() => recompute());
-      this.unsubEvents = useDashboardEventsStore.subscribe(() => recompute());
-      this.unsubFilters = useFilterDashboardStore.subscribe(() => recompute());
+      this.unsubFilters = useFilterDashboardStore.subscribe(() => handleFilterRelatedChange());
+      this.unsubCurrentEvent = useCurrentEventStore.subscribe(() => handleFilterRelatedChange());
     } catch {}
     try {
-      this.unsubCurrentEvent = useCurrentEventStore.subscribe(() => recompute());
+      this.unsubEvents = useDashboardEventsStore.subscribe(() => handleEventsChange());
+    } catch {}
+    try {
+      this.unsubBleachers = useDashboardBleachersStore.subscribe(() => handleBleachersChange());
     } catch {}
 
     // Note: initial scroll handling is performed in initGrids using opts
@@ -154,11 +256,7 @@ export class Dashboard {
   /**
    * Initialize renderers and grids based on current bleachers/events/filters
    */
-  private initGrids(opts?: {
-    initialScrollX?: number | null;
-    initialScrollY?: number | null;
-    onWorkTrackerSelect?: any;
-  }) {
+  private initGrids(opts?: { initialScrollX?: number | null; initialScrollY?: number | null }) {
     const app = this.app;
     const dates = this.dates;
     const contentColumns = this.contentColumns;
@@ -169,9 +267,7 @@ export class Dashboard {
       this.events,
       dates,
       this.yAxis,
-      {
-        onWorkTrackerSelect: opts?.onWorkTrackerSelect,
-      }
+      undefined
     );
     this.mainGridPinYCellRenderer = new PinnedYCellRenderer(app, this.bleachers, dates);
     const leftColumnCellRenderer = new StickyLeftColumnCellRenderer(
@@ -382,9 +478,9 @@ export class Dashboard {
     // Calculate center position (content width / 2 - viewport width / 2)
     const centerX = Math.max(0, (contentWidth - viewportWidth) / 2);
 
-    console.log(
-      `Centering horizontal scroll: contentWidth=${contentWidth}, viewportWidth=${viewportWidth}, centerX=${centerX}`
-    );
+    // console.log(
+    //   `Centering horizontal scroll: contentWidth=${contentWidth}, viewportWidth=${viewportWidth}, centerX=${centerX}`
+    // );
 
     // Set the horizontal scroll on ALL grids that need horizontal centering
     this.mainGrid.setHorizontalScroll(centerX);

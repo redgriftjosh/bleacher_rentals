@@ -55,7 +55,7 @@ export default function WorkTrackerModal({
   //   }
   // }, [workTracker?.pay_cents]);
 
-  console.log("selectedWorkTracker WorkTrackerModal", selectedWorkTracker);
+  // console.log("selectedWorkTracker WorkTrackerModal", selectedWorkTracker);
 
   const {
     data: fetchedWorkTracker,
@@ -105,14 +105,15 @@ export default function WorkTrackerModal({
     const token = await getToken({ template: "supabase" });
     try {
       await saveWorkTracker(workTracker, pickUpAddress, dropOffAddress, token);
-      // Refresh any active work tracker queries (all user/week variants)
+      // Refresh bleachers directly into the zustand store so Pixi updates without remounting
+      try {
+        const { FetchDashboardBleachers } = await import(
+          "@/features/dashboard/db/client/bleachers"
+        );
+        await FetchDashboardBleachers(token);
+      } catch {}
+      // Optionally refresh any active work-tracker-specific queries used elsewhere
       await queryClient.invalidateQueries({ queryKey: ["work-trackers"], refetchType: "active" });
-      // Also refresh the dashboard bleachers/events query and bump the global refresh token
-      await queryClient.invalidateQueries({
-        queryKey: ["FetchDashboardBleachersAndEvents"],
-        exact: false,
-      });
-      useDataRefreshTokenStore.getState().bump();
       setSelectedWorkTracker(null);
       setSelectedBlock(null);
     } catch (error) {

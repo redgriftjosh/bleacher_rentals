@@ -114,7 +114,7 @@ export class Grid extends Container {
       this.setupScrolling();
     }
 
-    console.log("✅ Grid created with CellRenderer and built-in scroll support");
+    // console.log("✅ Grid created with CellRenderer and built-in scroll support");
   }
 
   /**
