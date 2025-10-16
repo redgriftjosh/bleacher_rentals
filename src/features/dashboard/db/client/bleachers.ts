@@ -3,6 +3,7 @@ import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { Tables } from "../../../../../database.types";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { Bleacher } from "../../types";
+import { useDashboardBleachersStore } from "../../state/useDashboardBleachersStore";
 
 type Row = {
   bleacher_id: number;
@@ -115,6 +116,11 @@ export async function FetchDashboardBleachers(
   }));
 
   // console.log("bleachers", bleachers);
+  // Update the dashboard bleachers store so other parts of the app can react
+  try {
+    useDashboardBleachersStore.getState().setData(bleachers);
+    useDashboardBleachersStore.getState().setStale(false);
+  } catch {}
 
   return { bleachers };
 }

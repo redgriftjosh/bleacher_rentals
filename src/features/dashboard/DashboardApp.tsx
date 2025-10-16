@@ -14,6 +14,8 @@ type DashboardAppV3Props = {
   events: DashboardEvent[];
   summerAssignedBleacherIds?: number[];
   winterAssignedBleacherIds?: number[];
+  // When this token changes, force the dashboard to refresh its committed data
+  refreshToken?: number;
   onWorkTrackerSelect?: (workTracker: {
     work_tracker_id: number;
     bleacher_id: number;
@@ -26,6 +28,7 @@ export default function DashboardAppV3({
   events,
   summerAssignedBleacherIds = [],
   winterAssignedBleacherIds = [],
+  refreshToken = 0,
   onWorkTrackerSelect,
 }: DashboardAppV3Props) {
   // Filtering state from existing dashboard stores
@@ -103,6 +106,13 @@ export default function DashboardAppV3({
       }
     };
   }, [filteredBleachers, committedBleachers]);
+
+  // If external data changed (e.g., WorkTrackers saved) but bleacher IDs are the same,
+  // force-commit the latest filteredBleachers immediately when refreshToken changes.
+  useEffect(() => {
+    setCommittedBleachers(filteredBleachers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshToken]);
 
   const handleResize = useCallback(() => {
     // Cancel any pending flip
@@ -313,7 +323,15 @@ export default function DashboardAppV3({
         }
       }
     };
-  }, [committedBleachers, resizeTrigger, handleResize, onWorkTrackerSelect, filteredEvents, yAxis]);
+  }, [
+    committedBleachers,
+    resizeTrigger,
+    handleResize,
+    onWorkTrackerSelect,
+    filteredEvents,
+    yAxis,
+    refreshToken,
+  ]);
   return (
     <div className="w-full h-full pl-2 relative">
       <div ref={hostRef} className="w-full h-full border-l border-t border-gray-300" />

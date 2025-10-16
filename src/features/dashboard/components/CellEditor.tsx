@@ -44,7 +44,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         workTrackerId,
       };
       await saveBlock(editBlock, token);
-      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachers"] });
+      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachersAndEvents"] });
       resetForm();
     } catch (error) {
       console.error("Failed to Save Block:", error);

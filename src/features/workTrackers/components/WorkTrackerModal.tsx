@@ -8,6 +8,7 @@ import { AddressData } from "../../eventConfiguration/state/useCurrentEventStore
 import { useAuth } from "@clerk/nextjs";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
 import { fetchWorkTrackerById } from "../../oldDashboard/db/setupTeardownBlock/fetchWorkTracker";
 import { EditBlock } from "../../oldDashboard/_components/dashboard/MainScrollableGrid";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -106,6 +107,12 @@ export default function WorkTrackerModal({
       await saveWorkTracker(workTracker, pickUpAddress, dropOffAddress, token);
       // Refresh any active work tracker queries (all user/week variants)
       await queryClient.invalidateQueries({ queryKey: ["work-trackers"], refetchType: "active" });
+      // Also refresh the dashboard bleachers/events query and bump the global refresh token
+      await queryClient.invalidateQueries({
+        queryKey: ["FetchDashboardBleachersAndEvents"],
+        exact: false,
+      });
+      useDataRefreshTokenStore.getState().bump();
       setSelectedWorkTracker(null);
       setSelectedBlock(null);
     } catch (error) {

@@ -110,6 +110,7 @@ export default function Page() {
           events={data.events}
           summerAssignedBleacherIds={data.summerAssignedBleacherIds}
           winterAssignedBleacherIds={data.winterAssignedBleacherIds}
+          refreshToken={refreshToken}
           onWorkTrackerSelect={handleWorkTrackerSelectFromPixi}
         />
       </div>
