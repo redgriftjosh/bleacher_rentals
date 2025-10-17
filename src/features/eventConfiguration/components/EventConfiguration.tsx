@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Palette, X } from "lucide-react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import {
   AlertDialog,
@@ -36,6 +37,7 @@ type Props = {
 export const EventConfiguration = ({ showSetupTeardown }: Props) => {
   const currentEventStore = useCurrentEventStore();
   const [activeTab, setActiveTab] = useState<Tab>("Core");
+  // const [hueOpen, setHueOpen] = useState(false);
   const { getToken, userId, isLoaded } = useAuth();
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
@@ -103,8 +105,15 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
         showPanel ? "max-h-[500px]" : "-mt-2 max-h-0"
       }`}
     >
-      <div className="bg-white p-4 shadow-lg border border-gray-200">
-        <div className="flex items-center justify-between">
+      <div
+        className="p-4 shadow-lg border border-gray-200 bg-white"
+        style={
+          currentEventStore.hslHue !== null
+            ? { backgroundColor: `hsl(${currentEventStore.hslHue}, 60%, 60%)` }
+            : undefined
+        }
+      >
+        <div className="flex items-center gap-2">
           <div className="flex gap-2">
             {tabs.map((tab) => (
               <button
@@ -116,7 +125,7 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
                     ? "text-red-700"
                     : activeTab === tab
                     ? "text-darkBlue"
-                    : "text-gray-500"
+                    : "text-black/50"
                 }`}
                 onClick={() => setActiveTab(tab)}
               >
@@ -127,8 +136,51 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
               </button>
             ))}
           </div>
+          {/* Middle area for hue slider; grows to fill space between tabs and buttons */}
+          <div className="flex-1 px-2">
+            {currentEventStore.hueOpen && (
+              <div className="flex items-center gap-3">
+                <input
+                  aria-label="Event Hue"
+                  type="range"
+                  min={0}
+                  max={359}
+                  step={1}
+                  value={currentEventStore.hslHue ?? 0}
+                  onChange={(e) =>
+                    currentEventStore.setField("hslHue", parseInt(e.target.value, 10) || 0)
+                  }
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <span className="text-xs text-gray-700 w-10 text-right">
+                  {currentEventStore.hslHue ?? 0}
+                </span>
+              </div>
+            )}
+          </div>
 
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            {/* Palette toggle button (left of delete/update button group) */}
+            <button
+              type="button"
+              title={currentEventStore.hueOpen ? "Close hue slider" : "Open hue slider"}
+              className="px-2 py-2 bg-white text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
+              onClick={() => {
+                // If opening and hue is null, initialize to 0 so the slider is controlled
+                if (!currentEventStore.hueOpen && currentEventStore.hslHue === null) {
+                  currentEventStore.setField("hslHue", 0);
+                }
+                // Toggle hueOpen by reading the current value and passing a boolean (setField expects a boolean)
+                currentEventStore.setField("hueOpen", !currentEventStore.hueOpen);
+                // ;setHueOpen((v) => !v);
+              }}
+            >
+              {currentEventStore.hueOpen ? (
+                <X className="w-4 h-4" />
+              ) : (
+                <Palette className="w-4 h-4" />
+              )}
+            </button>
             {currentEventStore.eventId && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -179,37 +231,37 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
                   >
                     <path
                       d="M100 50.5908C100 78.2051 77.6142 100.591 50 
-             100.591C22.3858 100.591 0 78.2051 0 
-             50.5908C0 22.9766 22.3858 0.59082 50 
-             0.59082C77.6142 0.59082 100 22.9766 100 
-             50.5908ZM9.08144 50.5908C9.08144 73.1895 
-             27.4013 91.5094 50 91.5094C72.5987 
-             91.5094 90.9186 73.1895 90.9186 
-             50.5908C90.9186 27.9921 72.5987 9.67226 
-             50 9.67226C27.4013 9.67226 9.08144 
-             27.9921 9.08144 50.5908Z"
+                          100.591C22.3858 100.591 0 78.2051 0 
+                          50.5908C0 22.9766 22.3858 0.59082 50 
+                          0.59082C77.6142 0.59082 100 22.9766 100 
+                          50.5908ZM9.08144 50.5908C9.08144 73.1895 
+                          27.4013 91.5094 50 91.5094C72.5987 
+                          91.5094 90.9186 73.1895 90.9186 
+                          50.5908C90.9186 27.9921 72.5987 9.67226 
+                          50 9.67226C27.4013 9.67226 9.08144 
+                          27.9921 9.08144 50.5908Z"
                       fill="currentColor"
                     />
                     <path
                       d="M93.9676 39.0409C96.393 38.4038 
-             97.8624 35.9116 97.0079 
-             33.5539C95.2932 28.8227 92.871 
-             24.3692 89.8167 20.348C85.8452 
-             15.1192 80.8826 10.7238 75.2124 
-             7.41289C69.5422 4.10194 63.2754 
-             1.94025 56.7698 1.05124C51.7666 
-             0.367541 46.6976 0.446843 41.7345 
-             1.27873C39.2613 1.69328 37.813 
-             4.19778 38.4501 6.62326C39.0873 
-             9.04874 41.5694 10.4717 44.0505 
-             10.1071C47.8511 9.54855 51.7191 
-             9.52689 55.5402 10.0491C60.8642 
-             10.7766 65.9928 12.5457 70.6331 
-             15.2552C75.2735 17.9648 79.3347 
-             21.5619 82.5849 25.841C84.9175 
-             28.9121 86.7997 32.2913 88.1811 
-             35.8758C89.083 38.2158 91.5421 
-             39.6781 93.9676 39.0409Z"
+                          97.8624 35.9116 97.0079 
+                          33.5539C95.2932 28.8227 92.871 
+                          24.3692 89.8167 20.348C85.8452 
+                          15.1192 80.8826 10.7238 75.2124 
+                          7.41289C69.5422 4.10194 63.2754 
+                          1.94025 56.7698 1.05124C51.7666 
+                          0.367541 46.6976 0.446843 41.7345 
+                          1.27873C39.2613 1.69328 37.813 
+                          4.19778 38.4501 6.62326C39.0873 
+                          9.04874 41.5694 10.4717 44.0505 
+                          10.1071C47.8511 9.54855 51.7191 
+                          9.52689 55.5402 10.0491C60.8642 
+                          10.7766 65.9928 12.5457 70.6331 
+                          15.2552C75.2735 17.9648 79.3347 
+                          21.5619 82.5849 25.841C84.9175 
+                          28.9121 86.7997 32.2913 88.1811 
+                          35.8758C89.083 38.2158 91.5421 
+                          39.6781 93.9676 39.0409Z"
                       fill="currentFill"
                     />
                   </svg>

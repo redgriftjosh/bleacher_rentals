@@ -14,7 +14,7 @@ export const DetailsTab = () => {
         <LenientSelections />
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Status</label>
+            <label className="block text-sm font-medium text-black/70">Status</label>
             <Dropdown
               options={[
                 { label: "Quoted", value: "Quoted" },
@@ -37,8 +37,9 @@ export const DetailsTab = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+        <label className="block text-sm font-medium text-black/70 mb-1">Notes</label>
         <Textarea
+          className="bg-white "
           placeholder="Type your message here."
           value={currentEventStore.notes}
           onChange={(e) => currentEventStore.setField("notes", e.target.value)}
