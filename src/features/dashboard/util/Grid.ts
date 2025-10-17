@@ -533,6 +533,6 @@ export class Grid extends Container {
     this.off("grid:scroll-vertical", this.updateY);
     this.off("grid:scroll-horizontal", this.updateX);
     super.destroy(options);
-    console.log("Grid destroyed");
+    // console.log("Grid destroyed");
   }
 }

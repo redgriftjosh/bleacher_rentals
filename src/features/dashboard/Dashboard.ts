@@ -163,7 +163,7 @@ export class Dashboard {
     const allBleachers = useDashboardBleachersStore.getState().data;
     const allEvents = useDashboardEventsStore.getState().data;
     const currentEvent = useCurrentEventStore.getState();
-    const selectedIdsForFilter = filters.optimizationMode ? currentEvent.bleacherIds ?? [] : [];
+    const selectedIdsForFilter = currentEvent.bleacherIds;
 
     const filteredBleachers = filterSortPixiBleachers(
       filters.homeBaseIds,
@@ -177,6 +177,8 @@ export class Dashboard {
       filters.summerAssignedBleacherIds ?? [],
       filters.winterAssignedBleacherIds ?? []
     );
+    console.log("filteredBleachers: ", filteredBleachers);
+    console.log("filters.optimizationMode: ", filters.optimizationMode);
     const filteredEvents =
       this.yAxis === "Events" && filters.stateProvinces.length > 0
         ? filterEvents(allEvents, filters.stateProvinces)
