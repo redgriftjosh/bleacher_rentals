@@ -31,6 +31,9 @@ export class Dashboard {
   // Renderers
   private mainGridPinYCellRenderer!: PinnedYCellRenderer; // Store reference for scroll updates
   private mainGridCellRenderer!: MainGridCellRenderer; // Store reference for scroll updates
+  private leftColumnCellRenderer!: StickyLeftColumnCellRenderer;
+  private topRowCellRenderer!: StickyTopRowCellRenderer;
+  private topLeftCellRenderer!: TopLeftCellRenderer;
 
   // Cell editor
   private cellEditor!: CellEditor;
@@ -49,6 +52,16 @@ export class Dashboard {
   private contentColumns = 0;
   // Track minimal signature of spans per bleacher to detect when recomputation is needed
   private spanSignaturesByBleacherId: Map<number, string> = new Map();
+  // Debounce/coalesce incoming changes
+  private recomputeQueued = false;
+  // Track and cleanup resize listeners
+  private boundResizeHandler?: () => void;
+  // Coalesce rebuild after resize
+  private pendingResizeRAF?: number;
+  // Track last observed screen size and an arm flag for one-frame debounce
+  private lastScreenW?: number;
+  private lastScreenH?: number;
+  private rebuildArmed = false;
 
   constructor(
     app: Application,
@@ -91,7 +104,13 @@ export class Dashboard {
 
     this.initGrids(opts);
 
-    // Helper to compute span signatures by bleacherId
+    // Listen to window resize and log current dimensions/metrics
+    this.boundResizeHandler = () => this.handleResize();
+    try {
+      window.addEventListener("resize", this.boundResizeHandler);
+    } catch {}
+
+    // Unified recompute method
     const computeSpanSignatures = (bleachers: Bleacher[]): Map<number, string> => {
       const map = new Map<number, string>();
       for (const b of bleachers) {
@@ -104,134 +123,13 @@ export class Dashboard {
       return map;
     };
 
-    // Filters or current event selection changes can alter row sets or axis
-    const handleFilterRelatedChange = () => {
-      const filters = useFilterDashboardStore.getState();
-      const prevYAxis = this.yAxis;
-      this.yAxis = filters.yAxis;
-      const allBleachers = useDashboardBleachersStore.getState().data;
-      const allEvents = useDashboardEventsStore.getState().data;
-      const currentEvent = useCurrentEventStore.getState();
-      const selectedIdsForFilter = filters.optimizationMode ? currentEvent.bleacherIds ?? [] : [];
-      const filteredBleachers = filterSortPixiBleachers(
-        filters.homeBaseIds,
-        filters.winterHomeBaseIds,
-        filters.rows,
-        allBleachers,
-        selectedIdsForFilter,
-        false,
-        filters.optimizationMode,
-        filters.season,
-        filters.summerAssignedBleacherIds ?? [],
-        filters.winterAssignedBleacherIds ?? []
-      );
-      const filteredEvents =
-        this.yAxis === "Events" && filters.stateProvinces.length > 0
-          ? filterEvents(allEvents, filters.stateProvinces)
-          : allEvents;
-
-      const prevIds = this.bleachers.map((b) => b.bleacherId).join(",");
-      const nextIds = filteredBleachers.map((b) => b.bleacherId).join(",");
-      const yAxisChanged = prevYAxis !== this.yAxis;
-      const rowCountChanged =
-        (this.yAxis === "Bleachers" ? filteredBleachers.length : filteredEvents.length) !==
-        (this.yAxis === "Bleachers" ? this.bleachers.length : this.events.length);
-
-      this.bleachers = filteredBleachers;
-      this.events = filteredEvents;
-
-      if (yAxisChanged || rowCountChanged || prevIds !== nextIds) {
-        this.rebuildGrids();
-      } else {
-        // No structural changes: spans might change due to events filtering; refresh renderers
-        this.mainGridCellRenderer.setData(this.bleachers, this.events, this.yAxis);
-        this.mainGridPinYCellRenderer.setData(this.bleachers);
-        this.mainGrid.forceUpdate();
-        this.stickyLeftColumn.forceUpdate();
-        if (this.yAxis === "Bleachers") {
-          this.mainGridPinnedYAxis.forceUpdate();
-        }
-      }
-    };
-
-    // Events change: affects spans in both y-axes
-    const handleEventsChange = () => {
-      const filters = useFilterDashboardStore.getState();
-      const allEvents = useDashboardEventsStore.getState().data;
-      const filteredEvents =
-        this.yAxis === "Events" && filters.stateProvinces.length > 0
-          ? filterEvents(allEvents, filters.stateProvinces)
-          : allEvents;
-      this.events = filteredEvents;
-      // Update renderers without structural rebuild
-      this.mainGridCellRenderer.setData(this.bleachers, this.events, this.yAxis);
-      this.mainGrid.forceUpdate();
-      if (this.yAxis === "Events") {
-        // row count may have changed; check and rebuild if needed
-        const rowsCountChanged = this.events.length !== (this as any).mainGrid?.rows;
-        if (rowsCountChanged) {
-          this.rebuildGrids();
-          return;
-        }
-      }
-    };
-
-    // Bleachers change: Only recompute if spans signature changed; otherwise do nothing and let renderer's own subscription patch visible cells (blocks/workTrackers)
-    const handleBleachersChange = () => {
-      console.log("handleBleachersChange");
-      const filters = useFilterDashboardStore.getState();
-      const allBleachers = useDashboardBleachersStore.getState().data;
-      const currentEvent = useCurrentEventStore.getState();
-      const selectedIdsForFilter = filters.optimizationMode ? currentEvent.bleacherIds ?? [] : [];
-      const filteredBleachers = filterSortPixiBleachers(
-        filters.homeBaseIds,
-        filters.winterHomeBaseIds,
-        filters.rows,
-        allBleachers,
-        selectedIdsForFilter,
-        false,
-        filters.optimizationMode,
-        filters.season,
-        filters.summerAssignedBleacherIds ?? [],
-        filters.winterAssignedBleacherIds ?? []
-      );
-
-      const prevIds = this.bleachers.map((b) => b.bleacherId).join(",");
-      const nextIds = filteredBleachers.map((b) => b.bleacherId).join(",");
-      if (prevIds !== nextIds) {
-        console.log("Bleacher IDS changed");
-        // Row set changed (rare on WT save) -> rebuild
-        this.bleachers = filteredBleachers;
-        this.rebuildGrids();
-        return;
-      }
-
-      if (this.yAxis === "Bleachers") {
-        const nextSig = computeSpanSignatures(filteredBleachers);
-        // Compare with previous signatures; if any changed, update spans
-        let spansChanged = false;
-        for (const b of filteredBleachers) {
-          if (this.spanSignaturesByBleacherId.get(b.bleacherId) !== nextSig.get(b.bleacherId)) {
-            spansChanged = true;
-            break;
-          }
-        }
-        // Update cache
-        this.spanSignaturesByBleacherId = nextSig;
-        this.bleachers = filteredBleachers;
-        if (spansChanged) {
-          console.log("spansChanged");
-          this.mainGridCellRenderer.setData(this.bleachers, this.events, this.yAxis);
-          this.mainGridPinYCellRenderer.setData(this.bleachers);
-          this.mainGrid.forceUpdate();
-          this.stickyLeftColumn.forceUpdate();
-          this.mainGridPinnedYAxis.forceUpdate();
-        }
-        // else: do nothing; renderer internal subscribers will update the changed cells
-      } else {
-        // yAxis = Events: bleachers changes don't affect rows; ignore here
-        this.bleachers = filteredBleachers;
-      }
+    const scheduleRecompute = () => {
+      if (this.recomputeQueued) return;
+      this.recomputeQueued = true;
+      requestAnimationFrame(() => {
+        this.recomputeQueued = false;
+        this.recompute();
+      });
     };
 
     // console.log("is this thing on?");
@@ -239,18 +137,151 @@ export class Dashboard {
     // Initialize span signatures for current rows
     this.spanSignaturesByBleacherId = computeSpanSignatures(this.bleachers);
 
+    // Subscribe once and coalesce recomputes
     try {
-      this.unsubFilters = useFilterDashboardStore.subscribe(() => handleFilterRelatedChange());
-      this.unsubCurrentEvent = useCurrentEventStore.subscribe(() => handleFilterRelatedChange());
+      this.unsubFilters = useFilterDashboardStore.subscribe(() => scheduleRecompute());
+      this.unsubCurrentEvent = useCurrentEventStore.subscribe(() => scheduleRecompute());
     } catch {}
     try {
-      this.unsubEvents = useDashboardEventsStore.subscribe(() => handleEventsChange());
+      this.unsubEvents = useDashboardEventsStore.subscribe(() => scheduleRecompute());
     } catch {}
     try {
-      this.unsubBleachers = useDashboardBleachersStore.subscribe(() => handleBleachersChange());
+      this.unsubBleachers = useDashboardBleachersStore.subscribe(() => scheduleRecompute());
     } catch {}
 
     // Note: initial scroll handling is performed in initGrids using opts
+  }
+
+  /**
+   * Handle window resize: log new dimensions and relevant grid metrics
+   */
+  private handleResize() {
+    // Defer work to the next frame so Pixi has applied its own resize
+    if (this.pendingResizeRAF) cancelAnimationFrame(this.pendingResizeRAF);
+    this.pendingResizeRAF = requestAnimationFrame(() => {
+      this.pendingResizeRAF = undefined;
+      // Ensure renderer resolution tracks current DPR before we decide to rebuild
+      try {
+        const dprNow = (typeof window !== "undefined" && (window as any).devicePixelRatio) || 1;
+        const renderer: any = (this.app as any)?.renderer;
+        if (renderer && renderer.resolution !== dprNow) {
+          renderer.resolution = dprNow;
+          // Apply to canvas immediately
+          (this.app as any).resize?.();
+        }
+      } catch {}
+      const screenWNow = this.app.screen.width;
+      const screenHNow = this.app.screen.height;
+      const dpr = (typeof window !== "undefined" && (window as any).devicePixelRatio) || 1;
+      const rendererRes = (this.app as any)?.renderer?.resolution ?? undefined;
+      // console.log("[Dashboard] resize frame", {
+      //   screen: { width: screenWNow, height: screenHNow },
+      //   resolution: { devicePixelRatio: dpr, renderer: rendererRes },
+      // });
+      const changed =
+        this.lastScreenW !== undefined &&
+        this.lastScreenH !== undefined &&
+        (this.lastScreenW !== screenWNow || this.lastScreenH !== screenHNow);
+
+      // If size changed since last frame, arm a rebuild but wait for a stable frame
+      if (changed) {
+        this.rebuildArmed = true;
+      } else if (this.rebuildArmed) {
+        // If size is stable and we were armed, perform the rebuild now
+        try {
+          console.log("rebuilding Grids");
+          this.rebuildGrids();
+        } catch {}
+        this.rebuildArmed = false;
+      }
+
+      // Update last seen size
+      this.lastScreenW = screenWNow;
+      this.lastScreenH = screenHNow;
+    });
+  }
+
+  /**
+   * Unified recompute: reads all stores, computes filtered data, and applies minimal updates
+   */
+  private recompute() {
+    const filters = useFilterDashboardStore.getState();
+    const prevYAxis = this.yAxis;
+    this.yAxis = filters.yAxis;
+
+    const allBleachers = useDashboardBleachersStore.getState().data;
+    const allEvents = useDashboardEventsStore.getState().data;
+    const currentEvent = useCurrentEventStore.getState();
+    const selectedIdsForFilter = filters.optimizationMode ? currentEvent.bleacherIds ?? [] : [];
+
+    const filteredBleachers = filterSortPixiBleachers(
+      filters.homeBaseIds,
+      filters.winterHomeBaseIds,
+      filters.rows,
+      allBleachers,
+      selectedIdsForFilter,
+      false,
+      filters.optimizationMode,
+      filters.season,
+      filters.summerAssignedBleacherIds ?? [],
+      filters.winterAssignedBleacherIds ?? []
+    );
+    const filteredEvents =
+      this.yAxis === "Events" && filters.stateProvinces.length > 0
+        ? filterEvents(allEvents, filters.stateProvinces)
+        : allEvents;
+
+    const prevIds = this.bleachers.map((b) => b.bleacherId).join(",");
+    const nextIds = filteredBleachers.map((b) => b.bleacherId).join(",");
+    const yAxisChanged = prevYAxis !== this.yAxis;
+    const rowCountChanged =
+      (this.yAxis === "Bleachers" ? filteredBleachers.length : filteredEvents.length) !==
+      (this.yAxis === "Bleachers" ? this.bleachers.length : this.events.length);
+
+    // Update snapshots
+    this.bleachers = filteredBleachers;
+    this.events = filteredEvents;
+
+    // Structural changes -> rebuild
+    if (yAxisChanged || rowCountChanged || prevIds !== nextIds) {
+      this.rebuildGrids();
+      // Reset signatures for new rows
+      const nextSig = new Map<number, string>();
+      for (const b of filteredBleachers) nextSig.set(b.bleacherId, "");
+      this.spanSignaturesByBleacherId = nextSig;
+      return;
+    }
+
+    // Non-structural updates
+    if (this.yAxis === "Events") {
+      // Content changed due to filters/events; refresh visible cells
+      this.mainGridCellRenderer.setData(this.bleachers, this.events, this.yAxis);
+      this.mainGrid.forceUpdate();
+      return;
+    }
+
+    // yAxis === "Bleachers": check spans signature changes to update renderers minimally
+    const nextSig = new Map<number, string>();
+    let spansChanged = false;
+    for (const b of filteredBleachers) {
+      const sig = (b.bleacherEvents || [])
+        .map((ev: any) => `${ev.eventId}:${ev.eventStart}:${ev.eventEnd}`)
+        .sort()
+        .join("|");
+      nextSig.set(b.bleacherId, sig);
+      if (this.spanSignaturesByBleacherId.get(b.bleacherId) !== sig) spansChanged = true;
+    }
+    this.spanSignaturesByBleacherId = nextSig;
+
+    if (spansChanged) {
+      // Update pinned Y (spans labels), and refresh left column; main grid events spans can be refreshed via setData
+      this.mainGridCellRenderer.setData(this.bleachers, this.events, this.yAxis);
+      this.mainGridPinYCellRenderer.setData(this.bleachers);
+      this.mainGrid.forceUpdate();
+      this.stickyLeftColumn.forceUpdate();
+      this.mainGridPinnedYAxis.forceUpdate();
+    }
+    // Else: do nothing; the MainGridCellRenderer's internal subscription handles block/work-tracker text/icon updates
   }
 
   /**
@@ -270,14 +301,14 @@ export class Dashboard {
       undefined
     );
     this.mainGridPinYCellRenderer = new PinnedYCellRenderer(app, this.bleachers, dates);
-    const leftColumnCellRenderer = new StickyLeftColumnCellRenderer(
+    this.leftColumnCellRenderer = new StickyLeftColumnCellRenderer(
       app,
       this.bleachers,
       this.yAxis,
       this.events
     );
-    const topRowCellRenderer = new StickyTopRowCellRenderer(app);
-    const topLeftCellRenderer = new TopLeftCellRenderer(app);
+    this.topRowCellRenderer = new StickyTopRowCellRenderer(app);
+    this.topLeftCellRenderer = new TopLeftCellRenderer(app);
 
     // Calculate viewport dimensions
     const viewportWidth = app.screen.width - BLEACHER_COLUMN_WIDTH;
@@ -294,7 +325,7 @@ export class Dashboard {
       cellHeight: HEADER_ROW_HEIGHT,
       gridWidth: BLEACHER_COLUMN_WIDTH,
       gridHeight: HEADER_ROW_HEIGHT,
-      cellRenderer: topLeftCellRenderer,
+      cellRenderer: this.topLeftCellRenderer,
       x: 0,
       y: 0,
       showScrollbar: false,
@@ -309,7 +340,7 @@ export class Dashboard {
       cellHeight: HEADER_ROW_HEIGHT,
       gridWidth: viewportWidth,
       gridHeight: HEADER_ROW_HEIGHT,
-      cellRenderer: topRowCellRenderer,
+      cellRenderer: this.topRowCellRenderer,
       x: BLEACHER_COLUMN_WIDTH,
       y: 0,
       showScrollbar: false,
@@ -324,7 +355,7 @@ export class Dashboard {
       cellHeight: CELL_HEIGHT,
       gridWidth: BLEACHER_COLUMN_WIDTH,
       gridHeight: viewportHeight,
-      cellRenderer: leftColumnCellRenderer,
+      cellRenderer: this.leftColumnCellRenderer,
       x: 0,
       y: HEADER_ROW_HEIGHT,
       showScrollbar: false,
@@ -464,6 +495,27 @@ export class Dashboard {
     try {
       this.stickyTopLeftCell?.destroy();
     } catch {}
+
+    //   private mainGridPinYCellRenderer!: PinnedYCellRenderer; // Store reference for scroll updates
+    // private mainGridCellRenderer!: MainGridCellRenderer; // Store reference for scroll updates
+    // private leftColumnCellRenderer!: StickyLeftColumnCellRenderer;
+    // private topRowCellRenderer!: StickyTopRowCellRenderer;
+    // private topLeftCellRenderer!: TopLeftCellRenderer;
+    try {
+      this.mainGridPinYCellRenderer.destroy();
+    } catch {}
+    try {
+      this.mainGridCellRenderer.destroy();
+    } catch {}
+    try {
+      this.leftColumnCellRenderer.destroy();
+    } catch {}
+    try {
+      this.topRowCellRenderer.destroy();
+    } catch {}
+    try {
+      this.topLeftCellRenderer.destroy();
+    } catch {}
   }
 
   /**
@@ -529,6 +581,16 @@ export class Dashboard {
    * Clean up resources
    */
   destroy() {
+    try {
+      if (this.pendingResizeRAF) cancelAnimationFrame(this.pendingResizeRAF);
+      this.pendingResizeRAF = undefined;
+    } catch {}
+    try {
+      if (this.boundResizeHandler) {
+        window.removeEventListener("resize", this.boundResizeHandler);
+        this.boundResizeHandler = undefined;
+      }
+    } catch {}
     try {
       this.unsubCurrentEvent?.();
     } catch {}

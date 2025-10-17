@@ -94,21 +94,21 @@ export default function Page() {
   }
 
   return (
-    <div className="h-full grid grid-rows-[auto_1fr] gap-2 overflow-hidden">
+    <div className="h-full grid grid-rows-[auto_1fr] gap-2 overflow-hidden min-w-0">
       <CellEditor onWorkTrackerOpen={handleWorkTrackerOpen} />
       <WorkTrackerModal
         selectedWorkTracker={selectedWorkTracker}
         setSelectedWorkTracker={setSelectedWorkTracker}
         setSelectedBlock={() => {}} // Not used in PixiJS version
       />
-      <div>
+      <div className="min-w-0">
         <div className="flex justify-between items-center pt-2 pl-2 pr-2">
           <DashboardOptions />
           <CreateEventButton />
         </div>
         <EventConfiguration showSetupTeardown={false} />
       </div>
-      <div className="min-h-0">
+      <div className="min-h-0 min-w-0 overflow-hidden">
         <DashboardApp
           summerAssignedBleacherIds={data.summerAssignedBleacherIds}
           winterAssignedBleacherIds={data.winterAssignedBleacherIds}

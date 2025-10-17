@@ -63,4 +63,9 @@ export class StickyTopRowCellRenderer implements ICellRenderer {
     parent.addChild(headerCellTexture);
     return parent;
   }
+
+  destroy() {
+    this.baker.destroyAll();
+    // this.assetManager.destroy();
+  }
 }
