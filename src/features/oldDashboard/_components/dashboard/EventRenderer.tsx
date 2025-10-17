@@ -164,6 +164,7 @@ export default function EventRenderer({
               alerts: [], // will be calculated on load
               goodshuffleUrl: event.goodshuffleUrl,
               ownerUserId: event.ownerUserId,
+              hueOpen: false,
             });
           }}
         >
