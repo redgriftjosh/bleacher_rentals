@@ -52,7 +52,7 @@ export class Dashboard {
   private dates: string[] = [];
   private contentColumns = 0;
   // Track minimal signature of spans per bleacher to detect when recomputation is needed
-  private spanSignaturesByBleacherId: Map<number, string> = new Map();
+  // private spanSignaturesByBleacherId: Map<number, string> = new Map();
   // Debounce/coalesce incoming changes
   private recomputeQueued = false;
   // Track and cleanup resize listeners
@@ -135,24 +135,14 @@ export class Dashboard {
     // console.log("is this thing on?");
 
     // Initialize span signatures for current rows
-    this.spanSignaturesByBleacherId = computeSpanSignatures(this.bleachers);
+    // not important until we want to compare with previous state to conditionally re-render things.
+    // this.spanSignaturesByBleacherId = computeSpanSignatures(this.bleachers);
 
     // Subscribe once and coalesce recomputes
     this.unsubFilters = useFilterDashboardStore.subscribe(() => scheduleRecompute());
     this.unsubCurrentEvent = useCurrentEventStore.subscribe(() => scheduleRecompute());
     this.unsubEvents = useDashboardEventsStore.subscribe(() => scheduleRecompute());
     this.unsubBleachers = useDashboardBleachersStore.subscribe(() => scheduleRecompute());
-
-    // try {
-    //   this.unsubFilters = useFilterDashboardStore.subscribe(() => scheduleRecompute());
-    //   this.unsubCurrentEvent = useCurrentEventStore.subscribe(() => scheduleRecompute());
-    // } catch {}
-    // try {
-    //   this.unsubEvents = useDashboardEventsStore.subscribe(() => scheduleRecompute());
-    // } catch {}
-    // try {
-    //   this.unsubBleachers = useDashboardBleachersStore.subscribe(() => scheduleRecompute());
-    // } catch {}
 
     // Note: initial scroll handling is performed in initGrids using opts
   }
@@ -191,13 +181,6 @@ export class Dashboard {
       this.yAxis === "Events" && filters.stateProvinces.length > 0
         ? filterEvents(allEvents, filters.stateProvinces)
         : allEvents;
-
-    const prevIds = this.bleachers.map((b) => b.bleacherId).join(",");
-    const nextIds = filteredBleachers.map((b) => b.bleacherId).join(",");
-    const yAxisChanged = prevYAxis !== this.yAxis;
-    const rowCountChanged =
-      (this.yAxis === "Bleachers" ? filteredBleachers.length : filteredEvents.length) !==
-      (this.yAxis === "Bleachers" ? this.bleachers.length : this.events.length);
 
     // Update snapshots
     this.bleachers = filteredBleachers;
