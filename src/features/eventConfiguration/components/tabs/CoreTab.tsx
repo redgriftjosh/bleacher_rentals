@@ -90,16 +90,17 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
       } gap-4`}
     >
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Event Name</label>
+        <label className="block text-sm font-medium text-black/70 mb-1">Event Name</label>
         <input
           type="text"
-          className="w-full p-2 border rounded"
+          className="bg-white w-full p-2 border rounded"
           placeholder="Enter event name"
           value={currentEventStore.eventName}
           onChange={(e) => currentEventStore.setField("eventName", e.target.value)}
         />
-        <label className="block mt-1 text-sm font-medium text-gray-700">Address</label>
+        <label className="block mt-1 text-sm font-medium text-black/70">Address</label>
         <AddressAutocomplete
+          className="bg-white "
           onAddressSelect={(data) =>
             currentEventStore.setField("addressData", {
               ...data,
@@ -110,18 +111,18 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Event Start</label>
+        <label className="block text-sm font-medium text-black/70 mb-1">Event Start</label>
         <input
           type="date"
-          className="w-full p-2 border rounded"
+          className="bg-white w-full p-2 border rounded"
           value={currentEventStore.eventStart}
           onChange={(e) => currentEventStore.setField("eventStart", e.target.value)}
           max={currentEventStore.eventEnd || undefined}
         />
-        <label className="block text-sm font-medium text-gray-700 mt-1">Event End</label>
+        <label className="block text-sm font-medium text-black/70 mt-1">Event End</label>
         <input
           type="date"
-          className="w-full p-2 border rounded"
+          className="bg-white w-full p-2 border rounded"
           value={currentEventStore.eventEnd}
           onChange={(e) => currentEventStore.setField("eventEnd", e.target.value)}
           min={currentEventStore.eventStart || undefined}
@@ -131,12 +132,12 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
         <div>
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1 flex-1 ">
+              <label className="block text-sm font-medium text-black/70 mb-1 flex-1 ">
                 Setup Start
               </label>
               <input
                 type="date"
-                className={`w-full p-2 border rounded flex-1 ${
+                className={`bg-white w-full p-2 border rounded flex-1 ${
                   currentEventStore.sameDaySetup
                     ? "bg-gray-100 text-gray-100 cursor-not-allowed"
                     : ""
@@ -162,10 +163,10 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
           </div>
           <div className="flex gap-4 mt-1">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 flex-1">Teardown End</label>
+              <label className="block text-sm font-medium text-black/70 flex-1">Teardown End</label>
               <input
                 type="date"
-                className={`w-full p-2 border rounded flex-1 ${
+                className={`bg-white w-full p-2 border rounded flex-1 ${
                   currentEventStore.sameDayTeardown
                     ? "bg-gray-100 text-gray-100 cursor-not-allowed"
                     : ""
@@ -194,15 +195,15 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
         </div>
       )}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Good Shuffle</label>
+        <label className="block text-sm font-medium text-black/70 mb-1">Good Shuffle</label>
         <input
           type="text"
-          className="w-full p-2 border rounded"
+          className="bg-white w-full p-2 border rounded"
           placeholder="Enter goodshuffle url"
           value={currentEventStore.goodshuffleUrl ?? ""}
           onChange={(e) => currentEventStore.setField("goodshuffleUrl", e.target.value)}
         />
-        <label className="block text-sm font-medium text-gray-700 mt-1">Owner</label>
+        <label className="block text-sm font-medium text-black/70 mt-1">Owner</label>
         <Dropdown
           options={ownerOptions}
           selected={

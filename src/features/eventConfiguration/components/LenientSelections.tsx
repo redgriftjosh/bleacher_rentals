@@ -18,11 +18,11 @@ export const LenientSelections = () => {
 
         {currentEventStore.lenient ? (
           <div className="flex-1">
-            <label className="block mt-1 text-sm font-medium text-gray-700">Total Seats</label>
+            <label className="block mt-1 text-sm font-medium text-black/70">Total Seats</label>
             <input
               type="number"
               min="0"
-              className="block w-full border rounded p-2"
+              className="bg-white block w-full border rounded p-2"
               value={currentEventStore.seats ?? ""}
               onChange={(e) => currentEventStore.setField("seats", Number(e.target.value))}
               required
@@ -31,33 +31,33 @@ export const LenientSelections = () => {
         ) : (
           <>
             <div className="flex-1">
-              <label className="block mt-1 text-sm font-medium text-gray-700">7-Row</label>
+              <label className="block mt-1 text-sm font-medium text-black/70">7-Row</label>
               <input
                 type="number"
                 min="0"
-                className="block w-full border rounded p-2"
+                className="bg-white block w-full border rounded p-2"
                 value={currentEventStore.sevenRow ?? ""}
                 onChange={(e) => currentEventStore.setField("sevenRow", Number(e.target.value))}
                 required
               />
             </div>
             <div className="flex-1">
-              <label className="block mt-1 text-sm font-medium text-gray-700">10-Row</label>
+              <label className="block mt-1 text-sm font-medium text-black/70">10-Row</label>
               <input
                 type="number"
                 min="0"
-                className="block w-full border rounded p-2"
+                className="bg-white block w-full border rounded p-2"
                 value={currentEventStore.tenRow ?? ""}
                 onChange={(e) => currentEventStore.setField("tenRow", Number(e.target.value))}
                 required
               />
             </div>
             <div className="flex-1">
-              <label className="block mt-1 text-sm font-medium text-gray-700">15-Row</label>
+              <label className="block mt-1 text-sm font-medium text-black/70">15-Row</label>
               <input
                 type="number"
                 min="0"
-                className="block w-full border rounded p-2"
+                className="bg-white block w-full border rounded p-2"
                 value={currentEventStore.fifteenRow ?? ""}
                 onChange={(e) => currentEventStore.setField("fifteenRow", Number(e.target.value))}
                 required

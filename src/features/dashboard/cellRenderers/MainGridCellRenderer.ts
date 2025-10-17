@@ -13,6 +13,7 @@ import { Bleacher, DashboardEvent } from "../types";
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
 import { useSelectedBlockStore } from "../state/useSelectedBlock";
 import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useWorkTrackerSelectionStore";
+import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 
 /**
  * CellRenderer for the main scrollable grid area
@@ -64,7 +65,22 @@ export class MainGridCellRenderer implements ICellRenderer {
 
     // Calculate event spans once during construction depending on yAxis
     if (yAxis === "Bleachers") {
-      const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, dates);
+      const sel = useCurrentEventStore.getState();
+      const selected =
+        sel.eventStart && sel.eventEnd
+          ? {
+              eventId: sel.eventId ?? null,
+              bleacherIds: sel.bleacherIds ?? [],
+              eventStart: sel.eventStart,
+              eventEnd: sel.eventEnd,
+              eventName: sel.eventName || undefined,
+              address: sel.addressData?.address || undefined,
+              hslHue: sel.hslHue ?? undefined,
+              selectedStatus: sel.selectedStatus,
+              goodshuffleUrl: sel.goodshuffleUrl ?? null,
+            }
+          : undefined;
+      const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, dates, { selected });
       this.spansByRow = spansByRow;
     } else {
       this.spansByRow = this.calculateSpansByEvents(events, dates);
@@ -148,7 +164,22 @@ export class MainGridCellRenderer implements ICellRenderer {
     this.latestBleachersById = new Map(bleachers.map((b) => [b.bleacherId, b] as const));
 
     if (yAxis === "Bleachers") {
-      const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, this.dates);
+      const sel = useCurrentEventStore.getState();
+      const selected =
+        sel.eventStart && sel.eventEnd
+          ? {
+              eventId: sel.eventId ?? null,
+              bleacherIds: sel.bleacherIds ?? [],
+              eventStart: sel.eventStart,
+              eventEnd: sel.eventEnd,
+              eventName: sel.eventName || undefined,
+              address: sel.addressData?.address || undefined,
+              hslHue: sel.hslHue ?? undefined,
+              selectedStatus: sel.selectedStatus,
+              goodshuffleUrl: sel.goodshuffleUrl ?? null,
+            }
+          : undefined;
+      const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, this.dates, { selected });
       this.spansByRow = spansByRow;
     } else {
       this.spansByRow = this.calculateSpansByEvents(events, this.dates);
@@ -233,6 +264,7 @@ export class MainGridCellRenderer implements ICellRenderer {
     // Check if this cell has an event (bleachers or events mode)
     const eventInfo = EventsUtil.getCellEventInfo(row, col, this.spansByRow);
 
+    // --- Normal event rendering ---
     if (eventInfo.hasEvent && eventInfo.span) {
       // Use passed firstVisibleColumn or calculate from current scroll position
       const currentFirstVisibleColumn =

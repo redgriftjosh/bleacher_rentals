@@ -22,6 +22,8 @@ export type BleacherEvent = {
   hslHue: number | null;
   booked: boolean;
   goodshuffleUrl: string | null;
+  // Mark spans injected from current selection (not yet persisted)
+  isSelected?: boolean;
 };
 
 export type BleacherBlock = {

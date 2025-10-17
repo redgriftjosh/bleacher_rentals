@@ -73,14 +73,42 @@ export class EventsUtil {
    */
   public static calculateEventSpans(
     bleachers: Bleacher[],
-    dates: string[]
+    dates: string[],
+    opts?: {
+      // Optional injection of a currently selected event to preview across selected bleachers
+      selected?: {
+        eventId?: number | null;
+        bleacherIds: number[];
+        eventStart: string;
+        eventEnd: string;
+        eventName?: string;
+        address?: string;
+        hslHue?: number | null;
+        selectedStatus?: "Quoted" | "Booked";
+        goodshuffleUrl?: string | null;
+      } | null;
+    }
   ): { spansByRow: EventSpanType[][]; dateToIndex: Map<string, number> } {
     const dateToIndex = new Map(dates.map((d, i) => [d, i]));
+    const selected = opts?.selected;
+    const selectedStartISO = selected?.eventStart
+      ? DateTime.fromISO(selected.eventStart).toISODate()
+      : null;
+    const selectedEndISO = selected?.eventEnd
+      ? DateTime.fromISO(selected.eventEnd).toISODate()
+      : null;
+    const selectedStartCol =
+      selectedStartISO != null ? dateToIndex.get(selectedStartISO) : undefined;
+    const selectedEndCol = selectedEndISO != null ? dateToIndex.get(selectedEndISO) : undefined;
 
     const spansByRow = bleachers.map((bleacher, rowIndex) => {
       const spans: EventSpanType[] = [];
 
       for (const ev of bleacher.bleacherEvents ?? []) {
+        // If editing an existing event, exclude persisted spans for that eventId
+        if (selected?.eventId != null && ev.eventId === selected.eventId) {
+          continue;
+        }
         // Convert dates to indices
         const startISO = DateTime.fromISO(ev.eventStart).toISODate();
         const endISO = DateTime.fromISO(ev.eventEnd).toISODate();
@@ -93,6 +121,20 @@ export class EventsUtil {
 
         // Only include events that fall within our date range
         if (startCol !== undefined && endCol !== undefined) {
+          // If we have a current selection and this bleacher is selected, filter out any
+          // original event that exactly matches the selected event's date range.
+          // This avoids double-rendering when previewing the same event before save.
+          const isSelectedBleacher = !!selected?.bleacherIds?.includes(bleacher.bleacherId);
+          const matchesSelectedRange =
+            isSelectedBleacher &&
+            selectedStartCol !== undefined &&
+            selectedEndCol !== undefined &&
+            startCol === selectedStartCol &&
+            endCol === selectedEndCol;
+          if (matchesSelectedRange) {
+            // skip this original span; it will be injected below as selected
+            continue;
+          }
           spans.push({
             start: startCol,
             end: endCol,
@@ -103,6 +145,29 @@ export class EventsUtil {
             // console.log("89 startCol:", startCol, "endCol", endCol);
           }
         }
+      }
+
+      // Inject a synthetic selected event span for preview if this bleacher is selected
+      if (
+        selected &&
+        Array.isArray(selected.bleacherIds) &&
+        selected.bleacherIds.includes(bleacher.bleacherId) &&
+        selectedStartCol !== undefined &&
+        selectedEndCol !== undefined
+      ) {
+        const ev = {
+          eventId: selected.eventId ?? -1,
+          bleacherEventId: -1,
+          eventName: selected.eventName || "New Event",
+          address: selected.address || "No address",
+          eventStart: selected.eventStart,
+          eventEnd: selected.eventEnd,
+          hslHue: selected.hslHue ?? 220,
+          booked: (selected.selectedStatus ?? "Quoted") === "Booked",
+          goodshuffleUrl: selected.goodshuffleUrl ?? null,
+          isSelected: true,
+        } as any; // BleacherEvent compatible
+        spans.push({ start: selectedStartCol, end: selectedEndCol, ev, rowIndex });
       }
 
       // Sort spans by start column for consistent rendering
