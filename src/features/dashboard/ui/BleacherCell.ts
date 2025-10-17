@@ -40,6 +40,21 @@ export class BleacherCell extends Container {
   private toggle: BleacherCellToggle; // added toggle
   private onToggle?: (bleacherId: number) => void;
 
+  // Map bleacherRows to Tailwind-like colors:
+  // 7 -> green-700 (#15803d), 10 -> red-700 (#b91c1c), 15 -> yellow-500 (#eab308), else black
+  private getBleacherNumberColor(rows?: number): number {
+    switch (rows) {
+      case 7:
+        return 0x15803d; // green-700
+      case 10:
+        return 0xb91c1c; // red-700
+      case 15:
+        return 0xeab308; // yellow-500
+      default:
+        return 0x000000; // default black
+    }
+  }
+
   /**
    * Creates a cell that renders to a single `Sprite` using textures from `baker`.
    * @param baker - Shared `Baker` instance that caches baked `RenderTexture`s.
@@ -124,7 +139,11 @@ export class BleacherCell extends Container {
   private buildBleacherContainer(c: Container, b: Bleacher) {
     const bleacherNumber = new Text({
       text: String(b.bleacherNumber),
-      style: { fill: 0xf0b000, fontSize: 16, fontWeight: "bold" },
+      style: {
+        fill: this.getBleacherNumberColor(b.bleacherRows),
+        fontSize: 16,
+        fontWeight: "bold",
+      },
     });
     bleacherNumber.position.set(3, 2);
 
