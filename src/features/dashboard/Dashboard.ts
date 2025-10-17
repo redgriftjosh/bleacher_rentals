@@ -97,6 +97,7 @@ export class Dashboard {
         : allEvents;
     this.bleachers = filteredBleachers;
     this.events = filteredEvents;
+    // this.recompute();
 
     this.initGrids(opts);
 
@@ -137,16 +138,21 @@ export class Dashboard {
     this.spanSignaturesByBleacherId = computeSpanSignatures(this.bleachers);
 
     // Subscribe once and coalesce recomputes
-    try {
-      this.unsubFilters = useFilterDashboardStore.subscribe(() => scheduleRecompute());
-      this.unsubCurrentEvent = useCurrentEventStore.subscribe(() => scheduleRecompute());
-    } catch {}
-    try {
-      this.unsubEvents = useDashboardEventsStore.subscribe(() => scheduleRecompute());
-    } catch {}
-    try {
-      this.unsubBleachers = useDashboardBleachersStore.subscribe(() => scheduleRecompute());
-    } catch {}
+    this.unsubFilters = useFilterDashboardStore.subscribe(() => scheduleRecompute());
+    this.unsubCurrentEvent = useCurrentEventStore.subscribe(() => scheduleRecompute());
+    this.unsubEvents = useDashboardEventsStore.subscribe(() => scheduleRecompute());
+    this.unsubBleachers = useDashboardBleachersStore.subscribe(() => scheduleRecompute());
+
+    // try {
+    //   this.unsubFilters = useFilterDashboardStore.subscribe(() => scheduleRecompute());
+    //   this.unsubCurrentEvent = useCurrentEventStore.subscribe(() => scheduleRecompute());
+    // } catch {}
+    // try {
+    //   this.unsubEvents = useDashboardEventsStore.subscribe(() => scheduleRecompute());
+    // } catch {}
+    // try {
+    //   this.unsubBleachers = useDashboardBleachersStore.subscribe(() => scheduleRecompute());
+    // } catch {}
 
     // Note: initial scroll handling is performed in initGrids using opts
   }
@@ -196,47 +202,7 @@ export class Dashboard {
     // Update snapshots
     this.bleachers = filteredBleachers;
     this.events = filteredEvents;
-
-    // Structural changes -> rebuild
-    if (yAxisChanged || rowCountChanged || prevIds !== nextIds) {
-      this.rebuildGrids();
-      // Reset signatures for new rows
-      const nextSig = new Map<number, string>();
-      for (const b of filteredBleachers) nextSig.set(b.bleacherId, "");
-      this.spanSignaturesByBleacherId = nextSig;
-      return;
-    }
-
-    // Non-structural updates
-    if (this.yAxis === "Events") {
-      // Content changed due to filters/events; refresh visible cells
-      this.mainGridCellRenderer.setData(this.bleachers, this.events, this.yAxis);
-      this.mainGrid.forceUpdate();
-      return;
-    }
-
-    // yAxis === "Bleachers": check spans signature changes to update renderers minimally
-    const nextSig = new Map<number, string>();
-    let spansChanged = false;
-    for (const b of filteredBleachers) {
-      const sig = (b.bleacherEvents || [])
-        .map((ev: any) => `${ev.eventId}:${ev.eventStart}:${ev.eventEnd}`)
-        .sort()
-        .join("|");
-      nextSig.set(b.bleacherId, sig);
-      if (this.spanSignaturesByBleacherId.get(b.bleacherId) !== sig) spansChanged = true;
-    }
-    this.spanSignaturesByBleacherId = nextSig;
-
-    if (spansChanged) {
-      // Update pinned Y (spans labels), and refresh left column; main grid events spans can be refreshed via setData
-      this.mainGridCellRenderer.setData(this.bleachers, this.events, this.yAxis);
-      this.mainGridPinYCellRenderer.setData(this.bleachers);
-      this.mainGrid.forceUpdate();
-      this.stickyLeftColumn.forceUpdate();
-      this.mainGridPinnedYAxis.forceUpdate();
-    }
-    // Else: do nothing; the MainGridCellRenderer's internal subscription handles block/work-tracker text/icon updates
+    this.rebuildGrids(); // rebuild grids no matter what for now. Removes any animations for displaying new components.
   }
 
   /**
