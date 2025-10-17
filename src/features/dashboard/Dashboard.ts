@@ -14,6 +14,7 @@ import {
   HEADER_ROW_HEIGHT,
 } from "./values/constants";
 import { getColumnsAndDates } from "./util/scrollbar";
+import { ResizeManager } from "./util/ResizeManager";
 import { useDashboardBleachersStore } from "./state/useDashboardBleachersStore";
 import { useDashboardEventsStore } from "./state/useDashboardEventsStore";
 import { useFilterDashboardStore } from "../dashboardOptions/useFilterDashboardStore";
@@ -55,13 +56,8 @@ export class Dashboard {
   // Debounce/coalesce incoming changes
   private recomputeQueued = false;
   // Track and cleanup resize listeners
-  private boundResizeHandler?: () => void;
-  // Coalesce rebuild after resize
-  private pendingResizeRAF?: number;
-  // Track last observed screen size and an arm flag for one-frame debounce
-  private lastScreenW?: number;
-  private lastScreenH?: number;
-  private rebuildArmed = false;
+  // Resize handling via utility
+  private resizeManager?: ResizeManager;
 
   constructor(
     app: Application,
@@ -104,11 +100,14 @@ export class Dashboard {
 
     this.initGrids(opts);
 
-    // Listen to window resize and log current dimensions/metrics
-    this.boundResizeHandler = () => this.handleResize();
-    try {
-      window.addEventListener("resize", this.boundResizeHandler);
-    } catch {}
+    // Initialize ResizeManager to handle resize lifecycle
+    this.resizeManager = new ResizeManager(this.app, {
+      onStableResize: () => {
+        this.rebuildGrids();
+      },
+      log: false,
+    });
+    this.resizeManager.start();
 
     // Unified recompute method
     const computeSpanSignatures = (bleachers: Bleacher[]): Map<number, string> => {
@@ -155,51 +154,7 @@ export class Dashboard {
   /**
    * Handle window resize: log new dimensions and relevant grid metrics
    */
-  private handleResize() {
-    // Defer work to the next frame so Pixi has applied its own resize
-    if (this.pendingResizeRAF) cancelAnimationFrame(this.pendingResizeRAF);
-    this.pendingResizeRAF = requestAnimationFrame(() => {
-      this.pendingResizeRAF = undefined;
-      // Ensure renderer resolution tracks current DPR before we decide to rebuild
-      try {
-        const dprNow = (typeof window !== "undefined" && (window as any).devicePixelRatio) || 1;
-        const renderer: any = (this.app as any)?.renderer;
-        if (renderer && renderer.resolution !== dprNow) {
-          renderer.resolution = dprNow;
-          // Apply to canvas immediately
-          (this.app as any).resize?.();
-        }
-      } catch {}
-      const screenWNow = this.app.screen.width;
-      const screenHNow = this.app.screen.height;
-      const dpr = (typeof window !== "undefined" && (window as any).devicePixelRatio) || 1;
-      const rendererRes = (this.app as any)?.renderer?.resolution ?? undefined;
-      // console.log("[Dashboard] resize frame", {
-      //   screen: { width: screenWNow, height: screenHNow },
-      //   resolution: { devicePixelRatio: dpr, renderer: rendererRes },
-      // });
-      const changed =
-        this.lastScreenW !== undefined &&
-        this.lastScreenH !== undefined &&
-        (this.lastScreenW !== screenWNow || this.lastScreenH !== screenHNow);
-
-      // If size changed since last frame, arm a rebuild but wait for a stable frame
-      if (changed) {
-        this.rebuildArmed = true;
-      } else if (this.rebuildArmed) {
-        // If size is stable and we were armed, perform the rebuild now
-        try {
-          console.log("rebuilding Grids");
-          this.rebuildGrids();
-        } catch {}
-        this.rebuildArmed = false;
-      }
-
-      // Update last seen size
-      this.lastScreenW = screenWNow;
-      this.lastScreenH = screenHNow;
-    });
-  }
+  // resize is managed by ResizeManager
 
   /**
    * Unified recompute: reads all stores, computes filtered data, and applies minimal updates
@@ -582,14 +537,7 @@ export class Dashboard {
    */
   destroy() {
     try {
-      if (this.pendingResizeRAF) cancelAnimationFrame(this.pendingResizeRAF);
-      this.pendingResizeRAF = undefined;
-    } catch {}
-    try {
-      if (this.boundResizeHandler) {
-        window.removeEventListener("resize", this.boundResizeHandler);
-        this.boundResizeHandler = undefined;
-      }
+      this.resizeManager?.destroy();
     } catch {}
     try {
       this.unsubCurrentEvent?.();
