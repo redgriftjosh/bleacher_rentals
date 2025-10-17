@@ -22,6 +22,9 @@ import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
 import { useCurrentEventStore } from "../state/useCurrentEventStore";
 import { createEvent, deleteEvent } from "@/features/dashboard/db/client/db";
 import { updateEvent } from "@/features/dashboard/db/client/updateEvent";
+import { FetchDashboardBleachers } from "@/features/dashboard/db/client/bleachers";
+import { FetchDashboardEvents } from "@/features/dashboard/db/client/events";
+import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
@@ -33,20 +36,29 @@ type Props = {
 export const EventConfiguration = ({ showSetupTeardown }: Props) => {
   const currentEventStore = useCurrentEventStore();
   const [activeTab, setActiveTab] = useState<Tab>("Core");
-  const { getToken } = useAuth();
+  const { getToken, userId, isLoaded } = useAuth();
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
   const bumpRefresh = useDataRefreshTokenStore((s) => s.bump);
+  const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
+
+  // Refresh zustand stores directly without invalidating the page query
+  const refreshDashboardStores = async (token: string | null) => {
+    if (!token || !isLoaded || !userId) return;
+    await Promise.all([
+      FetchDashboardBleachers(token),
+      FetchDashboardEvents(token, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
+    ]);
+  };
 
   const handleCreateEvent = async () => {
     const state = useCurrentEventStore.getState();
     const token = await getToken({ template: "supabase" });
     try {
       await createEvent(state, token, user ?? null);
-      // Invalidate & immediately refetch dashboard data so UI reflects new event
-      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachersAndEvents"] });
-      bumpRefresh();
+      // Refresh zustand stores directly to update Pixi without React remount
+      await refreshDashboardStores(token ?? null);
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to create event:", error);
@@ -60,8 +72,7 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
     const token = await getToken({ template: "supabase" });
     try {
       await updateEvent(state, token, user ?? null, bleacherEvents);
-      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachersAndEvents"] });
-      bumpRefresh();
+      await refreshDashboardStores(token ?? null);
       currentEventStore.resetForm();
       setLoading(false);
     } catch (error) {
@@ -76,8 +87,7 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
     const token = await getToken({ template: "supabase" });
     try {
       await deleteEvent(state.eventId, state.addressData?.state ?? "", token, user ?? null);
-      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachersAndEvents"] });
-      bumpRefresh();
+      await refreshDashboardStores(token ?? null);
       currentEventStore.resetForm();
       setLoading(false);
     } catch (error) {
@@ -90,7 +100,7 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
   return (
     <div
       className={`overflow-hidden transition-all duration-1000 ease-in-out ml-2 ${
-        showPanel ? "max-h-[500px] mb-2" : "max-h-0"
+        showPanel ? "max-h-[500px]" : "-mt-2 max-h-0"
       }`}
     >
       <div className="bg-white p-4 shadow-lg border border-gray-200">

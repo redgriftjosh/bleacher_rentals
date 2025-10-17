@@ -23,7 +23,7 @@ export class PinnedSection extends HoverableBakedSprite {
         const eventCellLabel = new PinnableSection(eventInfo.span!, app, baker);
         container.addChild(eventCellLabel);
 
-        console.log("FirstEventCell content built");
+        // console.log("FirstEventCell content built");
       }
       // dimensions
     );

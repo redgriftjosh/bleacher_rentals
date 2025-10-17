@@ -10,7 +10,9 @@ import { Graphics, Sprite } from "pixi.js";
 import { TruckIcon } from "../ui/event/TruckIcon";
 import { DateTime } from "luxon";
 import { Bleacher, DashboardEvent } from "../types";
+import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
 import { useSelectedBlockStore } from "../state/useSelectedBlock";
+import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useWorkTrackerSelectionStore";
 
 /**
  * CellRenderer for the main scrollable grid area
@@ -30,12 +32,17 @@ export class MainGridCellRenderer implements ICellRenderer {
   private cellWidth: number = 0; // Store the cell width from main grid
   private cellEditor?: CellEditor; // Cell editor instance
   private yAxis: "Bleachers" | "Events" = "Bleachers";
+  private visibleCells: Map<
+    string,
+    { parent: Container; w: number; h: number; firstVisibleColumn?: number }
+  > = new Map();
+  private unsubBleachers?: () => void;
+  // Maintain a stable mapping from row index -> bleacherId (from initial input)
+  private rowBleacherIds: number[];
+  // Always-up-to-date bleacher snapshot from the store, keyed by id
+  private latestBleachersById: Map<number, Bleacher>;
 
-  private onWorkTrackerSelect?: (workTracker: {
-    work_tracker_id: number;
-    bleacher_id: number;
-    date: string;
-  }) => void;
+  // No external callback; selection is pushed to a zustand store
 
   constructor(
     app: Application,
@@ -43,21 +50,17 @@ export class MainGridCellRenderer implements ICellRenderer {
     events: DashboardEvent[],
     dates: string[],
     yAxis: "Bleachers" | "Events",
-    opts?: {
-      onWorkTrackerSelect?: (workTracker: {
-        work_tracker_id: number;
-        bleacher_id: number;
-        date: string;
-      }) => void;
-    }
+    opts?: undefined
   ) {
     this.app = app;
     this.baker = new Baker(app);
     this.bleachers = bleachers;
     this.events = events;
     this.dates = dates;
-    this.onWorkTrackerSelect = opts?.onWorkTrackerSelect;
     this.yAxis = yAxis;
+    // Stable mapping for rows
+    this.rowBleacherIds = bleachers.map((b) => b.bleacherId);
+    this.latestBleachersById = new Map(bleachers.map((b) => [b.bleacherId, b] as const));
 
     // Calculate event spans once during construction depending on yAxis
     if (yAxis === "Bleachers") {
@@ -65,6 +68,90 @@ export class MainGridCellRenderer implements ICellRenderer {
       this.spansByRow = spansByRow;
     } else {
       this.spansByRow = this.calculateSpansByEvents(events, dates);
+    }
+
+    // Subscribe to dashboard bleachers store to update block text dynamically
+    try {
+      let prevData = useDashboardBleachersStore.getState().data;
+      this.unsubBleachers = useDashboardBleachersStore.subscribe((s) => {
+        const nextData = s.data;
+        if (this.yAxis !== "Bleachers") {
+          prevData = nextData;
+          return;
+        }
+
+        // Map current ROW -> bleacherId to row indices (stable, based on initial input)
+        const idToRow = new Map<number, number>();
+        this.rowBleacherIds.forEach((id, i) => idToRow.set(id, i));
+        const prevById = new Map(prevData.map((b) => [b.bleacherId, b] as const));
+
+        // For each bleacher present in next data, compare block texts by date
+        for (const nextBleacher of nextData) {
+          const rowIndex = idToRow.get(nextBleacher.bleacherId);
+          if (rowIndex === undefined) continue;
+          const prevBleacher = prevById.get(nextBleacher.bleacherId);
+          const prevBlocksByDate = new Map(
+            (prevBleacher?.blocks ?? []).map((bl) => [bl.date, bl.text] as const)
+          );
+          const nextBlocksByDate = new Map(
+            (nextBleacher.blocks ?? []).map((bl) => [bl.date, bl.text] as const)
+          );
+          const allDates = new Set<string>([
+            ...Array.from(prevBlocksByDate.keys()),
+            ...Array.from(nextBlocksByDate.keys()),
+          ]);
+
+          for (const d of allDates) {
+            const prevText = prevBlocksByDate.get(d) ?? "";
+            const nextText = nextBlocksByDate.get(d) ?? "";
+            if (prevText !== nextText) {
+              const colIndex = this.dates.indexOf(d);
+              if (colIndex !== -1) {
+                const key = `${rowIndex}:${colIndex}`;
+                const vis = this.visibleCells.get(key);
+                // Update latest snapshot map so rebuild uses current data
+                this.latestBleachersById = new Map(nextData.map((b) => [b.bleacherId, b] as const));
+                if (vis) {
+                  // Rebuild just this visible cell to refresh its baked text
+                  this.buildCell(
+                    rowIndex,
+                    colIndex,
+                    vis.w,
+                    vis.h,
+                    vis.parent,
+                    vis.firstVisibleColumn
+                  );
+                }
+              }
+            }
+          }
+        }
+
+        // Keep snapshot in sync
+        prevData = nextData;
+        this.latestBleachersById = new Map(nextData.map((b) => [b.bleacherId, b] as const));
+      });
+    } catch {}
+  }
+
+  /**
+   * Update underlying data and recompute spans without recreating the renderer
+   * Call Grid.forceUpdate() after this to refresh visible cells.
+   */
+  public setData(bleachers: Bleacher[], events: DashboardEvent[], yAxis: "Bleachers" | "Events") {
+    console.log("setData MainScrollableGridCellRenderer");
+    this.baker.destroyAll();
+    this.bleachers = bleachers;
+    this.events = events;
+    this.yAxis = yAxis;
+    this.rowBleacherIds = bleachers.map((b) => b.bleacherId);
+    this.latestBleachersById = new Map(bleachers.map((b) => [b.bleacherId, b] as const));
+
+    if (yAxis === "Bleachers") {
+      const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, this.dates);
+      this.spansByRow = spansByRow;
+    } else {
+      this.spansByRow = this.calculateSpansByEvents(events, this.dates);
     }
   }
 
@@ -133,6 +220,14 @@ export class MainGridCellRenderer implements ICellRenderer {
     parent.removeChildren();
 
     const dimensions = { width: cellWidth, height: cellHeight };
+    // Track visibility for targeted rebuilds on store updates
+    const key = `${row}:${col}`;
+    const oldKey = (parent as any).__cellKey as string | undefined;
+    if (oldKey && oldKey !== key) {
+      this.visibleCells.delete(oldKey);
+    }
+    (parent as any).__cellKey = key;
+    this.visibleCells.set(key, { parent, w: cellWidth, h: cellHeight, firstVisibleColumn });
     parent.zIndex = 0;
 
     // Check if this cell has an event (bleachers or events mode)
@@ -173,8 +268,9 @@ export class MainGridCellRenderer implements ICellRenderer {
       const tile = new Tile(dimensions, this.baker, row, col, this.yAxis === "Bleachers");
       parent.addChild(tile);
 
-      // Attempt to find a block (bleachers mode only)
-      const bleacher = this.bleachers[row];
+      // Attempt to find a block (bleachers mode only) using the latest store snapshot by bleacherId
+      const bleacherId = this.rowBleacherIds[row];
+      const bleacher = this.latestBleachersById.get(bleacherId) ?? this.bleachers[row];
       const date = this.dates[col];
       if (this.yAxis === "Bleachers" && bleacher && date) {
         const block = bleacher.blocks.find((b) => b.date === date);
@@ -204,21 +300,20 @@ export class MainGridCellRenderer implements ICellRenderer {
           const icon = new TruckIcon(this.baker, () => {
             // Stop block editor from opening when clicking truck icon
             // Instead open WorkTracker modal via callback if provided
-            if (this.onWorkTrackerSelect) {
-              this.onWorkTrackerSelect({
-                work_tracker_id: workTracker.workTrackerId ?? -1,
-                bleacher_id: bleacher.bleacherId,
-                date,
-              });
-            } else {
-              console.log(
-                "Truck icon clicked (no callback) bleacher",
-                bleacher.bleacherId,
-                "date",
-                date
-              );
-            }
+            // Write selection to store to open modal without causing React rerender of dashboard
+            useWorkTrackerSelectionStore.getState().setSelected({
+              work_tracker_id: workTracker.workTrackerId ?? -1,
+              bleacher_id: bleacher.bleacherId,
+              date,
+            });
           });
+          // Prevent click/tap propagation from icon to tile so CellEditor doesn't open
+          icon.eventMode = "static";
+          icon.cursor = "pointer";
+          icon.on("pointerdown", (e: any) => e.stopPropagation());
+          icon.on("pointerup", (e: any) => e.stopPropagation());
+          icon.on("pointertap", (e: any) => e.stopPropagation());
+          icon.on("click", (e: any) => e.stopPropagation());
           const size = Math.min(cellWidth, cellHeight) * 0.55; // bigger for clarity
           icon.scale.set(size / 16); // base baked size 16
           icon.position.set(cellWidth - size + 4, 2); // top-right padding
@@ -242,7 +337,8 @@ export class MainGridCellRenderer implements ICellRenderer {
   private handleLoadBlock(rowIndex: number, columnIndex: number) {
     const store = useSelectedBlockStore.getState();
     const key = `${rowIndex}-${columnIndex}`;
-    const bleacher = this.bleachers[rowIndex];
+    const bleacherId = this.rowBleacherIds[rowIndex];
+    const bleacher = this.latestBleachersById.get(bleacherId) ?? this.bleachers[rowIndex];
     const date = this.dates[columnIndex];
 
     if (!bleacher || !date) return;
@@ -267,6 +363,10 @@ export class MainGridCellRenderer implements ICellRenderer {
    */
   destroy() {
     this.baker.destroyAll();
+    try {
+      this.unsubBleachers?.();
+    } catch {}
+    this.visibleCells.clear();
     // this.assetManager.destroy();
   }
 }

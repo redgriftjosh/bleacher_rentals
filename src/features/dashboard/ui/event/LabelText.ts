@@ -48,7 +48,7 @@ export class LabelText extends Container {
       this.addChild(this.addressLabel);
     }
 
-    console.log("LabelText");
+    // console.log("LabelText");
   }
 
   /**

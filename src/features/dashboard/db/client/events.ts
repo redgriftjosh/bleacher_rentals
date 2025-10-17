@@ -2,6 +2,7 @@
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { DashboardEvent } from "../../types";
+import { useDashboardEventsStore } from "../../state/useDashboardEventsStore";
 
 type Row = {
   event_id: number;
@@ -134,7 +135,13 @@ export async function FetchDashboardEvents(
     goodshuffleUrl: e.goodshuffle_url ?? null,
     ownerUserId: e.created_by_user_id ?? null,
   }));
-  console.log("FetchDashboardEvents events", events);
+  // console.log("FetchDashboardEvents events", events);
+
+  // Push into zustand store so Pixi can subscribe live
+  try {
+    useDashboardEventsStore.getState().setData(events);
+    useDashboardEventsStore.getState().setStale(false);
+  } catch {}
 
   return { events };
 }

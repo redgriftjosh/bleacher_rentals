@@ -33,6 +33,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
   }, [isOpen]);
 
   const handleSave = async () => {
+    setCurrentText("");
     const token = await getToken({ template: "supabase" });
     try {
       const editBlock = {
@@ -44,7 +45,13 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         workTrackerId,
       };
       await saveBlock(editBlock, token);
-      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachers"] });
+      // Refresh bleachers store directly so Pixi updates without remounting
+      try {
+        const { FetchDashboardBleachers } = await import(
+          "@/features/dashboard/db/client/bleachers"
+        );
+        await FetchDashboardBleachers(token);
+      } catch {}
       resetForm();
     } catch (error) {
       console.error("Failed to Save Block:", error);
@@ -65,7 +72,13 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         workTrackerId,
       };
       await deleteBlock(editBlock, token);
-      await qc.invalidateQueries({ queryKey: ["FetchDashboardBleachers"] });
+      // Refresh bleachers store directly so Pixi updates without remounting
+      try {
+        const { FetchDashboardBleachers } = await import(
+          "@/features/dashboard/db/client/bleachers"
+        );
+        await FetchDashboardBleachers(token);
+      } catch {}
       resetForm();
     } catch (error) {
       console.error("Failed to Delete Block:", error);

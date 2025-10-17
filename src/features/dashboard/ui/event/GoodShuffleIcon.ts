@@ -132,7 +132,7 @@ export class GoodShuffleIcon extends Container {
    * Force reset hover state (useful when parent containers change)
    */
   public resetHoverState() {
-    console.log("Resetting GoodShuffleIcon hover state");
+    // console.log("Resetting GoodShuffleIcon hover state");
     this.isHovering = false;
     this.isAnimating = false;
 
@@ -157,7 +157,7 @@ export class GoodShuffleIcon extends Container {
   }
 
   private createTextureFromLoaded(baker: Baker, cachedTexture: Texture) {
-    console.log("Creating texture from cached GSLogo");
+    // console.log("Creating texture from cached GSLogo");
 
     // Create the new texture with the cached image
     const newTexture = baker.getTexture(
@@ -174,11 +174,11 @@ export class GoodShuffleIcon extends Container {
     );
 
     this.iconSprite.texture = newTexture;
-    console.log("GoodShuffleIcon updated with cached texture");
+    // console.log("GoodShuffleIcon updated with cached texture");
   }
 
   private createFallbackTexture(baker: Baker) {
-    console.log("Creating fallback texture for GoodShuffleIcon");
+    // console.log("Creating fallback texture for GoodShuffleIcon");
     const fallbackTexture = baker.getTexture(
       `GoodShuffleIcon-fallback`,
       { width: 16, height: 16 },
@@ -192,7 +192,7 @@ export class GoodShuffleIcon extends Container {
     );
 
     this.iconSprite.texture = fallbackTexture;
-    console.log("GoodShuffleIcon created with fallback texture", this.iconSprite.texture);
+    // console.log("GoodShuffleIcon created with fallback texture", this.iconSprite.texture);
 
     // Make sure the sprite is visible
     this.iconSprite.alpha = 1;
@@ -201,10 +201,10 @@ export class GoodShuffleIcon extends Container {
 
   private async loadAndReplaceTexture(baker: Baker) {
     try {
-      console.log("Loading GSLogo.png with Assets API...");
+      // console.log("Loading GSLogo.png with Assets API...");
       const imagePath = `${window.location.origin}/GSLogo.png`;
       const logoTexture = await Assets.load(imagePath);
-      console.log("Logo texture loaded successfully from:", imagePath);
+      // console.log("Logo texture loaded successfully from:", imagePath);
 
       // Create the new texture with the loaded image
       const newTexture = baker.getTexture(
@@ -222,7 +222,7 @@ export class GoodShuffleIcon extends Container {
 
       // Replace the fallback texture with the real one
       this.iconSprite.texture = newTexture;
-      console.log("GoodShuffleIcon texture replaced with loaded image");
+      // console.log("GoodShuffleIcon texture replaced with loaded image");
     } catch (error) {
       console.error("Failed to load GSLogo.png, keeping fallback:", error);
     }

@@ -50,10 +50,6 @@ export class CellEditor {
     this.currentScrollX = this.grid.getCurrentScrollX();
     this.currentScrollY = this.grid.getCurrentScrollY();
 
-    console.log(
-      `🎬 89 CellEditor initialized with scroll: (${this.currentScrollX}, ${this.currentScrollY})`
-    );
-
     this.setupScrollListeners();
   }
 
@@ -85,21 +81,17 @@ export class CellEditor {
    * Start editing a cell at the specified coordinates
    */
   public editCell(row: number, col: number): void {
-    console.log(`🎯 89 editCell called for (${row}, ${col})`);
-
     // If already editing this cell, do nothing
     if (
       this.currentEditingCell &&
       this.currentEditingCell.row === row &&
       this.currentEditingCell.col === col
     ) {
-      console.log(`89 Already editing this cell, returning`);
       return;
     }
 
     // Commit any existing edit
     if (this.inputElement) {
-      console.log(`89 Committing existing edit`);
       this.commitCurrentEdit();
     }
 
@@ -109,20 +101,16 @@ export class CellEditor {
     this.setCellData(row, col, { isEditing: true });
 
     // Create input element
-    console.log(`89 Creating input element`);
-    this.createInputElement(cellData.value);
-    console.log(`89 Positioning input element`);
-    this.positionInputElement(row, col);
 
-    console.log(`✅ 89 Started editing cell (${row}, ${col})`);
+    this.createInputElement(cellData.value);
+
+    this.positionInputElement(row, col);
   }
 
   /**
    * Create the HTML input element
    */
   private createInputElement(initialValue: string): void {
-    console.log(`📝 Creating input element with value: "${initialValue}"`);
-
     this.inputElement = document.createElement("input");
     this.inputElement.type = "text";
     this.inputElement.value = initialValue;
@@ -142,12 +130,10 @@ export class CellEditor {
     this.inputElement.addEventListener("keydown", this.handleInputKeydown);
 
     // Add to DOM
-    console.log(`📎 89 Adding input to DOM`);
+
     document.body.appendChild(this.inputElement);
     this.inputElement.focus();
     this.inputElement.select();
-
-    console.log(`✅ 89 Input element created and added to DOM`);
   }
 
   /**
@@ -158,17 +144,10 @@ export class CellEditor {
 
     const screenPos = this.getCellScreenPosition(row, col);
 
-    console.log(
-      `📍 89 Positioning input at (${screenPos.x}, ${screenPos.y}) for cell (${row}, ${col})`
-    );
-    console.log(`📏 89 Input size: ${this.cellWidth}x${this.cellHeight}`);
-
     this.inputElement.style.left = `${screenPos.x}px`;
     this.inputElement.style.top = `${screenPos.y}px`;
     this.inputElement.style.width = `${this.cellWidth}px`;
     this.inputElement.style.height = `${this.cellHeight}px`;
-
-    console.log(`✅ 89 Input positioned`);
   }
 
   /**
@@ -178,22 +157,14 @@ export class CellEditor {
     // Get grid's world position
     const gridWorldPos = this.grid.getGlobalPosition();
 
-    console.log(`🌍 89 Grid world position: (${gridWorldPos.x}, ${gridWorldPos.y})`);
-    console.log(`📊 89 Grid offsets: (${this.gridOffsetX}, ${this.gridOffsetY})`);
-    console.log(`📜 89 Current scroll: (${this.currentScrollX}, ${this.currentScrollY})`);
-
     // Calculate cell position relative to grid's scroll offset
     const cellX = col * this.cellWidth - this.currentScrollX;
     const cellY = row * this.cellHeight - this.currentScrollY;
-
-    console.log(`🔢 89 Cell position before offsets: (${cellX}, ${cellY})`);
 
     const result = {
       x: gridWorldPos.x + this.gridOffsetX + cellX + 89.5,
       y: gridWorldPos.y + this.gridOffsetY * 2 + cellY + 31.5,
     };
-
-    console.log(`🎯 89 Final screen position: (${result.x}, ${result.y})`);
 
     return result;
   }
@@ -231,8 +202,6 @@ export class CellEditor {
     // Clean up input element
     this.destroyInputElement();
     this.currentEditingCell = undefined;
-
-    console.log(`Committed edit for cell (${row}, ${col}): "${value}"`);
   }
 
   /**
@@ -273,7 +242,6 @@ export class CellEditor {
    * Update scroll position and reposition input if needed
    */
   private updateScrollPosition(scrollX: number, scrollY: number): void {
-    console.log(`📜 89 CellEditor scroll updated: (${scrollX}, ${scrollY})`);
     this.currentScrollX = scrollX;
     this.currentScrollY = scrollY;
 

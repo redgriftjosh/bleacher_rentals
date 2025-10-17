@@ -16,7 +16,7 @@ export class TopLeftCell extends Sprite {
       label.x = 5;
       label.y = dimensions.height - label.height - 5;
       c.addChild(tile, label);
-      console.log("TopLeftTile");
+      // console.log("TopLeftTile");
     });
 
     this.texture = texture;

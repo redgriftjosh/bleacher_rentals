@@ -59,7 +59,7 @@ export class HoverableBakedSprite extends Container {
     this.on("pointerenter", this.showLiveContent.bind(this));
     this.on("pointerleave", this.showBakedContent.bind(this));
 
-    console.log(`HoverableBakedSprite created: ${cacheKey}`);
+    // console.log(`HoverableBakedSprite created: ${cacheKey}`);
   }
 
   /**
@@ -68,7 +68,7 @@ export class HoverableBakedSprite extends Container {
   private showLiveContent() {
     if (this.isShowingLive) return;
 
-    console.log(`Switching to live content: ${this.cacheKey}`);
+    // console.log(`Switching to live content: ${this.cacheKey}`);
     this.isShowingLive = true;
 
     // Hide baked sprite
@@ -93,7 +93,7 @@ export class HoverableBakedSprite extends Container {
   private showBakedContent() {
     if (!this.isShowingLive) return;
 
-    console.log(`Switching to baked content: ${this.cacheKey}`);
+    // console.log(`Switching to baked content: ${this.cacheKey}`);
     this.isShowingLive = false;
 
     // Reset any hover states in children before switching back
@@ -148,7 +148,7 @@ export class HoverableBakedSprite extends Container {
     // Update sprite texture
     this.bakedSprite.texture = newTexture;
 
-    console.log(`Refreshed baked texture: ${this.cacheKey}`);
+    // console.log(`Refreshed baked texture: ${this.cacheKey}`);
   }
 
   /**

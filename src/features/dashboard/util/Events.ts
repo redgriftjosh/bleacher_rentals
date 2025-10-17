@@ -100,7 +100,7 @@ export class EventsUtil {
             rowIndex,
           });
           if (ev.eventId == 89) {
-            console.log("89 startCol:", startCol, "endCol", endCol);
+            // console.log("89 startCol:", startCol, "endCol", endCol);
           }
         }
       }
@@ -126,21 +126,21 @@ export class EventsUtil {
     let log = false;
     if (row === 6 && [986, 987, 988, 995, 996, 997].includes(col)) {
       log = true;
-      console.log("89 Row 6, col", col);
+      // console.log("89 Row 6, col", col);
     }
 
     // Find the span that contains this column
     // NOTE: If multiple events overlap the same cell, we take the first one
     for (const span of spans) {
       if (col > span.start && col < span.end) {
-        if (log)
-          console.log("89 Row 6, col ", col, {
-            hasEvent: true,
-            span: span,
-            isStart: false,
-            isEnd: false,
-            isMiddle: true,
-          });
+        // if (log)
+        // console.log("89 Row 6, col ", col, {
+        //   hasEvent: true,
+        //   span: span,
+        //   isStart: false,
+        //   isEnd: false,
+        //   isMiddle: true,
+        // });
         return {
           hasEvent: true,
           span: span,
@@ -149,14 +149,14 @@ export class EventsUtil {
           isMiddle: true,
         };
       } else if (col === span.start) {
-        if (log)
-          console.log("89 Row 6, col ", col, {
-            hasEvent: true,
-            span: span,
-            isStart: true,
-            isEnd: false,
-            isMiddle: false,
-          });
+        // if (log)
+        // console.log("89 Row 6, col ", col, {
+        //   hasEvent: true,
+        //   span: span,
+        //   isStart: true,
+        //   isEnd: false,
+        //   isMiddle: false,
+        // });
         return {
           hasEvent: true,
           span: span,
@@ -165,14 +165,14 @@ export class EventsUtil {
           isMiddle: false,
         };
       } else if (col === span.end) {
-        if (log)
-          console.log("89 Row 6, col ", col, {
-            hasEvent: true,
-            span: span,
-            isStart: false,
-            isEnd: true,
-            isMiddle: false,
-          });
+        // if (log)
+        // console.log("89 Row 6, col ", col, {
+        //   hasEvent: true,
+        //   span: span,
+        //   isStart: false,
+        //   isEnd: true,
+        //   isMiddle: false,
+        // });
         return {
           hasEvent: true,
           span: span,
@@ -184,13 +184,13 @@ export class EventsUtil {
     }
 
     // No event found for this cell
-    if (log)
-      console.log("89 Row 6, col ", col, {
-        hasEvent: false,
-        isStart: false,
-        isEnd: false,
-        isMiddle: false,
-      });
+    // if (log)
+    //   console.log("89 Row 6, col ", col, {
+    //     hasEvent: false,
+    //     isStart: false,
+    //     isEnd: false,
+    //     isMiddle: false,
+    //   });
     return {
       hasEvent: false,
       isStart: false,

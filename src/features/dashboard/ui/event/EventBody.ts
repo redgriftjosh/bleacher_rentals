@@ -116,11 +116,11 @@ export class EventBody extends Sprite {
         }
 
         c.addChild(fill, g);
-        console.log(
-          "EventBody",
-          isBooked ? "booked" : "quoted",
-          eventInfo.isStart ? "start" : eventInfo.isEnd ? "end" : "middle"
-        );
+        // console.log(
+        //   "EventBody",
+        //   isBooked ? "booked" : "quoted",
+        //   eventInfo.isStart ? "start" : eventInfo.isEnd ? "end" : "middle"
+        // );
       }
     );
 
@@ -130,7 +130,7 @@ export class EventBody extends Sprite {
   private handleClick() {
     if (!this.currentSpan) return;
     const event = this.currentSpan.ev;
-    console.log("EventBody clicked: ", event);
+    // console.log("EventBody clicked: ", event);
     this.handleLoadEvent(event);
   }
 
