@@ -22,6 +22,7 @@ import { useFilterDashboardStore, YAxis } from "./useFilterDashboardStore";
 import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEventStore";
 import { getRowOptions, getStateProvOptions } from "../oldDashboard/functions";
 import { getHomeBaseOptions } from "@/utils/utils";
+import { useCurrentEventStore as useTestDashboardStore } from "@/features/dashboard/state/useTestDashboardStore";
 
 export function DashboardOptions() {
   // Stores
@@ -45,6 +46,49 @@ export function DashboardOptions() {
   const [openHomeBases, setOpenHomeBases] = React.useState(false);
   const [openRows, setOpenRows] = React.useState(false);
   const [openRegions, setOpenRegions] = React.useState(false);
+  const [openTestEditor, setOpenTestEditor] = React.useState(false);
+
+  // Test dashboard store (aliased)
+  const testCells = useTestDashboardStore((s) => s.cells);
+  const setTestField = useTestDashboardStore((s) => s.setField);
+
+  // Local inputs for adding a new test cell
+  const [newX, setNewX] = React.useState<string>("");
+  const [newH, setNewH] = React.useState<string>("");
+  const [newHex, setNewHex] = React.useState<string>("0x");
+  const [hexError, setHexError] = React.useState<string>("");
+
+  const formatHex = (val: number) => `0x${val.toString(16).padStart(6, "0")}`;
+  const parseHex = (raw: string): number | null => {
+    const s = raw.trim().toLowerCase();
+    const normalized = s.startsWith("0x") ? s.slice(2) : s.startsWith("#") ? s.slice(1) : s;
+    if (!/^[0-9a-f]{6}$/.test(normalized)) return null;
+    const num = parseInt(normalized, 16);
+    if (num < 0x000000 || num > 0xffffff) return null;
+    return num;
+  };
+
+  const handleAddTestCell = () => {
+    setHexError("");
+    const x = Number(newX);
+    const h = Number(newH);
+    const hexNum = parseHex(newHex);
+    if (!Number.isFinite(x) || !Number.isFinite(h)) return;
+    if (hexNum == null) {
+      setHexError("Hex must be like 0x2b80ff");
+      return;
+    }
+    const next = [...testCells, { x, h, hex: hexNum }];
+    setTestField("cells", next);
+    setNewX("");
+    setNewH("");
+    setNewHex("0x");
+  };
+
+  const handleRemoveTestCell = (idx: number) => {
+    const next = testCells.filter((_, i) => i !== idx);
+    setTestField("cells", next);
+  };
 
   // One-time defaults like original FilterDashboard
   const [initialized, setInitialized] = React.useState(false);
@@ -141,6 +185,10 @@ export function DashboardOptions() {
             >
               Old Dashboard
             </MenubarItem>
+            <MenubarSeparator />
+            <MenubarItem inset onClick={() => setOpenTestEditor(true)}>
+              Test Update Cell
+            </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
       </Menubar>
@@ -215,6 +263,84 @@ export function DashboardOptions() {
             variant="inverted"
             maxCount={1}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Test Update Cell modal */}
+      <Dialog open={openTestEditor} onOpenChange={setOpenTestEditor}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Test Update Cell</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Existing cells list */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Current Cells</div>
+              {testCells.length === 0 ? (
+                <div className="text-xs text-muted-foreground">No cells yet.</div>
+              ) : (
+                <ul className="space-y-1">
+                  {testCells.map((c, idx) => (
+                    <li key={idx} className="flex items-center justify-between text-sm">
+                      <span className="tabular-nums">
+                        x: {c.x}, h: {c.h}, hex: {formatHex(c.hex)}
+                      </span>
+                      <button
+                        className="px-2 py-0.5 text-xs rounded bg-red-500 text-white hover:bg-red-600"
+                        onClick={() => handleRemoveTestCell(idx)}
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Add new cell */}
+            <div className="space-y-2 border-t pt-3">
+              <div className="text-sm font-medium">Add Cell</div>
+              <div className="grid grid-cols-3 gap-2 items-end">
+                <div>
+                  <label className="block text-xs text-muted-foreground">x</label>
+                  <input
+                    type="number"
+                    className="w-full p-2 border rounded bg-white"
+                    value={newX}
+                    onChange={(e) => setNewX(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-muted-foreground">h</label>
+                  <input
+                    type="number"
+                    className="w-full p-2 border rounded bg-white"
+                    value={newH}
+                    onChange={(e) => setNewH(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-muted-foreground">hex</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border rounded bg-white font-mono"
+                    placeholder="0x2b80ff"
+                    value={newHex}
+                    onChange={(e) => setNewHex(e.target.value)}
+                  />
+                </div>
+              </div>
+              {hexError && <div className="text-xs text-red-600">{hexError}</div>}
+              <div className="flex justify-end">
+                <button
+                  className="px-3 py-1 rounded bg-darkBlue text-white hover:bg-lightBlue text-sm"
+                  onClick={handleAddTestCell}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

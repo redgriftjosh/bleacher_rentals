@@ -13,18 +13,18 @@ export function filterSortPixiBleachers(
   summerAssignedBleacherIds: number[] = [], // allowable bleachers if season === SUMMER
   winterAssignedBleacherIds: number[] = [] // allowable bleachers if season === WINTER
 ): Bleacher[] {
-  console.log("filterSortPixiBleachers", {
-    homeBaseIds,
-    winterHomeBaseIds,
-    rows,
-    bleachers,
-    alwaysIncludeBleacherIds,
-    isFormExpanded,
-    optimizationMode,
-    season,
-    summerAssignedBleacherIds,
-    winterAssignedBleacherIds,
-  });
+  // console.log("filterSortPixiBleachers", {
+  //   homeBaseIds,
+  //   winterHomeBaseIds,
+  //   rows,
+  //   bleachers,
+  //   alwaysIncludeBleacherIds,
+  //   isFormExpanded,
+  //   optimizationMode,
+  //   season,
+  //   summerAssignedBleacherIds,
+  //   winterAssignedBleacherIds,
+  // });
   // Fast lookups
   const summerHBSet = new Set(homeBaseIds);
   const winterHBSet = new Set(winterHomeBaseIds);

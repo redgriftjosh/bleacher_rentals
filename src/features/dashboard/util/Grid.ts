@@ -114,7 +114,7 @@ export class Grid extends Container {
       this.setupScrolling();
     }
 
-    console.log("✅ Grid created with CellRenderer and built-in scroll support");
+    // console.log("✅ Grid created with CellRenderer and built-in scroll support");
   }
 
   /**
@@ -533,6 +533,6 @@ export class Grid extends Container {
     this.off("grid:scroll-vertical", this.updateY);
     this.off("grid:scroll-horizontal", this.updateX);
     super.destroy(options);
-    console.log("Grid destroyed");
+    // console.log("Grid destroyed");
   }
 }
