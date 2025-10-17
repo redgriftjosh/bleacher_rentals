@@ -33,6 +33,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
   }, [isOpen]);
 
   const handleSave = async () => {
+    setCurrentText("");
     const token = await getToken({ template: "supabase" });
     try {
       const editBlock = {
