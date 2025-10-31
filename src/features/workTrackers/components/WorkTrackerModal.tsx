@@ -1,4 +1,4 @@
-import { Link, X, Trash2 } from "lucide-react";
+import { Link, X, Trash2, Calculator } from "lucide-react";
 import { Dropdown } from "@/components/DropDown";
 import { getDrivers } from "../../dashboard/db/client/getDrivers";
 import { useEffect, useState, useRef } from "react";
@@ -362,16 +362,32 @@ export default function WorkTrackerModal({
                   }
                   rows={4}
                 />
-                <label className={labelClassName}>Pay</label>
-                <input
-                  type="number"
-                  className={inputClassName}
-                  step="0.01"
-                  min="0"
-                  value={payInput}
-                  onChange={handlePayChange}
-                  placeholder="0.00"
+                <label className={labelClassName}>Internal Notes</label>
+                <textarea
+                  className="w-full text-sm border p-1 rounded bg-white"
+                  value={workTracker?.internal_notes ?? ""}
+                  placeholder="Internal Notes"
+                  onChange={(e) =>
+                    setWorkTracker((prev) => ({
+                      ...prev!,
+                      internal_notes: e.target.value,
+                    }))
+                  }
+                  rows={4}
                 />
+                <label className={labelClassName}>Pay</label>
+                <div className="flex flex-row gap-2 items-center">
+                  <input
+                    type="number"
+                    className={inputClassName}
+                    step="0.01"
+                    min="0"
+                    value={payInput}
+                    onChange={handlePayChange}
+                    placeholder="0.00"
+                  />
+                  <Calculator className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer" />
+                </div>
               </div>
 
               {/* Columns 2 & 3: Pickup and Dropoff with Map below */}
