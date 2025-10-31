@@ -341,6 +341,7 @@ export async function saveWorkTracker(
         notes: workTracker.notes,
         pay_cents: workTracker.pay_cents,
         bleacher_id: workTracker.bleacher_id,
+        internal_notes: workTracker.internal_notes,
       })
       .eq("work_tracker_id", workTracker.work_tracker_id);
 
@@ -362,6 +363,7 @@ export async function saveWorkTracker(
         notes: workTracker.notes,
         pay_cents: workTracker.pay_cents,
         bleacher_id: workTracker.bleacher_id,
+        internal_notes: workTracker.internal_notes,
       })
       .select("work_tracker_id")
       .single();

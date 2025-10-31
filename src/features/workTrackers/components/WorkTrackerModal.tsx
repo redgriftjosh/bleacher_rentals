@@ -1,4 +1,4 @@
-import { Link, X, Trash2 } from "lucide-react";
+import { Link, X, Trash2, Calculator } from "lucide-react";
 import { Dropdown } from "@/components/DropDown";
 import { getDrivers } from "../../dashboard/db/client/getDrivers";
 import { useEffect, useState, useRef } from "react";
@@ -13,7 +13,9 @@ import { fetchWorkTrackerById } from "../../oldDashboard/db/setupTeardownBlock/f
 import { EditBlock } from "../../oldDashboard/_components/dashboard/MainScrollableGrid";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";
-import { fetchBleachersForOptions } from "@/app/team/_lib/db";
+import { fetchBleachersForOptions, fetchDriverPaymentData } from "@/app/team/_lib/db";
+import { toLatLngString, calculateDriverPay } from "../util";
+import RouteMapPreview from "./RouteMapPreview";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -40,6 +42,64 @@ export default function WorkTrackerModal({
   const [payInput, setPayInput] = useState(
     selectedWorkTracker?.pay_cents != null ? (selectedWorkTracker?.pay_cents / 100).toFixed(2) : ""
   );
+
+  // Helper to format address for Distance Matrix API
+  const formatAddressString = (addr: AddressData | null): string => {
+    if (!addr) return "";
+    // If the address already contains city/state (common for our stored addresses),
+    // just use the address field
+    if (
+      addr.address &&
+      addr.city &&
+      (addr.address.includes(addr.city) || addr.address.includes(","))
+    ) {
+      return addr.address;
+    }
+    // Otherwise, build the full address
+    const parts = [addr.address, addr.city, addr.state, addr.postalCode].filter(Boolean);
+    return parts.join(", ");
+  };
+
+  // Try lat/lng first, fallback to address string
+  const origin = toLatLngString(pickUpAddress ?? undefined) || formatAddressString(pickUpAddress);
+  const dest = toLatLngString(dropOffAddress ?? undefined) || formatAddressString(dropOffAddress);
+
+  const distanceQueryEnabled = Boolean(origin && dest);
+
+  // Debug logging
+  console.log("Distance Query Debug:", {
+    origin,
+    dest,
+    pickUpPlaceId: pickUpAddress?.placeId,
+    dropOffPlaceId: dropOffAddress?.placeId,
+    distanceQueryEnabled,
+    pickUpAddress,
+    dropOffAddress,
+  });
+
+  const {
+    data: leg,
+    isFetching: isLegFetching,
+    error: legErr,
+  } = useQuery({
+    queryKey: ["gmaps-distance", origin, dest],
+    enabled: distanceQueryEnabled,
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/distance?origin=${encodeURIComponent(origin)}&dest=${encodeURIComponent(dest)}`
+      );
+      if (!res.ok) throw new Error(`Distance API failed (${res.status})`);
+      return res.json() as Promise<{
+        distanceMeters: number | null;
+        distanceText: string | null;
+        durationSeconds: number | null;
+        durationText: string | null;
+        durationInTrafficSeconds?: number | null;
+        durationInTrafficText?: string | null;
+      }>;
+    },
+  });
 
   useEffect(() => {
     setWorkTracker(selectedWorkTracker);
@@ -69,6 +129,20 @@ export default function WorkTrackerModal({
       const token = await getToken({ template: "supabase" });
       return fetchBleachersForOptions(token);
     },
+  });
+
+  // Fetch driver payment data when driver is selected
+  const {
+    data: driverPaymentData,
+    isLoading: isDriverPaymentLoading,
+    isError: isDriverPaymentError,
+  } = useQuery({
+    queryKey: ["driverPayment", workTracker?.user_id],
+    queryFn: async () => {
+      const token = await getToken({ template: "supabase" });
+      return fetchDriverPaymentData(workTracker!.user_id!, token);
+    },
+    enabled: !!workTracker?.user_id,
   });
 
   const {
@@ -189,6 +263,33 @@ export default function WorkTrackerModal({
     }
   }
 
+  const handleCalculatePay = () => {
+    if (!driverPaymentData) {
+      createErrorToast(["Cannot calculate pay: Driver payment data not loaded"]);
+      return;
+    }
+
+    if (!leg) {
+      createErrorToast(["Cannot calculate pay: Distance/duration data not available"]);
+      return;
+    }
+
+    const amount = calculateDriverPay(driverPaymentData, leg);
+
+    if (amount === null || amount === 0) {
+      createErrorToast(["Cannot calculate pay: Missing distance or duration data"]);
+      return;
+    }
+
+    // Update the pay input field
+    const formattedAmount = amount.toFixed(2);
+    setPayInput(formattedAmount);
+    setWorkTracker((prev) => ({
+      ...prev!,
+      pay_cents: Math.round(amount * 100),
+    }));
+  };
+
   const labelClassName = "block text-sm font-medium text-gray-700 mt-1";
   const inputClassName = "w-full p-2 border rounded bg-white";
 
@@ -302,102 +403,141 @@ export default function WorkTrackerModal({
                   }
                   rows={4}
                 />
+                <label className={labelClassName}>Internal Notes</label>
+                <textarea
+                  className="w-full text-sm border p-1 rounded bg-white"
+                  value={workTracker?.internal_notes ?? ""}
+                  placeholder="Internal Notes"
+                  onChange={(e) =>
+                    setWorkTracker((prev) => ({
+                      ...prev!,
+                      internal_notes: e.target.value,
+                    }))
+                  }
+                  rows={4}
+                />
                 <label className={labelClassName}>Pay</label>
-                <input
-                  type="number"
-                  className={inputClassName}
-                  step="0.01"
-                  min="0"
-                  value={payInput}
-                  onChange={handlePayChange}
-                  placeholder="0.00"
-                />
-              </div>
-              {/* Column 2: Pickup */}
-              <div className="flex-1">
-                <label className={labelClassName}>Pickup Time</label>
-                <input
-                  type="text"
-                  className={inputClassName}
-                  placeholder="Pickup Time"
-                  value={workTracker?.pickup_time ?? ""}
-                  onChange={(e) =>
-                    setWorkTracker((prev) => ({
-                      ...prev!,
-                      pickup_time: e.target.value,
-                    }))
-                  }
-                />
-                <label className={labelClassName}>Pickup POC</label>
-                <input
-                  type="text"
-                  className={inputClassName}
-                  placeholder="Pickup POC"
-                  value={workTracker?.pickup_poc ?? ""}
-                  onChange={(e) =>
-                    setWorkTracker((prev) => ({
-                      ...prev!,
-                      pickup_poc: e.target.value,
-                    }))
-                  }
-                />
-                <label className={labelClassName}>Pickup Address</label>
                 <div className="flex flex-row gap-2 items-center">
-                  <AddressAutocomplete
-                    className="bg-white"
-                    onAddressSelect={(data) =>
-                      setPickUpAddress({
-                        ...data,
-                        addressId: pickUpAddress?.addressId ?? null,
-                      })
-                    }
-                    initialValue={pickUpAddress?.address || ""}
+                  <input
+                    type="number"
+                    className={inputClassName}
+                    step="0.01"
+                    min="0"
+                    value={payInput}
+                    onChange={handlePayChange}
+                    placeholder="0.00"
                   />
-                  <Link className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer" />
+                  <Calculator
+                    className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer text-darkBlue hover:text-lightBlue"
+                    onClick={handleCalculatePay}
+                  />
                 </div>
               </div>
-              {/* Column 3: Dropoff */}
-              <div className="flex-1">
-                <label className={labelClassName}>Dropoff Time</label>
-                <input
-                  type="text"
-                  className={inputClassName}
-                  placeholder="Dropoff Time"
-                  value={workTracker?.dropoff_time ?? ""}
-                  onChange={(e) =>
-                    setWorkTracker((prev) => ({
-                      ...prev!,
-                      dropoff_time: e.target.value,
-                    }))
-                  }
-                />
-                <label className={labelClassName}>Dropoff POC</label>
-                <input
-                  type="text"
-                  className={inputClassName}
-                  placeholder="Dropoff POC"
-                  value={workTracker?.dropoff_poc ?? ""}
-                  onChange={(e) =>
-                    setWorkTracker((prev) => ({
-                      ...prev!,
-                      dropoff_poc: e.target.value,
-                    }))
-                  }
-                />
-                <label className={labelClassName}>Dropoff Address</label>
-                <AddressAutocomplete
-                  className="bg-white"
-                  onAddressSelect={(data) =>
-                    setDropOffAddress({
-                      ...data,
-                      addressId: dropOffAddress?.addressId ?? null,
-                    })
-                  }
-                  initialValue={dropOffAddress?.address || ""}
-                />
+
+              {/* Columns 2 & 3: Pickup and Dropoff with Map below */}
+              <div className="flex-[2] flex flex-col gap-4">
+                <div className="flex flex-row gap-4">
+                  {/* Column 2: Pickup */}
+                  <div className="flex-1">
+                    <label className={labelClassName}>Pickup Time</label>
+                    <input
+                      type="text"
+                      className={inputClassName}
+                      placeholder="Pickup Time"
+                      value={workTracker?.pickup_time ?? ""}
+                      onChange={(e) =>
+                        setWorkTracker((prev) => ({
+                          ...prev!,
+                          pickup_time: e.target.value,
+                        }))
+                      }
+                    />
+                    <label className={labelClassName}>Pickup POC</label>
+                    <input
+                      type="text"
+                      className={inputClassName}
+                      placeholder="Pickup POC"
+                      value={workTracker?.pickup_poc ?? ""}
+                      onChange={(e) =>
+                        setWorkTracker((prev) => ({
+                          ...prev!,
+                          pickup_poc: e.target.value,
+                        }))
+                      }
+                    />
+                    <label className={labelClassName}>Pickup Address</label>
+                    <div className="flex flex-row gap-2 items-center">
+                      <AddressAutocomplete
+                        className="bg-white"
+                        onAddressSelect={(data) =>
+                          setPickUpAddress({
+                            ...data,
+                            addressId: pickUpAddress?.addressId ?? null,
+                          })
+                        }
+                        initialValue={pickUpAddress?.address || ""}
+                      />
+                      <Link className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer" />
+                    </div>
+                  </div>
+                  {/* Column 3: Dropoff */}
+                  <div className="flex-1">
+                    <label className={labelClassName}>Dropoff Time</label>
+                    <input
+                      type="text"
+                      className={inputClassName}
+                      placeholder="Dropoff Time"
+                      value={workTracker?.dropoff_time ?? ""}
+                      onChange={(e) =>
+                        setWorkTracker((prev) => ({
+                          ...prev!,
+                          dropoff_time: e.target.value,
+                        }))
+                      }
+                    />
+                    <label className={labelClassName}>Dropoff POC</label>
+                    <input
+                      type="text"
+                      className={inputClassName}
+                      placeholder="Dropoff POC"
+                      value={workTracker?.dropoff_poc ?? ""}
+                      onChange={(e) =>
+                        setWorkTracker((prev) => ({
+                          ...prev!,
+                          dropoff_poc: e.target.value,
+                        }))
+                      }
+                    />
+                    <label className={labelClassName}>Dropoff Address</label>
+                    <AddressAutocomplete
+                      className="bg-white"
+                      onAddressSelect={(data) =>
+                        setDropOffAddress({
+                          ...data,
+                          addressId: dropOffAddress?.addressId ?? null,
+                        })
+                      }
+                      initialValue={dropOffAddress?.address || ""}
+                    />
+                  </div>
+                </div>
+
+                {/* Distance & ETA Info - Below both Pickup and Dropoff columns */}
+                <div className="mt-2">
+                  <RouteMapPreview
+                    origin={origin}
+                    destination={dest}
+                    pickUpAddress={pickUpAddress}
+                    dropOffAddress={dropOffAddress}
+                    isLoading={isLegFetching}
+                    error={legErr}
+                    distanceData={leg ?? null}
+                  />
+                </div>
               </div>
             </div>
-            <div className="mt-3 flex justify-between items-center gap-2">
+
+            <div className="mt-4 flex justify-between items-center gap-2">
               {workTracker?.work_tracker_id && workTracker.work_tracker_id !== -1 && (
                 <button
                   className="text-sm px-3 py-1 rounded bg-red-600 text-white cursor-pointer hover:bg-red-700 transition-all duration-200 flex items-center gap-1"

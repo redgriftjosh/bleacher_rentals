@@ -22,7 +22,7 @@ export async function fetchDriverTaxById(userId: number, token: string | null): 
     .eq("user_id", userId)
     .single();
   if (error && error.code === "PGRST116") {
-    const insertError = await insertDriver(userId, 0, supabase);
+    const insertError = await insertDriver(userId, 0, 0, "CAD", "KM", supabase);
     if (insertError) {
       return 0;
     }
@@ -34,10 +34,59 @@ export async function fetchDriverTaxById(userId: number, token: string | null): 
   return data?.tax ?? 0;
 }
 
-async function insertDriver(userId: number, tax: number, supabaseClient: SupabaseClient) {
+export type DriverPaymentData = {
+  tax: number;
+  payRateCents: number;
+  payCurrency: "CAD" | "USD";
+  payPerUnit: "KM" | "MI" | "HR";
+};
+
+export async function fetchDriverPaymentData(
+  userId: number,
+  token: string | null
+): Promise<DriverPaymentData> {
+  if (!token) {
+    createErrorToast(["No token found"]);
+  }
+  const supabase = await getSupabaseClient(token);
+  const { data, error } = await supabase
+    .from("Drivers")
+    .select("tax, pay_rate_cents, pay_currency, pay_per_unit")
+    .eq("user_id", userId)
+    .single();
+  if (error && error.code === "PGRST116") {
+    // No driver record exists, create one with defaults
+    const insertError = await insertDriver(userId, 0, 0, "CAD", "KM", supabase);
+    if (insertError) {
+      return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM" };
+    }
+    return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM" };
+  } else if (error) {
+    createErrorToastNoThrow(["Failed to fetch driver payment data.", error.message]);
+    return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM" };
+  }
+  return {
+    tax: data?.tax ?? 0,
+    payRateCents: data?.pay_rate_cents ?? 0,
+    payCurrency: (data?.pay_currency as "CAD" | "USD") ?? "CAD",
+    payPerUnit: (data?.pay_per_unit as "KM" | "MI" | "HR") ?? "KM",
+  };
+}
+
+async function insertDriver(
+  userId: number,
+  tax: number,
+  payRateCents: number,
+  payCurrency: string,
+  payPerUnit: string,
+  supabaseClient: SupabaseClient
+) {
   const { error } = await supabaseClient.from("Drivers").insert({
     user_id: userId,
     tax,
+    pay_rate_cents: payRateCents,
+    pay_currency: payCurrency,
+    pay_per_unit: payPerUnit,
   });
   if (error) {
     createErrorToastNoThrow(["Failed to insert driver.", error.message]);
@@ -53,6 +102,9 @@ export async function insertUser(
   roleId: number,
   homeBaseIds: number[],
   tax: number | null,
+  payRateCents: number | null,
+  payCurrency: string,
+  payPerUnit: string,
   token: string
 ): Promise<number | null> {
   // console.log("Inserting user", token);
@@ -75,7 +127,14 @@ export async function insertUser(
     return null;
   }
   if (roleId === ROLES.driver) {
-    const insertError = await insertDriver(userData.user_id, tax ?? 0, supabase);
+    const insertError = await insertDriver(
+      userData.user_id,
+      tax ?? 0,
+      payRateCents ?? 0,
+      payCurrency,
+      payPerUnit,
+      supabase
+    );
     if (insertError) {
       createErrorToastNoThrow(["Failed to insert driver.", insertError.message]);
       return null;
@@ -113,6 +172,9 @@ export async function updateUser(
     roleId,
     homeBaseIds,
     tax,
+    payRateCents,
+    payCurrency,
+    payPerUnit,
     token,
   }: {
     email: string | null;
@@ -121,6 +183,9 @@ export async function updateUser(
     roleId: number | null;
     homeBaseIds: number[];
     tax: number | null;
+    payRateCents: number | null;
+    payCurrency: string;
+    payPerUnit: string;
     token: string;
   }
 ) {
@@ -155,10 +220,15 @@ export async function updateUser(
     const taxValue = tax ?? 0;
     const { error: driverError } = await supabase
       .from("Drivers")
-      .update({ tax: taxValue })
+      .update({
+        tax: taxValue,
+        pay_rate_cents: payRateCents ?? 0,
+        pay_currency: payCurrency,
+        pay_per_unit: payPerUnit,
+      })
       .eq("user_id", userId);
     if (driverError) {
-      createErrorToastNoThrow(["Failed to update driver tax.", driverError.message]);
+      createErrorToastNoThrow(["Failed to update driver.", driverError.message]);
     }
   }
   createSuccessToast(["User Updated"]);

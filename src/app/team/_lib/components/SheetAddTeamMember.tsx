@@ -7,6 +7,7 @@ import {
   deactivateUser,
   deleteUser,
   fetchDriverTaxById,
+  fetchDriverPaymentData,
   insertUser,
   reactivateUser,
   updateUser,
@@ -48,6 +49,8 @@ import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import InputPercents from "@/components/InputPercents";
 import { getHomeBaseOptions } from "@/utils/utils";
+import CentsInput from "@/components/CentsInput";
+import { PaymentInfo } from "./PaymentInfo";
 
 export function SheetAddTeamMember({
   isOpen,
@@ -78,16 +81,22 @@ export function SheetAddTeamMember({
   const [summerBleacherIds, setSummerBleacherIds] = useState<number[]>([]);
   const [winterBleacherIds, setWinterBleacherIds] = useState<number[]>([]);
 
+  // Driver payment fields
+  const [payRateInput, setPayRateInput] = useState<string>("");
+  const [payRateCents, setPayRateCents] = useState<number | null>(null);
+  const [payCurrency, setPayCurrency] = useState<"CAD" | "USD">("CAD");
+  const [payPerUnit, setPayPerUnit] = useState<"KM" | "MI" | "HR">("KM");
+
   const {
-    data: taxData,
-    isLoading: isTaxLoading,
-    isFetching: isTaxFetching,
-    isError: isTaxError,
+    data: paymentData,
+    isLoading: isPaymentLoading,
+    isFetching: isPaymentFetching,
+    isError: isPaymentError,
   } = useQuery({
-    queryKey: ["driverTax", existingUser?.user_id],
+    queryKey: ["driverPayment", existingUser?.user_id],
     queryFn: async () => {
       const token = await getToken({ template: "supabase" });
-      return fetchDriverTaxById(existingUser!.user_id, token);
+      return fetchDriverPaymentData(existingUser!.user_id, token);
     },
     enabled: !!existingUser && existingUser.role === ROLES.driver,
   });
@@ -120,10 +129,16 @@ export function SheetAddTeamMember({
   });
 
   useEffect(() => {
-    if (taxData) {
-      setTax(taxData);
+    if (paymentData) {
+      setTax(paymentData.tax);
+      setPayRateCents(paymentData.payRateCents);
+      // Convert cents to decimal string for display (e.g., 250 -> "2.50")
+      const displayValue = (paymentData.payRateCents / 100).toFixed(2);
+      setPayRateInput(displayValue);
+      setPayCurrency(paymentData.payCurrency);
+      setPayPerUnit(paymentData.payPerUnit);
     }
-  }, [isTaxLoading, isTaxError, taxData]);
+  }, [isPaymentLoading, isPaymentError, paymentData]);
 
   useEffect(() => {
     if (assignments) {
@@ -144,6 +159,10 @@ export function SheetAddTeamMember({
       setTax(undefined);
       setSummerBleacherIds([]);
       setWinterBleacherIds([]);
+      setPayRateInput("");
+      setPayRateCents(null);
+      setPayCurrency("CAD");
+      setPayPerUnit("KM");
     }
   }, [isOpen]);
 
@@ -185,6 +204,9 @@ export function SheetAddTeamMember({
           roleId,
           homeBaseIds,
           tax: tax ?? null,
+          payRateCents: payRateCents,
+          payCurrency: payCurrency,
+          payPerUnit: payPerUnit,
           token: token!,
         });
         // Save bleacher assignments for existing user
@@ -205,6 +227,9 @@ export function SheetAddTeamMember({
           roleId!,
           homeBaseIds,
           tax ?? null,
+          payRateCents,
+          payCurrency,
+          payPerUnit,
           token!
         );
         if (newUserId) {
@@ -320,7 +345,7 @@ export function SheetAddTeamMember({
   const allowResend =
     existingUser && existingUser.status === STATUSES.invited && existingUser.role !== ROLES.driver;
 
-  if (isTaxLoading)
+  if (isPaymentLoading)
     return (
       <div
         onMouseDown={() => setIsOpen(false)}
@@ -478,29 +503,40 @@ export function SheetAddTeamMember({
                       </TooltipProvider>
                     </div>
                     <InputPercents value={tax ?? 0} setValue={setTax} />
-                    {/* <input
-                      type="string"
-                      className="col-span-3 px-3 py-2 border rounded text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                      step="1"
-                      min="0"
-                      max="100"
-                      value={taxRaw}
-                      onChange={(e) => {
-                        let value = e.target.value;
-
-                        // Remove all leading zeros (but keep a single "0" if that's all there is)
-                        if (/^0\d+/.test(value)) {
-                          value = value.replace(/^0+/, "");
-                        }
-
-                        // If user deletes everything, treat as 0
-                        if (value === "") value = "0";
-
-                        setTaxRaw(value);
-                        setTax(Number(value));
-                      }}
-                      placeholder="0%"
-                    /> */}
+                  </div>
+                </div>
+              )}
+              {roleId === ROLES.driver && (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-5 items-center gap-4">
+                    <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
+                      <label htmlFor="payRate">Pay</label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-gray-500" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>How much does this driver get paid per unit?</p>
+                            <p>For example: $2.50 per KM, or $50.00 per HR</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <div className="col-span-3">
+                      <PaymentInfo
+                        payRateInput={payRateInput}
+                        payRateCents={payRateCents}
+                        payCurrency={payCurrency}
+                        payPerUnit={payPerUnit}
+                        onPayRateChange={(input, cents) => {
+                          setPayRateInput(input);
+                          setPayRateCents(cents);
+                        }}
+                        onCurrencyChange={setPayCurrency}
+                        onUnitChange={setPayPerUnit}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -556,50 +592,54 @@ export function SheetAddTeamMember({
               )}
 
               {/* Summer / Winter bleacher assignments */}
-              <div className="space-y-4 pt-2">
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
-                    <label>Summer Bleachers</label>
-                  </div>
-                  <div className="col-span-3">
-                    <MultiSelect
-                      options={(bleacherOptions ?? []).map((o) => ({
-                        label: o.label,
-                        value: o.id,
-                      }))}
-                      color="bg-greenAccent"
-                      onValueChange={(value) => setSummerBleacherIds(value)}
-                      forceSelectedValues={summerBleacherIds}
-                      placeholder={isBleachersLoading ? "Loading..." : "Select Bleachers"}
-                      variant="inverted"
-                      maxCount={3}
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4 pt-2">
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
-                    <label>Winter Bleachers</label>
-                  </div>
-                  <div className="col-span-3">
-                    <MultiSelect
-                      options={(bleacherOptions ?? []).map((o) => ({
-                        label: o.label,
-                        value: o.id,
-                      }))}
-                      color="bg-greenAccent"
-                      onValueChange={(value) => setWinterBleacherIds(value)}
-                      forceSelectedValues={winterBleacherIds}
-                      placeholder={isBleachersLoading ? "Loading..." : "Select Bleachers"}
-                      variant="inverted"
-                      maxCount={3}
-                      className="w-full"
-                    />
+              {roleId !== ROLES.driver && (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-5 items-center gap-4">
+                    <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
+                      <label>Summer Bleachers</label>
+                    </div>
+                    <div className="col-span-3">
+                      <MultiSelect
+                        options={(bleacherOptions ?? []).map((o) => ({
+                          label: o.label,
+                          value: o.id,
+                        }))}
+                        color="bg-greenAccent"
+                        onValueChange={(value) => setSummerBleacherIds(value)}
+                        forceSelectedValues={summerBleacherIds}
+                        placeholder={isBleachersLoading ? "Loading..." : "Select Bleachers"}
+                        variant="inverted"
+                        maxCount={3}
+                        className="w-full"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+              {roleId !== ROLES.driver && (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-5 items-center gap-4">
+                    <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
+                      <label>Winter Bleachers</label>
+                    </div>
+                    <div className="col-span-3">
+                      <MultiSelect
+                        options={(bleacherOptions ?? []).map((o) => ({
+                          label: o.label,
+                          value: o.id,
+                        }))}
+                        color="bg-greenAccent"
+                        onValueChange={(value) => setWinterBleacherIds(value)}
+                        forceSelectedValues={winterBleacherIds}
+                        placeholder={isBleachersLoading ? "Loading..." : "Select Bleachers"}
+                        variant="inverted"
+                        maxCount={3}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
               {allowResend && (
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-5 items-end gap-4">

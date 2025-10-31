@@ -3,13 +3,16 @@
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import usePlacesAutocomplete, { getGeocode } from "use-places-autocomplete";
+import usePlacesAutocomplete, { getGeocode, getLatLng } from "use-places-autocomplete";
 
 interface AddressData {
   address: string;
   city?: string;
   state?: string;
   postalCode?: string;
+  lat?: number;
+  lng?: number;
+  placeId?: string;
 }
 
 interface AddressComponent {
@@ -69,6 +72,8 @@ export default function AddressAutocomplete({
 
     try {
       const results = await getGeocode({ address });
+      const { lat, lng } = await getLatLng(results[0]);
+      const placeId = results[0].place_id;
       const components = results[0].address_components;
 
       const state = components.find((comp: AddressComponent) =>

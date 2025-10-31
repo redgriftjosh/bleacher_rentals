@@ -11,6 +11,9 @@ export type AddressData = {
   city?: string;
   state?: string;
   postalCode?: string;
+  lat?: number;
+  lng?: number;
+  placeId?: string;
 };
 
 export type EventStatus = "Quoted" | "Booked";

@@ -552,6 +552,7 @@ export type Database = {
           dropoff_address_id: number | null
           dropoff_poc: string | null
           dropoff_time: string | null
+          internal_notes: string | null
           notes: string | null
           pay_cents: number | null
           pickup_address_id: number | null
@@ -567,6 +568,7 @@ export type Database = {
           dropoff_address_id?: number | null
           dropoff_poc?: string | null
           dropoff_time?: string | null
+          internal_notes?: string | null
           notes?: string | null
           pay_cents?: number | null
           pickup_address_id?: number | null
@@ -582,6 +584,7 @@ export type Database = {
           dropoff_address_id?: number | null
           dropoff_poc?: string | null
           dropoff_time?: string | null
+          internal_notes?: string | null
           notes?: string | null
           pay_cents?: number | null
           pickup_address_id?: number | null
