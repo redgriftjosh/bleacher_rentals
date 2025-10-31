@@ -278,7 +278,7 @@ export class MainGridCellRenderer implements ICellRenderer {
 
       if (!thisEventShouldBePinned && eventInfo.isStart) {
         // UNPINNED EVENT: Cache the entire container for maximum performance
-        parent.zIndex = 1000;
+        parent.zIndex = 3;
 
         const firstCell = new FirstCellNotPinned(
           eventInfo,
@@ -290,9 +290,6 @@ export class MainGridCellRenderer implements ICellRenderer {
         );
         parent.addChild(firstCell);
       } else {
-        // PINNED EVENT OR EVENT BODY: Use separate caching strategy
-        parent.zIndex = 100;
-
         const eventSprite = new EventBody(eventInfo, this.baker, dimensions);
         parent.addChild(eventSprite);
       }
@@ -325,8 +322,24 @@ export class MainGridCellRenderer implements ICellRenderer {
           textSprite.eventMode = "none"; // ensure it does not capture events itself
           tile.addChild(textSprite);
         }
+      }
 
-        // Work tracker indicator (truck icon substitute) if a work tracker exists for this date
+      // Set up click listener for cell editing (after adding children)
+      if (this.yAxis === "Bleachers") {
+        tile.on("cell:edit-request", (data: { row: number; col: number }) => {
+          // If the click originated from a truck icon interaction, the callback will already have fired.
+          // We rely on event stopping at the icon level; proceed with block load otherwise.
+          this.handleLoadBlock(data.row, data.col);
+        });
+      }
+    }
+
+    // Render truck icon AFTER event/tile rendering so it appears on top (both event and non-event cells)
+    if (this.yAxis === "Bleachers") {
+      const bleacherId = this.rowBleacherIds[row];
+      const bleacher = this.latestBleachersById.get(bleacherId) ?? this.bleachers[row];
+      const date = this.dates[col];
+      if (bleacher && date) {
         const workTracker = bleacher.workTrackers?.find((wt) => wt.date === date);
         if (workTracker) {
           const icon = new TruckIcon(this.baker, () => {
@@ -349,20 +362,12 @@ export class MainGridCellRenderer implements ICellRenderer {
           const size = Math.min(cellWidth, cellHeight) * 0.55; // bigger for clarity
           icon.scale.set(size / 16); // base baked size 16
           icon.position.set(cellWidth - size + 4, 2); // top-right padding
-          icon.zIndex = 500; // above text
-          tile.addChild(icon);
+          // icon.zIndex = 3; // Always on top
+          parent.addChild(icon); // Add to parent, not tile
         }
       }
-
-      // Set up click listener for cell editing (after adding children)
-      if (this.yAxis === "Bleachers") {
-        tile.on("cell:edit-request", (data: { row: number; col: number }) => {
-          // If the click originated from a truck icon interaction, the callback will already have fired.
-          // We rely on event stopping at the icon level; proceed with block load otherwise.
-          this.handleLoadBlock(data.row, data.col);
-        });
-      }
     }
+
     return parent;
   }
 
