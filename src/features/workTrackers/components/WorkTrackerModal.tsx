@@ -13,8 +13,8 @@ import { fetchWorkTrackerById } from "../../oldDashboard/db/setupTeardownBlock/f
 import { EditBlock } from "../../oldDashboard/_components/dashboard/MainScrollableGrid";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";
-import { fetchBleachersForOptions } from "@/app/team/_lib/db";
-import { toLatLngString } from "../util";
+import { fetchBleachersForOptions, fetchDriverPaymentData } from "@/app/team/_lib/db";
+import { toLatLngString, calculateDriverPay } from "../util";
 import RouteMapPreview from "./RouteMapPreview";
 
 type WorkTrackerModalProps = {
@@ -129,6 +129,20 @@ export default function WorkTrackerModal({
       const token = await getToken({ template: "supabase" });
       return fetchBleachersForOptions(token);
     },
+  });
+
+  // Fetch driver payment data when driver is selected
+  const {
+    data: driverPaymentData,
+    isLoading: isDriverPaymentLoading,
+    isError: isDriverPaymentError,
+  } = useQuery({
+    queryKey: ["driverPayment", workTracker?.user_id],
+    queryFn: async () => {
+      const token = await getToken({ template: "supabase" });
+      return fetchDriverPaymentData(workTracker!.user_id!, token);
+    },
+    enabled: !!workTracker?.user_id,
   });
 
   const {
@@ -248,6 +262,33 @@ export default function WorkTrackerModal({
       }));
     }
   }
+
+  const handleCalculatePay = () => {
+    if (!driverPaymentData) {
+      createErrorToast(["Cannot calculate pay: Driver payment data not loaded"]);
+      return;
+    }
+
+    if (!leg) {
+      createErrorToast(["Cannot calculate pay: Distance/duration data not available"]);
+      return;
+    }
+
+    const amount = calculateDriverPay(driverPaymentData, leg);
+
+    if (amount === null || amount === 0) {
+      createErrorToast(["Cannot calculate pay: Missing distance or duration data"]);
+      return;
+    }
+
+    // Update the pay input field
+    const formattedAmount = amount.toFixed(2);
+    setPayInput(formattedAmount);
+    setWorkTracker((prev) => ({
+      ...prev!,
+      pay_cents: Math.round(amount * 100),
+    }));
+  };
 
   const labelClassName = "block text-sm font-medium text-gray-700 mt-1";
   const inputClassName = "w-full p-2 border rounded bg-white";
@@ -386,7 +427,10 @@ export default function WorkTrackerModal({
                     onChange={handlePayChange}
                     placeholder="0.00"
                   />
-                  <Calculator className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer" />
+                  <Calculator
+                    className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer text-darkBlue hover:text-lightBlue"
+                    onClick={handleCalculatePay}
+                  />
                 </div>
               </div>
 

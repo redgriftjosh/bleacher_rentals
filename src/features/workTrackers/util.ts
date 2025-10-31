@@ -24,3 +24,54 @@ export function calculateFinancialTotals(WorkTrackersResult: WorkTrackersResult)
 export function toLatLngString(a?: { lat?: number; lng?: number }) {
   return a?.lat != null && a?.lng != null ? `${a.lat},${a.lng}` : "";
 }
+
+export type DistanceData = {
+  distanceMeters: number | null;
+  distanceText: string | null;
+  durationSeconds: number | null;
+  durationText: string | null;
+  durationInTrafficSeconds?: number | null;
+  durationInTrafficText?: string | null;
+};
+
+export type DriverPaymentData = {
+  tax: number;
+  payRateCents: number;
+  payCurrency: "CAD" | "USD";
+  payPerUnit: "KM" | "MI" | "HR";
+};
+
+export function calculateDriverPay(
+  driverPaymentData: DriverPaymentData,
+  distanceData: DistanceData
+): number | null {
+  if (!driverPaymentData || !distanceData) {
+    return null;
+  }
+
+  let amount = 0;
+  const rate = driverPaymentData.payRateCents / 100; // Convert cents to dollars
+
+  switch (driverPaymentData.payPerUnit) {
+    case "KM":
+      if (distanceData.distanceMeters != null) {
+        const kilometers = distanceData.distanceMeters / 1000;
+        amount = rate * kilometers;
+      }
+      break;
+    case "MI":
+      if (distanceData.distanceMeters != null) {
+        const miles = distanceData.distanceMeters / 1609.34;
+        amount = rate * miles;
+      }
+      break;
+    case "HR":
+      if (distanceData.durationSeconds != null) {
+        const hours = distanceData.durationSeconds / 3600;
+        amount = rate * hours;
+      }
+      break;
+  }
+
+  return amount > 0 ? amount : null;
+}
