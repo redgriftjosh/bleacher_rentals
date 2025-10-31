@@ -6,6 +6,7 @@ import { Baker } from "../util/Baker";
 import { EventLeftColumnCell } from "../ui/EventLeftColumnCell";
 import { Bleacher, DashboardEvent } from "../types";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
+import { useBleacherLocationModalStore } from "../state/useBleacherLocationModalStore";
 
 /**
  * CellRenderer for the sticky left column that displays bleacher information
@@ -94,6 +95,19 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
           ? selected.filter((n) => n !== id)
           : [...selected, id];
         st.setField("bleacherIds", updated);
+      });
+
+      // Wire map pin click handler
+      cell.setMapPinClickHandler((id) => {
+        const bleacher = this.bleachers.find((b) => b.bleacherId === id);
+        if (bleacher && bleacher.linxupDeviceId) {
+          const modalStore = useBleacherLocationModalStore.getState();
+          modalStore.openModal(
+            bleacher.bleacherNumber,
+            bleacher.bleacherId,
+            bleacher.linxupDeviceId
+          );
+        }
       });
 
       // Initial state application

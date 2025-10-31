@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
+import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
 import { fetchTakenBleacherNumbers, insertBleacher } from "../../db";
 import { useAuth } from "@clerk/nextjs";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
@@ -22,6 +23,7 @@ export function SheetAddBleacher() {
   // const [homeBases, setHomeBases] = useState<HomeBase[] | null>(null);
   const [selectedHomeBaseId, setSelectedHomeBaseId] = useState<number | null>(null);
   const [selectedWinterHomeBaseId, setSelectedWinterHomeBaseId] = useState<number | null>(null);
+  const [selectedLinxupDeviceId, setSelectedLinxupDeviceId] = useState<string | null>(null);
   const [isTakenNumber, setIsTakenNumber] = useState(true);
   // const [isLoading, setIsLoading] = useState(true);
 
@@ -33,6 +35,7 @@ export function SheetAddBleacher() {
       setSeats(null);
       setSelectedHomeBaseId(null);
       setSelectedWinterHomeBaseId(null);
+      setSelectedLinxupDeviceId(null);
     }
   }, [isOpen]);
 
@@ -88,6 +91,7 @@ export function SheetAddBleacher() {
           bleacher_seats: seats!,
           home_base_id: selectedHomeBaseId!,
           winter_home_base_id: selectedWinterHomeBaseId!,
+          linxup_device_id: selectedLinxupDeviceId,
         },
         insertToken
       );
@@ -195,6 +199,16 @@ export function SheetAddBleacher() {
                     onSelect={(e) => setSelectedWinterHomeBaseId(Number(e.home_base_id))}
                     placeholder="Select Home Base"
                     value={selectedWinterHomeBaseId ?? undefined}
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
+                    Linxup Device
+                  </label>
+                  <SelectLinxupDeviceDropDown
+                    onSelect={(deviceId) => setSelectedLinxupDeviceId(deviceId)}
+                    placeholder="Select Device (Optional)"
+                    value={selectedLinxupDeviceId ?? null}
                   />
                 </div>
               </div>

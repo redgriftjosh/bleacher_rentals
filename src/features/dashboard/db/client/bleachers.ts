@@ -10,6 +10,7 @@ type Row = {
   bleacher_number: number;
   bleacher_rows: number;
   bleacher_seats: number;
+  linxup_device_id: string | null;
   summer: { home_base_name: string; home_base_id: number } | null;
   winter: { home_base_name: string; home_base_id: number } | null;
   bleacher_events: {
@@ -52,6 +53,7 @@ export async function FetchDashboardBleachers(
       bleacher_number,
       bleacher_rows,
       bleacher_seats,
+      linxup_device_id,
       summer:HomeBases!Bleachers_home_base_id_fkey(home_base_name, home_base_id),
       winter:HomeBases!Bleachers_winter_home_base_id_fkey(home_base_name, home_base_id),
       bleacher_events:BleacherEvents!BleacherEvents_bleacher_id_fkey(
@@ -80,6 +82,7 @@ export async function FetchDashboardBleachers(
       )
       `
     )
+    .order("bleacher_number", { ascending: true })
     .overrideTypes<Row[], { merge: false }>();
 
   if (error) {
@@ -91,6 +94,7 @@ export async function FetchDashboardBleachers(
     bleacherNumber: r.bleacher_number,
     bleacherRows: r.bleacher_rows,
     bleacherSeats: r.bleacher_seats,
+    linxupDeviceId: r.linxup_device_id,
     summerHomeBase: r.summer ? { name: r.summer.home_base_name, id: r.summer.home_base_id } : null,
     winterHomeBase: r.winter ? { name: r.winter.home_base_name, id: r.winter.home_base_id } : null,
     bleacherEvents: r.bleacher_events.map((be) => ({

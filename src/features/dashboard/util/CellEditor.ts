@@ -119,7 +119,7 @@ export class CellEditor {
     this.inputElement.style.position = "absolute";
     this.inputElement.style.border = "2px solid #007acc";
     this.inputElement.style.outline = "none";
-    this.inputElement.style.zIndex = "1000";
+    this.inputElement.style.zIndex = "4";
     this.inputElement.style.background = "white";
     this.inputElement.style.fontSize = "14px";
     this.inputElement.style.padding = "4px";

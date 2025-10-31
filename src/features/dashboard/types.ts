@@ -10,6 +10,7 @@ export type Bleacher = {
   bleacherEvents: BleacherEvent[];
   blocks: BleacherBlock[];
   workTrackers: BleacherWorkTracker[];
+  linxupDeviceId: string | null;
 };
 
 export type BleacherEvent = {

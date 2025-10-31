@@ -98,6 +98,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           home_base_id: number
+          linxup_device_id: string | null
           updated_at: string | null
           updated_by: string | null
           winter_home_base_id: number
@@ -110,6 +111,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           home_base_id: number
+          linxup_device_id?: string | null
           updated_at?: string | null
           updated_by?: string | null
           winter_home_base_id: number
@@ -122,6 +124,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           home_base_id?: number
+          linxup_device_id?: string | null
           updated_at?: string | null
           updated_by?: string | null
           winter_home_base_id?: number
@@ -218,18 +221,27 @@ export type Database = {
         Row: {
           created_at: string
           driver_id: number
+          pay_currency: string
+          pay_per_unit: string
+          pay_rate_cents: number
           tax: number
           user_id: number
         }
         Insert: {
           created_at?: string
           driver_id?: number
+          pay_currency?: string
+          pay_per_unit?: string
+          pay_rate_cents?: number
           tax?: number
           user_id: number
         }
         Update: {
           created_at?: string
           driver_id?: number
+          pay_currency?: string
+          pay_per_unit?: string
+          pay_rate_cents?: number
           tax?: number
           user_id?: number
         }
