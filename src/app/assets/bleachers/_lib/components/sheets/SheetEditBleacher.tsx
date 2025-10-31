@@ -7,6 +7,7 @@ import { useBleachersStore } from "@/state/bleachersStore";
 import { fetchTakenBleacherNumbers, insertBleacher, updateBleacher } from "../../db";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
+import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
 import { toast } from "sonner";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
@@ -35,6 +36,7 @@ export function SheetEditBleacher() {
   const [seats, setSeats] = useState<number | null>(null);
   const [selectedHomeBaseId, setSelectedHomeBaseId] = useState<number | null>(null);
   const [selectedWinterHomeBaseId, setSelectedWinterHomeBaseId] = useState<number | null>(null);
+  const [selectedLinxupDeviceId, setSelectedLinxupDeviceId] = useState<string | null>(null);
 
   const [isTakenNumber, setIsTakenNumber] = useState(true);
 
@@ -64,6 +66,7 @@ export function SheetEditBleacher() {
       setSeats(bleacher.bleacher_seats);
       setSelectedHomeBaseId(bleacher.home_base_id);
       setSelectedWinterHomeBaseId(bleacher.winter_home_base_id);
+      setSelectedLinxupDeviceId((bleacher as any).linxup_device_id ?? null);
     } else {
       // setIsOpen(false);
       toast.error("Bleacher not found");
@@ -78,6 +81,7 @@ export function SheetEditBleacher() {
       setSeats(null);
       setSelectedHomeBaseId(null);
       setSelectedWinterHomeBaseId(null);
+      setSelectedLinxupDeviceId(null);
       // Remove the edit parameter from URL
       //   router.push("/assets/bleachers");
     }
@@ -133,6 +137,7 @@ export function SheetEditBleacher() {
           bleacher_seats: seats!,
           home_base_id: selectedHomeBaseId!,
           winter_home_base_id: selectedWinterHomeBaseId!,
+          linxup_device_id: selectedLinxupDeviceId,
         },
         token
       );
@@ -236,6 +241,16 @@ export function SheetEditBleacher() {
                     onSelect={(e) => setSelectedWinterHomeBaseId(Number(e.home_base_id))}
                     placeholder="Select Home Base"
                     value={selectedWinterHomeBaseId ?? undefined}
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
+                    Linxup Device
+                  </label>
+                  <SelectLinxupDeviceDropDown
+                    onSelect={(deviceId) => setSelectedLinxupDeviceId(deviceId)}
+                    placeholder="Select Device (Optional)"
+                    value={selectedLinxupDeviceId ?? null}
                   />
                 </div>
               </div>
