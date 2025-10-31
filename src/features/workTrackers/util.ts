@@ -20,3 +20,7 @@ export function calculateFinancialTotals(WorkTrackersResult: WorkTrackersResult)
 
   return { subtotal, tax, taxPercent, total };
 }
+
+export function toLatLngString(a?: { lat?: number; lng?: number }) {
+  return a?.lat != null && a?.lng != null ? `${a.lat},${a.lng}` : "";
+}
