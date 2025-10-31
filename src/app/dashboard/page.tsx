@@ -17,6 +17,8 @@ import WorkTrackerModal from "@/features/workTrackers/components/WorkTrackerModa
 import { DashboardOptions } from "@/features/dashboardOptions/DashboardOptions";
 import { CreateEventButton } from "@/features/eventConfiguration/components/CreateEventButton";
 import { EventConfiguration } from "@/features/eventConfiguration/components/EventConfiguration";
+import BleacherLocationModal from "@/features/dashboard/components/BleacherLocationModal";
+import { useBleacherLocationModalStore } from "@/features/dashboard/state/useBleacherLocationModalStore";
 
 export default function Page() {
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
@@ -25,6 +27,10 @@ export default function Page() {
   const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
   const refreshToken = useDataRefreshTokenStore((s) => s.token);
   const { isLoaded, userId, getToken } = useAuth();
+
+  // Bleacher location modal state
+  const locationModal = useBleacherLocationModalStore();
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["FetchDashboardBleachersAndEvents", { onlyShowMyEvents, userId, refreshToken }],
     enabled: isLoaded && !!userId,
@@ -101,6 +107,14 @@ export default function Page() {
         setSelectedWorkTracker={setSelectedWorkTracker}
         setSelectedBlock={() => {}} // Not used in PixiJS version
       />
+      {locationModal.isOpen && locationModal.bleacherNumber && locationModal.deviceId && (
+        <BleacherLocationModal
+          isOpen={locationModal.isOpen}
+          onClose={locationModal.closeModal}
+          bleacherNumber={locationModal.bleacherNumber}
+          deviceId={locationModal.deviceId}
+        />
+      )}
       <div className="min-w-0">
         <div className="flex justify-between items-center pt-2 pl-2 pr-2">
           <DashboardOptions />

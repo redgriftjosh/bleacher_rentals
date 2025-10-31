@@ -3,6 +3,7 @@ import { Baker } from "../util/Baker";
 import { BleacherCellToggle } from "./BleacherCellToggle";
 import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT } from "../values/constants";
 import { Bleacher } from "../types";
+import { MapPinIcon } from "./event/MapPinIcon";
 
 /**
  * A lightweight, scroll-friendly **row widget** for the sticky left column.
@@ -38,7 +39,9 @@ export class BleacherCell extends Container {
   private baker: Baker;
   private bleacherId?: number; // reuse-safe id
   private toggle: BleacherCellToggle; // added toggle
+  private mapPinIcon: MapPinIcon; // added map pin icon
   private onToggle?: (bleacherId: number) => void;
+  private onMapPinClick?: (bleacherId: number) => void;
 
   // Map bleacherRows to Tailwind-like colors:
   // 7 -> green-700 (#15803d), 10 -> red-700 (#b91c1c), 15 -> yellow-500 (#eab308), else black
@@ -78,6 +81,19 @@ export class BleacherCell extends Container {
     this.toggle.on("pointertap", () => {
       if (this.bleacherId != null && this.onToggle) this.onToggle(this.bleacherId);
     });
+
+    // map pin icon setup
+    this.mapPinIcon = new MapPinIcon(baker, () => {
+      if (this.bleacherId != null && this.onMapPinClick) this.onMapPinClick(this.bleacherId);
+    });
+    // Position it to the right of the bleacher number text
+    // Bleacher number is at (3, 2), roughly 16px font + some width
+    // Position map pin at approximately x: 30, y: 4 (vertically centered with number)
+    this.mapPinIcon.x = 35;
+    this.mapPinIcon.y = 12;
+    this.mapPinIcon.visible = true;
+    this.mapPinIcon.scale.set(0.5, 0.5); // scale down if needed
+    this.addChild(this.mapPinIcon);
   }
 
   /**
@@ -92,6 +108,9 @@ export class BleacherCell extends Container {
     this.bleacherId = b.bleacherId;
     const key = b.bleacherId.toString();
 
+    // Show/hide map pin based on whether device is assigned
+    this.mapPinIcon.visible = !!b.linxupDeviceId;
+
     // Builds each cell once and stores as a texture in memory
     const rt = this.baker.getTexture(
       key,
@@ -104,6 +123,10 @@ export class BleacherCell extends Container {
 
   setToggleHandler(fn: (bleacherId: number) => void) {
     this.onToggle = fn;
+  }
+
+  setMapPinClickHandler(fn: (bleacherId: number) => void) {
+    this.onMapPinClick = fn;
   }
 
   setFormExpanded(expanded: boolean) {
