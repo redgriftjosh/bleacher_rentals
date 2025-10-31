@@ -377,6 +377,36 @@ export async function saveWorkTracker(
   createSuccessToast(["Work Tracker saved"]);
 }
 
+export async function deleteWorkTracker(
+  workTrackerId: number | null,
+  token: string | null
+): Promise<void> {
+  if (!token) {
+    createErrorToast(["No authentication token found"]);
+    throw new Error("No authentication token found");
+  }
+
+  if (!workTrackerId || workTrackerId === -1) {
+    createErrorToast(["Invalid work tracker ID"]);
+    throw new Error("Invalid work tracker ID");
+  }
+
+  const supabase = await getSupabaseClient(token);
+
+  const { error } = await supabase
+    .from("WorkTrackers")
+    .delete()
+    .eq("work_tracker_id", workTrackerId);
+
+  if (error) {
+    createErrorToast(["Failed to delete work tracker.", error?.message ?? ""]);
+    throw error;
+  }
+
+  updateDataBase(["WorkTrackers"]);
+  createSuccessToast(["Work Tracker deleted"]);
+}
+
 export async function saveSetupTeardownBlock(
   block: SetupTeardownBlock | null,
   token: string | null

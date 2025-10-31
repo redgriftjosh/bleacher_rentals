@@ -1,9 +1,9 @@
-import { Link, X } from "lucide-react";
+import { Link, X, Trash2 } from "lucide-react";
 import { Dropdown } from "@/components/DropDown";
 import { getDrivers } from "../../dashboard/db/client/getDrivers";
 import { useEffect, useState, useRef } from "react";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
-import { getAddressFromId, saveWorkTracker } from "../../dashboard/db/client/db";
+import { getAddressFromId, saveWorkTracker, deleteWorkTracker } from "../../dashboard/db/client/db";
 import { AddressData } from "../../eventConfiguration/state/useCurrentEventStore";
 import { useAuth } from "@clerk/nextjs";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
@@ -118,6 +118,35 @@ export default function WorkTrackerModal({
       setSelectedBlock(null);
     } catch (error) {
       createErrorToast(["Failed to Save Work Tracker:", String(error)]);
+    }
+  };
+
+  const handleDeleteWorkTracker = async () => {
+    if (!workTracker?.work_tracker_id || workTracker.work_tracker_id === -1) {
+      createErrorToast(["Cannot delete unsaved work tracker"]);
+      return;
+    }
+
+    if (!confirm("Are you sure you want to delete this work tracker?")) {
+      return;
+    }
+
+    const token = await getToken({ template: "supabase" });
+    try {
+      await deleteWorkTracker(workTracker.work_tracker_id, token);
+      // Refresh bleachers directly into the zustand store so Pixi updates without remounting
+      try {
+        const { FetchDashboardBleachers } = await import(
+          "@/features/dashboard/db/client/bleachers"
+        );
+        await FetchDashboardBleachers(token);
+      } catch {}
+      // Optionally refresh any active work-tracker-specific queries used elsewhere
+      await queryClient.invalidateQueries({ queryKey: ["work-trackers"], refetchType: "active" });
+      setSelectedWorkTracker(null);
+      setSelectedBlock(null);
+    } catch (error) {
+      createErrorToast(["Failed to Delete Work Tracker:", String(error)]);
     }
   };
 
@@ -333,7 +362,17 @@ export default function WorkTrackerModal({
                 />
               </div>
             </div>
-            <div className="mt-3 flex justify-end items-center gap-2">
+            <div className="mt-3 flex justify-between items-center gap-2">
+              {workTracker?.work_tracker_id && workTracker.work_tracker_id !== -1 && (
+                <button
+                  className="text-sm px-3 py-1 rounded bg-red-600 text-white cursor-pointer hover:bg-red-700 transition-all duration-200 flex items-center gap-1"
+                  onClick={handleDeleteWorkTracker}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              )}
+              <div className="flex-1" />
               <button
                 className="text-sm px-3 py-1 rounded bg-darkBlue text-white cursor-pointer hover:bg-lightBlue transition-all duration-200"
                 onClick={handleSaveWorkTracker}
