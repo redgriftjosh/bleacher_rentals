@@ -242,7 +242,7 @@ export default function WorkTrackerModal({
               {/* Column 1: Global Info */}
               <div className="flex-1">
                 <div className="flex flex-row gap-2">
-                  <div className="flex-1">
+                  <div className="flex-[2]">
                     <label className={labelClassName}>Driver</label>
                     <Dropdown
                       options={drivers.map((driver) => ({
@@ -260,7 +260,7 @@ export default function WorkTrackerModal({
                     />
                   </div>
                   <div className="flex-1">
-                    <label className={labelClassName}>Bleacher Number</label>
+                    <label className={labelClassName}>Bleacher</label>
                     <Dropdown
                       options={(bleacherOptions ?? []).map((bleacher) => ({
                         label: bleacher.label,
