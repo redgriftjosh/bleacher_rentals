@@ -105,6 +105,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       pickup_poc: null,
       pickup_time: null,
       user_id: null,
+      internal_notes: null,
     };
 
     onWorkTrackerOpen?.(workTracker);
