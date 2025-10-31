@@ -91,7 +91,7 @@ export function Dropdown<T>({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -5 }}
                 transition={{ duration: 0.15 }}
-                className="absolute z-[9999] bg-white border border-gray-200 rounded shadow-lg overflow-hidden"
+                className="absolute z-[9999] bg-white border border-gray-200 rounded shadow-lg overflow-y-auto max-h-[60vh]"
                 style={{
                   position: "absolute",
                   top: dropdownPos.top,

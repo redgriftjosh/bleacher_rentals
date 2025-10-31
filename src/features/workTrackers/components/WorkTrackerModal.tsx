@@ -13,6 +13,7 @@ import { fetchWorkTrackerById } from "../../oldDashboard/db/setupTeardownBlock/f
 import { EditBlock } from "../../oldDashboard/_components/dashboard/MainScrollableGrid";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";
+import { fetchBleachersForOptions } from "@/app/team/_lib/db";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -56,6 +57,19 @@ export default function WorkTrackerModal({
   // }, [workTracker?.pay_cents]);
 
   // console.log("selectedWorkTracker WorkTrackerModal", selectedWorkTracker);
+
+  // Bleacher options for the dropdown
+  const {
+    data: bleacherOptions,
+    isLoading: isBleachersLoading,
+    isError: isBleachersError,
+  } = useQuery({
+    queryKey: ["bleacherOptions"],
+    queryFn: async () => {
+      const token = await getToken({ template: "supabase" });
+      return fetchBleachersForOptions(token);
+    },
+  });
 
   const {
     data: fetchedWorkTracker,
@@ -227,21 +241,42 @@ export default function WorkTrackerModal({
             <div className="flex flex-row gap-4">
               {/* Column 1: Global Info */}
               <div className="flex-1">
-                <label className={labelClassName}>Driver</label>
-                <Dropdown
-                  options={drivers.map((driver) => ({
-                    label: driver.first_name + " " + driver.last_name,
-                    value: driver.user_id,
-                  }))}
-                  selected={workTracker?.user_id}
-                  onSelect={(id) =>
-                    setWorkTracker((prev) => ({
-                      ...prev!,
-                      user_id: id,
-                    }))
-                  }
-                  placeholder="Select Driver"
-                />
+                <div className="flex flex-row gap-2">
+                  <div className="flex-1">
+                    <label className={labelClassName}>Driver</label>
+                    <Dropdown
+                      options={drivers.map((driver) => ({
+                        label: driver.first_name + " " + driver.last_name,
+                        value: driver.user_id,
+                      }))}
+                      selected={workTracker?.user_id}
+                      onSelect={(id) =>
+                        setWorkTracker((prev) => ({
+                          ...prev!,
+                          user_id: id,
+                        }))
+                      }
+                      placeholder="Select Driver"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className={labelClassName}>Bleacher Number</label>
+                    <Dropdown
+                      options={(bleacherOptions ?? []).map((bleacher) => ({
+                        label: bleacher.label,
+                        value: bleacher.id,
+                      }))}
+                      selected={workTracker?.bleacher_id}
+                      onSelect={(id) =>
+                        setWorkTracker((prev) => ({
+                          ...prev!,
+                          bleacher_id: id,
+                        }))
+                      }
+                      placeholder={isBleachersLoading ? "Loading..." : "Select Bleacher"}
+                    />
+                  </div>
+                </div>
                 <label className={labelClassName}>Date</label>
                 <input
                   type="date"
