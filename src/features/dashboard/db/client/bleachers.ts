@@ -82,6 +82,7 @@ export async function FetchDashboardBleachers(
       )
       `
     )
+    .order("bleacher_number", { ascending: true })
     .overrideTypes<Row[], { merge: false }>();
 
   if (error) {
