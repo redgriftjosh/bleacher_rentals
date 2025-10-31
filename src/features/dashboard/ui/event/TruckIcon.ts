@@ -45,39 +45,42 @@ export class TruckIcon extends Container {
     const cached = PngManager.getTexture("truck");
     if (!cached) return; // fallback already set
 
-    const baked = this.baker.getTexture(`TruckIcon-cached`, { width: 10, height: 10 }, (c) => {
+    const baked = this.baker.getTexture(`TruckIcon-cached`, { width: 96, height: 96 }, (c) => {
       const s = new Sprite(cached);
-      s.width = 10;
-      s.height = 10;
+      s.width = 96;
+      s.height = 96;
       s.anchor.set(0, 0);
       s.position.set(0, 0);
       c.addChild(s);
     });
     this.iconSprite.texture = baked;
+    this.iconSprite.anchor.set(0.5, 0.5);
   }
 
   private handleAsyncLoaded = (tex: Texture) => {
     // Rebuild baked texture using newly available source
-    const baked = this.baker.getTexture(`TruckIcon-cached`, { width: 10, height: 10 }, (c) => {
+    const baked = this.baker.getTexture(`TruckIcon-cached`, { width: 96, height: 96 }, (c) => {
       const s = new Sprite(tex);
-      s.width = 10;
-      s.height = 10;
+      s.width = 96;
+      s.height = 96;
       s.anchor.set(0, 0);
       s.position.set(0, 0);
       c.addChild(s);
     });
     this.iconSprite.texture = baked;
+    this.iconSprite.anchor.set(0.5, 0.5);
   };
 
   private createFallbackTexture() {
-    const fallback = this.baker.getTexture(`TruckIcon-fallback`, { width: 10, height: 10 }, (c) => {
+    const fallback = this.baker.getTexture(`TruckIcon-fallback`, { width: 96, height: 96 }, (c) => {
       const g = new Graphics();
       g.fill({ color: 0x1e3a8a });
-      g.roundRect(0, 0, 10, 10, 3);
+      g.roundRect(0, 0, 96, 96, 3);
       g.fill();
       c.addChild(g);
     });
     this.iconSprite.texture = fallback;
+    this.iconSprite.anchor.set(0.5, 0.5);
     this.iconSprite.alpha = 1;
     this.iconSprite.visible = true;
   }

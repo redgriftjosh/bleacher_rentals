@@ -360,9 +360,8 @@ export class MainGridCellRenderer implements ICellRenderer {
           icon.on("pointertap", (e: any) => e.stopPropagation());
           icon.on("click", (e: any) => e.stopPropagation());
           const size = Math.min(cellWidth, cellHeight) * 0.55; // bigger for clarity
-          icon.scale.set(size / 16); // base baked size 16
-          icon.position.set(cellWidth - size + 4, 2); // top-right padding
-          // icon.zIndex = 3; // Always on top
+          icon.scale.set(size / 144); // base baked size 48x48
+          icon.position.set(cellWidth - size + 16, 9); // top-right padding
           parent.addChild(icon); // Add to parent, not tile
         }
       }
