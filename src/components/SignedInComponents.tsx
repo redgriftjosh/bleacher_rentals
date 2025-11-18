@@ -13,16 +13,16 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
   useSupabaseSubscriptions();
   const { user, isLoaded } = useUser();
   const users = useUsersStore((s) => s.users);
-  // console.log("users:", users);
-  // console.log("user:", user);
+  console.log("users:", users);
 
   if (!isLoaded) return null;
+  console.log("user:", user);
 
   const currentUser = users.find((u) => u.clerk_user_id === user?.id);
-  // console.log("currentUser:", currentUser);
+  console.log("currentUser:", currentUser);
 
   const isDeactivated = currentUser?.status === 3;
-  // console.log("isDeactivated:", isDeactivated);
+  console.log("isDeactivated:", isDeactivated);
 
   if (isDeactivated) {
     return (
