@@ -85,7 +85,7 @@ export async function POST(req: Request) {
           // email: email_addresses?.[0]?.email_address || null,
           phone: phone_numbers?.[0]?.phone_number || null,
           status: 2,
-          role: 1,
+          // role: 1,
         },
         { onConflict: "email" }
       );
