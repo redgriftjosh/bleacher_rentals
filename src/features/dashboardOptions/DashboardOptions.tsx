@@ -33,6 +33,7 @@ export function DashboardOptions() {
   const rows = useFilterDashboardStore((s) => s.rows);
   const stateProvinces = useFilterDashboardStore((s) => s.stateProvinces);
   const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
+  const hideLostEvents = useFilterDashboardStore((s) => s.hideLostEvents);
   const optimizationMode = useFilterDashboardStore((s) => s.optimizationMode);
   const season = useFilterDashboardStore((s) => s.season);
 
@@ -132,6 +133,12 @@ export function DashboardOptions() {
               onCheckedChange={(checked) => setField("onlyShowMyEvents", Boolean(checked))}
             >
               Only Show My Events
+            </MenubarCheckboxItem>
+            <MenubarCheckboxItem
+              checked={hideLostEvents}
+              onCheckedChange={(checked) => setField("hideLostEvents", Boolean(checked))}
+            >
+              Hide Lost Events
             </MenubarCheckboxItem>
             <MenubarSeparator />
             <MenubarItem

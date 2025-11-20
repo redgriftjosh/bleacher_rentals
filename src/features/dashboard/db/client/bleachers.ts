@@ -2,7 +2,7 @@
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { Tables } from "../../../../../database.types";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
-import { Bleacher } from "../../types";
+import { Bleacher, EventStatus } from "../../types";
 import { useDashboardBleachersStore } from "../../state/useDashboardBleachersStore";
 
 type Row = {
@@ -21,7 +21,7 @@ type Row = {
       event_start: string;
       event_end: string;
       hsl_hue: number | null;
-      booked: boolean;
+      contract_status: EventStatus;
       address: { street: string } | null;
       goodshuffle_url: string | null;
     };
@@ -64,7 +64,7 @@ export async function FetchDashboardBleachers(
           event_start,
           event_end,
           hsl_hue,
-          booked,
+          contract_status,
           goodshuffle_url,
           address:Addresses!Events_address_id_fkey(
             street
@@ -104,7 +104,7 @@ export async function FetchDashboardBleachers(
       eventStart: be.event.event_start,
       eventEnd: be.event.event_end,
       hslHue: be.event.hsl_hue,
-      booked: be.event.booked,
+      contract_status: be.event.contract_status,
       goodshuffleUrl: be.event.goodshuffle_url ?? null,
       address: be.event.address?.street ?? "",
     })),

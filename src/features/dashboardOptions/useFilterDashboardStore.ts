@@ -11,6 +11,7 @@ export type FilterDashboardState = {
   stateProvinces: number[];
   onlyShowMyEvents: boolean;
   optimizationMode: boolean;
+  hideLostEvents: boolean;
   season: Season; // nullable: null => Don't Filter (both)
   // dynamically set by DashboardApp when fetched for current user; used in filtering
   summerAssignedBleacherIds?: number[];
@@ -34,6 +35,7 @@ const initialState: FilterDashboardState = {
   stateProvinces: [],
   onlyShowMyEvents: true,
   optimizationMode: false,
+  hideLostEvents: true,
   season: null, // default to SUMMER per request
   summerAssignedBleacherIds: [],
   winterAssignedBleacherIds: [],

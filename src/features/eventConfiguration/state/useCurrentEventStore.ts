@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { useEventsStore } from "@/state/eventsStore";
 import { calculateBestHue, updateCurrentEventAlerts } from "../../oldDashboard/functions";
 import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
+import { EventStatus } from "@/features/dashboard/types";
 
 export type AddressData = {
   addressId: number | null;
@@ -15,8 +16,6 @@ export type AddressData = {
   lng?: number;
   placeId?: string;
 };
-
-export type EventStatus = "Quoted" | "Booked";
 
 export type CurrentEventState = {
   eventId: number | null;
@@ -72,7 +71,7 @@ const initialState: CurrentEventState = {
   teardownEnd: "",
   sameDayTeardown: true,
   lenient: false,
-  selectedStatus: "Quoted",
+  selectedStatus: "QUOTED",
   notes: "",
   mustBeClean: false,
   bleacherIds: [],

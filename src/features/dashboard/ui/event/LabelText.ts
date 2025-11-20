@@ -1,5 +1,6 @@
 import { Container, Text } from "pixi.js";
 import { EventSpanType } from "../../util/Events";
+import { LOST_EVENT_COLOR } from "@/features/dashboard/values/constants";
 
 /**
  * Static event label component without any interactive elements
@@ -12,10 +13,14 @@ export class LabelText extends Container {
   constructor(eventInfo: EventSpanType) {
     super();
 
-    // Determine text color based on booked status
-    const isBooked = !!eventInfo.ev.booked;
-    const eventColor =
-      eventInfo.ev.hslHue != null ? this.hslToRgbInt(eventInfo.ev.hslHue, 60, 60) : 0x808080;
+    // Determine text color based on contract status
+    const isBooked = eventInfo.ev.contract_status === "BOOKED";
+    const isLost = eventInfo.ev.contract_status === "LOST";
+    const eventColor = isLost
+      ? LOST_EVENT_COLOR
+      : eventInfo.ev.hslHue != null
+        ? this.hslToRgbInt(eventInfo.ev.hslHue, 60, 60)
+        : 0x808080;
     const textColor = isBooked ? 0x000000 : eventColor;
 
     // Event name (main label)

@@ -32,6 +32,7 @@ const Dashboard = memo(({ yAxis }: DashboardProps) => {
   const rows = useFilterDashboardStore((s) => s.rows);
   const bleacherIds = useCurrentEventStore((s) => s.bleacherIds);
   const stateProvinces = useFilterDashboardStore((s) => s.stateProvinces);
+  const hideLostEvents = useFilterDashboardStore((s) => s.hideLostEvents);
 
   const dates: string[] = Array.from({ length: DATE_RANGE * 2 + 1 }, (_, i) =>
     DateTime.now()
@@ -65,8 +66,8 @@ const Dashboard = memo(({ yAxis }: DashboardProps) => {
   // when the user changes their filtering options in useFilterDashboardStore this will run
   const sortedEvents = useMemo(() => {
     // console.log("filterSortBleachers re-running due to dependency change");
-    return filterEvents(events, stateProvinces);
-  }, [events, stateProvinces]);
+    return filterEvents(events, stateProvinces, hideLostEvents);
+  }, [events, stateProvinces, hideLostEvents]);
 
   return (
     <ScrollSync>

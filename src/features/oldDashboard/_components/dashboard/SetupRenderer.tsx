@@ -51,7 +51,7 @@ export default function SetupRenderer({
   );
   const padding = 6;
   let width = `${daysVisible * COLUMN_WIDTH - (padding * 2 + 1)}px`;
-  const border = event.status === "Booked" ? 0 : 1;
+  const border = event.selectedStatus === "BOOKED" ? 0 : 1;
   const setupDays: number | null =
     event.setupStart != ""
       ? eventStartDate.diff(DateTime.fromISO(event.setupStart), "days").days

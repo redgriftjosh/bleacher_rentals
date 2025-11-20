@@ -259,6 +259,8 @@ export type Database = {
         Row: {
           address_id: number
           booked: boolean
+          contract_revenue_cents: number | null
+          contract_status: Database["public"]["Enums"]["contract_status"]
           created_at: string
           created_by_user_id: number | null
           event_end: string
@@ -280,6 +282,8 @@ export type Database = {
         Insert: {
           address_id: number
           booked?: boolean
+          contract_revenue_cents?: number | null
+          contract_status?: Database["public"]["Enums"]["contract_status"]
           created_at?: string
           created_by_user_id?: number | null
           event_end: string
@@ -301,6 +305,8 @@ export type Database = {
         Update: {
           address_id?: number
           booked?: boolean
+          contract_revenue_cents?: number | null
+          contract_status?: Database["public"]["Enums"]["contract_status"]
           created_at?: string
           created_by_user_id?: number | null
           event_end?: string
@@ -644,7 +650,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      contract_status: "QUOTED" | "BOOKED" | "LOST"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -771,6 +777,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      contract_status: ["QUOTED", "BOOKED", "LOST"],
+    },
   },
 } as const

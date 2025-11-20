@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { filterSortPixiBleachers } from "../util";
+import { filterSortPixiBleachers, filterEvents } from "../util";
 import { Bleacher } from "../../dashboard/types";
 
 function makeBleacher(partial: Partial<Bleacher>): Bleacher {
@@ -13,6 +13,7 @@ function makeBleacher(partial: Partial<Bleacher>): Bleacher {
     bleacherEvents: partial.bleacherEvents ?? [],
     blocks: partial.blocks ?? [],
     workTrackers: partial.workTrackers ?? [],
+    linxupDeviceId: partial.linxupDeviceId ?? null,
   };
 }
 
@@ -765,5 +766,406 @@ describe("Optimization mode OFF promotes selected (and includes them despite fil
     expect(ids.slice(0, 3)).toEqual([2, 3, 4]);
     // Bleacher 1 (assigned) follows
     expect(ids).toEqual([2, 3, 4, 1]);
+  });
+});
+
+// ------------------------------------------------------------
+// Tests for hideLostEvents filtering in filterSortPixiBleachers
+// ------------------------------------------------------------
+
+describe("filterSortPixiBleachers with hideLostEvents", () => {
+  const bleachers: Bleacher[] = [
+    makeBleacher({
+      bleacherId: 1,
+      summerHomeBase: { id: 1, name: "A" },
+      winterHomeBase: { id: 10, name: "W" },
+      bleacherRows: 5,
+      bleacherEvents: [
+        {
+          eventId: 101,
+          bleacherEventId: 1001,
+          eventName: "Event 101",
+          address: "Address 1",
+          eventStart: "2025-01-01",
+          eventEnd: "2025-01-02",
+          hslHue: 200,
+          contract_status: "BOOKED",
+          goodshuffleUrl: null,
+        },
+        {
+          eventId: 102,
+          bleacherEventId: 1002,
+          eventName: "Event 102",
+          address: "Address 2",
+          eventStart: "2025-01-05",
+          eventEnd: "2025-01-06",
+          hslHue: 220,
+          contract_status: "LOST",
+          goodshuffleUrl: null,
+        },
+      ],
+    }),
+    makeBleacher({
+      bleacherId: 2,
+      summerHomeBase: { id: 1, name: "A" },
+      winterHomeBase: { id: 10, name: "W" },
+      bleacherRows: 5,
+      bleacherEvents: [
+        {
+          eventId: 201,
+          bleacherEventId: 2001,
+          eventName: "Event 201",
+          address: "Address 3",
+          eventStart: "2025-02-01",
+          eventEnd: "2025-02-02",
+          hslHue: 180,
+          contract_status: "QUOTED",
+          goodshuffleUrl: null,
+        },
+        {
+          eventId: 202,
+          bleacherEventId: 2002,
+          eventName: "Event 202",
+          address: "Address 4",
+          eventStart: "2025-02-05",
+          eventEnd: "2025-02-06",
+          hslHue: 160,
+          contract_status: "LOST",
+          goodshuffleUrl: null,
+        },
+        {
+          eventId: 203,
+          bleacherEventId: 2003,
+          eventName: "Event 203",
+          address: "Address 5",
+          eventStart: "2025-02-10",
+          eventEnd: "2025-02-11",
+          hslHue: 140,
+          contract_status: "BOOKED",
+          goodshuffleUrl: null,
+        },
+      ],
+    }),
+  ];
+
+  const allSummerHBs = [1];
+  const allWinterHBs = [10];
+  const allRows = [5];
+
+  it("filters out LOST events from bleacherEvents when hideLostEvents is true", () => {
+    const result = filterSortPixiBleachers(
+      allSummerHBs,
+      allWinterHBs,
+      allRows,
+      bleachers,
+      [],
+      true,
+      true,
+      null,
+      [],
+      [],
+      true // hideLostEvents
+    );
+
+    // Bleacher 1 should have only event 101 (BOOKED), not 102 (LOST)
+    expect(result[0].bleacherEvents).toHaveLength(1);
+    expect(result[0].bleacherEvents[0].eventId).toBe(101);
+    expect(result[0].bleacherEvents[0].contract_status).toBe("BOOKED");
+
+    // Bleacher 2 should have only events 201 (QUOTED) and 203 (BOOKED), not 202 (LOST)
+    expect(result[1].bleacherEvents).toHaveLength(2);
+    expect(result[1].bleacherEvents[0].eventId).toBe(201);
+    expect(result[1].bleacherEvents[0].contract_status).toBe("QUOTED");
+    expect(result[1].bleacherEvents[1].eventId).toBe(203);
+    expect(result[1].bleacherEvents[1].contract_status).toBe("BOOKED");
+  });
+
+  it("includes LOST events when hideLostEvents is false", () => {
+    const result = filterSortPixiBleachers(
+      allSummerHBs,
+      allWinterHBs,
+      allRows,
+      bleachers,
+      [],
+      true,
+      true,
+      null,
+      [],
+      [],
+      false // hideLostEvents
+    );
+
+    // Bleacher 1 should have both events including LOST
+    expect(result[0].bleacherEvents).toHaveLength(2);
+    expect(result[0].bleacherEvents[0].contract_status).toBe("BOOKED");
+    expect(result[0].bleacherEvents[1].contract_status).toBe("LOST");
+
+    // Bleacher 2 should have all three events including LOST
+    expect(result[1].bleacherEvents).toHaveLength(3);
+    expect(result[1].bleacherEvents[0].contract_status).toBe("QUOTED");
+    expect(result[1].bleacherEvents[1].contract_status).toBe("LOST");
+    expect(result[1].bleacherEvents[2].contract_status).toBe("BOOKED");
+  });
+
+  it("defaults to hiding LOST events when parameter is not provided", () => {
+    const result = filterSortPixiBleachers(
+      allSummerHBs,
+      allWinterHBs,
+      allRows,
+      bleachers,
+      [],
+      true,
+      true,
+      null,
+      [],
+      []
+      // hideLostEvents not provided, should default to true
+    );
+
+    // Should filter out LOST events by default
+    expect(result[0].bleacherEvents).toHaveLength(1);
+    expect(result[0].bleacherEvents[0].contract_status).toBe("BOOKED");
+    expect(result[1].bleacherEvents).toHaveLength(2);
+    expect(result[1].bleacherEvents[0].contract_status).toBe("QUOTED");
+    expect(result[1].bleacherEvents[1].contract_status).toBe("BOOKED");
+  });
+
+  it("filters LOST events with optimizationMode=false (promotion scenario)", () => {
+    const selected = [2];
+    const result = filterSortPixiBleachers(
+      allSummerHBs,
+      allWinterHBs,
+      allRows,
+      bleachers,
+      selected,
+      true,
+      false, // optimizationMode off
+      null,
+      [],
+      [],
+      true // hideLostEvents
+    );
+
+    // Bleacher 2 should be promoted to top and have LOST events filtered
+    expect(result[0].bleacherId).toBe(2);
+    expect(result[0].bleacherEvents).toHaveLength(2);
+    expect(result[0].bleacherEvents[0].contract_status).toBe("QUOTED");
+    expect(result[0].bleacherEvents[1].contract_status).toBe("BOOKED");
+
+    // Bleacher 1 should follow and also have LOST events filtered
+    expect(result[1].bleacherId).toBe(1);
+    expect(result[1].bleacherEvents).toHaveLength(1);
+    expect(result[1].bleacherEvents[0].contract_status).toBe("BOOKED");
+  });
+
+  it("returns empty bleacherEvents array when all events are LOST", () => {
+    const bleacherWithOnlyLost: Bleacher[] = [
+      makeBleacher({
+        bleacherId: 99,
+        summerHomeBase: { id: 1, name: "A" },
+        winterHomeBase: { id: 10, name: "W" },
+        bleacherRows: 5,
+        bleacherEvents: [
+          {
+            eventId: 901,
+            bleacherEventId: 9001,
+            eventName: "Lost Event 1",
+            address: "Address",
+            eventStart: "2025-03-01",
+            eventEnd: "2025-03-02",
+            hslHue: 100,
+            contract_status: "LOST",
+            goodshuffleUrl: null,
+          },
+          {
+            eventId: 902,
+            bleacherEventId: 9002,
+            eventName: "Lost Event 2",
+            address: "Address",
+            eventStart: "2025-03-05",
+            eventEnd: "2025-03-06",
+            hslHue: 120,
+            contract_status: "LOST",
+            goodshuffleUrl: null,
+          },
+        ],
+      }),
+    ];
+
+    const result = filterSortPixiBleachers(
+      allSummerHBs,
+      allWinterHBs,
+      allRows,
+      bleacherWithOnlyLost,
+      [],
+      true,
+      true,
+      null,
+      [],
+      [],
+      true
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0].bleacherEvents).toHaveLength(0);
+  });
+});
+
+describe("filterSortPixiBleachers hideLostEvents parameter", () => {
+  const bleachers: Bleacher[] = [
+    makeBleacher({
+      bleacherId: 1,
+      bleacherNumber: 1,
+      summerHomeBase: { id: 1, name: "Base A" },
+      winterHomeBase: { id: 10, name: "Winter A" },
+      bleacherRows: 5,
+      bleacherEvents: [
+        {
+          eventId: 100,
+          bleacherEventId: 1001,
+          eventName: "Booked Event",
+          address: "123 Main St",
+          eventStart: "2024-06-01",
+          eventEnd: "2024-06-05",
+          hslHue: 180,
+          contract_status: "BOOKED",
+          goodshuffleUrl: null,
+        },
+        {
+          eventId: 101,
+          bleacherEventId: 1002,
+          eventName: "Lost Event",
+          address: "456 Oak Ave",
+          eventStart: "2024-06-10",
+          eventEnd: "2024-06-15",
+          hslHue: null,
+          contract_status: "LOST",
+          goodshuffleUrl: null,
+        },
+        {
+          eventId: 102,
+          bleacherEventId: 1003,
+          eventName: "Quoted Event",
+          address: "789 Pine Rd",
+          eventStart: "2024-06-20",
+          eventEnd: "2024-06-25",
+          hslHue: 240,
+          contract_status: "QUOTED",
+          goodshuffleUrl: null,
+        },
+      ],
+    }),
+    makeBleacher({
+      bleacherId: 2,
+      bleacherNumber: 2,
+      summerHomeBase: { id: 1, name: "Base A" },
+      winterHomeBase: { id: 10, name: "Winter A" },
+      bleacherRows: 5,
+      bleacherEvents: [
+        {
+          eventId: 200,
+          bleacherEventId: 2001,
+          eventName: "Lost Event 1",
+          address: "100 Elm St",
+          eventStart: "2024-07-01",
+          eventEnd: "2024-07-05",
+          hslHue: null,
+          contract_status: "LOST",
+          goodshuffleUrl: null,
+        },
+        {
+          eventId: 201,
+          bleacherEventId: 2002,
+          eventName: "Lost Event 2",
+          address: "200 Maple Dr",
+          eventStart: "2024-07-10",
+          eventEnd: "2024-07-15",
+          hslHue: null,
+          contract_status: "LOST",
+          goodshuffleUrl: null,
+        },
+      ],
+    }),
+  ];
+
+  it("filters out LOST events when hideLostEvents is true (default)", () => {
+    const result = filterSortPixiBleachers(
+      [1], // homeBaseIds
+      [10], // winterHomeBaseIds
+      [5], // rows
+      bleachers,
+      [], // alwaysIncludeBleacherIds
+      false, // isFormExpanded
+      true, // optimizationMode
+      null, // season
+      [], // summerAssignedBleacherIds
+      [], // winterAssignedBleacherIds
+      true // hideLostEvents
+    );
+
+    expect(result).toHaveLength(2);
+
+    // Bleacher 1 should have only BOOKED and QUOTED events (LOST filtered out)
+    const bleacher1 = result.find((b) => b.bleacherId === 1);
+    expect(bleacher1?.bleacherEvents).toHaveLength(2);
+    expect(bleacher1?.bleacherEvents.map((e) => e.eventId)).toEqual([100, 102]);
+
+    // Bleacher 2 should have no events (all were LOST)
+    const bleacher2 = result.find((b) => b.bleacherId === 2);
+    expect(bleacher2?.bleacherEvents).toHaveLength(0);
+  });
+
+  it("includes LOST events when hideLostEvents is false", () => {
+    const result = filterSortPixiBleachers(
+      [1], // homeBaseIds
+      [10], // winterHomeBaseIds
+      [5], // rows
+      bleachers,
+      [], // alwaysIncludeBleacherIds
+      false, // isFormExpanded
+      true, // optimizationMode
+      null, // season
+      [], // summerAssignedBleacherIds
+      [], // winterAssignedBleacherIds
+      false // hideLostEvents
+    );
+
+    expect(result).toHaveLength(2);
+
+    // Bleacher 1 should have all 3 events
+    const bleacher1 = result.find((b) => b.bleacherId === 1);
+    expect(bleacher1?.bleacherEvents).toHaveLength(3);
+    expect(bleacher1?.bleacherEvents.map((e) => e.eventId)).toEqual([100, 101, 102]);
+
+    // Bleacher 2 should have both LOST events
+    const bleacher2 = result.find((b) => b.bleacherId === 2);
+    expect(bleacher2?.bleacherEvents).toHaveLength(2);
+    expect(bleacher2?.bleacherEvents.map((e) => e.eventId)).toEqual([200, 201]);
+  });
+
+  it("filters LOST events in optimization mode OFF as well", () => {
+    const result = filterSortPixiBleachers(
+      [1], // homeBaseIds
+      [10], // winterHomeBaseIds
+      [5], // rows
+      bleachers,
+      [1, 2], // alwaysIncludeBleacherIds
+      false, // isFormExpanded
+      false, // optimizationMode (OFF - promotion behavior)
+      null, // season
+      [], // summerAssignedBleacherIds
+      [], // winterAssignedBleacherIds
+      true // hideLostEvents
+    );
+
+    expect(result).toHaveLength(2);
+
+    // Both bleachers should have LOST events filtered
+    const bleacher1 = result.find((b) => b.bleacherId === 1);
+    expect(bleacher1?.bleacherEvents).toHaveLength(2);
+    expect(bleacher1?.bleacherEvents.map((e) => e.contract_status)).not.toContain("LOST");
+
+    const bleacher2 = result.find((b) => b.bleacherId === 2);
+    expect(bleacher2?.bleacherEvents).toHaveLength(0);
   });
 });

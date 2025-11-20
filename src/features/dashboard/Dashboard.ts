@@ -89,11 +89,12 @@ export class Dashboard {
       filters.optimizationMode,
       filters.season,
       filters.summerAssignedBleacherIds ?? [],
-      filters.winterAssignedBleacherIds ?? []
+      filters.winterAssignedBleacherIds ?? [],
+      filters.hideLostEvents
     );
     const filteredEvents =
       this.yAxis === "Events" && filters.stateProvinces.length > 0
-        ? filterEvents(allEvents, filters.stateProvinces)
+        ? filterEvents(allEvents, filters.stateProvinces, filters.hideLostEvents)
         : allEvents;
     this.bleachers = filteredBleachers;
     this.events = filteredEvents;
@@ -175,13 +176,14 @@ export class Dashboard {
       filters.optimizationMode,
       filters.season,
       filters.summerAssignedBleacherIds ?? [],
-      filters.winterAssignedBleacherIds ?? []
+      filters.winterAssignedBleacherIds ?? [],
+      filters.hideLostEvents
     );
     console.log("filteredBleachers: ", filteredBleachers);
     console.log("filters.optimizationMode: ", filters.optimizationMode);
     const filteredEvents =
       this.yAxis === "Events" && filters.stateProvinces.length > 0
-        ? filterEvents(allEvents, filters.stateProvinces)
+        ? filterEvents(allEvents, filters.stateProvinces, filters.hideLostEvents)
         : allEvents;
 
     // Update snapshots

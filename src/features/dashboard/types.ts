@@ -21,7 +21,7 @@ export type BleacherEvent = {
   eventStart: string;
   eventEnd: string;
   hslHue: number | null;
-  booked: boolean;
+  contract_status: EventStatus;
   goodshuffleUrl: string | null;
   // Mark spans injected from current selection (not yet persisted)
   isSelected?: boolean;
@@ -62,6 +62,8 @@ export type DashboardBlock = {
   date: string;
 };
 
+export type EventStatus = "QUOTED" | "BOOKED" | "LOST";
+
 export type DashboardEvent = {
   eventId: number;
   bleacherEventId: number;
@@ -83,10 +85,9 @@ export type DashboardEvent = {
   sameDayTeardown: boolean;
   lenient: boolean;
   token: string;
-  selectedStatus: "Quoted" | "Booked";
+  selectedStatus: EventStatus;
   notes: string;
   numDays: number; // this is inserted into the css propery 2 days should be "200%"
-  status: "Quoted" | "Booked";
   hslHue: number | null;
   alerts: string[];
   mustBeClean: boolean;

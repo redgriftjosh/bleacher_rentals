@@ -11,7 +11,8 @@ export function filterSortPixiBleachers(
   optimizationMode: boolean,
   season: "SUMMER" | "WINTER" | null,
   summerAssignedBleacherIds: number[] = [], // allowable bleachers if season === SUMMER
-  winterAssignedBleacherIds: number[] = [] // allowable bleachers if season === WINTER
+  winterAssignedBleacherIds: number[] = [], // allowable bleachers if season === WINTER
+  hideLostEvents: boolean = true // filter out events with contract_status === LOST
 ): Bleacher[] {
   // console.log("filterSortPixiBleachers", {
   //   homeBaseIds,
@@ -91,8 +92,17 @@ export function filterSortPixiBleachers(
 
     for (const b of bleachers) {
       if (!finalSet.has(b.bleacherId)) continue;
-      if (alwaysSet.has(b.bleacherId)) top.push(b);
-      else rest.push(b);
+
+      // Filter out LOST events from bleacherEvents if hideLostEvents is true
+      const filteredBleacher = hideLostEvents
+        ? {
+            ...b,
+            bleacherEvents: b.bleacherEvents.filter((event) => event.contract_status !== "LOST"),
+          }
+        : b;
+
+      if (alwaysSet.has(b.bleacherId)) top.push(filteredBleacher);
+      else rest.push(filteredBleacher);
     }
     return [...top, ...rest];
   }
@@ -100,16 +110,35 @@ export function filterSortPixiBleachers(
   // Otherwise: keep original order for everything (including reinserted always-includes)
   const result: Bleacher[] = [];
   for (const b of bleachers) {
-    if (finalSet.has(b.bleacherId)) result.push(b);
+    if (finalSet.has(b.bleacherId)) {
+      // Filter out LOST events from bleacherEvents if hideLostEvents is true
+      if (hideLostEvents) {
+        result.push({
+          ...b,
+          bleacherEvents: b.bleacherEvents.filter((event) => event.contract_status !== "LOST"),
+        });
+      } else {
+        result.push(b);
+      }
+    }
   }
   // console.log("filterSortPixiBleachers result", result);
   return result;
 }
 
-export function filterEvents(events: DashboardEvent[], stateProvinces: number[]): DashboardEvent[] {
+export function filterEvents(
+  events: DashboardEvent[],
+  stateProvinces: number[],
+  hideLostEvents: boolean = true
+): DashboardEvent[] {
   const allStatesAndProvinces = [...STATES, ...PROVINCES];
 
   return events.filter((event) => {
+    // Filter out LOST events if hideLostEvents is true
+    if (hideLostEvents && event.selectedStatus === "LOST") {
+      return false;
+    }
+
     const state = event.addressData?.state;
     if (!state) return false;
 

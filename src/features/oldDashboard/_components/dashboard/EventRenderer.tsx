@@ -62,7 +62,7 @@ export default function EventRenderer({
   }
 
   let width = `${daysVisible * COLUMN_WIDTH - halfDayAdjustment}px`;
-  const border = event.status === "Booked" ? 0 : 1;
+  const border = event.selectedStatus === "BOOKED" ? 0 : 1;
 
   const daysRemainingEvent = Math.min(
     eventEndDate.diff(currentDate, "days").days + 1,
@@ -131,7 +131,7 @@ export default function EventRenderer({
             height: height,
             top: top,
             left: `${left}px`,
-            backgroundColor: event.status === "Booked" ? eventHsl : "white",
+            backgroundColor: event.selectedStatus === "BOOKED" ? eventHsl : "white",
             border: `${border}px solid ${eventHsl}`,
             // borderRadius: "4px",
             // zIndex: zIndex,
@@ -190,7 +190,7 @@ export default function EventRenderer({
             <div
               className="flex items-center gap-2 text-white"
               style={{
-                color: event.status === "Booked" ? "black" : eventHsl,
+                color: event.selectedStatus === "BOOKED" ? "black" : eventHsl,
                 maxWidth: "100%",
               }}
             >
@@ -199,7 +199,7 @@ export default function EventRenderer({
                 <span
                   className="-ml-1 text-xs font-bold w-5 h-5 flex items-center justify-center shrink-0"
                   style={{
-                    color: event.status === "Booked" ? "black" : eventHsl,
+                    color: event.selectedStatus === "BOOKED" ? "black" : eventHsl,
                   }}
                 >
                   <Sparkles className="" />
@@ -231,7 +231,7 @@ export default function EventRenderer({
             <div
               className=" text-white text-xs text-shadow-xs font-normal -mt-1 truncate"
               style={{
-                color: event.status === "Booked" ? "black" : eventHsl,
+                color: event.selectedStatus === "BOOKED" ? "black" : eventHsl,
               }}
             >
               {event.addressData?.address}

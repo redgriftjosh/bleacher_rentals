@@ -2,8 +2,9 @@ import { Toggle } from "../../../../components/Toggle";
 import React from "react";
 import { Dropdown } from "@/components/DropDown";
 import { Textarea } from "@/components/TextArea";
-import { EventStatus, useCurrentEventStore } from "../../state/useCurrentEventStore";
+import { useCurrentEventStore } from "../../state/useCurrentEventStore";
 import { LenientSelections } from "../LenientSelections";
+import { EventStatus } from "@/features/dashboard/types";
 
 export const DetailsTab = () => {
   const currentEventStore = useCurrentEventStore();
@@ -17,8 +18,9 @@ export const DetailsTab = () => {
             <label className="block text-sm font-medium text-black/70">Status</label>
             <Dropdown
               options={[
-                { label: "Quoted", value: "Quoted" },
-                { label: "Booked", value: "Booked" },
+                { label: "Quoted", value: "QUOTED" },
+                { label: "Booked", value: "BOOKED" },
+                { label: "Lost", value: "LOST" },
               ]}
               selected={currentEventStore.selectedStatus}
               onSelect={(e) => currentEventStore.setField("selectedStatus", e as EventStatus)}

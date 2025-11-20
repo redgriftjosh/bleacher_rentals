@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { Bleacher, BleacherEvent } from "../types";
+import { Bleacher, BleacherEvent, EventStatus } from "../types";
 
 export type EventSpanType = {
   start: number;
@@ -84,7 +84,7 @@ export class EventsUtil {
         eventName?: string;
         address?: string;
         hslHue?: number | null;
-        selectedStatus?: "Quoted" | "Booked";
+        selectedStatus?: EventStatus;
         goodshuffleUrl?: string | null;
       } | null;
     }
@@ -105,6 +105,9 @@ export class EventsUtil {
       const spans: EventSpanType[] = [];
 
       for (const ev of bleacher.bleacherEvents ?? []) {
+        // Skip LOST events - don't render them at all
+        // if (ev.contract_status === "LOST") continue;
+
         // If editing an existing event, exclude persisted spans for that eventId
         if (selected?.eventId != null && ev.eventId === selected.eventId) {
           continue;
@@ -163,7 +166,7 @@ export class EventsUtil {
           eventStart: selected.eventStart,
           eventEnd: selected.eventEnd,
           hslHue: selected.hslHue ?? 220,
-          booked: (selected.selectedStatus ?? "Quoted") === "Booked",
+          contract_status: selected.selectedStatus ?? "QUOTED",
           goodshuffleUrl: selected.goodshuffleUrl ?? null,
           isSelected: true,
         } as any; // BleacherEvent compatible

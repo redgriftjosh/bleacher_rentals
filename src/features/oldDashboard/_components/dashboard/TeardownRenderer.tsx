@@ -45,7 +45,7 @@ export default function TeardownRenderer({
     event.teardownEnd != ""
       ? DateTime.fromISO(event.teardownEnd).diff(eventEndDate, "days").days
       : null;
-  const border = event.status === "Booked" ? 0 : 1;
+  const border = event.selectedStatus === "BOOKED" ? 0 : 1;
 
   const halfDayWidth = COLUMN_WIDTH / 2 - padding / 2;
 

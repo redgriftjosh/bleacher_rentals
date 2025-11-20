@@ -1,6 +1,6 @@
 import { Container, Graphics, Sprite, Text } from "pixi.js";
 import { EventSpanType, EventsUtil } from "../../util/Events";
-import { CELL_HEIGHT, CELL_WIDTH } from "@/features/dashboard/values/constants";
+import { CELL_HEIGHT, CELL_WIDTH, LOST_EVENT_COLOR } from "@/features/dashboard/values/constants";
 import { Baker } from "../../util/Baker";
 import { useEventsStore } from "@/state/eventsStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
@@ -30,14 +30,16 @@ export class EventBody extends Sprite {
 
     this.on("pointerdown", this.handleClick.bind(this));
 
-    const isBooked = !!eventInfo.span?.ev.booked;
-    const eventColor =
-      eventInfo.span && eventInfo.span.ev.hslHue != null
+    const isBooked = eventInfo.span?.ev.contract_status === "BOOKED";
+    const isLost = eventInfo.span?.ev.contract_status === "LOST";
+    const eventColor = isLost
+      ? LOST_EVENT_COLOR
+      : eventInfo.span && eventInfo.span.ev.hslHue != null
         ? EventsUtil.hslToRgbInt(eventInfo.span.ev.hslHue, 60, 60)
         : 0x808080;
 
     const texture = baker.getTexture(
-      `EventBody:${eventInfo.span?.ev.eventId}:${isBooked ? "booked" : "quoted"}:${
+      `EventBody:${eventInfo.span?.ev.eventId}:${isBooked ? "booked" : isLost ? "lost" : "quoted"}:${
         eventInfo.isStart ? "start" : eventInfo.isEnd ? "end" : "middle"
       }`,
       null,
@@ -70,7 +72,7 @@ export class EventBody extends Sprite {
           // Booked events: solid fill
           fill.rect(L, T, W, H).fill(eventColor);
         } else {
-          // Quoted events: white background with selective borders
+          // Quoted and Lost events: white background with selective borders
           fill.rect(L, T, W, H).fill(0xffffff); // White background
 
           // Draw borders based on position in span
@@ -192,7 +194,7 @@ export class EventBody extends Sprite {
     setField("teardownEnd", fullEvent.teardown_end ?? "");
     setField("sameDayTeardown", !fullEvent.teardown_end);
     setField("lenient", fullEvent.lenient);
-    setField("selectedStatus", fullEvent.booked ? "Booked" : "Quoted");
+    setField("selectedStatus", fullEvent.contract_status ?? "QUOTED");
     setField("notes", fullEvent.notes ?? "");
     setField("mustBeClean", fullEvent.must_be_clean);
     setField("bleacherIds", eventBleacherIds);

@@ -10,7 +10,7 @@ type Row = {
   event_start: string;
   event_end: string;
   hsl_hue: number | null;
-  booked: boolean;
+  contract_status: "QUOTED" | "BOOKED" | "LOST";
   goodshuffle_url: string | null;
   lenient: boolean;
   notes: string | null;
@@ -48,7 +48,7 @@ export async function FetchDashboardEvents(
       event_start,
       event_end,
       hsl_hue,
-      booked,
+      contract_status,
       goodshuffle_url,
       lenient,
       notes,
@@ -124,10 +124,10 @@ export async function FetchDashboardEvents(
     sameDayTeardown: !e.teardown_end,
     lenient: e.lenient,
     token: "",
-    selectedStatus: e.booked ? "Booked" : "Quoted",
+    selectedStatus: e.contract_status,
     notes: e.notes ?? "",
     numDays: 0, // optional; compute in UI if needed
-    status: e.booked ? "Booked" : "Quoted",
+    status: e.contract_status,
     hslHue: e.hsl_hue,
     alerts: [],
     mustBeClean: e.must_be_clean,
