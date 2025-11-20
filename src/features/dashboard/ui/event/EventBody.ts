@@ -35,13 +35,13 @@ export class EventBody extends Sprite {
     const eventColor = isLost
       ? LOST_EVENT_COLOR
       : eventInfo.span && eventInfo.span.ev.hslHue != null
-        ? EventsUtil.hslToRgbInt(eventInfo.span.ev.hslHue, 60, 60)
-        : 0x808080;
+      ? EventsUtil.hslToRgbInt(eventInfo.span.ev.hslHue, 60, 60)
+      : 0x808080;
 
     const texture = baker.getTexture(
-      `EventBody:${eventInfo.span?.ev.eventId}:${isBooked ? "booked" : isLost ? "lost" : "quoted"}:${
-        eventInfo.isStart ? "start" : eventInfo.isEnd ? "end" : "middle"
-      }`,
+      `EventBody:${eventInfo.span?.ev.eventId}:${
+        isBooked ? "booked" : isLost ? "lost" : "quoted"
+      }:${eventInfo.isStart ? "start" : eventInfo.isEnd ? "end" : "middle"}`,
       null,
       (c) => {
         const g = new Graphics();

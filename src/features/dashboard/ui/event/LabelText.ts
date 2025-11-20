@@ -19,8 +19,8 @@ export class LabelText extends Container {
     const eventColor = isLost
       ? LOST_EVENT_COLOR
       : eventInfo.ev.hslHue != null
-        ? this.hslToRgbInt(eventInfo.ev.hslHue, 60, 60)
-        : 0x808080;
+      ? this.hslToRgbInt(eventInfo.ev.hslHue, 60, 60)
+      : 0x808080;
     const textColor = isBooked ? 0x000000 : eventColor;
 
     // Event name (main label)
