@@ -9,7 +9,7 @@ export function checkInsertUserFormRules(
   firstName: string | null,
   lastName: string | null,
   email: string | null,
-  roleId: number | null,
+  roleIds: number[],
   homeBaseIds: number[],
   existingEmails: string[],
   token: string | null,
@@ -22,8 +22,8 @@ export function checkInsertUserFormRules(
       "Missing: JWT Token. Please let Josh Redgrift (josh@tpi-3.ca) know you saw this message, refresh your page and try again."
     );
   }
-  if (!roleId) {
-    errors.push("Missing: Role");
+  if (!roleIds || roleIds.length === 0) {
+    errors.push("Missing: Role - Please select at least one role");
   }
   if (!firstName) {
     errors.push("Missing: First Name");
@@ -56,8 +56,8 @@ export function checkInsertUserFormRules(
   if (email && email.length > 100) {
     errors.push("Email is too long");
   }
-  if (roleId === ROLES.accountManager && homeBaseIds.length === 0) {
-    errors.push("Must assign to at least one Home Base");
+  if (roleIds.includes(ROLES.accountManager) && homeBaseIds.length === 0) {
+    errors.push("Account Managers must be assigned to at least one Home Base");
   }
 
   if (errors.length > 0) {
@@ -161,14 +161,5 @@ export async function deleteInviteUserEmail(email: string): Promise<boolean> {
   }
 }
 
-export function filterUserRoles(
-  userRoles: Tables<"UserRoles">[],
-  existingUser: ExistingUser | null
-): Tables<"UserRoles">[] {
-  if (!existingUser) return userRoles;
-  if (existingUser.role === ROLES.driver) {
-    return userRoles.filter((ur) => ur.id === ROLES.driver);
-  } else {
-    return userRoles.filter((ur) => ur.id !== ROLES.driver);
-  }
-}
+// No longer needed - users can have multiple roles
+// export function filterUserRoles removed

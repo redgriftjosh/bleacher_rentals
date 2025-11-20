@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
-  }
   public: {
     Tables: {
       Addresses: {
@@ -499,6 +494,42 @@ export type Database = {
         }
         Relationships: []
       }
+      UserRolesJunction: {
+        Row: {
+          created_at: string
+          user_id: number
+          user_roles_id: number
+          user_roles_junction_id: number
+        }
+        Insert: {
+          created_at?: string
+          user_id: number
+          user_roles_id: number
+          user_roles_junction_id?: number
+        }
+        Update: {
+          created_at?: string
+          user_id?: number
+          user_roles_id?: number
+          user_roles_junction_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "UserRolesJunction_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "UserRolesJunction_user_roles_id_fkey"
+            columns: ["user_roles_id"]
+            isOneToOne: false
+            referencedRelation: "UserRoles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Users: {
         Row: {
           avatar_image_url: string | null
@@ -774,3 +805,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

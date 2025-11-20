@@ -34,7 +34,7 @@
     "framer-motion": "^12.6.5",
     "lucide-react": "^0.487.0",
     "luxon": "^3.6.1",
-    "next": "15.2.4",
+    "next": "^15.5.6",
     "pixi.js": "^8.12.0",
     "pusher": "^5.2.0",
     "pusher-js": "^8.4.0",
@@ -56,13 +56,13 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-virtualized": "^9.22.2",
+    "@vitest/coverage-v8": "^2.0.5",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.1.2",
     "postcss": "^8.5.3",
     "supabase": "^2.23.4",
     "tailwindcss": "^4.1.1",
     "typescript": "^5",
-    "vitest": "^2.0.5",
-    "@vitest/coverage-v8": "^2.0.5"
+    "vitest": "^2.0.5"
   }
 }

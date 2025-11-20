@@ -2,7 +2,9 @@
 import { Color } from "@/types/Color";
 import { SheetAddTeamMember } from "./_lib/components/SheetAddTeamMember";
 import { UserList } from "./_lib/components/UserList";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { useUser } from "@clerk/nextjs";
 const tabs = [
   { id: "bleachers", label: "Bleachers", path: "/assets/bleachers" },
   { id: "other-assets", label: "Other Assets", path: "/assets/other-assets" },
@@ -13,7 +15,7 @@ export type ExistingUser = {
   first_name: string;
   last_name: string;
   email: string;
-  role: number;
+  roleIds: number[];
   status: number;
   homeBases: { id: number; label: string }[];
 } | null;
@@ -22,6 +24,27 @@ export default function TeamPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [existingUser, setExistingUser] = useState<ExistingUser>(null);
 
+  const { user } = useUser();
+  const supabase = useClerkSupabaseClient();
+  useEffect(() => {
+    if (!user) return;
+
+    async function loadUsers() {
+      const { data, error } = await supabase.from("Users").select("*");
+      if (error) {
+        console.error("Error loading users:", error);
+        return;
+      }
+      console.log("Loading users:", data);
+
+      // setLoading(true)
+      // const { data, error } = await client.from('tasks').select()
+      // if (!error) setTasks(data)
+      // setLoading(false)
+    }
+
+    loadUsers();
+  }, [user]);
   return (
     <main>
       <div className="flex justify-between items-center mb-4">

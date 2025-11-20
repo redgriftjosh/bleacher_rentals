@@ -7,6 +7,7 @@ import { useDriversStore } from "@/state/driversStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
 import { useUserRolesStore } from "@/state/userRolesStore";
+import { useUserRolesJunctionStore } from "@/state/userRolesJunctionStore";
 import { useUserStatusesStore } from "@/state/userStatusesStore";
 import { useUsersStore } from "@/state/userStore";
 import { Database } from "../../database.types";
@@ -32,6 +33,7 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   HomeBases: () => useHomeBasesStore.getState().setStale(true),
   UserHomeBases: () => useUserHomeBasesStore.getState().setStale(true),
   UserRoles: () => useUserRolesStore.getState().setStale(true),
+  UserRolesJunction: () => useUserRolesJunctionStore.getState().setStale(true),
   UserStatuses: () => useUserStatusesStore.getState().setStale(true),
   Users: () => useUsersStore.getState().setStale(true),
   WorkTrackers: () => useWorkTrackersStore.getState().setStale(true),

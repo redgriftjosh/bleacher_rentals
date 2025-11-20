@@ -14,6 +14,7 @@ import {
   fetchBleachersForOptions,
   fetchUserBleacherAssignments,
   upsertUserBleacherAssignments,
+  fetchUserRoleAssignments,
 } from "../db";
 import { Dropdown } from "@/components/DropDown";
 import { useUserRolesStore } from "@/state/userRolesStore";
@@ -22,7 +23,6 @@ import {
   checkEmailRules,
   checkInsertUserFormRules,
   deleteInviteUserEmail,
-  filterUserRoles,
   sendInviteUserEmail,
 } from "../functions";
 import { useUsersStore } from "@/state/userStore";
@@ -65,14 +65,13 @@ export function SheetAddTeamMember({
 }) {
   const { getToken } = useAuth();
   let userRoles = useUserRolesStore((s) => s.userRoles);
-  userRoles = filterUserRoles(userRoles, existingUser);
   const users = useUsersStore((s) => s.users);
   const homeBaseOptions = getHomeBaseOptions();
 
   const [email, setEmail] = useState<string | null>(existingUser?.email ?? null);
   const [firstName, setFirstName] = useState<string | null>(existingUser?.first_name ?? null);
   const [lastName, setLastName] = useState<string | null>(existingUser?.last_name ?? null);
-  const [roleId, setRoleId] = useState<number | null>(existingUser?.role ?? null);
+  const [roleIds, setRoleIds] = useState<number[]>(existingUser?.roleIds ?? []);
   const [homeBaseIds, setHomeBaseIds] = useState<number[]>(
     existingUser?.homeBases.map((hb) => hb.id) ?? []
   );
@@ -98,7 +97,7 @@ export function SheetAddTeamMember({
       const token = await getToken({ template: "supabase" });
       return fetchDriverPaymentData(existingUser!.user_id, token);
     },
-    enabled: !!existingUser && existingUser.role === ROLES.driver,
+    enabled: !!existingUser && existingUser.roleIds.includes(ROLES.driver),
   });
 
   // Bleacher options for pickers
@@ -128,6 +127,20 @@ export function SheetAddTeamMember({
     enabled: !!existingUser,
   });
 
+  // Existing user's role assignments
+  const {
+    data: roleAssignments,
+    isLoading: isRoleAssignmentsLoading,
+    isFetching: isRoleAssignmentsFetching,
+  } = useQuery({
+    queryKey: ["roleAssignments", existingUser?.user_id],
+    queryFn: async () => {
+      const token = await getToken({ template: "supabase" });
+      return fetchUserRoleAssignments(existingUser!.user_id, token);
+    },
+    enabled: !!existingUser,
+  });
+
   useEffect(() => {
     if (paymentData) {
       setTax(paymentData.tax);
@@ -147,13 +160,19 @@ export function SheetAddTeamMember({
     }
   }, [isAssignmentsLoading, isAssignmentsFetching, assignments]);
 
+  useEffect(() => {
+    if (roleAssignments) {
+      setRoleIds(roleAssignments);
+    }
+  }, [isRoleAssignmentsLoading, isRoleAssignmentsFetching, roleAssignments]);
+
   // useEffect to set all back to default
   useEffect(() => {
     if (!isOpen) {
       setEmail(null);
       setFirstName(null);
       setLastName(null);
-      setRoleId(null);
+      setRoleIds([]);
       setHomeBaseIds([]);
       setExistingUser(null);
       setTax(undefined);
@@ -171,7 +190,7 @@ export function SheetAddTeamMember({
       setEmail(existingUser.email.toLowerCase());
       setFirstName(existingUser.first_name);
       setLastName(existingUser.last_name);
-      setRoleId(existingUser.role);
+      setRoleIds(existingUser.roleIds);
       setHomeBaseIds(existingUser.homeBases.map((hb) => hb.id));
     }
   }, [existingUser]);
@@ -185,7 +204,7 @@ export function SheetAddTeamMember({
         firstName,
         lastName,
         email,
-        roleId,
+        roleIds,
         homeBaseIds,
         users.map((u) => u.email),
         token,
@@ -201,7 +220,7 @@ export function SheetAddTeamMember({
           email,
           firstName,
           lastName,
-          roleId,
+          roleIds,
           homeBaseIds,
           tax: tax ?? null,
           payRateCents: payRateCents,
@@ -224,7 +243,7 @@ export function SheetAddTeamMember({
           email!,
           firstName!,
           lastName!,
-          roleId!,
+          roleIds,
           homeBaseIds,
           tax ?? null,
           payRateCents,
@@ -240,11 +259,6 @@ export function SheetAddTeamMember({
             winterBleacherIds,
             token
           );
-        }
-        if (roleId === ROLES.driver) {
-          setSubmitting(false);
-          setIsOpen(false);
-          return;
         }
         const success = await sendInviteUserEmail(email!);
         if (success) {
@@ -343,7 +357,9 @@ export function SheetAddTeamMember({
   };
 
   const allowResend =
-    existingUser && existingUser.status === STATUSES.invited && existingUser.role !== ROLES.driver;
+    existingUser &&
+    existingUser.status === STATUSES.invited &&
+    !existingUser.roleIds.includes(ROLES.driver);
 
   if (isPaymentLoading)
     return (
@@ -426,8 +442,8 @@ export function SheetAddTeamMember({
               <div className="space-y-4 pt-2">
                 <div className="grid grid-cols-5 items-center gap-4">
                   <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
-                    <label htmlFor="name">Role</label>
-                    {roleId === ROLES.admin && (
+                    <label htmlFor="name">Roles</label>
+                    {roleIds.includes(ROLES.admin) && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -441,7 +457,7 @@ export function SheetAddTeamMember({
                       </TooltipProvider>
                     )}
 
-                    {roleId === ROLES.driver && (
+                    {roleIds.includes(ROLES.driver) && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -467,19 +483,22 @@ export function SheetAddTeamMember({
                     )}
                   </div>
                   <div className="col-span-3">
-                    <Dropdown
+                    <MultiSelect
                       options={userRoles.map((userRole) => ({
                         label: userRole.role,
                         value: userRole.id,
                       }))}
-                      selected={roleId}
-                      onSelect={(id) => setRoleId(id)}
-                      placeholder="Select Role"
+                      color="bg-greenAccent"
+                      onValueChange={(value) => setRoleIds(value)}
+                      forceSelectedValues={roleIds}
+                      placeholder="Select Roles"
+                      variant="inverted"
+                      maxCount={2}
                     />
                   </div>
                 </div>
               </div>
-              {roleId === ROLES.driver && (
+              {roleIds.includes(ROLES.driver) && (
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-5 items-center gap-4">
                     <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
@@ -506,7 +525,7 @@ export function SheetAddTeamMember({
                   </div>
                 </div>
               )}
-              {roleId === ROLES.driver && (
+              {roleIds.includes(ROLES.driver) && (
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-5 items-center gap-4">
                     <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
@@ -540,7 +559,7 @@ export function SheetAddTeamMember({
                   </div>
                 </div>
               )}
-              {roleId === ROLES.driver && (
+              {roleIds.includes(ROLES.driver) && (
                 <div className="text-xs text-black/50 mt-2">
                   <p>Driver's don't get access to this app at all.</p>
                   <p>
@@ -554,7 +573,7 @@ export function SheetAddTeamMember({
                   <p>In the future, we will add a 'Driver App' to automate this process.</p>
                 </div>
               )}
-              {roleId === ROLES.accountManager && (
+              {roleIds.includes(ROLES.accountManager) && (
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-5 items-center gap-4">
                     <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
@@ -592,7 +611,7 @@ export function SheetAddTeamMember({
               )}
 
               {/* Summer / Winter bleacher assignments */}
-              {roleId !== ROLES.driver && (
+              {!roleIds.includes(ROLES.driver) && (
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-5 items-center gap-4">
                     <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
@@ -616,7 +635,7 @@ export function SheetAddTeamMember({
                   </div>
                 </div>
               )}
-              {roleId !== ROLES.driver && (
+              {!roleIds.includes(ROLES.driver) && (
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-5 items-center gap-4">
                     <div className="text-right text-sm font-medium col-span-2 flex items-center justify-end gap-1">
@@ -701,7 +720,7 @@ export function SheetAddTeamMember({
                 </div>
               )}
 
-              {roleId === ROLES.admin ? (
+              {roleIds.includes(ROLES.admin) ? (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <PrimaryButton loading={submitting} loadingText="Sending...">
@@ -742,7 +761,7 @@ export function SheetAddTeamMember({
                 <PrimaryButton loading={submitting} loadingText="Sending..." onClick={handleSubmit}>
                   {existingUser
                     ? "Update User"
-                    : roleId === ROLES.driver
+                    : roleIds.includes(ROLES.driver)
                     ? "Create User"
                     : "Send Invite"}
                 </PrimaryButton>

@@ -11,6 +11,7 @@ import { useEventsStore } from "@/state/eventsStore";
 import { useAddressesStore } from "@/state/addressesStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { useUserRolesStore } from "@/state/userRolesStore";
+import { useUserRolesJunctionStore } from "@/state/userRolesJunctionStore";
 import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
 import useSubToDbChanges from "./useSubscribeToDbChanges";
 import { useBlocksStore } from "@/state/blocksStore";
@@ -111,6 +112,17 @@ export default function useSupabaseSubscriptions() {
     setStore: UserRolesStore.setUserRoles,
     stale: UserRolesStore.stale,
     setStale: UserRolesStore.setStale,
+    // subscriptionId,
+  });
+
+  const UserRolesJunctionStore = useUserRolesJunctionStore();
+  useSetupTable({
+    tableName: "UserRolesJunction",
+    // channelName: "userrolesjunction-channel",
+    getToken,
+    setStore: UserRolesJunctionStore.setUserRolesJunction,
+    stale: UserRolesJunctionStore.stale,
+    setStale: UserRolesJunctionStore.setStale,
     // subscriptionId,
   });
 

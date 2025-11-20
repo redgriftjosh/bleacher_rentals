@@ -6,6 +6,7 @@ import Script from "next/script";
 import { SignedInComponents } from "../components/SignedInComponents";
 import { Toaster } from "sonner";
 import { TanstackProvider } from "@/components/TanstackProvider";
+import TestComponent from "@/components/TestComponent";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +39,7 @@ export default function RootLayout({
           <SignedOut>
             <div className="flex items-center justify-center min-h-screen">
               <SignIn routing="hash" forceRedirectUrl="/dashboard" />
+              {/* <TestComponent /> */}
             </div>
           </SignedOut>
           <Script

@@ -3,6 +3,7 @@ import { updateDataBase } from "@/app/actions/db.actions";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
 import { useUserRolesStore } from "@/state/userRolesStore";
+import { useUserRolesJunctionStore } from "@/state/userRolesJunctionStore";
 import { useUserStatusesStore } from "@/state/userStatusesStore";
 import { useUsersStore } from "@/state/userStore";
 import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
@@ -99,7 +100,7 @@ export async function insertUser(
   email: string,
   firstName: string,
   lastName: string,
-  roleId: number,
+  roleIds: number[],
   homeBaseIds: number[],
   tax: number | null,
   payRateCents: number | null,
@@ -110,14 +111,16 @@ export async function insertUser(
   // console.log("Inserting user", token);
   const supabase = await getSupabaseClient(token);
 
+  const isDriver = roleIds.includes(ROLES.driver);
+
   const { error: userError, data: userData } = await supabase
     .from("Users")
     .insert({
       email,
       first_name: firstName,
       last_name: lastName,
-      role: roleId,
-      status: roleId === ROLES.driver ? STATUSES.active : STATUSES.invited,
+      role: roleIds[0] ?? null, // Keep for backward compatibility
+      status: isDriver ? STATUSES.active : STATUSES.invited,
     })
     .select("user_id") // 👈 ensure we get back the inserted user_id
     .single(); // 👈 safely assume only one user is inserted
@@ -126,7 +129,13 @@ export async function insertUser(
     console.error("Insert failed:", userError?.message);
     return null;
   }
-  if (roleId === ROLES.driver) {
+
+  const userId = userData.user_id;
+
+  // Insert role assignments into UserRolesJunction
+  await upsertUserRoleAssignments(userId, roleIds, token);
+
+  if (isDriver) {
     const insertError = await insertDriver(
       userData.user_id,
       tax ?? 0,
@@ -143,8 +152,6 @@ export async function insertUser(
 
   // console.log("Inserted invited user:", userData);
 
-  const userId = userData.user_id;
-
   const homeBaseLinks = homeBaseIds.map((homeBaseId) => ({
     user_id: userId,
     home_base_id: homeBaseId,
@@ -157,7 +164,7 @@ export async function insertUser(
   } else {
     // console.log("Linked user to home bases:", homeBaseIds);
     createSuccessToast(["User Created"]);
-    updateDataBase(["Users", "UserHomeBases", "UserRoles", "UserStatuses"]);
+    updateDataBase(["Users", "UserHomeBases", "UserRoles", "UserStatuses", "UserRolesJunction"]);
   }
 
   return userId;
@@ -169,7 +176,7 @@ export async function updateUser(
     email,
     firstName,
     lastName,
-    roleId,
+    roleIds,
     homeBaseIds,
     tax,
     payRateCents,
@@ -180,7 +187,7 @@ export async function updateUser(
     email: string | null;
     firstName: string | null;
     lastName: string | null;
-    roleId: number | null;
+    roleIds: number[];
     homeBaseIds: number[];
     tax: number | null;
     payRateCents: number | null;
@@ -198,11 +205,14 @@ export async function updateUser(
       // email, don't update email
       first_name: firstName,
       last_name: lastName,
-      role: roleId,
+      role: roleIds[0] ?? null, // Keep for backward compatibility
     })
     .eq("user_id", userId);
 
   if (updateError) throw updateError;
+
+  // Update role assignments in UserRolesJunction
+  await upsertUserRoleAssignments(userId, roleIds, token);
 
   // Delete existing home base links
   await supabase.from("UserHomeBases").delete().eq("user_id", userId);
@@ -216,7 +226,9 @@ export async function updateUser(
 
     await supabase.from("UserHomeBases").insert(inserts);
   }
-  if (roleId === ROLES.driver) {
+
+  const isDriver = roleIds.includes(ROLES.driver);
+  if (isDriver) {
     const taxValue = tax ?? 0;
     const { error: driverError } = await supabase
       .from("Drivers")
@@ -233,7 +245,58 @@ export async function updateUser(
   }
   createSuccessToast(["User Updated"]);
 
-  updateDataBase(["Users", "UserHomeBases", "UserRoles", "UserStatuses"]);
+  updateDataBase(["Users", "UserHomeBases", "UserRoles", "UserStatuses", "UserRolesJunction"]);
+}
+
+// ------- UserRolesJunction helpers -------
+
+export async function fetchUserRoleAssignments(
+  userId: number,
+  token: string | null
+): Promise<number[]> {
+  if (!token) {
+    createErrorToast(["No token found"]);
+  }
+  const supabase = await getSupabaseClient(token);
+  const { data, error } = await supabase
+    .from("UserRolesJunction")
+    .select("user_roles_id")
+    .eq("user_id", userId);
+  if (error) {
+    createErrorToastNoThrow(["Failed to fetch user role assignments.", error.message]);
+    return [];
+  }
+  return (data ?? []).map((r: any) => r.user_roles_id);
+}
+
+export async function upsertUserRoleAssignments(
+  userId: number,
+  roleIds: number[],
+  token: string | null
+): Promise<void> {
+  if (!token) {
+    createErrorToast(["No token found"]);
+  }
+  const supabase = await getSupabaseClient(token);
+
+  // Replace strategy: delete then insert
+  const { error: delError } = await supabase
+    .from("UserRolesJunction")
+    .delete()
+    .eq("user_id", userId);
+  if (delError) {
+    createErrorToastNoThrow(["Failed to clear previous role assignments.", delError.message]);
+    return;
+  }
+
+  const rows = roleIds.map((roleId) => ({ user_id: userId, user_roles_id: roleId }));
+  if (rows.length > 0) {
+    const { error: insError } = await supabase.from("UserRolesJunction").insert(rows);
+    if (insError) {
+      createErrorToastNoThrow(["Failed to save role assignments.", insError.message]);
+      return;
+    }
+  }
 }
 
 // ------- BleacherUsers helpers -------
@@ -353,13 +416,25 @@ export function fetchUsers() {
   const users = useUsersStore((s) => s.users);
   const userStatuses = useUserStatusesStore((s) => s.userStatuses);
   const userRoles = useUserRolesStore((s) => s.userRoles);
+  const userRolesJunction = useUserRolesJunctionStore((s) => s.userRolesJunction);
   const userHomeBases = useUserHomeBasesStore((s) => s.userHomeBases);
   const homeBases = useHomeBasesStore((s) => s.homeBases);
 
   // Get status and role display values for each user
   const usersWithDetails = users.map((user) => {
     const status = userStatuses.find((s) => s.id === user.status)?.status || "Unknown";
-    const role = userRoles.find((r) => r.id === user.role)?.role || "Unknown";
+
+    // Get role IDs from UserRolesJunction table
+    const roleIds = userRolesJunction
+      .filter((urj) => urj.user_id === user.user_id)
+      .map((urj) => urj.user_roles_id);
+
+    // Get role names for display
+    const roleNames = roleIds
+      .map((roleId) => userRoles.find((r) => r.id === roleId)?.role)
+      .filter((name): name is string => name !== undefined);
+
+    const roleDisplay = roleNames.length > 0 ? roleNames.join(", ") : "Unknown";
 
     // Get this user's associated home_base_ids from the junction table
     const linkedHomeBases = userHomeBases
@@ -373,7 +448,8 @@ export function fetchUsers() {
     return {
       ...user,
       statusDisplay: status,
-      roleDisplay: role,
+      roleDisplay,
+      roleIds, // Add roleIds for the ExistingUser type
       homeBases: linkedHomeBases,
     };
   });
