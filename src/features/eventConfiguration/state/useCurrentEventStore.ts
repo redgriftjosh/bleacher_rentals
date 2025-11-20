@@ -44,6 +44,7 @@ export type CurrentEventState = {
   alerts: string[];
   goodshuffleUrl: string | null;
   hueOpen: boolean;
+  contractRevenueCents: number | null;
 };
 
 // Me take event form stuff, add tools to change it.
@@ -81,6 +82,7 @@ const initialState: CurrentEventState = {
   alerts: [],
   goodshuffleUrl: null,
   hueOpen: false,
+  contractRevenueCents: null,
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.

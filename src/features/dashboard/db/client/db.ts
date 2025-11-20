@@ -127,6 +127,7 @@ export function fetchBleachers() {
                 .map((be) => be.bleacher_id), // find all bleachers linked to this event
               goodshuffleUrl: event.goodshuffle_url ?? null,
               ownerUserId: event.created_by_user_id ?? null,
+              contractRevenueCents: event.contract_revenue_cents ?? null,
             };
           })
           .filter((e) => e !== null) as DashboardEvent[]; // filter out nulls
@@ -213,6 +214,7 @@ export function fetchDashboardEvents() {
           .map((be) => be.bleacher_id),
         goodshuffleUrl: event.goodshuffle_url ?? null,
         ownerUserId: event.created_by_user_id ?? null,
+        contractRevenueCents: event.contract_revenue_cents ?? null,
       };
     });
     // console.log("dashboardEvents", dashboardEvents);
@@ -693,6 +695,7 @@ export async function createEvent(
     must_be_clean: state.mustBeClean,
     goodshuffle_url: state.goodshuffleUrl ?? null,
     created_by_user_id: state.ownerUserId ?? null,
+    contract_revenue_cents: state.contractRevenueCents ?? null,
     // NOTE: ownerUserId not persisted yet; add column (e.g., owner_user_id INT FK -> Users.user_id) if needed.
   };
 

@@ -201,6 +201,7 @@ export class EventBody extends Sprite {
     setField("isFormExpanded", true); // Open the configuration panel
     setField("hslHue", fullEvent.hsl_hue);
     setField("goodshuffleUrl", fullEvent.goodshuffle_url);
+    setField("contractRevenueCents", fullEvent.contract_revenue_cents ?? null);
     // Only set owner if backend provides a created_by_user_id
     if ((fullEvent as any).created_by_user_id !== undefined) {
       setField("ownerUserId", (fullEvent as any).created_by_user_id ?? null);

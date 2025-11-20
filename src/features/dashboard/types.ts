@@ -94,4 +94,5 @@ export type DashboardEvent = {
   bleacherIds: number[];
   goodshuffleUrl: string | null;
   ownerUserId: number | null;
+  contractRevenueCents: number | null;
 };

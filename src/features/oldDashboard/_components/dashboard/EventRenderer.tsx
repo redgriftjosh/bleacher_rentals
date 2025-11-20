@@ -112,6 +112,7 @@ export default function EventRenderer({
     // setField("alerts", event.alerts);
     setField("goodshuffleUrl", event.goodshuffleUrl);
     setField("ownerUserId", event.ownerUserId);
+    setField("contractRevenueCents", event.contractRevenueCents);
   };
 
   if (!isFirstVisibleColumn && !shouldDisplayEvent) return null;
@@ -164,6 +165,7 @@ export default function EventRenderer({
               alerts: [], // will be calculated on load
               goodshuffleUrl: event.goodshuffleUrl,
               ownerUserId: event.ownerUserId,
+              contractRevenueCents: event.contractRevenueCents,
               hueOpen: false,
             });
           }}

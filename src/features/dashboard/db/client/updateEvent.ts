@@ -68,6 +68,7 @@ export async function updateEvent(
     must_be_clean: state.mustBeClean,
     goodshuffle_url: state.goodshuffleUrl ?? null,
     created_by_user_id: state.ownerUserId ?? null,
+    contract_revenue_cents: state.contractRevenueCents ?? null,
   };
 
   const { error: eventError } = await supabase

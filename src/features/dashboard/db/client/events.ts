@@ -22,6 +22,7 @@ type Row = {
   teardown_end: string | null;
   must_be_clean: boolean;
   created_by_user_id: number | null;
+  contract_revenue_cents: number | null;
   address: {
     address_id: number;
     street: string;
@@ -60,6 +61,7 @@ export async function FetchDashboardEvents(
       teardown_end,
       must_be_clean,
       created_by_user_id,
+      contract_revenue_cents,
       address:Addresses!Events_address_id_fkey(
         address_id,
         street,
@@ -134,6 +136,7 @@ export async function FetchDashboardEvents(
     bleacherIds: (e.bleacher_events ?? []).map((be) => be.bleacher_id),
     goodshuffleUrl: e.goodshuffle_url ?? null,
     ownerUserId: e.created_by_user_id ?? null,
+    contractRevenueCents: e.contract_revenue_cents ?? null,
   }));
   // console.log("FetchDashboardEvents events", events);
 
