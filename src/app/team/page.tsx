@@ -15,6 +15,7 @@ export type ExistingUser = {
   email: string;
   role: number;
   status: number;
+  clerk_user_id: string | null;
   homeBases: { id: number; label: string }[];
 } | null;
 

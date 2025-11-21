@@ -95,6 +95,26 @@ async function insertDriver(
   return null;
 }
 
+export async function updateUserStatusToInvited(email: string, token: string | null) {
+  if (!token) {
+    createErrorToast(["No token found"]);
+  }
+  const supabase = await getSupabaseClient(token);
+
+  const { error } = await supabase
+    .from("Users")
+    .update({
+      status: STATUSES.invited,
+    })
+    .eq("email", email);
+
+  if (error) {
+    createErrorToastNoThrow(["Failed to update user status to invited.", error.message]);
+  } else {
+    updateDataBase(["Users", "UserStatuses"]);
+  }
+}
+
 export async function insertUser(
   email: string,
   firstName: string,
