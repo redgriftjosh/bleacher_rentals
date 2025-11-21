@@ -40,6 +40,7 @@
     "pusher-js": "^8.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-mobile-app-button": "^1.2.19",
     "react-virtualized": "^9.22.6",
     "sonner": "^2.0.3",
     "svix": "^1.63.1",
@@ -56,13 +57,13 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-virtualized": "^9.22.2",
+    "@vitest/coverage-v8": "^2.0.5",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.1.2",
     "postcss": "^8.5.3",
     "supabase": "^2.23.4",
     "tailwindcss": "^4.1.1",
     "typescript": "^5",
-    "vitest": "^2.0.5",
-    "@vitest/coverage-v8": "^2.0.5"
+    "vitest": "^2.0.5"
   }
 }

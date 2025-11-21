@@ -33,6 +33,7 @@ export function UserList({
               email: row.email,
               role: row.role || 0,
               status: row.status,
+              clerk_user_id: row.clerk_user_id,
               homeBases: row.homeBases,
             })
           }
