@@ -14,6 +14,7 @@ import {
   fetchBleachersForOptions,
   fetchUserBleacherAssignments,
   upsertUserBleacherAssignments,
+  updateUserStatusToInvited,
 } from "../db";
 import { Dropdown } from "@/components/DropDown";
 import { useUserRolesStore } from "@/state/userRolesStore";
@@ -257,6 +258,8 @@ export function SheetAddTeamMember({
     }
   };
   const handleResend = async () => {
+    setSubmitting(true);
+    const token = await getToken({ template: "supabase" });
     if (
       !checkEmailRules(
         email,
@@ -268,7 +271,9 @@ export function SheetAddTeamMember({
     }
     const success = await sendInviteUserEmail(email!);
     if (success) {
+      await updateUserStatusToInvited(email!, token);
       setSubmitting(false);
+      setIsOpen(false);
       toast.custom(
         (t) =>
           React.createElement(SuccessToast, {
@@ -344,6 +349,15 @@ export function SheetAddTeamMember({
 
   const allowResend =
     existingUser && existingUser.status === STATUSES.invited && existingUser.role !== ROLES.driver;
+
+  const allowDriverInvite =
+    existingUser &&
+    existingUser.role === ROLES.driver &&
+    !existingUser.clerk_user_id &&
+    existingUser.status !== STATUSES.inactive;
+
+  const allowDriverResend =
+    existingUser && existingUser.role === ROLES.driver && existingUser.status === STATUSES.invited;
 
   if (isPaymentLoading)
     return (
@@ -540,7 +554,7 @@ export function SheetAddTeamMember({
                   </div>
                 </div>
               )}
-              {roleId === ROLES.driver && (
+              {/* {roleId === ROLES.driver && (
                 <div className="text-xs text-black/50 mt-2">
                   <p>Driver's don't get access to this app at all.</p>
                   <p>
@@ -548,12 +562,11 @@ export function SheetAddTeamMember({
                     still need to export the PDF and send to the driver manually.
                   </p>
                   <p>
-                    {/* intentionally left blank for spacing */}
                     <br />
                   </p>
                   <p>In the future, we will add a 'Driver App' to automate this process.</p>
                 </div>
-              )}
+              )} */}
               {roleId === ROLES.accountManager && (
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-5 items-center gap-4">
@@ -656,6 +669,40 @@ export function SheetAddTeamMember({
                   </div>
                 </div>
               )}
+              {allowDriverInvite && (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-5 items-end gap-4">
+                    <div className="col-span-2 flex items-center"></div>
+                    <div className="col-span-3">
+                      <PrimaryButton
+                        loading={submitting}
+                        loadingText="Sending..."
+                        onClick={handleResend}
+                      >
+                        {existingUser.status === STATUSES.invited
+                          ? `Resend Invite`
+                          : `Invite to Driver App`}
+                      </PrimaryButton>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* {allowDriverResend && (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-5 items-end gap-4">
+                    <div className="col-span-2 flex items-center"></div>
+                    <div className="col-span-3">
+                      <PrimaryButton
+                        loading={submitting}
+                        loadingText="Sending..."
+                        onClick={handleResend}
+                      >
+                        Resend Driver App Invite
+                      </PrimaryButton>
+                    </div>
+                  </div>
+                </div>
+              )} */}
             </div>
 
             {/* Footer */}
@@ -676,18 +723,20 @@ export function SheetAddTeamMember({
                   </PrimaryButton>
                 </div>
               )}
-              {existingUser && existingUser.status === STATUSES.invited && (
-                <div className="mr-2">
-                  <PrimaryButton
-                    className="bg-red-800 hover:bg-red-900"
-                    loading={submitting}
-                    loadingText="Ok..."
-                    onClick={handleRevokeInvitationAndDeleteUser}
-                  >
-                    Cancel Invitation
-                  </PrimaryButton>
-                </div>
-              )}
+              {existingUser &&
+                existingUser.status === STATUSES.invited &&
+                existingUser.role !== ROLES.driver && (
+                  <div className="mr-2">
+                    <PrimaryButton
+                      className="bg-red-800 hover:bg-red-900"
+                      loading={submitting}
+                      loadingText="Ok..."
+                      onClick={handleRevokeInvitationAndDeleteUser}
+                    >
+                      Cancel Invitation
+                    </PrimaryButton>
+                  </div>
+                )}
               {existingUser && existingUser.status === STATUSES.inactive && (
                 <div className="mr-2">
                   <PrimaryButton
