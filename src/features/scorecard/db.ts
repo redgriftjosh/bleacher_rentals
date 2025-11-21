@@ -134,3 +134,99 @@ function formatWeekLabel(weekStart: Date, weekEnd: Date): string {
 
   return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
 }
+
+export async function fetchYearToDateRevenue(token: string | null): Promise<number> {
+  if (!token) {
+    createErrorToast(["No token found"]);
+    return 0;
+  }
+
+  const supabase = await getSupabaseClient(token);
+
+  // Get the start of the current year
+  const now = new Date();
+  const yearStart = new Date(now.getFullYear(), 0, 1); // January 1st
+
+  // Fetch all signed events from this year
+  const { data: events, error } = await supabase
+    .from("Events")
+    .select("contract_revenue_cents")
+    .eq("contract_status", "BOOKED")
+    .gte("event_start", yearStart.toISOString());
+
+  if (error) {
+    createErrorToast(["Failed to fetch year-to-date revenue.", error.message]);
+    return 0;
+  }
+
+  // Sum up the revenue (convert from cents to dollars)
+  const totalCents =
+    events?.reduce((sum, event) => sum + (event.contract_revenue_cents || 0), 0) || 0;
+  return totalCents / 100; // Convert cents to dollars
+}
+
+export type MonthlyRevenueData = {
+  month: string;
+  revenue: number;
+  eventCount: number;
+};
+
+export async function fetchMonthlyRevenue(token: string | null): Promise<MonthlyRevenueData[]> {
+  if (!token) {
+    createErrorToast(["No token found"]);
+    return [];
+  }
+
+  const supabase = await getSupabaseClient(token);
+
+  // Get the start of the current year
+  const now = new Date();
+  const yearStart = new Date(now.getFullYear(), 0, 1); // January 1st
+
+  // Fetch all booked events from this year
+  const { data: events, error } = await supabase
+    .from("Events")
+    .select("contract_revenue_cents, event_start")
+    .eq("contract_status", "BOOKED")
+    .gte("event_start", yearStart.toISOString())
+    .order("event_start", { ascending: true });
+
+  if (error) {
+    createErrorToast(["Failed to fetch monthly revenue.", error.message]);
+    return [];
+  }
+
+  // Group by month
+  const monthMap = new Map<string, { revenue: number; count: number }>();
+
+  events?.forEach((event) => {
+    const eventDate = new Date(event.event_start);
+    const monthKey = eventDate.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+
+    if (!monthMap.has(monthKey)) {
+      monthMap.set(monthKey, { revenue: 0, count: 0 });
+    }
+
+    const monthData = monthMap.get(monthKey)!;
+    monthData.revenue += (event.contract_revenue_cents || 0) / 100; // Convert to dollars
+    monthData.count += 1;
+  });
+
+  // Convert to array and fill in missing months
+  const monthlyData: MonthlyRevenueData[] = [];
+  const currentMonth = now.getMonth();
+
+  for (let i = 0; i <= currentMonth; i++) {
+    const date = new Date(now.getFullYear(), i, 1);
+    const monthKey = date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    const data = monthMap.get(monthKey);
+
+    monthlyData.push({
+      month: date.toLocaleDateString("en-US", { month: "short" }),
+      revenue: data?.revenue || 0,
+      eventCount: data?.count || 0,
+    });
+  }
+
+  return monthlyData;
+}
