@@ -391,7 +391,12 @@ INSERT INTO "public"."Addresses" ("address_id", "created_at", "street", "city", 
 	(295, '2025-11-21 15:02:58.868116+00', 'Seguin, TX, USA', 'Seguin', 'Texas', '78155'),
 	(296, '2025-11-24 16:11:35.071137+00', 'Timmermans'' Ranch and horse stables, Nixon Road, Simcoe, ON, Canada', 'Simcoe', 'Ontario', 'N3Y 4K6'),
 	(297, '2025-11-24 16:11:35.188115+00', 'Timmermann''s Ranch & Saddle Shop, West Roberts Road, Island Lake, IL, USA', 'Island Lake', 'Illinois', '60042'),
-	(284, '2025-11-17 16:17:06.327356+00', 'The International Center, Airport Road, Mississauga, ON, Canada', 'Mississauga', 'Ontario', 'L4V 1E8');
+	(284, '2025-11-17 16:17:06.327356+00', 'The International Center, Airport Road, Mississauga, ON, Canada', 'Mississauga', 'Ontario', 'L4V 1E8'),
+	(298, '2025-11-25 13:23:20.866247+00', 'Ancaster Fairgrounds, Trinity Road South, Jerseyville, ON, Canada', 'Hamilton', 'Ontario', 'L0R 1R0'),
+	(299, '2025-11-25 13:28:13.713697+00', '383 Belle River Rd E, South Woodslee, Essex County, ON N0R 1V0, Canada', 'South Woodslee', 'Ontario', 'N0R 1V0'),
+	(300, '2025-11-25 13:33:04.65985+00', '557 Walter St, Lucknow, Bruce County, ON N0G 2H0, Canada', 'Lucknow', 'Ontario', 'N0G 2H0'),
+	(301, '2025-11-25 14:14:29.625199+00', 'DTR (Dallas Trailer Repair) - Irving, Texas 356, Irving, TX, USA', 'Irving', 'Texas', '75060'),
+	(302, '2025-11-25 15:54:51.458783+00', 'DTR (Dallas Trailer Repair) - Irving, Texas 356, Irving, TX, USA', 'Irving', 'Texas', '75060');
 
 
 --
@@ -594,7 +599,7 @@ INSERT INTO "public"."Users" ("user_id", "created_at", "first_name", "last_name"
 	(27, '2025-10-10 16:45:08.808979+00', 'Jake', 'Loewen', 'jacob.loewen4141@gmail.com', NULL, NULL, 2, 3, NULL),
 	(28, '2025-10-10 16:45:42.896319+00', 'Devin', '- Dk Ferrier', 'dkfarrierservice@gmail.com', NULL, NULL, 2, 3, NULL),
 	(30, '2025-10-10 16:47:08.891749+00', 'Tim', '-Timberfell', 'timberfell@outlook.com', NULL, NULL, 2, 3, NULL),
-	(8, '2025-05-27 17:21:05.15774+00', 'Josh', 'Redgrift', 'redgriftjosh@gmail.com', NULL, 'user_35f2pOOvsfbnuYFRKDMmPKqcc5f', 2, 2, NULL),
+	(8, '2025-05-27 17:21:05.15774+00', 'Josh', 'Redgrift', 'redgriftjosh@gmail.com', NULL, 'user_2xgjA9Jf7gCkDc1GKbhdGyF0vKd', 2, 2, NULL),
 	(14, '2025-05-27 17:41:55.032595+00', 'Mike', 'timmermans', 'mike@bleacherrentals.com', NULL, 'user_2xolUMIdlXoybp1lwXIaHG1l70c', 2, 2, NULL),
 	(31, '2025-10-29 15:15:42.657863+00', 'Phillip', 'Horge', 'phillip@bleacherrentals.com', NULL, 'user_34nN0lj1uclgl6CqHN7WhCPBNZI', 2, 1, NULL),
 	(13, '2025-05-27 17:41:16.95106+00', 'Michelle', 'Adcock', 'michelle@bleacherrentals.com', NULL, 'user_2xgmEKuFQ00ExgIWyHwUnAX2lUl', 2, 2, NULL),
@@ -799,6 +804,7 @@ INSERT INTO "public"."Events" ("event_id", "created_at", "event_name", "setup_st
 	(215, '2025-11-14 18:24:12.787676+00', 'FL - Dade City - Pasco County Fair 2026', NULL, '2026-02-16', '2026-02-22', NULL, 273, 0, 0, 2, 6, false, true, '', false, 4, 'https://pro.goodshuffle.com/app/project/detail?id=230924613&tab=contract', 21),
 	(200, '2025-11-12 15:40:55.473902+00', 'On-Toronto- Soccer ', NULL, '2025-11-13', '2025-11-20', NULL, 254, 0, 0, 2, 0, false, false, '', false, 121, 'https://pro.goodshuffle.com/app/project/detail?id=230771855&tab=contract', 12),
 	(217, '2025-11-14 18:31:24.946934+00', 'FL - Green Cove Springs - Clay County Fair 2026', NULL, '2026-04-02', '2026-04-12', NULL, 275, 0, 0, 2, 1, false, true, '', false, 194, 'https://pro.goodshuffle.com/app/project/detail?id=230635206&tab=contract', 21),
+	(236, '2025-11-25 15:54:51.644593+00', 'Annual Inspection / Repairs ', NULL, '2025-12-09', '2025-12-28', NULL, 302, 0, 0, 0, 1, false, true, '', false, 359, NULL, 13),
 	(219, '2025-11-17 15:53:52.94556+00', 'ON-Niagara- Battle at the Border Cheer', NULL, '2026-02-21', '2026-02-22', NULL, 283, 0, 0, 0, 4, false, true, '', false, 271, 'https://pro.goodshuffle.com/app/project/detail?id=230976403&tab=contract', 12),
 	(218, '2025-11-14 18:35:21.781248+00', 'FL - Fruitland Park - 2026 Rodeo', NULL, '2026-03-22', '2026-03-23', NULL, 276, 0, 0, 0, 6, false, true, '', false, 174, 'https://pro.goodshuffle.com/app/project/detail?id=230353811&tab=contract', 21),
 	(216, '2025-11-14 18:27:21.277943+00', 'FL - Bradenton - FL Man Games 2026', NULL, '2026-02-21', '2026-02-21', NULL, 274, 0, 0, 0, 3, false, true, '', false, 125, 'https://pro.goodshuffle.com/app/project/detail?id=230618273&tab=contract', 21),
@@ -810,7 +816,11 @@ INSERT INTO "public"."Events" ("event_id", "created_at", "event_name", "setup_st
 	(224, '2025-11-20 17:58:35.162872+00', 'PA-Hersey-Sugar Rush 2026', NULL, '2026-01-05', '2026-01-06', NULL, 288, 0, 0, 0, 2, false, true, '', false, 161, 'https://pro.goodshuffle.com/app/project/detail?id=230404175&tab=contract', 12),
 	(226, '2025-11-20 19:36:22.534595+00', 'NC - Charlotte - Providence Day School 2025', NULL, '2025-08-22', '2025-12-10', NULL, 290, 0, 0, 1, 0, false, true, '', false, 73, 'https://pro.goodshuffle.com/app/project/detail?id=230684949&tab=contract', 21),
 	(231, '2025-11-21 15:02:59.04007+00', 'test zeeno', NULL, '2025-11-22', '2025-11-23', NULL, 295, 0, 0, 0, 0, false, true, '', true, 339, 'https://pro.goodshuffle.com/app/project/detail?id=230967857&tab=contract', 11),
-	(220, '2025-11-17 16:17:06.404048+00', 'ON-Missisaagua-All Star Cheer', NULL, '2026-04-10', '2026-04-13', NULL, 284, 0, 0, 0, 8, false, true, '', false, 327, 'https://pro.goodshuffle.com/app/project/detail?id=230976504&tab=contract', 12);
+	(220, '2025-11-17 16:17:06.404048+00', 'ON-Missisaagua-All Star Cheer', NULL, '2026-04-10', '2026-04-13', NULL, 284, 0, 0, 0, 8, false, true, '', false, 327, 'https://pro.goodshuffle.com/app/project/detail?id=230976504&tab=contract', 12),
+	(232, '2025-11-25 13:23:20.967673+00', 'ON-Ancaster Fair- 2026', NULL, '2026-09-24', '2026-09-27', NULL, 298, 0, 5, 6, 4, false, true, '', false, 62, 'https://pro.goodshuffle.com/app/project/detail?id=230828267&tab=contract', 12),
+	(233, '2025-11-25 13:28:13.787122+00', 'ON-Kingsville Pro Rodeo', NULL, '2026-07-24', '2026-07-26', NULL, 299, 0, 0, 3, 8, false, true, '', false, 277, 'https://pro.goodshuffle.com/app/project/detail?id=230710818&tab=contract', 12),
+	(234, '2025-11-25 13:33:04.750013+00', 'ON-Lucknow-Tractor Pull 26''', NULL, '2026-06-19', '2026-06-21', NULL, 300, 0, 0, 7, 5, false, true, '', false, 194, 'https://pro.goodshuffle.com/app/project/detail?id=230662929&tab=contract', 12),
+	(235, '2025-11-25 14:14:29.727435+00', 'Annual Inspection / Repairs', NULL, '2025-12-05', '2025-12-28', NULL, 301, 0, 0, 0, 1, false, true, '', false, 359, NULL, 13);
 
 
 --
@@ -1547,7 +1557,47 @@ INSERT INTO "public"."BleacherEvents" ("bleacher_event_id", "created_at", "bleac
 	(1393, '2025-11-24 16:39:29.309605+00', 10, 220, '', false, '', false),
 	(1394, '2025-11-24 17:21:02.624678+00', 60, 220, '', false, '', false),
 	(1397, '2025-11-24 20:26:08.636172+00', 86, 161, '', false, '', false),
-	(1398, '2025-11-24 20:32:58.744601+00', 84, 161, '', false, '', false);
+	(1398, '2025-11-24 20:32:58.744601+00', 84, 161, '', false, '', false),
+	(1399, '2025-11-25 13:23:21.074917+00', 56, 232, NULL, false, NULL, false),
+	(1400, '2025-11-25 13:23:21.074917+00', 59, 232, NULL, false, NULL, false),
+	(1401, '2025-11-25 13:23:21.074917+00', 70, 232, NULL, false, NULL, false),
+	(1402, '2025-11-25 13:23:21.074917+00', 68, 232, NULL, false, NULL, false),
+	(1403, '2025-11-25 13:23:21.074917+00', 85, 232, NULL, false, NULL, false),
+	(1404, '2025-11-25 13:23:21.074917+00', 86, 232, NULL, false, NULL, false),
+	(1405, '2025-11-25 13:23:21.074917+00', 88, 232, NULL, false, NULL, false),
+	(1406, '2025-11-25 13:23:21.074917+00', 89, 232, NULL, false, NULL, false),
+	(1407, '2025-11-25 13:23:21.074917+00', 91, 232, NULL, false, NULL, false),
+	(1408, '2025-11-25 13:23:21.074917+00', 46, 232, NULL, false, NULL, false),
+	(1409, '2025-11-25 13:23:21.074917+00', 65, 232, NULL, false, NULL, false),
+	(1410, '2025-11-25 13:23:21.074917+00', 73, 232, NULL, false, NULL, false),
+	(1411, '2025-11-25 13:23:21.074917+00', 74, 232, NULL, false, NULL, false),
+	(1412, '2025-11-25 13:23:21.074917+00', 75, 232, NULL, false, NULL, false),
+	(1413, '2025-11-25 13:23:21.074917+00', 76, 232, NULL, false, NULL, false),
+	(1414, '2025-11-25 13:28:13.872555+00', 85, 233, NULL, false, NULL, false),
+	(1415, '2025-11-25 13:28:13.872555+00', 86, 233, NULL, false, NULL, false),
+	(1416, '2025-11-25 13:28:13.872555+00', 88, 233, NULL, false, NULL, false),
+	(1417, '2025-11-25 13:28:13.872555+00', 70, 233, NULL, false, NULL, false),
+	(1418, '2025-11-25 13:28:13.872555+00', 68, 233, NULL, false, NULL, false),
+	(1419, '2025-11-25 13:28:13.872555+00', 67, 233, NULL, false, NULL, false),
+	(1420, '2025-11-25 13:28:13.872555+00', 56, 233, NULL, false, NULL, false),
+	(1421, '2025-11-25 13:28:13.872555+00', 54, 233, NULL, false, NULL, false),
+	(1422, '2025-11-25 13:28:13.872555+00', 57, 233, NULL, false, NULL, false),
+	(1423, '2025-11-25 13:28:13.872555+00', 55, 233, NULL, false, NULL, false),
+	(1424, '2025-11-25 13:28:13.872555+00', 26, 233, NULL, false, NULL, false),
+	(1425, '2025-11-25 13:33:04.843841+00', 26, 234, NULL, false, NULL, false),
+	(1426, '2025-11-25 13:33:04.843841+00', 44, 234, NULL, false, NULL, false),
+	(1427, '2025-11-25 13:33:04.843841+00', 45, 234, NULL, false, NULL, false),
+	(1428, '2025-11-25 13:33:04.843841+00', 55, 234, NULL, false, NULL, false),
+	(1429, '2025-11-25 13:33:04.843841+00', 57, 234, NULL, false, NULL, false),
+	(1430, '2025-11-25 13:33:04.843841+00', 59, 234, NULL, false, NULL, false),
+	(1431, '2025-11-25 13:33:04.843841+00', 85, 234, NULL, false, NULL, false),
+	(1432, '2025-11-25 13:33:04.843841+00', 86, 234, NULL, false, NULL, false),
+	(1433, '2025-11-25 13:33:04.843841+00', 88, 234, NULL, false, NULL, false),
+	(1434, '2025-11-25 13:33:04.843841+00', 84, 234, NULL, false, NULL, false),
+	(1435, '2025-11-25 13:33:04.843841+00', 89, 234, NULL, false, NULL, false),
+	(1436, '2025-11-25 13:33:04.843841+00', 91, 234, NULL, false, NULL, false),
+	(1437, '2025-11-25 14:14:29.825352+00', 60, 235, NULL, false, NULL, false),
+	(1438, '2025-11-25 15:54:51.754344+00', 61, 236, NULL, false, NULL, false);
 
 
 --
@@ -2357,7 +2407,8 @@ Fenelon Falls"', '2025-07-04'),
 	(1065, '2025-11-20 17:58:44.805864+00', 69, 'To Florida After', '2026-01-09'),
 	(1066, '2025-11-20 17:58:49.410809+00', 70, 'To Florida After', '2026-01-09'),
 	(1078, '2025-11-24 20:26:17.682612+00', 86, 'set up', '2025-10-08'),
-	(1079, '2025-11-24 20:33:30.809726+00', 89, 'right to Rockton', '2025-10-07');
+	(1079, '2025-11-24 20:33:30.809726+00', 89, 'right to Rockton', '2025-10-07'),
+	(1080, '2025-11-25 15:57:44.478443+00', 60, 'To Florida After', '2025-12-29');
 
 
 --
@@ -2695,14 +2746,14 @@ SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 1, false);
 -- Name: Addresses_address_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."Addresses_address_id_seq"', 297, true);
+SELECT pg_catalog.setval('"public"."Addresses_address_id_seq"', 302, true);
 
 
 --
 -- Name: BleacherEvents_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."BleacherEvents_id_seq"', 1398, true);
+SELECT pg_catalog.setval('"public"."BleacherEvents_id_seq"', 1438, true);
 
 
 --
@@ -2723,7 +2774,7 @@ SELECT pg_catalog.setval('"public"."Bleachers_bleacher_id_seq"', 168, true);
 -- Name: Blocks_block_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."Blocks_block_id_seq"', 1079, true);
+SELECT pg_catalog.setval('"public"."Blocks_block_id_seq"', 1080, true);
 
 
 --
@@ -2737,7 +2788,7 @@ SELECT pg_catalog.setval('"public"."Drivers_driver_id_seq"', 9, true);
 -- Name: Events_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."Events_id_seq"', 231, true);
+SELECT pg_catalog.setval('"public"."Events_id_seq"', 236, true);
 
 
 --
