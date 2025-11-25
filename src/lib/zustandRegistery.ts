@@ -36,4 +36,5 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   Users: () => useUsersStore.getState().setStale(true),
   WorkTrackers: () => useWorkTrackersStore.getState().setStale(true),
   BleacherUsers: () => {},
+  TestTable: () => {},
 };
