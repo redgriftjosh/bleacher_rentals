@@ -5,17 +5,20 @@ import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
 import { useUserRolesStore } from "@/state/userRolesStore";
 import { useUserStatusesStore } from "@/state/userStatusesStore";
 import { useUsersStore } from "@/state/userStore";
-import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
+// import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { ROLES, STATUSES } from "./constants";
 import { createErrorToast, createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 
-export async function fetchDriverTaxById(userId: number, token: string | null): Promise<number> {
-  if (!token) {
+export async function fetchDriverTaxById(
+  userId: number,
+  supabase: SupabaseClient
+): Promise<number> {
+  if (!supabase) {
     createErrorToast(["No token found"]);
   }
-  const supabase = await getSupabaseClient(token);
+  // const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from("Drivers")
     .select("tax")
@@ -43,12 +46,12 @@ export type DriverPaymentData = {
 
 export async function fetchDriverPaymentData(
   userId: number,
-  token: string | null
+  supabase: SupabaseClient
 ): Promise<DriverPaymentData> {
-  if (!token) {
+  if (!supabase) {
     createErrorToast(["No token found"]);
   }
-  const supabase = await getSupabaseClient(token);
+  // const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from("Drivers")
     .select("tax, pay_rate_cents, pay_currency, pay_per_unit")
@@ -95,12 +98,11 @@ async function insertDriver(
   return null;
 }
 
-export async function updateUserStatusToInvited(email: string, token: string | null) {
-  if (!token) {
+export async function updateUserStatusToInvited(email: string, supabase: SupabaseClient) {
+  if (!supabase) {
     createErrorToast(["No token found"]);
   }
-  const supabase = await getSupabaseClient(token);
-
+  // const supabase = await getSupabaseClient(token);
   const { error } = await supabase
     .from("Users")
     .update({
@@ -125,10 +127,10 @@ export async function insertUser(
   payRateCents: number | null,
   payCurrency: string,
   payPerUnit: string,
-  token: string
+  supabase: SupabaseClient
 ): Promise<number | null> {
   // console.log("Inserting user", token);
-  const supabase = await getSupabaseClient(token);
+  // const supabase = await getSupabaseClient(token);
 
   const { error: userError, data: userData } = await supabase
     .from("Users")
@@ -195,7 +197,7 @@ export async function updateUser(
     payRateCents,
     payCurrency,
     payPerUnit,
-    token,
+    supabase,
   }: {
     email: string | null;
     firstName: string | null;
@@ -206,10 +208,10 @@ export async function updateUser(
     payRateCents: number | null;
     payCurrency: string;
     payPerUnit: string;
-    token: string;
+    supabase: SupabaseClient;
   }
 ) {
-  const supabase = await getSupabaseClient(token);
+  // const supabase = await getSupabaseClient(token);
   // console.log("Updating user", token);
 
   const { error: updateError } = await supabase
@@ -260,11 +262,11 @@ export async function updateUser(
 
 export type SimpleOption = { id: number; label: string };
 
-export async function fetchBleachersForOptions(token: string | null): Promise<SimpleOption[]> {
-  if (!token) {
-    createErrorToast(["No token found"]);
+export async function fetchBleachersForOptions(supabase: SupabaseClient): Promise<SimpleOption[]> {
+  if (!supabase) {
+    createErrorToast(["No supabase client found"]);
   }
-  const supabase = await getSupabaseClient(token);
+  // const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from("Bleachers")
     .select("bleacher_id, bleacher_number")
@@ -278,12 +280,12 @@ export async function fetchBleachersForOptions(token: string | null): Promise<Si
 
 export async function fetchUserBleacherAssignments(
   userId: number,
-  token: string | null
+  supabase: SupabaseClient
 ): Promise<{ summer: number[]; winter: number[] }> {
-  if (!token) {
-    createErrorToast(["No token found"]);
+  if (!supabase) {
+    createErrorToast(["No supabase client found"]);
   }
-  const supabase = await getSupabaseClient(token);
+  // const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from("BleacherUsers")
     .select("bleacher_id, season")
@@ -305,12 +307,12 @@ export async function upsertUserBleacherAssignments(
   userId: number,
   summerIds: number[],
   winterIds: number[],
-  token: string | null
+  supabase: SupabaseClient
 ): Promise<void> {
-  if (!token) {
-    createErrorToast(["No token found"]);
+  if (!supabase) {
+    createErrorToast(["No supabase client found"]);
   }
-  const supabase = await getSupabaseClient(token);
+  // const supabase = await getSupabaseClient(token);
 
   // Replace strategy: delete then insert
   const { error: delError } = await supabase.from("BleacherUsers").delete().eq("user_id", userId);
@@ -332,9 +334,7 @@ export async function upsertUserBleacherAssignments(
   }
 }
 
-export async function deactivateUser(userId: number, token: string) {
-  const supabase = await getSupabaseClient(token);
-
+export async function deactivateUser(userId: number, supabase: SupabaseClient) {
   const { error: updateError } = await supabase
     .from("Users")
     .update({
@@ -346,9 +346,7 @@ export async function deactivateUser(userId: number, token: string) {
   updateDataBase(["Users", "UserStatuses"]);
 }
 
-export async function reactivateUser(userId: number, token: string) {
-  const supabase = await getSupabaseClient(token);
-
+export async function reactivateUser(userId: number, supabase: SupabaseClient) {
   const { error: updateError } = await supabase
     .from("Users")
     .update({
@@ -360,9 +358,7 @@ export async function reactivateUser(userId: number, token: string) {
   updateDataBase(["Users", "UserStatuses"]);
 }
 
-export async function deleteUser(userId: number, token: string) {
-  const supabase = await getSupabaseClient(token);
-
+export async function deleteUser(userId: number, supabase: SupabaseClient) {
   const { error: updateError } = await supabase.from("Users").delete().eq("user_id", userId);
 
   if (updateError) throw updateError;

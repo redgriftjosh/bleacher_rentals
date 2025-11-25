@@ -26,6 +26,7 @@ import { updateEvent } from "@/features/dashboard/db/client/updateEvent";
 import { FetchDashboardBleachers } from "@/features/dashboard/db/client/bleachers";
 import { FetchDashboardEvents } from "@/features/dashboard/db/client/events";
 import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
@@ -38,29 +39,27 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
   const currentEventStore = useCurrentEventStore();
   const [activeTab, setActiveTab] = useState<Tab>("Core");
   // const [hueOpen, setHueOpen] = useState(false);
-  const { getToken, userId, isLoaded } = useAuth();
+  const { userId, isLoaded } = useAuth();
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
-  const qc = useQueryClient();
-  const bumpRefresh = useDataRefreshTokenStore((s) => s.bump);
+  const supabase = useClerkSupabaseClient();
   const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
 
   // Refresh zustand stores directly without invalidating the page query
-  const refreshDashboardStores = async (token: string | null) => {
-    if (!token || !isLoaded || !userId) return;
+  const refreshDashboardStores = async () => {
+    if (!supabase || !isLoaded || !userId) return;
     await Promise.all([
-      FetchDashboardBleachers(token),
-      FetchDashboardEvents(token, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
+      FetchDashboardBleachers(supabase),
+      FetchDashboardEvents(supabase, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
     ]);
   };
 
   const handleCreateEvent = async () => {
     const state = useCurrentEventStore.getState();
-    const token = await getToken({ template: "supabase" });
     try {
-      await createEvent(state, token, user ?? null);
+      await createEvent(state, supabase, user ?? null);
       // Refresh zustand stores directly to update Pixi without React remount
-      await refreshDashboardStores(token ?? null);
+      await refreshDashboardStores();
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to create event:", error);
@@ -71,10 +70,9 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
   const handleUpdateEvent = async () => {
     setLoading(true);
     const state = useCurrentEventStore.getState();
-    const token = await getToken({ template: "supabase" });
     try {
-      await updateEvent(state, token, user ?? null, bleacherEvents);
-      await refreshDashboardStores(token ?? null);
+      await updateEvent(state, supabase, user ?? null, bleacherEvents);
+      await refreshDashboardStores();
       currentEventStore.resetForm();
       setLoading(false);
     } catch (error) {
@@ -86,10 +84,9 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
   const handleDeleteEvent = async () => {
     setLoading(true);
     const state = useCurrentEventStore.getState();
-    const token = await getToken({ template: "supabase" });
     try {
-      await deleteEvent(state.eventId, state.addressData?.state ?? "", token, user ?? null);
-      await refreshDashboardStores(token ?? null);
+      await deleteEvent(state.eventId, state.addressData?.state ?? "", supabase, user ?? null);
+      await refreshDashboardStores();
       currentEventStore.resetForm();
       setLoading(false);
     } catch (error) {

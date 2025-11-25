@@ -1,19 +1,18 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
 import { fetchDrivers } from "../db";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export function DriverList() {
   const router = useRouter();
-  const { getToken } = useAuth();
+  const supabase = useClerkSupabaseClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ["drivers"],
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchDrivers(token);
+      return fetchDrivers(supabase);
     },
   });
   const drivers = data?.drivers ?? [];

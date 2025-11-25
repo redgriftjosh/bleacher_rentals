@@ -1,12 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useHomeBasesStore } from "@/state/homeBaseStore";
-import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
 import {
   deactivateUser,
   deleteUser,
-  fetchDriverTaxById,
   fetchDriverPaymentData,
   insertUser,
   reactivateUser,
@@ -50,8 +47,8 @@ import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import InputPercents from "@/components/InputPercents";
 import { getHomeBaseOptions } from "@/utils/utils";
-import CentsInput from "@/components/CentsInput";
 import { PaymentInfo } from "./PaymentInfo";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export function SheetAddTeamMember({
   isOpen,
@@ -64,7 +61,7 @@ export function SheetAddTeamMember({
   existingUser?: ExistingUser;
   setExistingUser: (user: ExistingUser) => void;
 }) {
-  const { getToken } = useAuth();
+  const supabase = useClerkSupabaseClient();
   let userRoles = useUserRolesStore((s) => s.userRoles);
   userRoles = filterUserRoles(userRoles, existingUser);
   const users = useUsersStore((s) => s.users);
@@ -96,8 +93,7 @@ export function SheetAddTeamMember({
   } = useQuery({
     queryKey: ["driverPayment", existingUser?.user_id],
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchDriverPaymentData(existingUser!.user_id, token);
+      return fetchDriverPaymentData(existingUser!.user_id, supabase);
     },
     enabled: !!existingUser && existingUser.role === ROLES.driver,
   });
@@ -110,8 +106,7 @@ export function SheetAddTeamMember({
   } = useQuery({
     queryKey: ["bleacherOptions"],
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchBleachersForOptions(token);
+      return fetchBleachersForOptions(supabase);
     },
   });
 
@@ -123,8 +118,7 @@ export function SheetAddTeamMember({
   } = useQuery({
     queryKey: ["bleacherAssignments", existingUser?.user_id],
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchUserBleacherAssignments(existingUser!.user_id, token);
+      return fetchUserBleacherAssignments(existingUser!.user_id, supabase);
     },
     enabled: !!existingUser,
   });
@@ -180,7 +174,6 @@ export function SheetAddTeamMember({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const token = await getToken({ template: "supabase" });
     if (
       !checkInsertUserFormRules(
         firstName,
@@ -189,7 +182,7 @@ export function SheetAddTeamMember({
         roleId,
         homeBaseIds,
         users.map((u) => u.email),
-        token,
+        supabase,
         existingUser !== null
       )
     ) {
@@ -208,14 +201,14 @@ export function SheetAddTeamMember({
           payRateCents: payRateCents,
           payCurrency: payCurrency,
           payPerUnit: payPerUnit,
-          token: token!,
+          supabase: supabase,
         });
         // Save bleacher assignments for existing user
         await upsertUserBleacherAssignments(
           existingUser.user_id,
           summerBleacherIds,
           winterBleacherIds,
-          token
+          supabase
         );
         setSubmitting(false);
         setIsOpen(false);
@@ -231,7 +224,7 @@ export function SheetAddTeamMember({
           payRateCents,
           payCurrency,
           payPerUnit,
-          token!
+          supabase
         );
         if (newUserId) {
           // Save bleacher assignments for new user
@@ -239,7 +232,7 @@ export function SheetAddTeamMember({
             newUserId,
             summerBleacherIds,
             winterBleacherIds,
-            token
+            supabase
           );
         }
         if (roleId === ROLES.driver) {
@@ -259,7 +252,6 @@ export function SheetAddTeamMember({
   };
   const handleResend = async () => {
     setSubmitting(true);
-    const token = await getToken({ template: "supabase" });
     if (
       !checkEmailRules(
         email,
@@ -271,7 +263,7 @@ export function SheetAddTeamMember({
     }
     const success = await sendInviteUserEmail(email!);
     if (success) {
-      await updateUserStatusToInvited(email!, token);
+      await updateUserStatusToInvited(email!, supabase);
       setSubmitting(false);
       setIsOpen(false);
       toast.custom(
@@ -287,41 +279,38 @@ export function SheetAddTeamMember({
 
   const handleDeactivate = async () => {
     setSubmitting(true);
-    const token = await getToken({ template: "supabase" });
-    if (!token) {
-      console.warn("No token found");
+    if (!supabase) {
+      console.warn("No Supabase client found");
       setSubmitting(false);
       return;
     }
-    await deactivateUser(existingUser!.user_id, token!);
+    await deactivateUser(existingUser!.user_id, supabase);
     setSubmitting(false);
     setIsOpen(false);
   };
 
   const handleReactivate = async () => {
     setSubmitting(true);
-    const token = await getToken({ template: "supabase" });
-    if (!token) {
-      console.warn("No token found");
+    if (!supabase) {
+      console.warn("No Supabase client found");
       setSubmitting(false);
       return;
     }
-    await reactivateUser(existingUser!.user_id, token!);
+    await reactivateUser(existingUser!.user_id, supabase);
     setSubmitting(false);
     setIsOpen(false);
   };
 
   const handleRevokeInvitationAndDeleteUser = async () => {
     setSubmitting(true);
-    const token = await getToken({ template: "supabase" });
-    if (!token) {
-      console.warn("No token found");
+    if (!supabase) {
+      console.warn("No Supabase client found");
       setSubmitting(false);
       return;
     }
     const success = await deleteInviteUserEmail(email!);
     if (success) {
-      await deleteUser(existingUser!.user_id, token!);
+      await deleteUser(existingUser!.user_id, supabase);
       toast.custom(
         (t) =>
           React.createElement(SuccessToast, {

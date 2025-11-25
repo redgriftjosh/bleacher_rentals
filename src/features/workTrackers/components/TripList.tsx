@@ -1,11 +1,11 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
 import { fetchWorkTrackersForUserIdAndStartDate } from "../db";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";
 import { calculateFinancialTotals } from "../util";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 type Props = {
   userId: string;
@@ -14,12 +14,12 @@ type Props = {
 };
 
 export function TripList({ userId, startDate, onSelectWorkTracker }: Props) {
-  const { getToken } = useAuth();
+  const supabase = useClerkSupabaseClient();
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["work-trackers", userId, startDate],
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchWorkTrackersForUserIdAndStartDate(token, userId, startDate);
+      return fetchWorkTrackersForUserIdAndStartDate(supabase, userId, startDate, false);
     },
   });
   let financialTotals;

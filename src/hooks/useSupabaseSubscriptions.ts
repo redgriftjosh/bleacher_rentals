@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
 import { useBleachersStore } from "@/state/bleachersStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { useSetupTable } from "./useSetupTable";
@@ -22,15 +20,12 @@ import { useWorkTrackersStore } from "@/state/workTrackersStore";
 // I made a video explaining this code
 // https://www.loom.com/share/50e15eaa6e0e4f8e9e063ab896ecd8a1?sid=41289fe0-9b87-4026-a6a4-8ef9bd14f331
 export default function useSupabaseSubscriptions() {
-  const { getToken } = useAuth();
-
   useSubToDbChanges();
 
   const bleacherStore = useBleachersStore();
   useSetupTable({
     tableName: "Bleachers",
     // channelName: "bleachers-channel",
-    getToken,
     setStore: bleacherStore.setBleachers,
     stale: bleacherStore.stale,
     setStale: bleacherStore.setStale,
@@ -41,7 +36,6 @@ export default function useSupabaseSubscriptions() {
   useSetupTable({
     tableName: "Blocks",
     // channelName: "blocks-channel",
-    getToken,
     setStore: blocksStore.setBlocks,
     stale: blocksStore.stale,
     setStale: blocksStore.setStale,
@@ -52,7 +46,6 @@ export default function useSupabaseSubscriptions() {
   useSetupTable({
     tableName: "Users",
     // channelName: "users-channel",
-    getToken,
     setStore: usersStore.setUsers,
     stale: usersStore.stale,
     setStale: usersStore.setStale,
@@ -63,7 +56,6 @@ export default function useSupabaseSubscriptions() {
   useSetupTable({
     tableName: "WorkTrackers",
     // channelName: "workTrackers-channel",
-    getToken,
     setStore: workTrackersStore.setWorkTrackers,
     stale: workTrackersStore.stale,
     setStale: workTrackersStore.setStale,
@@ -74,7 +66,6 @@ export default function useSupabaseSubscriptions() {
   useSetupTable({
     tableName: "HomeBases",
     // channelName: "homebases-channel",
-    getToken,
     setStore: homeBaseStore.setHomeBases,
     stale: homeBaseStore.stale,
     setStale: homeBaseStore.setStale,
@@ -85,7 +76,6 @@ export default function useSupabaseSubscriptions() {
   useSetupTable({
     tableName: "UserStatuses",
     // channelName: "userstatuses-channel",
-    getToken,
     setStore: UserStatusesStore.setUserStatuses,
     stale: UserStatusesStore.stale,
     setStale: UserStatusesStore.setStale,
@@ -96,7 +86,6 @@ export default function useSupabaseSubscriptions() {
   useSetupTable({
     tableName: "UserHomeBases",
     // channelName: "userhomebases-channel",
-    getToken,
     setStore: UserHomeBasesStore.setUserHomeBases,
     stale: UserHomeBasesStore.stale,
     setStale: UserHomeBasesStore.setStale,
@@ -107,7 +96,6 @@ export default function useSupabaseSubscriptions() {
   useSetupTable({
     tableName: "UserRoles",
     // channelName: "userroles-channel",
-    getToken,
     setStore: UserRolesStore.setUserRoles,
     stale: UserRolesStore.stale,
     setStale: UserRolesStore.setStale,
@@ -118,7 +106,6 @@ export default function useSupabaseSubscriptions() {
   useSetupTable({
     tableName: "Events",
     // channelName: "events-channel",
-    getToken,
     setStore: eventsStore.setEvents,
     stale: eventsStore.stale,
     setStale: eventsStore.setStale,
@@ -129,7 +116,6 @@ export default function useSupabaseSubscriptions() {
   useSetupTable({
     tableName: "Tasks",
     // channelName: "tasks-channel",
-    getToken,
     setStore: tasksStore.setTasks,
     stale: tasksStore.stale,
     setStale: tasksStore.setStale,
@@ -140,7 +126,6 @@ export default function useSupabaseSubscriptions() {
   useSetupTable({
     tableName: "TaskStatuses",
     // channelName: "taskStatuses-channel",
-    getToken,
     setStore: taskStatusesStore.setTaskStatuses,
     stale: taskStatusesStore.stale,
     setStale: taskStatusesStore.setStale,
@@ -151,7 +136,6 @@ export default function useSupabaseSubscriptions() {
   useSetupTable({
     tableName: "TaskTypes",
     // channelName: "taskTypes-channel",
-    getToken,
     setStore: taskTypesStore.setTaskTypes,
     stale: taskTypesStore.stale,
     setStale: taskTypesStore.setStale,
@@ -162,7 +146,6 @@ export default function useSupabaseSubscriptions() {
   useSetupTable({
     tableName: "Addresses",
     // channelName: "addresses-channel",
-    getToken,
     setStore: addressesStore.setAddresses,
     stale: addressesStore.stale,
     setStale: addressesStore.setStale,
@@ -173,7 +156,6 @@ export default function useSupabaseSubscriptions() {
   useSetupTable({
     tableName: "BleacherEvents",
     // channelName: "bleacherevents-channel",
-    getToken,
     setStore: bleacherEventsStore.setBleacherEvents,
     stale: bleacherEventsStore.stale,
     setStale: bleacherEventsStore.setStale,

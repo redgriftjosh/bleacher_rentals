@@ -2,13 +2,13 @@ import {
   fetchDriverName,
   fetchWorkTrackersForUserIdAndStartDate,
 } from "@/features/workTrackers/db";
-import { getSupabaseServer } from "@/utils/supabase/getSupabaseServer";
 import { headers } from "next/headers";
 import React from "react";
 import { renderToStream } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
 import { calculateFinancialTotals, getDateRange } from "@/features/workTrackers/util";
 import { MyDocument } from "@/features/workTrackers/components/PdfComponent";
+import { createServerSupabaseClient } from "@/utils/supabase/getClerkSupabaseServerClient";
 
 export async function GET(
   request: Request,
@@ -19,15 +19,10 @@ export async function GET(
   const { userId, startDate } = await context.params;
 
   const headerStore = headers();
-  const authHeader = (await headerStore).get("authorization");
+  // const authHeader = (await headerStore).get("authorization");
 
-  const token = authHeader?.replace("Bearer ", "");
-  if (!token) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-  }
-
-  const supabase = await getSupabaseServer(token);
-  const data = await fetchWorkTrackersForUserIdAndStartDate(null, userId, startDate, supabase);
+  const supabase = createServerSupabaseClient();
+  const data = await fetchWorkTrackersForUserIdAndStartDate(supabase, userId, startDate, true);
   const financialTotals = calculateFinancialTotals(data);
   //   console.log("subtotal", subtotal);
   //   console.log("tax", tax);

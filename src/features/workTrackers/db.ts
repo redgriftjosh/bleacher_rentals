@@ -1,6 +1,5 @@
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { Tables } from "../../../database.types";
-import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { USER_ROLES } from "@/types/Constants";
 import { DateTime } from "luxon";
 import { SupabaseClient } from "@supabase/supabase-js";
@@ -25,13 +24,12 @@ export async function fetchDriverName(
   return name;
 }
 
-export async function fetchDrivers(token: string | null): Promise<{
+export async function fetchDrivers(supabase: SupabaseClient): Promise<{
   drivers: Tables<"Users">[] | null;
 }> {
-  if (!token) {
-    createErrorToast(["No token found"]);
+  if (!supabase) {
+    createErrorToast(["No supabase client found"]);
   }
-  const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase.from("Users").select("*").eq("role", USER_ROLES.DRIVER);
 
   if (error) {
@@ -41,11 +39,10 @@ export async function fetchDrivers(token: string | null): Promise<{
   return { drivers: data };
 }
 
-export async function fetchUserById(token: string | null, userId: string): Promise<string> {
-  if (!token) {
-    createErrorToast(["No token found"]);
+export async function fetchUserById(supabase: SupabaseClient, userId: string): Promise<string> {
+  if (!supabase) {
+    createErrorToast(["No supabase client found"]);
   }
-  const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from("Users")
     .select("first_name, last_name")
@@ -60,15 +57,12 @@ export async function fetchUserById(token: string | null, userId: string): Promi
 }
 
 export async function fetchWorkTrackerWeeks(
-  token: string | null,
+  supabase: SupabaseClient,
   userId: string
 ): Promise<string[]> {
-  if (!token) {
-    createErrorToast(["No token found"]);
-    return [];
+  if (!supabase) {
+    createErrorToast(["No supabase client found"]);
   }
-
-  const supabase = await getSupabaseClient(token);
 
   // 1. Get all dates for the given user
   const { data, error } = await supabase.from("WorkTrackers").select("date").eq("user_id", userId);
@@ -135,24 +129,16 @@ async function insertDriverServer(userId: number, tax: number, supabaseClient: S
 }
 
 export async function fetchWorkTrackersForUserIdAndStartDate(
-  token: string | null,
+  supabase: SupabaseClient,
   userId: string,
   startDate: string,
-  supabaseClient?: SupabaseClient // if supplied this is being called from the server
+  isServer: boolean
 ): Promise<WorkTrackersResult> {
   // console.log("supabaseClient", supabaseClient);
-  if (!supabaseClient && !token) {
-    createErrorToast(["No token found"]);
-    // return { workTracker: [], pickUpAddress: [], dropOffAddress: [] };
+  if (!supabase && !isServer) {
+    createErrorToast(["No Supabase client found"]);
   }
-  let supabase: SupabaseClient;
-  if (supabaseClient) {
-    supabase = supabaseClient;
-  } else if (token) {
-    supabase = await getSupabaseClient(token);
-  } else {
-    throw new Error("No token found");
-  }
+
   // const supabase = await getSupabaseClient(token);
 
   // 1. Get all dates for the given user
@@ -179,7 +165,7 @@ export async function fetchWorkTrackersForUserIdAndStartDate(
 
   if (error) {
     // if it's being called from the server, throw an error, otherwise toast
-    if (!supabaseClient) {
+    if (!isServer) {
       createErrorToast(["Failed to fetch work trackers", error.message]);
     } else {
       throw new Error(["Failed to fetch work trackers", error.message].join("\n"));
@@ -191,11 +177,11 @@ export async function fetchWorkTrackersForUserIdAndStartDate(
     ((data || []) as WorkTrackerWithBleacher[]).map(async (tracker) => {
       const pickup =
         tracker.pickup_address_id != null
-          ? await fetchAddressFromId(tracker.pickup_address_id, supabase, supabaseClient != null)
+          ? await fetchAddressFromId(tracker.pickup_address_id, supabase, isServer)
           : null;
       const dropoff =
         tracker.dropoff_address_id != null
-          ? await fetchAddressFromId(tracker.dropoff_address_id, supabase, supabaseClient != null)
+          ? await fetchAddressFromId(tracker.dropoff_address_id, supabase, isServer)
           : null;
 
       return {

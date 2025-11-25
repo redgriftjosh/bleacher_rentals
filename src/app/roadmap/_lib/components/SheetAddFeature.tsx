@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { Dropdown } from "@/components/DropDown";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useUsersStore } from "@/state/userStore";
@@ -14,6 +14,7 @@ import { Textarea } from "@/components/TextArea";
 import { useTaskTypesStore } from "@/state/taskTypesStore";
 import { useLayoutContext } from "@/contexts/LayoutContexts";
 import { useTaskStatusesStore } from "@/state/taskStatusesStore";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export function SheetAddFeature({
   isOpen,
@@ -28,13 +29,13 @@ export function SheetAddFeature({
   setExistingTask: (task: Task | null) => void;
   setSelectedTab: (tab: Tab) => void;
 }) {
-  const { getToken } = useAuth();
   const { user, isLoaded } = useUser();
   if (!isLoaded) return null;
   const { scrollRef } = useLayoutContext();
   const users = useUsersStore((s) => s.users);
   const taskTypes = useTaskTypesStore((s) => s.taskTypes);
   const taskStatuses = useTaskStatusesStore((s) => s.taskStatuses);
+  const supabase = useClerkSupabaseClient();
 
   const [name, setName] = useState<string | null>(existingTask?.name ?? null);
   const [description, setDescription] = useState<string | null>(existingTask?.description ?? null);
@@ -97,7 +98,6 @@ export function SheetAddFeature({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const token = await getToken({ template: "supabase" });
     const errors = checkInsertTaskFormRules(
       existingTask?.task_id ?? null,
       existingTask?.created_by_user.user_id ?? null,
@@ -106,7 +106,7 @@ export function SheetAddFeature({
       typeId,
       user,
       users,
-      token
+      supabase
     );
     if (errors) {
       setSubmitting(false);
@@ -120,7 +120,7 @@ export function SheetAddFeature({
         statusId!,
         user,
         users,
-        token!,
+        supabase,
         setSubmitting
       );
       setIsOpen(false);
@@ -130,19 +130,18 @@ export function SheetAddFeature({
   const handleDeleteTask = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const token = await getToken({ template: "supabase" });
     const errors = checkDeleteTaskFormRules(
       existingTask?.task_id ?? null,
       existingTask?.created_by_user.user_id ?? null,
       user,
       users,
-      token
+      supabase
     );
     if (errors) {
       setSubmitting(false);
       createErrorToast(errors);
     } else {
-      await deleteTask(existingTask?.task_id!, token!, setSubmitting);
+      await deleteTask(existingTask?.task_id!, supabase, setSubmitting);
       setIsOpen(false);
     }
   };
