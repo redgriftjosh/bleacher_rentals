@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
 import { Check, Trash, Truck, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useSelectedBlockStore } from "../state/useSelectedBlock";
@@ -8,6 +7,7 @@ import { Tables } from "../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { useQueryClient } from "@tanstack/react-query";
 import { deleteBlock, saveBlock } from "../db/client/db";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 type CellEditorProps = {
   onWorkTrackerOpen?: (workTracker: Tables<"WorkTrackers">) => void;
@@ -15,7 +15,7 @@ type CellEditorProps = {
 
 export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
   const qc = useQueryClient();
-  const { getToken } = useAuth();
+  const supabase = useClerkSupabaseClient();
   const { isOpen, key, blockId, bleacherId, date, text, workTrackerId, setField, resetForm } =
     useSelectedBlockStore();
 
@@ -34,7 +34,6 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
 
   const handleSave = async () => {
     setCurrentText("");
-    const token = await getToken({ template: "supabase" });
     try {
       const editBlock = {
         key,
@@ -44,13 +43,13 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         text: currentText,
         workTrackerId,
       };
-      await saveBlock(editBlock, token);
+      await saveBlock(editBlock, supabase);
       // Refresh bleachers store directly so Pixi updates without remounting
       try {
         const { FetchDashboardBleachers } = await import(
           "@/features/dashboard/db/client/bleachers"
         );
-        await FetchDashboardBleachers(token);
+        await FetchDashboardBleachers(supabase);
       } catch {}
       resetForm();
     } catch (error) {
@@ -61,7 +60,6 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
   const handleDelete = async () => {
     if (!blockId) return;
 
-    const token = await getToken({ template: "supabase" });
     try {
       const editBlock = {
         key,
@@ -71,13 +69,13 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         text: currentText,
         workTrackerId,
       };
-      await deleteBlock(editBlock, token);
+      await deleteBlock(editBlock, supabase);
       // Refresh bleachers store directly so Pixi updates without remounting
       try {
         const { FetchDashboardBleachers } = await import(
           "@/features/dashboard/db/client/bleachers"
         );
-        await FetchDashboardBleachers(token);
+        await FetchDashboardBleachers(supabase);
       } catch {}
       resetForm();
     } catch (error) {

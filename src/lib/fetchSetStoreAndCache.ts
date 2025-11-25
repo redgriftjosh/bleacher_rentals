@@ -1,31 +1,29 @@
 "use client";
 
-import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
-import { type GetToken } from "@clerk/types";
-
 /**
  * Fetches data from any Supabase table updates a Zustand store and caches it.
  *
- * @param getToken - Clerk getToken function
  * @param tableName - Supabase table to query
  * @param setStore - Zustand store setter for the table's data
+ * @param supabaseClient - Supabase client instance
  */
 
 export const fetchTableSetStoreAndCache = async <T>(
-  getToken: GetToken,
   tableName: string,
-  setStore: (data: T[]) => void
+  setStore: (data: T[]) => void,
+  supabaseClient: any
 ) => {
   const STORAGE_KEY = `cached-${tableName}`;
-  const token = await getToken({ template: "supabase" });
   // console.log(`Token ${token}`);
-  if (!token) return;
+  // if (!token) return;
 
-  const supabase = await getSupabaseClient(token);
+  // const supabase = await getSupabaseClient(token);
+  // const supabase = supabaseClient || (await getSupabaseClient(token));
+  // if (supabaseClient) console.log("Using passed supabase client: ", tableName);
   // supabase.realtime.setAuth(token);
 
-  const { data, error } = await supabase.from(tableName).select("*");
-  // console.log(`Fetched ${tableName}:`, data);
+  const { data, error } = await supabaseClient.from(tableName).select("*");
+  console.log(`Fetched ${tableName}:`, data);
   if (tableName === "Blocks") {
     // console.log("Blocks data:", data);
   }

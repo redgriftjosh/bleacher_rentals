@@ -4,13 +4,14 @@ import { useTaskTypesStore } from "@/state/taskTypesStore";
 import { useUsersStore } from "@/state/userStore";
 import { Tables } from "../../../../database.types";
 import { Tab, Task } from "./types";
-import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
+// import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { UserResource } from "@clerk/types";
 import { findUserId } from "./functions";
 import { updateDataBase } from "@/app/actions/db.actions";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { STATUSES } from "./constants";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export function getTasks(selectedTab: Tab): Task[] | null {
   const tasks = useTasksStore((s) => s.tasks);
@@ -58,11 +59,9 @@ export async function saveTask(
   statusId: number,
   clerkUser: UserResource | null,
   allusers: Tables<"Users">[],
-  token: string,
+  supabase: SupabaseClient,
   setSubmitting: React.Dispatch<React.SetStateAction<boolean>>
 ) {
-  const supabase = await getSupabaseClient(token);
-
   if (taskId) {
     // update task
     const { error: updateError } = await supabase
@@ -102,11 +101,9 @@ export async function saveTask(
 
 export async function deleteTask(
   taskId: number,
-  token: string,
+  supabase: SupabaseClient,
   setSubmitting: React.Dispatch<React.SetStateAction<boolean>>
 ) {
-  const supabase = await getSupabaseClient(token);
-
   const { error: deleteError } = await supabase.from("Tasks").delete().eq("task_id", taskId);
 
   if (deleteError) {

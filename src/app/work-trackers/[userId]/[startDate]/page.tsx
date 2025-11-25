@@ -1,36 +1,36 @@
 "use client";
-import { useAuth } from "@clerk/nextjs";
+
 import { TripList } from "../../../../features/workTrackers/components/TripList";
 import WorkTrackerModal from "../../../../features/workTrackers/components/WorkTrackerModal";
 import { useParams } from "next/navigation";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
-import { useState } from "react";
+import { use, useState } from "react";
 import { Tables } from "../../../../../database.types";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export default function WorkTrackersForUserPage() {
   // const { userId, startDate } = params;
   const params = useParams();
+  const supabase = useClerkSupabaseClient();
   const userId = params.userId as string;
   const startDate = params.startDate as string;
   const className = "py-2 text-center text-xs font-semibold border-r";
-  const { getToken } = useAuth();
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
     null
   );
 
   const handleDownload = async () => {
-    const token = await getToken({ template: "supabase" });
-    if (!token) {
+    if (!supabase) {
       alert("You must be signed in to download.");
       return;
     }
 
     const res = await fetch(`/work-trackers/${userId}/${startDate}/pdf`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      // headers: {
+      //   Authorization: `Bearer ${token}`,
+      // },
     });
 
     if (!res.ok) {

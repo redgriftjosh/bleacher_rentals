@@ -2,16 +2,17 @@
 import { useBleachersStore } from "@/state/bleachersStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { FormattedBleacher } from "./types";
-import { createClient } from "@/utils/supabase/client";
+// import { createClient } from "@/utils/supabase/client";
 import { InsertBleacher, SelectBleacher, UpdateBleacher } from "@/types/tables/Bleachers";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
 import { checkInsertBleacherFormRules } from "./functions";
 import { toast } from "sonner";
 import React from "react";
 import { ErrorToast } from "@/components/toasts/ErrorToast";
-import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
+// import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { SuccessToast } from "@/components/toasts/SuccessToast";
 import { updateDataBase } from "@/app/actions/db.actions";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 // Fetching the list of bleachers that you see. Needed to join the Home bases on them.
 export function fetchBleachers() {
@@ -47,9 +48,8 @@ export function fetchBleachers() {
   return formattedBleachers;
 }
 
-export async function insertBleacher(bleacher: InsertBleacher, token: string) {
+export async function insertBleacher(bleacher: InsertBleacher, supabase: SupabaseClient) {
   // console.log("inserting bleacher", token);
-  const supabase = await getSupabaseClient(token);
   const { error } = await supabase.from("Bleachers").insert(bleacher);
   if (error) {
     // console.log("Error inserting bleacher:", error);
@@ -82,9 +82,9 @@ export async function insertBleacher(bleacher: InsertBleacher, token: string) {
   );
 }
 
-export async function updateBleacher(bleacher: UpdateBleacher, token: string) {
+export async function updateBleacher(bleacher: UpdateBleacher, supabase: SupabaseClient) {
   // console.log("Updating bleacher", token);
-  const supabase = createClient(token);
+  // const supabase = createClient(token);
   const { error } = await supabase
     .from("Bleachers")
     .update(bleacher)
@@ -124,11 +124,9 @@ export async function updateBleacher(bleacher: UpdateBleacher, token: string) {
  * Requires a valid Supabase JWT token.
  */
 export async function fetchTakenBleacherNumbers(
-  token: string,
+  supabase: SupabaseClient,
   editBleacherNumber?: number
 ): Promise<number[]> {
-  const supabase = createClient(token);
-
   const { data, error } = await supabase.from("Bleachers").select("bleacher_number");
 
   if (error) {

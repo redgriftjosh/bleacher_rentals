@@ -12,14 +12,14 @@ export function checkInsertUserFormRules(
   roleId: number | null,
   homeBaseIds: number[],
   existingEmails: string[],
-  token: string | null,
+  supabase: any | null,
   isUpdating: boolean
 ): boolean {
   // check if all required fields are filled in
   let errors = [];
-  if (!token) {
+  if (!supabase) {
     errors.push(
-      "Missing: JWT Token. Please let Josh Redgrift (josh@tpi-3.ca) know you saw this message, refresh your page and try again."
+      "Missing: Supabase Client. Please let Josh Redgrift (josh@tpi-3.ca) know you saw this message, refresh your page and try again."
     );
   }
   if (!roleId) {

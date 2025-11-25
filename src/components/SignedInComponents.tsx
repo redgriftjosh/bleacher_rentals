@@ -2,29 +2,21 @@
 import Header from "@/components/Header";
 import SideBar from "@/components/Sidebar";
 import useSupabaseSubscriptions from "@/hooks/useSupabaseSubscriptions";
-import { SignOutButton, useUser } from "@clerk/nextjs";
+import { SignOutButton, useUser, useSession } from "@clerk/nextjs";
 import { Button } from "./ui/button";
 import { useUsersStore } from "@/state/userStore";
 import { useRef } from "react";
 import { LayoutProvider } from "@/contexts/LayoutContexts";
 import { DriverWelcome } from "./DriverWelcome";
 
-export function SignedInComponents({ children }: { children: React.ReactNode }) {
+function SignedInContent({ children }: { children: React.ReactNode }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   useSupabaseSubscriptions();
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
   const users = useUsersStore((s) => s.users);
-  // console.log("users:", users);
-
-  if (!isLoaded) return null;
-  // console.log("user:", user);
 
   const currentUser = users.find((u) => u.clerk_user_id === user?.id);
-  // console.log("currentUser:", currentUser);
-
   const isDeactivated = currentUser?.status === 3;
-  console.log("isDeactivated:", isDeactivated);
-
   const isDriver = currentUser?.role === 3;
 
   if (isDeactivated) {
@@ -58,4 +50,16 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
       </div>
     </LayoutProvider>
   );
+}
+
+export function SignedInComponents({ children }: { children: React.ReactNode }) {
+  const { session, isLoaded: sessionLoaded } = useSession();
+  const { user, isLoaded: userLoaded } = useUser();
+
+  // Wait for both session and user to be loaded
+  if (!sessionLoaded || !userLoaded || !session) {
+    return null;
+  }
+
+  return <SignedInContent>{children}</SignedInContent>;
 }

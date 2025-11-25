@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useWorkTrackerSelectionStore";
 import { Tables } from "../../../database.types";
 import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
-import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
+// import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { fetchUserBleacherAssignmentsForSeason } from "@/features/dashboard/db/client/bleacherUsers";
 import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
 import WorkTrackerModal from "@/features/workTrackers/components/WorkTrackerModal";
@@ -19,6 +19,7 @@ import { CreateEventButton } from "@/features/eventConfiguration/components/Crea
 import { EventConfiguration } from "@/features/eventConfiguration/components/EventConfiguration";
 import BleacherLocationModal from "@/features/dashboard/components/BleacherLocationModal";
 import { useBleacherLocationModalStore } from "@/features/dashboard/state/useBleacherLocationModalStore";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export default function Page() {
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
@@ -26,7 +27,8 @@ export default function Page() {
   );
   const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
   const refreshToken = useDataRefreshTokenStore((s) => s.token);
-  const { isLoaded, userId, getToken } = useAuth();
+  const { isLoaded, userId } = useAuth();
+  const supabase = useClerkSupabaseClient();
 
   // Bleacher location modal state
   const locationModal = useBleacherLocationModalStore();
@@ -35,14 +37,14 @@ export default function Page() {
     queryKey: ["FetchDashboardBleachersAndEvents", { onlyShowMyEvents, userId, refreshToken }],
     enabled: isLoaded && !!userId,
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
       const [b, e] = await Promise.all([
-        FetchDashboardBleachers(token),
-        FetchDashboardEvents(token, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
+        FetchDashboardBleachers(supabase),
+        FetchDashboardEvents(supabase, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
       ]);
 
       // Fetch BleacherUsers assignments for the logged-in user
-      const supabase = await getSupabaseClient(token!);
+      // const supabase = await getSupabaseClient(token!);
+
       const { summerAssignedBleacherIds, winterAssignedBleacherIds } =
         await fetchUserBleacherAssignmentsForSeason(supabase, userId!);
 

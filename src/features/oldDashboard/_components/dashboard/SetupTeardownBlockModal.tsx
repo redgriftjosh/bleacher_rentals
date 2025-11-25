@@ -1,10 +1,10 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
 import { saveSetupTeardownBlock } from "../../../dashboard/db/client/db";
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import { confirmedHsl, setupTeardownHsl } from "@/types/Constants";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export type SetupTeardownBlock = {
   bleacherEventId: number;
@@ -23,11 +23,10 @@ export default function SetupBlockModal({
   selectedBlock,
   setSelectedBlock,
 }: SetupTeardownBlockModalProps) {
-  const { getToken } = useAuth();
+  const supabase = useClerkSupabaseClient();
   const handleSaveBlock = async () => {
-    const token = await getToken({ template: "supabase" });
     try {
-      await saveSetupTeardownBlock(selectedBlock, token);
+      await saveSetupTeardownBlock(selectedBlock, supabase);
       setSelectedBlock(null);
     } catch (error) {
       console.error("Failed to Save Block:", error);

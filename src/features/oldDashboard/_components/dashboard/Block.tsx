@@ -1,10 +1,10 @@
 import { Check, Trash, Truck, X } from "lucide-react";
 import { EditBlock } from "./MainScrollableGrid";
-import { useAuth } from "@clerk/nextjs";
 import { deleteBlock, saveBlock } from "../../../dashboard/db/client/db";
 import { useEffect, useRef, useState } from "react";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { Tables } from "../../../../../database.types";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 type BlockProps = {
   selectedBlock: EditBlock | null;
@@ -21,7 +21,7 @@ export default function Block({
 }: BlockProps) {
   const [currectBlock, setCurrectBlock] = useState<EditBlock | null>(selectedBlock);
 
-  const { getToken } = useAuth();
+  const supabase = useClerkSupabaseClient();
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -64,9 +64,8 @@ export default function Block({
   };
 
   const handleSaveBlock = async () => {
-    const token = await getToken({ template: "supabase" });
     try {
-      await saveBlock(currectBlock, token);
+      await saveBlock(currectBlock, supabase);
       setSelectedBlock(null);
     } catch (error) {
       console.error("Failed to Save Block:", error);
@@ -74,9 +73,8 @@ export default function Block({
   };
 
   const handleDeleteBlock = async () => {
-    const token = await getToken({ template: "supabase" });
     try {
-      await deleteBlock(selectedBlock, token);
+      await deleteBlock(selectedBlock, supabase);
       setSelectedBlock(null);
     } catch (error) {
       console.error("Failed to Delete Block:", error);
