@@ -1,11 +1,11 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
 import { fetchDrivers, fetchWorkTrackerWeeks } from "../db";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { DateTime } from "luxon";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 type Props = {
   userId: string;
@@ -13,12 +13,11 @@ type Props = {
 
 export function WeekList({ userId }: Props) {
   const router = useRouter();
-  const { getToken } = useAuth();
+  const supabase = useClerkSupabaseClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ["weeks", userId],
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchWorkTrackerWeeks(token, userId);
+      return fetchWorkTrackerWeeks(supabase, userId);
     },
   });
 

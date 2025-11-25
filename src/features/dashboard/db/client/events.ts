@@ -1,8 +1,9 @@
 "use client";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
+// import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { DashboardEvent } from "../../types";
 import { useDashboardEventsStore } from "../../state/useDashboardEventsStore";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 type Row = {
   event_id: number;
@@ -35,11 +36,11 @@ type Row = {
 // Fetch Events into DashboardEvent shape (similar to legacy fetchDashboardEvents)
 // Includes address, basic fields, and bleacherIds via BleacherEvents. Setup/Teardown-specific text/flags use defaults.
 export async function FetchDashboardEvents(
-  token: string | null,
+  supabase: SupabaseClient,
   opts?: { onlyMine?: boolean; clerkUserId?: string | null }
 ): Promise<{ events: DashboardEvent[] }> {
-  if (!token) {
-    createErrorToast(["No token found"]);
+  if (!supabase) {
+    createErrorToast(["No Supabase Client found"]);
   }
 
   const queryString = `
@@ -71,8 +72,6 @@ export async function FetchDashboardEvents(
         bleacher_id
       )
       `;
-
-  const supabase = await getSupabaseClient(token);
 
   let builder = supabase.from("Events").select(queryString);
   if (opts?.onlyMine) {
@@ -135,7 +134,7 @@ export async function FetchDashboardEvents(
     goodshuffleUrl: e.goodshuffle_url ?? null,
     ownerUserId: e.created_by_user_id ?? null,
   }));
-  // console.log("FetchDashboardEvents events", events);
+  console.log("FetchDashboardEvents events", events);
 
   // Push into zustand store so Pixi can subscribe live
   try {

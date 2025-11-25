@@ -17,7 +17,6 @@ import {
 import { useAddressesStore } from "@/state/addressesStore";
 import { useEventsStore } from "@/state/eventsStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
-import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { useMemo } from "react";
 import { UserResource } from "@clerk/types";
 import { updateDataBase } from "@/app/actions/db.actions";
@@ -310,15 +309,14 @@ export async function saveWorkTracker(
   workTracker: Tables<"WorkTrackers"> | null,
   pickUpAddress: AddressData | null,
   dropOffAddress: AddressData | null,
-  token: string | null
+  supabase: SupabaseClient
 ): Promise<void> {
-  if (!token) {
-    createErrorToast(["No authentication token found"]);
+  if (!supabase) {
+    createErrorToast(["No Supabase Client found"]);
   }
   if (!workTracker) {
     createErrorToast(["Failed to save work tracker. No work tracker provided."]);
   }
-  const supabase = await getSupabaseClient(token);
   // const payCents = Math.round(payInput * 100);
 
   let pickUpAddressId: number | null = workTracker.pickup_address_id;
@@ -381,19 +379,16 @@ export async function saveWorkTracker(
 
 export async function deleteWorkTracker(
   workTrackerId: number | null,
-  token: string | null
+  supabase: SupabaseClient
 ): Promise<void> {
-  if (!token) {
-    createErrorToast(["No authentication token found"]);
-    throw new Error("No authentication token found");
+  if (!supabase) {
+    createErrorToast(["No Supabase Client found"]);
   }
 
   if (!workTrackerId || workTrackerId === -1) {
     createErrorToast(["Invalid work tracker ID"]);
     throw new Error("Invalid work tracker ID");
   }
-
-  const supabase = await getSupabaseClient(token);
 
   const { error } = await supabase
     .from("WorkTrackers")
@@ -411,19 +406,19 @@ export async function deleteWorkTracker(
 
 export async function saveSetupTeardownBlock(
   block: SetupTeardownBlock | null,
-  token: string | null
+  supabase: SupabaseClient
 ): Promise<void> {
-  if (!token) {
-    console.warn("No token found");
+  if (!supabase) {
+    console.warn("No Supabase Client found");
     toast.custom(
       (t) =>
         React.createElement(ErrorToast, {
           id: t,
-          lines: ["No token found"],
+          lines: ["No Supabase Client found"],
         }),
       { duration: 10000 }
     );
-    throw new Error("No authentication token found");
+    throw new Error("No Supabase Client found");
   }
 
   if (!block) {
@@ -439,7 +434,6 @@ export async function saveSetupTeardownBlock(
     throw new Error("No setup block selected to save.");
   }
 
-  const supabase = await getSupabaseClient(token);
   if (block.bleacherEventId) {
     const data =
       block.type === "setup"
@@ -490,18 +484,18 @@ export async function saveSetupTeardownBlock(
   updateDataBase(["BleacherEvents"]);
 }
 
-export async function saveBlock(block: EditBlock | null, token: string | null): Promise<void> {
-  if (!token) {
-    console.warn("No token found");
+export async function saveBlock(block: EditBlock | null, supabase: SupabaseClient): Promise<void> {
+  if (!supabase) {
+    console.warn("No Supabase Client found");
     toast.custom(
       (t) =>
         React.createElement(ErrorToast, {
           id: t,
-          lines: ["No token found"],
+          lines: ["No Supabase Client found"],
         }),
       { duration: 10000 }
     );
-    throw new Error("No authentication token found");
+    throw new Error("No Supabase Client found");
   }
 
   if (!block) {
@@ -517,7 +511,6 @@ export async function saveBlock(block: EditBlock | null, token: string | null): 
     throw new Error("No block selected to save.");
   }
 
-  const supabase = await getSupabaseClient(token);
   if (block.blockId) {
     const { error } = await supabase
       .from("Blocks")
@@ -565,18 +558,21 @@ export async function saveBlock(block: EditBlock | null, token: string | null): 
   updateDataBase(["Blocks"]);
 }
 
-export async function deleteBlock(block: EditBlock | null, token: string | null): Promise<void> {
-  if (!token) {
-    console.warn("No token found");
+export async function deleteBlock(
+  block: EditBlock | null,
+  supabase: SupabaseClient
+): Promise<void> {
+  if (!supabase) {
+    console.warn("No Supabase Client found");
     toast.custom(
       (t) =>
         React.createElement(ErrorToast, {
           id: t,
-          lines: ["No token found"],
+          lines: ["No Supabase Client found"],
         }),
       { duration: 10000 }
     );
-    throw new Error("No authentication token found");
+    throw new Error("No Supabase Client found");
   }
 
   if (!block) {
@@ -592,7 +588,6 @@ export async function deleteBlock(block: EditBlock | null, token: string | null)
     throw new Error("No block selected to save.");
   }
 
-  const supabase = await getSupabaseClient(token);
   if (block.blockId) {
     const { error } = await supabase.from("Blocks").delete().eq("block_id", block.blockId);
     if (error) {
@@ -632,15 +627,13 @@ export async function deleteBlock(block: EditBlock | null, token: string | null)
 
 export async function createEvent(
   state: CurrentEventStore,
-  token: string | null,
+  supabase: SupabaseClient,
   user: UserResource | null
 ): Promise<void> {
-  if (!token) {
-    console.warn("No token found");
-    throw new Error("No authentication token found");
+  if (!supabase) {
+    console.warn("No Supabase Client found");
+    throw new Error("No Supabase Client found");
   }
-
-  const supabase = await getSupabaseClient(token);
 
   if (!checkEventFormRules(state, user)) {
     throw new Error("Event form validation failed");
@@ -768,12 +761,12 @@ export async function createEvent(
 export async function deleteEvent(
   eventId: number | null,
   stateProv: string,
-  token: string | null,
+  supabase: SupabaseClient,
   user: UserResource | null
 ): Promise<void> {
-  if (!token) {
-    console.warn("No token found");
-    throw new Error("No authentication token found");
+  if (!supabase) {
+    console.warn("No Supabase Client found");
+    throw new Error("No Supabase Client found");
   }
 
   if (!eventId) {
@@ -782,8 +775,6 @@ export async function deleteEvent(
   }
 
   isUserPermitted(stateProv, user);
-
-  const supabase = await getSupabaseClient(token);
 
   // 1. Find the event to get address_id
   const { data: eventData, error: fetchEventError } = await supabase

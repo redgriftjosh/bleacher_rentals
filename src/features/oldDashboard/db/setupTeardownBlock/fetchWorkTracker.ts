@@ -1,16 +1,13 @@
 import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { fetchAddressFromId } from "../../../dashboard/db/client/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Tables } from "../../../../../database.types";
 
 export async function fetchWorkTrackerOld(
-  token: string,
+  supabase: SupabaseClient,
   beleacherEventId: number,
   type: "setup" | "teardown"
 ): Promise<number[]> {
-  const supabase = await getSupabaseClient(token);
-
   if (type === "setup") {
     const { data, error } = await supabase
       .from("BleacherEvents")
@@ -68,16 +65,12 @@ export async function fetchWorkTrackerOld(
 
 export async function fetchWorkTrackerById(
   id: number,
-  token: string | null
+  supabase: SupabaseClient
 ): Promise<{
   workTracker: Tables<"WorkTrackers"> | null;
   pickupAddress: Tables<"Addresses"> | null;
   dropoffAddress: Tables<"Addresses"> | null;
 }> {
-  if (!token) {
-    createErrorToast(["No token found"]);
-  }
-  const supabase = await getSupabaseClient(token);
   const workTracker = await fetchWorkTracker(id, supabase);
   let pickupAddress: Tables<"Addresses"> | null = null;
   if (workTracker?.pickup_address_id) {

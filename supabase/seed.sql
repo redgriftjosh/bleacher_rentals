@@ -594,7 +594,7 @@ INSERT INTO "public"."Users" ("user_id", "created_at", "first_name", "last_name"
 	(27, '2025-10-10 16:45:08.808979+00', 'Jake', 'Loewen', 'jacob.loewen4141@gmail.com', NULL, NULL, 2, 3, NULL),
 	(28, '2025-10-10 16:45:42.896319+00', 'Devin', '- Dk Ferrier', 'dkfarrierservice@gmail.com', NULL, NULL, 2, 3, NULL),
 	(30, '2025-10-10 16:47:08.891749+00', 'Tim', '-Timberfell', 'timberfell@outlook.com', NULL, NULL, 2, 3, NULL),
-	(8, '2025-05-27 17:21:05.15774+00', 'Josh', 'Redgrift', 'redgriftjosh@gmail.com', NULL, 'user_2xgjA9Jf7gCkDc1GKbhdGyF0vKd', 2, 2, NULL),
+	(8, '2025-05-27 17:21:05.15774+00', 'Josh', 'Redgrift', 'redgriftjosh@gmail.com', NULL, 'user_35f2pOOvsfbnuYFRKDMmPKqcc5f', 2, 2, NULL),
 	(14, '2025-05-27 17:41:55.032595+00', 'Mike', 'timmermans', 'mike@bleacherrentals.com', NULL, 'user_2xolUMIdlXoybp1lwXIaHG1l70c', 2, 2, NULL),
 	(31, '2025-10-29 15:15:42.657863+00', 'Phillip', 'Horge', 'phillip@bleacherrentals.com', NULL, 'user_34nN0lj1uclgl6CqHN7WhCPBNZI', 2, 1, NULL),
 	(13, '2025-05-27 17:41:16.95106+00', 'Michelle', 'Adcock', 'michelle@bleacherrentals.com', NULL, 'user_2xgmEKuFQ00ExgIWyHwUnAX2lUl', 2, 2, NULL),

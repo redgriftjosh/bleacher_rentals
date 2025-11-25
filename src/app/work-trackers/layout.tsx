@@ -1,23 +1,21 @@
 "use client";
 import { Color } from "@/types/Color";
-import { useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { fetchUserById } from "../../features/workTrackers/db";
 import { DateTime } from "luxon";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export default function WorkTrackersLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const userId = params.userId as string | undefined;
   const startDate = params.startDate as string | undefined;
-
-  const { getToken } = useAuth();
+  const supabase = useClerkSupabaseClient();
 
   const { data: user } = useQuery({
     queryKey: ["user", userId],
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchUserById(token, userId!);
+      return fetchUserById(supabase, userId!);
     },
     enabled: !!userId,
   });

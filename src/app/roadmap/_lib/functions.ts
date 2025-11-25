@@ -1,6 +1,7 @@
 import { UserResource } from "@clerk/types";
 import { Tables } from "../../../../database.types";
 import { TASK_ADMIN_IDS } from "./constants";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export function findUserId(clerkUser: UserResource | null, allusers: Tables<"Users">[]) {
   return allusers.find((u) => u.clerk_user_id === clerkUser?.id)?.user_id;
@@ -14,13 +15,13 @@ export function checkInsertTaskFormRules(
   typeId: number | null,
   clerkUser: UserResource | null,
   allusers: Tables<"Users">[],
-  token: string | null
+  supabase: SupabaseClient
 ): string[] | null {
   // check if all required fields are filled in
   let errors = [];
-  if (!token) {
+  if (!supabase) {
     errors.push(
-      "Missing: JWT Token. Please let Josh Redgrift (josh@tpi-3.ca) know you saw this message, refresh your page and try again."
+      "Missing: Supabase Client. Please let Josh Redgrift (josh@tpi-3.ca) know you saw this message, refresh your page and try again."
     );
   }
 
@@ -61,13 +62,13 @@ export function checkDeleteTaskFormRules(
   taskUserId: number | null,
   clerkUser: UserResource | null,
   allusers: Tables<"Users">[],
-  token: string | null
+  supabase: SupabaseClient
 ): string[] | null {
   // check if all required fields are filled in
   let errors = [];
-  if (!token) {
+  if (!supabase) {
     errors.push(
-      "Missing: JWT Token. Please let Josh Redgrift (josh@tpi-3.ca) know you saw this message, refresh your page and try again."
+      "Missing: Supabase Client. Please let Josh Redgrift (josh@tpi-3.ca) know you saw this message, refresh your page and try again."
     );
   }
   if (!clerkUser) {

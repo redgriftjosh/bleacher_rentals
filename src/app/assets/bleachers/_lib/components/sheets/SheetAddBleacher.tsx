@@ -5,16 +5,16 @@ import { useHomeBasesStore } from "@/state/homeBaseStore";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
 import { fetchTakenBleacherNumbers, insertBleacher } from "../../db";
-import { useAuth } from "@clerk/nextjs";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
 import { checkInsertBleacherFormRules } from "../../functions";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export function SheetAddBleacher() {
-  const { getToken } = useAuth();
   const [token, setToken] = useState<string | null>(null);
   const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
+  const supabase = useClerkSupabaseClient();
 
   const [isOpen, setIsOpen] = useState(false);
   const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);
@@ -39,14 +39,10 @@ export function SheetAddBleacher() {
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    getToken({ template: "supabase" }).then(setToken);
-  }, [getToken]);
-
   const { data: takenNumbers = [], isLoading } = useQuery({
     queryKey: ["taken-bleacher-numbers"],
-    queryFn: () => fetchTakenBleacherNumbers(token!), // token is guaranteed to be set
-    enabled: !!token, // ✅ only run when token is ready
+    queryFn: () => fetchTakenBleacherNumbers(supabase),
+    enabled: !!supabase,
   });
 
   // Calculate the next available bleacher number
@@ -64,9 +60,8 @@ export function SheetAddBleacher() {
   }, [bleacherNumber, takenNumbers]);
 
   const handleSave = async () => {
-    const insertToken = await getToken({ template: "supabase" });
-    if (!insertToken) {
-      console.warn("No token found");
+    if (!supabase) {
+      console.warn("No supabase client found");
       return;
     }
 
@@ -93,7 +88,7 @@ export function SheetAddBleacher() {
           winter_home_base_id: selectedWinterHomeBaseId!,
           linxup_device_id: selectedLinxupDeviceId,
         },
-        insertToken
+        supabase
       );
       setIsOpen(false);
     }

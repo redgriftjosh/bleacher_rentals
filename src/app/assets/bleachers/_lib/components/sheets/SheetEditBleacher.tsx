@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
-import { useAuth } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useBleachersStore } from "@/state/bleachersStore";
 import { fetchTakenBleacherNumbers, insertBleacher, updateBleacher } from "../../db";
@@ -14,15 +13,16 @@ import { SelectHomeBase } from "@/types/tables/HomeBases";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
 import { checkInsertBleacherFormRules } from "../../functions";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 // https://www.loom.com/share/377b110fd24f4eebbc6e90394ac3a407?sid=c32cff10-c666-4386-9a09-85ed203e4cb5
 // Did a little explainer on how this works.
 
 export function SheetEditBleacher() {
-  const { getToken } = useAuth();
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const supabase = useClerkSupabaseClient();
   //   const editBleacherNumber = searchParams.get("edit");
   const [editBleacherNumber, setEditBleacherNumber] = useState<string | null>(null);
   const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
@@ -87,20 +87,16 @@ export function SheetEditBleacher() {
     }
   }, [editBleacherNumber, router]);
 
-  useEffect(() => {
-    getToken({ template: "supabase" }).then(setToken);
-  }, [getToken]);
-
   const { data: takenNumbers = [], isLoading } = useQuery({
     queryKey: ["taken-bleacher-numbers", editBleacherNumber],
     queryFn: () => {
       // console.log("Running query with editBleacherNumber:", editBleacherNumber);
       return fetchTakenBleacherNumbers(
-        token!,
+        supabase,
         editBleacherNumber ? Number(editBleacherNumber) : undefined
       );
     },
-    enabled: !!token && !!editBleacherNumber,
+    enabled: !!supabase && !!editBleacherNumber,
   });
 
   useEffect(() => {
@@ -110,11 +106,6 @@ export function SheetEditBleacher() {
   }, [bleacherNumber, takenNumbers]);
 
   const handleSave = async () => {
-    const token = await getToken({ template: "supabase" });
-    if (!token) {
-      console.warn("No token found");
-      return;
-    }
     if (
       !checkInsertBleacherFormRules(
         {
@@ -139,7 +130,7 @@ export function SheetEditBleacher() {
           winter_home_base_id: selectedWinterHomeBaseId!,
           linxup_device_id: selectedLinxupDeviceId,
         },
-        token
+        supabase
       );
       //   setIsOpen(false);
       router.push("/assets/bleachers");

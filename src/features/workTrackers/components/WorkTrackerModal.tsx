@@ -5,10 +5,8 @@ import { useEffect, useState, useRef } from "react";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import { getAddressFromId, saveWorkTracker, deleteWorkTracker } from "../../dashboard/db/client/db";
 import { AddressData } from "../../eventConfiguration/state/useCurrentEventStore";
-import { useAuth } from "@clerk/nextjs";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
 import { fetchWorkTrackerById } from "../../oldDashboard/db/setupTeardownBlock/fetchWorkTracker";
 import { EditBlock } from "../../oldDashboard/_components/dashboard/MainScrollableGrid";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -16,6 +14,7 @@ import { Tables } from "../../../../database.types";
 import { fetchBleachersForOptions, fetchDriverPaymentData } from "@/app/team/_lib/db";
 import { toLatLngString, calculateDriverPay } from "../util";
 import RouteMapPreview from "./RouteMapPreview";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -28,7 +27,7 @@ export default function WorkTrackerModal({
   setSelectedWorkTracker,
   setSelectedBlock,
 }: WorkTrackerModalProps) {
-  const { getToken } = useAuth();
+  const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
   const drivers = getDrivers();
   const [workTracker, setWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
@@ -126,8 +125,7 @@ export default function WorkTrackerModal({
   } = useQuery({
     queryKey: ["bleacherOptions"],
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchBleachersForOptions(token);
+      return fetchBleachersForOptions(supabase);
     },
   });
 
@@ -139,8 +137,7 @@ export default function WorkTrackerModal({
   } = useQuery({
     queryKey: ["driverPayment", workTracker?.user_id],
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchDriverPaymentData(workTracker!.user_id!, token);
+      return fetchDriverPaymentData(workTracker!.user_id!, supabase);
     },
     enabled: !!workTracker?.user_id,
   });
@@ -152,8 +149,7 @@ export default function WorkTrackerModal({
   } = useQuery({
     queryKey: ["workTracker", selectedWorkTracker?.work_tracker_id],
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchWorkTrackerById(selectedWorkTracker!.work_tracker_id, token);
+      return fetchWorkTrackerById(selectedWorkTracker!.work_tracker_id, supabase);
     },
     enabled: !!selectedWorkTracker && selectedWorkTracker.work_tracker_id !== -1,
     refetchOnWindowFocus: false,
@@ -190,15 +186,14 @@ export default function WorkTrackerModal({
   }, [selectedWorkTracker, fetchedWorkTracker]);
 
   const handleSaveWorkTracker = async () => {
-    const token = await getToken({ template: "supabase" });
     try {
-      await saveWorkTracker(workTracker, pickUpAddress, dropOffAddress, token);
+      await saveWorkTracker(workTracker, pickUpAddress, dropOffAddress, supabase);
       // Refresh bleachers directly into the zustand store so Pixi updates without remounting
       try {
         const { FetchDashboardBleachers } = await import(
           "@/features/dashboard/db/client/bleachers"
         );
-        await FetchDashboardBleachers(token);
+        await FetchDashboardBleachers(supabase);
       } catch {}
       // Optionally refresh any active work-tracker-specific queries used elsewhere
       await queryClient.invalidateQueries({ queryKey: ["work-trackers"], refetchType: "active" });
@@ -219,15 +214,14 @@ export default function WorkTrackerModal({
       return;
     }
 
-    const token = await getToken({ template: "supabase" });
     try {
-      await deleteWorkTracker(workTracker.work_tracker_id, token);
+      await deleteWorkTracker(workTracker.work_tracker_id, supabase);
       // Refresh bleachers directly into the zustand store so Pixi updates without remounting
       try {
         const { FetchDashboardBleachers } = await import(
           "@/features/dashboard/db/client/bleachers"
         );
-        await FetchDashboardBleachers(token);
+        await FetchDashboardBleachers(supabase);
       } catch {}
       // Optionally refresh any active work-tracker-specific queries used elsewhere
       await queryClient.invalidateQueries({ queryKey: ["work-trackers"], refetchType: "active" });

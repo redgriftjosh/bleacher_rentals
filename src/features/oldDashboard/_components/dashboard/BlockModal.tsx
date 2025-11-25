@@ -1,9 +1,9 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
 import { EditBlock } from "./MainScrollableGrid";
 import { deleteBlock, saveBlock } from "../../../dashboard/db/client/db";
 import { X } from "lucide-react";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 type BlockModalProps = {
   selectedBlock: EditBlock | null;
@@ -11,20 +11,18 @@ type BlockModalProps = {
 };
 
 export default function BlockModal({ selectedBlock, setSelectedBlock }: BlockModalProps) {
-  const { getToken } = useAuth();
+  const supabase = useClerkSupabaseClient();
   const handleSaveBlock = async () => {
-    const token = await getToken({ template: "supabase" });
     try {
-      await saveBlock(selectedBlock, token);
+      await saveBlock(selectedBlock, supabase);
       setSelectedBlock(null);
     } catch (error) {
       console.error("Failed to Save Block:", error);
     }
   };
   const handleDeleteBlock = async () => {
-    const token = await getToken({ template: "supabase" });
     try {
-      await deleteBlock(selectedBlock, token);
+      await deleteBlock(selectedBlock, supabase);
       setSelectedBlock(null);
     } catch (error) {
       console.error("Failed to Delete Block:", error);

@@ -1,6 +1,5 @@
 import { CurrentEventStore } from "../../../eventConfiguration/state/useCurrentEventStore";
 import { UserResource } from "@clerk/types";
-import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { checkEventFormRules } from "../../../oldDashboard/functions";
 import { toast } from "sonner";
 import { createErrorToast, ErrorToast } from "@/components/toasts/ErrorToast";
@@ -13,19 +12,17 @@ import { Tables, TablesInsert } from "../../../../../database.types";
 
 export async function updateEvent(
   state: CurrentEventStore,
-  token: string | null,
+  supabase: SupabaseClient,
   user: UserResource | null,
   bleacherEvents: Tables<"BleacherEvents">[]
 ): Promise<void> {
-  if (!token) {
-    createErrorToast(["No authentication token found"]);
+  if (!supabase) {
+    createErrorToast(["No Supabase Client found"]);
   }
 
   if (state.eventId === null) {
     createErrorToast(["No eventId provided for update"]);
   }
-
-  const supabase = await getSupabaseClient(token);
 
   if (!checkEventFormRules(state, user)) {
     throw new Error("Event form validation failed");
