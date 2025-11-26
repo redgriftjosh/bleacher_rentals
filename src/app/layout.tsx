@@ -38,10 +38,7 @@ export default function RootLayout({
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-hidden`}>
           <SignedOut>
             <div className="flex items-center justify-center min-h-screen">
-              <SignIn
-                routing="hash"
-                // forceRedirectUrl="/dashboard"
-              />
+              <SignIn routing="hash" forceRedirectUrl="/dashboard" />
               {/* <TestComponent /> */}
             </div>
           </SignedOut>
