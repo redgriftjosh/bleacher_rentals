@@ -34,6 +34,8 @@ export async function createUser(
         pay_rate_cents: state.payRateCents ?? 0,
         pay_currency: state.payCurrency,
         pay_per_unit: state.payPerUnit,
+        account_manager_id: state.accountManagerId,
+        is_active: true,
       });
 
       if (driverError) throw driverError;
@@ -43,6 +45,7 @@ export async function createUser(
     if (state.isAccountManager) {
       const { error: amError } = await supabase.from("AccountManagers").insert({
         user_id: userId,
+        is_active: true,
       });
 
       if (amError) throw amError;
@@ -83,7 +86,7 @@ export async function updateUser(
 
     if (userError) throw userError;
 
-    // 2. Handle Driver role
+    // 2. Handle Driver role (check for existing driver regardless of is_active status)
     const { data: existingDriver } = await supabase
       .from("Drivers")
       .select("driver_id")
@@ -92,7 +95,7 @@ export async function updateUser(
 
     if (state.isDriver) {
       if (existingDriver) {
-        // Update existing driver
+        // Update existing driver and set to active
         const { error: driverUpdateError } = await supabase
           .from("Drivers")
           .update({
@@ -100,6 +103,8 @@ export async function updateUser(
             pay_rate_cents: state.payRateCents ?? 0,
             pay_currency: state.payCurrency,
             pay_per_unit: state.payPerUnit,
+            account_manager_id: state.accountManagerId,
+            is_active: true,
           })
           .eq("user_id", userId);
 
@@ -112,21 +117,23 @@ export async function updateUser(
           pay_rate_cents: state.payRateCents ?? 0,
           pay_currency: state.payCurrency,
           pay_per_unit: state.payPerUnit,
+          account_manager_id: state.accountManagerId,
+          is_active: true,
         });
 
         if (driverInsertError) throw driverInsertError;
       }
     } else if (existingDriver) {
-      // Remove driver role
-      const { error: driverDeleteError } = await supabase
+      // Mark driver as inactive instead of deleting
+      const { error: driverUpdateError } = await supabase
         .from("Drivers")
-        .delete()
+        .update({ is_active: false })
         .eq("user_id", userId);
 
-      if (driverDeleteError) throw driverDeleteError;
+      if (driverUpdateError) throw driverUpdateError;
     }
 
-    // 3. Handle Account Manager role
+    // 3. Handle Account Manager role (check for existing AM regardless of is_active status)
     const { data: existingAM } = await supabase
       .from("AccountManagers")
       .select("account_manager_id")
@@ -138,9 +145,18 @@ export async function updateUser(
         // Create new account manager record
         const { error: amInsertError } = await supabase.from("AccountManagers").insert({
           user_id: userId,
+          is_active: true,
         });
 
         if (amInsertError) throw amInsertError;
+      } else {
+        // Reactivate existing account manager
+        const { error: amUpdateError } = await supabase
+          .from("AccountManagers")
+          .update({ is_active: true })
+          .eq("user_id", userId);
+
+        if (amUpdateError) throw amUpdateError;
       }
 
       // Update bleacher assignments
@@ -158,13 +174,13 @@ export async function updateUser(
 
       if (bleacherClearError) throw bleacherClearError;
 
-      // Then delete account manager record
-      const { error: amDeleteError } = await supabase
+      // Mark account manager as inactive instead of deleting
+      const { error: amUpdateError } = await supabase
         .from("AccountManagers")
-        .delete()
+        .update({ is_active: false })
         .eq("user_id", userId);
 
-      if (amDeleteError) throw amDeleteError;
+      if (amUpdateError) throw amUpdateError;
     }
 
     return { success: true };

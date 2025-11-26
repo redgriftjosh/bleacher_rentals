@@ -6,6 +6,7 @@ import { Dropdown } from "@/components/DropDown";
 import { useCurrentUserStore } from "../../state/useCurrentUserStore";
 import SectionHeader from "../util/SectionHeader";
 import SectionButton from "../inputs/SectionButton";
+import { SelectAccountManager } from "../inputs/SelectAccountManager";
 
 export function DriverSection() {
   const isDriver = useCurrentUserStore((s) => s.isDriver);
@@ -13,6 +14,7 @@ export function DriverSection() {
   const payRateCents = useCurrentUserStore((s) => s.payRateCents);
   const payCurrency = useCurrentUserStore((s) => s.payCurrency);
   const payPerUnit = useCurrentUserStore((s) => s.payPerUnit);
+  const accountManagerId = useCurrentUserStore((s) => s.accountManagerId);
   const setField = useCurrentUserStore((s) => s.setField);
 
   const handlePayRateChange = (input: string) => {
@@ -56,6 +58,31 @@ export function DriverSection() {
 
       {isDriver && (
         <div className="mt-2 space-y-2">
+          {/* Account Manager */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <div className="text-right text-sm font-medium flex items-center justify-end gap-1">
+              <label htmlFor="accountManager">Account Manager</label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 text-gray-500" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Assign this driver to an account manager.</p>
+                    <p>Account managers can view and manage their assigned drivers.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <div className="col-span-3">
+              <SelectAccountManager
+                value={accountManagerId}
+                onChange={(value) => setField("accountManagerId", value)}
+                placeholder="Select Account Manager..."
+              />
+            </div>
+          </div>
+
           {/* Tax */}
           <div className="grid grid-cols-4 items-center gap-4">
             <div className="text-right text-sm font-medium flex items-center justify-end gap-1">

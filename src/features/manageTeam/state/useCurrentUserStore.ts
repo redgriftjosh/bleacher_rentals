@@ -22,6 +22,7 @@ export type CurrentUserState = {
   payRateCents: number | null;
   payCurrency: "CAD" | "USD";
   payPerUnit: "KM" | "MI" | "HR";
+  accountManagerId: number | null;
 
   // Account Manager-specific fields
   summerBleacherIds: number[];
@@ -54,6 +55,7 @@ const initialState: CurrentUserState = {
   payRateCents: null,
   payCurrency: "CAD",
   payPerUnit: "KM",
+  accountManagerId: null,
   summerBleacherIds: [],
   winterBleacherIds: [],
   assignedDriverIds: [],
@@ -89,6 +91,7 @@ export const useCurrentUserStore = create<CurrentUserStore>((set) => ({
         payRateCents: result.data.payRateCents,
         payCurrency: result.data.payCurrency,
         payPerUnit: result.data.payPerUnit,
+        accountManagerId: result.data.accountManagerId,
         summerBleacherIds: result.data.summerBleacherIds,
         winterBleacherIds: result.data.winterBleacherIds,
         assignedDriverIds: result.data.assignedDriverIds,

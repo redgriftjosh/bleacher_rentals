@@ -2859,3 +2859,14 @@ SELECT pg_catalog.setval('"public"."WorkTrackers_work_tracker_id_seq"', 45, true
 --
 
 RESET ALL;
+
+
+insert into public."AccountManagers" (user_id)
+select user_id
+from public."Users"
+where role = 1 or role = 2
+  and not exists (
+    select 1 
+    from public."AccountManagers" 
+    where "AccountManagers".user_id = "Users".user_id
+  );

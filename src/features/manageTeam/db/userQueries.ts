@@ -14,18 +14,20 @@ export async function fetchUserById(supabase: TypedSupabaseClient, userId: numbe
 
     if (userError) throw userError;
 
-    // 2. Check if user is a driver
+    // 2. Check if user is a driver (and active)
     const { data: driverData } = await supabase
       .from("Drivers")
       .select("*")
       .eq("user_id", userId)
+      .eq("is_active", true)
       .maybeSingle();
 
-    // 3. Check if user is an account manager
+    // 3. Check if user is an account manager (and active)
     const { data: accountManagerData } = await supabase
       .from("AccountManagers")
       .select("*")
       .eq("user_id", userId)
+      .eq("is_active", true)
       .maybeSingle();
 
     // 4. If account manager, fetch bleacher assignments
@@ -66,6 +68,7 @@ export async function fetchUserById(supabase: TypedSupabaseClient, userId: numbe
         payRateCents: driverData?.pay_rate_cents ?? null,
         payCurrency: (driverData?.pay_currency as "CAD" | "USD") ?? "CAD",
         payPerUnit: (driverData?.pay_per_unit as "KM" | "MI" | "HR") ?? "KM",
+        accountManagerId: driverData?.account_manager_id ?? null,
         summerBleacherIds,
         winterBleacherIds,
         assignedDriverIds,

@@ -75,14 +75,36 @@ export async function deleteUser(
   userId: number
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabase.from("Users").delete().eq("user_id", userId);
+    // Mark user as inactive instead of deleting
+    const { error: userError } = await supabase
+      .from("Users")
+      .update({ status: STATUSES.inactive })
+      .eq("user_id", userId);
 
-    if (error) throw error;
+    if (userError) throw userError;
 
-    updateDataBase(["UserStatuses", "Users", "UserHomeBases", "UserRoles"]);
+    // Mark driver as inactive if exists
+    const { error: driverError } = await supabase
+      .from("Drivers")
+      .update({ is_active: false })
+      .eq("user_id", userId);
+
+    // Ignore error if driver doesn't exist
+    if (driverError && driverError.code !== "PGRST116") throw driverError;
+
+    // Mark account manager as inactive if exists
+    const { error: amError } = await supabase
+      .from("AccountManagers")
+      .update({ is_active: false })
+      .eq("user_id", userId);
+
+    // Ignore error if account manager doesn't exist
+    if (amError && amError.code !== "PGRST116") throw amError;
+
+    updateDataBase(["UserStatuses", "Users", "Drivers", "AccountManagers"]);
     return { success: true };
   } catch (error) {
-    console.error("Error deleting user:", error);
+    console.error("Error deactivating user:", error);
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
   }
 }

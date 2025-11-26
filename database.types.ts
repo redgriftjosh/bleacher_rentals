@@ -13,16 +13,19 @@ export type Database = {
         Row: {
           account_manager_id: number
           created_at: string
+          is_active: boolean
           user_id: number
         }
         Insert: {
           account_manager_id?: number
           created_at?: string
+          is_active?: boolean
           user_id: number
         }
         Update: {
           account_manager_id?: number
           created_at?: string
+          is_active?: boolean
           user_id?: number
         }
         Relationships: [
@@ -263,6 +266,7 @@ export type Database = {
           account_manager_id: number | null
           created_at: string
           driver_id: number
+          is_active: boolean
           pay_currency: string
           pay_per_unit: string
           pay_rate_cents: number
@@ -273,6 +277,7 @@ export type Database = {
           account_manager_id?: number | null
           created_at?: string
           driver_id?: number
+          is_active?: boolean
           pay_currency?: string
           pay_per_unit?: string
           pay_rate_cents?: number
@@ -283,6 +288,7 @@ export type Database = {
           account_manager_id?: number | null
           created_at?: string
           driver_id?: number
+          is_active?: boolean
           pay_currency?: string
           pay_per_unit?: string
           pay_rate_cents?: number
