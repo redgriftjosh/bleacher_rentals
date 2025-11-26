@@ -27,7 +27,8 @@ export function useAccountManagers(): AccountManagerOption[] {
         // Fetch all active account managers with their user details
         const { data, error } = await supabase
           .from("AccountManagers")
-          .select(`
+          .select(
+            `
             account_manager_id,
             user_id,
             is_active,
@@ -37,7 +38,8 @@ export function useAccountManagers(): AccountManagerOption[] {
               email,
               clerk_user_id
             )
-          `)
+          `
+          )
           .eq("is_active", true);
 
         if (error) throw error;

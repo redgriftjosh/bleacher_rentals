@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
 import { checkInsertBleacherFormRules } from "../../functions";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
 
 // https://www.loom.com/share/377b110fd24f4eebbc6e90394ac3a407?sid=c32cff10-c666-4386-9a09-85ed203e4cb5
 // Did a little explainer on how this works.
@@ -37,6 +38,8 @@ export function SheetEditBleacher() {
   const [selectedHomeBaseId, setSelectedHomeBaseId] = useState<number | null>(null);
   const [selectedWinterHomeBaseId, setSelectedWinterHomeBaseId] = useState<number | null>(null);
   const [selectedLinxupDeviceId, setSelectedLinxupDeviceId] = useState<string | null>(null);
+  const [summerAccountManagerId, setSummerAccountManagerId] = useState<number | null>(null);
+  const [winterAccountManagerId, setWinterAccountManagerId] = useState<number | null>(null);
 
   const [isTakenNumber, setIsTakenNumber] = useState(true);
 
@@ -67,6 +70,8 @@ export function SheetEditBleacher() {
       setSelectedHomeBaseId(bleacher.home_base_id);
       setSelectedWinterHomeBaseId(bleacher.winter_home_base_id);
       setSelectedLinxupDeviceId((bleacher as any).linxup_device_id ?? null);
+      setSummerAccountManagerId((bleacher as any).summer_account_manager_id ?? null);
+      setWinterAccountManagerId((bleacher as any).winter_account_manager_id ?? null);
     } else {
       // setIsOpen(false);
       toast.error("Bleacher not found");
@@ -82,6 +87,8 @@ export function SheetEditBleacher() {
       setSelectedHomeBaseId(null);
       setSelectedWinterHomeBaseId(null);
       setSelectedLinxupDeviceId(null);
+      setSummerAccountManagerId(null);
+      setWinterAccountManagerId(null);
       // Remove the edit parameter from URL
       //   router.push("/assets/bleachers");
     }
@@ -129,6 +136,8 @@ export function SheetEditBleacher() {
           home_base_id: selectedHomeBaseId!,
           winter_home_base_id: selectedWinterHomeBaseId!,
           linxup_device_id: selectedLinxupDeviceId,
+          summer_account_manager_id: summerAccountManagerId,
+          winter_account_manager_id: winterAccountManagerId,
         },
         supabase
       );
@@ -243,6 +252,30 @@ export function SheetEditBleacher() {
                     placeholder="Select Device (Optional)"
                     value={selectedLinxupDeviceId ?? null}
                   />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
+                    Summer Account Manager
+                  </label>
+                  <div className="col-span-3">
+                    <SelectAccountManager
+                      value={summerAccountManagerId}
+                      onChange={(value) => setSummerAccountManagerId(value)}
+                      placeholder="Select Account Manager..."
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
+                    Winter Account Manager
+                  </label>
+                  <div className="col-span-3">
+                    <SelectAccountManager
+                      value={winterAccountManagerId}
+                      onChange={(value) => setWinterAccountManagerId(value)}
+                      placeholder="Select Account Manager..."
+                    />
+                  </div>
                 </div>
               </div>
             </div>

@@ -4,6 +4,7 @@ import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
+import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
 import { fetchTakenBleacherNumbers, insertBleacher } from "../../db";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
 import { checkInsertBleacherFormRules } from "../../functions";
@@ -24,6 +25,8 @@ export function SheetAddBleacher() {
   const [selectedHomeBaseId, setSelectedHomeBaseId] = useState<number | null>(null);
   const [selectedWinterHomeBaseId, setSelectedWinterHomeBaseId] = useState<number | null>(null);
   const [selectedLinxupDeviceId, setSelectedLinxupDeviceId] = useState<string | null>(null);
+  const [summerAccountManagerId, setSummerAccountManagerId] = useState<number | null>(null);
+  const [winterAccountManagerId, setWinterAccountManagerId] = useState<number | null>(null);
   const [isTakenNumber, setIsTakenNumber] = useState(true);
   // const [isLoading, setIsLoading] = useState(true);
 
@@ -36,6 +39,8 @@ export function SheetAddBleacher() {
       setSelectedHomeBaseId(null);
       setSelectedWinterHomeBaseId(null);
       setSelectedLinxupDeviceId(null);
+      setSummerAccountManagerId(null);
+      setWinterAccountManagerId(null);
     }
   }, [isOpen]);
 
@@ -87,6 +92,8 @@ export function SheetAddBleacher() {
           home_base_id: selectedHomeBaseId!,
           winter_home_base_id: selectedWinterHomeBaseId!,
           linxup_device_id: selectedLinxupDeviceId,
+          summer_account_manager_id: summerAccountManagerId,
+          winter_account_manager_id: winterAccountManagerId,
         },
         supabase
       );
@@ -205,6 +212,30 @@ export function SheetAddBleacher() {
                     placeholder="Select Device (Optional)"
                     value={selectedLinxupDeviceId ?? null}
                   />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
+                    Summer Account Manager
+                  </label>
+                  <div className="col-span-3">
+                    <SelectAccountManager
+                      value={summerAccountManagerId}
+                      onChange={setSummerAccountManagerId}
+                      placeholder="Select Account Manager (Optional)"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
+                    Winter Account Manager
+                  </label>
+                  <div className="col-span-3">
+                    <SelectAccountManager
+                      value={winterAccountManagerId}
+                      onChange={setWinterAccountManagerId}
+                      placeholder="Select Account Manager (Optional)"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
