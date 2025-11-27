@@ -26,6 +26,19 @@ export type FilterDashboardStore = FilterDashboardState & {
   resetForm: () => void;
 };
 
+// Determine default season based on current date
+const getDefaultSeason = (): Season => {
+  // const now = new Date();
+  const now = new Date(2025, 11, 1); // December 1st, 2025 (month is 0-indexed)
+  const month = now.getMonth(); // 0-indexed: 0 = January, 11 = December
+
+  // June 1st or later (month >= 5) -> SUMMER
+  // December 1st or later (month >= 11) -> WINTER
+  if (month >= 11) return "WINTER"; // December
+  if (month >= 5) return "SUMMER"; // June through November
+  return "WINTER"; // January through May
+};
+
 const initialState: FilterDashboardState = {
   yAxis: "Bleachers",
   homeBaseIds: [],
@@ -34,7 +47,7 @@ const initialState: FilterDashboardState = {
   stateProvinces: [],
   onlyShowMyEvents: true,
   optimizationMode: false,
-  season: null, // default to SUMMER per request
+  season: getDefaultSeason(),
   summerAssignedBleacherIds: [],
   winterAssignedBleacherIds: [],
 };
