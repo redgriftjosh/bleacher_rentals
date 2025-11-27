@@ -28,8 +28,8 @@ export type FilterDashboardStore = FilterDashboardState & {
 
 // Determine default season based on current date
 const getDefaultSeason = (): Season => {
-  // const now = new Date();
-  const now = new Date(2025, 11, 1); // December 1st, 2025 (month is 0-indexed)
+  const now = new Date();
+  // const now = new Date(2025, 11, 1); // December 1st, 2025 (month is 0-indexed)
   const month = now.getMonth(); // 0-indexed: 0 = January, 11 = December
 
   // June 1st or later (month >= 5) -> SUMMER
