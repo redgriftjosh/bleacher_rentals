@@ -1,61 +1,114 @@
 "use client";
-import { useBleachersStore } from "@/state/bleachersStore";
-import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { FormattedBleacher } from "./types";
-// import { createClient } from "@/utils/supabase/client";
-import { InsertBleacher, SelectBleacher, UpdateBleacher } from "@/types/tables/Bleachers";
-import { SelectHomeBase } from "@/types/tables/HomeBases";
-import { checkInsertBleacherFormRules } from "./functions";
+import { InsertBleacher, UpdateBleacher } from "@/types/tables/Bleachers";
 import { toast } from "sonner";
 import React from "react";
 import { ErrorToast } from "@/components/toasts/ErrorToast";
-// import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { SuccessToast } from "@/components/toasts/SuccessToast";
 import { updateDataBase } from "@/app/actions/db.actions";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { useQuery } from "@tanstack/react-query";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
-// Fetching the list of bleachers that you see. Needed to join the Home bases on them.
-export function fetchBleachers() {
-  const bleachers = useBleachersStore((s) => s.bleachers) as SelectBleacher[];
-  const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
-  // console.log("bleachers:", bleachers);
+// Fetching the list of bleachers with home bases using React Query
+export function useBleachersQuery() {
+  const supabase = useClerkSupabaseClient();
 
-  if (!bleachers || !homeBases) return [];
+  return useQuery({
+    queryKey: ["bleachers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("Bleachers")
+        .select(
+          `
+          bleacher_number,
+          bleacher_rows,
+          bleacher_seats,
+          home_base:HomeBases!Bleachers_home_base_id_fkey(
+            home_base_id,
+            home_base_name
+          ),
+          winter_home_base:HomeBases!Bleachers_winter_home_base_id_fkey(
+            home_base_id,
+            home_base_name
+          )
+        `
+        )
+        .order("bleacher_number", { ascending: false });
 
-  const formattedBleachers: FormattedBleacher[] = bleachers
-    .map((bleacher) => {
-      const homeBase = homeBases.find((base) => base.home_base_id === bleacher.home_base_id);
-      const winterHomeBase = homeBases.find(
-        (base) => base.home_base_id === bleacher.winter_home_base_id
-      );
+      if (error) throw error;
 
-      return {
-        bleacherNumber: bleacher.bleacher_number,
-        bleacherRows: bleacher.bleacher_rows,
-        bleacherSeats: bleacher.bleacher_seats,
-        homeBase: {
-          homeBaseId: homeBase?.home_base_id ?? 0,
-          homeBaseName: homeBase?.home_base_name ?? "",
-        },
-        winterHomeBase: {
-          homeBaseId: winterHomeBase?.home_base_id ?? 0,
-          homeBaseName: winterHomeBase?.home_base_name ?? "",
-        },
-      };
-    })
-    .sort((a, b) => b.bleacherNumber - a.bleacherNumber);
+      const formattedBleachers: FormattedBleacher[] = (data || []).map((bleacher) => {
+        const homeBase = bleacher.home_base as any;
+        const winterHomeBase = bleacher.winter_home_base as any;
 
-  return formattedBleachers;
+        return {
+          bleacherNumber: bleacher.bleacher_number,
+          bleacherRows: bleacher.bleacher_rows,
+          bleacherSeats: bleacher.bleacher_seats,
+          homeBase: {
+            homeBaseId: homeBase?.home_base_id ?? 0,
+            homeBaseName: homeBase?.home_base_name ?? "",
+          },
+          winterHomeBase: {
+            homeBaseId: winterHomeBase?.home_base_id ?? 0,
+            homeBaseName: winterHomeBase?.home_base_name ?? "",
+          },
+        };
+      });
+
+      return formattedBleachers;
+    },
+  });
 }
 
-export async function insertBleacher(bleacher: InsertBleacher, supabase: SupabaseClient) {
+// Fetch a single bleacher with all details for editing
+export function useBleacherQuery(bleacherNumber: number | null) {
+  const supabase = useClerkSupabaseClient();
+
+  return useQuery({
+    queryKey: ["bleacher", bleacherNumber],
+    queryFn: async () => {
+      if (!bleacherNumber) return null;
+
+      const { data, error } = await supabase
+        .from("Bleachers")
+        .select(
+          `
+          bleacher_id,
+          bleacher_number,
+          bleacher_rows,
+          bleacher_seats,
+          home_base_id,
+          winter_home_base_id,
+          linxup_device_id,
+          summer_account_manager_id,
+          winter_account_manager_id
+        `
+        )
+        .eq("bleacher_number", bleacherNumber)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!supabase && bleacherNumber !== null,
+  });
+}
+
+export async function insertBleacher(bleacher: InsertBleacher, supabase: SupabaseClient, queryClient?: any) {
   // console.log("inserting bleacher", token);
   const { error } = await supabase.from("Bleachers").insert(bleacher);
   if (error) {
     // console.log("Error inserting bleacher:", error);
     let errorMessage = error.message;
     if (error.code === "23505") {
-      errorMessage = "Error: Bleacher number already exists!";
+      // Check which constraint was violated
+      if (error.message.includes("Bleachers_linxup_device_id_key")) {
+        errorMessage = "Error: This Linxup device is already assigned to another bleacher!";
+      } else {
+        errorMessage = "Error: Bleacher number already exists!";
+      }
     }
     toast.custom(
       (t) =>
@@ -80,9 +133,20 @@ export async function insertBleacher(bleacher: InsertBleacher, supabase: Supabas
       }),
     { duration: 10000 }
   );
+  
+  // Invalidate React Query caches if queryClient is provided
+  if (queryClient) {
+    await queryClient.invalidateQueries({ queryKey: ["bleachers"] });
+    await queryClient.invalidateQueries({ queryKey: ["bleachers-with-assignments"] });
+    await queryClient.invalidateQueries({ queryKey: ["taken-bleacher-numbers"] });
+  }
 }
 
-export async function updateBleacher(bleacher: UpdateBleacher, supabase: SupabaseClient) {
+export async function updateBleacher(
+  bleacher: UpdateBleacher,
+  supabase: SupabaseClient,
+  queryClient?: any
+) {
   // console.log("Updating bleacher", token);
   // const supabase = createClient(token);
   const { error } = await supabase
@@ -116,6 +180,14 @@ export async function updateBleacher(bleacher: UpdateBleacher, supabase: Supabas
       }),
     { duration: 10000 }
   );
+
+  // Invalidate React Query caches if queryClient is provided
+  if (queryClient) {
+    await queryClient.invalidateQueries({ queryKey: ["bleachers"] });
+    await queryClient.invalidateQueries({ queryKey: ["bleachers-with-assignments"] });
+    await queryClient.invalidateQueries({ queryKey: ["bleacher"] });
+  }
+
   updateDataBase(["Bleachers"]);
 }
 

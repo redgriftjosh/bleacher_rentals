@@ -6,9 +6,11 @@ import { createUser, updateUser, sendUserInvite } from "../../db/userOperations"
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function ActionButtons() {
   const supabase = useClerkSupabaseClient();
+  const queryClient = useQueryClient();
   const state = useCurrentUserStore();
   const existingUserId = useCurrentUserStore((s) => s.existingUserId);
   const isSubmitting = useCurrentUserStore((s) => s.isSubmitting);
@@ -38,12 +40,25 @@ export default function ActionButtons() {
         if (!result.success) {
           throw new Error(result.error || "Failed to update user");
         }
+
+        // Invalidate bleachers query if account manager changes were made
+        if (state.isAccountManager) {
+          await queryClient.invalidateQueries({ queryKey: ["bleachers"] });
+          await queryClient.invalidateQueries({ queryKey: ["bleachers-with-assignments"] });
+        }
+
         createSuccessToast(["User updated successfully"]);
       } else {
         // Create new user
         const result = await createUser(supabase, state);
         if (!result.success) {
           throw new Error(result.error || "Failed to create user");
+        }
+
+        // Invalidate bleachers query if account manager was created
+        if (state.isAccountManager) {
+          await queryClient.invalidateQueries({ queryKey: ["bleachers"] });
+          await queryClient.invalidateQueries({ queryKey: ["bleachers-with-assignments"] });
         }
 
         // Send invite email

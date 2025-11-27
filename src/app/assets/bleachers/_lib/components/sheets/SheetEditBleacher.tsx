@@ -1,16 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useBleachersStore } from "@/state/bleachersStore";
-import { fetchTakenBleacherNumbers, insertBleacher, updateBleacher } from "../../db";
+import {
+  fetchTakenBleacherNumbers,
+  insertBleacher,
+  updateBleacher,
+  useBleacherQuery,
+} from "../../db";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
 import { toast } from "sonner";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
 import { checkInsertBleacherFormRules } from "../../functions";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
@@ -20,16 +23,12 @@ import { SelectAccountManager } from "@/features/manageTeam/components/inputs/Se
 // Did a little explainer on how this works.
 
 export function SheetEditBleacher() {
-  const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = useClerkSupabaseClient();
-  //   const editBleacherNumber = searchParams.get("edit");
-  const [editBleacherNumber, setEditBleacherNumber] = useState<string | null>(null);
-  const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
-  const homeBasesLoading = useHomeBasesStore((s) => s.stale);
-  const bleachers = useBleachersStore((s) => s.bleachers);
-  const bleachersLoading = useBleachersStore((s) => s.stale);
+  const queryClient = useQueryClient();
+  const searchParamsValue = searchParams.get("edit");
+  const editBleacherNumber = searchParamsValue ? Number(searchParamsValue) : null;
 
   const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);
   const [id, setId] = useState<number | null>(null);
@@ -43,25 +42,30 @@ export function SheetEditBleacher() {
 
   const [isTakenNumber, setIsTakenNumber] = useState(true);
 
-  // useEffect to set all back to default
+  // Fetch the bleacher data using React Query
+  const {
+    data: bleacher,
+    isLoading: bleacherLoading,
+    error: bleacherError,
+  } = useBleacherQuery(editBleacherNumber);
+
+  // Fetch home bases for the dropdowns
+  const { data: homeBases = [], isLoading: homeBasesLoading } = useQuery({
+    queryKey: ["home-bases"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("HomeBases")
+        .select("home_base_id, home_base_name")
+        .order("home_base_name");
+
+      if (error) throw error;
+      return data as SelectHomeBase[];
+    },
+    enabled: !!supabase,
+  });
+
+  // Populate form fields when bleacher data loads
   useEffect(() => {
-    const edit = searchParams.get("edit");
-
-    if (!edit) {
-      setEditBleacherNumber(null);
-      return;
-    }
-    // console.log("editBleacherNumber:", edit);
-    setEditBleacherNumber(edit);
-
-    // gonna wait to show anything until data is not stale
-    // should at least try to see if cached data is available but don't throw the error
-    // until the data isn't stale and we've verified that it doesn't exist.
-    // Will do this later maybe.
-    if (bleachersLoading || homeBasesLoading) return;
-    // console.log("bleachersss:", bleachers);
-    const bleacher = bleachers.find((b) => b.bleacher_number === Number(edit));
-
     if (bleacher) {
       setBleacherNumber(bleacher.bleacher_number);
       setId(bleacher.bleacher_id);
@@ -69,19 +73,19 @@ export function SheetEditBleacher() {
       setSeats(bleacher.bleacher_seats);
       setSelectedHomeBaseId(bleacher.home_base_id);
       setSelectedWinterHomeBaseId(bleacher.winter_home_base_id);
-      setSelectedLinxupDeviceId((bleacher as any).linxup_device_id ?? null);
-      setSummerAccountManagerId((bleacher as any).summer_account_manager_id ?? null);
-      setWinterAccountManagerId((bleacher as any).winter_account_manager_id ?? null);
-    } else {
-      // setIsOpen(false);
+      setSelectedLinxupDeviceId(bleacher.linxup_device_id ?? null);
+      setSummerAccountManagerId(bleacher.summer_account_manager_id ?? null);
+      setWinterAccountManagerId(bleacher.winter_account_manager_id ?? null);
+    } else if (bleacherError) {
       toast.error("Bleacher not found");
     }
-  }, [searchParams, bleachers, bleachersLoading, homeBases, homeBasesLoading]);
+  }, [bleacher, bleacherError]);
 
-  // useEffect to set all back to default and clear URL
+  // Reset form when sheet closes
   useEffect(() => {
     if (!editBleacherNumber) {
       setBleacherNumber(null);
+      setId(null);
       setRows(null);
       setSeats(null);
       setSelectedHomeBaseId(null);
@@ -89,10 +93,8 @@ export function SheetEditBleacher() {
       setSelectedLinxupDeviceId(null);
       setSummerAccountManagerId(null);
       setWinterAccountManagerId(null);
-      // Remove the edit parameter from URL
-      //   router.push("/assets/bleachers");
     }
-  }, [editBleacherNumber, router]);
+  }, [editBleacherNumber]);
 
   const { data: takenNumbers = [], isLoading } = useQuery({
     queryKey: ["taken-bleacher-numbers", editBleacherNumber],
@@ -139,7 +141,8 @@ export function SheetEditBleacher() {
           summer_account_manager_id: summerAccountManagerId,
           winter_account_manager_id: winterAccountManagerId,
         },
-        supabase
+        supabase,
+        queryClient
       );
       //   setIsOpen(false);
       router.push("/assets/bleachers");

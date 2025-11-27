@@ -1,21 +1,34 @@
 "use client";
 import { useEffect, useState } from "react";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
-import { useHomeBasesStore } from "@/state/homeBaseStore";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
+import { SelectHomeBase } from "@/types/tables/HomeBases";
 import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
 import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
 import { fetchTakenBleacherNumbers, insertBleacher } from "../../db";
-import { SelectHomeBase } from "@/types/tables/HomeBases";
 import { checkInsertBleacherFormRules } from "../../functions";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export function SheetAddBleacher() {
-  const [token, setToken] = useState<string | null>(null);
-  const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
   const supabase = useClerkSupabaseClient();
+  const queryClient = useQueryClient();
+
+  // Fetch home bases for the dropdowns
+  const { data: homeBases = [], isLoading: homeBasesLoading } = useQuery({
+    queryKey: ["home-bases"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("HomeBases")
+        .select("home_base_id, home_base_name")
+        .order("home_base_name");
+      
+      if (error) throw error;
+      return data as SelectHomeBase[];
+    },
+    enabled: !!supabase,
+  });
 
   const [isOpen, setIsOpen] = useState(false);
   const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);
@@ -95,7 +108,8 @@ export function SheetAddBleacher() {
           summer_account_manager_id: summerAccountManagerId,
           winter_account_manager_id: winterAccountManagerId,
         },
-        supabase
+        supabase,
+        queryClient
       );
       setIsOpen(false);
     }

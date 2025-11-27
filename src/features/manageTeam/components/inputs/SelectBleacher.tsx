@@ -33,7 +33,7 @@ export function SelectBleacher({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [hideAssigned, setHideAssigned] = useState(false);
-  const bleachers = useBleachers();
+  const { data: bleachers = [], isLoading } = useBleachers();
 
   const handleToggle = (bleacherId: number) => {
     if (selectedBleacherIds.includes(bleacherId)) {
