@@ -36,17 +36,21 @@ export async function fetchUserById(supabase: TypedSupabaseClient, userId: numbe
     let assignedDriverIds: number[] = [];
 
     if (accountManagerData) {
+      const accountManagerId = accountManagerData.account_manager_id;
+
       const { data: bleachers } = await supabase
         .from("Bleachers")
         .select("bleacher_id, summer_account_manager_id, winter_account_manager_id")
-        .or(`summer_account_manager_id.eq.${userId},winter_account_manager_id.eq.${userId}`);
+        .or(
+          `summer_account_manager_id.eq.${accountManagerId},winter_account_manager_id.eq.${accountManagerId}`
+        );
 
       if (bleachers) {
         summerBleacherIds = bleachers
-          .filter((b) => b.summer_account_manager_id === userId)
+          .filter((b) => b.summer_account_manager_id === accountManagerId)
           .map((b) => b.bleacher_id);
         winterBleacherIds = bleachers
-          .filter((b) => b.winter_account_manager_id === userId)
+          .filter((b) => b.winter_account_manager_id === accountManagerId)
           .map((b) => b.bleacher_id);
       }
 

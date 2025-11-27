@@ -59,8 +59,8 @@ export function DriverSection() {
       {isDriver && (
         <div className="mt-2 space-y-2">
           {/* Account Manager */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <div className="text-right text-sm font-medium flex items-center justify-end gap-1">
+          <div className="grid grid-cols-5 items-center gap-4">
+            <div className="col-span-2 text-right text-sm font-medium flex items-center justify-end gap-1">
               <label htmlFor="accountManager">Account Manager</label>
               <TooltipProvider>
                 <Tooltip>
@@ -84,8 +84,8 @@ export function DriverSection() {
           </div>
 
           {/* Tax */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <div className="text-right text-sm font-medium flex items-center justify-end gap-1">
+          <div className="grid grid-cols-5 items-center gap-4">
+            <div className="col-span-2 text-right text-sm font-medium flex items-center justify-end gap-1">
               <label htmlFor="tax">Tax</label>
               <TooltipProvider>
                 <Tooltip>
@@ -107,8 +107,8 @@ export function DriverSection() {
           </div>
 
           {/* Pay Rate */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <div className="text-right text-sm font-medium flex items-center justify-end gap-1">
+          <div className="grid grid-cols-5 items-center gap-4">
+            <div className="col-span-2 text-right text-sm font-medium flex items-center justify-end gap-1">
               <label htmlFor="payRate">Pay Rate</label>
               <TooltipProvider>
                 <Tooltip>
@@ -136,8 +136,8 @@ export function DriverSection() {
           </div>
 
           {/* Currency */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="currency" className="text-right text-sm font-medium">
+          <div className="grid grid-cols-5 items-center gap-4">
+            <label htmlFor="currency" className="col-span-2 text-right text-sm font-medium">
               Currency
             </label>
             <div className="col-span-3">
@@ -151,8 +151,8 @@ export function DriverSection() {
           </div>
 
           {/* Unit */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="unit" className="text-right text-sm font-medium">
+          <div className="grid grid-cols-5 items-center gap-4">
+            <label htmlFor="unit" className="col-span-2 text-right text-sm font-medium">
               Per Unit
             </label>
             <div className="col-span-3">

@@ -195,27 +195,41 @@ async function updateBleacherAssignments(
   userId: number,
   state: CurrentUserState
 ): Promise<void> {
-  // Clear existing assignments for this user
+  // First, get the account_manager_id for this user
+  const { data: amData, error: amError } = await supabase
+    .from("AccountManagers")
+    .select("account_manager_id")
+    .eq("user_id", userId)
+    .single();
+
+  if (amError || !amData) {
+    console.error("Failed to get account manager ID:", amError);
+    return;
+  }
+
+  const accountManagerId = amData.account_manager_id;
+
+  // Clear existing assignments for this account manager
   await supabase
     .from("Bleachers")
     .update({
       summer_account_manager_id: null,
     })
-    .eq("summer_account_manager_id", userId);
+    .eq("summer_account_manager_id", accountManagerId);
 
   await supabase
     .from("Bleachers")
     .update({
       winter_account_manager_id: null,
     })
-    .eq("winter_account_manager_id", userId);
+    .eq("winter_account_manager_id", accountManagerId);
 
   // Set new summer assignments
   if (state.summerBleacherIds.length > 0) {
     await supabase
       .from("Bleachers")
       .update({
-        summer_account_manager_id: userId,
+        summer_account_manager_id: accountManagerId,
       })
       .in("bleacher_id", state.summerBleacherIds);
   }
@@ -225,7 +239,7 @@ async function updateBleacherAssignments(
     await supabase
       .from("Bleachers")
       .update({
-        winter_account_manager_id: userId,
+        winter_account_manager_id: accountManagerId,
       })
       .in("bleacher_id", state.winterBleacherIds);
   }
