@@ -1,5 +1,6 @@
 "use client";
-import { DriverList } from "../../features/workTrackers/components/DriverList";
+
+import { AllWeeksList } from "@/features/workTrackers/components/AllWeeksList";
 
 export default function WorkTrackersPage() {
   return (
@@ -7,11 +8,11 @@ export default function WorkTrackersPage() {
       {/* Header */}
       <thead className="bg-gray-100">
         <tr className="border-b border-gray-200">
-          <th className="p-3 text-left font-semibold">Driver</th>
+          <th className="p-3 text-left font-semibold">Week</th>
         </tr>
       </thead>
 
-      <DriverList />
+      <AllWeeksList />
     </table>
   );
 }

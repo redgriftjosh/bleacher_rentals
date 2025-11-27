@@ -9,6 +9,35 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      AccountManagers: {
+        Row: {
+          account_manager_id: number
+          created_at: string
+          is_active: boolean
+          user_id: number
+        }
+        Insert: {
+          account_manager_id?: number
+          created_at?: string
+          is_active?: boolean
+          user_id: number
+        }
+        Update: {
+          account_manager_id?: number
+          created_at?: string
+          is_active?: boolean
+          user_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "AccountManagers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "Users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       Addresses: {
         Row: {
           address_id: number
@@ -94,8 +123,10 @@ export type Database = {
           created_by: string | null
           home_base_id: number
           linxup_device_id: string | null
+          summer_account_manager_id: number | null
           updated_at: string | null
           updated_by: string | null
+          winter_account_manager_id: number | null
           winter_home_base_id: number
         }
         Insert: {
@@ -107,8 +138,10 @@ export type Database = {
           created_by?: string | null
           home_base_id: number
           linxup_device_id?: string | null
+          summer_account_manager_id?: number | null
           updated_at?: string | null
           updated_by?: string | null
+          winter_account_manager_id?: number | null
           winter_home_base_id: number
         }
         Update: {
@@ -120,8 +153,10 @@ export type Database = {
           created_by?: string | null
           home_base_id?: number
           linxup_device_id?: string | null
+          summer_account_manager_id?: number | null
           updated_at?: string | null
           updated_by?: string | null
+          winter_account_manager_id?: number | null
           winter_home_base_id?: number
         }
         Relationships: [
@@ -131,6 +166,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "HomeBases"
             referencedColumns: ["home_base_id"]
+          },
+          {
+            foreignKeyName: "Bleachers_summer_account_manager_id_fkey"
+            columns: ["summer_account_manager_id"]
+            isOneToOne: false
+            referencedRelation: "AccountManagers"
+            referencedColumns: ["account_manager_id"]
+          },
+          {
+            foreignKeyName: "Bleachers_winter_account_manager_id_fkey"
+            columns: ["winter_account_manager_id"]
+            isOneToOne: false
+            referencedRelation: "AccountManagers"
+            referencedColumns: ["account_manager_id"]
           },
           {
             foreignKeyName: "Bleachers_winter_home_base_id_fkey"
@@ -214,8 +263,10 @@ export type Database = {
       }
       Drivers: {
         Row: {
+          account_manager_id: number | null
           created_at: string
           driver_id: number
+          is_active: boolean
           pay_currency: string
           pay_per_unit: string
           pay_rate_cents: number
@@ -223,8 +274,10 @@ export type Database = {
           user_id: number
         }
         Insert: {
+          account_manager_id?: number | null
           created_at?: string
           driver_id?: number
+          is_active?: boolean
           pay_currency?: string
           pay_per_unit?: string
           pay_rate_cents?: number
@@ -232,8 +285,10 @@ export type Database = {
           user_id: number
         }
         Update: {
+          account_manager_id?: number | null
           created_at?: string
           driver_id?: number
+          is_active?: boolean
           pay_currency?: string
           pay_per_unit?: string
           pay_rate_cents?: number
@@ -242,9 +297,16 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "Drivers_account_manager_id_fkey"
+            columns: ["account_manager_id"]
+            isOneToOne: false
+            referencedRelation: "AccountManagers"
+            referencedColumns: ["account_manager_id"]
+          },
+          {
             foreignKeyName: "Drivers_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "Users"
             referencedColumns: ["user_id"]
           },
@@ -440,24 +502,6 @@ export type Database = {
         }
         Relationships: []
       }
-      TestTable: {
-        Row: {
-          created_at: string
-          entry: string
-          test_table_id: number
-        }
-        Insert: {
-          created_at?: string
-          entry: string
-          test_table_id?: number
-        }
-        Update: {
-          created_at?: string
-          entry?: string
-          test_table_id?: number
-        }
-        Relationships: []
-      }
       UserHomeBases: {
         Row: {
           created_at: string
@@ -519,6 +563,7 @@ export type Database = {
           created_at: string
           email: string
           first_name: string | null
+          is_admin: boolean
           last_name: string | null
           phone: string | null
           role: number | null
@@ -531,6 +576,7 @@ export type Database = {
           created_at?: string
           email: string
           first_name?: string | null
+          is_admin?: boolean
           last_name?: string | null
           phone?: string | null
           role?: number | null
@@ -543,6 +589,7 @@ export type Database = {
           created_at?: string
           email?: string
           first_name?: string | null
+          is_admin?: boolean
           last_name?: string | null
           phone?: string | null
           role?: number | null

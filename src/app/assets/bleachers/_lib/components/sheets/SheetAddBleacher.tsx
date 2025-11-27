@@ -1,20 +1,34 @@
 "use client";
 import { useEffect, useState } from "react";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
-import { useHomeBasesStore } from "@/state/homeBaseStore";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
-import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
-import { fetchTakenBleacherNumbers, insertBleacher } from "../../db";
 import { SelectHomeBase } from "@/types/tables/HomeBases";
+import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
+import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
+import { fetchTakenBleacherNumbers, insertBleacher } from "../../db";
 import { checkInsertBleacherFormRules } from "../../functions";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export function SheetAddBleacher() {
-  const [token, setToken] = useState<string | null>(null);
-  const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
   const supabase = useClerkSupabaseClient();
+  const queryClient = useQueryClient();
+
+  // Fetch home bases for the dropdowns
+  const { data: homeBases = [], isLoading: homeBasesLoading } = useQuery({
+    queryKey: ["home-bases"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("HomeBases")
+        .select("home_base_id, home_base_name")
+        .order("home_base_name");
+
+      if (error) throw error;
+      return data as SelectHomeBase[];
+    },
+    enabled: !!supabase,
+  });
 
   const [isOpen, setIsOpen] = useState(false);
   const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);
@@ -24,6 +38,8 @@ export function SheetAddBleacher() {
   const [selectedHomeBaseId, setSelectedHomeBaseId] = useState<number | null>(null);
   const [selectedWinterHomeBaseId, setSelectedWinterHomeBaseId] = useState<number | null>(null);
   const [selectedLinxupDeviceId, setSelectedLinxupDeviceId] = useState<string | null>(null);
+  const [summerAccountManagerId, setSummerAccountManagerId] = useState<number | null>(null);
+  const [winterAccountManagerId, setWinterAccountManagerId] = useState<number | null>(null);
   const [isTakenNumber, setIsTakenNumber] = useState(true);
   // const [isLoading, setIsLoading] = useState(true);
 
@@ -36,6 +52,8 @@ export function SheetAddBleacher() {
       setSelectedHomeBaseId(null);
       setSelectedWinterHomeBaseId(null);
       setSelectedLinxupDeviceId(null);
+      setSummerAccountManagerId(null);
+      setWinterAccountManagerId(null);
     }
   }, [isOpen]);
 
@@ -87,8 +105,11 @@ export function SheetAddBleacher() {
           home_base_id: selectedHomeBaseId!,
           winter_home_base_id: selectedWinterHomeBaseId!,
           linxup_device_id: selectedLinxupDeviceId,
+          summer_account_manager_id: summerAccountManagerId,
+          winter_account_manager_id: winterAccountManagerId,
         },
-        supabase
+        supabase,
+        queryClient
       );
       setIsOpen(false);
     }
@@ -205,6 +226,30 @@ export function SheetAddBleacher() {
                     placeholder="Select Device (Optional)"
                     value={selectedLinxupDeviceId ?? null}
                   />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
+                    Summer Account Manager
+                  </label>
+                  <div className="col-span-3">
+                    <SelectAccountManager
+                      value={summerAccountManagerId}
+                      onChange={setSummerAccountManagerId}
+                      placeholder="Select Account Manager (Optional)"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
+                    Winter Account Manager
+                  </label>
+                  <div className="col-span-3">
+                    <SelectAccountManager
+                      value={winterAccountManagerId}
+                      onChange={setWinterAccountManagerId}
+                      placeholder="Select Account Manager (Optional)"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

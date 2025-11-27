@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Trash, Truck, X } from "lucide-react";
+import { Check, Trash, Truck, X, CalendarPlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useSelectedBlockStore } from "../state/useSelectedBlock";
 import { Tables } from "../../../../database.types";
@@ -8,6 +8,7 @@ import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { useQueryClient } from "@tanstack/react-query";
 import { deleteBlock, saveBlock } from "../db/client/db";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 
 type CellEditorProps = {
   onWorkTrackerOpen?: (workTracker: Tables<"WorkTrackers">) => void;
@@ -109,6 +110,33 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     onWorkTrackerOpen?.(workTracker);
   };
 
+  const handleCreateEvent = () => {
+    if (!date || !bleacherId) {
+      createErrorToast(["Failed to create event. Missing date or bleacher id."]);
+      return;
+    }
+
+    const eventStore = useCurrentEventStore.getState();
+
+    // Calculate end date (7 days after start date)
+    const startDate = new Date(date);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 7);
+
+    // Format dates as YYYY-MM-DD
+    const formatDate = (d: Date) => d.toISOString().split("T")[0];
+
+    // Set the event configuration
+    eventStore.setField("isFormExpanded", true);
+    eventStore.setField("isFormMinimized", false);
+    eventStore.setField("eventStart", formatDate(startDate));
+    eventStore.setField("eventEnd", formatDate(endDate));
+    eventStore.setField("bleacherIds", [bleacherId]);
+
+    // Close the cell editor
+    handleClose();
+  };
+
   // Track whether the initial mousedown began on the backdrop so we only close when both down & up occur there
   const mouseDownOnBackdrop = useRef(false);
 
@@ -177,6 +205,13 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
             >
               <Truck className="h-4 w-4" />
               Work Tracker
+            </button>
+            <button
+              className="flex items-center gap-1 text-xs underline text-gray-500 cursor-pointer hover:text-black transition-all duration-200"
+              onClick={handleCreateEvent}
+            >
+              <CalendarPlus className="h-4 w-4" />
+              Create Event
             </button>
           </div>
 

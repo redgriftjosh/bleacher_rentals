@@ -1,4 +1,4 @@
-SET session_replication_role = replica;
+-- SET session_replication_role = replica;
 
 --
 -- PostgreSQL database dump
@@ -2859,3 +2859,55 @@ SELECT pg_catalog.setval('"public"."WorkTrackers_work_tracker_id_seq"', 45, true
 --
 
 RESET ALL;
+
+
+insert into public."AccountManagers" (user_id)
+select user_id
+from public."Users"
+where role = 1 or role = 2
+  and not exists (
+    select 1 
+    from public."AccountManagers" 
+    where "AccountManagers".user_id = "Users".user_id
+  );
+
+
+  -- Backfill summer_account_manager_id from existing BleacherUsers
+update public."Bleachers" b
+set summer_account_manager_id = am.account_manager_id
+from (
+  select
+    bu.bleacher_id,
+    am.account_manager_id,
+    row_number() over (
+      partition by bu.bleacher_id
+      order by am.account_manager_id
+    ) as rn
+  from public."BleacherUsers" bu
+  join public."AccountManagers" am
+    on am.user_id = bu.user_id
+  where bu.season = 'SUMMER'
+) am
+where b.bleacher_id = am.bleacher_id
+  and am.rn = 1
+  and b.summer_account_manager_id is null;
+
+-- Backfill winter_account_manager_id from existing BleacherUsers
+update public."Bleachers" b
+set winter_account_manager_id = am.account_manager_id
+from (
+  select
+    bu.bleacher_id,
+    am.account_manager_id,
+    row_number() over (
+      partition by bu.bleacher_id
+      order by am.account_manager_id
+    ) as rn
+  from public."BleacherUsers" bu
+  join public."AccountManagers" am
+    on am.user_id = bu.user_id
+  where bu.season = 'WINTER'
+) am
+where b.bleacher_id = am.bleacher_id
+  and am.rn = 1
+  and b.winter_account_manager_id is null;
