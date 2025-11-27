@@ -10,11 +10,10 @@ import { Tables } from "../../../../../database.types";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export default function WorkTrackersForUserPage() {
-  // const { userId, startDate } = params;
   const params = useParams();
   const supabase = useClerkSupabaseClient();
-  const userId = params.userId as string;
   const startDate = params.startDate as string;
+  const userId = params.userId as string;
   const className = "py-2 text-center text-xs font-semibold border-r";
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
     null
@@ -26,7 +25,7 @@ export default function WorkTrackersForUserPage() {
       return;
     }
 
-    const res = await fetch(`/work-trackers/${userId}/${startDate}/pdf`, {
+    const res = await fetch(`/work-trackers/${startDate}/${userId}/pdf`, {
       method: "GET",
       // headers: {
       //   Authorization: `Bearer ${token}`,
