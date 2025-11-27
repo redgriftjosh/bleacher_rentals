@@ -11,7 +11,7 @@ import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useW
 import { Tables } from "../../../database.types";
 import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
 // import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
-import { fetchUserBleacherAssignmentsForSeason } from "@/features/dashboard/db/client/bleacherUsers";
+import { fetchUserBleacherAssignmentsForSeason } from "@/features/dashboard/db/client/accountManagerBleachers";
 import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
 import WorkTrackerModal from "@/features/workTrackers/components/WorkTrackerModal";
 import { DashboardOptions } from "@/features/dashboardOptions/DashboardOptions";

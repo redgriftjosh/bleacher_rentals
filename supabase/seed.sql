@@ -2870,3 +2870,44 @@ where role = 1 or role = 2
     from public."AccountManagers" 
     where "AccountManagers".user_id = "Users".user_id
   );
+
+
+  -- Backfill summer_account_manager_id from existing BleacherUsers
+update public."Bleachers" b
+set summer_account_manager_id = am.account_manager_id
+from (
+  select
+    bu.bleacher_id,
+    am.account_manager_id,
+    row_number() over (
+      partition by bu.bleacher_id
+      order by am.account_manager_id
+    ) as rn
+  from public."BleacherUsers" bu
+  join public."AccountManagers" am
+    on am.user_id = bu.user_id
+  where bu.season = 'SUMMER'
+) am
+where b.bleacher_id = am.bleacher_id
+  and am.rn = 1
+  and b.summer_account_manager_id is null;
+
+-- Backfill winter_account_manager_id from existing BleacherUsers
+update public."Bleachers" b
+set winter_account_manager_id = am.account_manager_id
+from (
+  select
+    bu.bleacher_id,
+    am.account_manager_id,
+    row_number() over (
+      partition by bu.bleacher_id
+      order by am.account_manager_id
+    ) as rn
+  from public."BleacherUsers" bu
+  join public."AccountManagers" am
+    on am.user_id = bu.user_id
+  where bu.season = 'WINTER'
+) am
+where b.bleacher_id = am.bleacher_id
+  and am.rn = 1
+  and b.winter_account_manager_id is null;
