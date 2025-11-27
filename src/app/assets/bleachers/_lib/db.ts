@@ -96,7 +96,11 @@ export function useBleacherQuery(bleacherNumber: number | null) {
   });
 }
 
-export async function insertBleacher(bleacher: InsertBleacher, supabase: SupabaseClient, queryClient?: any) {
+export async function insertBleacher(
+  bleacher: InsertBleacher,
+  supabase: SupabaseClient,
+  queryClient?: any
+) {
   // console.log("inserting bleacher", token);
   const { error } = await supabase.from("Bleachers").insert(bleacher);
   if (error) {
@@ -133,7 +137,7 @@ export async function insertBleacher(bleacher: InsertBleacher, supabase: Supabas
       }),
     { duration: 10000 }
   );
-  
+
   // Invalidate React Query caches if queryClient is provided
   if (queryClient) {
     await queryClient.invalidateQueries({ queryKey: ["bleachers"] });

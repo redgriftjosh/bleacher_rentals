@@ -47,8 +47,8 @@ import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import InputPercents from "@/components/InputPercents";
 import { getHomeBaseOptions } from "@/utils/utils";
-import { PaymentInfo } from "./PaymentInfo";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { PaymentInfo } from "@/features/manageTeam/legacy/components/PaymentInfo";
 
 export function SheetAddTeamMember({
   isOpen,

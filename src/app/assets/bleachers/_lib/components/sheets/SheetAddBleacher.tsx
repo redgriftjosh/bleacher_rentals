@@ -23,7 +23,7 @@ export function SheetAddBleacher() {
         .from("HomeBases")
         .select("home_base_id, home_base_name")
         .order("home_base_name");
-      
+
       if (error) throw error;
       return data as SelectHomeBase[];
     },
