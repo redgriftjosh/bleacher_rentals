@@ -8,7 +8,7 @@ This is a **Next.js 15** app with **App Router** using TypeScript. It's an inter
 
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS 4
 - **UI Components**: shadcn/ui (New York style) + custom components
-- **State Management**: Zustand stores with stale-refresh pattern
+- **State Management**: Feature-specific Zustand stores (transitioning away from global src/state stores)
 - **Database**: Supabase with real-time subscriptions via Pusher
 - **Auth**: Clerk with custom user management
 - **Canvas/Graphics**: PixiJS for complex dashboard visualizations
@@ -16,9 +16,60 @@ This is a **Next.js 15** app with **App Router** using TypeScript. It's an inter
 
 ## Key Patterns & Conventions
 
-### State Management - Zustand with Stale Pattern
+### State Management Migration Plan
 
-Every Zustand store follows this exact pattern:
+**🚨 IMPORTANT: Active Migration in Progress**
+
+We are **phasing out** all global Zustand stores in `src/state/` that mirror database tables. These stores were used for caching and real-time updates but add unnecessary complexity.
+
+**Stores Being Deprecated (DO NOT use in new code):**
+
+- `src/state/eventsStore.ts` → Use direct Supabase queries
+- `src/state/bleacherEventStore.ts` → Use direct Supabase queries
+- `src/state/addressesStore.ts` → Use direct Supabase queries
+- `src/state/bleachersStore.ts` → Use direct Supabase queries
+- `src/state/blocksStore.ts` → Use direct Supabase queries
+- `src/state/workTrackersStore.ts` → Use direct Supabase queries
+- All other `src/state/*Store.ts` files
+
+**Stores That Are Good (continue using):**
+
+- `src/features/eventConfiguration/state/useCurrentEventStore.ts` - Feature-specific form state
+- `src/features/dashboardOptions/useFilterDashboardStore.ts` - Dashboard filter state
+- Other feature-specific stores in `src/features/**/state/`
+
+**Migration Pattern:**
+
+```typescript
+// ❌ OLD: Reading from global Zustand store
+const events = useEventsStore((s) => s.events);
+const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
+
+// ✅ NEW: Direct Supabase query with proper joins
+const { data: eventData } = await supabase
+  .from("Events")
+  .select(
+    `
+    *,
+    address:Addresses(*),
+    bleacher_events:BleacherEvents(bleacher_id)
+  `
+  )
+  .eq("event_id", eventId)
+  .single();
+```
+
+**Why This Migration:**
+
+- Removes duplicate state management layer
+- Simplifies data flow (single source of truth: database)
+- Eliminates stale data issues and complex refresh logic
+- Reduces bundle size and complexity
+- Pusher real-time updates will be handled differently
+
+### Old State Management Pattern (Being Phased Out)
+
+The legacy pattern used Zustand stores with stale-refresh:
 
 ```typescript
 type Store = {
@@ -29,14 +80,14 @@ type Store = {
 };
 ```
 
-**Critical**: All stores include `stale` tracking for intelligent refetching. Use `useSetupTable` hook for automatic data management.
+**Do not replicate this pattern.** Use direct Supabase queries instead.
 
-### Data Flow Architecture
+### Data Flow Architecture (New Pattern)
 
-1. **useSupabaseSubscriptions()** - Central hook that sets up all table subscriptions
-2. **useSetupTable()** - Generic hook for table setup with stale refresh
-3. **Pusher** - Real-time updates trigger `setStaleByTable()` from `zustandRegistry.ts`
-4. **Server Actions** - Use `updateDataBase()` action to trigger Pusher notifications
+1. **Direct Queries** - Fetch data directly from Supabase when needed
+2. **Feature Stores** - Use Zustand only for UI/form state within features
+3. **React Query** (future) - May be added for caching and optimistic updates
+4. **Pusher** - Real-time updates will trigger component re-renders directly
 
 ### Database Integration
 
@@ -60,8 +111,9 @@ export async function GET(req: NextRequest) {
 
 ### File Organization
 
-- **`src/state/`** - All Zustand stores (one per database table)
-- **`src/hooks/`** - Reusable hooks, especially data fetching patterns
+- **`src/state/`** - ⚠️ **DEPRECATED** - Legacy global Zustand stores (being phased out)
+- **`src/features/*/state/`** - ✅ Feature-specific Zustand stores (use these for UI/form state)
+- **`src/hooks/`** - Reusable hooks (many will be deprecated with state migration)
 - **`src/app/(dashboards)/`** - Route groups for dashboard pages
 - **`src/features/`** - Complex feature modules (especially PixiJS dashboard)
 - **`src/components/ui/`** - shadcn/ui components (don't modify directly)
@@ -101,11 +153,20 @@ The `src/features/dashboard/` contains a complex PixiJS-based scheduling dashboa
 
 ### Adding New Database Table
 
+**New Pattern (Recommended):**
+
 1. Add migration to `supabase/migrations/`
 2. Run `npm run generate-types-local`
-3. Create Zustand store in `src/state/`
-4. Add to `zustandRegistry.ts`
-5. Add to `useSupabaseSubscriptions.ts`
+3. Query directly from Supabase in components/features as needed
+4. Use feature-specific Zustand stores only for UI state (not data caching)
+
+**Old Pattern (Being Phased Out):**
+
+1. ~~Add migration to `supabase/migrations/`~~
+2. ~~Run `npm run generate-types-local`~~
+3. ~~Create Zustand store in `src/state/`~~
+4. ~~Add to `zustandRegistry.ts`~~
+5. ~~Add to `useSupabaseSubscriptions.ts`~~
 
 ### Creating New Page
 

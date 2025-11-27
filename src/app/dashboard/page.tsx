@@ -15,11 +15,13 @@ import { fetchUserBleacherAssignmentsForSeason } from "@/features/dashboard/db/c
 import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
 import WorkTrackerModal from "@/features/workTrackers/components/WorkTrackerModal";
 import { DashboardOptions } from "@/features/dashboardOptions/DashboardOptions";
+import { SeasonToggle } from "@/features/dashboardOptions/SeasonToggle";
 import { CreateEventButton } from "@/features/eventConfiguration/components/CreateEventButton";
 import { EventConfiguration } from "@/features/eventConfiguration/components/EventConfiguration";
 import BleacherLocationModal from "@/features/dashboard/components/BleacherLocationModal";
 import { useBleacherLocationModalStore } from "@/features/dashboard/state/useBleacherLocationModalStore";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { supabaseClientRegistry } from "@/features/dashboard/util/supabaseClientRegistry";
 
 export default function Page() {
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
@@ -29,6 +31,14 @@ export default function Page() {
   const refreshToken = useDataRefreshTokenStore((s) => s.token);
   const { isLoaded, userId } = useAuth();
   const supabase = useClerkSupabaseClient();
+
+  // Register supabase client for PixiJS components
+  useEffect(() => {
+    supabaseClientRegistry.setClient(supabase);
+    return () => {
+      supabaseClientRegistry.setClient(null);
+    };
+  }, [supabase]);
 
   // Bleacher location modal state
   const locationModal = useBleacherLocationModalStore();
@@ -119,7 +129,10 @@ export default function Page() {
       )}
       <div className="min-w-0">
         <div className="flex justify-between items-center pt-2 pl-2 pr-2">
-          <DashboardOptions />
+          <div className="flex items-center gap-3">
+            <DashboardOptions />
+            <SeasonToggle />
+          </div>
           <CreateEventButton />
         </div>
         <EventConfiguration showSetupTeardown={false} />
