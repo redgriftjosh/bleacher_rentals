@@ -9,6 +9,8 @@ export class GoodShuffleIcon extends Container {
   private originalScale = 1;
   private isHovering = false; // Track hover state to prevent stuck states
   private goodshuffleUrl: string;
+  private animationFrameId: number | null = null; // Track animation frame for cleanup
+  private isDestroyed = false; // Track if component is destroyed
 
   constructor(baker: Baker, goodshuffleUrl: string) {
     super();
@@ -68,6 +70,12 @@ export class GoodShuffleIcon extends Container {
   }
 
   private animateHover(isHovering: boolean) {
+    // Cancel any existing animation
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+
     this.isAnimating = true;
 
     const targetScale = isHovering ? 1.2 : this.originalScale;
@@ -79,29 +87,41 @@ export class GoodShuffleIcon extends Container {
     const startShadowAlpha = this.shadowGraphics.alpha;
 
     const animate = () => {
+      // Safety check: stop if destroyed or sprites are null
+      if (this.isDestroyed || !this.iconSprite || !this.shadowGraphics) {
+        this.isAnimating = false;
+        this.animationFrameId = null;
+        return;
+      }
+
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
       // Smooth easing function (ease out)
       const easeOut = 1 - Math.pow(1 - progress, 3);
 
-      // Animate scale
+      // Animate scale (with null check)
       const currentScale = startScale + (targetScale - startScale) * easeOut;
-      this.iconSprite.scale.set(currentScale);
+      if (this.iconSprite && this.iconSprite.scale) {
+        this.iconSprite.scale.set(currentScale);
+      }
 
-      // Animate shadow alpha
+      // Animate shadow alpha (with null check)
       const currentShadowAlpha =
         startShadowAlpha + (targetShadowAlpha - startShadowAlpha) * easeOut;
-      this.shadowGraphics.alpha = currentShadowAlpha;
+      if (this.shadowGraphics) {
+        this.shadowGraphics.alpha = currentShadowAlpha;
+      }
 
       if (progress < 1) {
-        requestAnimationFrame(animate);
+        this.animationFrameId = requestAnimationFrame(animate);
       } else {
         this.isAnimating = false;
+        this.animationFrameId = null;
       }
     };
 
-    animate();
+    this.animationFrameId = requestAnimationFrame(animate);
   }
 
   private updateShadow() {
@@ -136,15 +156,34 @@ export class GoodShuffleIcon extends Container {
     this.isHovering = false;
     this.isAnimating = false;
 
-    // Reset to non-hovered state immediately
-    this.iconSprite.scale.set(this.originalScale);
-    this.shadowGraphics.alpha = 0;
+    // Cancel any pending animation frame
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+
+    // Reset to non-hovered state immediately (with null checks)
+    if (this.iconSprite && this.iconSprite.scale) {
+      this.iconSprite.scale.set(this.originalScale);
+    }
+    if (this.shadowGraphics) {
+      this.shadowGraphics.alpha = 0;
+    }
   }
 
   /**
    * Clean up resources and event listeners
    */
   destroy(options?: Parameters<Container["destroy"]>[0]) {
+    // Mark as destroyed to stop any running animations
+    this.isDestroyed = true;
+
+    // Cancel any pending animation frame
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+
     // Clean up hover event listeners
     this.off("pointerenter");
     this.off("pointerleave");
