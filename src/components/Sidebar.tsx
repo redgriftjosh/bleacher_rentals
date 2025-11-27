@@ -34,7 +34,12 @@ const menuItems: MenuItem[] = [
   },
   { label: "Team", href: "/team", icon: UsersIcon, roles: [USER_ROLES.ADMIN] },
   { label: "Assets", href: "/assets", icon: TruckIcon, roles: [USER_ROLES.ADMIN] },
-  { label: "Work Trackers", href: "/work-trackers", icon: TruckIcon, roles: [USER_ROLES.ADMIN] },
+  {
+    label: "Work Trackers",
+    href: "/work-trackers",
+    icon: TruckIcon,
+    roles: [USER_ROLES.ADMIN, USER_ROLES.ACCOUNT_MANAGER],
+  },
 ];
 
 const SideBar = () => {
