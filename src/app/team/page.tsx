@@ -1,12 +1,9 @@
 "use client";
 import { Color } from "@/types/Color";
-import { SheetAddTeamMember } from "./_lib/components/SheetAddTeamMember";
-import { UserList } from "./_lib/components/UserList";
-import { useState } from "react";
-const tabs = [
-  { id: "bleachers", label: "Bleachers", path: "/assets/bleachers" },
-  { id: "other-assets", label: "Other Assets", path: "/assets/other-assets" },
-];
+import { UserList } from "../../features/manageTeam/components/UserList";
+import { UserConfigurationModal } from "@/features/manageTeam/components/UserConfigurationModal";
+import { PrimaryButton } from "@/components/PrimaryButton";
+import { useCurrentUserStore } from "@/features/manageTeam/state/useCurrentUserStore";
 
 export type ExistingUser = {
   user_id: number;
@@ -20,8 +17,7 @@ export type ExistingUser = {
 } | null;
 
 export default function TeamPage() {
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [existingUser, setExistingUser] = useState<ExistingUser>(null);
+  const openForNewUser = useCurrentUserStore((s) => s.openForNewUser);
 
   return (
     <main>
@@ -33,13 +29,11 @@ export default function TeamPage() {
             Manage your team here.
           </p>
         </div>
-        <SheetAddTeamMember
-          isOpen={isSheetOpen}
-          setIsOpen={setIsSheetOpen}
-          existingUser={existingUser}
-          setExistingUser={setExistingUser}
-        />
+        <PrimaryButton onClick={openForNewUser}>+ Add Team Member</PrimaryButton>
       </div>
+
+      <UserConfigurationModal />
+
       <table className="min-w-full border-collapse border border-gray-200">
         {/* Header */}
         <thead className="bg-gray-100">
@@ -51,16 +45,7 @@ export default function TeamPage() {
           </tr>
         </thead>
 
-        <UserList
-          isSheetOpen={isSheetOpen}
-          setIsSheetOpen={setIsSheetOpen}
-          setExistingUser={setExistingUser}
-        />
-
-        {/* Body */}
-        {/* <Suspense fallback={<BleacherListSkeleton />}>
-          <BleacherList />
-        </Suspense> */}
+        <UserList />
       </table>
     </main>
   );

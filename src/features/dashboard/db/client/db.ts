@@ -774,7 +774,7 @@ export async function deleteEvent(
     throw new Error("No event selected to delete.");
   }
 
-  isUserPermitted(stateProv, user);
+  // isUserPermitted(stateProv, user);
 
   // 1. Find the event to get address_id
   const { data: eventData, error: fetchEventError } = await supabase

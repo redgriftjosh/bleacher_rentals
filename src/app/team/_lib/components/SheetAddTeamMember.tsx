@@ -12,7 +12,7 @@ import {
   fetchUserBleacherAssignments,
   upsertUserBleacherAssignments,
   updateUserStatusToInvited,
-} from "../db";
+} from "../../../../app/team/_lib/db";
 import { Dropdown } from "@/components/DropDown";
 import { useUserRolesStore } from "@/state/userRolesStore";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -22,7 +22,7 @@ import {
   deleteInviteUserEmail,
   filterUserRoles,
   sendInviteUserEmail,
-} from "../functions";
+} from "../../../../app/team/_lib/functions";
 import { useUsersStore } from "@/state/userStore";
 import React from "react";
 import { ErrorToast } from "@/components/toasts/ErrorToast";
@@ -40,15 +40,15 @@ import {
 import { MultiSelect } from "@/components/MultiSelect";
 import { Info, TriangleAlert } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ExistingUser } from "../../page";
+import { ExistingUser } from "../../../../app/team/page";
 import { SuccessToast } from "@/components/toasts/SuccessToast";
-import { ROLES, STATUSES } from "../constants";
+import { ROLES, STATUSES } from "../../../../app/team/_lib/constants";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import InputPercents from "@/components/InputPercents";
 import { getHomeBaseOptions } from "@/utils/utils";
-import { PaymentInfo } from "./PaymentInfo";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { PaymentInfo } from "@/features/manageTeam/legacy/components/PaymentInfo";
 
 export function SheetAddTeamMember({
   isOpen,

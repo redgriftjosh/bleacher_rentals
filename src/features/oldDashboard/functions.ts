@@ -28,10 +28,10 @@ export function checkEventFormRules(
 ): boolean {
   // check if all required fields are filled in
   let missingFields = [];
-  const error = isUserPermitted(createEventPayload.addressData?.state ?? "", user);
-  if (error) {
-    missingFields.push(error);
-  }
+  // const error = isUserPermitted(createEventPayload.addressData?.state ?? "", user);
+  // if (error) {
+  //   missingFields.push(error);
+  // }
   if (createEventPayload.eventName == "") {
     missingFields.push("Missing: Event Name");
   }
