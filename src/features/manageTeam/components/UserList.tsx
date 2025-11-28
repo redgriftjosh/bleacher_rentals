@@ -1,22 +1,15 @@
 "use client";
-import { useBleachersStore } from "@/state/bleachersStore";
-import { fetchUsers } from "../db";
-import { ExistingUser } from "../../page";
+import { fetchUsers } from "@/features/manageTeam/util/fetchUsers";
+import { useCurrentUserStore } from "@/features/manageTeam/state/useCurrentUserStore";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
-export function UserList({
-  isSheetOpen,
-  setIsSheetOpen,
-  setExistingUser,
-}: {
-  isSheetOpen: boolean;
-  setIsSheetOpen: (isOpen: boolean) => void;
-  setExistingUser: (user: ExistingUser) => void;
-}) {
+export function UserList() {
   const users = fetchUsers();
-  // console.log("users:", users);
-  const handleClick = (user: ExistingUser) => {
-    setExistingUser(user);
-    setIsSheetOpen(true);
+  const loadExistingUser = useCurrentUserStore((s) => s.loadExistingUser);
+  const supabase = useClerkSupabaseClient();
+
+  const handleClick = (userId: number) => {
+    loadExistingUser(userId, supabase);
   };
 
   return (
@@ -25,18 +18,7 @@ export function UserList({
         <tr
           key={index}
           className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer"
-          onClick={() =>
-            handleClick({
-              user_id: row.user_id,
-              first_name: row.first_name || "",
-              last_name: row.last_name || "",
-              email: row.email,
-              role: row.role || 0,
-              status: row.status,
-              clerk_user_id: row.clerk_user_id,
-              homeBases: row.homeBases,
-            })
-          }
+          onClick={() => handleClick(row.user_id)}
         >
           <td className="py-1 px-3 text-left">{row.first_name + " " + row.last_name}</td>
           <td className="py-1 px-3 text-left">{row.email}</td>

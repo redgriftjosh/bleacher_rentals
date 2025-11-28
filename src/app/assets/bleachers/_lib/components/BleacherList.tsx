@@ -1,13 +1,14 @@
 "use client";
-import { useBleachersStore } from "@/state/bleachersStore";
-import { fetchBleachers } from "../db";
+import { useBleachersQuery } from "../db";
 import { BleacherItemRow } from "./BleacherItemRow";
 import { BleacherListSkeleton } from "./BleacherListSkeleton";
 
 export function BleacherList() {
-  const bleachers = fetchBleachers();
-  // const loading = useBleachersStore((s) => s.loading);
-  // if (loading) return <BleacherListSkeleton />;
+  const { data: bleachers, isLoading } = useBleachersQuery();
+
+  if (isLoading) return <BleacherListSkeleton />;
+  if (!bleachers) return null;
+
   return (
     <tbody>
       {bleachers.map((row, index) => (

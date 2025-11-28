@@ -10,4 +10,14 @@ export type FormattedBleacher = {
     homeBaseId: number;
     homeBaseName: string;
   };
+  summerAccountManager?: {
+    accountManagerId: number;
+    firstName: string | null;
+    lastName: string | null;
+  } | null;
+  winterAccountManager?: {
+    accountManagerId: number;
+    firstName: string | null;
+    lastName: string | null;
+  } | null;
 };

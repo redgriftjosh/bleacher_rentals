@@ -2,15 +2,13 @@ import { Container, Graphics, Sprite, Text } from "pixi.js";
 import { EventSpanType, EventsUtil } from "../../util/Events";
 import { CELL_HEIGHT, CELL_WIDTH } from "@/features/dashboard/values/constants";
 import { Baker } from "../../util/Baker";
-import { useEventsStore } from "@/state/eventsStore";
-import { useBleacherEventsStore } from "@/state/bleacherEventStore";
-import { useAddressesStore } from "@/state/addressesStore";
 import { BleacherEvent } from "../../types";
-import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
-import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
+import { loadEventById } from "../../db/client/loadEventById";
+import { supabaseClientRegistry } from "../../util/supabaseClientRegistry";
 
 export class EventBody extends Sprite {
   private currentSpan?: EventSpanType;
+
   constructor(
     eventInfo: {
       hasEvent: boolean;
@@ -130,86 +128,17 @@ export class EventBody extends Sprite {
   private handleClick() {
     if (!this.currentSpan) return;
     const event = this.currentSpan.ev;
-    // console.log("EventBody clicked: ", event);
     this.handleLoadEvent(event);
   }
 
-  private handleLoadEvent(bleacherEvent: BleacherEvent) {
-    const store = useCurrentEventStore.getState();
-    const setField = store.setField;
+  private async handleLoadEvent(bleacherEvent: BleacherEvent) {
+    const supabase = supabaseClientRegistry.getClient();
 
-    // Get the full event data from stores
-    const events = useEventsStore.getState().events;
-    const bleacherEvents = useBleacherEventsStore.getState().bleacherEvents;
-    const addresses = useAddressesStore.getState().addresses;
-
-    // Find the BleacherEvent record to get the event_id
-    const bleacherEventRecord = bleacherEvents.find(
-      (be) => be.bleacher_event_id === bleacherEvent.bleacherEventId
-    );
-
-    // Find the full event data using either bleacher_event link or direct eventId fallback
-    const fullEvent = bleacherEventRecord
-      ? events.find((e) => e.event_id === bleacherEventRecord.event_id)
-      : events.find((e) => e.event_id === (bleacherEvent as any).eventId);
-
-    if (!fullEvent) {
-      console.warn("Could not find full event data");
+    if (!supabase) {
+      console.warn("No Supabase client available");
       return;
     }
 
-    // Find the address data
-    const address = addresses.find((a) => a.address_id === fullEvent.address_id);
-
-    // Get all bleacher IDs for this event
-    const eventBleacherIds = bleacherEvents
-      .filter((be) => be.event_id === fullEvent.event_id)
-      .map((be) => be.bleacher_id);
-
-    // Load all event data into the store, similar to EventRenderer
-    setField("eventId", fullEvent.event_id);
-    setField("eventName", fullEvent.event_name);
-    setField(
-      "addressData",
-      address
-        ? {
-            addressId: address.address_id,
-            address: address.street,
-            city: address.city,
-            state: address.state_province,
-            postalCode: address.zip_postal ?? undefined,
-          }
-        : null
-    );
-    setField("seats", fullEvent.total_seats);
-    setField("sevenRow", fullEvent.seven_row);
-    setField("tenRow", fullEvent.ten_row);
-    setField("fifteenRow", fullEvent.fifteen_row);
-    setField("setupStart", fullEvent.setup_start ?? "");
-    setField("sameDaySetup", !fullEvent.setup_start);
-    setField("eventStart", fullEvent.event_start);
-    setField("eventEnd", fullEvent.event_end);
-    setField("teardownEnd", fullEvent.teardown_end ?? "");
-    setField("sameDayTeardown", !fullEvent.teardown_end);
-    setField("lenient", fullEvent.lenient);
-    setField("selectedStatus", fullEvent.booked ? "Booked" : "Quoted");
-    setField("notes", fullEvent.notes ?? "");
-    setField("mustBeClean", fullEvent.must_be_clean);
-    setField("bleacherIds", eventBleacherIds);
-    setField("isFormExpanded", true); // Open the configuration panel
-    setField("hslHue", fullEvent.hsl_hue);
-    setField("goodshuffleUrl", fullEvent.goodshuffle_url);
-    // Only set owner if backend provides a created_by_user_id
-    if ((fullEvent as any).created_by_user_id !== undefined) {
-      setField("ownerUserId", (fullEvent as any).created_by_user_id ?? null);
-    } else {
-      setField("ownerUserId", null);
-    }
-
-    // Ensure the dashboard flips to Bleachers view and highlights selected bleachers
-    try {
-      const filterStore = useFilterDashboardStore.getState();
-      filterStore.setField("yAxis", "Bleachers");
-    } catch {}
+    await loadEventById(bleacherEvent.eventId, supabase);
   }
 }

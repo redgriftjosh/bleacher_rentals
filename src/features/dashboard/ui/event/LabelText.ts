@@ -1,5 +1,7 @@
 import { Container, Text } from "pixi.js";
 import { EventSpanType } from "../../util/Events";
+import { loadEventById } from "../../db/client/loadEventById";
+import { supabaseClientRegistry } from "../../util/supabaseClientRegistry";
 
 /**
  * Static event label component without any interactive elements
@@ -8,9 +10,17 @@ import { EventSpanType } from "../../util/Events";
 export class LabelText extends Container {
   private nameLabel: Text;
   private addressLabel?: Text;
+  private eventInfo: EventSpanType;
 
   constructor(eventInfo: EventSpanType) {
     super();
+
+    this.eventInfo = eventInfo;
+
+    // Make clickable
+    this.eventMode = "static";
+    this.cursor = "pointer";
+    this.on("pointerdown", this.handleClick.bind(this));
 
     // Determine text color based on booked status
     const isBooked = !!eventInfo.ev.booked;
@@ -49,6 +59,22 @@ export class LabelText extends Container {
     }
 
     // console.log("LabelText");
+  }
+
+  private async handleClick(e: any) {
+    // Don't handle if clicking on an interactive child (like GoodShuffleIcon)
+    if (e.target !== this && e.target.eventMode === "static") {
+      return;
+    }
+
+    const supabase = supabaseClientRegistry.getClient();
+
+    if (!supabase) {
+      console.warn("No Supabase client available");
+      return;
+    }
+
+    await loadEventById(this.eventInfo.ev.eventId, supabase);
   }
 
   /**

@@ -3,6 +3,8 @@ import { EventSpanType } from "../../util/Events";
 import { LabelText } from "./LabelText";
 import { GoodShuffleIcon } from "./GoodShuffleIcon";
 import { Baker } from "../../util/Baker";
+import { loadEventById } from "../../db/client/loadEventById";
+import { supabaseClientRegistry } from "../../util/supabaseClientRegistry";
 
 /**
  * Event cell label that can render in different modes for optimal caching
@@ -12,10 +14,18 @@ import { Baker } from "../../util/Baker";
  */
 export class PinnableSection extends Container {
   private labelText: LabelText;
+  private eventInfo: EventSpanType;
 
   constructor(eventInfo: EventSpanType, app: Application, baker: Baker) {
     super();
     this.position.set(4, 4);
+
+    this.eventInfo = eventInfo;
+
+    // Make clickable
+    this.eventMode = "static";
+    this.cursor = "pointer";
+    this.on("pointerdown", this.handleClick.bind(this));
 
     // Always create the static label
     this.labelText = new LabelText(eventInfo);
@@ -31,6 +41,27 @@ export class PinnableSection extends Container {
     this.addChild(this.labelText);
 
     // console.log("PinnableSection");
+  }
+
+  private async handleClick(e: any) {
+    // Don't handle if clicking on an interactive child (like GoodShuffleIcon)
+    // Check if the target or any parent is an interactive element
+    let target = e.target;
+    while (target && target !== this) {
+      if (target.eventMode === "static" && target !== this.labelText) {
+        return; // Let the child handle it
+      }
+      target = target.parent;
+    }
+
+    const supabase = supabaseClientRegistry.getClient();
+
+    if (!supabase) {
+      console.warn("No Supabase client available");
+      return;
+    }
+
+    await loadEventById(this.eventInfo.ev.eventId, supabase);
   }
 
   /**
