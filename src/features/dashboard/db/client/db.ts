@@ -327,7 +327,6 @@ export async function saveWorkTracker(
     const { error: workTrackerError } = await supabase
       .from("WorkTrackers")
       .update({
-        // user_id: workTracker.user_id,
         date: workTracker.date,
         pickup_address_id: pickUpAddressId,
         pickup_poc: workTracker.pickup_poc,
@@ -350,7 +349,6 @@ export async function saveWorkTracker(
     const { data: workTrackerData, error: workTrackerError } = await supabase
       .from("WorkTrackers")
       .insert({
-        // user_id: workTracker.user_id,
         date: workTracker.date,
         pickup_address_id: pickUpAddressId,
         pickup_poc: workTracker.pickup_poc,
