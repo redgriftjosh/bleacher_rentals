@@ -1,34 +1,34 @@
 /**
  * Configuration for deprecated database tables and columns.
  * Add deprecated items here to automatically generate linting patterns.
- * 
- * NOTE: This file provides TypeScript types. The actual runtime configuration
- * is in dbDeprecated.mjs (to avoid transpilation issues in Vercel).
- * Keep both files in sync!
  */
 
-export type DeprecatedTable = {
-  name: string;
-  reason: string;
-};
+/**
+ * @typedef {Object} DeprecatedTable
+ * @property {string} name
+ * @property {string} reason
+ */
 
-export type DeprecatedColumn = {
-  table: string;
-  column: string;
-  reason: string;
-};
+/**
+ * @typedef {Object} DeprecatedColumn
+ * @property {string} table
+ * @property {string} column
+ * @property {string} reason
+ */
 
-export type DeprecatedConfig = {
-  tables: DeprecatedTable[];
-  columns: DeprecatedColumn[];
-};
+/**
+ * @typedef {Object} DeprecatedConfig
+ * @property {DeprecatedTable[]} tables
+ * @property {DeprecatedColumn[]} columns
+ */
 
 // ============================================================================
 // DEPRECATION CONFIGURATION
 // ============================================================================
-// ⚠️ IMPORTANT: If you modify this, also update dbDeprecated.mjs
+// Add deprecated tables and columns here with their replacement instructions
 
-export const DEPRECATED_CONFIG: DeprecatedConfig = {
+/** @type {DeprecatedConfig} */
+export const DEPRECATED_CONFIG = {
   tables: [
     {
       name: "UserRoles",
