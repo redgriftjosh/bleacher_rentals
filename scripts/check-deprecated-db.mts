@@ -5,7 +5,7 @@
 
 import { readFileSync } from "fs";
 import { glob } from "glob";
-import { DEPRECATED_CONFIG, DeprecatedColumn, DeprecatedTable } from "../dbDeprecated.js";
+import { DEPRECATED_CONFIG } from "../dbDeprecated.ts";
 
 // ============================================================================
 // PATTERN GENERATION (Auto-generated from config above)
