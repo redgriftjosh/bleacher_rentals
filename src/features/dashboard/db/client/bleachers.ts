@@ -1,6 +1,6 @@
 "use client";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { Tables } from "../../../../../database.types";
+import { Database, Tables } from "../../../../../database.types";
 // import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { Bleacher } from "../../types";
 import { useDashboardBleachersStore } from "../../state/useDashboardBleachersStore";
@@ -39,7 +39,7 @@ type Row = {
 };
 
 export async function FetchDashboardBleachers(
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): Promise<{ bleachers: Bleacher[] }> {
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);

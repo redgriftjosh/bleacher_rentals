@@ -17,7 +17,6 @@ export async function createUser(
         last_name: state.lastName,
         email: state.email.toLowerCase(),
         is_admin: state.isAdmin,
-        role: state.isAdmin ? 2 : state.isAccountManager ? 1 : state.isDriver ? 3 : 1,
         status: 1, // Active
       })
       .select("user_id")
@@ -80,7 +79,6 @@ export async function updateUser(
         last_name: state.lastName,
         email: state.email.toLowerCase(),
         is_admin: state.isAdmin,
-        role: state.isAdmin ? 2 : state.isAccountManager ? 1 : state.isDriver ? 3 : 1,
       })
       .eq("user_id", userId);
 

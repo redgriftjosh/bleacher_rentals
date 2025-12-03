@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchDriversForWeek, checkUserAccess } from "../db";
+import { fetchDriversForWeek, checkUserAccess } from "../db/db";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";

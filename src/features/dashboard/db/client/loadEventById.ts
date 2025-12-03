@@ -1,13 +1,17 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
+import { Database } from "../../../../../database.types";
 
 /**
  * Loads an event by ID from the database and populates the current event store
  * @param eventId - The event ID to load
  * @param supabase - Supabase client instance
  */
-export async function loadEventById(eventId: number, supabase: SupabaseClient): Promise<void> {
+export async function loadEventById(
+  eventId: number,
+  supabase: SupabaseClient<Database>
+): Promise<void> {
   if (!supabase) {
     console.warn("No Supabase client available");
     return;

@@ -97,6 +97,7 @@ export function Dropdown<T>({
                   top: dropdownPos.top,
                   left: dropdownPos.left,
                   width: dropdownPos.width,
+                  pointerEvents: "auto",
                 }}
               >
                 {options.map((option) => (

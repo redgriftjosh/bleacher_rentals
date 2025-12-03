@@ -1,5 +1,5 @@
 import { UserResource } from "@clerk/types";
-import { Tables } from "../../../../database.types";
+import { Database, Tables } from "../../../../database.types";
 import { TASK_ADMIN_IDS } from "./constants";
 import { SupabaseClient } from "@supabase/supabase-js";
 
@@ -15,7 +15,7 @@ export function checkInsertTaskFormRules(
   typeId: number | null,
   clerkUser: UserResource | null,
   allusers: Tables<"Users">[],
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): string[] | null {
   // check if all required fields are filled in
   let errors = [];
@@ -62,7 +62,7 @@ export function checkDeleteTaskFormRules(
   taskUserId: number | null,
   clerkUser: UserResource | null,
   allusers: Tables<"Users">[],
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): string[] | null {
   // check if all required fields are filled in
   let errors = [];
