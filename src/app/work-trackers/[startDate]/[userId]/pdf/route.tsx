@@ -17,19 +17,25 @@ export async function GET(
   }
 ) {
   const { userId, startDate } = await context.params;
+  const numericUserId = Number(userId);
 
   const headerStore = headers();
   // const authHeader = (await headerStore).get("authorization");
 
   const supabase = createServerSupabaseClient();
-  const data = await fetchWorkTrackersForUserIdAndStartDate(supabase, userId, startDate, true);
+  const data = await fetchWorkTrackersForUserIdAndStartDate(
+    supabase,
+    numericUserId,
+    startDate,
+    true
+  );
   const financialTotals = calculateFinancialTotals(data);
   //   console.log("subtotal", subtotal);
   //   console.log("tax", tax);
   //   console.log("total", total);
   console.log("financialTotals", financialTotals);
   const dateRange = getDateRange(startDate);
-  const driverName = await fetchDriverName(userId, supabase);
+  const driverName = await fetchDriverName(numericUserId, supabase);
 
   const stream = await renderToStream(
     <MyDocument

@@ -8,7 +8,7 @@ import { calculateFinancialTotals } from "../util";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 type Props = {
-  userId: string;
+  userId: number;
   startDate: string;
   onSelectWorkTracker?: (workTracker: Tables<"WorkTrackers">) => void;
 };

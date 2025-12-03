@@ -8,16 +8,17 @@ import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient"
 
 export default function WorkTrackersLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
-  const userId = params.userId as string | undefined;
+  const userId = params.userId ? parseInt(params.userId as string, 10) : undefined;
   const startDate = params.startDate as string | undefined;
   const supabase = useClerkSupabaseClient();
 
   const { data: user } = useQuery({
     queryKey: ["user", userId],
     queryFn: async () => {
-      return fetchUserById(supabase, userId!);
+      if (userId === undefined) return null;
+      return fetchUserById(supabase, userId);
     },
-    enabled: !!userId,
+    enabled: userId !== undefined,
   });
   const name = userId && user ? ` - ${user}` : "";
   const dateRange = startDate

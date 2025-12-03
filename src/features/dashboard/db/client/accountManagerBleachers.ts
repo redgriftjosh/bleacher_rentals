@@ -1,4 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
+import { Database } from "../../../../../database.types";
 
 type UserBleacherAssignments = {
   summerAssignedBleacherIds: number[];
@@ -6,7 +7,7 @@ type UserBleacherAssignments = {
 };
 
 export async function fetchUserBleacherAssignmentsForSeason(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   clerkUserId: string
 ): Promise<UserBleacherAssignments> {
   // Lookup app user_id from clerk_user_id

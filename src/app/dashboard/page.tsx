@@ -90,7 +90,8 @@ export default function Page() {
         pickup_address_id: null,
         pickup_poc: null,
         pickup_time: null,
-        user_id: null,
+        // user_id: null,
+        driver_id: null,
       } as Tables<"WorkTrackers">);
     });
     return () => unsub();

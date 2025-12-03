@@ -40,7 +40,7 @@ export default function TeamPage() {
           <tr className="border-b border-gray-200">
             <th className="p-3 text-left font-semibold">Name</th>
             <th className="p-3 text-left font-semibold">Email</th>
-            <th className="p-3 text-left font-semibold">Role</th>
+            {/* <th className="p-3 text-left font-semibold">Role</th> */}
             <th className="p-3 text-left font-semibold">Status</th>
           </tr>
         </thead>

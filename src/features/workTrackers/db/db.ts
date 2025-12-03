@@ -1,13 +1,13 @@
 import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { Tables } from "../../../../database.types";
+import { Database, Tables } from "../../../../database.types";
 import { USER_ROLES } from "@/types/Constants";
 import { DateTime } from "luxon";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { fetchAddressFromId } from "@/features/dashboard/db/client/db";
 
 export async function fetchDriverName(
-  userId: string,
-  supabaseClient: SupabaseClient
+  userId: number,
+  supabaseClient: SupabaseClient<Database>
 ): Promise<string> {
   const { data, error } = await supabaseClient
     .from("Users")
@@ -24,22 +24,10 @@ export async function fetchDriverName(
   return name;
 }
 
-export async function fetchDrivers(supabase: SupabaseClient): Promise<{
-  drivers: Tables<"Users">[] | null;
-}> {
-  if (!supabase) {
-    createErrorToast(["No supabase client found"]);
-  }
-  const { data, error } = await supabase.from("Users").select("*").eq("role", USER_ROLES.DRIVER);
-
-  if (error) {
-    createErrorToast(["Failed to fetch Drivers.", error.message]);
-  }
-  console.log("fetchDrivers", data);
-  return { drivers: data };
-}
-
-export async function fetchUserById(supabase: SupabaseClient, userId: string): Promise<string> {
+export async function fetchUserById(
+  supabase: SupabaseClient<Database>,
+  userId: number
+): Promise<string> {
   if (!supabase) {
     createErrorToast(["No supabase client found"]);
   }
@@ -56,39 +44,9 @@ export async function fetchUserById(supabase: SupabaseClient, userId: string): P
   return name;
 }
 
-export async function fetchWorkTrackerWeeks(
-  supabase: SupabaseClient,
-  userId: string
+export async function fetchAllWorkTrackerWeeks(
+  supabase: SupabaseClient<Database>
 ): Promise<string[]> {
-  if (!supabase) {
-    createErrorToast(["No supabase client found"]);
-  }
-
-  // 1. Get all dates for the given user
-  const { data, error } = await supabase.from("WorkTrackers").select("date").eq("user_id", userId);
-
-  if (error) {
-    createErrorToast(["Failed to fetch work tracker dates", error.message]);
-    return [];
-  }
-
-  // 2. Normalize each date to the Monday of its week
-  const mondayDates = new Set<string>();
-  for (const row of data || []) {
-    const date = DateTime.fromISO(row.date);
-    if (date.isValid) {
-      const monday = date.minus({ days: (date.weekday + 6) % 7 });
-      mondayDates.add(monday.toISODate()); // format as "YYYY-MM-DD"
-    }
-  }
-  const dates = Array.from(mondayDates).sort();
-  console.log("dates", dates);
-
-  // 3. Return a sorted list
-  return dates;
-}
-
-export async function fetchAllWorkTrackerWeeks(supabase: SupabaseClient): Promise<string[]> {
   if (!supabase) {
     createErrorToast(["No supabase client found"]);
   }
@@ -104,6 +62,7 @@ export async function fetchAllWorkTrackerWeeks(supabase: SupabaseClient): Promis
   // 2. Normalize each date to the Monday of its week
   const mondayDates = new Set<string>();
   for (const row of data || []) {
+    if (!row.date) continue;
     const date = DateTime.fromISO(row.date);
     if (date.isValid) {
       const monday = date.minus({ days: (date.weekday + 6) % 7 });
@@ -118,7 +77,7 @@ export async function fetchAllWorkTrackerWeeks(supabase: SupabaseClient): Promis
 }
 
 export async function fetchDriversForWeek(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   startDate: string,
   showAllDrivers: boolean = false,
   currentUserId?: number
@@ -133,20 +92,25 @@ export async function fetchDriversForWeek(
 
   if (showAllDrivers) {
     // Show ALL active drivers, regardless of work trackers
-    const { data: users, error: usersError } = await supabase
-      .from("Users")
-      .select("*")
-      .eq("role", USER_ROLES.DRIVER);
+    const { data: driversData, error: driversError } = await supabase
+      .from("Drivers")
+      .select(
+        `
+        driver_id,
+        user:Users!Drivers_user_id_fkey(*)
+      `
+      )
+      .eq("is_active", true);
 
-    if (usersError) {
-      createErrorToast(["Failed to fetch drivers", usersError.message]);
+    if (driversError) {
+      createErrorToast(["Failed to fetch drivers", driversError.message]);
       return { drivers: [] };
     }
 
     // Get trip counts for all drivers
     const { data: workTrackers, error: wtError } = await supabase
       .from("WorkTrackers")
-      .select("user_id")
+      .select("driver_id")
       .gte("date", startDate)
       .lt("date", endDate);
 
@@ -157,14 +121,16 @@ export async function fetchDriversForWeek(
     // Count trips per driver
     const tripCounts = new Map<number, number>();
     (workTrackers || []).forEach((wt) => {
-      if (wt.user_id) {
-        tripCounts.set(wt.user_id, (tripCounts.get(wt.user_id) || 0) + 1);
+      if (wt.driver_id) {
+        tripCounts.set(wt.driver_id, (tripCounts.get(wt.driver_id) || 0) + 1);
       }
     });
 
-    const usersWithCounts = users.map((user) => ({
-      ...user,
-      tripCount: tripCounts.get(user.user_id) || 0,
+    // Map to user format with trip counts
+    const usersWithCounts = (driversData as any[]).map((driver) => ({
+      ...driver.user,
+      driver_id: driver.driver_id,
+      tripCount: tripCounts.get(driver.driver_id) || 0,
     }));
 
     console.log("fetchDriversForWeek (all drivers)", usersWithCounts);
@@ -188,11 +154,12 @@ export async function fetchDriversForWeek(
     }
 
     // Get all drivers assigned to this account manager
-    const { data: drivers, error: driversError } = await supabase
+    const { data: driversData, error: driversError } = await supabase
       .from("Drivers")
       .select(
         `
-        user:Users(*)
+        driver_id,
+        user:Users!Drivers_user_id_fkey(*)
       `
       )
       .eq("account_manager_id", accountManager.account_manager_id)
@@ -203,17 +170,12 @@ export async function fetchDriversForWeek(
       return { drivers: [] };
     }
 
-    // Extract user objects from the joined data
-    const users = drivers
-      .map((d: any) => d.user)
-      .filter((u): u is Tables<"Users"> => u !== null && u.role === USER_ROLES.DRIVER);
-
     // Get trip counts for these drivers
-    const userIds = users.map((u) => u.user_id);
+    const driverIds = (driversData as any[]).map((d) => d.driver_id);
     const { data: workTrackers, error: wtError } = await supabase
       .from("WorkTrackers")
-      .select("user_id")
-      .in("user_id", userIds)
+      .select("driver_id")
+      .in("driver_id", driverIds)
       .gte("date", startDate)
       .lt("date", endDate);
 
@@ -224,14 +186,16 @@ export async function fetchDriversForWeek(
     // Count trips per driver
     const tripCounts = new Map<number, number>();
     (workTrackers || []).forEach((wt) => {
-      if (wt.user_id) {
-        tripCounts.set(wt.user_id, (tripCounts.get(wt.user_id) || 0) + 1);
+      if (wt.driver_id) {
+        tripCounts.set(wt.driver_id, (tripCounts.get(wt.driver_id) || 0) + 1);
       }
     });
 
-    const usersWithCounts = users.map((user) => ({
-      ...user,
-      tripCount: tripCounts.get(user.user_id) || 0,
+    // Map to user format with trip counts
+    const usersWithCounts = (driversData as any[]).map((driver) => ({
+      ...driver.user,
+      driver_id: driver.driver_id,
+      tripCount: tripCounts.get(driver.driver_id) || 0,
     }));
 
     console.log("fetchDriversForWeek (my drivers)", usersWithCounts);
@@ -240,7 +204,7 @@ export async function fetchDriversForWeek(
 }
 
 export async function checkUserAccess(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: number
 ): Promise<{
   isAdmin: boolean;
@@ -284,7 +248,7 @@ export type WorkTrackersResult = {
 
 async function fetchDriverTaxByIdServer(
   userId: number,
-  supabaseClient: SupabaseClient
+  supabaseClient: SupabaseClient<Database>
 ): Promise<number> {
   const { data, error } = await supabaseClient
     .from("Drivers")
@@ -301,7 +265,11 @@ async function fetchDriverTaxByIdServer(
   return data?.tax ?? 0;
 }
 
-async function insertDriverServer(userId: number, tax: number, supabaseClient: SupabaseClient) {
+async function insertDriverServer(
+  userId: number,
+  tax: number,
+  supabaseClient: SupabaseClient<Database>
+) {
   const { error } = await supabaseClient.from("Drivers").insert({
     user_id: userId,
     tax,
@@ -313,8 +281,8 @@ async function insertDriverServer(userId: number, tax: number, supabaseClient: S
 }
 
 export async function fetchWorkTrackersForUserIdAndStartDate(
-  supabase: SupabaseClient,
-  userId: string,
+  supabase: SupabaseClient<Database>,
+  userId: number,
   startDate: string,
   isServer: boolean
 ): Promise<WorkTrackersResult> {
@@ -323,9 +291,29 @@ export async function fetchWorkTrackersForUserIdAndStartDate(
     createErrorToast(["No Supabase client found"]);
   }
 
+  // First get the driver_id from the user_id
+  const { data: driverData, error: driverError } = await supabase
+    .from("Drivers")
+    .select("driver_id")
+    .eq("user_id", userId)
+    .single();
+
+  if (driverError || !driverData) {
+    if (!isServer) {
+      createErrorToast(["Failed to fetch driver", driverError?.message || "Driver not found"]);
+    } else {
+      throw new Error(
+        ["Failed to fetch driver", driverError?.message || "Driver not found"].join("\n")
+      );
+    }
+    return { workTrackers: [], driverTax: 0 };
+  }
+
+  const driverId = driverData.driver_id;
+
   // const supabase = await getSupabaseClient(token);
 
-  // 1. Get all dates for the given user
+  // 1. Get all dates for the given driver
   // console.log("userId", userId);
   // console.log("startDate", startDate);
   // console.log("supabase", supabase);
@@ -342,7 +330,7 @@ export async function fetchWorkTrackersForUserIdAndStartDate(
       bleacher:Bleachers(bleacher_number)
     `
     )
-    .eq("user_id", userId)
+    .eq("driver_id", driverId)
     .gte("date", startDate)
     .lt("date", DateTime.fromISO(startDate).plus({ days: 7 }).toISODate());
   // console.log("data", data);

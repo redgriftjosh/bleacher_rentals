@@ -50,7 +50,7 @@ const SideBar = () => {
 
   if (!currentUser) return null;
 
-  const role = currentUser.role;
+  // const role = currentUser.role;
 
   return (
     <div
@@ -59,7 +59,7 @@ const SideBar = () => {
     >
       <nav className="flex-1 overflow-hidden">
         {menuItems
-          .filter((item) => item.roles.includes(role as UserRoleValue))
+          // .filter((item) => item.roles.includes(role as UserRoleValue))
           .map((item) => {
             const isSelected = pathname.startsWith(item.href);
             const Icon = item.icon; // Get the icon component dynamically

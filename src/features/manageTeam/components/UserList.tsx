@@ -22,7 +22,7 @@ export function UserList() {
         >
           <td className="py-1 px-3 text-left">{row.first_name + " " + row.last_name}</td>
           <td className="py-1 px-3 text-left">{row.email}</td>
-          <td className="py-1 px-3 text-left">
+          {/* <td className="py-1 px-3 text-left">
             <div>{row.roleDisplay}</div>
             {row.role === 1 && (
               <div className="text-xs text-gray-500">
@@ -31,7 +31,7 @@ export function UserList() {
                   : "No Home Bases"}
               </div>
             )}
-          </td>
+          </td> */}
           <td className="py-1 px-3 text-left">{row.statusDisplay}</td>
         </tr>
       ))}
