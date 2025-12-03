@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchWorkTrackersForUserIdAndStartDate } from "../db";
+import { fetchWorkTrackersForUserIdAndStartDate } from "../db/db";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";

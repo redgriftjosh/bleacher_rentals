@@ -168,6 +168,7 @@ export default function MainScrollableGrid({
       pickup_time: null,
       user_id: null,
       internal_notes: null,
+      driver_id: null,
     });
 
     // setWorkTracker({

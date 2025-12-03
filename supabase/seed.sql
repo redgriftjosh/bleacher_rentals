@@ -2911,3 +2911,10 @@ from (
 where b.bleacher_id = am.bleacher_id
   and am.rn = 1
   and b.winter_account_manager_id is null;
+
+
+  -- Backfill driver_id from Drivers table based on user_id
+update "public"."WorkTrackers" wt
+set driver_id = d.driver_id
+from "public"."Drivers" d
+where wt.user_id = d.user_id;

@@ -1,7 +1,7 @@
 import {
   fetchDriverName,
   fetchWorkTrackersForUserIdAndStartDate,
-} from "@/features/workTrackers/db";
+} from "@/features/workTrackers/db/db";
 import { headers } from "next/headers";
 import React from "react";
 import { renderToStream } from "@react-pdf/renderer";

@@ -1,5 +1,5 @@
 import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { Tables } from "../../../database.types";
+import { Tables } from "../../../../database.types";
 import { USER_ROLES } from "@/types/Constants";
 import { DateTime } from "luxon";
 import { SupabaseClient } from "@supabase/supabase-js";

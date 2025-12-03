@@ -2,7 +2,7 @@
 import { Color } from "@/types/Color";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { fetchUserById } from "../../features/workTrackers/db";
+import { fetchUserById } from "../../features/workTrackers/db/db";
 import { DateTime } from "luxon";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 

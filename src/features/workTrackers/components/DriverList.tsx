@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchDrivers } from "../db";
+import { fetchDrivers } from "../db/db";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
