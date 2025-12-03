@@ -9,7 +9,7 @@
 // Only creates client with the same token once.
 // */
 
-// let currentClient: SupabaseClient | null = null;
+// let currentClient: SupabaseClient<Database> | null = null;
 // let currentToken: string | null = null;
 
 // export const supabaseClient = (supabaseToken: string) => {

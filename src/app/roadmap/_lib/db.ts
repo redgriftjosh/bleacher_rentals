@@ -2,7 +2,7 @@ import { useTasksStore } from "@/state/tasksStore";
 import { useTaskStatusesStore } from "@/state/taskStatusesStore";
 import { useTaskTypesStore } from "@/state/taskTypesStore";
 import { useUsersStore } from "@/state/userStore";
-import { Tables } from "../../../../database.types";
+import { Database, Tables } from "../../../../database.types";
 import { Tab, Task } from "./types";
 // import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
@@ -59,7 +59,7 @@ export async function saveTask(
   statusId: number,
   clerkUser: UserResource | null,
   allusers: Tables<"Users">[],
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   setSubmitting: React.Dispatch<React.SetStateAction<boolean>>
 ) {
   if (taskId) {
@@ -80,6 +80,12 @@ export async function saveTask(
     }
   } else {
     const userId = findUserId(clerkUser, allusers);
+
+    if (!userId) {
+      setSubmitting(false);
+      createErrorToast(["Failed to insert task", "User not found"]);
+    }
+
     // insert task
     const { error: insertError } = await supabase.from("Tasks").insert({
       name,
@@ -92,6 +98,7 @@ export async function saveTask(
     if (insertError) {
       setSubmitting(false);
       createErrorToast(["Failed to insert task", insertError.message]);
+      return;
     }
   }
   updateDataBase(["Tasks"]);
@@ -101,7 +108,7 @@ export async function saveTask(
 
 export async function deleteTask(
   taskId: number,
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   setSubmitting: React.Dispatch<React.SetStateAction<boolean>>
 ) {
   const { error: deleteError } = await supabase.from("Tasks").delete().eq("task_id", taskId);

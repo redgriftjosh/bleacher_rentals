@@ -13,7 +13,7 @@ export default function WorkTrackersForUserPage() {
   const params = useParams();
   const supabase = useClerkSupabaseClient();
   const startDate = params.startDate as string;
-  const userId = params.userId as string;
+  const userId = Number(params.userId);
   const className = "py-2 text-center text-xs font-semibold border-r";
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
     null

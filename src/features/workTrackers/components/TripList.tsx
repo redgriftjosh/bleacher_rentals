@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchWorkTrackersForUserIdAndStartDate } from "../db";
+import { fetchWorkTrackersForUserIdAndStartDate } from "../db/db";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";
@@ -8,7 +8,7 @@ import { calculateFinancialTotals } from "../util";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 type Props = {
-  userId: string;
+  userId: number;
   startDate: string;
   onSelectWorkTracker?: (workTracker: Tables<"WorkTrackers">) => void;
 };

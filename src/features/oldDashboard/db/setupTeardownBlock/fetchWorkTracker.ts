@@ -3,66 +3,6 @@ import { fetchAddressFromId } from "../../../dashboard/db/client/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Tables } from "../../../../../database.types";
 
-export async function fetchWorkTrackerOld(
-  supabase: SupabaseClient,
-  beleacherEventId: number,
-  type: "setup" | "teardown"
-): Promise<number[]> {
-  if (type === "setup") {
-    const { data, error } = await supabase
-      .from("BleacherEvents")
-      .select("setup_work_tracker_id")
-      .eq("bleacher_event_id", beleacherEventId)
-      .single();
-
-    if (error) {
-      createErrorToast(["Failed to fetch work tracker id.", error.message]);
-    }
-
-    const workTrackerId = data?.setup_work_tracker_id;
-    if (!workTrackerId) {
-      createErrorToast(["Failed to fetch work tracker id. No work tracker id found."]);
-    }
-    const { data: workTrackerData, error: workTrackerError } = await supabase
-      .from("WorkTrackers")
-      .select("*")
-      .eq("work_tracker_id", workTrackerId)
-      .single();
-
-    if (workTrackerError) {
-      createErrorToast(["Failed to fetch work tracker.", workTrackerError.message]);
-    }
-
-    return workTrackerData;
-  } else {
-    const { data, error } = await supabase
-      .from("BleacherEvents")
-      .select("teardown_work_tracker_id")
-      .eq("bleacher_event_id", beleacherEventId)
-      .single();
-
-    if (error) {
-      createErrorToast(["Failed to fetch work tracker id.", error.message]);
-    }
-
-    const workTrackerId = data?.teardown_work_tracker_id;
-    if (!workTrackerId) {
-      createErrorToast(["Failed to fetch work tracker id. No work tracker id found."]);
-    }
-    const { data: workTrackerData, error: workTrackerError } = await supabase
-      .from("WorkTrackers")
-      .select("*")
-      .eq("work_tracker_id", workTrackerId)
-      .single();
-
-    if (workTrackerError) {
-      createErrorToast(["Failed to fetch work tracker.", workTrackerError.message]);
-    }
-
-    return workTrackerData;
-  }
-}
-
 export async function fetchWorkTrackerById(
   id: number,
   supabase: SupabaseClient

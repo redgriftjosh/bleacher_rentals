@@ -1,18 +1,14 @@
 "use client";
 import { updateDataBase } from "@/app/actions/db.actions";
-import { useHomeBasesStore } from "@/state/homeBaseStore";
-import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
-import { useUserRolesStore } from "@/state/userRolesStore";
-import { useUserStatusesStore } from "@/state/userStatusesStore";
-import { useUsersStore } from "@/state/userStore";
 import { ROLES, STATUSES } from "../constants";
 import { createErrorToast, createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
+import { Database } from "../../../../database.types";
 
 export async function fetchDriverTaxById(
   userId: number,
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): Promise<number> {
   if (!supabase) {
     createErrorToast(["No token found"]);
@@ -44,7 +40,7 @@ export type DriverPaymentData = {
 
 export async function fetchDriverPaymentData(
   userId: number,
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): Promise<DriverPaymentData> {
   if (!supabase) {
     createErrorToast(["No token found"]);
@@ -79,7 +75,7 @@ async function insertDriver(
   payRateCents: number,
   payCurrency: string,
   payPerUnit: string,
-  supabaseClient: SupabaseClient
+  supabaseClient: SupabaseClient<Database>
 ) {
   const { error } = await supabaseClient.from("Drivers").insert({
     user_id: userId,
@@ -95,7 +91,7 @@ async function insertDriver(
   return null;
 }
 
-export async function updateUserStatusToInvited(email: string, supabase: SupabaseClient) {
+export async function updateUserStatusToInvited(email: string, supabase: SupabaseClient<Database>) {
   if (!supabase) {
     createErrorToast(["No token found"]);
   }
@@ -113,140 +109,11 @@ export async function updateUserStatusToInvited(email: string, supabase: Supabas
   }
 }
 
-export async function insertUser(
-  email: string,
-  firstName: string,
-  lastName: string,
-  roleId: number,
-  homeBaseIds: number[],
-  tax: number | null,
-  payRateCents: number | null,
-  payCurrency: string,
-  payPerUnit: string,
-  supabase: SupabaseClient
-): Promise<number | null> {
-  const { error: userError, data: userData } = await supabase
-    .from("Users")
-    .insert({
-      email,
-      first_name: firstName,
-      last_name: lastName,
-      role: roleId,
-      status: roleId === ROLES.driver ? STATUSES.active : STATUSES.invited,
-    })
-    .select("user_id")
-    .single();
-
-  if (userError || !userData) {
-    console.error("Insert failed:", userError?.message);
-    return null;
-  }
-  if (roleId === ROLES.driver) {
-    const insertError = await insertDriver(
-      userData.user_id,
-      tax ?? 0,
-      payRateCents ?? 0,
-      payCurrency,
-      payPerUnit,
-      supabase
-    );
-    if (insertError) {
-      createErrorToastNoThrow(["Failed to insert driver.", insertError.message]);
-      return null;
-    }
-  }
-
-  const userId = userData.user_id;
-
-  const homeBaseLinks = homeBaseIds.map((homeBaseId) => ({
-    user_id: userId,
-    home_base_id: homeBaseId,
-  }));
-
-  const { error: linkError } = await supabase.from("UserHomeBases").insert(homeBaseLinks);
-
-  if (linkError) {
-    console.error("Failed to link user to home bases:", linkError.message);
-  } else {
-    createSuccessToast(["User Created"]);
-    updateDataBase(["Users", "UserHomeBases", "UserRoles", "UserStatuses"]);
-  }
-
-  return userId;
-}
-
-export async function updateUser(
-  userId: number,
-  {
-    email,
-    firstName,
-    lastName,
-    roleId,
-    homeBaseIds,
-    tax,
-    payRateCents,
-    payCurrency,
-    payPerUnit,
-    supabase,
-  }: {
-    email: string | null;
-    firstName: string | null;
-    lastName: string | null;
-    roleId: number | null;
-    homeBaseIds: number[];
-    tax: number | null;
-    payRateCents: number | null;
-    payCurrency: string;
-    payPerUnit: string;
-    supabase: SupabaseClient;
-  }
-) {
-  const { error: updateError } = await supabase
-    .from("Users")
-    .update({
-      first_name: firstName,
-      last_name: lastName,
-      role: roleId,
-    })
-    .eq("user_id", userId);
-
-  if (updateError) throw updateError;
-
-  // Delete existing home base links
-  await supabase.from("UserHomeBases").delete().eq("user_id", userId);
-
-  // Re-insert new links
-  if (homeBaseIds.length > 0) {
-    const inserts = homeBaseIds.map((hbId) => ({
-      user_id: userId,
-      home_base_id: hbId,
-    }));
-
-    await supabase.from("UserHomeBases").insert(inserts);
-  }
-  if (roleId === ROLES.driver) {
-    const taxValue = tax ?? 0;
-    const { error: driverError } = await supabase
-      .from("Drivers")
-      .update({
-        tax: taxValue,
-        pay_rate_cents: payRateCents ?? 0,
-        pay_currency: payCurrency,
-        pay_per_unit: payPerUnit,
-      })
-      .eq("user_id", userId);
-    if (driverError) {
-      createErrorToastNoThrow(["Failed to update driver.", driverError.message]);
-    }
-  }
-  createSuccessToast(["User Updated"]);
-
-  updateDataBase(["Users", "UserHomeBases", "UserRoles", "UserStatuses"]);
-}
-
 export type SimpleOption = { id: number; label: string };
 
-export async function fetchBleachersForOptions(supabase: SupabaseClient): Promise<SimpleOption[]> {
+export async function fetchBleachersForOptions(
+  supabase: SupabaseClient<Database>
+): Promise<SimpleOption[]> {
   if (!supabase) {
     createErrorToast(["No supabase client found"]);
   }
@@ -263,7 +130,7 @@ export async function fetchBleachersForOptions(supabase: SupabaseClient): Promis
 
 export async function fetchUserBleacherAssignments(
   userId: number,
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): Promise<{ summer: number[]; winter: number[] }> {
   if (!supabase) {
     createErrorToast(["No supabase client found"]);
@@ -289,7 +156,7 @@ export async function upsertUserBleacherAssignments(
   userId: number,
   summerIds: number[],
   winterIds: number[],
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): Promise<void> {
   if (!supabase) {
     createErrorToast(["No supabase client found"]);
@@ -314,7 +181,7 @@ export async function upsertUserBleacherAssignments(
   }
 }
 
-export async function deactivateUser(userId: number, supabase: SupabaseClient) {
+export async function deactivateUser(userId: number, supabase: SupabaseClient<Database>) {
   const { error: updateError } = await supabase
     .from("Users")
     .update({
@@ -326,7 +193,7 @@ export async function deactivateUser(userId: number, supabase: SupabaseClient) {
   updateDataBase(["Users", "UserStatuses"]);
 }
 
-export async function reactivateUser(userId: number, supabase: SupabaseClient) {
+export async function reactivateUser(userId: number, supabase: SupabaseClient<Database>) {
   const { error: updateError } = await supabase
     .from("Users")
     .update({
@@ -338,39 +205,39 @@ export async function reactivateUser(userId: number, supabase: SupabaseClient) {
   updateDataBase(["Users", "UserStatuses"]);
 }
 
-export async function deleteUser(userId: number, supabase: SupabaseClient) {
+export async function deleteUser(userId: number, supabase: SupabaseClient<Database>) {
   const { error: updateError } = await supabase.from("Users").delete().eq("user_id", userId);
 
   if (updateError) throw updateError;
-  updateDataBase(["UserStatuses", "Users", "UserHomeBases", "UserRoles"]);
+  updateDataBase(["UserStatuses", "Users", "UserHomeBases"]);
 }
 
-export function fetchUsers() {
-  const users = useUsersStore((s) => s.users);
-  const userStatuses = useUserStatusesStore((s) => s.userStatuses);
-  const userRoles = useUserRolesStore((s) => s.userRoles);
-  const userHomeBases = useUserHomeBasesStore((s) => s.userHomeBases);
-  const homeBases = useHomeBasesStore((s) => s.homeBases);
+// export function fetchUsers() {
+//   const users = useUsersStore((s) => s.users);
+//   const userStatuses = useUserStatusesStore((s) => s.userStatuses);
+//   const userRoles = useUserRolesStore((s) => s.userRoles);
+//   const userHomeBases = useUserHomeBasesStore((s) => s.userHomeBases);
+//   const homeBases = useHomeBasesStore((s) => s.homeBases);
 
-  const usersWithDetails = users.map((user) => {
-    const status = userStatuses.find((s) => s.id === user.status)?.status || "Unknown";
-    const role = userRoles.find((r) => r.id === user.role)?.role || "Unknown";
+//   const usersWithDetails = users.map((user) => {
+//     const status = userStatuses.find((s) => s.id === user.status)?.status || "Unknown";
+//     const role = userRoles.find((r) => r.id === user.role)?.role || "Unknown";
 
-    const linkedHomeBases = userHomeBases
-      .filter((uhb) => uhb.user_id === user.user_id)
-      .map((uhb) => {
-        const base = homeBases.find((hb) => hb.home_base_id === uhb.home_base_id);
-        return base ? { id: base.home_base_id, label: base.home_base_name } : null;
-      })
-      .filter((hb): hb is { id: number; label: string } => hb !== null);
+//     const linkedHomeBases = userHomeBases
+//       .filter((uhb) => uhb.user_id === user.user_id)
+//       .map((uhb) => {
+//         const base = homeBases.find((hb) => hb.home_base_id === uhb.home_base_id);
+//         return base ? { id: base.home_base_id, label: base.home_base_name } : null;
+//       })
+//       .filter((hb): hb is { id: number; label: string } => hb !== null);
 
-    return {
-      ...user,
-      statusDisplay: status,
-      roleDisplay: role,
-      homeBases: linkedHomeBases,
-    };
-  });
+//     return {
+//       ...user,
+//       statusDisplay: status,
+//       roleDisplay: role,
+//       homeBases: linkedHomeBases,
+//     };
+//   });
 
-  return usersWithDetails;
-}
+//   return usersWithDetails;
+// }

@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { WorkTrackersResult } from "@/features/workTrackers/db";
+import { WorkTrackersResult } from "@/features/workTrackers/db/db";
 
 export function getDateRange(startDate: string): string {
   const start = DateTime.fromISO(startDate, { zone: "utc" });

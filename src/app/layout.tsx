@@ -49,9 +49,9 @@ export default function RootLayout({
           <SignedIn>
             <Toaster />
             {/* <TestComponent /> */}
-            <SignedInComponents>
-              <TanstackProvider>{children}</TanstackProvider>
-            </SignedInComponents>
+            <TanstackProvider>
+              <SignedInComponents>{children}</SignedInComponents>
+            </TanstackProvider>
           </SignedIn>
         </body>
       </html>

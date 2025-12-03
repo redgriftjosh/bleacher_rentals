@@ -294,41 +294,41 @@ export function calculateConflictsForSingleEvent(
   return alerts;
 }
 
-export function isUserPermitted(stateProv: string, user: UserResource | null): string | null {
-  const users = useUsersStore.getState().users;
-  const currentUser = users.find((u) => u.clerk_user_id === user?.id);
-  const errorMessages = [
-    "Error: Cannot Find Home Base",
-    "Error: Cannot Find User",
-    "You are not permitted to edit events in this region.",
-  ];
+// export function isUserPermitted(stateProv: string, user: UserResource | null): string | null {
+//   const users = useUsersStore.getState().users;
+//   const currentUser = users.find((u) => u.clerk_user_id === user?.id);
+//   const errorMessages = [
+//     "Error: Cannot Find Home Base",
+//     "Error: Cannot Find User",
+//     "You are not permitted to edit events in this region.",
+//   ];
 
-  if (!currentUser) {
-    return errorMessages[1];
-  }
+//   if (!currentUser) {
+//     return errorMessages[1];
+//   }
 
-  if (currentUser.role === 2) return null; // Admin can access all events
+//   if (currentUser.role === 2) return null; // Admin can access all events
 
-  const userHomeBases = useUserHomeBasesStore.getState().userHomeBases;
+//   const userHomeBases = useUserHomeBasesStore.getState().userHomeBases;
 
-  let eventHomeBaseId: number | null = null;
-  try {
-    eventHomeBaseId = getHomeBaseIdByName(stateProv);
-    if (!eventHomeBaseId) return errorMessages[0];
-  } catch (error) {
-    return errorMessages[0];
-  }
+//   let eventHomeBaseId: number | null = null;
+//   try {
+//     eventHomeBaseId = getHomeBaseIdByName(stateProv);
+//     if (!eventHomeBaseId) return errorMessages[0];
+//   } catch (error) {
+//     return errorMessages[0];
+//   }
 
-  // Check if any of the user's home base assignments match the eventHomeBaseId
-  const isPermitted = userHomeBases.some(
-    (uhb) => uhb.user_id === currentUser.user_id && uhb.home_base_id === eventHomeBaseId
-  );
+//   // Check if any of the user's home base assignments match the eventHomeBaseId
+//   const isPermitted = userHomeBases.some(
+//     (uhb) => uhb.user_id === currentUser.user_id && uhb.home_base_id === eventHomeBaseId
+//   );
 
-  if (!isPermitted) {
-    return errorMessages[2];
-  }
-  return null;
-}
+//   if (!isPermitted) {
+//     return errorMessages[2];
+//   }
+//   return null;
+// }
 
 // should return something like this:
 //   return [

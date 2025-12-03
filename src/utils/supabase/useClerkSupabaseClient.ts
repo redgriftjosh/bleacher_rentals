@@ -3,13 +3,14 @@
 import { useMemo } from "react";
 import { useSession } from "@clerk/nextjs";
 import { createClient } from "@supabase/supabase-js";
+import { Database } from "../../../database.types";
 
 export function useClerkSupabaseClient() {
   const { session } = useSession();
 
   const client = useMemo(
     () =>
-      createClient(
+      createClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // or _KEY, just be consistent
         {

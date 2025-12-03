@@ -9,6 +9,7 @@ import { updateDataBase } from "@/app/actions/db.actions";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { useQuery } from "@tanstack/react-query";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { Database } from "../../../../../database.types";
 
 // Fetching the list of bleachers with home bases using React Query
 export function useBleachersQuery() {
@@ -98,7 +99,7 @@ export function useBleacherQuery(bleacherNumber: number | null) {
 
 export async function insertBleacher(
   bleacher: InsertBleacher,
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   queryClient?: any
 ) {
   // console.log("inserting bleacher", token);
@@ -148,7 +149,7 @@ export async function insertBleacher(
 
 export async function updateBleacher(
   bleacher: UpdateBleacher,
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   queryClient?: any
 ) {
   // console.log("Updating bleacher", token);
@@ -200,7 +201,7 @@ export async function updateBleacher(
  * Requires a valid Supabase JWT token.
  */
 export async function fetchTakenBleacherNumbers(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   editBleacherNumber?: number
 ): Promise<number[]> {
   const { data, error } = await supabase.from("Bleachers").select("bleacher_number");

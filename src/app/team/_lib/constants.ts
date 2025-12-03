@@ -1,9 +1,9 @@
 // Make sure this matches the Database
-export const ROLES = {
-  accountManager: 1,
-  admin: 2,
-  driver: 3,
-};
+// export const ROLES = {
+//   accountManager: 1,
+//   admin: 2,
+//   driver: 3,
+// };
 
 // Make sure this matches the Database
 export const STATUSES = {

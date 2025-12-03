@@ -4,7 +4,6 @@ import {
   calculateEventAlerts,
   calculateNumDays,
   checkEventFormRules,
-  isUserPermitted,
 } from "../../../oldDashboard/functions";
 import { toast } from "sonner";
 import React from "react";
@@ -26,7 +25,7 @@ import { SetupTeardownBlock } from "../../../oldDashboard/_components/dashboard/
 import { SupabaseClient } from "@supabase/supabase-js";
 import { useWorkTrackersStore } from "@/state/workTrackersStore";
 import { DashboardBleacher, DashboardBlock, DashboardEvent } from "../../types";
-import { Tables, TablesInsert } from "../../../../../database.types";
+import { Database, Tables, TablesInsert } from "../../../../../database.types";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -229,7 +228,7 @@ export function fetchDashboardEvents() {
 async function saveAddress(
   address: AddressData | null,
   addressId: number | null,
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): Promise<number | null> {
   if (!address) return null;
 
@@ -286,7 +285,7 @@ export function getAddressFromId(addressId: number | null): AddressData | null {
 
 export async function fetchAddressFromId(
   id: number,
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   isServer?: boolean
 ): Promise<Tables<"Addresses"> | null> {
   const { data, error } = await supabase
@@ -309,7 +308,7 @@ export async function saveWorkTracker(
   workTracker: Tables<"WorkTrackers"> | null,
   pickUpAddress: AddressData | null,
   dropOffAddress: AddressData | null,
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): Promise<void> {
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);
@@ -328,7 +327,6 @@ export async function saveWorkTracker(
     const { error: workTrackerError } = await supabase
       .from("WorkTrackers")
       .update({
-        user_id: workTracker.user_id,
         date: workTracker.date,
         pickup_address_id: pickUpAddressId,
         pickup_poc: workTracker.pickup_poc,
@@ -340,6 +338,7 @@ export async function saveWorkTracker(
         pay_cents: workTracker.pay_cents,
         bleacher_id: workTracker.bleacher_id,
         internal_notes: workTracker.internal_notes,
+        driver_id: workTracker.driver_id,
       })
       .eq("work_tracker_id", workTracker.work_tracker_id);
 
@@ -350,7 +349,6 @@ export async function saveWorkTracker(
     const { data: workTrackerData, error: workTrackerError } = await supabase
       .from("WorkTrackers")
       .insert({
-        user_id: workTracker.user_id,
         date: workTracker.date,
         pickup_address_id: pickUpAddressId,
         pickup_poc: workTracker.pickup_poc,
@@ -362,6 +360,7 @@ export async function saveWorkTracker(
         pay_cents: workTracker.pay_cents,
         bleacher_id: workTracker.bleacher_id,
         internal_notes: workTracker.internal_notes,
+        driver_id: workTracker.driver_id,
       })
       .select("work_tracker_id")
       .single();
@@ -379,7 +378,7 @@ export async function saveWorkTracker(
 
 export async function deleteWorkTracker(
   workTrackerId: number | null,
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): Promise<void> {
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);
@@ -406,7 +405,7 @@ export async function deleteWorkTracker(
 
 export async function saveSetupTeardownBlock(
   block: SetupTeardownBlock | null,
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): Promise<void> {
   if (!supabase) {
     console.warn("No Supabase Client found");
@@ -484,7 +483,10 @@ export async function saveSetupTeardownBlock(
   updateDataBase(["BleacherEvents"]);
 }
 
-export async function saveBlock(block: EditBlock | null, supabase: SupabaseClient): Promise<void> {
+export async function saveBlock(
+  block: EditBlock | null,
+  supabase: SupabaseClient<Database>
+): Promise<void> {
   if (!supabase) {
     console.warn("No Supabase Client found");
     toast.custom(
@@ -560,7 +562,7 @@ export async function saveBlock(block: EditBlock | null, supabase: SupabaseClien
 
 export async function deleteBlock(
   block: EditBlock | null,
-  supabase: SupabaseClient
+  supabase: SupabaseClient<Database>
 ): Promise<void> {
   if (!supabase) {
     console.warn("No Supabase Client found");
@@ -627,7 +629,7 @@ export async function deleteBlock(
 
 export async function createEvent(
   state: CurrentEventStore,
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   user: UserResource | null
 ): Promise<void> {
   if (!supabase) {
@@ -761,7 +763,7 @@ export async function createEvent(
 export async function deleteEvent(
   eventId: number | null,
   stateProv: string,
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   user: UserResource | null
 ): Promise<void> {
   if (!supabase) {

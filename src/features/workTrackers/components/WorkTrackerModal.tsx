@@ -1,6 +1,5 @@
 import { Link, X, Trash2, Calculator } from "lucide-react";
 import { Dropdown } from "@/components/DropDown";
-import { getDrivers } from "../../dashboard/db/client/getDrivers";
 import { useEffect, useState, useRef } from "react";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import { getAddressFromId, saveWorkTracker, deleteWorkTracker } from "../../dashboard/db/client/db";
@@ -15,6 +14,7 @@ import { fetchBleachersForOptions, fetchDriverPaymentData } from "@/app/team/_li
 import { toLatLngString, calculateDriverPay } from "../util";
 import RouteMapPreview from "./RouteMapPreview";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { getDriversWithUsers } from "../db/getDrivers.db";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -29,7 +29,19 @@ export default function WorkTrackerModal({
 }: WorkTrackerModalProps) {
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
-  const drivers = getDrivers();
+
+  // Fetch drivers with user data using React Query
+  const {
+    data: drivers = [],
+    isLoading: isDriversLoading,
+    isError: isDriversError,
+  } = useQuery({
+    queryKey: ["drivers-with-users"],
+    queryFn: async () => {
+      return getDriversWithUsers(supabase);
+    },
+  });
+
   const [workTracker, setWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
     selectedWorkTracker
   );
@@ -130,16 +142,17 @@ export default function WorkTrackerModal({
   });
 
   // Fetch driver payment data when driver is selected
+  const selectedDriver = drivers.find((d) => d.driver_id === workTracker?.driver_id);
   const {
     data: driverPaymentData,
     isLoading: isDriverPaymentLoading,
     isError: isDriverPaymentError,
   } = useQuery({
-    queryKey: ["driverPayment", workTracker?.user_id],
+    queryKey: ["driverPayment", workTracker?.driver_id],
     queryFn: async () => {
-      return fetchDriverPaymentData(workTracker!.user_id!, supabase);
+      return fetchDriverPaymentData(selectedDriver!.user_id, supabase);
     },
-    enabled: !!workTracker?.user_id,
+    enabled: !!workTracker?.driver_id && !!selectedDriver,
   });
 
   const {
@@ -341,17 +354,17 @@ export default function WorkTrackerModal({
                     <label className={labelClassName}>Driver</label>
                     <Dropdown
                       options={drivers.map((driver) => ({
-                        label: driver.first_name + " " + driver.last_name,
-                        value: driver.user_id,
+                        label: (driver.user.first_name || "") + " " + (driver.user.last_name || ""),
+                        value: driver.driver_id,
                       }))}
-                      selected={workTracker?.user_id}
+                      selected={workTracker?.driver_id}
                       onSelect={(id) =>
                         setWorkTracker((prev) => ({
                           ...prev!,
-                          user_id: id,
+                          driver_id: id,
                         }))
                       }
-                      placeholder="Select Driver"
+                      placeholder={isDriversLoading ? "Loading..." : "Select Driver"}
                     />
                   </div>
                   <div className="flex-1">

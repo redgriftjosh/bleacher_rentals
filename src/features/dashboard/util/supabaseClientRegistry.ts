@@ -1,17 +1,18 @@
 import { SupabaseClient } from "@supabase/supabase-js";
+import { Database } from "../../../../database.types";
 
 /**
  * Global registry for the Supabase client instance
  * Used by PixiJS components that can't use React hooks
  */
 class SupabaseClientRegistry {
-  private client: SupabaseClient | null = null;
+  private client: SupabaseClient<Database> | null = null;
 
-  setClient(client: SupabaseClient | null) {
+  setClient(client: SupabaseClient<Database> | null) {
     this.client = client;
   }
 
-  getClient(): SupabaseClient | null {
+  getClient(): SupabaseClient<Database> | null {
     return this.client;
   }
 }

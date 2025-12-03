@@ -621,6 +621,7 @@ export type Database = {
           bleacher_id: number | null
           created_at: string
           date: string | null
+          driver_id: number | null
           dropoff_address_id: number | null
           dropoff_poc: string | null
           dropoff_time: string | null
@@ -637,6 +638,7 @@ export type Database = {
           bleacher_id?: number | null
           created_at?: string
           date?: string | null
+          driver_id?: number | null
           dropoff_address_id?: number | null
           dropoff_poc?: string | null
           dropoff_time?: string | null
@@ -653,6 +655,7 @@ export type Database = {
           bleacher_id?: number | null
           created_at?: string
           date?: string | null
+          driver_id?: number | null
           dropoff_address_id?: number | null
           dropoff_poc?: string | null
           dropoff_time?: string | null
@@ -672,6 +675,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "Bleachers"
             referencedColumns: ["bleacher_id"]
+          },
+          {
+            foreignKeyName: "WorkTrackers_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "Drivers"
+            referencedColumns: ["driver_id"]
           },
           {
             foreignKeyName: "worktrackers_dropoff_address_id_fkey"
