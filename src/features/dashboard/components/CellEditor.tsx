@@ -90,25 +90,14 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       return;
     }
 
-    const workTracker: Tables<"WorkTrackers"> = {
+    const workTracker: Partial<Tables<"WorkTrackers">> & { work_tracker_id: number } = {
       work_tracker_id: workTrackerId ?? -1,
       bleacher_id: bleacherId,
-      created_at: "",
       date: date,
-      dropoff_address_id: null,
-      dropoff_poc: null,
-      dropoff_time: null,
-      notes: null,
-      pay_cents: null,
-      pickup_address_id: null,
-      pickup_poc: null,
-      pickup_time: null,
-      user_id: null,
-      internal_notes: null,
       driver_id: null,
     };
 
-    onWorkTrackerOpen?.(workTracker);
+    onWorkTrackerOpen?.(workTracker as Tables<"WorkTrackers">);
   };
 
   const handleCreateEvent = () => {

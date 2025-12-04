@@ -43,25 +43,15 @@ export default function Block({
     if (!currectBlock?.bleacherId) {
       createErrorToast(["Failed to select work tracker. No bleacher id provided."]);
     }
-    setWorkTracker({
+
+    const workTracker: Partial<Tables<"WorkTrackers">> & { work_tracker_id: number } = {
       work_tracker_id: selectedBlock?.workTrackerId ?? -1,
       bleacher_id: currectBlock.bleacherId,
-      created_at: "",
       date: currectBlock.date,
-      dropoff_address_id: null,
-      dropoff_poc: null,
-      dropoff_time: null,
-      notes: null,
-      pay_cents: null,
-      pickup_address_id: null,
-      pickup_poc: null,
-      pickup_time: null,
-      user_id: null,
-      internal_notes: null,
       driver_id: null,
-    });
+    };
 
-    // console.log("workTracker", workTracker);
+    setWorkTracker(workTracker as Tables<"WorkTrackers">);
   };
 
   const handleSaveBlock = async () => {

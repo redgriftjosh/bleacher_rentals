@@ -144,54 +144,13 @@ export default function MainScrollableGrid({
     if (!bleacherId) {
       createErrorToast(["Failed to select work tracker. No bleacher id provided."]);
     }
-    // setSelectedBlock({
-    //   key,
-    //   blockId: block?.blockId ?? null,
-    //   bleacherId: bleachers[rowIndex].bleacherId,
-    //   date: dates[columnIndex],
-    //   text: block?.text ?? "",
-    //   workTrackerId: workTracker?.workTrackerId ?? null,
-    // });
 
     setWorkTracker({
       work_tracker_id: workTrackerId ?? -1,
       bleacher_id: bleacherId,
-      created_at: "",
       date: date,
-      dropoff_address_id: null,
-      dropoff_poc: null,
-      dropoff_time: null,
-      notes: null,
-      pay_cents: null,
-      pickup_address_id: null,
-      pickup_poc: null,
-      pickup_time: null,
-      user_id: null,
-      internal_notes: null,
       driver_id: null,
-    });
-
-    // setWorkTracker({
-    //   work_tracker_id: workTrackerId ?? -1,
-    //   bleacher_id: bleacherId,
-    //   created_at: "",
-    //   date: date,
-    //   dropoff_address_id: null,
-    //   dropoff_event_id: null,
-    //   dropoff_poc: null,
-    //   dropoff_poc_override: false,
-    //   dropoff_time: null,
-    //   notes: null,
-    //   pay_cents: null,
-    //   pickup_address_id: null,
-    //   pickup_event_id: null,
-    //   pickup_poc: null,
-    //   pickup_poc_override: false,
-    //   pickup_time: null,
-    //   user_id: null,
-    // });
-
-    // console.log("workTracker", workTracker);
+    } as Tables<"WorkTrackers">);
   };
 
   if (bleachers === null || bleachers.length === 0) {

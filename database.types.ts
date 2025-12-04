@@ -264,36 +264,54 @@ export type Database = {
       Drivers: {
         Row: {
           account_manager_id: number | null
+          address_id: number | null
           created_at: string
           driver_id: number
+          insurance_photo_path: string | null
           is_active: boolean
+          license_photo_path: string | null
+          medical_card_photo_path: string | null
           pay_currency: string
           pay_per_unit: string
           pay_rate_cents: number
+          phone_number: string | null
           tax: number
           user_id: number
+          vehicle_id: number | null
         }
         Insert: {
           account_manager_id?: number | null
+          address_id?: number | null
           created_at?: string
           driver_id?: number
+          insurance_photo_path?: string | null
           is_active?: boolean
+          license_photo_path?: string | null
+          medical_card_photo_path?: string | null
           pay_currency?: string
           pay_per_unit?: string
           pay_rate_cents?: number
+          phone_number?: string | null
           tax?: number
           user_id: number
+          vehicle_id?: number | null
         }
         Update: {
           account_manager_id?: number | null
+          address_id?: number | null
           created_at?: string
           driver_id?: number
+          insurance_photo_path?: string | null
           is_active?: boolean
+          license_photo_path?: string | null
+          medical_card_photo_path?: string | null
           pay_currency?: string
           pay_per_unit?: string
           pay_rate_cents?: number
+          phone_number?: string | null
           tax?: number
           user_id?: number
+          vehicle_id?: number | null
         }
         Relationships: [
           {
@@ -304,11 +322,25 @@ export type Database = {
             referencedColumns: ["account_manager_id"]
           },
           {
+            foreignKeyName: "Drivers_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "Addresses"
+            referencedColumns: ["address_id"]
+          },
+          {
             foreignKeyName: "Drivers_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "Users"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "Drivers_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "Vehicles"
+            referencedColumns: ["vehicle_id"]
           },
         ]
       }
@@ -410,6 +442,38 @@ export type Database = {
           home_base_name?: string
         }
         Relationships: []
+      }
+      InspectionPhotos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          inspection_id: number
+          photo_id: number
+          storage_path: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          inspection_id: number
+          photo_id?: number
+          storage_path: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          inspection_id?: number
+          photo_id?: number
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "InspectionPhotos_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "WorkTrackerInspections"
+            referencedColumns: ["inspection_id"]
+          },
+        ]
       }
       Tasks: {
         Row: {
@@ -616,9 +680,110 @@ export type Database = {
         }
         Relationships: []
       }
+      Vehicles: {
+        Row: {
+          created_at: string
+          make: string
+          model: string
+          vehicle_id: number
+          vin_number: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          make: string
+          model: string
+          vehicle_id?: number
+          vin_number?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string
+          make?: string
+          model?: string
+          vehicle_id?: number
+          vin_number?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
+      WorkTrackerInspections: {
+        Row: {
+          all_spindles_present: boolean
+          any_broken_parts: boolean
+          are_lights_functioning: boolean
+          are_lights_in_place: boolean
+          are_safety_chains_attached: boolean
+          are_safety_pins_attached: boolean
+          created_at: string
+          e_brake_pin_works: boolean
+          electric_trailer_brake_works: boolean
+          handrails_present: boolean
+          inspection_id: number
+          is_bleacher_clean: boolean
+          is_cylinder_sleeve_in_place: boolean
+          is_safety_chain_condition_good: boolean
+          is_spare_tire_present: boolean
+          is_sticker_condition_good: boolean
+          is_tire_condition_good: boolean
+          locking_tabs_present: boolean
+          notes: string | null
+          opens_closes_smoothly: boolean
+          overall_rating: number | null
+        }
+        Insert: {
+          all_spindles_present: boolean
+          any_broken_parts: boolean
+          are_lights_functioning: boolean
+          are_lights_in_place: boolean
+          are_safety_chains_attached: boolean
+          are_safety_pins_attached: boolean
+          created_at?: string
+          e_brake_pin_works: boolean
+          electric_trailer_brake_works: boolean
+          handrails_present: boolean
+          inspection_id?: number
+          is_bleacher_clean: boolean
+          is_cylinder_sleeve_in_place: boolean
+          is_safety_chain_condition_good: boolean
+          is_spare_tire_present: boolean
+          is_sticker_condition_good: boolean
+          is_tire_condition_good: boolean
+          locking_tabs_present: boolean
+          notes?: string | null
+          opens_closes_smoothly: boolean
+          overall_rating?: number | null
+        }
+        Update: {
+          all_spindles_present?: boolean
+          any_broken_parts?: boolean
+          are_lights_functioning?: boolean
+          are_lights_in_place?: boolean
+          are_safety_chains_attached?: boolean
+          are_safety_pins_attached?: boolean
+          created_at?: string
+          e_brake_pin_works?: boolean
+          electric_trailer_brake_works?: boolean
+          handrails_present?: boolean
+          inspection_id?: number
+          is_bleacher_clean?: boolean
+          is_cylinder_sleeve_in_place?: boolean
+          is_safety_chain_condition_good?: boolean
+          is_spare_tire_present?: boolean
+          is_sticker_condition_good?: boolean
+          is_tire_condition_good?: boolean
+          locking_tabs_present?: boolean
+          notes?: string | null
+          opens_closes_smoothly?: boolean
+          overall_rating?: number | null
+        }
+        Relationships: []
+      }
       WorkTrackers: {
         Row: {
+          accepted_at: string | null
           bleacher_id: number | null
+          completed_at: string | null
           created_at: string
           date: string | null
           driver_id: number | null
@@ -631,11 +796,19 @@ export type Database = {
           pickup_address_id: number | null
           pickup_poc: string | null
           pickup_time: string | null
+          post_inspection_id: number | null
+          pre_inspection_id: number | null
+          released_at: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["worktracker_status"]
+          updated_at: string
           user_id: number | null
           work_tracker_id: number
         }
         Insert: {
+          accepted_at?: string | null
           bleacher_id?: number | null
+          completed_at?: string | null
           created_at?: string
           date?: string | null
           driver_id?: number | null
@@ -648,11 +821,19 @@ export type Database = {
           pickup_address_id?: number | null
           pickup_poc?: string | null
           pickup_time?: string | null
+          post_inspection_id?: number | null
+          pre_inspection_id?: number | null
+          released_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["worktracker_status"]
+          updated_at?: string
           user_id?: number | null
           work_tracker_id?: number
         }
         Update: {
+          accepted_at?: string | null
           bleacher_id?: number | null
+          completed_at?: string | null
           created_at?: string
           date?: string | null
           driver_id?: number | null
@@ -665,6 +846,12 @@ export type Database = {
           pickup_address_id?: number | null
           pickup_poc?: string | null
           pickup_time?: string | null
+          post_inspection_id?: number | null
+          pre_inspection_id?: number | null
+          released_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["worktracker_status"]
+          updated_at?: string
           user_id?: number | null
           work_tracker_id?: number
         }
@@ -698,6 +885,20 @@ export type Database = {
             referencedColumns: ["address_id"]
           },
           {
+            foreignKeyName: "WorkTrackers_post_inspection_id_fkey"
+            columns: ["post_inspection_id"]
+            isOneToOne: false
+            referencedRelation: "WorkTrackerInspections"
+            referencedColumns: ["inspection_id"]
+          },
+          {
+            foreignKeyName: "WorkTrackers_pre_inspection_id_fkey"
+            columns: ["pre_inspection_id"]
+            isOneToOne: false
+            referencedRelation: "WorkTrackerInspections"
+            referencedColumns: ["inspection_id"]
+          },
+          {
             foreignKeyName: "worktrackers_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -714,7 +915,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      worktracker_status:
+        | "draft"
+        | "released"
+        | "accepted"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -841,7 +1048,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      worktracker_status: [
+        "draft",
+        "released",
+        "accepted",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ],
+    },
   },
 } as const
 

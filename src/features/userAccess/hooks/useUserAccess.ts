@@ -27,8 +27,11 @@ export function useUserAccess() {
       return determineUserAccess(userData);
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1,
+    staleTime: 2 * 60 * 1000, // 2 minutes - shorter to handle token refresh better
+    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
+    refetchOnWindowFocus: true, // Refetch when user returns to the tab
+    refetchOnReconnect: true, // Refetch when network reconnects
+    retry: 2, // Retry twice in case of token refresh issues
   });
 
   return {

@@ -15,6 +15,7 @@ import { toLatLngString, calculateDriverPay } from "../util";
 import RouteMapPreview from "./RouteMapPreview";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { getDriversWithUsers } from "../db/getDrivers.db";
+import WorkTrackerStatusBadge from "./WorkTrackerStatusBadge";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -397,6 +398,22 @@ export default function WorkTrackerModal({
                     }))
                   }
                 />
+
+                {/* Status Badge - Account Manager can toggle between draft and released */}
+                <label className={labelClassName}>Status</label>
+                <div className="flex items-center justify-center p-3 bg-gray-50 rounded border">
+                  <WorkTrackerStatusBadge
+                    status={workTracker?.status ?? "draft"}
+                    onStatusChange={(newStatus) => {
+                      setWorkTracker((prev) => ({
+                        ...prev!,
+                        status: newStatus,
+                      }));
+                    }}
+                    canEdit={true}
+                  />
+                </div>
+
                 <label className={labelClassName}>Driver Notes</label>
                 <textarea
                   className="w-full text-sm border p-1 rounded bg-white"

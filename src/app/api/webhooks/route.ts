@@ -110,7 +110,6 @@ export async function POST(req: Request) {
           first_name: first_name || null,
           last_name: last_name || null,
           email: emailToUse,
-          phone: phone_numbers?.[0]?.phone_number || null,
         })
         .eq("clerk_user_id", id);
 

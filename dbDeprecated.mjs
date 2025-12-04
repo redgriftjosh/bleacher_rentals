@@ -42,6 +42,11 @@ export const DEPRECATED_CONFIG = {
       reason: "Use is_admin flag and check Drivers/AccountManagers tables instead.",
     },
     {
+      table: "Users",
+      column: "phone",
+      reason: "Haven't needed it so I'm planning to drop it.",
+    },
+    {
       table: "WorkTrackers",
       column: "user_id",
       reason: "Use driver_id instead (WorkTrackers now links to Drivers table).",

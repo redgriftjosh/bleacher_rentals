@@ -2844,3 +2844,8 @@ update "public"."WorkTrackers" wt
 set driver_id = d.driver_id
 from "public"."Drivers" d
 where wt.user_id = d.user_id;
+
+-- 3) Backfill existing rows
+-- update public."WorkTrackers"
+-- set id = gen_random_uuid()
+-- where id is null;
