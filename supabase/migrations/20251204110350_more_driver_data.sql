@@ -171,3 +171,12 @@ alter table public."Drivers"
   add column insurance_photo_path text,
   add column medical_card_photo_path text,
   add column vehicle_id bigint references public."Vehicles"(vehicle_id) on delete set null;
+
+alter table public."Vehicles" enable row level security;
+
+create policy "Allow All for Auth"
+  on public."Vehicles"
+  as permissive
+  for all
+  to authenticated
+using (true);
