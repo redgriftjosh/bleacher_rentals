@@ -180,3 +180,14 @@ create policy "Allow All for Auth"
   for all
   to authenticated
 using (true);
+
+-- Create storage bucket for driver documents
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'driver-documents',
+  'driver-documents',
+  true,  -- Private bucket, only authenticated users can access
+  10485760,  -- 10MB file size limit
+  ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/heic', 'image/heif', 'image/webp', 'application/pdf']
+)
+ON CONFLICT (id) DO NOTHING;

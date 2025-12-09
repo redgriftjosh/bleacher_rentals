@@ -39,4 +39,5 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   AccountManagers: () => {},
   InspectionPhotos: () => {},
   WorkTrackerInspections: () => {},
+  Vehicles: () => {},
 };

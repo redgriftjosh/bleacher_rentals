@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { fetchUserById } from "../db/userQueries";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "@/../database.types";
+import { AddressData } from "@/features/eventConfiguration/state/useCurrentEventStore";
 
 export type CurrentUserState = {
   // Basic user info
@@ -23,6 +24,17 @@ export type CurrentUserState = {
   payCurrency: "CAD" | "USD";
   payPerUnit: "KM" | "MI" | "HR";
   accountManagerId: number | null;
+  phoneNumber: string | null;
+  driverAddress: AddressData | null;
+  licensePhotoPath: string | null;
+  insurancePhotoPath: string | null;
+  medicalCardPhotoPath: string | null;
+  vehicleId: number | null;
+  // Vehicle fields (embedded for convenience)
+  vehicleMake: string | null;
+  vehicleModel: string | null;
+  vehicleYear: number | null;
+  vehicleVin: string | null;
 
   // Account Manager-specific fields
   summerBleacherIds: number[];
@@ -31,6 +43,7 @@ export type CurrentUserState = {
 
   // UI state
   existingUserId: number | null;
+  existingDriverId: number | null;
   isOpen: boolean;
   isSubmitting: boolean;
 };
@@ -56,10 +69,21 @@ const initialState: CurrentUserState = {
   payCurrency: "CAD",
   payPerUnit: "KM",
   accountManagerId: null,
+  phoneNumber: null,
+  driverAddress: null,
+  licensePhotoPath: null,
+  insurancePhotoPath: null,
+  medicalCardPhotoPath: null,
+  vehicleId: null,
+  vehicleMake: null,
+  vehicleModel: null,
+  vehicleYear: null,
+  vehicleVin: null,
   summerBleacherIds: [],
   winterBleacherIds: [],
   assignedDriverIds: [],
   existingUserId: null,
+  existingDriverId: null,
   isOpen: false,
   isSubmitting: false,
 };
@@ -78,6 +102,8 @@ export const useCurrentUserStore = create<CurrentUserStore>((set) => ({
 
     const result = await fetchUserById(supabase, userId);
 
+    console.log("fetchUserById result:", result);
+
     if (result.success && result.data) {
       set({
         firstName: result.data.firstName ?? "",
@@ -92,10 +118,21 @@ export const useCurrentUserStore = create<CurrentUserStore>((set) => ({
         payCurrency: result.data.payCurrency,
         payPerUnit: result.data.payPerUnit,
         accountManagerId: result.data.accountManagerId,
+        phoneNumber: result.data.phoneNumber,
+        driverAddress: result.data.driverAddress,
+        licensePhotoPath: result.data.licensePhotoPath,
+        insurancePhotoPath: result.data.insurancePhotoPath,
+        medicalCardPhotoPath: result.data.medicalCardPhotoPath,
+        vehicleId: result.data.vehicleId,
+        vehicleMake: result.data.vehicleMake,
+        vehicleModel: result.data.vehicleModel,
+        vehicleYear: result.data.vehicleYear,
+        vehicleVin: result.data.vehicleVin,
         summerBleacherIds: result.data.summerBleacherIds,
         winterBleacherIds: result.data.winterBleacherIds,
         assignedDriverIds: result.data.assignedDriverIds,
         existingUserId: userId,
+        existingDriverId: result.data.driverId ?? null,
         isOpen: true,
         isSubmitting: false,
       });

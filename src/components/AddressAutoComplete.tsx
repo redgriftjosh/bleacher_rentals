@@ -104,6 +104,10 @@ export default function AddressAutocomplete({
           onChange={(e) => setValue(e.target.value)}
           disabled={!ready}
           placeholder="Enter address..."
+          autoComplete="new-password" // disable browser autofill
+          autoCorrect="off"
+          spellCheck={false}
+          name="google-address"
         />
       </div>
 
@@ -117,6 +121,7 @@ export default function AddressAutocomplete({
                 left: suggestionPos.left,
                 width: suggestionPos.width,
                 position: "absolute",
+                pointerEvents: "auto",
               }}
             >
               {data.map(({ place_id, description }) => (

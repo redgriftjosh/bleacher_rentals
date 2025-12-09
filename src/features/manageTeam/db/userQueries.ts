@@ -17,10 +17,13 @@ export async function fetchUserById(supabase: TypedSupabaseClient, userId: numbe
     // 2. Check if user is a driver (and active)
     const { data: driverData } = await supabase
       .from("Drivers")
-      .select("*")
+      .select("*, vehicle:Vehicles(*), address:Addresses(*)")
       .eq("user_id", userId)
       .eq("is_active", true)
       .maybeSingle();
+
+    console.log("Driver data fetched:", driverData);
+    console.log("Address data:", driverData?.address);
 
     // 3. Check if user is an account manager (and active)
     const { data: accountManagerData } = await supabase
@@ -68,11 +71,30 @@ export async function fetchUserById(supabase: TypedSupabaseClient, userId: numbe
         status: userData.status,
         isDriver: !!driverData,
         isAccountManager: !!accountManagerData,
+        driverId: driverData?.driver_id ?? null,
         tax: driverData?.tax ?? undefined,
         payRateCents: driverData?.pay_rate_cents ?? null,
         payCurrency: (driverData?.pay_currency as "CAD" | "USD") ?? "CAD",
         payPerUnit: (driverData?.pay_per_unit as "KM" | "MI" | "HR") ?? "KM",
         accountManagerId: driverData?.account_manager_id ?? null,
+        phoneNumber: driverData?.phone_number ?? null,
+        driverAddress: driverData?.address
+          ? {
+              addressId: driverData.address.address_id,
+              address: driverData.address.street,
+              city: driverData.address.city,
+              state: driverData.address.state_province,
+              postalCode: driverData.address.zip_postal ?? undefined,
+            }
+          : null,
+        licensePhotoPath: driverData?.license_photo_path ?? null,
+        insurancePhotoPath: driverData?.insurance_photo_path ?? null,
+        medicalCardPhotoPath: driverData?.medical_card_photo_path ?? null,
+        vehicleId: driverData?.vehicle_id ?? null,
+        vehicleMake: driverData?.vehicle?.make ?? null,
+        vehicleModel: driverData?.vehicle?.model ?? null,
+        vehicleYear: driverData?.vehicle?.year ?? null,
+        vehicleVin: driverData?.vehicle?.vin_number ?? null,
         summerBleacherIds,
         winterBleacherIds,
         assignedDriverIds,

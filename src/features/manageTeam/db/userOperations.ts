@@ -1,8 +1,51 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { CurrentUserState } from "../state/useCurrentUserStore";
 import { Database } from "@/../database.types";
+import { AddressData } from "@/features/eventConfiguration/state/useCurrentEventStore";
 
 type TypedSupabaseClient = SupabaseClient<Database>;
+
+/**
+ * Helper function to save or update an address
+ * Returns the address_id or null
+ */
+async function saveDriverAddress(
+  supabase: TypedSupabaseClient,
+  addressData: AddressData | null
+): Promise<number | null> {
+  if (!addressData || !addressData.address) return null;
+
+  if (addressData.addressId) {
+    // Update existing address
+    const { error: addressError } = await supabase
+      .from("Addresses")
+      .update({
+        street: addressData.address,
+        city: addressData.city ?? "",
+        state_province: addressData.state ?? "",
+        zip_postal: addressData.postalCode ?? null,
+      })
+      .eq("address_id", addressData.addressId);
+
+    if (addressError) throw addressError;
+    return addressData.addressId;
+  } else {
+    // Create new address
+    const { data: newAddress, error: addressError } = await supabase
+      .from("Addresses")
+      .insert({
+        street: addressData.address,
+        city: addressData.city ?? "",
+        state_province: addressData.state ?? "",
+        zip_postal: addressData.postalCode ?? null,
+      })
+      .select("address_id")
+      .single();
+
+    if (addressError) throw addressError;
+    return newAddress?.address_id ?? null;
+  }
+}
 
 export async function createUser(
   supabase: TypedSupabaseClient,
@@ -27,6 +70,27 @@ export async function createUser(
 
     // 2. If driver, insert into Drivers table
     if (state.isDriver) {
+      // Handle vehicle creation if vehicle data is provided
+      let vehicleId = state.vehicleId;
+      if (!vehicleId && state.vehicleMake && state.vehicleModel && state.vehicleYear) {
+        const { data: vehicleData, error: vehicleError } = await supabase
+          .from("Vehicles")
+          .insert({
+            make: state.vehicleMake,
+            model: state.vehicleModel,
+            year: state.vehicleYear,
+            vin_number: state.vehicleVin,
+          })
+          .select("vehicle_id")
+          .single();
+
+        if (vehicleError) throw vehicleError;
+        vehicleId = vehicleData.vehicle_id;
+      }
+
+      // Handle address creation/update
+      const addressId = await saveDriverAddress(supabase, state.driverAddress);
+
       const { error: driverError } = await supabase.from("Drivers").insert({
         user_id: userId,
         tax: state.tax ?? 0,
@@ -34,6 +98,12 @@ export async function createUser(
         pay_currency: state.payCurrency,
         pay_per_unit: state.payPerUnit,
         account_manager_id: state.accountManagerId,
+        phone_number: state.phoneNumber,
+        address_id: addressId,
+        license_photo_path: state.licensePhotoPath,
+        insurance_photo_path: state.insurancePhotoPath,
+        medical_card_photo_path: state.medicalCardPhotoPath,
+        vehicle_id: vehicleId,
         is_active: true,
       });
 
@@ -92,6 +162,44 @@ export async function updateUser(
       .single();
 
     if (state.isDriver) {
+      // Handle vehicle update/creation if vehicle data is provided
+      let vehicleId = state.vehicleId;
+
+      if (state.vehicleMake && state.vehicleModel && state.vehicleYear) {
+        if (vehicleId) {
+          // Update existing vehicle
+          const { error: vehicleUpdateError } = await supabase
+            .from("Vehicles")
+            .update({
+              make: state.vehicleMake,
+              model: state.vehicleModel,
+              year: state.vehicleYear,
+              vin_number: state.vehicleVin,
+            })
+            .eq("vehicle_id", vehicleId);
+
+          if (vehicleUpdateError) throw vehicleUpdateError;
+        } else {
+          // Create new vehicle
+          const { data: vehicleData, error: vehicleError } = await supabase
+            .from("Vehicles")
+            .insert({
+              make: state.vehicleMake,
+              model: state.vehicleModel,
+              year: state.vehicleYear,
+              vin_number: state.vehicleVin,
+            })
+            .select("vehicle_id")
+            .single();
+
+          if (vehicleError) throw vehicleError;
+          vehicleId = vehicleData.vehicle_id;
+        }
+      }
+
+      // Handle address creation/update
+      const addressId = await saveDriverAddress(supabase, state.driverAddress);
+
       if (existingDriver) {
         // Update existing driver and set to active
         const { error: driverUpdateError } = await supabase
@@ -102,6 +210,12 @@ export async function updateUser(
             pay_currency: state.payCurrency,
             pay_per_unit: state.payPerUnit,
             account_manager_id: state.accountManagerId,
+            phone_number: state.phoneNumber,
+            address_id: addressId,
+            license_photo_path: state.licensePhotoPath,
+            insurance_photo_path: state.insurancePhotoPath,
+            medical_card_photo_path: state.medicalCardPhotoPath,
+            vehicle_id: vehicleId,
             is_active: true,
           })
           .eq("user_id", userId);
@@ -116,6 +230,12 @@ export async function updateUser(
           pay_currency: state.payCurrency,
           pay_per_unit: state.payPerUnit,
           account_manager_id: state.accountManagerId,
+          phone_number: state.phoneNumber,
+          address_id: addressId,
+          license_photo_path: state.licensePhotoPath,
+          insurance_photo_path: state.insurancePhotoPath,
+          medical_card_photo_path: state.medicalCardPhotoPath,
+          vehicle_id: vehicleId,
           is_active: true,
         });
 
