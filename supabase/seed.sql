@@ -4,7 +4,7 @@ SET session_replication_role = replica;
 -- PostgreSQL database dump
 --
 
--- \restrict Sip1hIRfqiVVVvdAfQcfTajGBN9o7KepsxXokhsVTnJsHbgPcVdvWoZiUjhmap1
+-- \restrict keBeMosU65xAcXqIynzEp9DGQI6wPC1jdlasaalV1QSMhZeMTx3pW1EIWvfScXK
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -153,7 +153,8 @@ INSERT INTO "public"."Users" ("user_id", "created_at", "first_name", "last_name"
 	(11, '2025-05-27 17:39:31.28641+00', 'Zeeno', 'Wasti', 'zeeno@bleacherrentals.com', NULL, 'user_31KLeN0wc2F0FQIkyay25UZ8IdS', 2, 2, NULL, true),
 	(20, '2025-08-04 20:33:23.531555+00', 'Test', 'Driver', 'josh+1@tpi-3.ca', NULL, 'user_35nFjciDvubzD5s9FZiOtgdyrUF', 2, 3, NULL, false),
 	(24, '2025-10-10 12:45:26.85301+00', 'Justin', 'Kowolsky', 'justinkowalsky@live.com', NULL, NULL, 1, 3, NULL, false),
-	(8, '2025-05-27 17:21:05.15774+00', 'Josh', 'Redgrift', 'redgriftjosh@gmail.com', NULL, 'user_35f2pOOvsfbnuYFRKDMmPKqcc5f', 2, 2, NULL, true);
+	(8, '2025-05-27 17:21:05.15774+00', 'Josh', 'Redgrift', 'redgriftjosh@gmail.com', NULL, 'user_35f2pOOvsfbnuYFRKDMmPKqcc5f', 2, 2, NULL, true),
+	(40, '2025-05-27 17:21:05.15774+00', 'Sarah', 'Joo', 'sarahjoo8888@gmail.com', NULL, 'user_37qEDkzrCMtsUuNPnVUjPiLMitC', 2, 2, NULL, true);
 
 
 --
@@ -530,11 +531,9 @@ INSERT INTO "public"."Bleachers" ("bleacher_id", "created_at", "bleacher_number"
 	(168, '2025-11-13 14:46:56.695833+00', 103, 1, 1, 10, 285, NULL, NULL, NULL, NULL, NULL, NULL),
 	(12, '2025-04-30 14:44:51.826568+00', 11, 4, 4, 15, 450, NULL, NULL, NULL, NULL, 1, NULL),
 	(53, '2025-05-01 13:54:39.97021+00', 52, 5, 5, 10, 300, NULL, NULL, NULL, NULL, 7, NULL),
-	(152, '2025-08-15 16:13:02.560765+00', 455, 3, 3, 4, 20, NULL, NULL, NULL, NULL, 11, NULL),
 	(1, '2025-04-15 03:16:44.907213+00', 1, 5, 1, 10, 300, NULL, NULL, NULL, '861861043871287', 1, 7),
 	(2, '2025-04-28 15:09:32.118054+00', 2, 15, 15, 15, 450, NULL, NULL, NULL, '861861044650987', 1, 7),
 	(3, '2025-04-28 18:09:17.727234+00', 3, 15, 15, 15, 450, NULL, NULL, NULL, NULL, 1, 7),
-	(4, '2025-04-29 13:49:51.724322+00', 4, 3, 3, 10, 260, NULL, NULL, NULL, '861861044527359', 1, 11),
 	(5, '2025-04-29 13:50:35.310087+00', 5, 5, 5, 10, 300, NULL, NULL, NULL, NULL, 1, 7),
 	(8, '2025-04-30 14:39:24.710786+00', 7, 5, 5, 10, 240, NULL, NULL, NULL, NULL, 1, 7),
 	(9, '2025-04-30 14:40:38.163055+00', 8, 5, 5, 10, 240, NULL, NULL, NULL, NULL, 1, 7),
@@ -553,6 +552,7 @@ INSERT INTO "public"."Bleachers" ("bleacher_id", "created_at", "bleacher_number"
 	(39, '2025-04-30 20:53:29.140164+00', 38, 1, 1, 10, 260, NULL, NULL, NULL, '861861044412032', NULL, 8),
 	(41, '2025-04-30 20:54:09.061189+00', 40, 2, 1, 10, 260, NULL, NULL, NULL, '861861044527524', NULL, 8),
 	(44, '2025-04-30 20:55:38.268434+00', 43, 5, 5, 15, 450, NULL, NULL, NULL, '861861043836538', 7, 7),
+	(4, '2025-04-29 13:49:51.724322+00', 4, 3, 3, 10, 260, NULL, NULL, NULL, '861861044527359', 1, 11),
 	(45, '2025-04-30 20:56:11.814795+00', 44, 5, 1, 15, 450, NULL, NULL, NULL, '861861043874281', NULL, 8),
 	(46, '2025-04-30 20:56:31.729997+00', 45, 5, 5, 8, 123, NULL, NULL, NULL, '861861044527425', 7, 7),
 	(47, '2025-04-30 20:56:56.539754+00', 46, 5, 5, 10, 300, NULL, NULL, NULL, '861861044406174', 7, 7),
@@ -630,7 +630,8 @@ INSERT INTO "public"."Bleachers" ("bleacher_id", "created_at", "bleacher_number"
 	(132, '2025-08-15 16:07:35.886854+00', 435, 5, 5, 4, 20, NULL, NULL, NULL, NULL, NULL, 7),
 	(133, '2025-08-15 16:07:47.724771+00', 436, 5, 5, 4, 20, NULL, NULL, NULL, NULL, NULL, 7),
 	(134, '2025-08-15 16:07:58.594838+00', 437, 5, 5, 4, 20, NULL, NULL, NULL, NULL, NULL, 7),
-	(135, '2025-08-15 16:08:14.781207+00', 438, 5, 5, 4, 20, NULL, NULL, NULL, NULL, NULL, 7);
+	(135, '2025-08-15 16:08:14.781207+00', 438, 5, 5, 4, 20, NULL, NULL, NULL, NULL, NULL, 7),
+	(152, '2025-08-15 16:13:02.560765+00', 455, 3, 3, 4, 20, NULL, NULL, NULL, NULL, 11, NULL);
 
 
 --
@@ -2382,19 +2383,38 @@ Fenelon Falls"', '2025-07-04'),
 
 
 --
+-- Data for Name: Vehicles; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
 -- Data for Name: Drivers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."Drivers" ("driver_id", "created_at", "user_id", "tax", "pay_rate_cents", "pay_currency", "pay_per_unit", "account_manager_id", "is_active") VALUES
-	(3, '2025-10-10 13:16:32.851556+00', 25, 13, 0, 'CAD', 'KM', NULL, true),
-	(5, '2025-10-10 16:45:08.963723+00', 27, 13, 0, 'CAD', 'KM', NULL, true),
-	(6, '2025-10-10 16:45:43.001958+00', 28, 13, 0, 'CAD', 'KM', NULL, true),
-	(8, '2025-10-10 16:47:08.981771+00', 30, 13, 0, 'CAD', 'KM', NULL, true),
-	(4, '2025-10-10 13:18:26.345782+00', 26, 13, 450, 'CAD', 'KM', NULL, true),
-	(2, '2025-10-10 12:45:26.9873+00', 24, 13, 300, 'CAD', 'KM', NULL, true),
-	(7, '2025-10-10 16:46:45.803082+00', 29, 13, 400, 'CAD', 'KM', NULL, true),
-	(9, '2025-11-14 21:26:46.751199+00', 37, 13, 4500, 'CAD', 'HR', NULL, true),
-	(1, '2025-08-05 22:04:43.271758+00', 20, 25, 455, 'CAD', 'HR', NULL, true);
+INSERT INTO "public"."Drivers" ("driver_id", "created_at", "user_id", "tax", "pay_rate_cents", "pay_currency", "pay_per_unit", "account_manager_id", "is_active", "phone_number", "address_id", "license_photo_path", "insurance_photo_path", "medical_card_photo_path", "vehicle_id") VALUES
+	(3, '2025-10-10 13:16:32.851556+00', 25, 13, 0, 'CAD', 'KM', NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	(5, '2025-10-10 16:45:08.963723+00', 27, 13, 0, 'CAD', 'KM', NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	(6, '2025-10-10 16:45:43.001958+00', 28, 13, 0, 'CAD', 'KM', NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	(8, '2025-10-10 16:47:08.981771+00', 30, 13, 0, 'CAD', 'KM', NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	(4, '2025-10-10 13:18:26.345782+00', 26, 13, 450, 'CAD', 'KM', NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	(2, '2025-10-10 12:45:26.9873+00', 24, 13, 300, 'CAD', 'KM', NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	(7, '2025-10-10 16:46:45.803082+00', 29, 13, 400, 'CAD', 'KM', NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	(9, '2025-11-14 21:26:46.751199+00', 37, 13, 4500, 'CAD', 'HR', NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	(1, '2025-08-05 22:04:43.271758+00', 20, 25, 455, 'CAD', 'HR', NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	(10, '2026-01-05 16:37:07.800946+00', 8, 13, 500, 'CAD', 'KM', 11, true, NULL, NULL, NULL, NULL, NULL, NULL);
+
+
+--
+-- Data for Name: WorkTrackerInspections; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- Data for Name: InspectionPhotos; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
 
 
 --
@@ -2616,51 +2636,55 @@ INSERT INTO "public"."UserStatuses" ("id", "created_at", "status") VALUES
 -- Data for Name: WorkTrackers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."WorkTrackers" ("work_tracker_id", "created_at", "user_id", "date", "pickup_time", "pickup_address_id", "pickup_poc", "dropoff_time", "dropoff_address_id", "dropoff_poc", "pay_cents", "notes", "bleacher_id", "internal_notes") VALUES
-	(2, '2025-08-04 20:34:58.387942+00', 20, '2025-08-05', 'pick up time', 116, 'pick up poc', 'drop off time', 117, 'drop off poc', 12312, 'notes', 4, NULL),
-	(3, '2025-08-06 16:00:41.641447+00', 20, '2025-08-13', '8am', 123, 'julie', '9pm', 124, 'julue- 727 828 3823 ', 45500, 'please call julie when arriving', 85, NULL),
-	(4, '2025-08-15 15:11:14.908803+00', 20, '2025-08-22', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 69, NULL),
-	(5, '2025-08-15 15:58:35.136305+00', 20, '2025-09-18', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 44, NULL),
-	(6, '2025-08-15 16:15:21.076252+00', 20, '2025-08-21', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 99, NULL),
-	(7, '2025-08-15 16:15:36.977314+00', 20, '2025-08-21', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'fdf', 99, NULL),
-	(8, '2025-08-15 16:23:57.365415+00', 20, '2025-08-21', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 92, NULL),
-	(9, '2025-08-19 19:19:22.822638+00', 20, '2025-08-20', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 80, NULL),
-	(10, '2025-08-19 20:35:44.609046+00', 20, '2025-09-12', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 9, NULL),
-	(13, '2025-08-20 17:20:56.58331+00', 20, '2025-08-25', NULL, 162, NULL, NULL, 163, NULL, NULL, NULL, 8, NULL),
-	(11, '2025-08-20 12:18:22.406224+00', 20, '2025-08-25', NULL, 164, NULL, NULL, 165, NULL, NULL, NULL, 10, NULL),
-	(12, '2025-08-20 12:20:58.429683+00', 20, '2025-08-25', NULL, 166, NULL, NULL, 167, NULL, NULL, NULL, 11, NULL),
-	(14, '2025-08-27 17:08:02.831395+00', 20, '2025-09-03', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 26, NULL),
-	(15, '2025-10-05 14:22:48.663963+00', 20, '2025-09-02', '8am', NULL, NULL, '4pm', NULL, NULL, NULL, NULL, 88, NULL),
-	(35, '2025-11-04 19:12:25.346313+00', 24, '2025-11-10', '7:30 am', 242, 'Fern- 519 242-0819', '/', 243, '/', NULL, 'Tearing down 10 row from Laurier, bringing back to the farm ', 79, NULL),
-	(36, '2025-11-04 19:30:18.859362+00', 24, '2025-11-11', '/', 244, 'Jennifer  (519) 770-6858', '8 am set up', 245, '/', NULL, 'Taking 7 row with Devin, to Brantford for set up', 77, NULL),
-	(17, '2025-10-15 15:26:53.407705+00', 24, '2025-10-20', '8am', 199, '(416) 587-0003- Ross', '- ', 196, '-', NULL, 'tearing down Ram Rodeo event with Jake, bringing #90 15 row back to the farm.', 93, NULL),
-	(19, '2025-10-16 12:38:23.90041+00', 25, '2025-10-20', '11 am ', 200, 'Mike- 615-478-0051', '-', 201, '-', NULL, 'tearing down 15 row form La Plata Monster Truck event- taking back to the farm ', 44, NULL),
-	(20, '2025-10-16 13:01:20.547468+00', 24, '2025-10-20', '8am', NULL, '(416) 587-0003- Ross', '-', NULL, '-', NULL, 'Tear down Only** Please fold this unit up, it will be staying on site, as the triple crown may end up using.', 75, NULL),
-	(21, '2025-10-16 13:02:05.161476+00', 24, '2025-10-20', '8am', NULL, '(416) 587-0003- Ross', '-', NULL, '-', NULL, 'Tear down only** Please fold this unit up, and move it out of the way. Triple Crown may use it next week.', 73, NULL),
-	(22, '2025-10-16 13:05:00.965617+00', NULL, '2025-10-26', '-', 202, '', '10 am', 203, 'Mike- (716) 278-2104', NULL, 'taking a 10 row for set up at Kickboxing event, inside the Niagara Convention Center US Side. I emailed you a map for entry, can call Mike when arriving. Stu Devin and Kyle also going.. Kyle will have the carnets for you to use so please coordinate with him.', 86, NULL),
-	(18, '2025-10-15 15:28:42.488007+00', 24, '2025-10-20', '8am', 198, '(416) 587-0003- Ross', '-', 197, '-', NULL, 'heading back after, to grab the 7 row and bringing to the farm', 74, NULL),
-	(37, '2025-11-04 19:31:57.036037+00', 24, '2025-11-11', '12:30 pm', 246, 'Jennifer   (519) 770-6858', '/', 247, '/', NULL, 'tearing down 7 row, taking back to the farm.', 77, NULL),
-	(39, '2025-11-07 20:10:19.137894+00', NULL, '2025-10-05', NULL, 252, NULL, NULL, 253, NULL, NULL, NULL, 89, NULL),
-	(23, '2025-10-17 19:28:08.690066+00', NULL, '2025-10-17', NULL, 206, NULL, NULL, 207, NULL, NULL, NULL, 8, NULL),
-	(16, '2025-10-10 12:40:17.888484+00', 24, '2025-10-12', 'pickup time', 192, 'pickup poc', 'dropoff time', 193, 'drop off poc', 2000000, 'Driver notes', 2, NULL),
-	(24, '2025-10-22 15:35:15.031342+00', 24, '2025-10-27', '8am', 211, 'Don- (519) 323-7982', '-', 212, '-', NULL, 'Tearing down Ancaster with Jake and Mitch- bringing the VIP back to the farm', 46, NULL),
-	(25, '2025-10-22 15:35:55.873273+00', 24, '2025-10-28', '8am', 213, 'Don- (519) 323-7982', '-', 214, '-', NULL, 'second run back to Ancaster, to Haul #63 home', 65, NULL),
-	(33, '2025-11-04 16:20:52.934491+00', 24, '2025-11-13', 'Second Run, After Laurier', 238, 'Aaron-365-324-0150. ', '/', 239, '/', NULL, 'Tearing down 10 row, taking back to the farm.', 84, NULL),
-	(27, '2025-10-27 13:10:45.65747+00', 25, '2025-11-01', '10 pm', 217, 'Mike 2727 2727272 ', '-', 218, NULL, NULL, 'test ', 88, NULL),
-	(42, '2025-11-14 21:42:07.093717+00', 37, '2025-11-17', '7:00 AM', 277, 'Andy Bernard', '11:00 AM', 278, 'Michael Scott', 11343, 'Make sure you use the back entrance at CN Tower. Call Michael if you have any probelms - 519 872 7202', 63, NULL),
-	(26, '2025-10-27 12:58:30.12976+00', 24, '2025-10-31', '10:30 pm', 216, 'Mike- 823-223-2322', '-', 215, '-', 12000, 'Tearing down Kickboxing event, bringing 10 row back to the farm', 84, NULL),
-	(28, '2025-10-27 13:13:26.348451+00', 25, '2025-10-02', NULL, 219, NULL, NULL, 220, NULL, NULL, NULL, 13, NULL),
-	(32, '2025-11-04 16:18:43.981033+00', 28, '2025-11-10', '10 am', 236, 'Justin- BR Driver', '/', 237, '/', 46950, 'Tearing down 10 row with Justin, hauling it back to the farm.', 86, NULL),
-	(45, '2025-11-24 16:11:35.345109+00', 37, '2025-11-24', 'pikc up', 296, NULL, NULL, 297, NULL, 37462, 'use back door', 4, 'this driver is cool'),
-	(38, '2025-11-04 19:33:41.354547+00', 24, '2025-11-10', '7:30 am ', 248, 'Fern-519 242-0819', '/', 249, '/', NULL, 'tearing down 15 row with Kyle and Devin, bringing back to the farm.', 10, NULL),
-	(40, '2025-11-12 15:45:59.268282+00', 24, '2025-11-21', '9am', 255, 'steve 236232323', '10 am', 256, '/', 237862, 'testing testing ', 80, 'Tear down 20$'),
-	(41, '2025-11-14 15:35:12.060622+00', 24, '2025-11-21', 'SET UP', 258, NULL, 'SET UP', 259, NULL, 9000, NULL, 80, NULL);
+INSERT INTO "public"."WorkTrackers" ("work_tracker_id", "created_at", "user_id", "date", "pickup_time", "pickup_address_id", "pickup_poc", "dropoff_time", "dropoff_address_id", "dropoff_poc", "pay_cents", "notes", "bleacher_id", "internal_notes", "driver_id", "status", "released_at", "accepted_at", "started_at", "completed_at", "updated_at", "pre_inspection_id", "post_inspection_id") VALUES
+	(22, '2025-10-16 13:05:00.965617+00', NULL, '2025-10-26', '-', 202, '', '10 am', 203, 'Mike- (716) 278-2104', NULL, 'taking a 10 row for set up at Kickboxing event, inside the Niagara Convention Center US Side. I emailed you a map for entry, can call Mike when arriving. Stu Devin and Kyle also going.. Kyle will have the carnets for you to use so please coordinate with him.', 86, NULL, NULL, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(39, '2025-11-07 20:10:19.137894+00', NULL, '2025-10-05', NULL, 252, NULL, NULL, 253, NULL, NULL, NULL, 89, NULL, NULL, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(23, '2025-10-17 19:28:08.690066+00', NULL, '2025-10-17', NULL, 206, NULL, NULL, 207, NULL, NULL, NULL, 8, NULL, NULL, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(2, '2025-08-04 20:34:58.387942+00', 20, '2025-08-05', 'pick up time', 116, 'pick up poc', 'drop off time', 117, 'drop off poc', 12312, 'notes', 4, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(3, '2025-08-06 16:00:41.641447+00', 20, '2025-08-13', '8am', 123, 'julie', '9pm', 124, 'julue- 727 828 3823 ', 45500, 'please call julie when arriving', 85, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(4, '2025-08-15 15:11:14.908803+00', 20, '2025-08-22', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 69, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(5, '2025-08-15 15:58:35.136305+00', 20, '2025-09-18', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 44, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(6, '2025-08-15 16:15:21.076252+00', 20, '2025-08-21', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 99, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(7, '2025-08-15 16:15:36.977314+00', 20, '2025-08-21', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'fdf', 99, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(8, '2025-08-15 16:23:57.365415+00', 20, '2025-08-21', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 92, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(9, '2025-08-19 19:19:22.822638+00', 20, '2025-08-20', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 80, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(10, '2025-08-19 20:35:44.609046+00', 20, '2025-09-12', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 9, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(13, '2025-08-20 17:20:56.58331+00', 20, '2025-08-25', NULL, 162, NULL, NULL, 163, NULL, NULL, NULL, 8, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(11, '2025-08-20 12:18:22.406224+00', 20, '2025-08-25', NULL, 164, NULL, NULL, 165, NULL, NULL, NULL, 10, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(12, '2025-08-20 12:20:58.429683+00', 20, '2025-08-25', NULL, 166, NULL, NULL, 167, NULL, NULL, NULL, 11, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(14, '2025-08-27 17:08:02.831395+00', 20, '2025-09-03', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 26, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(15, '2025-10-05 14:22:48.663963+00', 20, '2025-09-02', '8am', NULL, NULL, '4pm', NULL, NULL, NULL, NULL, 88, NULL, 1, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(35, '2025-11-04 19:12:25.346313+00', 24, '2025-11-10', '7:30 am', 242, 'Fern- 519 242-0819', '/', 243, '/', NULL, 'Tearing down 10 row from Laurier, bringing back to the farm ', 79, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(36, '2025-11-04 19:30:18.859362+00', 24, '2025-11-11', '/', 244, 'Jennifer  (519) 770-6858', '8 am set up', 245, '/', NULL, 'Taking 7 row with Devin, to Brantford for set up', 77, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(17, '2025-10-15 15:26:53.407705+00', 24, '2025-10-20', '8am', 199, '(416) 587-0003- Ross', '- ', 196, '-', NULL, 'tearing down Ram Rodeo event with Jake, bringing #90 15 row back to the farm.', 93, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(19, '2025-10-16 12:38:23.90041+00', 25, '2025-10-20', '11 am ', 200, 'Mike- 615-478-0051', '-', 201, '-', NULL, 'tearing down 15 row form La Plata Monster Truck event- taking back to the farm ', 44, NULL, 3, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(20, '2025-10-16 13:01:20.547468+00', 24, '2025-10-20', '8am', NULL, '(416) 587-0003- Ross', '-', NULL, '-', NULL, 'Tear down Only** Please fold this unit up, it will be staying on site, as the triple crown may end up using.', 75, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(21, '2025-10-16 13:02:05.161476+00', 24, '2025-10-20', '8am', NULL, '(416) 587-0003- Ross', '-', NULL, '-', NULL, 'Tear down only** Please fold this unit up, and move it out of the way. Triple Crown may use it next week.', 73, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(18, '2025-10-15 15:28:42.488007+00', 24, '2025-10-20', '8am', 198, '(416) 587-0003- Ross', '-', 197, '-', NULL, 'heading back after, to grab the 7 row and bringing to the farm', 74, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(37, '2025-11-04 19:31:57.036037+00', 24, '2025-11-11', '12:30 pm', 246, 'Jennifer   (519) 770-6858', '/', 247, '/', NULL, 'tearing down 7 row, taking back to the farm.', 77, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(16, '2025-10-10 12:40:17.888484+00', 24, '2025-10-12', 'pickup time', 192, 'pickup poc', 'dropoff time', 193, 'drop off poc', 2000000, 'Driver notes', 2, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(24, '2025-10-22 15:35:15.031342+00', 24, '2025-10-27', '8am', 211, 'Don- (519) 323-7982', '-', 212, '-', NULL, 'Tearing down Ancaster with Jake and Mitch- bringing the VIP back to the farm', 46, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(25, '2025-10-22 15:35:55.873273+00', 24, '2025-10-28', '8am', 213, 'Don- (519) 323-7982', '-', 214, '-', NULL, 'second run back to Ancaster, to Haul #63 home', 65, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(33, '2025-11-04 16:20:52.934491+00', 24, '2025-11-13', 'Second Run, After Laurier', 238, 'Aaron-365-324-0150. ', '/', 239, '/', NULL, 'Tearing down 10 row, taking back to the farm.', 84, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(27, '2025-10-27 13:10:45.65747+00', 25, '2025-11-01', '10 pm', 217, 'Mike 2727 2727272 ', '-', 218, NULL, NULL, 'test ', 88, NULL, 3, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(42, '2025-11-14 21:42:07.093717+00', 37, '2025-11-17', '7:00 AM', 277, 'Andy Bernard', '11:00 AM', 278, 'Michael Scott', 11343, 'Make sure you use the back entrance at CN Tower. Call Michael if you have any probelms - 519 872 7202', 63, NULL, 9, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(26, '2025-10-27 12:58:30.12976+00', 24, '2025-10-31', '10:30 pm', 216, 'Mike- 823-223-2322', '-', 215, '-', 12000, 'Tearing down Kickboxing event, bringing 10 row back to the farm', 84, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(28, '2025-10-27 13:13:26.348451+00', 25, '2025-10-02', NULL, 219, NULL, NULL, 220, NULL, NULL, NULL, 13, NULL, 3, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(32, '2025-11-04 16:18:43.981033+00', 28, '2025-11-10', '10 am', 236, 'Justin- BR Driver', '/', 237, '/', 46950, 'Tearing down 10 row with Justin, hauling it back to the farm.', 86, NULL, 6, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(45, '2025-11-24 16:11:35.345109+00', 37, '2025-11-24', 'pikc up', 296, NULL, NULL, 297, NULL, 37462, 'use back door', 4, 'this driver is cool', 9, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(38, '2025-11-04 19:33:41.354547+00', 24, '2025-11-10', '7:30 am ', 248, 'Fern-519 242-0819', '/', 249, '/', NULL, 'tearing down 15 row with Kyle and Devin, bringing back to the farm.', 10, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(40, '2025-11-12 15:45:59.268282+00', 24, '2025-11-21', '9am', 255, 'steve 236232323', '10 am', 256, '/', 237862, 'testing testing ', 80, 'Tear down 20$', 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL),
+	(41, '2025-11-14 15:35:12.060622+00', 24, '2025-11-21', 'SET UP', 258, NULL, 'SET UP', 259, NULL, 9000, NULL, 80, NULL, 2, 'draft', NULL, NULL, NULL, NULL, '2026-01-05 16:36:39.880011+00', NULL, NULL);
 
 
 --
 -- Data for Name: buckets; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
 --
 
+INSERT INTO "storage"."buckets" ("id", "name", "owner", "created_at", "updated_at", "public", "avif_autodetection", "file_size_limit", "allowed_mime_types", "owner_id", "type") VALUES
+	('inspection-photos', 'inspection-photos', NULL, '2026-01-05 16:36:39.817425+00', '2026-01-05 16:36:39.817425+00', true, false, 5242880, '{image/jpeg,image/jpg,image/png,image/heic,image/heif,image/webp}', NULL, 'STANDARD'),
+	('driver-documents', 'driver-documents', NULL, '2026-01-05 16:36:39.817425+00', '2026-01-05 16:36:39.817425+00', true, false, 10485760, '{image/jpeg,image/jpg,image/png,image/heic,image/heif,image/webp,application/pdf}', NULL, 'STANDARD')
+ON CONFLICT (id) DO NOTHING;
 
 
 --
@@ -2671,6 +2695,18 @@ INSERT INTO "public"."WorkTrackers" ("work_tracker_id", "created_at", "user_id",
 
 --
 -- Data for Name: buckets_vectors; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
+--
+
+
+
+--
+-- Data for Name: iceberg_namespaces; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
+--
+
+
+
+--
+-- Data for Name: iceberg_tables; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
 --
 
 
@@ -2701,6 +2737,12 @@ INSERT INTO "public"."WorkTrackers" ("work_tracker_id", "created_at", "user_id",
 
 --
 -- Data for Name: vector_indexes; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
+--
+
+
+
+--
+-- Data for Name: hooks; Type: TABLE DATA; Schema: supabase_functions; Owner: supabase_functions_admin
 --
 
 
@@ -2758,7 +2800,7 @@ SELECT pg_catalog.setval('"public"."Blocks_block_id_seq"', 1079, true);
 -- Name: Drivers_driver_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."Drivers_driver_id_seq"', 9, true);
+SELECT pg_catalog.setval('"public"."Drivers_driver_id_seq"', 10, true);
 
 
 --
@@ -2773,6 +2815,13 @@ SELECT pg_catalog.setval('"public"."Events_id_seq"', 231, true);
 --
 
 SELECT pg_catalog.setval('"public"."HomeBases_home_base_id_seq"', 15, true);
+
+
+--
+-- Name: InspectionPhotos_photo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"public"."InspectionPhotos_photo_id_seq"', 1, false);
 
 
 --
@@ -2825,6 +2874,20 @@ SELECT pg_catalog.setval('"public"."Users_user_id_seq"', 40, true);
 
 
 --
+-- Name: Vehicles_vehicle_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"public"."Vehicles_vehicle_id_seq"', 1, false);
+
+
+--
+-- Name: WorkTrackerInspections_inspection_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"public"."WorkTrackerInspections_inspection_id_seq"', 1, false);
+
+
+--
 -- Name: WorkTrackers_work_tracker_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -2832,10 +2895,17 @@ SELECT pg_catalog.setval('"public"."WorkTrackers_work_tracker_id_seq"', 45, true
 
 
 --
+-- Name: hooks_id_seq; Type: SEQUENCE SET; Schema: supabase_functions; Owner: supabase_functions_admin
+--
+
+SELECT pg_catalog.setval('"supabase_functions"."hooks_id_seq"', 1, false);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict Sip1hIRfqiVVVvdAfQcfTajGBN9o7KepsxXokhsVTnJsHbgPcVdvWoZiUjhmap1
+-- \unrestrict keBeMosU65xAcXqIynzEp9DGQI6wPC1jdlasaalV1QSMhZeMTx3pW1EIWvfScXK
 
 RESET ALL;
 
