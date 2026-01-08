@@ -6,7 +6,7 @@ import { useEventsStore } from "@/state/eventsStore";
 import { useDriversStore } from "@/state/driversStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
-import { useUserRolesStore } from "@/state/userRolesStore";
+// import { useUserRolesStore } from "@/state/userRolesStore";
 import { useUserStatusesStore } from "@/state/userStatusesStore";
 import { useUsersStore } from "@/state/userStore";
 import { Database } from "../../database.types";
@@ -31,7 +31,7 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   TaskTypes: () => useTaskTypesStore.getState().setStale(true),
   HomeBases: () => useHomeBasesStore.getState().setStale(true),
   UserHomeBases: () => useUserHomeBasesStore.getState().setStale(true),
-  UserRoles: () => useUserRolesStore.getState().setStale(true),
+  UserRoles: () => {},
   UserStatuses: () => useUserStatusesStore.getState().setStale(true),
   Users: () => useUsersStore.getState().setStale(true),
   WorkTrackers: () => useWorkTrackersStore.getState().setStale(true),

@@ -18,20 +18,29 @@ export function AccountManagerSection() {
   const assignedDriverIds = useCurrentUserStore((s) => s.assignedDriverIds);
   const setField = useCurrentUserStore((s) => s.setField);
 
-  // Fetch driver options
+  // Fetch driver options from Drivers table with user data
   const { data: driverOptions, isLoading: isDriversLoading } = useQuery({
     queryKey: ["driverOptions"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("Users")
-        .select("user_id, first_name, last_name")
-        .eq("role", 3) // Driver role
-        .order("first_name", { ascending: true });
+        .from("Drivers")
+        .select(
+          `
+          driver_id,
+          user:Users!Drivers_user_id_fkey(
+            user_id,
+            first_name,
+            last_name
+          )
+        `
+        )
+        .eq("is_active", true)
+        .order("user_id", { ascending: true });
 
       if (error) throw error;
-      return (data || []).map((u) => ({
-        label: `${u.first_name} ${u.last_name}`,
-        value: u.user_id,
+      return (data || []).map((d: any) => ({
+        label: `${d.user.first_name} ${d.user.last_name}`,
+        value: d.driver_id,
       }));
     },
   });

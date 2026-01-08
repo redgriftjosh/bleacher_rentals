@@ -2,29 +2,41 @@
 import Header from "@/components/Header";
 import SideBar from "@/components/Sidebar";
 import useSupabaseSubscriptions from "@/hooks/useSupabaseSubscriptions";
-import { SignOutButton, useUser, useSession } from "@clerk/nextjs";
+import { SignOutButton, useSession, useUser } from "@clerk/nextjs";
 import { Button } from "./ui/button";
-import { useUsersStore } from "@/state/userStore";
 import { useRef } from "react";
 import { LayoutProvider } from "@/contexts/LayoutContexts";
 import { DriverWelcome } from "./DriverWelcome";
+import { useUserAccess } from "@/features/userAccess";
+import LoadingSpinner from "./LoadingSpinner";
 
 function SignedInContent({ children }: { children: React.ReactNode }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   useSupabaseSubscriptions();
-  const { user } = useUser();
-  const users = useUsersStore((s) => s.users);
+  const { accessLevel, reason, isLoading } = useUserAccess();
 
-  const currentUser = users.find((u) => u.clerk_user_id === user?.id);
-  const isDeactivated = currentUser?.status === 3;
-  const isDriver = currentUser?.role === 3;
+  // Show loading state while checking access
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
-  if (isDeactivated) {
+  // Denied access (deactivated, no roles, or user not found)
+  if (accessLevel === "denied") {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-center bg-gray-100">
-        <h1 className="text-2xl font-semibold mb-4">Your account has been deactivated.</h1>
+        <h1 className="text-2xl font-semibold mb-4">
+          {reason === "Account deactivated"
+            ? "Your account has been deactivated."
+            : "Access Denied"}
+        </h1>
         <p className="text-gray-600 mb-6">
-          Please contact support if you believe this is a mistake.
+          {reason === "Account deactivated"
+            ? "Please contact support if you believe this is a mistake."
+            : "You do not have the necessary permissions to access this application."}
         </p>
         <SignOutButton>
           <Button variant="destructive">Log out</Button>
@@ -33,7 +45,8 @@ function SignedInContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (isDriver) {
+  // Driver-only access
+  if (accessLevel === "driver-only") {
     return <DriverWelcome />;
   }
 
@@ -54,11 +67,15 @@ function SignedInContent({ children }: { children: React.ReactNode }) {
 
 export function SignedInComponents({ children }: { children: React.ReactNode }) {
   const { session, isLoaded: sessionLoaded } = useSession();
-  const { user, isLoaded: userLoaded } = useUser();
+  const { isLoaded: userLoaded } = useUser();
 
   // Wait for both session and user to be loaded
   if (!sessionLoaded || !userLoaded || !session) {
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return <SignedInContent>{children}</SignedInContent>;

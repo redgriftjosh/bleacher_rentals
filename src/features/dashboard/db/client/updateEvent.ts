@@ -8,11 +8,11 @@ import { updateDataBase } from "@/app/actions/db.actions";
 import { createSuccessToast, SuccessToast } from "@/components/toasts/SuccessToast";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
-import { Tables, TablesInsert } from "../../../../../database.types";
+import { Database, Tables, TablesInsert } from "../../../../../database.types";
 
 export async function updateEvent(
   state: CurrentEventStore,
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   user: UserResource | null,
   bleacherEvents: Tables<"BleacherEvents">[]
 ): Promise<void> {
@@ -29,7 +29,7 @@ export async function updateEvent(
   }
 
   // 1. Update Address (if address exists)
-  if (state.addressData) {
+  if (state.addressData && state.addressData.addressId) {
     const updatedAddress: Partial<TablesInsert<"Addresses">> = {
       city: state.addressData.city ?? "",
       state_province: state.addressData.state ?? "",
@@ -84,7 +84,7 @@ export async function updateEvent(
 
 async function updateBleacherEvents(
   state: CurrentEventStore,
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   bleacherEvents: Tables<"BleacherEvents">[]
 ) {
   const existingLinks = bleacherEvents.filter((be) => be.event_id === state.eventId);
@@ -101,7 +101,7 @@ async function updateBleacherEvents(
     const { error: deleteError } = await supabase
       .from("BleacherEvents")
       .delete()
-      .eq("event_id", state.eventId)
+      .eq("event_id", state.eventId!)
       .in("bleacher_id", toDelete);
 
     if (deleteError) {
@@ -113,7 +113,7 @@ async function updateBleacherEvents(
   if (toAdd.length > 0) {
     const newBleacherLinks = toAdd.map((bleacher_id) => ({
       bleacher_id,
-      event_id: state.eventId,
+      event_id: state.eventId!,
       setup_text: "",
       setup_confirmed: false,
       teardown_text: "",

@@ -4,6 +4,7 @@ import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { DashboardEvent } from "../../types";
 import { useDashboardEventsStore } from "../../state/useDashboardEventsStore";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { Database } from "../../../../../database.types";
 
 type Row = {
   event_id: number;
@@ -36,7 +37,7 @@ type Row = {
 // Fetch Events into DashboardEvent shape (similar to legacy fetchDashboardEvents)
 // Includes address, basic fields, and bleacherIds via BleacherEvents. Setup/Teardown-specific text/flags use defaults.
 export async function FetchDashboardEvents(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   opts?: { onlyMine?: boolean; clerkUserId?: string | null }
 ): Promise<{ events: DashboardEvent[] }> {
   if (!supabase) {

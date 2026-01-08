@@ -8,7 +8,7 @@ import { useUserStatusesStore } from "@/state/userStatusesStore";
 import { useEventsStore } from "@/state/eventsStore";
 import { useAddressesStore } from "@/state/addressesStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
-import { useUserRolesStore } from "@/state/userRolesStore";
+// import { useUserRolesStore } from "@/state/userRolesStore";
 import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
 import useSubToDbChanges from "./useSubscribeToDbChanges";
 import { useBlocksStore } from "@/state/blocksStore";
@@ -92,15 +92,15 @@ export default function useSupabaseSubscriptions() {
     // subscriptionId,
   });
 
-  const UserRolesStore = useUserRolesStore();
-  useSetupTable({
-    tableName: "UserRoles",
-    // channelName: "userroles-channel",
-    setStore: UserRolesStore.setUserRoles,
-    stale: UserRolesStore.stale,
-    setStale: UserRolesStore.setStale,
-    // subscriptionId,
-  });
+  // const UserRolesStore = useUserRolesStore();
+  // useSetupTable({
+  //   tableName: "UserRoles",
+  //   // channelName: "userroles-channel",
+  //   setStore: UserRolesStore.setUserRoles,
+  //   stale: UserRolesStore.stale,
+  //   setStale: UserRolesStore.setStale,
+  //   // subscriptionId,
+  // });
 
   const eventsStore = useEventsStore();
   useSetupTable({

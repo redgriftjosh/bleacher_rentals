@@ -1,9 +1,6 @@
 import { ErrorToast } from "@/components/toasts/ErrorToast";
 import React from "react";
 import { toast } from "sonner";
-import { ROLES } from "./constants";
-import { Tables } from "../../../../database.types";
-import { ExistingUser } from "../page";
 
 export function checkInsertUserFormRules(
   firstName: string | null,
@@ -56,9 +53,9 @@ export function checkInsertUserFormRules(
   if (email && email.length > 100) {
     errors.push("Email is too long");
   }
-  if (roleId === ROLES.accountManager && homeBaseIds.length === 0) {
-    errors.push("Must assign to at least one Home Base");
-  }
+  // if (roleId === ROLES.accountManager && homeBaseIds.length === 0) {
+  //   errors.push("Must assign to at least one Home Base");
+  // }
 
   if (errors.length > 0) {
     toast.custom(
@@ -161,14 +158,14 @@ export async function deleteInviteUserEmail(email: string): Promise<boolean> {
   }
 }
 
-export function filterUserRoles(
-  userRoles: Tables<"UserRoles">[],
-  existingUser: ExistingUser | null
-): Tables<"UserRoles">[] {
-  if (!existingUser) return userRoles;
-  if (existingUser.role === ROLES.driver) {
-    return userRoles.filter((ur) => ur.id === ROLES.driver);
-  } else {
-    return userRoles.filter((ur) => ur.id !== ROLES.driver);
-  }
-}
+// export function filterUserRoles(
+//   userRoles: Tables<"UserRoles">[],
+//   existingUser: ExistingUser | null
+// ): Tables<"UserRoles">[] {
+//   if (!existingUser) return userRoles;
+//   if (existingUser.role === ROLES.driver) {
+//     return userRoles.filter((ur) => ur.id === ROLES.driver);
+//   } else {
+//     return userRoles.filter((ur) => ur.id !== ROLES.driver);
+//   }
+// }

@@ -13,6 +13,7 @@ function makeBleacher(partial: Partial<Bleacher>): Bleacher {
     bleacherEvents: partial.bleacherEvents ?? [],
     blocks: partial.blocks ?? [],
     workTrackers: partial.workTrackers ?? [],
+    linxupDeviceId: partial.linxupDeviceId ?? null,
   };
 }
 
