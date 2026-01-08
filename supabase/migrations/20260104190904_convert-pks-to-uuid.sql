@@ -275,54 +275,73 @@ commit;
 
 
 -- ===============================================================================
---                                   AccountManagers
+--                                   Bleachers
 -- ===============================================================================
 
 begin;
 
 -- 1) add uuid "id" column (nullable)
--- alter table "public"."Table" add column if not exists id uuid;
+alter table "public"."Bleachers" add column if not exists id uuid;
 
 -- 2) backfill uuid ids
--- update "public"."Table" set id = gen_random_uuid() where id is null;
+update "public"."Bleachers" set id = gen_random_uuid() where id is null;
 
 -- 3) set "id" not null, with default
--- alter table "public"."Table" alter column id set not null, alter column id set default gen_random_uuid();
+alter table "public"."Bleachers" alter column id set not null, alter column id set default gen_random_uuid();
 
 -- 4) make id unique so it can be referenced by a FK
--- alter table "public"."Table" drop constraint if exists "Table_id_key";
--- alter table "public"."Table" add constraint "Table_id_key" unique (id);
+alter table "public"."Bleachers" drop constraint if exists "Bleachers_id_key";
+alter table "public"."Bleachers" add constraint "Bleachers_id_key" unique (id);
 
 -- 5) (on referencing tables) add new null columns to reference new uuid PKs
--- alter table "public"."OtherTable" add column if not exists table_uuid uuid;
+alter table "public"."BleacherUsers" add column if not exists bleacher_uuid uuid;
+alter table "public"."Blocks" add column if not exists bleacher_uuid uuid;
+alter table "public"."BleacherEvents" add column if not exists bleacher_uuid uuid;
+alter table "public"."WorkTrackers" add column if not exists bleacher_uuid uuid;
 
 -- 6) (on referencing tables) set value for new uuid columns using the old bigint FK
--- update "public"."OtherTable" ref set table_uuid = curr.id from "public"."Table" curr where ref.table_id is not null and ref.table_id = curr.table_id;
+update "public"."BleacherUsers" ref set bleacher_uuid = curr.id from "public"."Bleachers" curr where ref.bleacher_id is not null and ref.bleacher_id = curr.bleacher_id;
+update "public"."Blocks" ref set bleacher_uuid = curr.id from "public"."Bleachers" curr where ref.bleacher_id is not null and ref.bleacher_id = curr.bleacher_id;
+update "public"."BleacherEvents" ref set bleacher_uuid = curr.id from "public"."Bleachers" curr where ref.bleacher_id is not null and ref.bleacher_id = curr.bleacher_id;
+update "public"."WorkTrackers" ref set bleacher_uuid = curr.id from "public"."Bleachers" curr where ref.bleacher_id is not null and ref.bleacher_id = curr.bleacher_id;
+
 
 -- 7) add sql from 6) to end of seed.sql, run supabase db reset, then supabase db dump --local --data-only -f supabase/seed.sql
 
 -- 8) (on referencing tables) drop old FKs constraints
--- alter table "public"."OtherTable" drop constraint if exists "OtherTable_table_id_fkey";
+alter table "public"."BleacherUsers" drop constraint if exists "BleacherUsers_bleacher_id_fkey";
+alter table "public"."Blocks" drop constraint if exists "block_bleacher_id_fkey";
+alter table "public"."BleacherEvents" drop constraint if exists "BleacherEvents_bleacher_id_fkey";
+alter table "public"."WorkTrackers" drop constraint if exists "worktrackers_bleacher_id_fkey";
 
 -- 9) (on referencing tables) create new FK constraints with uuids
--- alter table "public"."OtherTable" add constraint "OtherTable_table_uuid_fkey" foreign key (table_uuid) references public."Table"(id);
+alter table "public"."BleacherUsers" add constraint "BleacherUsers_bleacher_uuid_fkey" foreign key (bleacher_uuid) references public."Bleachers"(id);
+alter table "public"."Blocks" add constraint "Blocks_bleacher_uuid_fkey" foreign key (bleacher_uuid) references public."Bleachers"(id);
+alter table "public"."BleacherEvents" add constraint "BleacherEvents_bleacher_uuid_fkey" foreign key (bleacher_uuid) references public."Bleachers"(id);
+alter table "public"."WorkTrackers" add constraint "WorkTrackers_bleacher_uuid_fkey" foreign key (bleacher_uuid) references public."Bleachers"(id);
 
 -- 10) (on referencing tables) create indexes on new uuids
--- create index if not exists "OtherTable_table_uuid_idx" on public."OtherTable"(table_uuid);
+create index if not exists "BleacherUsers_bleacher_uuid_idx" on public."BleacherUsers"(bleacher_uuid);
+create index if not exists "Blocks_bleacher_uuid_idx" on public."Blocks"(bleacher_uuid);
+create index if not exists "BleacherEvents_bleacher_uuid_idx" on public."BleacherEvents"(bleacher_uuid);
+create index if not exists "WorkTrackers_bleacher_uuid_idx" on public."WorkTrackers"(bleacher_uuid);
 
 -- 11) (on referencing tables) drop old bigint columns
--- alter table "public"."OtherTable" drop column table_id;
+alter table "public"."BleacherUsers" drop column bleacher_id;
+alter table "public"."Blocks" drop column bleacher_id;
+alter table "public"."BleacherEvents" drop column bleacher_id;
+alter table "public"."WorkTrackers" drop column bleacher_id;
 
 -- 11.5) drop each of these columns in the studio as well so we can generate seed.sql without errors
 
 -- 12) Drop old PK constraint, rename old column, recreate PK on uuid id
--- alter table "public"."Table" drop constraint if exists "Table_pkey";
+alter table "public"."Bleachers" drop constraint if exists "Bleachers_pkey";
 
 -- 13) make new uuid column the primary key
--- alter table "public"."Table" add constraint "Table_pkey" primary key (id);
+alter table "public"."Bleachers" add constraint "Bleachers_pkey" primary key (id);
 
 -- 14) drop old bigint column
--- alter table "public"."Table" drop column table_id;
+alter table "public"."Bleachers" drop column bleacher_id;
 
 -- 15) Drop old bigint in the studio
 -- supabase db dump --local --data-only -f supabase/seed.sql
