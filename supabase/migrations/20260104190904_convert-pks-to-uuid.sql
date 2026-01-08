@@ -212,23 +212,23 @@ commit;
 
 
 -- ===============================================================================
---                                   AccountManagers
+--                                   BleacherUsers
 -- ===============================================================================
 
 begin;
 
 -- 1) add uuid "id" column (nullable)
--- alter table "public"."Table" add column if not exists id uuid;
+alter table "public"."BleacherUsers" add column if not exists id uuid;
 
 -- 2) backfill uuid ids
--- update "public"."Table" set id = gen_random_uuid() where id is null;
+update "public"."BleacherUsers" set id = gen_random_uuid() where id is null;
 
 -- 3) set "id" not null, with default
--- alter table "public"."Table" alter column id set not null, alter column id set default gen_random_uuid();
-
+alter table "public"."BleacherUsers" alter column id set not null, alter column id set default gen_random_uuid();
+    
 -- 4) make id unique so it can be referenced by a FK
--- alter table "public"."Table" drop constraint if exists "Table_id_key";
--- alter table "public"."Table" add constraint "Table_id_key" unique (id);
+alter table "public"."BleacherUsers" drop constraint if exists "BleacherUsers_id_key";
+alter table "public"."BleacherUsers" add constraint "BleacherUsers_id_key" unique (id);
 
 -- 5) (on referencing tables) add new null columns to reference new uuid PKs
 -- alter table "public"."OtherTable" add column if not exists table_uuid uuid;
@@ -253,13 +253,13 @@ begin;
 -- 11.5) drop each of these columns in the studio as well so we can generate seed.sql without errors
 
 -- 12) Drop old PK constraint, rename old column, recreate PK on uuid id
--- alter table "public"."Table" drop constraint if exists "Table_pkey";
+alter table "public"."BleacherUsers" drop constraint if exists "BleacherUsers_pkey";
 
 -- 13) make new uuid column the primary key
--- alter table "public"."Table" add constraint "Table_pkey" primary key (id);
+alter table "public"."BleacherUsers" add constraint "BleacherUsers_pkey" primary key (id);
 
 -- 14) drop old bigint column
--- alter table "public"."Table" drop column table_id;
+alter table "public"."BleacherUsers" drop column bleacher_user_id;
 
 -- 15) Drop old bigint in the studio
 -- supabase db dump --local --data-only -f supabase/seed.sql
