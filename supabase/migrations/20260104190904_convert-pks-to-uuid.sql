@@ -420,7 +420,70 @@ commit;
 
 
 -- ===============================================================================
---                                   AccountManagers
+--                                   Drivers
+-- ===============================================================================
+
+begin;
+
+-- 1) add uuid "id" column (nullable)
+alter table "public"."Drivers" add column if not exists id uuid;
+
+-- 2) backfill uuid ids
+update "public"."Drivers" set id = gen_random_uuid() where id is null;
+
+-- 3) set "id" not null, with default
+alter table "public"."Drivers" alter column id set not null, alter column id set default gen_random_uuid();
+
+-- 4) make id unique so it can be referenced by a FK
+alter table "public"."Drivers" drop constraint if exists "Drivers_id_key";
+alter table "public"."Drivers" add constraint "Drivers_id_key" unique (id);
+
+-- 5) (on referencing tables) add new null columns to reference new uuid PKs
+alter table "public"."WorkTrackers" add column if not exists driver_uuid uuid;
+
+-- 6) (on referencing tables) set value for new uuid columns using the old bigint FK
+update "public"."WorkTrackers" ref set driver_uuid = curr.id from "public"."Drivers" curr where ref.driver_id is not null and ref.driver_id = curr.driver_id;
+
+-- 7) add sql from 6) to end of seed.sql, run supabase db reset, then supabase db dump --local --data-only -f supabase/seed.sql
+
+-- 8) (on referencing tables) drop old FKs constraints
+alter table "public"."WorkTrackers" drop constraint if exists "WorkTrackers_driver_id_fkey";
+
+-- 9) (on referencing tables) create new FK constraints with uuids
+alter table "public"."WorkTrackers" add constraint "WorkTrackers_driver_uuid_fkey" foreign key (driver_uuid) references public."Drivers"(id);
+
+-- 10) (on referencing tables) create indexes on new uuids
+create index if not exists "WorkTrackers_driver_uuid_idx" on public."WorkTrackers"(driver_uuid);
+
+-- 11) (on referencing tables) drop old bigint columns
+alter table "public"."WorkTrackers" drop column driver_id;
+
+-- 11.5) drop each of these columns in the studio as well so we can generate seed.sql without errors
+
+-- 12) Drop old PK constraint, rename old column, recreate PK on uuid id
+alter table "public"."Drivers" drop constraint if exists "Drivers_pkey";
+
+-- 13) make new uuid column the primary key
+alter table "public"."Drivers" add constraint "Drivers_pkey" primary key (id);
+
+-- 14) drop old bigint column
+alter table "public"."Drivers" drop column driver_id;
+
+-- 15) Drop old bigint in the studio
+-- supabase db dump --local --data-only -f supabase/seed.sql
+-- supabase db reset
+
+commit;
+
+
+
+
+
+
+
+
+-- ===============================================================================
+--                                   Events
 -- ===============================================================================
 
 begin;
@@ -483,7 +546,7 @@ commit;
 
 
 -- ===============================================================================
---                                   AccountManagers
+--                                   HomeBases
 -- ===============================================================================
 
 begin;
@@ -546,7 +609,7 @@ commit;
 
 
 -- ===============================================================================
---                                   AccountManagers
+--                                   TaskStatuses
 -- ===============================================================================
 
 begin;
@@ -609,7 +672,7 @@ commit;
 
 
 -- ===============================================================================
---                                   AccountManagers
+--                                   TaskTypes
 -- ===============================================================================
 
 begin;
@@ -672,7 +735,7 @@ commit;
 
 
 -- ===============================================================================
---                                   AccountManagers
+--                                   Tasks
 -- ===============================================================================
 
 begin;
@@ -735,7 +798,7 @@ commit;
 
 
 -- ===============================================================================
---                                   AccountManagers
+--                                   UserHomeBases
 -- ===============================================================================
 
 begin;
@@ -798,7 +861,7 @@ commit;
 
 
 -- ===============================================================================
---                                   AccountManagers
+--                                   UserRoles
 -- ===============================================================================
 
 begin;
@@ -861,7 +924,7 @@ commit;
 
 
 -- ===============================================================================
---                                   AccountManagers
+--                                   UserStatuses
 -- ===============================================================================
 
 begin;
@@ -924,7 +987,7 @@ commit;
 
 
 -- ===============================================================================
---                                   AccountManagers
+--                                   Users
 -- ===============================================================================
 
 begin;
@@ -987,70 +1050,7 @@ commit;
 
 
 -- ===============================================================================
---                                   AccountManagers
--- ===============================================================================
-
-begin;
-
--- 1) add uuid "id" column (nullable)
--- alter table "public"."Table" add column if not exists id uuid;
-
--- 2) backfill uuid ids
--- update "public"."Table" set id = gen_random_uuid() where id is null;
-
--- 3) set "id" not null, with default
--- alter table "public"."Table" alter column id set not null, alter column id set default gen_random_uuid();
-
--- 4) make id unique so it can be referenced by a FK
--- alter table "public"."Table" drop constraint if exists "Table_id_key";
--- alter table "public"."Table" add constraint "Table_id_key" unique (id);
-
--- 5) (on referencing tables) add new null columns to reference new uuid PKs
--- alter table "public"."OtherTable" add column if not exists table_uuid uuid;
-
--- 6) (on referencing tables) set value for new uuid columns using the old bigint FK
--- update "public"."OtherTable" ref set table_uuid = curr.id from "public"."Table" curr where ref.table_id is not null and ref.table_id = curr.table_id;
-
--- 7) add sql from 6) to end of seed.sql, run supabase db reset, then supabase db dump --local --data-only -f supabase/seed.sql
-
--- 8) (on referencing tables) drop old FKs constraints
--- alter table "public"."OtherTable" drop constraint if exists "OtherTable_table_id_fkey";
-
--- 9) (on referencing tables) create new FK constraints with uuids
--- alter table "public"."OtherTable" add constraint "OtherTable_table_uuid_fkey" foreign key (table_uuid) references public."Table"(id);
-
--- 10) (on referencing tables) create indexes on new uuids
--- create index if not exists "OtherTable_table_uuid_idx" on public."OtherTable"(table_uuid);
-
--- 11) (on referencing tables) drop old bigint columns
--- alter table "public"."OtherTable" drop column table_id;
-
--- 11.5) drop each of these columns in the studio as well so we can generate seed.sql without errors
-
--- 12) Drop old PK constraint, rename old column, recreate PK on uuid id
--- alter table "public"."Table" drop constraint if exists "Table_pkey";
-
--- 13) make new uuid column the primary key
--- alter table "public"."Table" add constraint "Table_pkey" primary key (id);
-
--- 14) drop old bigint column
--- alter table "public"."Table" drop column table_id;
-
--- 15) Drop old bigint in the studio
--- supabase db dump --local --data-only -f supabase/seed.sql
--- supabase db reset
-
-commit;
-
-
-
-
-
-
-
-
--- ===============================================================================
---                                   AccountManagers
+--                                   WorkTrackers
 -- ===============================================================================
 
 begin;
