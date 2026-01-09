@@ -4,7 +4,7 @@ SET session_replication_role = replica;
 -- PostgreSQL database dump
 --
 
--- \restrict ezuZw4oGiYaHgaGt8ybrdsvdwKhaKhwNXgeoYLxbTODpXcB1TB4PqkjvnwvE0rv
+-- \restrict L0HDcYaSxffIQhA4syq1ALitXgAd55cdlYcA0v3GMdA5k6UwGU09tQO9DKtat5q
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -2954,10 +2954,10 @@ INSERT INTO "public"."UserRoles" ("created_at", "role", "id") VALUES
 -- Data for Name: UserStatuses; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."UserStatuses" ("id", "created_at", "status") VALUES
-	(1, '2025-05-21 16:29:54.749727+00', 'Invited'),
-	(2, '2025-05-21 16:30:01.377311+00', 'Active'),
-	(3, '2025-05-21 16:30:07.124225+00', 'Inactive');
+INSERT INTO "public"."UserStatuses" ("created_at", "status", "id") VALUES
+	('2025-05-21 16:29:54.749727+00', 'Invited', '75dfeb9e-6c28-4839-a91c-a7333b0921c6'),
+	('2025-05-21 16:30:01.377311+00', 'Active', '5d314da7-0a1e-4294-b012-ab74f6e07cd6'),
+	('2025-05-21 16:30:07.124225+00', 'Inactive', '7b65d5a1-8ee0-4b7a-816d-d3ec1ed123c5');
 
 
 --
@@ -3090,13 +3090,6 @@ SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 1, false);
 
 
 --
--- Name: UserStatuses_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('"public"."UserStatuses_id_seq"', 3, true);
-
-
---
 -- Name: Users_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -3121,6 +3114,6 @@ SELECT pg_catalog.setval('"supabase_functions"."hooks_id_seq"', 1, false);
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict ezuZw4oGiYaHgaGt8ybrdsvdwKhaKhwNXgeoYLxbTODpXcB1TB4PqkjvnwvE0rv
+-- \unrestrict L0HDcYaSxffIQhA4syq1ALitXgAd55cdlYcA0v3GMdA5k6UwGU09tQO9DKtat5q
 
 RESET ALL;
