@@ -1009,48 +1009,88 @@ commit;
 begin;
 
 -- 1) add uuid "id" column (nullable)
--- alter table "public"."Table" add column if not exists id uuid;
+alter table "public"."Users" add column if not exists id uuid;
 
 -- 2) backfill uuid ids
--- update "public"."Table" set id = gen_random_uuid() where id is null;
+update "public"."Users" set id = gen_random_uuid() where id is null;
 
 -- 3) set "id" not null, with default
--- alter table "public"."Table" alter column id set not null, alter column id set default gen_random_uuid();
+alter table "public"."Users" alter column id set not null, alter column id set default gen_random_uuid();
 
 -- 4) make id unique so it can be referenced by a FK
--- alter table "public"."Table" drop constraint if exists "Table_id_key";
--- alter table "public"."Table" add constraint "Table_id_key" unique (id);
+alter table "public"."Users" drop constraint if exists "Users_id_key";
+alter table "public"."Users" add constraint "Users_id_key" unique (id);
 
 -- 5) (on referencing tables) add new null columns to reference new uuid PKs
--- alter table "public"."OtherTable" add column if not exists table_uuid uuid;
+alter table "public"."UserHomeBases" add column if not exists user_uuid uuid;
+alter table "public"."BleacherUsers" add column if not exists user_uuid uuid;
+alter table "public"."Events" add column if not exists created_by_user_uuid uuid;
+alter table "public"."WorkTrackers" add column if not exists user_uuid uuid;
+alter table "public"."Drivers" add column if not exists user_uuid uuid;
+alter table "public"."Tasks" add column if not exists created_by_user_uuid uuid;
+alter table "public"."AccountManagers" add column if not exists user_uuid uuid;
 
 -- 6) (on referencing tables) set value for new uuid columns using the old bigint FK
--- update "public"."OtherTable" ref set table_uuid = curr.id from "public"."Table" curr where ref.table_id is not null and ref.table_id = curr.table_id;
+update "public"."UserHomeBases" ref set user_uuid = curr.id from "public"."Users" curr where ref.user_id is not null and ref.user_id = curr.user_id;
+update "public"."BleacherUsers" ref set user_uuid = curr.id from "public"."Users" curr where ref.user_id is not null and ref.user_id = curr.user_id;
+update "public"."Events" ref set created_by_user_uuid = curr.id from "public"."Users" curr where ref.created_by_user_id is not null and ref.created_by_user_id = curr.user_id;
+update "public"."WorkTrackers" ref set user_uuid = curr.id from "public"."Users" curr where ref.user_id is not null and ref.user_id = curr.user_id;
+update "public"."Drivers" ref set user_uuid = curr.id from "public"."Users" curr where ref.user_id is not null and ref.user_id = curr.user_id;
+update "public"."Tasks" ref set created_by_user_uuid = curr.id from "public"."Users" curr where ref.created_by_user_id is not null and ref.created_by_user_id = curr.user_id;
+update "public"."AccountManagers" ref set user_uuid = curr.id from "public"."Users" curr where ref.user_id is not null and ref.user_id = curr.user_id;
+
+drop trigger if exists sync_worktracker_user_driver_trigger on public."WorkTrackers";
+drop function if exists public.sync_worktracker_user_driver();
 
 -- 7) add sql from 6) to end of seed.sql, run supabase db reset, then supabase db dump --local --data-only -f supabase/seed.sql
 
 -- 8) (on referencing tables) drop old FKs constraints
--- alter table "public"."OtherTable" drop constraint if exists "OtherTable_table_id_fkey";
+alter table "public"."UserHomeBases" drop constraint if exists "userhomebases_user_id_fkey";
+alter table "public"."BleacherUsers" drop constraint if exists "BleacherUsers_user_id_fkey";
+alter table "public"."Events" drop constraint if exists "Events_created_by_user_id_fkey";
+alter table "public"."WorkTrackers" drop constraint if exists "worktrackers_user_id_fkey";
+alter table "public"."Drivers" drop constraint if exists "Drivers_user_id_fkey";
+alter table "public"."Tasks" drop constraint if exists "Tasks_created_by_user_id_fkey";
+alter table "public"."AccountManagers" drop constraint if exists "AccountManagers_user_id_key";
+alter table "public"."AccountManagers" drop constraint if exists "AccountManagers_user_id_fkey";
 
 -- 9) (on referencing tables) create new FK constraints with uuids
--- alter table "public"."OtherTable" add constraint "OtherTable_table_uuid_fkey" foreign key (table_uuid) references public."Table"(id);
+alter table "public"."UserHomeBases" add constraint "UserHomeBases_user_uuid_fkey" foreign key (user_uuid) references public."Users"(id);
+alter table "public"."BleacherUsers" add constraint "BleacherUsers_user_uuid_fkey" foreign key (user_uuid) references public."Users"(id);
+alter table "public"."Events" add constraint "Events_created_by_user_uuid_fkey" foreign key (created_by_user_uuid) references public."Users"(id);
+alter table "public"."WorkTrackers" add constraint "WorkTrackers_user_uuid_fkey" foreign key (user_uuid) references public."Users"(id);
+alter table "public"."Drivers" add constraint "Drivers_user_uuid_fkey" foreign key (user_uuid) references public."Users"(id);
+alter table "public"."Tasks" add constraint "Tasks_created_by_user_uuid_fkey" foreign key (created_by_user_uuid) references public."Users"(id);
+alter table "public"."AccountManagers" add constraint "AccountManagers_user_uuid_fkey" foreign key (user_uuid) references public."Users"(id);
 
 -- 10) (on referencing tables) create indexes on new uuids
--- create index if not exists "OtherTable_table_uuid_idx" on public."OtherTable"(table_uuid);
+create index if not exists "UserHomeBases_user_uuid_idx" on public."UserHomeBases"(user_uuid);
+create index if not exists "BleacherUsers_user_uuid_idx" on public."BleacherUsers"(user_uuid);
+create index if not exists "Events_created_by_user_uuid_idx" on public."Events"(created_by_user_uuid);
+create index if not exists "WorkTrackers_user_uuid_idx" on public."WorkTrackers"(user_uuid);
+create index if not exists "Drivers_user_uuid_idx" on public."Drivers"(user_uuid);
+create index if not exists "Tasks_created_by_user_uuid_idx" on public."Tasks"(created_by_user_uuid);
+create index if not exists "AccountManagers_user_uuid_idx" on public."AccountManagers"(user_uuid);
 
 -- 11) (on referencing tables) drop old bigint columns
--- alter table "public"."OtherTable" drop column table_id;
+alter table "public"."UserHomeBases" drop column user_id;
+alter table "public"."BleacherUsers" drop column user_id;
+alter table "public"."Events" drop column created_by_user_id;
+alter table "public"."WorkTrackers" drop column user_id;
+alter table "public"."Drivers" drop column user_id;
+alter table "public"."Tasks" drop column created_by_user_id;
+alter table "public"."AccountManagers" drop column user_id;
 
 -- 11.5) drop each of these columns in the studio as well so we can generate seed.sql without errors
 
 -- 12) Drop old PK constraint, rename old column, recreate PK on uuid id
--- alter table "public"."Table" drop constraint if exists "Table_pkey";
+alter table "public"."Users" drop constraint if exists "Users_pkey";
 
 -- 13) make new uuid column the primary key
--- alter table "public"."Table" add constraint "Table_pkey" primary key (id);
+alter table "public"."Users" add constraint "Users_pkey" primary key (id);
 
 -- 14) drop old bigint column
--- alter table "public"."Table" drop column table_id;
+alter table "public"."Users" drop column user_id;
 
 -- 15) Drop old bigint in the studio
 -- supabase db dump --local --data-only -f supabase/seed.sql
