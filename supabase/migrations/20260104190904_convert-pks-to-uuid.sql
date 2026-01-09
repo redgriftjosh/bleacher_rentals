@@ -552,48 +552,60 @@ commit;
 begin;
 
 -- 1) add uuid "id" column (nullable)
--- alter table "public"."Table" add column if not exists id uuid;
+alter table "public"."HomeBases" add column if not exists id uuid;
 
 -- 2) backfill uuid ids
--- update "public"."Table" set id = gen_random_uuid() where id is null;
+update "public"."HomeBases" set id = gen_random_uuid() where id is null;
 
 -- 3) set "id" not null, with default
--- alter table "public"."Table" alter column id set not null, alter column id set default gen_random_uuid();
+alter table "public"."HomeBases" alter column id set not null, alter column id set default gen_random_uuid();
 
 -- 4) make id unique so it can be referenced by a FK
--- alter table "public"."Table" drop constraint if exists "Table_id_key";
--- alter table "public"."Table" add constraint "Table_id_key" unique (id);
+alter table "public"."HomeBases" drop constraint if exists "HomeBases_id_key";
+alter table "public"."HomeBases" add constraint "HomeBases_id_key" unique (id);
 
 -- 5) (on referencing tables) add new null columns to reference new uuid PKs
--- alter table "public"."OtherTable" add column if not exists table_uuid uuid;
+alter table "public"."UserHomeBases" add column if not exists home_base_uuid uuid;
+alter table "public"."Bleachers" add column if not exists summer_home_base_uuid uuid;
+alter table "public"."Bleachers" add column if not exists winter_home_base_uuid uuid;
 
 -- 6) (on referencing tables) set value for new uuid columns using the old bigint FK
--- update "public"."OtherTable" ref set table_uuid = curr.id from "public"."Table" curr where ref.table_id is not null and ref.table_id = curr.table_id;
+update "public"."UserHomeBases" ref set home_base_uuid = curr.id from "public"."HomeBases" curr where ref.home_base_id is not null and ref.home_base_id = curr.home_base_id;
+update "public"."Bleachers" ref set summer_home_base_uuid = curr.id from "public"."HomeBases" curr where ref.home_base_id is not null and ref.home_base_id = curr.home_base_id;
+update "public"."Bleachers" ref set winter_home_base_uuid = curr.id from "public"."HomeBases" curr where ref.winter_home_base_id is not null and ref.winter_home_base_id = curr.home_base_id;
 
 -- 7) add sql from 6) to end of seed.sql, run supabase db reset, then supabase db dump --local --data-only -f supabase/seed.sql
 
 -- 8) (on referencing tables) drop old FKs constraints
--- alter table "public"."OtherTable" drop constraint if exists "OtherTable_table_id_fkey";
+alter table "public"."UserHomeBases" drop constraint if exists "userhomebases_home_base_id_fkey";
+alter table "public"."Bleachers" drop constraint if exists "Bleachers_home_base_id_fkey";
+alter table "public"."Bleachers" drop constraint if exists "Bleachers_winter_home_base_id_fkey";
 
 -- 9) (on referencing tables) create new FK constraints with uuids
--- alter table "public"."OtherTable" add constraint "OtherTable_table_uuid_fkey" foreign key (table_uuid) references public."Table"(id);
+alter table "public"."UserHomeBases" add constraint "userhomebases_home_base_uuid_fkey" foreign key (home_base_uuid) references public."HomeBases"(id);
+alter table "public"."Bleachers" add constraint "bleachers_summer_home_base_uuid_fkey" foreign key (summer_home_base_uuid) references public."HomeBases"(id);
+alter table "public"."Bleachers" add constraint "bleachers_winter_home_base_uuid_fkey" foreign key (winter_home_base_uuid) references public."HomeBases"(id);
 
 -- 10) (on referencing tables) create indexes on new uuids
--- create index if not exists "OtherTable_table_uuid_idx" on public."OtherTable"(table_uuid);
+create index if not exists "UserHomeBases_home_base_uuid_idx" on public."UserHomeBases"(home_base_uuid);
+create index if not exists "Bleachers_summer_home_base_uuid_idx" on public."Bleachers"(summer_home_base_uuid);
+create index if not exists "Bleachers_winter_home_base_uuid_idx" on public."Bleachers"(winter_home_base_uuid);
 
 -- 11) (on referencing tables) drop old bigint columns
--- alter table "public"."OtherTable" drop column table_id;
+alter table "public"."UserHomeBases" drop column home_base_id;
+alter table "public"."Bleachers" drop column home_base_id;
+alter table "public"."Bleachers" drop column winter_home_base_id;
 
 -- 11.5) drop each of these columns in the studio as well so we can generate seed.sql without errors
 
 -- 12) Drop old PK constraint, rename old column, recreate PK on uuid id
--- alter table "public"."Table" drop constraint if exists "Table_pkey";
+alter table "public"."HomeBases" drop constraint if exists "HomeBases_pkey";
 
 -- 13) make new uuid column the primary key
--- alter table "public"."Table" add constraint "Table_pkey" primary key (id);
+alter table "public"."HomeBases" add constraint "HomeBases_pkey" primary key (id);
 
 -- 14) drop old bigint column
--- alter table "public"."Table" drop column table_id;
+alter table "public"."HomeBases" drop column home_base_id;
 
 -- 15) Drop old bigint in the studio
 -- supabase db dump --local --data-only -f supabase/seed.sql
