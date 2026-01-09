@@ -4,7 +4,7 @@ SET session_replication_role = replica;
 -- PostgreSQL database dump
 --
 
--- \restrict 07WyXTiOaLubbQRxr4Db3tlOmv3uVhkrWVgbvQoajXVYcSvDyHkFUMTDwNrF8Aq
+-- \restrict xpfz6lHvP4ZdZ59tL2d6m4bN985sD8lH8Q7BYLWvamtnkLcCDmoIcd3U3gbmXgc
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -2769,37 +2769,37 @@ INSERT INTO "public"."TaskTypes" ("created_at", "label", "id") VALUES
 -- Data for Name: Tasks; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."Tasks" ("task_id", "created_at", "name", "description", "created_by_user_id", "task_status_uuid", "task_type_uuid") VALUES
-	(1, '2025-06-26 00:43:36.324324+00', 'Roadmap', 'Add Features Log. Add a button to the top right by the bell called “Request Feature” This could be a google form or document if its possible but it could also be a fully coded page. It should allow users to create a new feature request, label them as a feature or a bug, track who submitted the request. Then if they get approved we can see the actual roadmap and update the roadmap whenever.', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(7, '2025-06-26 00:46:48.216314+00', 'SetupTeardown Alert Fix', 'Get rid of alert when teardown and setup are overlapping by just one day.', 8, 'ceaef02a-7f0e-46a2-bdac-bc2999e0de34', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(9, '2025-06-26 00:48:01.885869+00', 'User Permissions Bug', 'When a user first creates an account it turns them into an account manager if they were an admin. Do capitals in the email do weird things?', 8, '8e24e3f4-a443-4792-a89d-123924c48321', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
-	(6, '2025-06-26 00:46:24.468119+00', 'Bleacher Location', 'Beside the bleacher number, put the city(first) and province/state(second). Also add an address field to the teardown and white space block so the bleacher location can use it. The bleacher location logic should be to find today and look left to find the last address. This is where the bleacher should be. If it''s currently in an event, then use this address.', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(3, '2025-06-26 00:45:33.918833+00', 'Bleacher Colours', 'Bring back the coloured labels for bleacher dashboard', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(2, '2025-06-26 00:44:44.196943+00', 'Remove Home Base Rule', 'Remove Rule stating events must be within a home base.
+INSERT INTO "public"."Tasks" ("created_at", "name", "description", "created_by_user_id", "task_status_uuid", "task_type_uuid") VALUES
+	('2025-06-26 00:43:36.324324+00', 'Roadmap', 'Add Features Log. Add a button to the top right by the bell called “Request Feature” This could be a google form or document if its possible but it could also be a fully coded page. It should allow users to create a new feature request, label them as a feature or a bug, track who submitted the request. Then if they get approved we can see the actual roadmap and update the roadmap whenever.', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-06-26 00:46:48.216314+00', 'SetupTeardown Alert Fix', 'Get rid of alert when teardown and setup are overlapping by just one day.', 8, 'ceaef02a-7f0e-46a2-bdac-bc2999e0de34', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-06-26 00:48:01.885869+00', 'User Permissions Bug', 'When a user first creates an account it turns them into an account manager if they were an admin. Do capitals in the email do weird things?', 8, '8e24e3f4-a443-4792-a89d-123924c48321', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
+	('2025-06-26 00:46:24.468119+00', 'Bleacher Location', 'Beside the bleacher number, put the city(first) and province/state(second). Also add an address field to the teardown and white space block so the bleacher location can use it. The bleacher location logic should be to find today and look left to find the last address. This is where the bleacher should be. If it''s currently in an event, then use this address.', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-06-26 00:45:33.918833+00', 'Bleacher Colours', 'Bring back the coloured labels for bleacher dashboard', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-06-26 00:44:44.196943+00', 'Remove Home Base Rule', 'Remove Rule stating events must be within a home base.
 
 NOTE FROM JOSH:
 If you''re an admin, you can create any event, anywhere. If you''re an Account Manager you can only create/edit/delete events within your home base. I know this will need to be changed in the future but since we''re all admins it seems like the most logical way to go.', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(4, '2025-06-26 00:45:55.472515+00', 'Event Link Field', 'Add link field to event details. If there is a link in the url field, display a good shuffle logo beside the Event Name and make it clickable. When you click the link it opens the good shuffle page in a new tab.', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(5, '2025-06-26 00:46:11.341863+00', 'Scroll to top', 'When you select an event, scroll to the top of the dashboard so you can see the selected bleachers.', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(16, '2025-06-27 18:49:06.661234+00', 'sorting by event location', 'events under Y axis should be able to sort by province and state,    Make this a multi select.
+	('2025-06-26 00:45:55.472515+00', 'Event Link Field', 'Add link field to event details. If there is a link in the url field, display a good shuffle logo beside the Event Name and make it clickable. When you click the link it opens the good shuffle page in a new tab.', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-06-26 00:46:11.341863+00', 'Scroll to top', 'When you select an event, scroll to the top of the dashboard so you can see the selected bleachers.', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-06-27 18:49:06.661234+00', 'sorting by event location', 'events under Y axis should be able to sort by province and state,    Make this a multi select.
 
 Here is a demo: https://www.loom.com/share/36399ffc1c4a4f5da9299bf511843708?sid=e1e62544-a2bd-4910-b3ba-8dcda8f89143', 14, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(14, '2025-06-26 19:31:46.114245+00', 'Description for Asset', 'JOSH: Add new column to the bleacher table called description
+	('2025-06-26 19:31:46.114245+00', 'Description for Asset', 'JOSH: Add new column to the bleacher table called description
 
 When adding a bleacher, it would be handy to have a drop down for hitch type: Bumper, or Gooseneck. This is helpful when scheduling drivers for delivery as not all drivers have both hitches on their trucks. 
 
 Also for the 4 rows it would be nice to label if they are hinging or not. 
 
 Add ', 13, 'ceaef02a-7f0e-46a2-bdac-bc2999e0de34', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(17, '2025-06-27 18:53:16.543143+00', 'add driver', 'add user type,  driver,    add or invite possible. Don''t send invite email just add to database', 14, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(13, '2025-06-26 18:53:58.541255+00', 'Update Cell Click Outside the modal', 'When I edit a cell in the dashboard I try to copy all the text by highlighting the text with the mouse but a lot of the time I release the mouse button outside the popup and this closes it. Can you change this functionality to maybe only close the pop up with the mouse button was pressed and released outside the modal to ensure that it was closed intentionally?', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(10, '2025-06-26 00:48:22.355155+00', 'Add Contact Info To Event', 'This contact info would be defining who should be contacted when the driver arrives with the bleachers. This will mainly come in handy when the driver app comes out.', 8, '81459bdb-aad8-40d4-9645-ac4abc22b294', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(15, '2025-06-27 18:45:31.324919+00', 'sameday setup teardown', 'sameday setup teardown looks weird. This is actually an issue with an event that is only one day long, and has same day setup and teardown. I gotta find a way to make this not look so bad.', 8, 'e357f671-e17e-4ba0-b47c-85b446861067', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
-	(21, '2025-08-01 14:17:05.483578+00', 'Tax to work tracker', 'under driver assign tax percent (optional)', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(19, '2025-07-02 17:38:49.421378+00', 'Laggy when typing', 'Sometimes it''s laggy when typing on a block. Look into it', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
-	(24, '2025-08-01 14:41:46.986027+00', 'Default Template', 'A template would be preselected with home bases on the bleacher view and preselected with states/provinces on the event view. A user should be able to build their own template by selecting this data and then by default they would only see this data everytime they log in.', 8, 'ceaef02a-7f0e-46a2-bdac-bc2999e0de34', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(22, '2025-08-01 14:29:37.969041+00', 'POC On Event & Autopoulate Work Tracker', 'Put a POC field on the event config. then when linking a worktracker pickup event you can auto populate the POC to the WT', 8, '81459bdb-aad8-40d4-9645-ac4abc22b294', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(18, '2025-06-27 20:09:50.380504+00', 'Work Trackers', 'Setup Block should have
+	('2025-06-27 18:53:16.543143+00', 'add driver', 'add user type,  driver,    add or invite possible. Don''t send invite email just add to database', 14, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-06-26 18:53:58.541255+00', 'Update Cell Click Outside the modal', 'When I edit a cell in the dashboard I try to copy all the text by highlighting the text with the mouse but a lot of the time I release the mouse button outside the popup and this closes it. Can you change this functionality to maybe only close the pop up with the mouse button was pressed and released outside the modal to ensure that it was closed intentionally?', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-06-26 00:48:22.355155+00', 'Add Contact Info To Event', 'This contact info would be defining who should be contacted when the driver arrives with the bleachers. This will mainly come in handy when the driver app comes out.', 8, '81459bdb-aad8-40d4-9645-ac4abc22b294', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-06-27 18:45:31.324919+00', 'sameday setup teardown', 'sameday setup teardown looks weird. This is actually an issue with an event that is only one day long, and has same day setup and teardown. I gotta find a way to make this not look so bad.', 8, 'e357f671-e17e-4ba0-b47c-85b446861067', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
+	('2025-08-01 14:17:05.483578+00', 'Tax to work tracker', 'under driver assign tax percent (optional)', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-07-02 17:38:49.421378+00', 'Laggy when typing', 'Sometimes it''s laggy when typing on a block. Look into it', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
+	('2025-08-01 14:41:46.986027+00', 'Default Template', 'A template would be preselected with home bases on the bleacher view and preselected with states/provinces on the event view. A user should be able to build their own template by selecting this data and then by default they would only see this data everytime they log in.', 8, 'ceaef02a-7f0e-46a2-bdac-bc2999e0de34', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-08-01 14:29:37.969041+00', 'POC On Event & Autopoulate Work Tracker', 'Put a POC field on the event config. then when linking a worktracker pickup event you can auto populate the POC to the WT', 8, '81459bdb-aad8-40d4-9645-ac4abc22b294', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-06-27 20:09:50.380504+00', 'Work Trackers', 'Setup Block should have
 Select a driver from a drop down list
 Should have a toggle for selecting a primary driver. If there is already another primary driver then it should display a popup saying are you sure you want to change primary driver from [Name] to [New Name]?
 Cannot change drop off address and you don’t even need to see it.
@@ -2825,15 +2825,15 @@ Should be able to click on a row and edit it like you clicked on a setup/teardow
 
 Just make sure everything is editable and then download as PDF.
 ', 8, 'b72e218f-6a71-4259-9403-c1226a47db90', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(25, '2025-08-06 17:14:34.410444+00', 'Laggy only in yellow boxes', 'when typing in yellow boxes sometimes the text can take like 8 seconds to update.', 8, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(20, '2025-07-28 15:00:40.312656+00', 'Prompt For Creating An Event With No Bleachers', 'When someone first creates an event they tend to forget to add a bleacher to it so I think if someone clicks save event with no bleachers selected, you should see a prompt saying "Forgetting something? 🥴"  Then maybe some text saying that this event has no bleachers selected. Do you want to select a bleacher for this event before saving? - Yes/ No', 8, 'ceaef02a-7f0e-46a2-bdac-bc2999e0de34', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(26, '2025-08-06 17:17:24.925995+00', 'Bleacher info on work tracker', 'In the bleacher number column, include the hitch type and the number of rows. This means I''ll need to add a new field to the bleacher in the assets page called "Hitch type" and then someone is going to need to input all the hitch types in the existing bleachers.', 8, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(27, '2025-08-06 17:24:07.048882+00', 'Work Tracker Location should affect bleache location', 'Now that we have work trackers the drop off location of the work tracker should affect the bleacher location on the sticky left column.', 8, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(28, '2025-08-15 15:50:21.583591+00', 'Bug when scrolling down on events axis', 'When you scroll down on the events axis it throws a client side exception.', 9, 'ceaef02a-7f0e-46a2-bdac-bc2999e0de34', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
-	(29, '2025-08-15 15:58:59.910257+00', 'override colors', 'add a setting in event tab so that we can over ride the color of the event', 14, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(30, '2025-08-15 16:00:16.791895+00', 'Allow users to choose color on event', 'Incase a color is too close to other events', 8, 'ceaef02a-7f0e-46a2-bdac-bc2999e0de34', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(31, '2025-08-15 16:01:45.783573+00', 'Displaying bleacher id instead of bleacher number in work tracker', 'It''s showing the bleacher id not the bleacher number in the work trascker in work trackers page. So in production bleacher 43 is displaying as bleacher 44', 8, 'ceaef02a-7f0e-46a2-bdac-bc2999e0de34', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
-	(32, '2025-08-19 15:26:56.581781+00', 'Pre selected Dashboard', 'Assign bleachers by number to users,   thesew numbers should be the ones they see on there home screen,    Each user will only be allowed to adit the numbers they are assigned to.  
+	('2025-08-06 17:14:34.410444+00', 'Laggy only in yellow boxes', 'when typing in yellow boxes sometimes the text can take like 8 seconds to update.', 8, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-07-28 15:00:40.312656+00', 'Prompt For Creating An Event With No Bleachers', 'When someone first creates an event they tend to forget to add a bleacher to it so I think if someone clicks save event with no bleachers selected, you should see a prompt saying "Forgetting something? 🥴"  Then maybe some text saying that this event has no bleachers selected. Do you want to select a bleacher for this event before saving? - Yes/ No', 8, 'ceaef02a-7f0e-46a2-bdac-bc2999e0de34', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-08-06 17:17:24.925995+00', 'Bleacher info on work tracker', 'In the bleacher number column, include the hitch type and the number of rows. This means I''ll need to add a new field to the bleacher in the assets page called "Hitch type" and then someone is going to need to input all the hitch types in the existing bleachers.', 8, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-08-06 17:24:07.048882+00', 'Work Tracker Location should affect bleache location', 'Now that we have work trackers the drop off location of the work tracker should affect the bleacher location on the sticky left column.', 8, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-08-15 15:50:21.583591+00', 'Bug when scrolling down on events axis', 'When you scroll down on the events axis it throws a client side exception.', 9, 'ceaef02a-7f0e-46a2-bdac-bc2999e0de34', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
+	('2025-08-15 15:58:59.910257+00', 'override colors', 'add a setting in event tab so that we can over ride the color of the event', 14, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-08-15 16:00:16.791895+00', 'Allow users to choose color on event', 'Incase a color is too close to other events', 8, 'ceaef02a-7f0e-46a2-bdac-bc2999e0de34', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-08-15 16:01:45.783573+00', 'Displaying bleacher id instead of bleacher number in work tracker', 'It''s showing the bleacher id not the bleacher number in the work trascker in work trackers page. So in production bleacher 43 is displaying as bleacher 44', 8, 'ceaef02a-7f0e-46a2-bdac-bc2999e0de34', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
+	('2025-08-19 15:26:56.581781+00', 'Pre selected Dashboard', 'Assign bleachers by number to users,   thesew numbers should be the ones they see on there home screen,    Each user will only be allowed to adit the numbers they are assigned to.  
 
 Maybe a toggle button to show all or show just the bleachers they get to see would be usfull
 
@@ -2846,15 +2846,15 @@ Maybe this can be greyed out for the owner of the use during these dates and ope
 The idea is that only one user should have access to a bleachers (the responsible person) at one time,   other then the manager. 
 
 ', 14, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(33, '2025-10-29 12:28:53.363974+00', 'search bar', 'Add a search bar for event look up', 14, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(34, '2025-10-30 13:46:02.110987+00', 'edit the work tracker page', 'would like this to show each week,  then under the week show the list of drivers,   rather then the drivers then the week.  
+	('2025-10-29 12:28:53.363974+00', 'search bar', 'Add a search bar for event look up', 14, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-10-30 13:46:02.110987+00', 'edit the work tracker page', 'would like this to show each week,  then under the week show the list of drivers,   rather then the drivers then the week.  
 
 
 Then we have a check box that states when the drivers are ready to be paid,  and another to check after they were paid.  
 
 Seperate list for canadian drivers and us drivers', 14, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(35, '2025-10-30 13:53:20.863908+00', 'default to summer homebase', 'move the bleacher sorting to a toggle switch on th etop,    default list shows summer homebase,   toggle  to switch to winter or all bleachers.  ', 14, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(36, '2025-11-13 14:09:10.685741+00', 'Dashboard and KPI''s', 'I''d like to create a dashboard with metrics that are public for all to see.   
+	('2025-10-30 13:53:20.863908+00', 'default to summer homebase', 'move the bleacher sorting to a toggle switch on th etop,    default list shows summer homebase,   toggle  to switch to winter or all bleachers.  ', 14, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-11-13 14:09:10.685741+00', 'Dashboard and KPI''s', 'I''d like to create a dashboard with metrics that are public for all to see.   
 
 But i''m woundering if we need a private list that shows only the login users events in a list sorted by date,  so they can easily switch the event to confirmed,  rather then going in the dashboard list.  
  
@@ -2881,14 +2881,14 @@ Gross profit = Total event value - total cost of delvery
 
 Total bleacher value,   = total value of bleachers under management,  (winter is dec 1 to juine 1,  summer is june 1 to dec 1,).   we will require to put value of each asset in the suystem for this.  
   ', 14, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(37, '2025-11-14 18:10:41.998799+00', 'Wrapped Text', 'Could we wrap the text in the box? Just to make it look neater especially when we have event to event quotes. ', 21, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(38, '2025-11-14 18:48:31.406189+00', 'Home Base when entering events', 'If I am entering an event in SC or NC and selecting bleachers, it won''t create event because it says " can''t find home base".', 21, '8e24e3f4-a443-4792-a89d-123924c48321', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
-	(39, '2025-11-17 20:50:47.343293+00', 'Account manager access', 'Account managers will need to have access to the work trackers on the left side. When I switched from Admin to Account manager, Assets, team and work trackers all became hidden for me. - Denver ', 12, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(40, '2025-11-18 20:40:48.524247+00', 'Drivers App', 'Pre/Post Trip Inspections- Google form already created.  Drivers accepting/approving delivery/pick up (delivery confirmation check box- then it asks did you do your post trip inspection- allow to add set up photos etc) Documents- upload documents drivers need ie- blue books.  Instructional videos- on our website already www.bleacherrentals.com/driver Password:BRdriver. Ability to send documents for signatures ie: rate cards, policies etc. Driver profile- phone number, email, address, do they have storage space for bleachers,  upload drivers license, medical card etc to profile.  Messaging feature- send/receive messages like text with drivers right through the app. ', 13, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(41, '2025-11-18 20:43:12.263236+00', 'Maintenance ', 'Be able to book a bleacher out for maintenance so the team knows when a bleacher is out of service for repairs.(highlight in red) Allow to add address of shop if being taken to a shop for repairs. ', 13, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(42, '2025-12-06 01:43:57.837075+00', 'drivers rate', 'When changing drivers rate it wont let me choose usd or mile/hourly. ', 14, '8e24e3f4-a443-4792-a89d-123924c48321', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
-	(43, '2025-12-10 13:20:57.746328+00', 'Work tracker- no bleachers', 'Josh, just doing the work trackers this week.. anyway there can be an option of not selecting a bleacher? 99% of the time this is for when we have to do site visits.. that could be an option maybe there is a bleacher called " Site Visit" or just an option to select no bleacher.  But I need to be able to put this line item on the work trackers.  Call/ msg me if this is confusing. thanks!', 12, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
-	(23, '2025-08-01 14:36:52.789356+00', 'Pay Auto Populate', 'Use Google Maps API to get the distrance to drive for the driver. Use non-toll roads. 
+	('2025-11-14 18:10:41.998799+00', 'Wrapped Text', 'Could we wrap the text in the box? Just to make it look neater especially when we have event to event quotes. ', 21, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-11-14 18:48:31.406189+00', 'Home Base when entering events', 'If I am entering an event in SC or NC and selecting bleachers, it won''t create event because it says " can''t find home base".', 21, '8e24e3f4-a443-4792-a89d-123924c48321', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
+	('2025-11-17 20:50:47.343293+00', 'Account manager access', 'Account managers will need to have access to the work trackers on the left side. When I switched from Admin to Account manager, Assets, team and work trackers all became hidden for me. - Denver ', 12, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-11-18 20:40:48.524247+00', 'Drivers App', 'Pre/Post Trip Inspections- Google form already created.  Drivers accepting/approving delivery/pick up (delivery confirmation check box- then it asks did you do your post trip inspection- allow to add set up photos etc) Documents- upload documents drivers need ie- blue books.  Instructional videos- on our website already www.bleacherrentals.com/driver Password:BRdriver. Ability to send documents for signatures ie: rate cards, policies etc. Driver profile- phone number, email, address, do they have storage space for bleachers,  upload drivers license, medical card etc to profile.  Messaging feature- send/receive messages like text with drivers right through the app. ', 13, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-11-18 20:43:12.263236+00', 'Maintenance ', 'Be able to book a bleacher out for maintenance so the team knows when a bleacher is out of service for repairs.(highlight in red) Allow to add address of shop if being taken to a shop for repairs. ', 13, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-12-06 01:43:57.837075+00', 'drivers rate', 'When changing drivers rate it wont let me choose usd or mile/hourly. ', 14, '8e24e3f4-a443-4792-a89d-123924c48321', '35e4808d-a206-4887-94c2-8ccc9f13264a'),
+	('2025-12-10 13:20:57.746328+00', 'Work tracker- no bleachers', 'Josh, just doing the work trackers this week.. anyway there can be an option of not selecting a bleacher? 99% of the time this is for when we have to do site visits.. that could be an option maybe there is a bleacher called " Site Visit" or just an option to select no bleacher.  But I need to be able to put this line item on the work trackers.  Call/ msg me if this is confusing. thanks!', 12, '8e24e3f4-a443-4792-a89d-123924c48321', '236d435a-6e37-4b93-88ab-00be22b36a90'),
+	('2025-08-01 14:36:52.789356+00', 'Pay Auto Populate', 'Use Google Maps API to get the distrance to drive for the driver. Use non-toll roads. 
 
 Add driver rate field to driver config based on milage. $ per Km maybe do the mile drop down if easy and not a rabit hole.
 
@@ -3090,13 +3090,6 @@ SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 1, false);
 
 
 --
--- Name: Tasks_task_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('"public"."Tasks_task_id_seq"', 43, true);
-
-
---
 -- Name: UserHomeBases_user_home_base_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -3142,6 +3135,6 @@ SELECT pg_catalog.setval('"supabase_functions"."hooks_id_seq"', 1, false);
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict 07WyXTiOaLubbQRxr4Db3tlOmv3uVhkrWVgbvQoajXVYcSvDyHkFUMTDwNrF8Aq
+-- \unrestrict xpfz6lHvP4ZdZ59tL2d6m4bN985sD8lH8Q7BYLWvamtnkLcCDmoIcd3U3gbmXgc
 
 RESET ALL;
