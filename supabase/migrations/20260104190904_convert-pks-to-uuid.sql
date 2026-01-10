@@ -1008,6 +1008,9 @@ commit;
 
 begin;
 
+drop trigger if exists users_sync_is_admin on public."Users";
+drop trigger if exists users_sync_role_from_is_admin on public."Users";
+
 -- 1) add uuid "id" column (nullable)
 alter table "public"."Users" add column if not exists id uuid;
 
@@ -1164,7 +1167,22 @@ commit;
 
 
 
+-- create table
+--   public.lists (
+--     id uuid not null default gen_random_uuid (),
+--     created_at timestamp with time zone not null default now(),
+--     name text not null,
+--     constraint lists_pkey primary key (id)
+--   ) tablespace pg_default;
 
 
 
-
+-- Create a role/user with replication privileges for PowerSync
+CREATE ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN PASSWORD 'myhighlyrandompassword';
+-- Set up permissions for the newly created role
+-- Read-only (SELECT) access is required
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO powersync_role;
+-- Optionally, grant SELECT on all future tables (to cater for schema additions)
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO powersync_role;
+-- Create a publication to replicate tables. The publication must be named "powersync"
+CREATE PUBLICATION powersync FOR ALL TABLES;

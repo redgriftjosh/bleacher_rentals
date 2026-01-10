@@ -141,7 +141,7 @@ SET row_security = off;
 
 INSERT INTO "public"."Users" ("created_at", "first_name", "last_name", "email", "phone", "clerk_user_id", "status", "role", "avatar_image_url", "is_admin", "id") VALUES
 	('2025-10-10 13:18:26.252838+00', 'Kyle', '- KDR', 'kroth@kdrinc.ca', NULL, NULL, 2, 3, NULL, false, '17dac0a8-3125-4d03-ac2b-0ed0798af461'),
-	('2025-05-27 17:21:05.15774+00', 'Josh', 'Redgrift', 'redgriftjosh@gmail.com', NULL, 'user_2xgjA9Jf7gCkDc1GKbhdGyF0vKd', 2, 2, NULL, true, 'fb847f63-6088-4089-b62f-fe4aa4abe573'),
+	('2025-05-27 17:21:05.15774+00', 'Josh', 'Redgrift', 'redgriftjosh@gmail.com', NULL, 'user_35f2pOOvsfbnuYFRKDMmPKqcc5f', 2, 2, NULL, true, 'fb847f63-6088-4089-b62f-fe4aa4abe573'),
 	('2025-10-10 16:45:08.808979+00', 'Jake', 'Loewen', 'jacob.loewen4141@gmail.com', NULL, NULL, 2, 3, NULL, false, '726fd04b-649c-4f05-b45b-e05a3cbcf6e9'),
 	('2025-10-10 13:16:32.664764+00', 'Mitch', 'Carruthers', 'carruthersmitchell@hotmail.com', NULL, NULL, 2, 3, NULL, false, 'e7034a30-0964-469a-a75c-368aae1b8af2'),
 	('2025-05-27 17:41:16.95106+00', 'Michelle', 'Adcock', 'michelle@bleacherrentals.com', NULL, 'user_2xgmEKuFQ00ExgIWyHwUnAX2lUl', 2, 2, NULL, true, '0add9397-6c0d-42d8-8c43-476cf895ae32'),

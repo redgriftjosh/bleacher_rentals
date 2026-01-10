@@ -10,6 +10,7 @@ import { checkInsertBleacherFormRules } from "../../functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { Database } from "../../../../../../../database.types";
 
 export function SheetAddBleacher() {
   const supabase = useClerkSupabaseClient();
@@ -21,8 +22,13 @@ export function SheetAddBleacher() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("HomeBases")
-        .select("home_base_id, home_base_name")
+        .select("id, home_base_name")
         .order("home_base_name");
+
+      type Expected =
+        | Pick<Database["public"]["Tables"]["HomeBases"]["Row"], "id" | "home_base_name">[]
+        | null;
+      data satisfies Expected;
 
       if (error) throw error;
       return data as SelectHomeBase[];

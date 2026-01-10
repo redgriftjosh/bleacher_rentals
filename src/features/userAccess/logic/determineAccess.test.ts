@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { determineUserAccess, USER_STATUS, AccessResult } from "./determineAccess";
-import { UserAccessData } from "../db/getUserAccess.db";
+import { UserAccessData } from "../hooks/useUserAccess";
 
 describe("determineUserAccess", () => {
   it("should deny access when user data is null", () => {
@@ -11,7 +11,7 @@ describe("determineUserAccess", () => {
 
   it("should deny access for deactivated users regardless of roles", () => {
     const userData: UserAccessData = {
-      user_id: 1,
+      user_uuid: "1",
       status: USER_STATUS.DEACTIVATED,
       is_admin: true,
       hasAccountManagerRole: true,
@@ -24,7 +24,7 @@ describe("determineUserAccess", () => {
 
   it("should grant full access to admins", () => {
     const userData: UserAccessData = {
-      user_id: 1,
+      user_uuid: "1",
       status: USER_STATUS.ACTIVE,
       is_admin: true,
       hasAccountManagerRole: false,
@@ -37,7 +37,7 @@ describe("determineUserAccess", () => {
 
   it("should grant full access to account managers", () => {
     const userData: UserAccessData = {
-      user_id: 1,
+      user_uuid: "1",
       status: USER_STATUS.ACTIVE,
       is_admin: false,
       hasAccountManagerRole: true,
@@ -50,7 +50,7 @@ describe("determineUserAccess", () => {
 
   it("should grant full access to users who are both account manager and admin", () => {
     const userData: UserAccessData = {
-      user_id: 1,
+      user_uuid: "1",
       status: USER_STATUS.ACTIVE,
       is_admin: true,
       hasAccountManagerRole: true,
@@ -63,7 +63,7 @@ describe("determineUserAccess", () => {
 
   it("should grant driver-only access to users with only driver role", () => {
     const userData: UserAccessData = {
-      user_id: 1,
+      user_uuid: "1",
       status: USER_STATUS.ACTIVE,
       is_admin: false,
       hasAccountManagerRole: false,
@@ -76,7 +76,7 @@ describe("determineUserAccess", () => {
 
   it("should deny access to users with no roles", () => {
     const userData: UserAccessData = {
-      user_id: 1,
+      user_uuid: "1",
       status: USER_STATUS.ACTIVE,
       is_admin: false,
       hasAccountManagerRole: false,
@@ -89,7 +89,7 @@ describe("determineUserAccess", () => {
 
   it("should grant full access to inactive users who are admins", () => {
     const userData: UserAccessData = {
-      user_id: 1,
+      user_uuid: "1",
       status: USER_STATUS.INACTIVE,
       is_admin: true,
       hasAccountManagerRole: false,
@@ -101,7 +101,7 @@ describe("determineUserAccess", () => {
 
   it("should grant driver-only access to inactive users with driver role", () => {
     const userData: UserAccessData = {
-      user_id: 1,
+      user_uuid: "1",
       status: USER_STATUS.INACTIVE,
       is_admin: false,
       hasAccountManagerRole: false,
@@ -113,7 +113,7 @@ describe("determineUserAccess", () => {
 
   it("should prioritize admin over driver role", () => {
     const userData: UserAccessData = {
-      user_id: 1,
+      user_uuid: "1",
       status: USER_STATUS.ACTIVE,
       is_admin: true,
       hasAccountManagerRole: false,
@@ -125,7 +125,7 @@ describe("determineUserAccess", () => {
 
   it("should prioritize account manager over driver role", () => {
     const userData: UserAccessData = {
-      user_id: 1,
+      user_uuid: "1",
       status: USER_STATUS.ACTIVE,
       is_admin: false,
       hasAccountManagerRole: true,

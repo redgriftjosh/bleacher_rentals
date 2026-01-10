@@ -1,4 +1,4 @@
-import { UserAccessData } from "../db/getUserAccess.db";
+import { UserAccessData } from "../hooks/useUserAccess";
 
 export const USER_STATUS = {
   ACTIVE: 1,

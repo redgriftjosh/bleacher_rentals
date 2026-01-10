@@ -83,8 +83,8 @@ export function useBleacherQuery(bleacherNumber: number | null) {
           home_base_id,
           winter_home_base_id,
           linxup_device_id,
-          summer_account_manager_id,
-          winter_account_manager_id
+          summer_account_manager_uuid,
+          winter_account_manager_uuid
         `
         )
         .eq("bleacher_number", bleacherNumber)
