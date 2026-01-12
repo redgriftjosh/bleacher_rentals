@@ -568,7 +568,7 @@ export type Database = {
           last_name: string | null
           phone: string | null
           role: number | null
-          status: number
+          status_uuid: string | null
         }
         Insert: {
           avatar_image_url?: string | null
@@ -581,7 +581,7 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           role?: number | null
-          status?: number
+          status_uuid?: string | null
         }
         Update: {
           avatar_image_url?: string | null
@@ -594,9 +594,17 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           role?: number | null
-          status?: number
+          status_uuid?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "Users_status_uuid_fkey"
+            columns: ["status_uuid"]
+            isOneToOne: false
+            referencedRelation: "UserStatuses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       UserStatuses: {
         Row: {

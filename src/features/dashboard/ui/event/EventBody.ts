@@ -35,7 +35,7 @@ export class EventBody extends Sprite {
         : 0x808080;
 
     const texture = baker.getTexture(
-      `EventBody:${eventInfo.span?.ev.eventId}:${isBooked ? "booked" : "quoted"}:${
+      `EventBody:${eventInfo.span?.ev.eventUuid}:${isBooked ? "booked" : "quoted"}:${
         eventInfo.isStart ? "start" : eventInfo.isEnd ? "end" : "middle"
       }`,
       null,
@@ -139,6 +139,6 @@ export class EventBody extends Sprite {
       return;
     }
 
-    await loadEventById(bleacherEvent.eventId, supabase);
+    await loadEventById(bleacherEvent.eventUuid, supabase);
   }
 }

@@ -16,7 +16,7 @@ import { calculateUserAlerts } from "../util/alerts";
 export function UserConfigurationModal() {
   const isOpen = useCurrentUserStore((s) => s.isOpen);
   const setIsOpen = useCurrentUserStore((s) => s.setIsOpen);
-  const existingUserId = useCurrentUserStore((s) => s.existingUserId);
+  const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
   const state = useCurrentUserStore();
   const resetForm = useCurrentUserStore((s) => s.resetForm);
 
@@ -32,7 +32,7 @@ export function UserConfigurationModal() {
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{existingUserId ? "Edit User Configuration" : "Add New User"}</DialogTitle>
+          <DialogTitle>{existingUserUuid ? "Edit User Configuration" : "Add New User"}</DialogTitle>
           <DialogDescription>
             Configure user details, roles, and permissions. All sections marked with * are required.
           </DialogDescription>

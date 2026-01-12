@@ -959,24 +959,24 @@ alter table "public"."UserStatuses" drop constraint if exists "UserStatuses_id_k
 alter table "public"."UserStatuses" add constraint "UserStatuses_id_key" unique (id);
 
 -- 5) (on referencing tables) add new null columns to reference new uuid PKs
--- alter table "public"."OtherTable" add column if not exists table_uuid uuid;
+alter table "public"."Users" add column if not exists status_uuid uuid;
 
 -- 6) (on referencing tables) set value for new uuid columns using the old bigint FK
--- update "public"."OtherTable" ref set table_uuid = curr.id from "public"."Table" curr where ref.table_id is not null and ref.table_id = curr.table_id;
+update "public"."Users" ref set status_uuid = curr.id from "public"."UserStatuses" curr where ref.status is not null and ref.status = curr.user_status_id;
 
 -- 7) add sql from 6) to end of seed.sql, run supabase db reset, then supabase db dump --local --data-only -f supabase/seed.sql
 
 -- 8) (on referencing tables) drop old FKs constraints
--- alter table "public"."OtherTable" drop constraint if exists "OtherTable_table_id_fkey";
+alter table "public"."Users" drop constraint if exists "Users_status_id_fkey";
 
 -- 9) (on referencing tables) create new FK constraints with uuids
--- alter table "public"."OtherTable" add constraint "OtherTable_table_uuid_fkey" foreign key (table_uuid) references public."Table"(id);
+alter table "public"."Users" add constraint "Users_status_uuid_fkey" foreign key (status_uuid) references public."UserStatuses"(id);
 
 -- 10) (on referencing tables) create indexes on new uuids
--- create index if not exists "OtherTable_table_uuid_idx" on public."OtherTable"(table_uuid);
+create index if not exists "Users_status_uuid_idx" on public."Users"(status_uuid);
 
 -- 11) (on referencing tables) drop old bigint columns
--- alter table "public"."OtherTable" drop column table_id;
+alter table "public"."Users" drop column status;
 
 -- 11.5) drop each of these columns in the studio as well so we can generate seed.sql without errors
 

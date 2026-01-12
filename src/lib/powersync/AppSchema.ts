@@ -11,7 +11,96 @@ const AccountManagersCols = {
   is_active: column.integer,
   user_uuid: column.text,
 } satisfies PowerSyncColsFor<"AccountManagers">;
-const AccountManagers = new Table(AccountManagersCols, { indexes: { user: ["user_uuid"] } });
+const AccountManagers = new Table(AccountManagersCols, { indexes: { user_uuid: ["user_uuid"] } });
+
+const AddressesCols = {
+  created_at: column.text,
+  street: column.text,
+  city: column.text,
+  state_province: column.text,
+  zip_postal: column.text,
+} satisfies PowerSyncColsFor<"Addresses">;
+const Addresses = new Table(AddressesCols);
+
+const BleachersCols = {
+  created_at: column.text,
+  bleacher_number: column.integer,
+  bleacher_rows: column.integer,
+  bleacher_seats: column.integer,
+  created_by: column.text,
+  updated_at: column.text,
+  updated_by: column.text,
+  linxup_device_id: column.text,
+  summer_account_manager_uuid: column.text,
+  winter_account_manager_uuid: column.text,
+  summer_home_base_uuid: column.text,
+  winter_home_base_uuid: column.text,
+} satisfies PowerSyncColsFor<"Bleachers">;
+const Bleachers = new Table(BleachersCols, {
+  indexes: {
+    summer_account_manager_uuid: ["summer_account_manager_uuid"],
+    winter_account_manager_uuid: ["winter_account_manager_uuid"],
+    summer_home_base_uuid: ["summer_home_base_uuid"],
+    winter_home_base_uuid: ["winter_home_base_uuid"],
+  },
+});
+
+const BleacherEventsCols = {
+  created_at: column.text,
+  setup_text: column.text,
+  setup_confirmed: column.integer,
+  teardown_text: column.text,
+  teardown_confirmed: column.integer,
+  bleacher_uuid: column.text,
+  event_uuid: column.text,
+} satisfies PowerSyncColsFor<"BleacherEvents">;
+const BleacherEvents = new Table(BleacherEventsCols, {
+  indexes: {
+    bleacher_uuid: ["bleacher_uuid"],
+    event_uuid: ["event_uuid"],
+  },
+});
+
+const BlocksCols = {
+  created_at: column.text,
+  text: column.text,
+  date: column.text,
+  bleacher_uuid: column.text,
+} satisfies PowerSyncColsFor<"Blocks">;
+const Blocks = new Table(BlocksCols, { indexes: { bleacher_uuid: ["bleacher_uuid"] } });
+
+const EventsCols = {
+  created_at: column.text,
+  event_name: column.text,
+  setup_start: column.text,
+  event_start: column.text,
+  event_end: column.text,
+  teardown_end: column.text,
+  total_seats: column.integer,
+  seven_row: column.integer,
+  ten_row: column.integer,
+  fifteen_row: column.integer,
+  lenient: column.integer,
+  booked: column.integer,
+  notes: column.text,
+  must_be_clean: column.integer,
+  hsl_hue: column.integer,
+  goodshuffle_url: column.text,
+  address_uuid: column.text,
+  created_by_user_uuid: column.text,
+} satisfies PowerSyncColsFor<"Events">;
+const Events = new Table(EventsCols, {
+  indexes: {
+    created_by_user_uuid: ["created_by_user_uuid"],
+    address_uuid: ["address_uuid"],
+  },
+});
+
+const HomeBasesCols = {
+  created_at: column.text,
+  home_base_name: column.text,
+} satisfies PowerSyncColsFor<"HomeBases">;
+const HomeBases = new Table(HomeBasesCols);
 
 const DriversCols = {
   created_at: column.text,
@@ -23,7 +112,7 @@ const DriversCols = {
   account_manager_uuid: column.text,
   user_uuid: column.text,
 } satisfies PowerSyncColsFor<"Drivers">;
-const Drivers = new Table(DriversCols, { indexes: { user: ["user_uuid"] } });
+const Drivers = new Table(DriversCols, { indexes: { user_uuid: ["user_uuid"] } });
 
 const UsersCols = {
   first_name: column.text,
@@ -31,13 +120,13 @@ const UsersCols = {
   email: column.text,
   phone: column.text,
   clerk_user_id: column.text,
-  status: column.integer,
+  status_uuid: column.text,
   role: column.integer,
   avatar_image_url: column.text,
   is_admin: column.integer,
   created_at: column.text,
 } satisfies PowerSyncColsFor<"Users">;
-const Users = new Table(UsersCols);
+const Users = new Table(UsersCols, { indexes: { status_uuid: ["status_uuid"] } });
 
 const WorkTrackersCols = {
   created_at: column.text,
@@ -56,18 +145,30 @@ const WorkTrackersCols = {
   user_uuid: column.text,
 } satisfies PowerSyncColsFor<"WorkTrackers">;
 const WorkTrackers = new Table(WorkTrackersCols, {
-  indexes: { user: ["user_uuid"], driver: ["driver_uuid"] },
+  indexes: { user_uuid: ["user_uuid"], driver_uuid: ["driver_uuid"] },
 });
 
 export const AppSchema = new Schema({
+  Addresses,
   AccountManagers,
+  Bleachers,
+  BleacherEvents,
+  Blocks,
+  Events,
+  HomeBases,
   Drivers,
   Users,
   WorkTrackers,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
+export type BlocksRecord = PowerSyncDB["Blocks"];
+export type AddressRecord = PowerSyncDB["Addresses"];
 export type AccountManagerRecord = PowerSyncDB["AccountManagers"];
 export type DriverRecord = PowerSyncDB["Drivers"];
 export type UserRecord = PowerSyncDB["Users"];
+export type HomeBasesRecord = PowerSyncDB["HomeBases"];
+export type BleachersRecord = PowerSyncDB["Bleachers"];
+export type BleacherEventsRecord = PowerSyncDB["BleacherEvents"];
+export type EventsRecord = PowerSyncDB["Events"];
 export type WorkTrackerRecord = PowerSyncDB["WorkTrackers"];

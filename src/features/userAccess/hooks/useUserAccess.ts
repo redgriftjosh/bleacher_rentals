@@ -1,23 +1,24 @@
 import { useUser } from "@clerk/nextjs";
-import { determineUserAccess } from "../logic/determineAccess";
+import { AccessLevel, determineUserAccess } from "../logic/determineAccess";
 import { useQuery } from "@powersync/react";
 import { ACCOUNT_MANAGERS_TABLE, DRIVERS_TABLE, USERS_TABLE } from "@/lib/powersync/AppSchema";
 import { useMemo } from "react";
 import { db } from "@/components/providers/SystemProvider";
+import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 
 export type UserAccessData = {
-  user_uuid: string;
-  status: number;
-  is_admin: boolean;
-  hasAccountManagerRole: boolean;
-  hasDriverRole: boolean;
+  status_uuid: string | null;
+  id: string;
+  is_admin: number | null;
+  account_manager_id: string | null;
+  driver_id: string | null;
 };
 
 /**
  * React Query hook to fetch and determine user access level.
  * Returns the access result and loading/error states.
  */
-export function useUserAccess() {
+export function useUserAccess(): { accessLevel: AccessLevel; reason?: string } {
   const { user } = useUser();
   const clerkUserId = user?.id ?? null;
 
@@ -35,7 +36,7 @@ export function useUserAccess() {
       )
       .select([
         "u.id as id",
-        "u.status as status",
+        "u.status_uuid",
         "u.is_admin as is_admin",
         "am.id as account_manager_id",
         "d.id as driver_id",
@@ -45,12 +46,21 @@ export function useUserAccess() {
       .compile();
   }, [clerkUserId]);
 
-  const { data: results } = useQuery(
-    compiled?.sql ?? "select 1 where 0",
-    (compiled?.parameters as any[]) ?? []
-  );
+  if (!compiled) {
+    return {
+      accessLevel: "denied",
+      reason: "Loading user data...",
+    };
+  }
 
-  const result = results?.[0];
+  const { data } = useTypedQuery(compiled, expect<UserAccessData>());
+
+  // const { data: results } = useQuery(
+  //   compiled?.sql ?? "select 1 where 0",
+  //   (compiled?.parameters as any[]) ?? []
+  // );
+
+  const result = data?.[0];
 
   // const { data: results } = useQuery(
   //   `SELECT
@@ -71,17 +81,17 @@ export function useUserAccess() {
   // Return early if data hasn't loaded yet
   if (!result) {
     return {
-      accessLevel: null,
+      accessLevel: "denied",
       reason: "Loading user data...",
     };
   }
 
   const userData: UserAccessData = {
-    user_uuid: result.id,
-    status: result.status,
+    id: result.id,
+    status_uuid: result.status_uuid,
     is_admin: result.is_admin,
-    hasAccountManagerRole: !!result.account_manager_id,
-    hasDriverRole: !!result.driver_id,
+    account_manager_id: result.account_manager_id,
+    driver_id: result.driver_id,
   };
 
   console.log(`userData ${JSON.stringify(userData, null, 2)}`);

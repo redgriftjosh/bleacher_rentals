@@ -1,24 +1,24 @@
 import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { fetchAddressFromId } from "../../../dashboard/db/client/db";
+import { fetchAddressFromUuid } from "../../../dashboard/db/client/db";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Tables } from "../../../../../database.types";
 
-export async function fetchWorkTrackerById(
-  id: number,
+export async function fetchWorkTrackerByUuid(
+  uuid: string,
   supabase: SupabaseClient
 ): Promise<{
   workTracker: Tables<"WorkTrackers"> | null;
   pickupAddress: Tables<"Addresses"> | null;
   dropoffAddress: Tables<"Addresses"> | null;
 }> {
-  const workTracker = await fetchWorkTracker(id, supabase);
+  const workTracker = await fetchWorkTracker(uuid, supabase);
   let pickupAddress: Tables<"Addresses"> | null = null;
-  if (workTracker?.pickup_address_id) {
-    pickupAddress = await fetchAddressFromId(workTracker.pickup_address_id, supabase);
+  if (workTracker?.pickup_address_uuid) {
+    pickupAddress = await fetchAddressFromUuid(workTracker.pickup_address_uuid, supabase);
   }
   let dropoffAddress: Tables<"Addresses"> | null = null;
-  if (workTracker?.dropoff_address_id) {
-    dropoffAddress = await fetchAddressFromId(workTracker.dropoff_address_id, supabase);
+  if (workTracker?.dropoff_address_uuid) {
+    dropoffAddress = await fetchAddressFromUuid(workTracker.dropoff_address_uuid, supabase);
   }
 
   console.log("data", workTracker, pickupAddress, dropoffAddress);
@@ -26,14 +26,10 @@ export async function fetchWorkTrackerById(
 }
 
 async function fetchWorkTracker(
-  id: number,
+  uuid: string,
   supabase: SupabaseClient
 ): Promise<Tables<"WorkTrackers"> | null> {
-  const { data, error } = await supabase
-    .from("WorkTrackers")
-    .select("*")
-    .eq("work_tracker_id", id)
-    .single();
+  const { data, error } = await supabase.from("WorkTrackers").select("*").eq("id", uuid).single();
 
   if (error) {
     createErrorToast(["Failed to fetch work tracker.", error.message]);

@@ -26,3 +26,10 @@ type ColFor<V> =
 export type PowerSyncColsFor<T extends SupaTableName> = {
   [K in Exclude<keyof SupaRow<T>, "id"> & string]: ColFor<SupaRow<T>[K]>;
 };
+
+// Exact type equality helper
+export type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
+  ? (<T>() => T extends B ? 1 : 2) extends <T>() => T extends A ? 1 : 2
+    ? true
+    : false
+  : false;

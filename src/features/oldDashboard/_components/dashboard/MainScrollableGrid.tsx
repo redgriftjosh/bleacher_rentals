@@ -26,11 +26,11 @@ import { Tables } from "../../../../../database.types";
 
 export type EditBlock = {
   key: string;
-  blockId: number | null;
-  bleacherId: number;
+  blockUuid: string | null;
+  bleacherUuid: string;
   date: string;
   text: string;
-  workTrackerId: number | null;
+  workTrackerUuid: string | null;
 };
 
 type MainScrollableGridProps = {

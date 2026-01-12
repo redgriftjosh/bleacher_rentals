@@ -56,7 +56,7 @@ interface MultiSelectProps
     /** The text to display for the option. */
     label: string;
     /** The unique value associated with the option. */
-    value: number;
+    value: string;
     /** Optional icon component to display alongside the option. */
     icon?: React.ComponentType<{ className?: string }>;
   }[];
@@ -67,12 +67,12 @@ interface MultiSelectProps
    * Callback function triggered when the selected values change.
    * Receives an array of the new selected values.
    */
-  onValueChange: (value: number[]) => void;
+  onValueChange: (value: string[]) => void;
 
   /** The default selected values when the component mounts. */
-  defaultSelectedValues?: number[];
+  defaultSelectedValues?: string[];
 
-  forceSelectedValues?: number[];
+  forceSelectedValues?: string[];
 
   /**
    * Placeholder text to be displayed when no values are selected.
@@ -131,7 +131,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
     },
     ref
   ) => {
-    const [internalSelected, setInternalSelected] = React.useState<number[]>(defaultSelectedValues);
+    const [internalSelected, setInternalSelected] = React.useState<string[]>(defaultSelectedValues);
     const isControlled = typeof forceSelectedValues !== "undefined";
     const selectedValues = isControlled ? forceSelectedValues : internalSelected;
 
@@ -155,7 +155,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       }
     };
 
-    const toggleOption = (value: number) => {
+    const toggleOption = (value: string) => {
       const exists = selectedValues.includes(value);
       const newValues = exists
         ? selectedValues.filter((v) => v !== value)

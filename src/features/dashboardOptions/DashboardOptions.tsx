@@ -28,8 +28,8 @@ export function DashboardOptions() {
   const yAxis = useFilterDashboardStore((s) => s.yAxis);
   const setField = useFilterDashboardStore((s) => s.setField);
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
-  const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
-  const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
+  const summerHomeBaseUuids = useFilterDashboardStore((s) => s.summerHomeBaseUuids);
+  const winterHomeBaseUuids = useFilterDashboardStore((s) => s.winterHomeBaseUuids);
   const rows = useFilterDashboardStore((s) => s.rows);
   const stateProvinces = useFilterDashboardStore((s) => s.stateProvinces);
   const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
@@ -53,11 +53,11 @@ export function DashboardOptions() {
     if (homeBaseOptions.length === 0 || rowOptions.length === 0 || stateProvOptions.length === 0)
       return;
     setInitialized(true);
-    const allHomeIds = homeBaseOptions.map((o) => o.value);
+    const allHomeUuids = homeBaseOptions.map((o) => o.value);
     const allRowVals = rowOptions.map((o) => o.value);
     const allStates = stateProvOptions.map((o) => o.value);
-    setField("homeBaseIds", allHomeIds);
-    setField("winterHomeBaseIds", allHomeIds);
+    setField("summerHomeBaseUuids", allHomeUuids);
+    setField("winterHomeBaseUuids", allHomeUuids);
     setField("rows", allRowVals);
     setField("stateProvinces", allStates);
   }, [initialized, homeBaseOptions, rowOptions, stateProvOptions, setField]);
@@ -158,8 +158,8 @@ export function DashboardOptions() {
                 <MultiSelect
                   options={homeBaseOptions}
                   color="bg-amber-500"
-                  onValueChange={(value) => setField("homeBaseIds", value)}
-                  forceSelectedValues={homeBaseIds}
+                  onValueChange={(value) => setField("summerHomeBaseUuids", value)}
+                  forceSelectedValues={summerHomeBaseUuids}
                   placeholder="Home Bases"
                   variant="inverted"
                   maxCount={1}
@@ -172,8 +172,8 @@ export function DashboardOptions() {
                 <MultiSelect
                   options={homeBaseOptions}
                   color="bg-blue-500"
-                  onValueChange={(value) => setField("winterHomeBaseIds", value)}
-                  forceSelectedValues={winterHomeBaseIds}
+                  onValueChange={(value) => setField("winterHomeBaseUuids", value)}
+                  forceSelectedValues={winterHomeBaseUuids}
                   placeholder="Home Bases"
                   variant="inverted"
                   maxCount={1}
@@ -191,9 +191,12 @@ export function DashboardOptions() {
             <DialogTitle>Rows</DialogTitle>
           </DialogHeader>
           <MultiSelect
-            options={rowOptions}
-            onValueChange={(value) => setField("rows", value)}
-            forceSelectedValues={rows}
+            options={rowOptions.map((value) => ({
+              value: value.toString(),
+              label: value.label,
+            }))}
+            onValueChange={(value) => setField("rows", value.map(Number))}
+            forceSelectedValues={rows.map(String)}
             placeholder="Rows"
             variant="inverted"
             maxCount={1}
@@ -208,9 +211,12 @@ export function DashboardOptions() {
             <DialogTitle>States & Provinces</DialogTitle>
           </DialogHeader>
           <MultiSelect
-            options={stateProvOptions}
-            onValueChange={(value) => setField("stateProvinces", value)}
-            forceSelectedValues={stateProvinces}
+            options={stateProvOptions.map((value) => ({
+              value: value.toString(),
+              label: value.label,
+            }))}
+            onValueChange={(value) => setField("stateProvinces", value.map(Number))}
+            forceSelectedValues={stateProvinces.map(String)}
             placeholder="States & Provinces"
             variant="inverted"
             maxCount={1}

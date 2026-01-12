@@ -23,14 +23,14 @@ export function getTasks(selectedTab: Tab): Task[] | null {
   const tasksWithDetails: Task[] = [];
 
   for (const task of tasks) {
-    const taskType = taskTypes.find((t) => t.task_type_id === task.task_type_id);
-    const taskStatus = taskStatuses.find((s) => s.task_status_id === task.task_status_id);
-    const createdByUser = users.find((u) => u.user_id === task.created_by_user_id);
+    const taskType = taskTypes.find((t) => t.id === task.task_type_uuid);
+    const taskStatus = taskStatuses.find((s) => s.id === task.task_status_uuid);
+    const createdByUser = users.find((u) => u.id === task.created_by_user_uuid);
 
     if (!taskType || !taskStatus || !createdByUser) return null;
 
     // Filter based on selected tab
-    const statusId = taskStatus.task_status_id;
+    const statusId = taskStatus.id;
     const matchesTab =
       (selectedTab === "backlog" && statusId === STATUSES.backlog) ||
       (selectedTab === "completed" && statusId === STATUSES.complete) ||
@@ -52,36 +52,36 @@ export function getTasks(selectedTab: Tab): Task[] | null {
 }
 
 export async function saveTask(
-  taskId: number | null,
+  taskUuid: string | null,
   name: string,
   description: string,
-  typeId: number,
-  statusId: number,
+  typeUuid: string,
+  statusUuid: string,
   clerkUser: UserResource | null,
   allusers: Tables<"Users">[],
   supabase: SupabaseClient<Database>,
   setSubmitting: React.Dispatch<React.SetStateAction<boolean>>
 ) {
-  if (taskId) {
+  if (taskUuid) {
     // update task
     const { error: updateError } = await supabase
       .from("Tasks")
       .update({
         name,
         description,
-        task_type_id: typeId,
-        task_status_id: statusId,
+        task_type_uuid: typeUuid,
+        task_status_uuid: statusUuid,
       })
-      .eq("task_id", taskId);
+      .eq("id", taskUuid);
 
     if (updateError) {
       setSubmitting(false);
       createErrorToast(["Failed to update task", updateError.message]);
     }
   } else {
-    const userId = findUserId(clerkUser, allusers);
+    const userUuid = findUserId(clerkUser, allusers);
 
-    if (!userId) {
+    if (!userUuid) {
       setSubmitting(false);
       createErrorToast(["Failed to insert task", "User not found"]);
     }
@@ -90,9 +90,9 @@ export async function saveTask(
     const { error: insertError } = await supabase.from("Tasks").insert({
       name,
       description,
-      task_type_id: typeId,
-      task_status_id: statusId,
-      created_by_user_id: userId,
+      task_type_uuid: typeUuid,
+      task_status_uuid: statusUuid,
+      created_by_user_uuid: userUuid,
     });
 
     if (insertError) {
@@ -107,11 +107,11 @@ export async function saveTask(
 }
 
 export async function deleteTask(
-  taskId: number,
+  taskUuid: string,
   supabase: SupabaseClient<Database>,
   setSubmitting: React.Dispatch<React.SetStateAction<boolean>>
 ) {
-  const { error: deleteError } = await supabase.from("Tasks").delete().eq("task_id", taskId);
+  const { error: deleteError } = await supabase.from("Tasks").delete().eq("id", taskUuid);
 
   if (deleteError) {
     setSubmitting(false);

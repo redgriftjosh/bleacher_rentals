@@ -13,16 +13,16 @@ export function fetchUsers() {
   const homeBases = useHomeBasesStore((s) => s.homeBases);
 
   const usersWithDetails = users.map((user) => {
-    const status = userStatuses.find((s) => s.id === user.status)?.status || "Unknown";
+    const status = userStatuses.find((s) => s.id === user.status_uuid)?.status || "Unknown";
     // const role = userRoles.find((r) => r.id === user.role)?.role || "Unknown";
 
     const linkedHomeBases = userHomeBases
-      .filter((uhb) => uhb.user_id === user.user_id)
+      .filter((uhb) => uhb.user_uuid === user.id)
       .map((uhb) => {
-        const base = homeBases.find((hb) => hb.home_base_id === uhb.home_base_id);
-        return base ? { id: base.home_base_id, label: base.home_base_name } : null;
+        const base = homeBases.find((hb) => hb.id === uhb.id);
+        return base ? { id: base.id, label: base.home_base_name } : null;
       })
-      .filter((hb): hb is { id: number; label: string } => hb !== null);
+      .filter((hb): hb is { id: string; label: string } => hb !== null);
 
     return {
       ...user,

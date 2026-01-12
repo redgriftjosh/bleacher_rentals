@@ -10,16 +10,16 @@ export const CreateEventButton = () => {
   const { user } = useUser();
   const users = useUsersStore((s) => s.users);
 
-  const resolveCurrentUserId = () => {
-    const metaId = user?.publicMetadata?.user_id as string | number | undefined;
-    if (metaId !== undefined && metaId !== null) {
-      const num = typeof metaId === "string" ? parseInt(metaId, 10) : metaId;
-      if (!Number.isNaN(num)) return num as number;
-    }
+  const resolveCurrentUserUuid = () => {
+    // const metaId = user?.publicMetadata?.user_id as string | number | undefined;
+    // if (metaId !== undefined && metaId !== null) {
+    //   const num = typeof metaId === "string" ? parseInt(metaId, 10) : metaId;
+    //   if (!Number.isNaN(num)) return num as number;
+    // }
     const clerkId = user?.id;
     if (clerkId) {
       const match = users.find((u) => u.clerk_user_id === clerkId);
-      if (match) return match.user_id;
+      if (match) return match.id;
     }
     return null;
   };
@@ -41,7 +41,7 @@ export const CreateEventButton = () => {
             onClick={() => {
               currentEventStore.setField("isFormExpanded", false);
               currentEventStore.resetForm();
-              useCurrentEventStore.getState().setField("ownerUserId", null);
+              useCurrentEventStore.getState().setField("ownerUserUuid", null);
             }}
             className="px-2 py-2 bg-transparent font-light rounded mb-2 hover:bg-gray-100 hover:border-darkBlue border-transparent border transition text-gray-500 hover:text-darkBlue text-3xl cursor-pointer"
           >
@@ -63,7 +63,7 @@ export const CreateEventButton = () => {
             onClick={() => {
               currentEventStore.setField("isFormExpanded", false);
               currentEventStore.resetForm();
-              useCurrentEventStore.getState().setField("ownerUserId", null);
+              useCurrentEventStore.getState().setField("ownerUserUuid", null);
             }}
             className="px-2 py-2 bg-transparent font-light rounded mb-2 hover:bg-gray-100 hover:border-darkBlue border-transparent border transition text-gray-500 hover:text-darkBlue text-3xl cursor-pointer"
           >
@@ -90,10 +90,10 @@ export const CreateEventButton = () => {
             // ensure not minimized on expand
             currentEventStore.setField("isFormMinimized", false);
           }
-          if (!currentEventStore.ownerUserId) {
-            const resolved = resolveCurrentUserId();
+          if (!currentEventStore.ownerUserUuid) {
+            const resolved = resolveCurrentUserUuid();
             if (resolved) {
-              useCurrentEventStore.getState().setField("ownerUserId", resolved);
+              useCurrentEventStore.getState().setField("ownerUserUuid", resolved);
             }
           }
         }}

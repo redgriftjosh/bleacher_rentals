@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
-import { SelectHomeBase } from "@/types/tables/HomeBases";
 import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
 import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
 import { fetchTakenBleacherNumbers, insertBleacher } from "../../db";
@@ -11,41 +10,25 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { Database } from "../../../../../../../database.types";
+import { useHomeBases } from "../../hooks/useHomeBases";
 
 export function SheetAddBleacher() {
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
 
   // Fetch home bases for the dropdowns
-  const { data: homeBases = [], isLoading: homeBasesLoading } = useQuery({
-    queryKey: ["home-bases"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("HomeBases")
-        .select("id, home_base_name")
-        .order("home_base_name");
-
-      type Expected =
-        | Pick<Database["public"]["Tables"]["HomeBases"]["Row"], "id" | "home_base_name">[]
-        | null;
-      data satisfies Expected;
-
-      if (error) throw error;
-      return data as SelectHomeBase[];
-    },
-    enabled: !!supabase,
-  });
+  const homeBases = useHomeBases();
 
   const [isOpen, setIsOpen] = useState(false);
   const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);
   const [rows, setRows] = useState<number | null>(null);
   const [seats, setSeats] = useState<number | null>(null);
   // const [homeBases, setHomeBases] = useState<HomeBase[] | null>(null);
-  const [selectedHomeBaseId, setSelectedHomeBaseId] = useState<number | null>(null);
-  const [selectedWinterHomeBaseId, setSelectedWinterHomeBaseId] = useState<number | null>(null);
+  const [selectedSummerHomeBaseUuid, setSelectedSummerHomeBaseUuid] = useState<string | null>(null);
+  const [selectedWinterHomeBaseUuid, setSelectedWinterHomeBaseUuid] = useState<string | null>(null);
   const [selectedLinxupDeviceId, setSelectedLinxupDeviceId] = useState<string | null>(null);
-  const [summerAccountManagerId, setSummerAccountManagerId] = useState<number | null>(null);
-  const [winterAccountManagerId, setWinterAccountManagerId] = useState<number | null>(null);
+  const [summerAccountManagerUuid, setSummerAccountManagerUuid] = useState<string | null>(null);
+  const [winterAccountManagerUuid, setWinterAccountManagerUuid] = useState<string | null>(null);
   const [isTakenNumber, setIsTakenNumber] = useState(true);
   // const [isLoading, setIsLoading] = useState(true);
 
@@ -55,11 +38,11 @@ export function SheetAddBleacher() {
       setBleacherNumber(null);
       setRows(null);
       setSeats(null);
-      setSelectedHomeBaseId(null);
-      setSelectedWinterHomeBaseId(null);
+      setSelectedSummerHomeBaseUuid(null);
+      setSelectedWinterHomeBaseUuid(null);
       setSelectedLinxupDeviceId(null);
-      setSummerAccountManagerId(null);
-      setWinterAccountManagerId(null);
+      setSummerAccountManagerUuid(null);
+      setWinterAccountManagerUuid(null);
     }
   }, [isOpen]);
 
@@ -95,8 +78,8 @@ export function SheetAddBleacher() {
           bleacher_number: bleacherNumber,
           bleacher_rows: rows,
           bleacher_seats: seats,
-          home_base_id: selectedHomeBaseId,
-          winter_home_base_id: selectedWinterHomeBaseId,
+          summer_home_base_uuid: selectedSummerHomeBaseUuid,
+          winter_home_base_uuid: selectedWinterHomeBaseUuid,
         },
         takenNumbers
       )
@@ -108,11 +91,11 @@ export function SheetAddBleacher() {
           bleacher_number: bleacherNumber!,
           bleacher_rows: rows!,
           bleacher_seats: seats!,
-          home_base_id: selectedHomeBaseId!,
-          winter_home_base_id: selectedWinterHomeBaseId!,
+          summer_home_base_uuid: selectedSummerHomeBaseUuid!,
+          winter_home_base_uuid: selectedWinterHomeBaseUuid!,
           linxup_device_id: selectedLinxupDeviceId,
-          summer_account_manager_id: summerAccountManagerId,
-          winter_account_manager_id: winterAccountManagerId,
+          summer_account_manager_uuid: summerAccountManagerUuid,
+          winter_account_manager_uuid: winterAccountManagerUuid,
         },
         supabase,
         queryClient
@@ -207,9 +190,9 @@ export function SheetAddBleacher() {
                   </label>
                   <SelectHomeBaseDropDown
                     options={homeBases ?? []} // Add your home base options here
-                    onSelect={(e) => setSelectedHomeBaseId(Number(e.home_base_id))}
+                    onSelect={(e) => setSelectedSummerHomeBaseUuid(e.id)}
                     placeholder="Select Home Base"
-                    value={selectedHomeBaseId ?? undefined}
+                    value={selectedSummerHomeBaseUuid ?? undefined}
                   />
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
@@ -218,9 +201,9 @@ export function SheetAddBleacher() {
                   </label>
                   <SelectHomeBaseDropDown
                     options={homeBases ?? []} // Add your home base options here
-                    onSelect={(e) => setSelectedWinterHomeBaseId(Number(e.home_base_id))}
+                    onSelect={(e) => setSelectedWinterHomeBaseUuid(e.id)}
                     placeholder="Select Home Base"
-                    value={selectedWinterHomeBaseId ?? undefined}
+                    value={selectedWinterHomeBaseUuid ?? undefined}
                   />
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
@@ -239,8 +222,8 @@ export function SheetAddBleacher() {
                   </label>
                   <div className="col-span-3">
                     <SelectAccountManager
-                      value={summerAccountManagerId}
-                      onChange={setSummerAccountManagerId}
+                      value={summerAccountManagerUuid}
+                      onChange={setSummerAccountManagerUuid}
                       placeholder="Select Account Manager (Optional)"
                     />
                   </div>
@@ -251,8 +234,8 @@ export function SheetAddBleacher() {
                   </label>
                   <div className="col-span-3">
                     <SelectAccountManager
-                      value={winterAccountManagerId}
-                      onChange={setWinterAccountManagerId}
+                      value={winterAccountManagerUuid}
+                      onChange={setWinterAccountManagerUuid}
                       placeholder="Select Account Manager (Optional)"
                     />
                   </div>

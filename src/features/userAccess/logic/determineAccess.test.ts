@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { determineUserAccess, USER_STATUS, AccessResult } from "./determineAccess";
 import { UserAccessData } from "../hooks/useUserAccess";
+import { STATUSES } from "@/app/team/_lib/constants";
 
 describe("determineUserAccess", () => {
   it("should deny access when user data is null", () => {
@@ -11,9 +12,9 @@ describe("determineUserAccess", () => {
 
   it("should deny access for deactivated users regardless of roles", () => {
     const userData: UserAccessData = {
-      user_uuid: "1",
-      status: USER_STATUS.DEACTIVATED,
-      is_admin: true,
+      id: "1",
+      status_uuid: STATUSES.inactive,
+      is_admin: 1,
       hasAccountManagerRole: true,
       hasDriverRole: true,
     };
