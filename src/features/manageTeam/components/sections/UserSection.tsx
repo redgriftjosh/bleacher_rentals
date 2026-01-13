@@ -11,10 +11,10 @@ export function UserSection() {
   const lastName = useCurrentUserStore((s) => s.lastName);
   const email = useCurrentUserStore((s) => s.email);
   const isAdmin = useCurrentUserStore((s) => s.isAdmin);
-  const existingUserId = useCurrentUserStore((s) => s.existingUserId);
+  const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
   const setField = useCurrentUserStore((s) => s.setField);
 
-  const isEditing = existingUserId !== null;
+  const isEditing = existingUserUuid !== null;
 
   return (
     <div className="space-y-6">

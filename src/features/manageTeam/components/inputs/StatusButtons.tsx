@@ -26,7 +26,7 @@ const STATUSES = {
 
 export default function StatusButtons() {
   const supabase = useClerkSupabaseClient();
-  const existingUserId = useCurrentUserStore((s) => s.existingUserId);
+  const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
   const status = useCurrentUserStore((s) => s.status);
   const email = useCurrentUserStore((s) => s.email);
   const isSubmitting = useCurrentUserStore((s) => s.isSubmitting);
@@ -65,7 +65,7 @@ export default function StatusButtons() {
         throw new Error("Failed to revoke invite");
       }
 
-      const deleteResult = await deleteUser(supabase, existingUserId!);
+      const deleteResult = await deleteUser(supabase, existingUserUuid!);
       if (!deleteResult.success) {
         throw new Error(deleteResult.error || "Failed to delete user");
       }
@@ -85,7 +85,7 @@ export default function StatusButtons() {
   const handleDeactivate = async () => {
     setField("isSubmitting", true);
     try {
-      const result = await deactivateUser(supabase, existingUserId!);
+      const result = await deactivateUser(supabase, existingUserUuid!);
       if (!result.success) {
         throw new Error(result.error || "Failed to deactivate user");
       }
@@ -104,7 +104,7 @@ export default function StatusButtons() {
   const handleReactivate = async () => {
     setField("isSubmitting", true);
     try {
-      const result = await reactivateUser(supabase, existingUserId!);
+      const result = await reactivateUser(supabase, existingUserUuid!);
       if (!result.success) {
         throw new Error(result.error || "Failed to reactivate user");
       }
@@ -120,7 +120,7 @@ export default function StatusButtons() {
     }
   };
 
-  if (!existingUserId) return null;
+  if (!existingUserUuid) return null;
 
   return (
     <div className="flex flex-wrap gap-2 justify-end">

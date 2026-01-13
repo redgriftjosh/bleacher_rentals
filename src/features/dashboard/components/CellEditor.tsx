@@ -17,7 +17,7 @@ type CellEditorProps = {
 export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
   const qc = useQueryClient();
   const supabase = useClerkSupabaseClient();
-  const { isOpen, key, blockId, bleacherId, date, text, workTrackerId, setField, resetForm } =
+  const { isOpen, key, blockUuid, bleacherUuid, date, text, workTrackerUuid, setField, resetForm } =
     useSelectedBlockStore();
 
   const [currentText, setCurrentText] = useState(text);
@@ -38,11 +38,11 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     try {
       const editBlock = {
         key,
-        blockId,
-        bleacherId,
+        blockUuid,
+        bleacherUuid,
         date,
         text: currentText,
-        workTrackerId,
+        workTrackerUuid,
       };
       await saveBlock(editBlock, supabase);
       // Refresh bleachers store directly so Pixi updates without remounting
@@ -59,16 +59,16 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
   };
 
   const handleDelete = async () => {
-    if (!blockId) return;
+    if (!blockUuid) return;
 
     try {
       const editBlock = {
         key,
-        blockId,
-        bleacherId,
+        blockUuid,
+        bleacherUuid,
         date,
         text: currentText,
-        workTrackerId,
+        workTrackerUuid,
       };
       await deleteBlock(editBlock, supabase);
       // Refresh bleachers store directly so Pixi updates without remounting
@@ -85,34 +85,34 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
   };
 
   const handleOpenWorkTracker = () => {
-    if (!date || !bleacherId) {
+    if (!date || !bleacherUuid) {
       createErrorToast(["Failed to open work tracker. Missing date or bleacher id."]);
       return;
     }
 
     const workTracker: Tables<"WorkTrackers"> = {
-      work_tracker_id: workTrackerId ?? -1,
-      bleacher_id: bleacherId,
+      id: workTrackerUuid ?? "-1",
+      bleacher_uuid: bleacherUuid,
       created_at: "",
       date: date,
-      dropoff_address_id: null,
+      dropoff_address_uuid: null,
       dropoff_poc: null,
       dropoff_time: null,
       notes: null,
       pay_cents: null,
-      pickup_address_id: null,
+      pickup_address_uuid: null,
       pickup_poc: null,
       pickup_time: null,
-      user_id: null,
+      user_uuid: null,
       internal_notes: null,
-      driver_id: null,
+      driver_uuid: null,
     };
 
     onWorkTrackerOpen?.(workTracker);
   };
 
   const handleCreateEvent = () => {
-    if (!date || !bleacherId) {
+    if (!date || !bleacherUuid) {
       createErrorToast(["Failed to create event. Missing date or bleacher id."]);
       return;
     }
@@ -132,7 +132,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     eventStore.setField("isFormMinimized", false);
     eventStore.setField("eventStart", formatDate(startDate));
     eventStore.setField("eventEnd", formatDate(endDate));
-    eventStore.setField("bleacherIds", [bleacherId]);
+    eventStore.setField("bleacherUuids", [bleacherUuid]);
 
     // Close the cell editor
     handleClose();
@@ -217,7 +217,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
           </div>
 
           <div className="flex gap-2">
-            {blockId && (
+            {blockUuid && (
               <button
                 className="flex items-center gap-1 text-sm text-gray-500 px-3 py-1 rounded bg-gray-200 cursor-pointer hover:bg-red-900/20 hover:text-red-700 hover:border-red-700 border-1 border-gray-200 transition-all duration-200"
                 onClick={handleDelete}

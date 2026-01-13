@@ -4,22 +4,22 @@ import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient"
 import { useQuery } from "@tanstack/react-query";
 
 export type BleacherOption = {
-  bleacherId: number;
+  bleacherUuid: string;
   bleacherNumber: number;
-  homeBaseName: string;
+  summerHomeBaseName: string;
   winterHomeBaseName: string;
   bleacherRows: number;
   bleacherSeats: number;
-  summerAccountManagerId: number | null;
-  winterAccountManagerId: number | null;
+  summerAccountManagerUuid: string | null;
+  winterAccountManagerUuid: string | null;
   summerAssignedUser: {
-    userId: number;
+    userUuid: string;
     clerkUserId: string;
     firstName: string;
     lastName: string;
   } | null;
   winterAssignedUser: {
-    userId: number;
+    userUuid: string;
     clerkUserId: string;
     firstName: string;
     lastName: string;
@@ -39,21 +39,21 @@ export function useBleachers() {
         .from("Bleachers")
         .select(
           `
-          bleacher_id,
+          id,
           bleacher_number,
           bleacher_rows,
           bleacher_seats,
-          summer_account_manager_id,
-          winter_account_manager_id,
-          home_base:HomeBases!Bleachers_home_base_id_fkey(home_base_name),
-          winter_home_base:HomeBases!Bleachers_winter_home_base_id_fkey(home_base_name),
-          summer_account_manager:AccountManagers!Bleachers_summer_account_manager_id_fkey(
-            account_manager_id,
-            user:Users(user_id, clerk_user_id, first_name, last_name)
+          summer_account_manager_uuid,
+          winter_account_manager_uuid,
+          summer_home_base:HomeBases!bleachers_summer_home_base_uuid_fkey(home_base_name),
+          winter_home_base:HomeBases!bleachers_winter_home_base_uuid_fkey(home_base_name),
+          summer_account_manager:AccountManagers!Bleachers_summer_account_manager_uuid_fkey(
+            id,
+            user:Users(id, clerk_user_id, first_name, last_name)
           ),
-          winter_account_manager:AccountManagers!Bleachers_winter_account_manager_id_fkey(
-            account_manager_id,
-            user:Users(user_id, clerk_user_id, first_name, last_name)
+          winter_account_manager:AccountManagers!Bleachers_winter_account_manager_uuid_fkey(
+            id,
+            user:Users(id, clerk_user_id, first_name, last_name)
           )
         `
         )
@@ -68,17 +68,17 @@ export function useBleachers() {
         const winterUser = winterAM?.user;
 
         return {
-          bleacherId: b.bleacher_id,
+          bleacherUuid: b.id,
           bleacherNumber: b.bleacher_number,
-          homeBaseName: (b.home_base as any)?.home_base_name || "Unknown",
+          summerHomeBaseName: (b.summer_home_base as any)?.home_base_name || "Unknown",
           winterHomeBaseName: (b.winter_home_base as any)?.home_base_name || "Unknown",
           bleacherRows: b.bleacher_rows,
           bleacherSeats: b.bleacher_seats,
-          summerAccountManagerId: b.summer_account_manager_id,
-          winterAccountManagerId: b.winter_account_manager_id,
+          summerAccountManagerUuid: b.summer_account_manager_uuid,
+          winterAccountManagerUuid: b.winter_account_manager_uuid,
           summerAssignedUser: summerUser
             ? {
-                userId: summerUser.user_id,
+                userUuid: summerUser.id,
                 clerkUserId: summerUser.clerk_user_id,
                 firstName: summerUser.first_name,
                 lastName: summerUser.last_name,
@@ -86,7 +86,7 @@ export function useBleachers() {
             : null,
           winterAssignedUser: winterUser
             ? {
-                userId: winterUser.user_id,
+                userUuid: winterUser.id,
                 clerkUserId: winterUser.clerk_user_id,
                 firstName: winterUser.first_name,
                 lastName: winterUser.last_name,

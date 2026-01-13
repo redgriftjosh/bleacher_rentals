@@ -1,35 +1,35 @@
 export type SelectBleacher = {
-  bleacher_id: number;
+  id: string;
   created_at: string;
   bleacher_number: number;
-  home_base_id: number;
-  winter_home_base_id: number;
+  summer_home_base_uuid: string;
+  winter_home_base_uuid: string;
   bleacher_rows: number;
   bleacher_seats: number;
   linxup_device_id: string | null;
-  summer_account_manager_id: number | null;
-  winter_account_manager_id: number | null;
+  summer_account_manager_uuid: string | null;
+  winter_account_manager_uuid: string | null;
 };
 
 export type InsertBleacher = {
   bleacher_number: number;
-  home_base_id: number;
-  winter_home_base_id: number;
+  summer_home_base_uuid: string;
+  winter_home_base_uuid: string;
   bleacher_rows: number;
   bleacher_seats: number;
   linxup_device_id?: string | null;
-  summer_account_manager_id?: number | null;
-  winter_account_manager_id?: number | null;
+  summer_account_manager_uuid?: string | null;
+  winter_account_manager_uuid?: string | null;
 };
 
 export type UpdateBleacher = {
-  bleacher_id: number;
+  id: string;
   bleacher_number: number;
-  home_base_id: number;
-  winter_home_base_id: number;
+  summer_home_base_uuid: string;
+  winter_home_base_uuid: string;
   bleacher_rows: number;
   bleacher_seats: number;
   linxup_device_id?: string | null;
-  summer_account_manager_id?: number | null;
-  winter_account_manager_id?: number | null;
+  summer_account_manager_uuid?: string | null;
+  winter_account_manager_uuid?: string | null;
 };

@@ -4,11 +4,11 @@ import { create } from "zustand";
 export type SelectedBlockState = {
   isOpen: boolean;
   key: string;
-  blockId: number | null;
-  bleacherId: number;
+  blockUuid: string | null;
+  bleacherUuid: string;
   date: string;
   text: string;
-  workTrackerId: number | null;
+  workTrackerUuid: string | null;
 };
 
 // Me take event form stuff, add tools to change it.
@@ -23,11 +23,11 @@ export type SelectedBlockStore = SelectedBlockState & {
 const initialState: SelectedBlockState = {
   isOpen: false,
   key: "",
-  blockId: null,
-  bleacherId: 0,
+  blockUuid: null,
+  bleacherUuid: "",
   date: "",
   text: "",
-  workTrackerId: null,
+  workTrackerUuid: null,
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.

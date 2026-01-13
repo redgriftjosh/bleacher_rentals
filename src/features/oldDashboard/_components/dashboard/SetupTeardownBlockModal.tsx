@@ -7,8 +7,8 @@ import { confirmedHsl, setupTeardownHsl } from "@/types/Constants";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export type SetupTeardownBlock = {
-  bleacherEventId: number;
-  bleacherId: number;
+  bleacherEventUuid: string;
+  bleacherUuid: string;
   text: string;
   confirmed: boolean;
   type: "setup" | "teardown";

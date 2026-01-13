@@ -12,7 +12,7 @@ export default function ActionButtons() {
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
   const state = useCurrentUserStore();
-  const existingUserId = useCurrentUserStore((s) => s.existingUserId);
+  const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
   const isSubmitting = useCurrentUserStore((s) => s.isSubmitting);
   const setField = useCurrentUserStore((s) => s.setField);
   const setIsOpen = useCurrentUserStore((s) => s.setIsOpen);
@@ -34,7 +34,7 @@ export default function ActionButtons() {
     setField("isSubmitting", true);
 
     try {
-      if (existingUserId) {
+      if (existingUserUuid) {
         // Update existing user
         const result = await updateUser(supabase, state);
         if (!result.success) {
@@ -98,7 +98,7 @@ export default function ActionButtons() {
           Cancel
         </PrimaryButton>
         <PrimaryButton onClick={handleSubmit} loading={isSubmitting} loadingText="Saving...">
-          {existingUserId ? "Update User" : "Send Invite"}
+          {existingUserUuid ? "Update User" : "Send Invite"}
         </PrimaryButton>
       </div>
     </div>

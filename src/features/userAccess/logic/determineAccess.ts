@@ -1,10 +1,11 @@
-import { UserAccessData } from "../db/getUserAccess.db";
+import { STATUSES } from "@/app/team/_lib/constants";
+import { UserAccessData } from "../hooks/useUserAccess";
 
-export const USER_STATUS = {
-  ACTIVE: 1,
-  INACTIVE: 2,
-  DEACTIVATED: 3,
-} as const;
+// export const USER_STATUS = {
+//   ACTIVE: 1,
+//   INACTIVE: 2,
+//   DEACTIVATED: 3,
+// } as const;
 
 export type AccessLevel = "full" | "driver-only" | "denied";
 
@@ -33,7 +34,7 @@ export function determineUserAccess(userData: UserAccessData | null): AccessResu
   }
 
   // Check if user is deactivated
-  if (userData.status === USER_STATUS.DEACTIVATED) {
+  if (userData.status_uuid === STATUSES.inactive) {
     return {
       accessLevel: "denied",
       reason: "Account deactivated",
@@ -48,14 +49,14 @@ export function determineUserAccess(userData: UserAccessData | null): AccessResu
   }
 
   // Account managers get full access
-  if (userData.hasAccountManagerRole) {
+  if (userData.account_manager_id) {
     return {
       accessLevel: "full",
     };
   }
 
   // Driver-only users get limited access
-  if (userData.hasDriverRole && !userData.hasAccountManagerRole && !userData.is_admin) {
+  if (userData.driver_id && !userData.account_manager_id && !userData.is_admin) {
     return {
       accessLevel: "driver-only",
     };

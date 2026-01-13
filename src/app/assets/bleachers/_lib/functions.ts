@@ -1,5 +1,4 @@
 import { ErrorToast } from "@/components/toasts/ErrorToast";
-import { InsertBleacher } from "@/types/tables/Bleachers";
 import React from "react";
 import { toast } from "sonner";
 
@@ -7,8 +6,8 @@ type CheckInsertBleacher = {
   bleacher_number: number | null;
   bleacher_rows: number | null;
   bleacher_seats: number | null;
-  home_base_id: number | null;
-  winter_home_base_id: number | null;
+  summer_home_base_uuid: string | null;
+  winter_home_base_uuid: string | null;
 };
 
 export function checkInsertBleacherFormRules(
@@ -31,10 +30,10 @@ export function checkInsertBleacherFormRules(
   if (!bleacher.bleacher_seats) {
     errors.push("Missing: Seats");
   }
-  if (!bleacher.home_base_id) {
+  if (!bleacher.summer_home_base_uuid) {
     errors.push("Missing: Homebase");
   }
-  if (!bleacher.winter_home_base_id) {
+  if (!bleacher.winter_home_base_uuid) {
     errors.push("Missing: Winter Homebase");
   }
   if (errors.length > 0) {

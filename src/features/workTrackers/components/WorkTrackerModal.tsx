@@ -2,11 +2,15 @@ import { Link, X, Trash2, Calculator } from "lucide-react";
 import { Dropdown } from "@/components/DropDown";
 import { useEffect, useState, useRef } from "react";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
-import { getAddressFromId, saveWorkTracker, deleteWorkTracker } from "../../dashboard/db/client/db";
+import {
+  getAddressFromUuid,
+  saveWorkTracker,
+  deleteWorkTracker,
+} from "../../dashboard/db/client/db";
 import { AddressData } from "../../eventConfiguration/state/useCurrentEventStore";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchWorkTrackerById } from "../../oldDashboard/db/setupTeardownBlock/fetchWorkTracker";
+import { fetchWorkTrackerByUuid } from "../../oldDashboard/db/setupTeardownBlock/fetchWorkTracker";
 import { EditBlock } from "../../oldDashboard/_components/dashboard/MainScrollableGrid";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";
@@ -46,8 +50,8 @@ export default function WorkTrackerModal({
   const [workTracker, setWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
     selectedWorkTracker
   );
-  const pickupAddress = getAddressFromId(selectedWorkTracker?.pickup_address_id ?? null);
-  const dropoffAddress = getAddressFromId(selectedWorkTracker?.dropoff_address_id ?? null);
+  const pickupAddress = getAddressFromUuid(selectedWorkTracker?.pickup_address_uuid ?? null);
+  const dropoffAddress = getAddressFromUuid(selectedWorkTracker?.dropoff_address_uuid ?? null);
   const [pickUpAddress, setPickUpAddress] = useState<AddressData | null>(pickupAddress);
   const [dropOffAddress, setDropOffAddress] = useState<AddressData | null>(dropoffAddress);
 
@@ -143,17 +147,17 @@ export default function WorkTrackerModal({
   });
 
   // Fetch driver payment data when driver is selected
-  const selectedDriver = drivers.find((d) => d.driver_id === workTracker?.driver_id);
+  const selectedDriver = drivers.find((d) => d.driver_uuid === workTracker?.driver_uuid);
   const {
     data: driverPaymentData,
     isLoading: isDriverPaymentLoading,
     isError: isDriverPaymentError,
   } = useQuery({
-    queryKey: ["driverPayment", workTracker?.driver_id],
+    queryKey: ["driverPayment", workTracker?.driver_uuid],
     queryFn: async () => {
-      return fetchDriverPaymentData(selectedDriver!.user_id, supabase);
+      return fetchDriverPaymentData(selectedDriver!.user_uuid, supabase);
     },
-    enabled: !!workTracker?.driver_id && !!selectedDriver,
+    enabled: !!workTracker?.driver_uuid && !!selectedDriver,
   });
 
   const {
@@ -161,16 +165,16 @@ export default function WorkTrackerModal({
     isLoading: isWorkTrackerLoading,
     isError: isWorkTrackerError,
   } = useQuery({
-    queryKey: ["workTracker", selectedWorkTracker?.work_tracker_id],
+    queryKey: ["workTracker", selectedWorkTracker?.id],
     queryFn: async () => {
-      return fetchWorkTrackerById(selectedWorkTracker!.work_tracker_id, supabase);
+      return fetchWorkTrackerByUuid(selectedWorkTracker!.id, supabase);
     },
-    enabled: !!selectedWorkTracker && selectedWorkTracker.work_tracker_id !== -1,
+    enabled: !!selectedWorkTracker && selectedWorkTracker.id !== "-1",
     refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
-    if (selectedWorkTracker?.work_tracker_id === -1) {
+    if (selectedWorkTracker?.id === "-1") {
       setWorkTracker(selectedWorkTracker);
       setPickUpAddress(null);
       setDropOffAddress(null);
@@ -183,14 +187,14 @@ export default function WorkTrackerModal({
           : ""
       );
       setPickUpAddress({
-        addressId: fetchedWorkTracker.pickupAddress?.address_id ?? null,
+        addressUuid: fetchedWorkTracker.pickupAddress?.id ?? null,
         address: fetchedWorkTracker.pickupAddress?.street ?? "",
         city: fetchedWorkTracker.pickupAddress?.city ?? "",
         state: fetchedWorkTracker.pickupAddress?.state_province ?? "",
         postalCode: fetchedWorkTracker.pickupAddress?.zip_postal ?? "",
       });
       setDropOffAddress({
-        addressId: fetchedWorkTracker.dropoffAddress?.address_id ?? null,
+        addressUuid: fetchedWorkTracker.dropoffAddress?.id ?? null,
         address: fetchedWorkTracker.dropoffAddress?.street ?? "",
         city: fetchedWorkTracker.dropoffAddress?.city ?? "",
         state: fetchedWorkTracker.dropoffAddress?.state_province ?? "",
@@ -219,7 +223,7 @@ export default function WorkTrackerModal({
   };
 
   const handleDeleteWorkTracker = async () => {
-    if (!workTracker?.work_tracker_id || workTracker.work_tracker_id === -1) {
+    if (!workTracker?.id || workTracker.id === "-1") {
       createErrorToast(["Cannot delete unsaved work tracker"]);
       return;
     }
@@ -229,7 +233,7 @@ export default function WorkTrackerModal({
     }
 
     try {
-      await deleteWorkTracker(workTracker.work_tracker_id, supabase);
+      await deleteWorkTracker(workTracker.id, supabase);
       // Refresh bleachers directly into the zustand store so Pixi updates without remounting
       try {
         const { FetchDashboardBleachers } = await import(
@@ -338,9 +342,7 @@ export default function WorkTrackerModal({
           >
             <div className="flex flex-row justify-between items-start">
               <h2 className="text-sm font-semibold mb-2">
-                {selectedWorkTracker.work_tracker_id === -1
-                  ? "Create Work Tracker"
-                  : "Edit Work Tracker"}
+                {selectedWorkTracker.id === "-1" ? "Create Work Tracker" : "Edit Work Tracker"}
               </h2>
               <X
                 className="-mt-1 cursor-pointer text-black/30 hover:text-black hover:drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] transition-all duration-200"
@@ -356,13 +358,13 @@ export default function WorkTrackerModal({
                     <Dropdown
                       options={drivers.map((driver) => ({
                         label: (driver.user.first_name || "") + " " + (driver.user.last_name || ""),
-                        value: driver.driver_id,
+                        value: driver.driver_uuid,
                       }))}
-                      selected={workTracker?.driver_id}
+                      selected={workTracker?.driver_uuid}
                       onSelect={(id) =>
                         setWorkTracker((prev) => ({
                           ...prev!,
-                          driver_id: id,
+                          driver_uuid: id,
                         }))
                       }
                       placeholder={isDriversLoading ? "Loading..." : "Select Driver"}
@@ -373,13 +375,13 @@ export default function WorkTrackerModal({
                     <Dropdown
                       options={(bleacherOptions ?? []).map((bleacher) => ({
                         label: bleacher.label,
-                        value: bleacher.id,
+                        value: bleacher.uuid,
                       }))}
-                      selected={workTracker?.bleacher_id}
+                      selected={workTracker?.bleacher_uuid}
                       onSelect={(id) =>
                         setWorkTracker((prev) => ({
                           ...prev!,
-                          bleacher_id: id,
+                          bleacher_uuid: id,
                         }))
                       }
                       placeholder={isBleachersLoading ? "Loading..." : "Select Bleacher"}
@@ -494,7 +496,7 @@ export default function WorkTrackerModal({
                         onAddressSelect={(data) =>
                           setPickUpAddress({
                             ...data,
-                            addressId: pickUpAddress?.addressId ?? null,
+                            addressUuid: pickUpAddress?.addressUuid ?? null,
                           })
                         }
                         initialValue={pickUpAddress?.address || ""}
@@ -536,7 +538,7 @@ export default function WorkTrackerModal({
                       onAddressSelect={(data) =>
                         setDropOffAddress({
                           ...data,
-                          addressId: dropOffAddress?.addressId ?? null,
+                          addressUuid: dropOffAddress?.addressUuid ?? null,
                         })
                       }
                       initialValue={dropOffAddress?.address || ""}
@@ -560,7 +562,7 @@ export default function WorkTrackerModal({
             </div>
 
             <div className="mt-4 flex justify-between items-center gap-2">
-              {workTracker?.work_tracker_id && workTracker.work_tracker_id !== -1 && (
+              {workTracker?.id && workTracker.id !== "-1" && (
                 <button
                   className="text-sm px-3 py-1 rounded bg-red-600 text-white cursor-pointer hover:bg-red-700 transition-all duration-200 flex items-center gap-1"
                   onClick={handleDeleteWorkTracker}

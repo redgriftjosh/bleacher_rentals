@@ -1,8 +1,6 @@
 import { toast } from "sonner";
 import React from "react";
 import { ErrorToast } from "@/components/toasts/ErrorToast";
-import { Duration } from "luxon";
-import { SuccessToast } from "@/components/toasts/SuccessToast";
 import {
   AddressData,
   CurrentEventState,
@@ -11,16 +9,10 @@ import {
 } from "../eventConfiguration/state/useCurrentEventStore";
 import { useEventsStore } from "@/state/eventsStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
-import { useHomeBasesStore } from "@/state/homeBaseStore";
-import { SelectHomeBase } from "@/types/tables/HomeBases";
-import { useUsersStore } from "@/state/userStore";
-import { useUser } from "@clerk/nextjs";
-import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
-import { getHomeBaseIdByName } from "@/utils/utils";
 import { UserResource } from "@clerk/types";
 import { PROVINCES, ROW_OPTIONS, STATES } from "@/types/Constants";
 import { Tables } from "../../../database.types";
-import { DashboardBleacher, DashboardEvent } from "../dashboard/types";
+import { DashboardBleacher } from "../dashboard/types";
 
 export function checkEventFormRules(
   createEventPayload: CurrentEventStore,
@@ -70,7 +62,7 @@ export function checkEventFormRules(
   //     missingFields.push("Select at least one bleacher");
   //   }
   // }
-  if (createEventPayload.bleacherIds.length === 0) {
+  if (createEventPayload.bleacherUuids.length === 0) {
     missingFields.push("Select at least one bleacher");
   }
   if (missingFields.length > 0) {
@@ -167,30 +159,32 @@ export function calculateBestHue(
 export function calculateEventAlerts(
   events: Tables<"Events">[],
   bleacherEvents: Tables<"BleacherEvents">[]
-): Record<number, string[]> {
-  const alerts: Record<number, string[]> = {};
+): Record<string, string[]> {
+  const alerts: Record<string, string[]> = {};
 
   for (const event of events) {
     const eventAlerts: string[] = [];
 
     // Find all bleachers linked to this event
     const bleachersInThisEvent = bleacherEvents
-      .filter((be) => be.event_id === event.event_id)
-      .map((be) => be.bleacher_id);
+      .filter((be) => be.event_uuid === event.id)
+      .map((be) => be.bleacher_uuid);
 
     if (bleachersInThisEvent.length === 0) {
-      alerts[event.event_id] = eventAlerts;
+      alerts[event.id] = eventAlerts;
       continue;
     }
 
     // Find all bleacher events where the bleacher is shared
     const overlappingBleacherEvents = bleacherEvents.filter(
-      (be) => bleachersInThisEvent.includes(be.bleacher_id) && be.event_id !== event.event_id
+      (be) => bleachersInThisEvent.includes(be.bleacher_uuid) && be.event_uuid !== event.id
     );
 
-    const overlappingEventIds = [...new Set(overlappingBleacherEvents.map((be) => be.event_id))];
+    const overlappingEventUuids = [
+      ...new Set(overlappingBleacherEvents.map((be) => be.event_uuid)),
+    ];
 
-    const overlappingEvents = events.filter((e) => overlappingEventIds.includes(e.event_id));
+    const overlappingEvents = events.filter((e) => overlappingEventUuids.includes(e.id));
 
     const thisSetupStart = event.setup_start
       ? new Date(event.setup_start)
@@ -214,7 +208,7 @@ export function calculateEventAlerts(
       }
     }
 
-    alerts[event.event_id] = eventAlerts;
+    alerts[event.id] = eventAlerts;
   }
 
   return alerts;
@@ -256,16 +250,17 @@ export function calculateConflictsForSingleEvent(
     : new Date(currentEvent.eventEnd);
 
   // Build a lookup: event_id => bleacher_ids[]
-  const eventIdToBleachers: Record<number, number[]> = {};
+  const eventUuidToBleachers: Record<string, string[]> = {};
   for (const be of allBleacherEvents) {
-    if (!eventIdToBleachers[be.event_id]) {
-      eventIdToBleachers[be.event_id] = [];
+    if (!be.event_uuid || !be.bleacher_uuid) continue;
+    if (!eventUuidToBleachers[be.event_uuid]) {
+      eventUuidToBleachers[be.event_uuid] = [];
     }
-    eventIdToBleachers[be.event_id].push(be.bleacher_id);
+    eventUuidToBleachers[be.event_uuid].push(be.bleacher_uuid);
   }
 
   for (const event of allEvents) {
-    if (event.event_id === currentEvent.eventId) continue; // Don't compare with self
+    if (event.id === currentEvent.eventUuid) continue; // Don't compare with self
 
     const eventSetupStart = event.setup_start
       ? new Date(event.setup_start)
@@ -275,11 +270,11 @@ export function calculateConflictsForSingleEvent(
       ? new Date(event.teardown_end)
       : new Date(event.event_end);
 
-    const bleachersInOtherEvent = eventIdToBleachers[event.event_id] || [];
+    const bleachersInOtherEvent = eventUuidToBleachers[event.id] || [];
 
     // Check if bleachers overlap
     const bleacherOverlap = bleachersInOtherEvent.some((id) =>
-      currentEvent.bleacherIds.includes(id)
+      currentEvent.bleacherUuids.includes(id)
     );
 
     if (!bleacherOverlap) continue;
@@ -352,19 +347,19 @@ export function getStateProvOptions() {
 }
 
 export function filterSortBleachers(
-  homeBaseIds: number[],
-  winterHomeBaseIds: number[],
+  summerHomeBaseUuids: string[],
+  winterHomeBaseUuids: string[],
   rows: number[],
   bleachers: DashboardBleacher[],
-  bleacherIds: number[],
+  bleacherUuids: string[],
   isFormExpanded: boolean
 ): DashboardBleacher[] {
   const matchesFilter = (b: DashboardBleacher) =>
-    homeBaseIds.includes(b.homeBase.homeBaseId) &&
-    winterHomeBaseIds.includes(b.winterHomeBase.homeBaseId) &&
+    summerHomeBaseUuids.includes(b.summerHomeBase.homeBaseUuid) &&
+    winterHomeBaseUuids.includes(b.winterHomeBase.homeBaseUuid) &&
     rows.includes(b.bleacherRows);
 
-  const alwaysInclude = (b: DashboardBleacher) => bleacherIds.includes(b.bleacherId);
+  const alwaysInclude = (b: DashboardBleacher) => bleacherUuids.includes(b.bleacherUuid);
 
   // Keep all selected bleachers, even if they don't match the filters (when expanded)
   const filteredBleachers = isFormExpanded

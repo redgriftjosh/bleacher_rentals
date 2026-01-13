@@ -3,16 +3,19 @@ import { Database, Tables } from "../../../../database.types";
 import { TASK_ADMIN_IDS } from "./constants";
 import { SupabaseClient } from "@supabase/supabase-js";
 
-export function findUserId(clerkUser: UserResource | null, allusers: Tables<"Users">[]) {
-  return allusers.find((u) => u.clerk_user_id === clerkUser?.id)?.user_id;
+export function findUserId(
+  clerkUser: UserResource | null,
+  allusers: Tables<"Users">[]
+): string | undefined {
+  return allusers.find((u) => u.clerk_user_id === clerkUser?.id)?.id;
 }
 
 export function checkInsertTaskFormRules(
-  taskId: number | null,
-  taskUserId: number | null,
+  taskUuid: string | null,
+  taskUserUuid: string | null,
   name: string | null,
   description: string | null,
-  typeId: number | null,
+  typeUuid: string | null,
   clerkUser: UserResource | null,
   allusers: Tables<"Users">[],
   supabase: SupabaseClient<Database>
@@ -28,19 +31,19 @@ export function checkInsertTaskFormRules(
   if (!clerkUser) {
     errors.push("Cannot Find Authenticated User!");
   }
-  const userId = findUserId(clerkUser, allusers);
-  if (!userId) {
+  const userUuid = findUserId(clerkUser, allusers);
+  if (!userUuid) {
     errors.push("Cannot Link Authenticated User To Database!");
   }
-  if (taskId) {
-    if (userId !== taskUserId && !TASK_ADMIN_IDS.includes(userId ?? -1)) {
+  if (taskUuid) {
+    if (userUuid !== taskUserUuid && !TASK_ADMIN_IDS.includes(userUuid ?? "-1")) {
       errors.push("You can only edit tasks you created!");
     }
   }
   if (!name || name === "") {
     errors.push("Missing: Name");
   }
-  if (!typeId) {
+  if (!typeUuid) {
     errors.push("Missing: Type");
   }
   if (name && name.length > 200) {
@@ -58,8 +61,8 @@ export function checkInsertTaskFormRules(
 }
 
 export function checkDeleteTaskFormRules(
-  taskId: number | null,
-  taskUserId: number | null,
+  taskUuid: string | null,
+  taskUserUuid: string | null,
   clerkUser: UserResource | null,
   allusers: Tables<"Users">[],
   supabase: SupabaseClient<Database>
@@ -74,15 +77,15 @@ export function checkDeleteTaskFormRules(
   if (!clerkUser) {
     errors.push("Cannot Find Authenticated User!");
   }
-  const userId = findUserId(clerkUser, allusers);
-  if (!userId) {
+  const userUuid = findUserId(clerkUser, allusers);
+  if (!userUuid) {
     errors.push("Cannot Link Authenticated User To Database!");
   }
-  if (userId !== taskUserId && !TASK_ADMIN_IDS.includes(userId ?? -1)) {
+  if (userUuid !== taskUserUuid && !TASK_ADMIN_IDS.includes(userUuid ?? "-1")) {
     errors.push("You can only delete tasks you created!");
   }
-  if (!taskId) {
-    errors.push("Error: Can't find TaskId");
+  if (!taskUuid) {
+    errors.push("Error: Can't find TaskUuid");
   }
 
   if (errors.length > 0) {

@@ -22,6 +22,7 @@ import BleacherLocationModal from "@/features/dashboard/components/BleacherLocat
 import { useBleacherLocationModalStore } from "@/features/dashboard/state/useBleacherLocationModalStore";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { supabaseClientRegistry } from "@/features/dashboard/util/supabaseClientRegistry";
+import { useBleachers } from "@/features/dashboard/db/hooks/useBleachers";
 
 export default function Page() {
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
@@ -55,14 +56,14 @@ export default function Page() {
       // Fetch BleacherUsers assignments for the logged-in user
       // const supabase = await getSupabaseClient(token!);
 
-      const { summerAssignedBleacherIds, winterAssignedBleacherIds } =
+      const { summerAssignedBleacherUuids, winterAssignedBleacherUuids } =
         await fetchUserBleacherAssignmentsForSeason(supabase, userId!);
 
       return {
         bleachers: b.bleachers,
         events: e.events,
-        summerAssignedBleacherIds,
-        winterAssignedBleacherIds,
+        summerAssignedBleacherUuids,
+        winterAssignedBleacherUuids,
       };
     },
   });
@@ -78,20 +79,20 @@ export default function Page() {
       const wt = s.selected;
       if (!wt) return;
       setSelectedWorkTracker({
-        work_tracker_id: wt.work_tracker_id,
-        bleacher_id: wt.bleacher_id,
+        id: wt.id,
+        bleacher_uuid: wt.bleacher_uuid,
         date: wt.date,
         created_at: "",
-        dropoff_address_id: null,
+        dropoff_address_uuid: null,
         dropoff_poc: null,
         dropoff_time: null,
         notes: null,
         pay_cents: null,
-        pickup_address_id: null,
+        pickup_address_uuid: null,
         pickup_poc: null,
         pickup_time: null,
         // user_id: null,
-        driver_id: null,
+        driver_uuid: null,
       } as Tables<"WorkTrackers">);
     });
     return () => unsub();
@@ -140,8 +141,8 @@ export default function Page() {
       </div>
       <div className="min-h-0 min-w-0 overflow-hidden">
         <DashboardApp
-          summerAssignedBleacherIds={data.summerAssignedBleacherIds}
-          winterAssignedBleacherIds={data.winterAssignedBleacherIds}
+          summerAssignedBleacherUuids={data.summerAssignedBleacherUuids}
+          winterAssignedBleacherUuids={data.winterAssignedBleacherUuids}
         />
       </div>
     </div>

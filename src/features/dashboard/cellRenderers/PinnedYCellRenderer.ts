@@ -77,7 +77,7 @@ export class PinnedYCellRenderer implements ICellRenderer {
 
     if (pinnedEventSpan) {
       // Cache the static label
-      const labelCacheKey = `PinnableSection:${pinnedEventSpan.ev.eventId}`;
+      const labelCacheKey = `PinnableSection:${pinnedEventSpan.ev.eventUuid}`;
       const pinnableSection = new PinnableSection(pinnedEventSpan, this.app, this.baker);
       // const pinnedTexture = this.baker.getTexture(
       //   labelCacheKey,

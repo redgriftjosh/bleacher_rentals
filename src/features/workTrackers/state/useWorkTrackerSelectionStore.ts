@@ -3,8 +3,8 @@
 import { create } from "zustand";
 
 export type WorkTrackerSelection = {
-  work_tracker_id: number;
-  bleacher_id: number;
+  id: string;
+  bleacher_uuid: string;
   date: string;
 } | null;
 

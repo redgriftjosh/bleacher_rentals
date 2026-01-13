@@ -7,7 +7,7 @@ type TypedSupabaseClient = SupabaseClient<Database>;
 export async function createUser(
   supabase: TypedSupabaseClient,
   state: CurrentUserState
-): Promise<{ success: boolean; userId?: number; error?: string }> {
+): Promise<{ success: boolean; userUuid?: string; error?: string }> {
   try {
     // 1. Insert into Users table
     const { data: userData, error: userError } = await supabase
@@ -19,21 +19,20 @@ export async function createUser(
         is_admin: state.isAdmin,
         status: 1, // Active
       })
-      .select("user_id")
+      .select("id")
       .single();
 
     if (userError) throw userError;
-    const userId = userData.user_id;
-
+    const userUuid = userData.id;
     // 2. If driver, insert into Drivers table
     if (state.isDriver) {
       const { error: driverError } = await supabase.from("Drivers").insert({
-        user_id: userId,
+        user_uuid: userUuid,
         tax: state.tax ?? 0,
         pay_rate_cents: state.payRateCents ?? 0,
         pay_currency: state.payCurrency,
         pay_per_unit: state.payPerUnit,
-        account_manager_id: state.accountManagerId,
+        account_manager_uuid: state.accountManagerUuid,
         is_active: true,
       });
 
@@ -43,17 +42,17 @@ export async function createUser(
     // 3. If account manager, insert into AccountManagers table
     if (state.isAccountManager) {
       const { error: amError } = await supabase.from("AccountManagers").insert({
-        user_id: userId,
+        user_uuid: userUuid,
         is_active: true,
       });
 
       if (amError) throw amError;
 
       // 4. Update bleacher assignments
-      await updateBleacherAssignments(supabase, userId, state);
+      await updateBleacherAssignments(supabase, userUuid, state);
     }
 
-    return { success: true, userId };
+    return { success: true, userUuid };
   } catch (error) {
     console.error("Error creating user:", error);
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
@@ -64,12 +63,12 @@ export async function updateUser(
   supabase: TypedSupabaseClient,
   state: CurrentUserState
 ): Promise<{ success: boolean; error?: string }> {
-  if (!state.existingUserId) {
-    return { success: false, error: "No user ID provided" };
+  if (!state.existingUserUuid) {
+    return { success: false, error: "No user UUID provided" };
   }
 
   try {
-    const userId = state.existingUserId;
+    const userUuid = state.existingUserUuid;
 
     // 1. Update Users table
     const { error: userError } = await supabase
@@ -80,15 +79,15 @@ export async function updateUser(
         email: state.email.toLowerCase(),
         is_admin: state.isAdmin,
       })
-      .eq("user_id", userId);
+      .eq("id", userUuid);
 
     if (userError) throw userError;
 
     // 2. Handle Driver role (check for existing driver regardless of is_active status)
     const { data: existingDriver } = await supabase
       .from("Drivers")
-      .select("driver_id")
-      .eq("user_id", userId)
+      .select("id")
+      .eq("user_uuid", userUuid)
       .single();
 
     if (state.isDriver) {
@@ -101,21 +100,20 @@ export async function updateUser(
             pay_rate_cents: state.payRateCents ?? 0,
             pay_currency: state.payCurrency,
             pay_per_unit: state.payPerUnit,
-            account_manager_id: state.accountManagerId,
+            account_manager_uuid: state.accountManagerUuid,
             is_active: true,
           })
-          .eq("user_id", userId);
-
+          .eq("user_uuid", userUuid);
         if (driverUpdateError) throw driverUpdateError;
       } else {
         // Create new driver record
         const { error: driverInsertError } = await supabase.from("Drivers").insert({
-          user_id: userId,
+          user_uuid: userUuid,
           tax: state.tax ?? 0,
           pay_rate_cents: state.payRateCents ?? 0,
           pay_currency: state.payCurrency,
           pay_per_unit: state.payPerUnit,
-          account_manager_id: state.accountManagerId,
+          account_manager_uuid: state.accountManagerUuid,
           is_active: true,
         });
 
@@ -126,7 +124,7 @@ export async function updateUser(
       const { error: driverUpdateError } = await supabase
         .from("Drivers")
         .update({ is_active: false })
-        .eq("user_id", userId);
+        .eq("user_uuid", userUuid);
 
       if (driverUpdateError) throw driverUpdateError;
     }
@@ -134,15 +132,15 @@ export async function updateUser(
     // 3. Handle Account Manager role (check for existing AM regardless of is_active status)
     const { data: existingAM } = await supabase
       .from("AccountManagers")
-      .select("account_manager_id")
-      .eq("user_id", userId)
+      .select("id")
+      .eq("user_uuid", userUuid)
       .single();
 
     if (state.isAccountManager) {
       if (!existingAM) {
         // Create new account manager record
         const { error: amInsertError } = await supabase.from("AccountManagers").insert({
-          user_id: userId,
+          user_uuid: userUuid,
           is_active: true,
         });
 
@@ -152,31 +150,32 @@ export async function updateUser(
         const { error: amUpdateError } = await supabase
           .from("AccountManagers")
           .update({ is_active: true })
-          .eq("user_id", userId);
+          .eq("user_uuid", userUuid);
 
         if (amUpdateError) throw amUpdateError;
       }
 
       // Update bleacher assignments
-      await updateBleacherAssignments(supabase, userId, state);
+      await updateBleacherAssignments(supabase, userUuid, state);
     } else if (existingAM) {
       // Remove account manager role
       // First clear bleacher assignments
       const { error: bleacherClearError } = await supabase
         .from("Bleachers")
         .update({
-          summer_account_manager_id: null,
-          winter_account_manager_id: null,
+          summer_account_manager_uuid: null,
+          winter_account_manager_uuid: null,
         })
-        .or(`summer_account_manager_id.eq.${userId},winter_account_manager_id.eq.${userId}`);
-
+        .or(
+          `summer_account_manager_uuid.eq.${userUuid},winter_account_manager_uuid.eq.${userUuid}`
+        );
       if (bleacherClearError) throw bleacherClearError;
 
       // Mark account manager as inactive instead of deleting
       const { error: amUpdateError } = await supabase
         .from("AccountManagers")
         .update({ is_active: false })
-        .eq("user_id", userId);
+        .eq("user_uuid", userUuid);
 
       if (amUpdateError) throw amUpdateError;
     }
@@ -190,14 +189,14 @@ export async function updateUser(
 
 async function updateBleacherAssignments(
   supabase: TypedSupabaseClient,
-  userId: number,
+  userUuid: string,
   state: CurrentUserState
 ): Promise<void> {
   // First, get the account_manager_id for this user
   const { data: amData, error: amError } = await supabase
     .from("AccountManagers")
-    .select("account_manager_id")
-    .eq("user_id", userId)
+    .select("id")
+    .eq("user_uuid", userUuid)
     .single();
 
   if (amError || !amData) {
@@ -205,41 +204,41 @@ async function updateBleacherAssignments(
     return;
   }
 
-  const accountManagerId = amData.account_manager_id;
+  const accountManagerUuid = amData.id;
 
   // Clear existing assignments for this account manager
   await supabase
     .from("Bleachers")
     .update({
-      summer_account_manager_id: null,
+      summer_account_manager_uuid: null,
     })
-    .eq("summer_account_manager_id", accountManagerId);
+    .eq("summer_account_manager_uuid", accountManagerUuid);
 
   await supabase
     .from("Bleachers")
     .update({
-      winter_account_manager_id: null,
+      winter_account_manager_uuid: null,
     })
-    .eq("winter_account_manager_id", accountManagerId);
+    .eq("winter_account_manager_uuid", accountManagerUuid);
 
   // Set new summer assignments
-  if (state.summerBleacherIds.length > 0) {
+  if (state.summerBleacherUuids.length > 0) {
     await supabase
       .from("Bleachers")
       .update({
-        summer_account_manager_id: accountManagerId,
+        summer_account_manager_uuid: accountManagerUuid,
       })
-      .in("bleacher_id", state.summerBleacherIds);
+      .in("id", state.summerBleacherUuids);
   }
 
   // Set new winter assignments
-  if (state.winterBleacherIds.length > 0) {
+  if (state.winterBleacherUuids.length > 0) {
     await supabase
       .from("Bleachers")
       .update({
-        winter_account_manager_id: accountManagerId,
+        winter_account_manager_uuid: accountManagerUuid,
       })
-      .in("bleacher_id", state.winterBleacherIds);
+      .in("id", state.winterBleacherUuids);
   }
 }
 

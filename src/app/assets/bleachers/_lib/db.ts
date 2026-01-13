@@ -1,6 +1,5 @@
 "use client";
 import { FormattedBleacher } from "./types";
-import { InsertBleacher, UpdateBleacher } from "@/types/tables/Bleachers";
 import { toast } from "sonner";
 import React from "react";
 import { ErrorToast } from "@/components/toasts/ErrorToast";
@@ -10,57 +9,59 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { useQuery } from "@tanstack/react-query";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { Database } from "../../../../../database.types";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { InsertBleacher, UpdateBleacher } from "@/types/tables/Bleachers";
 
+type Query = {
+  bleacher_number: number | null;
+  bleacher_rows: number | null;
+  bleacher_seats: number | null;
+  summer_home_base_uuid: string | null;
+  summer_home_base_name: string | null;
+  winter_home_base_uuid: string | null;
+  winter_home_base_name: string | null;
+};
 // Fetching the list of bleachers with home bases using React Query
 export function useBleachersQuery() {
-  const supabase = useClerkSupabaseClient();
+  const compiled = db
+    .selectFrom("Bleachers as b")
+    .leftJoin("HomeBases as shb", "shb.id", "b.summer_home_base_uuid")
+    .leftJoin("HomeBases as whb", "whb.id", "b.winter_home_base_uuid")
+    .select([
+      "b.bleacher_number",
+      "b.bleacher_rows",
+      "b.bleacher_seats",
 
-  return useQuery({
-    queryKey: ["bleachers"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("Bleachers")
-        .select(
-          `
-          bleacher_number,
-          bleacher_rows,
-          bleacher_seats,
-          home_base:HomeBases!Bleachers_home_base_id_fkey(
-            home_base_id,
-            home_base_name
-          ),
-          winter_home_base:HomeBases!Bleachers_winter_home_base_id_fkey(
-            home_base_id,
-            home_base_name
-          )
-        `
-        )
-        .order("bleacher_number", { ascending: false });
+      // home_base fields
+      "shb.id as summer_home_base_uuid",
+      "shb.home_base_name as summer_home_base_name",
 
-      if (error) throw error;
+      // winter_home_base fields
+      "whb.id as winter_home_base_uuid",
+      "whb.home_base_name as winter_home_base_name",
+    ])
+    .orderBy("b.bleacher_number", "desc")
+    .compile();
 
-      const formattedBleachers: FormattedBleacher[] = (data || []).map((bleacher) => {
-        const homeBase = bleacher.home_base as any;
-        const winterHomeBase = bleacher.winter_home_base as any;
-
-        return {
-          bleacherNumber: bleacher.bleacher_number,
-          bleacherRows: bleacher.bleacher_rows,
-          bleacherSeats: bleacher.bleacher_seats,
-          homeBase: {
-            homeBaseId: homeBase?.home_base_id ?? 0,
-            homeBaseName: homeBase?.home_base_name ?? "",
-          },
-          winterHomeBase: {
-            homeBaseId: winterHomeBase?.home_base_id ?? 0,
-            homeBaseName: winterHomeBase?.home_base_name ?? "",
-          },
-        };
-      });
-
-      return formattedBleachers;
-    },
+  const { data } = useTypedQuery(compiled, expect<Query>());
+  const formattedBleachers: FormattedBleacher[] = (data || []).map((bleacher) => {
+    return {
+      bleacherNumber: bleacher.bleacher_number || 0,
+      bleacherRows: bleacher.bleacher_rows || 0,
+      bleacherSeats: bleacher.bleacher_seats || 0,
+      summerHomeBase: {
+        homeBaseUuid: bleacher.summer_home_base_uuid ?? "",
+        homeBaseName: bleacher.summer_home_base_name ?? "",
+      },
+      winterHomeBase: {
+        homeBaseUuid: bleacher.winter_home_base_uuid ?? "",
+        homeBaseName: bleacher.winter_home_base_name ?? "",
+      },
+    };
   });
+
+  return formattedBleachers;
 }
 
 // Fetch a single bleacher with all details for editing
@@ -76,15 +77,15 @@ export function useBleacherQuery(bleacherNumber: number | null) {
         .from("Bleachers")
         .select(
           `
-          bleacher_id,
+          id,
           bleacher_number,
           bleacher_rows,
           bleacher_seats,
-          home_base_id,
-          winter_home_base_id,
+          summer_home_base_uuid,
+          winter_home_base_uuid,
           linxup_device_id,
-          summer_account_manager_id,
-          winter_account_manager_id
+          summer_account_manager_uuid,
+          winter_account_manager_uuid
         `
         )
         .eq("bleacher_number", bleacherNumber)
@@ -154,10 +155,7 @@ export async function updateBleacher(
 ) {
   // console.log("Updating bleacher", token);
   // const supabase = createClient(token);
-  const { error } = await supabase
-    .from("Bleachers")
-    .update(bleacher)
-    .eq("bleacher_id", bleacher.bleacher_id);
+  const { error } = await supabase.from("Bleachers").update(bleacher).eq("id", bleacher.id);
 
   if (error) {
     // console.log("Error inserting bleacher:", error);

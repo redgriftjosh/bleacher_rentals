@@ -1,28 +1,29 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { FormattedBleacher } from "../types";
 
-interface BleacherItemProps {
-  bleacherNumber: number;
-  bleacherRows: number;
-  bleacherSeats: number;
-  homeBase: {
-    homeBaseId: number;
-    homeBaseName: string;
-  };
-  winterHomeBase: {
-    homeBaseId: number;
-    homeBaseName: string;
-  };
-}
+// interface BleacherItemProps {
+//   bleacherNumber: number;
+//   bleacherRows: number;
+//   bleacherSeats: number;
+//   summerHomeBase: {
+//     homeBaseId: number;
+//     homeBaseName: string;
+//   };
+//   winterHomeBase: {
+//     homeBaseId: number;
+//     homeBaseName: string;
+//   };
+// }
 
 export function BleacherItemRow({
   bleacherNumber,
   bleacherRows,
   bleacherSeats,
-  homeBase,
+  summerHomeBase,
   winterHomeBase,
-}: BleacherItemProps) {
+}: FormattedBleacher) {
   const router = useRouter();
 
   const handleClick = () => {
@@ -37,7 +38,7 @@ export function BleacherItemRow({
       <td className="p-3 text-left">{bleacherNumber}</td>
       <td className="p-3 text-left">{bleacherRows}</td>
       <td className="p-3 text-left">{bleacherSeats}</td>
-      <td className="p-3 text-left">{homeBase.homeBaseName}</td>
+      <td className="p-3 text-left">{summerHomeBase.homeBaseName}</td>
       <td className="p-3 text-left">{winterHomeBase.homeBaseName}</td>
     </tr>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchWorkTrackersForUserIdAndStartDate } from "../db/db";
+import { fetchWorkTrackersForUserUuidAndStartDate } from "../db/db";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";
@@ -8,18 +8,18 @@ import { calculateFinancialTotals } from "../util";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 type Props = {
-  userId: number;
+  userUuid: string;
   startDate: string;
   onSelectWorkTracker?: (workTracker: Tables<"WorkTrackers">) => void;
 };
 
-export function TripList({ userId, startDate, onSelectWorkTracker }: Props) {
+export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
   const supabase = useClerkSupabaseClient();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["work-trackers", userId, startDate],
+    queryKey: ["work-trackers", userUuid, startDate],
     queryFn: async () => {
-      return fetchWorkTrackersForUserIdAndStartDate(supabase, userId, startDate, false);
+      return fetchWorkTrackersForUserUuidAndStartDate(supabase, userUuid, startDate, false);
     },
   });
   let financialTotals;

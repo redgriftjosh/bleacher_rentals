@@ -3,13 +3,13 @@ import { Database } from "@/../database.types";
 
 type TypedSupabaseClient = SupabaseClient<Database>;
 
-export async function fetchUserById(supabase: TypedSupabaseClient, userId: number) {
+export async function fetchUserById(supabase: TypedSupabaseClient, userUuid: string) {
   try {
     // 1. Fetch user data
     const { data: userData, error: userError } = await supabase
       .from("Users")
       .select("*")
-      .eq("user_id", userId)
+      .eq("id", userUuid)
       .single();
 
     if (userError) throw userError;
@@ -18,7 +18,7 @@ export async function fetchUserById(supabase: TypedSupabaseClient, userId: numbe
     const { data: driverData } = await supabase
       .from("Drivers")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_uuid", userUuid)
       .eq("is_active", true)
       .maybeSingle();
 
@@ -26,32 +26,32 @@ export async function fetchUserById(supabase: TypedSupabaseClient, userId: numbe
     const { data: accountManagerData } = await supabase
       .from("AccountManagers")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_uuid", userUuid)
       .eq("is_active", true)
       .maybeSingle();
 
     // 4. If account manager, fetch bleacher assignments
-    let summerBleacherIds: number[] = [];
-    let winterBleacherIds: number[] = [];
-    let assignedDriverIds: number[] = [];
+    let summerBleacherUuids: string[] = [];
+    let winterBleacherUuids: string[] = [];
+    let assignedDriverUuids: string[] = [];
 
     if (accountManagerData) {
-      const accountManagerId = accountManagerData.account_manager_id;
+      const accountManagerUuid = accountManagerData.id;
 
       const { data: bleachers } = await supabase
         .from("Bleachers")
-        .select("bleacher_id, summer_account_manager_id, winter_account_manager_id")
+        .select("id, summer_account_manager_uuid, winter_account_manager_uuid")
         .or(
-          `summer_account_manager_id.eq.${accountManagerId},winter_account_manager_id.eq.${accountManagerId}`
+          `summer_account_manager_uuid.eq.${accountManagerUuid},winter_account_manager_uuid.eq.${accountManagerUuid}`
         );
 
       if (bleachers) {
-        summerBleacherIds = bleachers
-          .filter((b) => b.summer_account_manager_id === accountManagerId)
-          .map((b) => b.bleacher_id);
-        winterBleacherIds = bleachers
-          .filter((b) => b.winter_account_manager_id === accountManagerId)
-          .map((b) => b.bleacher_id);
+        summerBleacherUuids = bleachers
+          .filter((b) => b.summer_account_manager_uuid === accountManagerUuid)
+          .map((b) => b.id);
+        winterBleacherUuids = bleachers
+          .filter((b) => b.winter_account_manager_uuid === accountManagerUuid)
+          .map((b) => b.id);
       }
 
       // TODO: Fetch assigned drivers when that relationship is implemented
@@ -65,17 +65,17 @@ export async function fetchUserById(supabase: TypedSupabaseClient, userId: numbe
         lastName: userData.last_name,
         email: userData.email,
         isAdmin: userData.is_admin,
-        status: userData.status,
+        status_uuid: userData.status_uuid,
         isDriver: !!driverData,
         isAccountManager: !!accountManagerData,
         tax: driverData?.tax ?? undefined,
         payRateCents: driverData?.pay_rate_cents ?? null,
         payCurrency: (driverData?.pay_currency as "CAD" | "USD") ?? "CAD",
         payPerUnit: (driverData?.pay_per_unit as "KM" | "MI" | "HR") ?? "KM",
-        accountManagerId: driverData?.account_manager_id ?? null,
-        summerBleacherIds,
-        winterBleacherIds,
-        assignedDriverIds,
+        accountManagerUuid: driverData?.account_manager_uuid ?? null,
+        summerBleacherUuids,
+        winterBleacherUuids,
+        assignedDriverUuids,
       },
     };
   } catch (error) {

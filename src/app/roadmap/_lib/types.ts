@@ -5,7 +5,7 @@ export type Task = {
   created_by_user: Tables<"Users">;
   description: string;
   name: string;
-  task_id: number;
+  id: string;
   task_status: Tables<"TaskStatuses">;
   task_type: Tables<"TaskTypes">;
 };

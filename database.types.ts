@@ -11,54 +11,54 @@ export type Database = {
     Tables: {
       AccountManagers: {
         Row: {
-          account_manager_id: number
           created_at: string
+          id: string
           is_active: boolean
-          user_id: number
+          user_uuid: string | null
         }
         Insert: {
-          account_manager_id?: number
           created_at?: string
+          id?: string
           is_active?: boolean
-          user_id: number
+          user_uuid?: string | null
         }
         Update: {
-          account_manager_id?: number
           created_at?: string
+          id?: string
           is_active?: boolean
-          user_id?: number
+          user_uuid?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "AccountManagers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
+            foreignKeyName: "AccountManagers_user_uuid_fkey"
+            columns: ["user_uuid"]
+            isOneToOne: false
             referencedRelation: "Users"
-            referencedColumns: ["user_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
       Addresses: {
         Row: {
-          address_id: number
           city: string
           created_at: string
+          id: string
           state_province: string
           street: string
           zip_postal: string | null
         }
         Insert: {
-          address_id?: number
           city: string
           created_at?: string
+          id?: string
           state_province: string
           street: string
           zip_postal?: string | null
         }
         Update: {
-          address_id?: number
           city?: string
           created_at?: string
+          id?: string
           state_province?: string
           street?: string
           zip_postal?: string | null
@@ -67,30 +67,30 @@ export type Database = {
       }
       BleacherEvents: {
         Row: {
-          bleacher_event_id: number
-          bleacher_id: number
+          bleacher_uuid: string | null
           created_at: string
-          event_id: number
+          event_uuid: string | null
+          id: string
           setup_confirmed: boolean
           setup_text: string | null
           teardown_confirmed: boolean
           teardown_text: string | null
         }
         Insert: {
-          bleacher_event_id?: number
-          bleacher_id: number
+          bleacher_uuid?: string | null
           created_at?: string
-          event_id: number
+          event_uuid?: string | null
+          id?: string
           setup_confirmed?: boolean
           setup_text?: string | null
           teardown_confirmed?: boolean
           teardown_text?: string | null
         }
         Update: {
-          bleacher_event_id?: number
-          bleacher_id?: number
+          bleacher_uuid?: string | null
           created_at?: string
-          event_id?: number
+          event_uuid?: string | null
+          id?: string
           setup_confirmed?: boolean
           setup_text?: string | null
           teardown_confirmed?: boolean
@@ -98,265 +98,233 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "BleacherEvents_bleacher_id_fkey"
-            columns: ["bleacher_id"]
+            foreignKeyName: "BleacherEvents_bleacher_uuid_fkey"
+            columns: ["bleacher_uuid"]
             isOneToOne: false
             referencedRelation: "Bleachers"
-            referencedColumns: ["bleacher_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "BleacherEvents_event_id_fkey"
-            columns: ["event_id"]
+            foreignKeyName: "BleacherEvents_event_uuid_fkey"
+            columns: ["event_uuid"]
             isOneToOne: false
             referencedRelation: "Events"
-            referencedColumns: ["event_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
       Bleachers: {
         Row: {
-          bleacher_id: number
           bleacher_number: number
           bleacher_rows: number
           bleacher_seats: number
           created_at: string
           created_by: string | null
-          home_base_id: number
+          id: string
           linxup_device_id: string | null
-          summer_account_manager_id: number | null
+          summer_account_manager_uuid: string | null
+          summer_home_base_uuid: string | null
           updated_at: string | null
           updated_by: string | null
-          winter_account_manager_id: number | null
-          winter_home_base_id: number
+          winter_account_manager_uuid: string | null
+          winter_home_base_uuid: string | null
         }
         Insert: {
-          bleacher_id?: number
           bleacher_number: number
           bleacher_rows: number
           bleacher_seats: number
           created_at?: string
           created_by?: string | null
-          home_base_id: number
+          id?: string
           linxup_device_id?: string | null
-          summer_account_manager_id?: number | null
+          summer_account_manager_uuid?: string | null
+          summer_home_base_uuid?: string | null
           updated_at?: string | null
           updated_by?: string | null
-          winter_account_manager_id?: number | null
-          winter_home_base_id: number
+          winter_account_manager_uuid?: string | null
+          winter_home_base_uuid?: string | null
         }
         Update: {
-          bleacher_id?: number
           bleacher_number?: number
           bleacher_rows?: number
           bleacher_seats?: number
           created_at?: string
           created_by?: string | null
-          home_base_id?: number
+          id?: string
           linxup_device_id?: string | null
-          summer_account_manager_id?: number | null
+          summer_account_manager_uuid?: string | null
+          summer_home_base_uuid?: string | null
           updated_at?: string | null
           updated_by?: string | null
-          winter_account_manager_id?: number | null
-          winter_home_base_id?: number
+          winter_account_manager_uuid?: string | null
+          winter_home_base_uuid?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "Bleachers_home_base_id_fkey"
-            columns: ["home_base_id"]
-            isOneToOne: false
-            referencedRelation: "HomeBases"
-            referencedColumns: ["home_base_id"]
-          },
-          {
-            foreignKeyName: "Bleachers_summer_account_manager_id_fkey"
-            columns: ["summer_account_manager_id"]
+            foreignKeyName: "Bleachers_summer_account_manager_uuid_fkey"
+            columns: ["summer_account_manager_uuid"]
             isOneToOne: false
             referencedRelation: "AccountManagers"
-            referencedColumns: ["account_manager_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "Bleachers_winter_account_manager_id_fkey"
-            columns: ["winter_account_manager_id"]
-            isOneToOne: false
-            referencedRelation: "AccountManagers"
-            referencedColumns: ["account_manager_id"]
-          },
-          {
-            foreignKeyName: "Bleachers_winter_home_base_id_fkey"
-            columns: ["winter_home_base_id"]
+            foreignKeyName: "bleachers_summer_home_base_uuid_fkey"
+            columns: ["summer_home_base_uuid"]
             isOneToOne: false
             referencedRelation: "HomeBases"
-            referencedColumns: ["home_base_id"]
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Bleachers_winter_account_manager_uuid_fkey"
+            columns: ["winter_account_manager_uuid"]
+            isOneToOne: false
+            referencedRelation: "AccountManagers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bleachers_winter_home_base_uuid_fkey"
+            columns: ["winter_home_base_uuid"]
+            isOneToOne: false
+            referencedRelation: "HomeBases"
+            referencedColumns: ["id"]
           },
         ]
       }
       BleacherUsers: {
         Row: {
-          bleacher_id: number
-          bleacher_user_id: number
+          bleacher_uuid: string | null
           created_at: string
+          id: string
           season: string
-          user_id: number
+          user_uuid: string | null
         }
         Insert: {
-          bleacher_id: number
-          bleacher_user_id?: number
+          bleacher_uuid?: string | null
           created_at?: string
+          id?: string
           season: string
-          user_id: number
+          user_uuid?: string | null
         }
         Update: {
-          bleacher_id?: number
-          bleacher_user_id?: number
+          bleacher_uuid?: string | null
           created_at?: string
+          id?: string
           season?: string
-          user_id?: number
+          user_uuid?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "BleacherUsers_bleacher_id_fkey"
-            columns: ["bleacher_id"]
+            foreignKeyName: "BleacherUsers_bleacher_uuid_fkey"
+            columns: ["bleacher_uuid"]
             isOneToOne: false
             referencedRelation: "Bleachers"
-            referencedColumns: ["bleacher_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "BleacherUsers_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "BleacherUsers_user_uuid_fkey"
+            columns: ["user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
-            referencedColumns: ["user_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
       Blocks: {
         Row: {
-          bleacher_id: number | null
-          block_id: number
+          bleacher_uuid: string | null
           created_at: string
           date: string | null
+          id: string
           text: string | null
         }
         Insert: {
-          bleacher_id?: number | null
-          block_id?: number
+          bleacher_uuid?: string | null
           created_at?: string
           date?: string | null
+          id?: string
           text?: string | null
         }
         Update: {
-          bleacher_id?: number | null
-          block_id?: number
+          bleacher_uuid?: string | null
           created_at?: string
           date?: string | null
+          id?: string
           text?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "block_bleacher_id_fkey"
-            columns: ["bleacher_id"]
+            foreignKeyName: "Blocks_bleacher_uuid_fkey"
+            columns: ["bleacher_uuid"]
             isOneToOne: false
             referencedRelation: "Bleachers"
-            referencedColumns: ["bleacher_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
       Drivers: {
         Row: {
-          account_manager_id: number | null
-          address_id: number | null
+          account_manager_uuid: string | null
           created_at: string
-          driver_id: number
-          insurance_photo_path: string | null
+          id: string
           is_active: boolean
-          license_photo_path: string | null
-          medical_card_photo_path: string | null
           pay_currency: string
           pay_per_unit: string
           pay_rate_cents: number
-          phone_number: string | null
           tax: number
-          user_id: number
-          vehicle_id: number | null
+          user_uuid: string | null
         }
         Insert: {
-          account_manager_id?: number | null
-          address_id?: number | null
+          account_manager_uuid?: string | null
           created_at?: string
-          driver_id?: number
-          insurance_photo_path?: string | null
+          id?: string
           is_active?: boolean
-          license_photo_path?: string | null
-          medical_card_photo_path?: string | null
           pay_currency?: string
           pay_per_unit?: string
           pay_rate_cents?: number
-          phone_number?: string | null
           tax?: number
-          user_id: number
-          vehicle_id?: number | null
+          user_uuid?: string | null
         }
         Update: {
-          account_manager_id?: number | null
-          address_id?: number | null
+          account_manager_uuid?: string | null
           created_at?: string
-          driver_id?: number
-          insurance_photo_path?: string | null
+          id?: string
           is_active?: boolean
-          license_photo_path?: string | null
-          medical_card_photo_path?: string | null
           pay_currency?: string
           pay_per_unit?: string
           pay_rate_cents?: number
-          phone_number?: string | null
           tax?: number
-          user_id?: number
-          vehicle_id?: number | null
+          user_uuid?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "Drivers_account_manager_id_fkey"
-            columns: ["account_manager_id"]
+            foreignKeyName: "Drivers_account_manager_uuid_fkey"
+            columns: ["account_manager_uuid"]
             isOneToOne: false
             referencedRelation: "AccountManagers"
-            referencedColumns: ["account_manager_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "Drivers_address_id_fkey"
-            columns: ["address_id"]
+            foreignKeyName: "Drivers_user_uuid_fkey"
+            columns: ["user_uuid"]
             isOneToOne: false
-            referencedRelation: "Addresses"
-            referencedColumns: ["address_id"]
-          },
-          {
-            foreignKeyName: "Drivers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "Users"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "Drivers_vehicle_id_fkey"
-            columns: ["vehicle_id"]
-            isOneToOne: false
-            referencedRelation: "Vehicles"
-            referencedColumns: ["vehicle_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
       Events: {
         Row: {
-          address_id: number
+          address_uuid: string | null
           booked: boolean
           created_at: string
-          created_by_user_id: number | null
+          created_by_user_uuid: string | null
           event_end: string
-          event_id: number
           event_name: string
           event_start: string
           fifteen_row: number | null
           goodshuffle_url: string | null
           hsl_hue: number | null
+          id: string
           lenient: boolean
           must_be_clean: boolean
           notes: string | null
@@ -367,17 +335,17 @@ export type Database = {
           total_seats: number | null
         }
         Insert: {
-          address_id: number
+          address_uuid?: string | null
           booked?: boolean
           created_at?: string
-          created_by_user_id?: number | null
+          created_by_user_uuid?: string | null
           event_end: string
-          event_id?: number
           event_name: string
           event_start: string
           fifteen_row?: number | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
+          id?: string
           lenient: boolean
           must_be_clean?: boolean
           notes?: string | null
@@ -388,17 +356,17 @@ export type Database = {
           total_seats?: number | null
         }
         Update: {
-          address_id?: number
+          address_uuid?: string | null
           booked?: boolean
           created_at?: string
-          created_by_user_id?: number | null
+          created_by_user_uuid?: string | null
           event_end?: string
-          event_id?: number
           event_name?: string
           event_start?: string
           fifteen_row?: number | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
+          id?: string
           lenient?: boolean
           must_be_clean?: boolean
           notes?: string | null
@@ -410,120 +378,88 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "Events_address_id_fkey"
-            columns: ["address_id"]
+            foreignKeyName: "Events_address_uuid_fkey"
+            columns: ["address_uuid"]
             isOneToOne: false
             referencedRelation: "Addresses"
-            referencedColumns: ["address_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "Events_created_by_user_id_fkey"
-            columns: ["created_by_user_id"]
+            foreignKeyName: "Events_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
-            referencedColumns: ["user_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
       HomeBases: {
         Row: {
           created_at: string
-          home_base_id: number
           home_base_name: string
+          id: string
         }
         Insert: {
           created_at?: string
-          home_base_id?: number
           home_base_name: string
+          id?: string
         }
         Update: {
           created_at?: string
-          home_base_id?: number
           home_base_name?: string
+          id?: string
         }
         Relationships: []
-      }
-      InspectionPhotos: {
-        Row: {
-          caption: string | null
-          created_at: string
-          inspection_id: number
-          photo_id: number
-          storage_path: string
-        }
-        Insert: {
-          caption?: string | null
-          created_at?: string
-          inspection_id: number
-          photo_id?: number
-          storage_path: string
-        }
-        Update: {
-          caption?: string | null
-          created_at?: string
-          inspection_id?: number
-          photo_id?: number
-          storage_path?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "InspectionPhotos_inspection_id_fkey"
-            columns: ["inspection_id"]
-            isOneToOne: false
-            referencedRelation: "WorkTrackerInspections"
-            referencedColumns: ["inspection_id"]
-          },
-        ]
       }
       Tasks: {
         Row: {
           created_at: string
-          created_by_user_id: number
+          created_by_user_uuid: string | null
           description: string
+          id: string
           name: string
-          task_id: number
-          task_status_id: number
-          task_type_id: number
+          task_status_uuid: string | null
+          task_type_uuid: string | null
         }
         Insert: {
           created_at?: string
-          created_by_user_id: number
+          created_by_user_uuid?: string | null
           description: string
+          id?: string
           name: string
-          task_id?: number
-          task_status_id: number
-          task_type_id: number
+          task_status_uuid?: string | null
+          task_type_uuid?: string | null
         }
         Update: {
           created_at?: string
-          created_by_user_id?: number
+          created_by_user_uuid?: string | null
           description?: string
+          id?: string
           name?: string
-          task_id?: number
-          task_status_id?: number
-          task_type_id?: number
+          task_status_uuid?: string | null
+          task_type_uuid?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "Tasks_created_by_user_id_fkey"
-            columns: ["created_by_user_id"]
+            foreignKeyName: "Tasks_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
-            referencedColumns: ["user_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "Tasks_task_status_id_fkey"
-            columns: ["task_status_id"]
+            foreignKeyName: "Tasks_task_status_uuid_fkey"
+            columns: ["task_status_uuid"]
             isOneToOne: false
             referencedRelation: "TaskStatuses"
-            referencedColumns: ["task_status_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "Tasks_task_type_id_fkey"
-            columns: ["task_type_id"]
+            foreignKeyName: "Tasks_task_type_uuid_fkey"
+            columns: ["task_type_uuid"]
             isOneToOne: false
             referencedRelation: "TaskTypes"
-            referencedColumns: ["task_type_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -531,91 +467,91 @@ export type Database = {
         Row: {
           created_at: string
           hex: string
+          id: string
           label: string
-          task_status_id: number
         }
         Insert: {
           created_at?: string
           hex: string
+          id?: string
           label: string
-          task_status_id?: number
         }
         Update: {
           created_at?: string
           hex?: string
+          id?: string
           label?: string
-          task_status_id?: number
         }
         Relationships: []
       }
       TaskTypes: {
         Row: {
           created_at: string
+          id: string
           label: string
-          task_type_id: number
         }
         Insert: {
           created_at?: string
+          id?: string
           label: string
-          task_type_id?: number
         }
         Update: {
           created_at?: string
+          id?: string
           label?: string
-          task_type_id?: number
         }
         Relationships: []
       }
       UserHomeBases: {
         Row: {
           created_at: string
-          home_base_id: number | null
-          user_home_base_id: number
-          user_id: number | null
+          home_base_uuid: string | null
+          id: string
+          user_uuid: string | null
         }
         Insert: {
           created_at?: string
-          home_base_id?: number | null
-          user_home_base_id?: number
-          user_id?: number | null
+          home_base_uuid?: string | null
+          id?: string
+          user_uuid?: string | null
         }
         Update: {
           created_at?: string
-          home_base_id?: number | null
-          user_home_base_id?: number
-          user_id?: number | null
+          home_base_uuid?: string | null
+          id?: string
+          user_uuid?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "userhomebases_home_base_id_fkey"
-            columns: ["home_base_id"]
+            foreignKeyName: "userhomebases_home_base_uuid_fkey"
+            columns: ["home_base_uuid"]
             isOneToOne: false
             referencedRelation: "HomeBases"
-            referencedColumns: ["home_base_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "userhomebases_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "UserHomeBases_user_uuid_fkey"
+            columns: ["user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
-            referencedColumns: ["user_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
       UserRoles: {
         Row: {
           created_at: string
-          id: number
+          id: string
           role: string
         }
         Insert: {
           created_at?: string
-          id?: number
+          id?: string
           role: string
         }
         Update: {
           created_at?: string
-          id?: number
+          id?: string
           role?: string
         }
         Relationships: []
@@ -627,12 +563,12 @@ export type Database = {
           created_at: string
           email: string
           first_name: string | null
+          id: string
           is_admin: boolean
           last_name: string | null
           phone: string | null
           role: number | null
-          status: number
-          user_id: number
+          status_uuid: string | null
         }
         Insert: {
           avatar_image_url?: string | null
@@ -640,12 +576,12 @@ export type Database = {
           created_at?: string
           email: string
           first_name?: string | null
+          id?: string
           is_admin?: boolean
           last_name?: string | null
           phone?: string | null
           role?: number | null
-          status?: number
-          user_id?: number
+          status_uuid?: string | null
         }
         Update: {
           avatar_image_url?: string | null
@@ -653,257 +589,128 @@ export type Database = {
           created_at?: string
           email?: string
           first_name?: string | null
+          id?: string
           is_admin?: boolean
           last_name?: string | null
           phone?: string | null
           role?: number | null
-          status?: number
-          user_id?: number
+          status_uuid?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "Users_status_uuid_fkey"
+            columns: ["status_uuid"]
+            isOneToOne: false
+            referencedRelation: "UserStatuses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       UserStatuses: {
         Row: {
           created_at: string
-          id: number
+          id: string
           status: string
         }
         Insert: {
           created_at?: string
-          id?: number
+          id?: string
           status: string
         }
         Update: {
           created_at?: string
-          id?: number
+          id?: string
           status?: string
-        }
-        Relationships: []
-      }
-      Vehicles: {
-        Row: {
-          created_at: string
-          make: string
-          model: string
-          vehicle_id: number
-          vin_number: string | null
-          year: number
-        }
-        Insert: {
-          created_at?: string
-          make: string
-          model: string
-          vehicle_id?: number
-          vin_number?: string | null
-          year: number
-        }
-        Update: {
-          created_at?: string
-          make?: string
-          model?: string
-          vehicle_id?: number
-          vin_number?: string | null
-          year?: number
-        }
-        Relationships: []
-      }
-      WorkTrackerInspections: {
-        Row: {
-          all_spindles_present: boolean
-          any_broken_parts: boolean
-          are_lights_functioning: boolean
-          are_lights_in_place: boolean
-          are_safety_chains_attached: boolean
-          are_safety_pins_attached: boolean
-          created_at: string
-          e_brake_pin_works: boolean
-          electric_trailer_brake_works: boolean
-          handrails_present: boolean
-          inspection_id: number
-          is_bleacher_clean: boolean
-          is_cylinder_sleeve_in_place: boolean
-          is_safety_chain_condition_good: boolean
-          is_spare_tire_present: boolean
-          is_sticker_condition_good: boolean
-          is_tire_condition_good: boolean
-          locking_tabs_present: boolean
-          notes: string | null
-          opens_closes_smoothly: boolean
-          overall_rating: number | null
-        }
-        Insert: {
-          all_spindles_present: boolean
-          any_broken_parts: boolean
-          are_lights_functioning: boolean
-          are_lights_in_place: boolean
-          are_safety_chains_attached: boolean
-          are_safety_pins_attached: boolean
-          created_at?: string
-          e_brake_pin_works: boolean
-          electric_trailer_brake_works: boolean
-          handrails_present: boolean
-          inspection_id?: number
-          is_bleacher_clean: boolean
-          is_cylinder_sleeve_in_place: boolean
-          is_safety_chain_condition_good: boolean
-          is_spare_tire_present: boolean
-          is_sticker_condition_good: boolean
-          is_tire_condition_good: boolean
-          locking_tabs_present: boolean
-          notes?: string | null
-          opens_closes_smoothly: boolean
-          overall_rating?: number | null
-        }
-        Update: {
-          all_spindles_present?: boolean
-          any_broken_parts?: boolean
-          are_lights_functioning?: boolean
-          are_lights_in_place?: boolean
-          are_safety_chains_attached?: boolean
-          are_safety_pins_attached?: boolean
-          created_at?: string
-          e_brake_pin_works?: boolean
-          electric_trailer_brake_works?: boolean
-          handrails_present?: boolean
-          inspection_id?: number
-          is_bleacher_clean?: boolean
-          is_cylinder_sleeve_in_place?: boolean
-          is_safety_chain_condition_good?: boolean
-          is_spare_tire_present?: boolean
-          is_sticker_condition_good?: boolean
-          is_tire_condition_good?: boolean
-          locking_tabs_present?: boolean
-          notes?: string | null
-          opens_closes_smoothly?: boolean
-          overall_rating?: number | null
         }
         Relationships: []
       }
       WorkTrackers: {
         Row: {
-          accepted_at: string | null
-          bleacher_id: number | null
-          completed_at: string | null
+          bleacher_uuid: string | null
           created_at: string
           date: string | null
-          driver_id: number | null
-          dropoff_address_id: number | null
+          driver_uuid: string | null
+          dropoff_address_uuid: string | null
           dropoff_poc: string | null
           dropoff_time: string | null
+          id: string
           internal_notes: string | null
           notes: string | null
           pay_cents: number | null
-          pickup_address_id: number | null
+          pickup_address_uuid: string | null
           pickup_poc: string | null
           pickup_time: string | null
-          post_inspection_id: number | null
-          pre_inspection_id: number | null
-          released_at: string | null
-          started_at: string | null
-          status: Database["public"]["Enums"]["worktracker_status"]
-          updated_at: string
-          user_id: number | null
-          work_tracker_id: number
+          user_uuid: string | null
         }
         Insert: {
-          accepted_at?: string | null
-          bleacher_id?: number | null
-          completed_at?: string | null
+          bleacher_uuid?: string | null
           created_at?: string
           date?: string | null
-          driver_id?: number | null
-          dropoff_address_id?: number | null
+          driver_uuid?: string | null
+          dropoff_address_uuid?: string | null
           dropoff_poc?: string | null
           dropoff_time?: string | null
+          id?: string
           internal_notes?: string | null
           notes?: string | null
           pay_cents?: number | null
-          pickup_address_id?: number | null
+          pickup_address_uuid?: string | null
           pickup_poc?: string | null
           pickup_time?: string | null
-          post_inspection_id?: number | null
-          pre_inspection_id?: number | null
-          released_at?: string | null
-          started_at?: string | null
-          status?: Database["public"]["Enums"]["worktracker_status"]
-          updated_at?: string
-          user_id?: number | null
-          work_tracker_id?: number
+          user_uuid?: string | null
         }
         Update: {
-          accepted_at?: string | null
-          bleacher_id?: number | null
-          completed_at?: string | null
+          bleacher_uuid?: string | null
           created_at?: string
           date?: string | null
-          driver_id?: number | null
-          dropoff_address_id?: number | null
+          driver_uuid?: string | null
+          dropoff_address_uuid?: string | null
           dropoff_poc?: string | null
           dropoff_time?: string | null
+          id?: string
           internal_notes?: string | null
           notes?: string | null
           pay_cents?: number | null
-          pickup_address_id?: number | null
+          pickup_address_uuid?: string | null
           pickup_poc?: string | null
           pickup_time?: string | null
-          post_inspection_id?: number | null
-          pre_inspection_id?: number | null
-          released_at?: string | null
-          started_at?: string | null
-          status?: Database["public"]["Enums"]["worktracker_status"]
-          updated_at?: string
-          user_id?: number | null
-          work_tracker_id?: number
+          user_uuid?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "worktrackers_bleacher_id_fkey"
-            columns: ["bleacher_id"]
+            foreignKeyName: "WorkTrackers_bleacher_uuid_fkey"
+            columns: ["bleacher_uuid"]
             isOneToOne: false
             referencedRelation: "Bleachers"
-            referencedColumns: ["bleacher_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "WorkTrackers_driver_id_fkey"
-            columns: ["driver_id"]
+            foreignKeyName: "WorkTrackers_driver_uuid_fkey"
+            columns: ["driver_uuid"]
             isOneToOne: false
             referencedRelation: "Drivers"
-            referencedColumns: ["driver_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "worktrackers_dropoff_address_id_fkey"
-            columns: ["dropoff_address_id"]
+            foreignKeyName: "worktrackers_dropoff_address_uuid_fkey"
+            columns: ["dropoff_address_uuid"]
             isOneToOne: false
             referencedRelation: "Addresses"
-            referencedColumns: ["address_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "worktrackers_pickup_address_id_fkey"
-            columns: ["pickup_address_id"]
+            foreignKeyName: "worktrackers_pickup_address_uuid_fkey"
+            columns: ["pickup_address_uuid"]
             isOneToOne: false
             referencedRelation: "Addresses"
-            referencedColumns: ["address_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "WorkTrackers_post_inspection_id_fkey"
-            columns: ["post_inspection_id"]
-            isOneToOne: false
-            referencedRelation: "WorkTrackerInspections"
-            referencedColumns: ["inspection_id"]
-          },
-          {
-            foreignKeyName: "WorkTrackers_pre_inspection_id_fkey"
-            columns: ["pre_inspection_id"]
-            isOneToOne: false
-            referencedRelation: "WorkTrackerInspections"
-            referencedColumns: ["inspection_id"]
-          },
-          {
-            foreignKeyName: "worktrackers_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "WorkTrackers_user_uuid_fkey"
+            columns: ["user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
-            referencedColumns: ["user_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -915,13 +722,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      worktracker_status:
-        | "draft"
-        | "released"
-        | "accepted"
-        | "in_progress"
-        | "completed"
-        | "cancelled"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1048,16 +849,7 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      worktracker_status: [
-        "draft",
-        "released",
-        "accepted",
-        "in_progress",
-        "completed",
-        "cancelled",
-      ],
-    },
+    Enums: {},
   },
 } as const
 

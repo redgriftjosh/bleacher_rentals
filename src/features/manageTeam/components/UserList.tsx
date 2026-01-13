@@ -8,8 +8,8 @@ export function UserList() {
   const loadExistingUser = useCurrentUserStore((s) => s.loadExistingUser);
   const supabase = useClerkSupabaseClient();
 
-  const handleClick = (userId: number) => {
-    loadExistingUser(userId, supabase);
+  const handleClick = (userUuid: string) => {
+    loadExistingUser(userUuid, supabase);
   };
 
   return (
@@ -18,7 +18,7 @@ export function UserList() {
         <tr
           key={index}
           className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer"
-          onClick={() => handleClick(row.user_id)}
+          onClick={() => handleClick(row.id)}
         >
           <td className="py-1 px-3 text-left">{row.first_name + " " + row.last_name}</td>
           <td className="py-1 px-3 text-left">{row.email}</td>

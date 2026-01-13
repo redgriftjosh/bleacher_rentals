@@ -13,7 +13,7 @@ export default function WorkTrackersForUserPage() {
   const params = useParams();
   const supabase = useClerkSupabaseClient();
   const startDate = params.startDate as string;
-  const userId = Number(params.userId);
+  const userUuid = params.userUuid as string;
   const className = "py-2 text-center text-xs font-semibold border-r";
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
     null
@@ -25,7 +25,7 @@ export default function WorkTrackersForUserPage() {
       return;
     }
 
-    const res = await fetch(`/work-trackers/${startDate}/${userId}/pdf`, {
+    const res = await fetch(`/work-trackers/${startDate}/${userUuid}/pdf`, {
       method: "GET",
       // headers: {
       //   Authorization: `Bearer ${token}`,
@@ -43,7 +43,7 @@ export default function WorkTrackersForUserPage() {
     // Create a temporary link to trigger download
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `work-trackers-${userId}-${startDate}.pdf`);
+    link.setAttribute("download", `work-trackers-${userUuid}-${startDate}.pdf`);
     document.body.appendChild(link);
     link.click();
 
@@ -57,7 +57,7 @@ export default function WorkTrackersForUserPage() {
       {/* put a button that says "Download PDF"  */}
       <button
         onClick={handleDownload}
-        // href={`/work-trackers/${userId}/${startDate}/pdf`}
+        // href={`/work-trackers/${userUuid}/${startDate}/pdf`}
         className="px-4 py-2 bg-darkBlue text-white text-sm font-semibold rounded shadow-md hover:bg-lightBlue transition cursor-pointer"
       >
         Download PDF
@@ -80,7 +80,7 @@ export default function WorkTrackersForUserPage() {
           </tr>
         </thead>
         <TripList
-          userId={userId}
+          userUuid={userUuid}
           startDate={startDate}
           onSelectWorkTracker={(wt) => setSelectedWorkTracker(wt)}
         />
