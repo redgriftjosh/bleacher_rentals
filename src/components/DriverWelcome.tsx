@@ -1,7 +1,7 @@
 "use client";
 import { SignOutButton } from "@clerk/nextjs";
 import { Button } from "./ui/button";
-import { AppStoreButton, GooglePlayButton, ButtonsContainer } from "react-mobile-app-button";
+// import { AppStoreButton, GooglePlayButton, ButtonsContainer } from "react-mobile-app-button";
 import { Smartphone, LogOut } from "lucide-react";
 
 export function DriverWelcome() {
@@ -40,10 +40,10 @@ export function DriverWelcome() {
         {/* App Store Buttons */}
         <div className="mb-8 flex flex-col items-center">
           <p className="text-sm text-gray-500 mb-4 font-medium">Download the Driver App:</p>
-          <ButtonsContainer>
+          {/* <ButtonsContainer>
             <AppStoreButton url={iOSUrl} theme="dark" height={60} width={200} />
             <GooglePlayButton url={APKUrl} theme="dark" height={60} width={200} />
-          </ButtonsContainer>
+          </ButtonsContainer> */}
         </div>
 
         {/* Coming Soon Notice */}

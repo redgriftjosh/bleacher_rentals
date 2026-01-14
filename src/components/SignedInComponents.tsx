@@ -9,30 +9,20 @@ import { LayoutProvider } from "@/contexts/LayoutContexts";
 import { DriverWelcome } from "./DriverWelcome";
 import { useUserAccess } from "@/features/userAccess";
 import LoadingSpinner from "./LoadingSpinner";
-import { useQuery } from "@powersync/react";
 
-function SignedInContent({ children }: { children: React.ReactNode }) {
+export function SignedInComponents({ children }: { children: React.ReactNode }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   useSupabaseSubscriptions();
   const { accessLevel, reason } = useUserAccess();
 
-  const { data: users } = useQuery("SELECT * FROM Users");
-  console.log("Users from PowerSync:", users);
-
-  const { data: lists } = useQuery("SELECT * FROM lists");
-  console.log("Lists from PowerSync:", lists);
-
-  const { data: workTrackers } = useQuery("SELECT * FROM WorkTrackers");
-  console.log("WorkTrackers from PowerSync:", workTrackers);
-
-  // Show loading state while checking access
-  // if (isLoading) {
-  //   return (
-  //     <div className="flex items-center justify-center min-h-screen">
-  //       <LoadingSpinner />
-  //     </div>
-  //   );
-  // }
+  // Wait for both session and user to be loaded
+  if (accessLevel === "loading") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   // Denied access (deactivated, no roles, or user not found)
   if (accessLevel === "denied") {
@@ -56,9 +46,9 @@ function SignedInContent({ children }: { children: React.ReactNode }) {
   }
 
   // Driver-only access
-  // if (accessLevel === "driver-only") {
-  //   return <DriverWelcome />;
-  // }
+  if (accessLevel === "driver-only") {
+    return <DriverWelcome />;
+  }
 
   return (
     <LayoutProvider scrollRef={scrollRef}>
@@ -73,20 +63,4 @@ function SignedInContent({ children }: { children: React.ReactNode }) {
       </div>
     </LayoutProvider>
   );
-}
-
-export function SignedInComponents({ children }: { children: React.ReactNode }) {
-  const { session, isLoaded: sessionLoaded } = useSession();
-  const { isLoaded: userLoaded } = useUser();
-
-  // Wait for both session and user to be loaded
-  if (!sessionLoaded || !userLoaded || !session) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  return <SignedInContent>{children}</SignedInContent>;
 }

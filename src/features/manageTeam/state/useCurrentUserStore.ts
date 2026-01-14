@@ -76,33 +76,28 @@ export const useCurrentUserStore = create<CurrentUserStore>((set) => ({
   loadExistingUser: async (userUuid, supabase) => {
     set({ existingUserUuid: userUuid, isSubmitting: true });
 
-    const result = await fetchUserById(supabase, userUuid);
+    const result = await fetchUserById(userUuid);
 
-    if (result.success && result.data) {
-      set({
-        firstName: result.data.firstName ?? "",
-        lastName: result.data.lastName ?? "",
-        email: result.data.email,
-        isAdmin: result.data.isAdmin,
-        status_uuid: result.data.status_uuid,
-        isDriver: result.data.isDriver,
-        isAccountManager: result.data.isAccountManager,
-        tax: result.data.tax,
-        payRateCents: result.data.payRateCents,
-        payCurrency: result.data.payCurrency,
-        payPerUnit: result.data.payPerUnit,
-        accountManagerUuid: result.data.accountManagerUuid,
-        summerBleacherUuids: result.data.summerBleacherUuids,
-        winterBleacherUuids: result.data.winterBleacherUuids,
-        assignedDriverUuids: result.data.assignedDriverUuids,
-        existingUserUuid: userUuid,
-        isOpen: true,
-        isSubmitting: false,
+    set({
+      firstName: result.firstName ?? "",
+      lastName: result.lastName ?? "",
+      email: result.email ?? "",
+      isAdmin: result.isAdmin === 1,
+      status_uuid: result.data.status_uuid,
+      isDriver: result.data.isDriver,
+      isAccountManager: result.data.isAccountManager,
+      tax: result.data.tax,
+      payRateCents: result.data.payRateCents,
+      payCurrency: result.data.payCurrency,
+      payPerUnit: result.data.payPerUnit,
+      accountManagerUuid: result.data.accountManagerUuid,
+      summerBleacherUuids: result.data.summerBleacherUuids,
+      winterBleacherUuids: result.data.winterBleacherUuids,
+      assignedDriverUuids: result.data.assignedDriverUuids,
+      existingUserUuid: userUuid,
+      isOpen: true,
+      isSubmitting: false,
       });
-    } else {
-      console.error("Failed to load user:", result.error);
-      set({ isSubmitting: false });
-    }
   },
 
   openForNewUser: () => {

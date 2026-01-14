@@ -40,7 +40,7 @@ export const SystemProvider = ({ children }: { children: React.ReactNode }) => {
   const { session } = useSession();
   const connector = useMemo(
     () => (session?.getToken ? new BackendConnector(session) : undefined),
-    [session]
+    [session?.id]
   );
 
   //   const connectOnceRef = React.useRef(false);

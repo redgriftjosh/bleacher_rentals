@@ -7,10 +7,10 @@ import { UserAccessData } from "../hooks/useUserAccess";
 //   DEACTIVATED: 3,
 // } as const;
 
-export type AccessLevel = "full" | "driver-only" | "denied";
+export type AccessLevel = "full" | "driver-only" | "denied" | "loading";
 
 export type AccessResult = {
-  accessLevel: AccessLevel;
+  accessLevel: Exclude<AccessLevel, "loading">;
   reason?: string;
 };
 
