@@ -2,6 +2,8 @@
 
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { filterBySearch } from "../util/filterBySearch";
+import { useSearchQueryStore } from "../state/useSearchQueryStore";
 
 type Driver = {
   driverUuid: string;
@@ -48,6 +50,7 @@ export function useDrivers(): Driver[] {
     .compile();
 
   const { data } = useTypedQuery(compiled, expect<Driver>());
+  const searchQuery = useSearchQueryStore((s) => s.searchQuery);
 
-  return data ?? [];
+  return filterBySearch(data ?? [], searchQuery);
 }

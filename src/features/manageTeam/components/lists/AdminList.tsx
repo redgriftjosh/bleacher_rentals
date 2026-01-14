@@ -1,7 +1,7 @@
 "use client";
-import { useAdmins } from "../hooks/useAdmins";
-import { UserAvatar } from "./util/UserAvatar";
-import { STATUSES } from "@/app/team/_lib/constants";
+import { useAdmins } from "../../hooks/useAdmins";
+import { UserAvatar } from "../util/UserAvatar";
+import { STATUSES } from "@/features/manageTeam/constants";
 import { useMemo } from "react";
 
 function StatusBadge({ statusUuid }: { statusUuid: string | null }) {

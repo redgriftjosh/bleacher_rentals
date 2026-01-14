@@ -1,4 +1,4 @@
-import { STATUSES } from "@/app/team/_lib/constants";
+import { STATUSES } from "@/features/manageTeam/constants";
 import { UserAccessData } from "../hooks/useUserAccess";
 
 // export const USER_STATUS = {

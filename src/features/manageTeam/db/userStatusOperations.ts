@@ -1,7 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "@/../database.types";
 import { updateDataBase } from "@/app/actions/db.actions";
-import { STATUSES } from "@/app/team/_lib/constants";
+import { STATUSES } from "@/features/manageTeam/constants";
 
 type TypedSupabaseClient = SupabaseClient<Database>;
 

@@ -1,6 +1,6 @@
 "use client";
 import { updateDataBase } from "@/app/actions/db.actions";
-import { STATUSES } from "./constants";
+import { STATUSES } from "../../../features/manageTeam/constants";
 import { createErrorToast, createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";

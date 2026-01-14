@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { determineUserAccess, USER_STATUS, AccessResult } from "./determineAccess";
 import { UserAccessData } from "../hooks/useUserAccess";
-import { STATUSES } from "@/app/team/_lib/constants";
+import { STATUSES } from "@/features/manageTeam/constants";
 
 describe("determineUserAccess", () => {
   it("should deny access when user data is null", () => {

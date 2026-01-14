@@ -1,7 +1,7 @@
 "use client";
-import { useDrivers } from "../hooks/useDrivers";
-import { UserAvatar } from "./util/UserAvatar";
-import { STATUSES } from "@/app/team/_lib/constants";
+import { useAccountManagers } from "../../hooks/useAccountManagers";
+import { UserAvatar } from "../util/UserAvatar";
+import { STATUSES } from "@/features/manageTeam/constants";
 import { useMemo } from "react";
 
 function StatusBadge({ statusUuid }: { statusUuid: string | null }) {
@@ -25,15 +25,6 @@ function StatusBadge({ statusUuid }: { statusUuid: string | null }) {
   );
 }
 
-function formatAmount(cents: number | null) {
-  if (cents === null) return "—";
-  const dollars = cents / 100;
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(dollars);
-}
-
 function formatDate(dateString: string | null) {
   if (!dateString) return "Unknown";
   const date = new Date(dateString);
@@ -44,17 +35,17 @@ function formatDate(dateString: string | null) {
   }).format(date);
 }
 
-export function DriverList({ showInactive = false }: { showInactive?: boolean }) {
-  const drivers = useDrivers();
+export function AccountManagerList({ showInactive = false }: { showInactive?: boolean }) {
+  const accountManagers = useAccountManagers();
 
-  const filteredDrivers = showInactive
-    ? drivers
-    : drivers.filter((driver) => driver.statusUuid !== STATUSES.inactive);
+  const filteredManagers = showInactive
+    ? accountManagers
+    : accountManagers.filter((manager) => manager.statusUuid !== STATUSES.inactive);
 
-  if (filteredDrivers.length === 0) {
+  if (filteredManagers.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-        <p className="text-gray-500">No drivers found</p>
+        <p className="text-gray-500">No account managers found</p>
       </div>
     );
   }
@@ -66,7 +57,7 @@ export function DriverList({ showInactive = false }: { showInactive?: boolean })
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Driver
+                Account Manager
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Contact
@@ -75,63 +66,48 @@ export function DriverList({ showInactive = false }: { showInactive?: boolean })
                 Status
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Compensation
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Manager
+                Active Drivers
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredDrivers.map((driver) => (
+            {filteredManagers.map((manager) => (
               <tr
-                key={driver.driverUuid}
+                key={manager.accountManagerUuid}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <td className="px-4 py-2">
                   <div className="flex items-start gap-3">
                     <UserAvatar
-                      clerkUserId={driver.clerkUserId}
-                      firstName={driver.firstName}
-                      lastName={driver.lastName}
+                      clerkUserId={manager.clerkUserId}
+                      firstName={manager.firstName}
+                      lastName={manager.lastName}
                       className="w-10 h-10 flex-shrink-0"
                     />
                     <div className="min-w-0">
                       <div className="text-sm font-medium text-gray-900 truncate">
-                        {driver.firstName} {driver.lastName}
+                        {manager.firstName} {manager.lastName}
                       </div>
                       <div className="text-xs text-gray-500">
-                        Member since {formatDate(driver.createdAt)}
+                        Member since {formatDate(manager.createdAt)}
                       </div>
                     </div>
                   </div>
                 </td>
                 <td className="px-4 py-4">
-                  <div className="text-sm text-gray-900 break-words">{driver.email}</div>
+                  <div className="text-sm text-gray-900 break-words">{manager.email}</div>
                 </td>
                 <td className="px-4 py-4">
-                  <StatusBadge statusUuid={driver.statusUuid} />
+                  <StatusBadge statusUuid={manager.statusUuid} />
                 </td>
                 <td className="px-4 py-4">
-                  <div className="text-sm">
-                    <div className="font-medium text-gray-900">
-                      <span className="text-xs text-gray-500 mr-1">
-                        {driver.payCurrency || "USD"}
+                  <div className="text-sm font-medium text-gray-900">
+                    {manager.numDrivers > 0 ? (
+                      <span>
+                        {manager.numDrivers} {manager.numDrivers === 1 ? "driver" : "drivers"}
                       </span>
-                      ${formatAmount(driver.payRateCents)}
-                      {driver.payPerUnit && `/${driver.payPerUnit.toLowerCase()}`}
-                    </div>
-                    {driver.tax !== null && (
-                      <div className="text-xs text-gray-500">Tax: {driver.tax}%</div>
-                    )}
-                  </div>
-                </td>
-                <td className="px-4 py-4">
-                  <div className="text-sm text-gray-900">
-                    {driver.accountManagerFirstName ? (
-                      <span>{driver.accountManagerFirstName}</span>
                     ) : (
-                      <span className="text-gray-400">—</span>
+                      <span className="text-gray-400">No drivers</span>
                     )}
                   </div>
                 </td>
