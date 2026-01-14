@@ -1,5 +1,6 @@
 "use client";
 import { useAccountManagers } from "../../hooks/useAccountManagers";
+import { useCurrentUserStore } from "../../state/useCurrentUserStore";
 import { UserAvatar } from "../util/UserAvatar";
 import { STATUSES } from "@/features/manageTeam/constants";
 import { useMemo } from "react";
@@ -37,6 +38,11 @@ function formatDate(dateString: string | null) {
 
 export function AccountManagerList({ showInactive = false }: { showInactive?: boolean }) {
   const accountManagers = useAccountManagers();
+  const loadExistingUser = useCurrentUserStore((s) => s.loadExistingUser);
+
+  const handleClick = (userUuid: string) => {
+    loadExistingUser(userUuid);
+  };
 
   const filteredManagers = showInactive
     ? accountManagers
@@ -75,6 +81,7 @@ export function AccountManagerList({ showInactive = false }: { showInactive?: bo
               <tr
                 key={manager.accountManagerUuid}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => handleClick(manager.userUuid)}
               >
                 <td className="px-4 py-2">
                   <div className="flex items-start gap-3">

@@ -1,5 +1,6 @@
 "use client";
 import { useAdmins } from "../../hooks/useAdmins";
+import { useCurrentUserStore } from "../../state/useCurrentUserStore";
 import { UserAvatar } from "../util/UserAvatar";
 import { STATUSES } from "@/features/manageTeam/constants";
 import { useMemo } from "react";
@@ -37,6 +38,11 @@ function formatDate(dateString: string | null) {
 
 export function AdminList({ showInactive = false }: { showInactive?: boolean }) {
   const admins = useAdmins();
+  const loadExistingUser = useCurrentUserStore((s) => s.loadExistingUser);
+
+  const handleClick = (userUuid: string) => {
+    loadExistingUser(userUuid);
+  };
 
   const filteredAdmins = showInactive
     ? admins
@@ -75,6 +81,7 @@ export function AdminList({ showInactive = false }: { showInactive?: boolean }) 
               <tr
                 key={admin.userUuid}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => handleClick(admin.userUuid)}
               >
                 <td className="px-4 py-2">
                   <div className="flex items-start gap-3">

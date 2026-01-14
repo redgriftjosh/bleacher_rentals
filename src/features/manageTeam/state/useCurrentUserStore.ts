@@ -11,7 +11,7 @@ export type CurrentUserState = {
   lastName: string;
   email: string;
   isAdmin: boolean;
-  status_uuid: string | null;
+  statusUuid: string | null;
 
   // Role flags
   isDriver: boolean;
@@ -39,7 +39,7 @@ export type CurrentUserStore = CurrentUserState & {
   setField: <K extends keyof CurrentUserState>(key: K, value: CurrentUserState[K]) => void;
   setIsOpen: (isOpen: boolean) => void;
   resetForm: () => void;
-  loadExistingUser: (userUuid: string, supabase: SupabaseClient<Database>) => Promise<void>;
+  loadExistingUser: (userUuid: string) => Promise<void>;
   openForNewUser: () => void;
 };
 
@@ -48,7 +48,7 @@ const initialState: CurrentUserState = {
   lastName: "",
   email: "",
   isAdmin: false,
-  status_uuid: null,
+  statusUuid: null,
   isDriver: false,
   isAccountManager: false,
   tax: undefined,
@@ -73,31 +73,16 @@ export const useCurrentUserStore = create<CurrentUserStore>((set) => ({
 
   resetForm: () => set(initialState),
 
-  loadExistingUser: async (userUuid, supabase) => {
+  loadExistingUser: async (userUuid) => {
     set({ existingUserUuid: userUuid, isSubmitting: true });
 
     const result = await fetchUserById(userUuid);
 
-    set({
-      firstName: result.firstName ?? "",
-      lastName: result.lastName ?? "",
-      email: result.email ?? "",
-      isAdmin: result.isAdmin === 1,
-      status_uuid: result.data.status_uuid,
-      isDriver: result.data.isDriver,
-      isAccountManager: result.data.isAccountManager,
-      tax: result.data.tax,
-      payRateCents: result.data.payRateCents,
-      payCurrency: result.data.payCurrency,
-      payPerUnit: result.data.payPerUnit,
-      accountManagerUuid: result.data.accountManagerUuid,
-      summerBleacherUuids: result.data.summerBleacherUuids,
-      winterBleacherUuids: result.data.winterBleacherUuids,
-      assignedDriverUuids: result.data.assignedDriverUuids,
-      existingUserUuid: userUuid,
-      isOpen: true,
-      isSubmitting: false,
-      });
+    set(
+      result
+        ? { ...result, existingUserUuid: userUuid, isOpen: true, isSubmitting: false }
+        : { isSubmitting: false }
+    );
   },
 
   openForNewUser: () => {

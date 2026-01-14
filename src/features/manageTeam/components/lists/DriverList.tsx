@@ -1,5 +1,6 @@
 "use client";
 import { useDrivers } from "../../hooks/useDrivers";
+import { useCurrentUserStore } from "../../state/useCurrentUserStore";
 import { UserAvatar } from "../util/UserAvatar";
 import { STATUSES } from "@/features/manageTeam/constants";
 import { useMemo } from "react";
@@ -46,6 +47,11 @@ function formatDate(dateString: string | null) {
 
 export function DriverList({ showInactive = false }: { showInactive?: boolean }) {
   const drivers = useDrivers();
+  const loadExistingUser = useCurrentUserStore((s) => s.loadExistingUser);
+
+  const handleClick = (userUuid: string) => {
+    loadExistingUser(userUuid);
+  };
 
   const filteredDrivers = showInactive
     ? drivers
@@ -87,6 +93,7 @@ export function DriverList({ showInactive = false }: { showInactive?: boolean })
               <tr
                 key={driver.driverUuid}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => handleClick(driver.userUuid)}
               >
                 <td className="px-4 py-2">
                   <div className="flex items-start gap-3">

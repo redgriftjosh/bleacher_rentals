@@ -1,10 +1,7 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "@/../database.types";
 import { db } from "@/components/providers/SystemProvider";
 import { sql } from "@powersync/kysely-driver";
 import { typedGetAll, expect } from "@/lib/powersync/typedQuery";
-
-type TypedSupabaseClient = SupabaseClient<Database>;
+import { CurrentUserState } from "../state/useCurrentUserStore";
 
 type FetchUserResult = {
   firstName: string | null;
@@ -12,33 +9,23 @@ type FetchUserResult = {
   email: string | null;
   isAdmin: number | null;
   statusUuid: string | null;
-  driverId: string | null;
+  isDriver: number;
+  isAccountManager: number;
   tax: number | null;
   payRateCents: number | null;
   payCurrency: string | null;
   payPerUnit: string | null;
-  driverAccountManagerUuid: string | null;
-  accountManagerId: string | null;
-  bleacherId: string | null;
-  summerAmUuid: string | null;
-  winterAmUuid: string | null;
+  accountManagerUuid: string | null;
+  summerBleacherUuids: string;
+  winterBleacherUuids: string;
+  assignedDriverUuids: string;
 };
 
-export async function fetchUserById(userUuid: string) {
+export async function fetchUserById(userUuid: string): Promise<CurrentUserState | null> {
   const compiled = db
     .selectFrom("Users as u")
     .leftJoin("Drivers as d", (join) =>
       join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1)
-    )
-    .leftJoin("AccountManagers as am", (join) =>
-      join.onRef("am.user_uuid", "=", "u.id").on("am.is_active", "=", 1)
-    )
-    // join bleachers only if this user is an active account manager
-    .leftJoin("Bleachers as b", (join) =>
-      join.on(
-        sql`(${sql.ref("b.summer_account_manager_uuid")} = ${sql.ref("am.id")}
-              OR ${sql.ref("b.winter_account_manager_uuid")} = ${sql.ref("am.id")})`
-      )
     )
     .select([
       "u.first_name as firstName",
@@ -47,105 +34,70 @@ export async function fetchUserById(userUuid: string) {
       "u.is_admin as isAdmin",
       "u.status_uuid as statusUuid",
 
-      "d.id as driverId",
+      // role flags
+      sql<number>`exists (
+      select 1
+      from "Drivers" d2
+      where d2.user_uuid = u.id
+        and d2.is_active = 1
+    )`.as("isDriver"),
+
+      sql<number>`exists (
+      select 1
+      from "AccountManagers" am
+      where am.user_uuid = u.id
+        and am.is_active = 1
+    )`.as("isAccountManager"),
+
+      // driver fields (null if no active driver row)
       "d.tax as tax",
       "d.pay_rate_cents as payRateCents",
       "d.pay_currency as payCurrency",
       "d.pay_per_unit as payPerUnit",
-      "d.account_manager_uuid as driverAccountManagerUuid",
+      "d.account_manager_uuid as accountManagerUuid",
 
-      "am.id as accountManagerId",
-
-      "b.id as bleacherId",
-      "b.summer_account_manager_uuid as summerAmUuid",
-      "b.winter_account_manager_uuid as winterAmUuid",
+      // PowerSync/SQLite-friendly "empty arrays" (return JSON text; parse in TS if you care)
+      sql<string>`'[]'`.as("summerBleacherUuids"),
+      sql<string>`'[]'`.as("winterBleacherUuids"),
+      sql<string>`'[]'`.as("assignedDriverUuids"),
     ])
     .where("u.id", "=", userUuid)
+    .limit(1)
     .compile();
 
   const data = await typedGetAll(compiled, expect<FetchUserResult>());
+  const raw = data[0];
 
-  return data[0];
+  if (!raw) return null;
 
-  // try {
-  //   // 1. Fetch user data
-  //   const { data: userData, error: userError } = await supabase
-  //     .from("Users")
-  //     .select("*")
-  //     .eq("id", userUuid)
-  //     .single();
+  // Map to CurrentUserState
+  return {
+    // Basic user info
+    firstName: raw.firstName ?? "",
+    lastName: raw.lastName ?? "",
+    email: raw.email ?? "",
+    isAdmin: Boolean(raw.isAdmin),
+    statusUuid: raw.statusUuid,
 
-  //   if (userError) throw userError;
+    // Role flags
+    isDriver: Boolean(raw.isDriver),
+    isAccountManager: Boolean(raw.isAccountManager),
 
-  //   // 2. Check if user is a driver (and active)
-  //   const { data: driverData } = await supabase
-  //     .from("Drivers")
-  //     .select("*")
-  //     .eq("user_uuid", userUuid)
-  //     .eq("is_active", true)
-  //     .maybeSingle();
+    // Driver-specific fields
+    tax: raw.tax ?? undefined,
+    payRateCents: raw.payRateCents,
+    payCurrency: (raw.payCurrency as "CAD" | "USD") ?? "USD",
+    payPerUnit: (raw.payPerUnit as "KM" | "MI" | "HR") ?? "KM",
+    accountManagerUuid: raw.accountManagerUuid,
 
-  //   // 3. Check if user is an account manager (and active)
-  //   const { data: accountManagerData } = await supabase
-  //     .from("AccountManagers")
-  //     .select("*")
-  //     .eq("user_uuid", userUuid)
-  //     .eq("is_active", true)
-  //     .maybeSingle();
+    // Account Manager-specific fields
+    summerBleacherUuids: JSON.parse(raw.summerBleacherUuids),
+    winterBleacherUuids: JSON.parse(raw.winterBleacherUuids),
+    assignedDriverUuids: JSON.parse(raw.assignedDriverUuids),
 
-  //   // 4. If account manager, fetch bleacher assignments
-  //   let summerBleacherUuids: string[] = [];
-  //   let winterBleacherUuids: string[] = [];
-  //   let assignedDriverUuids: string[] = [];
-
-  //   if (accountManagerData) {
-  //     const accountManagerUuid = accountManagerData.id;
-
-  //     const { data: bleachers } = await supabase
-  //       .from("Bleachers")
-  //       .select("id, summer_account_manager_uuid, winter_account_manager_uuid")
-  //       .or(
-  //         `summer_account_manager_uuid.eq.${accountManagerUuid},winter_account_manager_uuid.eq.${accountManagerUuid}`
-  //       );
-
-  //     if (bleachers) {
-  //       summerBleacherUuids = bleachers
-  //         .filter((b) => b.summer_account_manager_uuid === accountManagerUuid)
-  //         .map((b) => b.id);
-  //       winterBleacherUuids = bleachers
-  //         .filter((b) => b.winter_account_manager_uuid === accountManagerUuid)
-  //         .map((b) => b.id);
-  //     }
-
-  //     // TODO: Fetch assigned drivers when that relationship is implemented
-  //     // For now, leaving as empty array
-  //   }
-
-  //   return {
-  //     success: true,
-  //     data: {
-  //       firstName: userData.first_name,
-  //       lastName: userData.last_name,
-  //       email: userData.email,
-  //       isAdmin: userData.is_admin,
-  //       status_uuid: userData.status_uuid,
-  //       isDriver: !!driverData,
-  //       isAccountManager: !!accountManagerData,
-  //       tax: driverData?.tax ?? undefined,
-  //       payRateCents: driverData?.pay_rate_cents ?? null,
-  //       payCurrency: (driverData?.pay_currency as "CAD" | "USD") ?? "CAD",
-  //       payPerUnit: (driverData?.pay_per_unit as "KM" | "MI" | "HR") ?? "KM",
-  //       accountManagerUuid: driverData?.account_manager_uuid ?? null,
-  //       summerBleacherUuids,
-  //       winterBleacherUuids,
-  //       assignedDriverUuids,
-  //     },
-  //   };
-  // } catch (error) {
-  //   console.error("Error fetching user:", error);
-  //   return {
-  //     success: false,
-  //     error: error instanceof Error ? error.message : "Unknown error",
-  //   };
-  // }
+    // UI state defaults
+    existingUserUuid: null,
+    isOpen: false,
+    isSubmitting: false,
+  };
 }
