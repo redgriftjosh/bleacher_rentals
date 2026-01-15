@@ -104,6 +104,7 @@ export function useRealtimeHydrateCurrentUserStore() {
   const { data } = useTypedQuery(compiled, expect<UserRealtimeRow>());
 
   const row = isOpen && userUuid ? data?.[0] : undefined;
+  console.log("useRealtimeHydrateCurrentUserStore row:", row);
 
   useEffect(() => {
     if (!isOpen || !userUuid || !row) return;

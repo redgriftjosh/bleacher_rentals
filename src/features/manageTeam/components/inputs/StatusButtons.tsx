@@ -17,17 +17,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-const STATUSES = {
-  invited: 1,
-  active: 2,
-  inactive: 3,
-};
+import { STATUSES } from "../../constants";
 
 export default function StatusButtons() {
   const supabase = useClerkSupabaseClient();
   const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
-  const status = useCurrentUserStore((s) => s.status);
+  console.log("StatusButtons existingUserUuid:", existingUserUuid);
+  const statusUuid = useCurrentUserStore((s) => s.statusUuid);
+  console.log("StatusButtons statusUuid:", statusUuid);
   const email = useCurrentUserStore((s) => s.email);
   const isSubmitting = useCurrentUserStore((s) => s.isSubmitting);
   const setField = useCurrentUserStore((s) => s.setField);
@@ -125,7 +122,7 @@ export default function StatusButtons() {
   return (
     <div className="flex flex-wrap gap-2 justify-end">
       {/* Invited Status Actions */}
-      {status === STATUSES.invited && (
+      {statusUuid === STATUSES.invited && (
         <>
           <button
             onClick={handleResendInvite}
@@ -166,7 +163,7 @@ export default function StatusButtons() {
       )}
 
       {/* Active Status Actions */}
-      {status === STATUSES.active && (
+      {statusUuid === STATUSES.active && (
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <button
@@ -198,7 +195,7 @@ export default function StatusButtons() {
       )}
 
       {/* Inactive Status Actions */}
-      {status === STATUSES.inactive && (
+      {statusUuid === STATUSES.inactive && (
         <button
           onClick={handleReactivate}
           disabled={isSubmitting}
