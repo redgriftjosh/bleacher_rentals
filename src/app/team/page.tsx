@@ -7,11 +7,13 @@ import { useCurrentUserStore } from "@/features/manageTeam/state/useCurrentUserS
 import { DriverList } from "@/features/manageTeam/components/lists/DriverList";
 import { AccountManagerList } from "@/features/manageTeam/components/lists/AccountManagerList";
 import { AdminList } from "@/features/manageTeam/components/lists/AdminList";
+import { IncompleteList } from "@/features/manageTeam/components/lists/IncompleteList";
 import TabNavigation, { TeamTab } from "../../features/manageTeam/components/inputs/TabNavigation";
 import SearchBar from "../../features/manageTeam/components/inputs/SearchBar";
 import { Toggle } from "@/components/Toggle";
 import { useState, useEffect } from "react";
 import { useSearchQueryStore } from "@/features/manageTeam/state/useSearchQueryStore";
+import { useRealtimeHydrateCurrentUserStore } from "@/features/manageTeam/hooks/useUserById";
 
 export type ExistingUser = {
   user_id: number;
@@ -25,6 +27,7 @@ export type ExistingUser = {
 } | null;
 
 export default function TeamPage() {
+  useRealtimeHydrateCurrentUserStore();
   const openForNewUser = useCurrentUserStore((s) => s.openForNewUser);
   const [activeTab, setActiveTab] = useState<TeamTab>("admins");
   const [showInactive, setShowInactive] = useState(false);
@@ -65,6 +68,9 @@ export default function TeamPage() {
           inline={true}
         />
       </div>
+
+      {/* Incomplete Users Alert - Shows regardless of tab */}
+      <IncompleteList showInactive={showInactive} />
 
       {/* Admins Section */}
       {activeTab === "admins" && (

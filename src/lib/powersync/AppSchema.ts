@@ -148,11 +148,22 @@ const WorkTrackers = new Table(WorkTrackersCols, {
   indexes: { user_uuid: ["user_uuid"], driver_uuid: ["driver_uuid"] },
 });
 
+const BleacherUsersCols = {
+  created_at: column.text,
+  season: column.text,
+  bleacher_uuid: column.text,
+  user_uuid: column.text,
+} satisfies PowerSyncColsFor<"BleacherUsers">;
+const BleacherUsers = new Table(BleacherUsersCols, {
+  indexes: { bleacher_uuid: ["bleacher_uuid"], user_uuid: ["user_uuid"] },
+});
+
 export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
   Bleachers,
   BleacherEvents,
+  BleacherUsers,
   Blocks,
   Events,
   HomeBases,
@@ -169,6 +180,7 @@ export type DriverRecord = PowerSyncDB["Drivers"];
 export type UserRecord = PowerSyncDB["Users"];
 export type HomeBasesRecord = PowerSyncDB["HomeBases"];
 export type BleachersRecord = PowerSyncDB["Bleachers"];
+export type BleacherUsersRecord = PowerSyncDB["BleacherUsers"];
 export type BleacherEventsRecord = PowerSyncDB["BleacherEvents"];
 export type EventsRecord = PowerSyncDB["Events"];
 export type WorkTrackerRecord = PowerSyncDB["WorkTrackers"];

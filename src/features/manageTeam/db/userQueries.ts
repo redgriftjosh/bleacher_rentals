@@ -27,40 +27,60 @@ export async function fetchUserById(userUuid: string): Promise<CurrentUserState 
     .leftJoin("Drivers as d", (join) =>
       join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1)
     )
-    .select([
-      "u.first_name as firstName",
-      "u.last_name as lastName",
-      "u.email as email",
-      "u.is_admin as isAdmin",
-      "u.status_uuid as statusUuid",
+    .leftJoin("AccountManagers as am", (join) =>
+      join.onRef("am.user_uuid", "=", "u.id").on("am.is_active", "=", 1)
+    )
+    .select((eb) => {
+      const summerDistinct = eb
+        .selectFrom("BleacherUsers as bu")
+        .select(["bu.bleacher_uuid as bleacher_uuid"])
+        .whereRef("bu.user_uuid", "=", "u.id")
+        .where("bu.season", "=", "SUMMER")
+        .where("bu.bleacher_uuid", "is not", null)
+        .distinct()
+        .as("summer_rows");
 
-      // role flags
-      sql<number>`exists (
-      select 1
-      from "Drivers" d2
-      where d2.user_uuid = u.id
-        and d2.is_active = 1
-    )`.as("isDriver"),
+      const winterDistinct = eb
+        .selectFrom("BleacherUsers as bu")
+        .select(["bu.bleacher_uuid as bleacher_uuid"])
+        .whereRef("bu.user_uuid", "=", "u.id")
+        .where("bu.season", "=", "WINTER")
+        .where("bu.bleacher_uuid", "is not", null)
+        .distinct()
+        .as("winter_rows");
 
-      sql<number>`exists (
-      select 1
-      from "AccountManagers" am
-      where am.user_uuid = u.id
-        and am.is_active = 1
-    )`.as("isAccountManager"),
+      return [
+        "u.first_name as firstName",
+        "u.last_name as lastName",
+        "u.email as email",
+        "u.is_admin as isAdmin",
+        "u.status_uuid as statusUuid",
 
-      // driver fields (null if no active driver row)
-      "d.tax as tax",
-      "d.pay_rate_cents as payRateCents",
-      "d.pay_currency as payCurrency",
-      "d.pay_per_unit as payPerUnit",
-      "d.account_manager_uuid as accountManagerUuid",
+        // ✅ fully type-safe flags derived from LEFT JOIN presence
+        sql<number>`case when ${sql.ref("d.id")} is null then 0 else 1 end`.as("isDriver"),
+        sql<number>`case when ${sql.ref("am.id")} is null then 0 else 1 end`.as("isAccountManager"),
 
-      // PowerSync/SQLite-friendly "empty arrays" (return JSON text; parse in TS if you care)
-      sql<string>`'[]'`.as("summerBleacherUuids"),
-      sql<string>`'[]'`.as("winterBleacherUuids"),
-      sql<string>`'[]'`.as("assignedDriverUuids"),
-    ])
+        // driver fields
+        "d.tax as tax",
+        "d.pay_rate_cents as payRateCents",
+        "d.pay_currency as payCurrency",
+        "d.pay_per_unit as payPerUnit",
+        "d.account_manager_uuid as accountManagerUuid",
+
+        // bleacher arrays
+        sql<string>`coalesce((
+          select json_group_array(bleacher_uuid)
+          from (${summerDistinct})
+        ), '[]')`.as("summerBleacherUuids"),
+
+        sql<string>`coalesce((
+          select json_group_array(bleacher_uuid)
+          from (${winterDistinct})
+        ), '[]')`.as("winterBleacherUuids"),
+
+        sql<string>`'[]'`.as("assignedDriverUuids"),
+      ];
+    })
     .where("u.id", "=", userUuid)
     .limit(1)
     .compile();

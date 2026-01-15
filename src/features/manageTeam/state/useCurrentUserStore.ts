@@ -74,15 +74,15 @@ export const useCurrentUserStore = create<CurrentUserStore>((set) => ({
   resetForm: () => set(initialState),
 
   loadExistingUser: async (userUuid) => {
-    set({ existingUserUuid: userUuid, isSubmitting: true });
+    set({ existingUserUuid: userUuid, isOpen: true });
 
-    const result = await fetchUserById(userUuid);
+    // const result = await fetchUserById(userUuid);
 
-    set(
-      result
-        ? { ...result, existingUserUuid: userUuid, isOpen: true, isSubmitting: false }
-        : { isSubmitting: false }
-    );
+    // set(
+    //   result
+    //     ? { ...result, existingUserUuid: userUuid, isOpen: true, isSubmitting: false }
+    //     : { isSubmitting: false }
+    // );
   },
 
   openForNewUser: () => {
