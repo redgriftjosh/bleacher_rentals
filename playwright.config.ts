@@ -4,14 +4,16 @@ const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 
 export default defineConfig({
   testDir: "src/features/manageTeam/e2e",
-  timeout: 240_000,
+  timeout: 30_000,
   expect: {
     timeout: 15_000,
   },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : undefined,
+  // PowerSync can be sensitive to multiple concurrent browser contexts.
+  // Keep local runs single-worker for stability.
+  workers: process.env.CI ? 2 : 1,
   reporter: process.env.CI
     ? [["github"], ["html", { open: "never" }]]
     : [["list"], ["html", { open: "never" }]],
