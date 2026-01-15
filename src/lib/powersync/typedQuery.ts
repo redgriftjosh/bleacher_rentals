@@ -1,3 +1,4 @@
+"use client";
 import type { CompiledQuery } from "kysely";
 import { useQuery } from "@powersync/react";
 import { db, powerSyncDb } from "@/components/providers/SystemProvider";

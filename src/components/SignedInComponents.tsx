@@ -7,7 +7,7 @@ import { Button } from "./ui/button";
 import { useRef } from "react";
 import { LayoutProvider } from "@/contexts/LayoutContexts";
 import { DriverWelcome } from "./DriverWelcome";
-import { useUserAccess } from "@/features/userAccess";
+import { useUserAccess } from "@/features/userAccess/client";
 import LoadingSpinner from "./LoadingSpinner";
 
 export function SignedInComponents({ children }: { children: React.ReactNode }) {

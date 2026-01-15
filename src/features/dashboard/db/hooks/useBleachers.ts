@@ -1,3 +1,4 @@
+"use client";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";

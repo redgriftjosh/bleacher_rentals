@@ -1,3 +1,4 @@
+"use client";
 import { db } from "@/components/providers/SystemProvider";
 import { sql } from "@powersync/kysely-driver";
 import { typedGetAll, expect } from "@/lib/powersync/typedQuery";

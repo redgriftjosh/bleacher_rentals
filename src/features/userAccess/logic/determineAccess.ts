@@ -1,5 +1,5 @@
 import { STATUSES } from "@/features/manageTeam/constants";
-import { UserAccessData } from "../hooks/useUserAccess";
+import type { UserAccessData } from "../types";
 
 // export const USER_STATUS = {
 //   ACTIVE: 1,
