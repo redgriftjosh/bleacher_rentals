@@ -78,18 +78,19 @@ export class Dashboard {
     const allEvents = useDashboardEventsStore.getState().data;
     const filters = useFilterDashboardStore.getState();
     const currentEvent = useCurrentEventStore.getState();
-    const filteredBleachers = filterSortPixiBleachers(
-      filters.homeBaseIds,
-      filters.winterHomeBaseIds,
-      filters.rows,
-      allBleachers,
-      currentEvent.bleacherIds ?? [],
-      currentEvent.isFormExpanded,
-      filters.optimizationMode,
-      filters.season,
-      filters.summerAssignedBleacherIds ?? [],
-      filters.winterAssignedBleacherIds ?? []
-    );
+    // const filteredBleachers = filterSortPixiBleachers(
+    //   filters.summerHomeBaseUuids,
+    //   filters.winterHomeBaseUuids,
+    //   filters.rows,
+    //   allBleachers,
+    //   currentEvent.bleacherUuids ?? [],
+    //   currentEvent.isFormExpanded,
+    //   filters.optimizationMode,
+    //   filters.season,
+    //   filters.summerAssignedBleacherUuids ?? [],
+    //   filters.winterAssignedBleacherUuids ?? []
+    // );
+    const filteredBleachers = allBleachers;
     const filteredEvents =
       this.yAxis === "Events" && filters.stateProvinces.length > 0
         ? filterEvents(allEvents, filters.stateProvinces)
@@ -110,14 +111,14 @@ export class Dashboard {
     this.resizeManager.start();
 
     // Unified recompute method
-    const computeSpanSignatures = (bleachers: Bleacher[]): Map<number, string> => {
-      const map = new Map<number, string>();
+    const computeSpanSignatures = (bleachers: Bleacher[]): Map<string, string> => {
+      const map = new Map<string, string>();
       for (const b of bleachers) {
         const sig = (b.bleacherEvents || [])
-          .map((ev: any) => `${ev.eventId}:${ev.eventStart}:${ev.eventEnd}`)
+          .map((ev: any) => `${ev.eventUuid}:${ev.eventStart}:${ev.eventEnd}`)
           .sort()
           .join("|");
-        map.set(b.bleacherId, sig);
+        map.set(b.bleacherUuid, sig);
       }
       return map;
     };
@@ -162,19 +163,21 @@ export class Dashboard {
     const allBleachers = useDashboardBleachersStore.getState().data;
     const allEvents = useDashboardEventsStore.getState().data;
     const currentEvent = useCurrentEventStore.getState();
+    console.log("allBleachers: ", allBleachers);
 
-    const filteredBleachers = filterSortPixiBleachers(
-      filters.homeBaseIds,
-      filters.winterHomeBaseIds,
-      filters.rows,
-      allBleachers,
-      currentEvent.bleacherIds ?? [],
-      currentEvent.isFormExpanded,
-      filters.optimizationMode,
-      filters.season,
-      filters.summerAssignedBleacherIds ?? [],
-      filters.winterAssignedBleacherIds ?? []
-    );
+    // const filteredBleachers = filterSortPixiBleachers(
+    //   filters.summerHomeBaseUuids,
+    //   filters.winterHomeBaseUuids,
+    //   filters.rows,
+    //   allBleachers,
+    //   currentEvent.bleacherUuids ?? [],
+    //   currentEvent.isFormExpanded,
+    //   filters.optimizationMode,
+    //   filters.season,
+    //   filters.summerAssignedBleacherUuids ?? [],
+    //   filters.winterAssignedBleacherUuids ?? []
+    // );
+    const filteredBleachers = allBleachers;
     console.log("filteredBleachers: ", filteredBleachers);
     console.log("filters.optimizationMode: ", filters.optimizationMode);
     const filteredEvents =

@@ -39,33 +39,31 @@ export function SheetAddFeature({
 
   const [name, setName] = useState<string | null>(existingTask?.name ?? null);
   const [description, setDescription] = useState<string | null>(existingTask?.description ?? null);
-  const [typeId, setTypeId] = useState<number>(
-    existingTask?.task_type.task_type_id ?? DEFAULT_TYPE
-  );
-  const [statusId, setStatusId] = useState<number>(
-    existingTask?.task_status.task_status_id ?? DEFAULT_STATUS
+  const [typeUuid, setTypeUuid] = useState<string>(existingTask?.task_type.id ?? DEFAULT_TYPE);
+  const [statusUuid, setStatusUuid] = useState<string>(
+    existingTask?.task_status.id ?? DEFAULT_STATUS
   );
   const [submitting, setSubmitting] = useState(false);
 
-  const userId = findUserId(user, users);
+  const userUuid = findUserId(user, users);
 
   const isSavable = existingTask
-    ? userId === existingTask.created_by_user.user_id || TASK_ADMIN_IDS.includes(userId ?? -1)
+    ? userUuid === existingTask.created_by_user.id || TASK_ADMIN_IDS.includes(userUuid ?? "-1")
     : true;
 
   const isDeletable =
     !!existingTask &&
-    (userId === existingTask.created_by_user.user_id || TASK_ADMIN_IDS.includes(userId ?? -1));
+    (userUuid === existingTask.created_by_user.id || TASK_ADMIN_IDS.includes(userUuid ?? "-1"));
 
-  const isEscalatable = TASK_ADMIN_IDS.includes(userId ?? -1);
+  const isEscalatable = TASK_ADMIN_IDS.includes(userUuid ?? "-1");
 
   // useEffect to set all back to default
   useEffect(() => {
     if (!isOpen) {
       setName(null);
       setDescription(null);
-      setTypeId(DEFAULT_TYPE);
-      setStatusId(DEFAULT_STATUS);
+      setTypeUuid(DEFAULT_TYPE);
+      setStatusUuid(DEFAULT_STATUS);
       setExistingTask(null);
     }
   }, [isOpen]);
@@ -74,8 +72,8 @@ export function SheetAddFeature({
     if (existingTask) {
       setName(existingTask.name);
       setDescription(existingTask.description);
-      setTypeId(existingTask.task_type.task_type_id);
-      setStatusId(existingTask.task_status.task_status_id);
+      setTypeUuid(existingTask.task_type.id);
+      setStatusUuid(existingTask.task_status.id);
     }
   }, [existingTask]);
 
@@ -99,11 +97,11 @@ export function SheetAddFeature({
     e.preventDefault();
     setSubmitting(true);
     const errors = checkInsertTaskFormRules(
-      existingTask?.task_id ?? null,
-      existingTask?.created_by_user.user_id ?? null,
+      existingTask?.id ?? null,
+      existingTask?.created_by_user.id ?? null,
       name,
       description,
-      typeId,
+      typeUuid,
       user,
       users,
       supabase
@@ -113,11 +111,11 @@ export function SheetAddFeature({
       createErrorToast(errors);
     } else {
       await saveTask(
-        existingTask?.task_id ?? null,
+        existingTask?.id ?? null,
         name!,
         description!,
-        typeId!,
-        statusId!,
+        typeUuid!,
+        statusUuid!,
         user,
         users,
         supabase,
@@ -131,8 +129,8 @@ export function SheetAddFeature({
     e.preventDefault();
     setSubmitting(true);
     const errors = checkDeleteTaskFormRules(
-      existingTask?.task_id ?? null,
-      existingTask?.created_by_user.user_id ?? null,
+      existingTask?.id ?? null,
+      existingTask?.created_by_user.id ?? null,
       user,
       users,
       supabase
@@ -141,7 +139,7 @@ export function SheetAddFeature({
       setSubmitting(false);
       createErrorToast(errors);
     } else {
-      await deleteTask(existingTask?.task_id!, supabase, setSubmitting);
+      await deleteTask(existingTask?.id!, supabase, setSubmitting);
       setIsOpen(false);
     }
   };
@@ -196,10 +194,10 @@ export function SheetAddFeature({
                     <Dropdown
                       options={taskTypes.map((type) => ({
                         label: type.label,
-                        value: type.task_type_id,
+                        value: type.id,
                       }))}
-                      selected={typeId}
-                      onSelect={(id) => setTypeId(id)}
+                      selected={typeUuid}
+                      onSelect={(id) => setTypeUuid(id)}
                       placeholder="Select Task Type"
                     />
                   </div>
@@ -215,10 +213,10 @@ export function SheetAddFeature({
                       <Dropdown
                         options={taskStatuses.map((status) => ({
                           label: status.label,
-                          value: status.task_status_id,
+                          value: status.id,
                         }))}
-                        selected={statusId}
-                        onSelect={(id) => setStatusId(id)}
+                        selected={statusUuid}
+                        onSelect={(id) => setStatusUuid(id)}
                         placeholder="Select Status"
                       />
                     </div>

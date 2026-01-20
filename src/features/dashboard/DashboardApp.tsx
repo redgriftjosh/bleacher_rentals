@@ -7,13 +7,13 @@ import { Baker } from "./util/Baker";
 import { useFilterDashboardStore } from "../dashboardOptions/useFilterDashboardStore";
 
 type Props = {
-  summerAssignedBleacherIds?: number[];
-  winterAssignedBleacherIds?: number[];
+  summerAssignedBleacherUuids?: string[];
+  winterAssignedBleacherUuids?: string[];
 };
 
 export default function DashboardApp({
-  summerAssignedBleacherIds = [],
-  winterAssignedBleacherIds = [],
+  summerAssignedBleacherUuids = [],
+  winterAssignedBleacherUuids = [],
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
@@ -24,9 +24,9 @@ export default function DashboardApp({
   // Store assignment IDs into filter store for downstream filtering logic
   useEffect(() => {
     const state = useFilterDashboardStore.getState();
-    state.setField("summerAssignedBleacherIds", summerAssignedBleacherIds);
-    state.setField("winterAssignedBleacherIds", winterAssignedBleacherIds);
-  }, [summerAssignedBleacherIds, winterAssignedBleacherIds]);
+    state.setField("summerAssignedBleacherUuids", summerAssignedBleacherUuids);
+    state.setField("winterAssignedBleacherUuids", winterAssignedBleacherUuids);
+  }, [summerAssignedBleacherUuids, winterAssignedBleacherUuids]);
 
   useEffect(() => {
     let cancelled = false;

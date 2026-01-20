@@ -37,11 +37,11 @@ import { MapPinIcon } from "./event/MapPinIcon";
 export class BleacherCell extends Container {
   private sprite: Sprite;
   private baker: Baker;
-  private bleacherId?: number; // reuse-safe id
+  private bleacherUuid?: string; // reuse-safe id
   private toggle: BleacherCellToggle; // added toggle
   private mapPinIcon: MapPinIcon; // added map pin icon
-  private onToggle?: (bleacherId: number) => void;
-  private onMapPinClick?: (bleacherId: number) => void;
+  private onToggle?: (bleacherUuid: string) => void;
+  private onMapPinClick?: (bleacherUuid: string) => void;
 
   // Map bleacherRows to Tailwind-like colors:
   // 7 -> green-700 (#15803d), 10 -> red-700 (#b91c1c), 15 -> yellow-500 (#eab308), else black
@@ -79,12 +79,12 @@ export class BleacherCell extends Container {
     this.addChild(this.toggle);
 
     this.toggle.on("pointertap", () => {
-      if (this.bleacherId != null && this.onToggle) this.onToggle(this.bleacherId);
+      if (this.bleacherUuid != null && this.onToggle) this.onToggle(this.bleacherUuid);
     });
 
     // map pin icon setup
     this.mapPinIcon = new MapPinIcon(baker, () => {
-      if (this.bleacherId != null && this.onMapPinClick) this.onMapPinClick(this.bleacherId);
+      if (this.bleacherUuid != null && this.onMapPinClick) this.onMapPinClick(this.bleacherUuid);
     });
     // Position it to the right of the bleacher number text
     // Bleacher number is at (3, 2), roughly 16px font + some width
@@ -105,8 +105,8 @@ export class BleacherCell extends Container {
    * @param b - Bleacher data model for this row.
    */
   setBleacher(b: Bleacher) {
-    this.bleacherId = b.bleacherId;
-    const key = b.bleacherId.toString();
+    this.bleacherUuid = b.bleacherUuid;
+    const key = b.bleacherUuid.toString();
 
     // Show/hide map pin based on whether device is assigned
     this.mapPinIcon.visible = !!b.linxupDeviceId;
@@ -121,11 +121,11 @@ export class BleacherCell extends Container {
     this.sprite.texture = rt;
   }
 
-  setToggleHandler(fn: (bleacherId: number) => void) {
+  setToggleHandler(fn: (bleacherUuid: string) => void) {
     this.onToggle = fn;
   }
 
-  setMapPinClickHandler(fn: (bleacherId: number) => void) {
+  setMapPinClickHandler(fn: (bleacherUuid: string) => void) {
     this.onMapPinClick = fn;
   }
 

@@ -1,5 +1,5 @@
-import { SelectHomeBase } from "@/types/tables/HomeBases";
 import { useEffect, useState } from "react";
+import { HomeBase } from "../../hooks/useHomeBases";
 
 // type HomeBaseDropDown = {
 //   homeBaseId: number;
@@ -7,10 +7,10 @@ import { useEffect, useState } from "react";
 // };
 
 type selectHomeBaseDropDownProps = {
-  options: SelectHomeBase[];
-  onSelect: (selected: SelectHomeBase) => void;
+  options: HomeBase[];
+  onSelect: (selected: HomeBase) => void;
   placeholder?: string;
-  value?: number;
+  value?: string;
 };
 
 const selectHomeBaseDropDown: React.FC<selectHomeBaseDropDownProps> = ({
@@ -20,16 +20,16 @@ const selectHomeBaseDropDown: React.FC<selectHomeBaseDropDownProps> = ({
   value,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selected, setSelected] = useState<SelectHomeBase | null>(null);
+  const [selected, setSelected] = useState<HomeBase | null>(null);
 
   useEffect(() => {
     if (value !== undefined) {
-      const selectedOption = options.find((option) => option.home_base_id === value);
+      const selectedOption = options.find((option) => option.id === value);
       setSelected(selectedOption ?? null);
     }
   }, [value]);
 
-  const handleSelect = (option: SelectHomeBase) => {
+  const handleSelect = (option: HomeBase) => {
     setSelected(option);
     onSelect(option);
     setIsOpen(false);

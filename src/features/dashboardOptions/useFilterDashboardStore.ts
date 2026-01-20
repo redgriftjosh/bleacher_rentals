@@ -5,16 +5,16 @@ export type Season = "SUMMER" | "WINTER" | null; // null = Don't Filter (both)
 
 export type FilterDashboardState = {
   yAxis: YAxis;
-  homeBaseIds: number[];
-  winterHomeBaseIds: number[];
+  summerHomeBaseUuids: string[];
+  winterHomeBaseUuids: string[];
   rows: number[];
   stateProvinces: number[];
   onlyShowMyEvents: boolean;
   optimizationMode: boolean;
   season: Season; // nullable: null => Don't Filter (both)
   // dynamically set by DashboardApp when fetched for current user; used in filtering
-  summerAssignedBleacherIds?: number[];
-  winterAssignedBleacherIds?: number[];
+  summerAssignedBleacherUuids?: string[];
+  winterAssignedBleacherUuids?: string[];
 };
 
 // Me take event form stuff, add tools to change it.
@@ -41,15 +41,15 @@ const getDefaultSeason = (): Season => {
 
 const initialState: FilterDashboardState = {
   yAxis: "Bleachers",
-  homeBaseIds: [],
-  winterHomeBaseIds: [],
+  summerHomeBaseUuids: [],
+  winterHomeBaseUuids: [],
   rows: [],
   stateProvinces: [],
   onlyShowMyEvents: true,
   optimizationMode: false,
   season: getDefaultSeason(),
-  summerAssignedBleacherIds: [],
-  winterAssignedBleacherIds: [],
+  summerAssignedBleacherUuids: [],
+  winterAssignedBleacherUuids: [],
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.

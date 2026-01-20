@@ -3,18 +3,19 @@ import { create } from "zustand";
 type BleacherLocationModalState = {
   isOpen: boolean;
   bleacherNumber: number | null;
-  bleacherId: number | null;
+  bleacherUuid: string | null;
   deviceId: string | null;
-  openModal: (bleacherNumber: number, bleacherId: number, deviceId: string) => void;
+  openModal: (bleacherNumber: number, bleacherUuid: string, deviceId: string) => void;
   closeModal: () => void;
 };
 
 export const useBleacherLocationModalStore = create<BleacherLocationModalState>((set) => ({
   isOpen: false,
   bleacherNumber: null,
-  bleacherId: null,
+  bleacherUuid: null,
   deviceId: null,
-  openModal: (bleacherNumber, bleacherId, deviceId) =>
-    set({ isOpen: true, bleacherNumber, bleacherId, deviceId }),
-  closeModal: () => set({ isOpen: false, bleacherNumber: null, bleacherId: null, deviceId: null }),
+  openModal: (bleacherNumber, bleacherUuid, deviceId) =>
+    set({ isOpen: true, bleacherNumber, bleacherUuid, deviceId }),
+  closeModal: () =>
+    set({ isOpen: false, bleacherNumber: null, bleacherUuid: null, deviceId: null }),
 }));

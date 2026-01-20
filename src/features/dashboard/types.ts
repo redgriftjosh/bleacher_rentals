@@ -1,12 +1,29 @@
 import { AddressData } from "../eventConfiguration/state/useCurrentEventStore";
 
+export type EditBlock = {
+  key: string;
+  blockUuid: string | null;
+  bleacherUuid: string;
+  date: string;
+  text: string;
+  workTrackerUuid: string | null;
+};
+
+export type SetupTeardownBlock = {
+  bleacherEventUuid: string;
+  bleacherUuid: string;
+  text: string;
+  confirmed: boolean;
+  type: "setup" | "teardown";
+};
+
 export type Bleacher = {
-  bleacherId: number;
+  bleacherUuid: string;
   bleacherNumber: number;
   bleacherRows: number;
   bleacherSeats: number;
-  summerHomeBase: { name: string; id: number } | null;
-  winterHomeBase: { name: string; id: number } | null;
+  summerHomeBase: { name: string; homeBaseUuid: string } | null;
+  winterHomeBase: { name: string; homeBaseUuid: string } | null;
   bleacherEvents: BleacherEvent[];
   blocks: BleacherBlock[];
   workTrackers: BleacherWorkTracker[];
@@ -14,8 +31,8 @@ export type Bleacher = {
 };
 
 export type BleacherEvent = {
-  eventId: number;
-  bleacherEventId: number;
+  eventUuid: string;
+  bleacherEventUuid: string;
   eventName: string;
   address: string;
   eventStart: string;
@@ -28,43 +45,43 @@ export type BleacherEvent = {
 };
 
 export type BleacherBlock = {
-  blockId: number;
+  blockUuid: string;
   text: string;
   date: string;
 };
 
 export type BleacherWorkTracker = {
-  workTrackerId: number;
+  workTrackerUuid: string;
   date: string;
 };
 
 export type DashboardBleacher = {
-  bleacherId: number;
+  bleacherUuid: string;
   bleacherNumber: number;
   bleacherRows: number;
   bleacherSeats: number;
-  homeBase: {
-    homeBaseId: number;
+  summerHomeBase: {
+    homeBaseUuid: string;
     homeBaseName: string;
   };
   winterHomeBase: {
-    homeBaseId: number;
+    homeBaseUuid: string;
     homeBaseName: string;
   };
   events: DashboardEvent[];
   blocks: DashboardBlock[];
-  relatedWorkTrackers: { workTrackerId: number; date: string }[];
+  relatedWorkTrackers: { workTrackerUuid: string; date: string }[];
 };
 
 export type DashboardBlock = {
-  blockId: number;
+  blockUuid: string;
   text: string;
   date: string;
 };
 
 export type DashboardEvent = {
-  eventId: number;
-  bleacherEventId: number;
+  eventUuid: string;
+  bleacherEventUuid: string;
   eventName: string;
   addressData: AddressData | null;
   seats: number | null;
@@ -90,7 +107,7 @@ export type DashboardEvent = {
   hslHue: number | null;
   alerts: string[];
   mustBeClean: boolean;
-  bleacherIds: number[];
+  bleacherUuids: string[];
   goodshuffleUrl: string | null;
-  ownerUserId: number | null;
+  ownerUserUuid: string | null;
 };

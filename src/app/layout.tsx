@@ -5,7 +5,8 @@ import { ClerkProvider, SignedIn, SignedOut, SignIn } from "@clerk/nextjs";
 import Script from "next/script";
 import { SignedInComponents } from "../components/SignedInComponents";
 import { Toaster } from "sonner";
-import { TanstackProvider } from "@/components/TanstackProvider";
+import { TanstackProvider } from "@/components/providers/TanstackProvider";
+import { DynamicSystemProvider } from "@/components/providers/DynamicSystemProvider";
 // import TestComponent from "@/components/TestComponent";
 
 const geistSans = Geist({
@@ -50,7 +51,9 @@ export default function RootLayout({
             <Toaster />
             {/* <TestComponent /> */}
             <TanstackProvider>
-              <SignedInComponents>{children}</SignedInComponents>
+              <DynamicSystemProvider>
+                <SignedInComponents>{children}</SignedInComponents>
+              </DynamicSystemProvider>
             </TanstackProvider>
           </SignedIn>
         </body>

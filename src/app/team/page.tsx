@@ -1,9 +1,19 @@
 "use client";
 import { Color } from "@/types/Color";
-import { UserList } from "../../features/manageTeam/components/UserList";
+// import { UserList } from "../../features/manageTeam/components/lists/UserList";
 import { UserConfigurationModal } from "@/features/manageTeam/components/UserConfigurationModal";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useCurrentUserStore } from "@/features/manageTeam/state/useCurrentUserStore";
+import { DriverList } from "@/features/manageTeam/components/lists/DriverList";
+import { AccountManagerList } from "@/features/manageTeam/components/lists/AccountManagerList";
+import { AdminList } from "@/features/manageTeam/components/lists/AdminList";
+import { IncompleteList } from "@/features/manageTeam/components/lists/IncompleteList";
+import TabNavigation, { TeamTab } from "../../features/manageTeam/components/inputs/TabNavigation";
+import SearchBar from "../../features/manageTeam/components/inputs/SearchBar";
+import { Toggle } from "@/components/Toggle";
+import { useState, useEffect } from "react";
+import { useSearchQueryStore } from "@/features/manageTeam/state/useSearchQueryStore";
+import { useRealtimeHydrateCurrentUserStore } from "@/features/manageTeam/hooks/useUserById";
 
 export type ExistingUser = {
   user_id: number;
@@ -17,7 +27,18 @@ export type ExistingUser = {
 } | null;
 
 export default function TeamPage() {
+  useRealtimeHydrateCurrentUserStore();
   const openForNewUser = useCurrentUserStore((s) => s.openForNewUser);
+  const [activeTab, setActiveTab] = useState<TeamTab>("admins");
+  const [showInactive, setShowInactive] = useState(false);
+  const setField = useSearchQueryStore((s) => s.setField);
+
+  // Reset search query when leaving page
+  useEffect(() => {
+    return () => {
+      setField("searchQuery", "");
+    };
+  }, [setField]);
 
   return (
     <main>
@@ -34,19 +55,66 @@ export default function TeamPage() {
 
       <UserConfigurationModal />
 
-      <table className="min-w-full border-collapse border border-gray-200">
-        {/* Header */}
-        <thead className="bg-gray-100">
-          <tr className="border-b border-gray-200">
-            <th className="p-3 text-left font-semibold">Name</th>
-            <th className="p-3 text-left font-semibold">Email</th>
-            {/* <th className="p-3 text-left font-semibold">Role</th> */}
-            <th className="p-3 text-left font-semibold">Status</th>
-          </tr>
-        </thead>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-4">
+          <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+          <SearchBar />
+        </div>
+        <Toggle
+          label="Show Inactive"
+          tooltip={false}
+          checked={showInactive}
+          onChange={setShowInactive}
+          inline={true}
+        />
+      </div>
 
-        <UserList />
-      </table>
+      {/* Incomplete Users Alert - Shows regardless of tab */}
+      <IncompleteList showInactive={showInactive} />
+
+      {/* Admins Section */}
+      {activeTab === "admins" && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Admins</h2>
+          <AdminList showInactive={showInactive} />
+        </div>
+      )}
+
+      {/* Account Managers Section */}
+      {activeTab === "account-managers" && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Account Managers</h2>
+          <AccountManagerList showInactive={showInactive} />
+        </div>
+      )}
+
+      {/* Drivers Section */}
+      {activeTab === "drivers" && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Drivers</h2>
+          <DriverList showInactive={showInactive} />
+        </div>
+      )}
+
+      {/* All Users Section */}
+      {activeTab === "all" && (
+        <div>
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Admins</h2>
+            <AdminList showInactive={showInactive} />
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Account Managers</h2>
+            <AccountManagerList showInactive={showInactive} />
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Drivers</h2>
+            <DriverList showInactive={showInactive} />
+          </div>
+        </div>
+      )}
     </main>
   );
 }

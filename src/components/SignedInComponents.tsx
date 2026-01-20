@@ -7,16 +7,16 @@ import { Button } from "./ui/button";
 import { useRef } from "react";
 import { LayoutProvider } from "@/contexts/LayoutContexts";
 import { DriverWelcome } from "./DriverWelcome";
-import { useUserAccess } from "@/features/userAccess";
+import { useUserAccess } from "@/features/userAccess/client";
 import LoadingSpinner from "./LoadingSpinner";
 
-function SignedInContent({ children }: { children: React.ReactNode }) {
+export function SignedInComponents({ children }: { children: React.ReactNode }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   useSupabaseSubscriptions();
-  const { accessLevel, reason, isLoading } = useUserAccess();
+  const { accessLevel, reason } = useUserAccess();
 
-  // Show loading state while checking access
-  if (isLoading) {
+  // Wait for both session and user to be loaded
+  if (accessLevel === "loading") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner />
@@ -63,20 +63,4 @@ function SignedInContent({ children }: { children: React.ReactNode }) {
       </div>
     </LayoutProvider>
   );
-}
-
-export function SignedInComponents({ children }: { children: React.ReactNode }) {
-  const { session, isLoaded: sessionLoaded } = useSession();
-  const { isLoaded: userLoaded } = useUser();
-
-  // Wait for both session and user to be loaded
-  if (!sessionLoaded || !userLoaded || !session) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  return <SignedInContent>{children}</SignedInContent>;
 }

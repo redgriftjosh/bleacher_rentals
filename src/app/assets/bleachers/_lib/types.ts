@@ -2,21 +2,21 @@ export type FormattedBleacher = {
   bleacherNumber: number;
   bleacherRows: number;
   bleacherSeats: number;
-  homeBase: {
-    homeBaseId: number;
+  summerHomeBase: {
+    homeBaseUuid: string;
     homeBaseName: string;
   };
   winterHomeBase: {
-    homeBaseId: number;
+    homeBaseUuid: string;
     homeBaseName: string;
   };
   summerAccountManager?: {
-    accountManagerId: number;
+    accountManagerUuid: string;
     firstName: string | null;
     lastName: string | null;
   } | null;
   winterAccountManager?: {
-    accountManagerId: number;
+    accountManagerUuid: string;
     firstName: string | null;
     lastName: string | null;
   } | null;

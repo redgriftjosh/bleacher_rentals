@@ -77,8 +77,8 @@ export class EventsUtil {
     opts?: {
       // Optional injection of a currently selected event to preview across selected bleachers
       selected?: {
-        eventId?: number | null;
-        bleacherIds: number[];
+        eventUuid?: string | null;
+        bleacherUuids: string[];
         eventStart: string;
         eventEnd: string;
         eventName?: string;
@@ -105,8 +105,8 @@ export class EventsUtil {
       const spans: EventSpanType[] = [];
 
       for (const ev of bleacher.bleacherEvents ?? []) {
-        // If editing an existing event, exclude persisted spans for that eventId
-        if (selected?.eventId != null && ev.eventId === selected.eventId) {
+        // If editing an existing event, exclude persisted spans for that eventUuid
+        if (selected?.eventUuid != null && ev.eventUuid === selected.eventUuid) {
           continue;
         }
         // Convert dates to indices
@@ -124,7 +124,7 @@ export class EventsUtil {
           // If we have a current selection and this bleacher is selected, filter out any
           // original event that exactly matches the selected event's date range.
           // This avoids double-rendering when previewing the same event before save.
-          const isSelectedBleacher = !!selected?.bleacherIds?.includes(bleacher.bleacherId);
+          const isSelectedBleacher = !!selected?.bleacherUuids?.includes(bleacher.bleacherUuid);
           const matchesSelectedRange =
             isSelectedBleacher &&
             selectedStartCol !== undefined &&
@@ -141,23 +141,20 @@ export class EventsUtil {
             ev,
             rowIndex,
           });
-          if (ev.eventId == 89) {
-            // console.log("89 startCol:", startCol, "endCol", endCol);
-          }
         }
       }
 
       // Inject a synthetic selected event span for preview if this bleacher is selected
       if (
         selected &&
-        Array.isArray(selected.bleacherIds) &&
-        selected.bleacherIds.includes(bleacher.bleacherId) &&
+        Array.isArray(selected.bleacherUuids) &&
+        selected.bleacherUuids.includes(bleacher.bleacherUuid) &&
         selectedStartCol !== undefined &&
         selectedEndCol !== undefined
       ) {
         const ev = {
-          eventId: selected.eventId ?? -1,
-          bleacherEventId: -1,
+          eventUuid: selected.eventUuid ?? "-1",
+          bleacherEventUuid: "-1",
           eventName: selected.eventName || "New Event",
           address: selected.address || "No address",
           eventStart: selected.eventStart,

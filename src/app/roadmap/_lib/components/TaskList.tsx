@@ -62,7 +62,7 @@ export default function TaskList({
           </td>
           <td
             className={`py-1 px-3 text-left font-bold ${
-              TASK_TYPES.feature === task.task_type.task_type_id ? "text-blue-600" : "text-red-600"
+              TASK_TYPES.feature === task.task_type.id ? "text-blue-600" : "text-red-600"
             }`}
             style={{ width: `${COLUMN_WIDTHS.type}px` }}
           >

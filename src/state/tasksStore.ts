@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { Tables } from "../../database.types";
-import { updateCurrentEventAlerts } from "@/features/oldDashboard/functions";
+import { updateCurrentEventAlerts } from "@/features/dashboard/functions";
 
 type Store = {
   tasks: Tables<"Tasks">[];

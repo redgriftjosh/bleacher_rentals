@@ -7,7 +7,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "../../../../../database.types";
 
 type Row = {
-  event_id: number;
+  id: string;
   event_name: string;
   event_start: string;
   event_end: string;
@@ -23,15 +23,15 @@ type Row = {
   setup_start: string | null;
   teardown_end: string | null;
   must_be_clean: boolean;
-  created_by_user_id: number | null;
+  created_by_user_uuid: string | null;
   address: {
-    address_id: number;
+    id: string;
     street: string;
     city: string;
     state_province: string;
     zip_postal: string | null;
   } | null;
-  bleacher_events: { bleacher_id: number }[];
+  bleacher_events: { bleacher_uuid: string }[];
 };
 
 // Fetch Events into DashboardEvent shape (similar to legacy fetchDashboardEvents)
@@ -45,7 +45,7 @@ export async function FetchDashboardEvents(
   }
 
   const queryString = `
-      event_id,
+      id,
       event_name,
       event_start,
       event_end,
@@ -61,16 +61,16 @@ export async function FetchDashboardEvents(
       setup_start,
       teardown_end,
       must_be_clean,
-      created_by_user_id,
-      address:Addresses!Events_address_id_fkey(
-        address_id,
+      created_by_user_uuid,
+      address:Addresses!Events_address_uuid_fkey(
+        id,
         street,
         city,
         state_province,
         zip_postal
       ),
-      bleacher_events:BleacherEvents!BleacherEvents_event_id_fkey(
-        bleacher_id
+      bleacher_events:BleacherEvents!BleacherEvents_event_uuid_fkey(
+        bleacher_uuid
       )
       `;
 
@@ -80,11 +80,11 @@ export async function FetchDashboardEvents(
     if (clerkUserId) {
       const { data: userRow, error: userErr } = await supabase
         .from("Users")
-        .select("user_id")
+        .select("id")
         .eq("clerk_user_id", clerkUserId)
         .maybeSingle();
-      if (!userErr && userRow?.user_id) {
-        builder = builder.eq("created_by_user_id", userRow.user_id);
+      if (!userErr && userRow?.id) {
+        builder = builder.eq("created_by_user_uuid", userRow.id);
       }
     }
   }
@@ -96,12 +96,12 @@ export async function FetchDashboardEvents(
   }
 
   const events: DashboardEvent[] = (finalData ?? []).map((e) => ({
-    eventId: e.event_id,
-    bleacherEventId: -1,
+    eventUuid: e.id,
+    bleacherEventUuid: "-1",
     eventName: e.event_name,
     addressData: e.address
       ? {
-          addressId: e.address.address_id,
+          addressUuid: e.address.id,
           address: e.address.street,
           city: e.address.city,
           state: e.address.state_province,
@@ -131,9 +131,9 @@ export async function FetchDashboardEvents(
     hslHue: e.hsl_hue,
     alerts: [],
     mustBeClean: e.must_be_clean,
-    bleacherIds: (e.bleacher_events ?? []).map((be) => be.bleacher_id),
+    bleacherUuids: (e.bleacher_events ?? []).map((be) => be.bleacher_uuid),
     goodshuffleUrl: e.goodshuffle_url ?? null,
-    ownerUserId: e.created_by_user_id ?? null,
+    ownerUserUuid: e.created_by_user_uuid ?? null,
   }));
   console.log("FetchDashboardEvents events", events);
 

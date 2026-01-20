@@ -85,7 +85,7 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
     setLoading(true);
     const state = useCurrentEventStore.getState();
     try {
-      await deleteEvent(state.eventId, state.addressData?.state ?? "", supabase, user ?? null);
+      await deleteEvent(state.eventUuid, state.addressData?.state ?? "", supabase, user ?? null);
       await refreshDashboardStores();
       currentEventStore.resetForm();
       setLoading(false);
@@ -178,7 +178,7 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
                 <Palette className="w-4 h-4" />
               )}
             </button>
-            {currentEventStore.eventId && (
+            {currentEventStore.eventUuid && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <button className="px-4 py-2 mr-2 bg-white text-red-800 text-sm font-semibold border border-red-800 rounded-sm hover:bg-red-800 hover:text-white transition cursor-pointer">
@@ -209,10 +209,10 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
             {!loading ? (
               <button
                 className="px-4 py-2 bg-darkBlue text-white text-sm font-semibold rounded-sm shadow-md hover:bg-lightBlue transition cursor-pointer"
-                onClick={currentEventStore.eventId ? handleUpdateEvent : handleCreateEvent}
+                onClick={currentEventStore.eventUuid ? handleUpdateEvent : handleCreateEvent}
                 disabled={loading}
               >
-                {currentEventStore.eventId ? "Update Event" : "Create Event"}
+                {currentEventStore.eventUuid ? "Update Event" : "Create Event"}
               </button>
             ) : (
               <button

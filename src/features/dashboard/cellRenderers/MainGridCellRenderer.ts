@@ -39,9 +39,9 @@ export class MainGridCellRenderer implements ICellRenderer {
   > = new Map();
   private unsubBleachers?: () => void;
   // Maintain a stable mapping from row index -> bleacherId (from initial input)
-  private rowBleacherIds: number[];
+  private rowBleacherUuids: string[];
   // Always-up-to-date bleacher snapshot from the store, keyed by id
-  private latestBleachersById: Map<number, Bleacher>;
+  private latestBleachersByUuid: Map<string, Bleacher>;
 
   // No external callback; selection is pushed to a zustand store
 
@@ -60,8 +60,8 @@ export class MainGridCellRenderer implements ICellRenderer {
     this.dates = dates;
     this.yAxis = yAxis;
     // Stable mapping for rows
-    this.rowBleacherIds = bleachers.map((b) => b.bleacherId);
-    this.latestBleachersById = new Map(bleachers.map((b) => [b.bleacherId, b] as const));
+    this.rowBleacherUuids = bleachers.map((b) => b.bleacherUuid);
+    this.latestBleachersByUuid = new Map(bleachers.map((b) => [b.bleacherUuid, b] as const));
 
     // Calculate event spans once during construction depending on yAxis
     if (yAxis === "Bleachers") {
@@ -69,8 +69,8 @@ export class MainGridCellRenderer implements ICellRenderer {
       const selected =
         sel.eventStart && sel.eventEnd
           ? {
-              eventId: sel.eventId ?? null,
-              bleacherIds: sel.bleacherIds ?? [],
+              eventUuid: sel.eventUuid ?? null,
+              bleacherUuids: sel.bleacherUuids ?? [],
               eventStart: sel.eventStart,
               eventEnd: sel.eventEnd,
               eventName: sel.eventName || undefined,
@@ -97,15 +97,15 @@ export class MainGridCellRenderer implements ICellRenderer {
         }
 
         // Map current ROW -> bleacherId to row indices (stable, based on initial input)
-        const idToRow = new Map<number, number>();
-        this.rowBleacherIds.forEach((id, i) => idToRow.set(id, i));
-        const prevById = new Map(prevData.map((b) => [b.bleacherId, b] as const));
+        const uuidToRow = new Map<string, number>();
+        this.rowBleacherUuids.forEach((id, i) => uuidToRow.set(id, i));
+        const prevByUuid = new Map(prevData.map((b) => [b.bleacherUuid, b] as const));
 
         // For each bleacher present in next data, compare block texts by date
         for (const nextBleacher of nextData) {
-          const rowIndex = idToRow.get(nextBleacher.bleacherId);
+          const rowIndex = uuidToRow.get(nextBleacher.bleacherUuid);
           if (rowIndex === undefined) continue;
-          const prevBleacher = prevById.get(nextBleacher.bleacherId);
+          const prevBleacher = prevByUuid.get(nextBleacher.bleacherUuid);
           const prevBlocksByDate = new Map(
             (prevBleacher?.blocks ?? []).map((bl) => [bl.date, bl.text] as const)
           );
@@ -126,7 +126,9 @@ export class MainGridCellRenderer implements ICellRenderer {
                 const key = `${rowIndex}:${colIndex}`;
                 const vis = this.visibleCells.get(key);
                 // Update latest snapshot map so rebuild uses current data
-                this.latestBleachersById = new Map(nextData.map((b) => [b.bleacherId, b] as const));
+                this.latestBleachersByUuid = new Map(
+                  nextData.map((b) => [b.bleacherUuid, b] as const)
+                );
                 if (vis) {
                   // Rebuild just this visible cell to refresh its baked text
                   this.buildCell(
@@ -145,7 +147,7 @@ export class MainGridCellRenderer implements ICellRenderer {
 
         // Keep snapshot in sync
         prevData = nextData;
-        this.latestBleachersById = new Map(nextData.map((b) => [b.bleacherId, b] as const));
+        this.latestBleachersByUuid = new Map(nextData.map((b) => [b.bleacherUuid, b] as const));
       });
     } catch {}
   }
@@ -160,16 +162,16 @@ export class MainGridCellRenderer implements ICellRenderer {
     this.bleachers = bleachers;
     this.events = events;
     this.yAxis = yAxis;
-    this.rowBleacherIds = bleachers.map((b) => b.bleacherId);
-    this.latestBleachersById = new Map(bleachers.map((b) => [b.bleacherId, b] as const));
+    this.rowBleacherUuids = bleachers.map((b) => b.bleacherUuid);
+    this.latestBleachersByUuid = new Map(bleachers.map((b) => [b.bleacherUuid, b] as const));
 
     if (yAxis === "Bleachers") {
       const sel = useCurrentEventStore.getState();
       const selected =
         sel.eventStart && sel.eventEnd
           ? {
-              eventId: sel.eventId ?? null,
-              bleacherIds: sel.bleacherIds ?? [],
+              eventUuid: sel.eventUuid ?? null,
+              bleacherUuids: sel.bleacherUuids ?? [],
               eventStart: sel.eventStart,
               eventEnd: sel.eventEnd,
               eventName: sel.eventName || undefined,
@@ -202,8 +204,8 @@ export class MainGridCellRenderer implements ICellRenderer {
 
       // Map DashboardEvent to BleacherEvent-like object (only needed fields)
       const be = {
-        eventId: ev.eventId,
-        bleacherEventId: ev.bleacherEventId ?? -1,
+        eventUuid: ev.eventUuid,
+        bleacherEventUuid: ev.bleacherEventUuid ?? "-1",
         eventName: ev.eventName,
         address: ev.addressData?.address ?? "",
         eventStart: ev.eventStart,
@@ -297,14 +299,14 @@ export class MainGridCellRenderer implements ICellRenderer {
       const tile = new Tile(dimensions, this.baker, row, col, this.yAxis === "Bleachers");
       parent.addChild(tile);
 
-      // Attempt to find a block (bleachers mode only) using the latest store snapshot by bleacherId
-      const bleacherId = this.rowBleacherIds[row];
-      const bleacher = this.latestBleachersById.get(bleacherId) ?? this.bleachers[row];
+      // Attempt to find a block (bleachers mode only) using the latest store snapshot by bleacherUuid
+      const bleacherUuid = this.rowBleacherUuids[row];
+      const bleacher = this.latestBleachersByUuid.get(bleacherUuid) ?? this.bleachers[row];
       const date = this.dates[col];
       if (this.yAxis === "Bleachers" && bleacher && date) {
         const block = bleacher.blocks.find((b) => b.date === date);
         if (block && block.text) {
-          const labelKey = `block:${bleacher.bleacherId}:${date}:${block.text}`;
+          const labelKey = `block:${bleacher.bleacherUuid}:${date}:${block.text}`;
           const textSprite = this.baker.getSprite(
             labelKey,
             { width: cellWidth, height: cellHeight },
@@ -336,8 +338,8 @@ export class MainGridCellRenderer implements ICellRenderer {
 
     // Render truck icon AFTER event/tile rendering so it appears on top (both event and non-event cells)
     if (this.yAxis === "Bleachers") {
-      const bleacherId = this.rowBleacherIds[row];
-      const bleacher = this.latestBleachersById.get(bleacherId) ?? this.bleachers[row];
+      const bleacherUuid = this.rowBleacherUuids[row];
+      const bleacher = this.latestBleachersByUuid.get(bleacherUuid) ?? this.bleachers[row];
       const date = this.dates[col];
       if (bleacher && date) {
         const workTracker = bleacher.workTrackers?.find((wt) => wt.date === date);
@@ -347,8 +349,8 @@ export class MainGridCellRenderer implements ICellRenderer {
             // Instead open WorkTracker modal via callback if provided
             // Write selection to store to open modal without causing React rerender of dashboard
             useWorkTrackerSelectionStore.getState().setSelected({
-              work_tracker_id: workTracker.workTrackerId ?? -1,
-              bleacher_id: bleacher.bleacherId,
+              id: workTracker.workTrackerUuid ?? "-1",
+              bleacher_uuid: bleacher.bleacherUuid,
               date,
             });
           });
@@ -373,8 +375,8 @@ export class MainGridCellRenderer implements ICellRenderer {
   private handleLoadBlock(rowIndex: number, columnIndex: number) {
     const store = useSelectedBlockStore.getState();
     const key = `${rowIndex}-${columnIndex}`;
-    const bleacherId = this.rowBleacherIds[rowIndex];
-    const bleacher = this.latestBleachersById.get(bleacherId) ?? this.bleachers[rowIndex];
+    const bleacherUuid = this.rowBleacherUuids[rowIndex];
+    const bleacher = this.latestBleachersByUuid.get(bleacherUuid) ?? this.bleachers[rowIndex];
     const date = this.dates[columnIndex];
 
     if (!bleacher || !date) return;
@@ -384,14 +386,14 @@ export class MainGridCellRenderer implements ICellRenderer {
 
     store.setField("isOpen", true);
     store.setField("key", key);
-    store.setField("blockId", existingBlock?.blockId ?? null);
-    store.setField("bleacherId", bleacher.bleacherId);
+    store.setField("blockUuid", existingBlock?.blockUuid ?? null);
+    store.setField("bleacherUuid", bleacher.bleacherUuid);
     store.setField("date", date);
     store.setField("text", existingBlock?.text ?? "");
     // Work tracker integration not yet wired in this data set
-    // Attach workTrackerId if it exists for this bleacher/date
+    // Attach workTrackerUuid if it exists for this bleacher/date
     const workTracker = bleacher.workTrackers?.find((wt) => wt.date === date);
-    store.setField("workTrackerId", workTracker?.workTrackerId ?? null);
+    store.setField("workTrackerUuid", workTracker?.workTrackerUuid ?? null);
   }
 
   /**

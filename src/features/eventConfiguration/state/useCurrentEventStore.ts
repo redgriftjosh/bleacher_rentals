@@ -2,11 +2,11 @@
 
 import { create } from "zustand";
 import { useEventsStore } from "@/state/eventsStore";
-import { calculateBestHue, updateCurrentEventAlerts } from "../../oldDashboard/functions";
 import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
+import { calculateBestHue, updateCurrentEventAlerts } from "@/features/dashboard/functions";
 
 export type AddressData = {
-  addressId: number | null;
+  addressUuid: string | null;
   address: string;
   city?: string;
   state?: string;
@@ -19,9 +19,9 @@ export type AddressData = {
 export type EventStatus = "Quoted" | "Booked";
 
 export type CurrentEventState = {
-  eventId: number | null;
+  eventUuid: string | null;
   // User who created/owns the event (will default to current logged in user on open)
-  ownerUserId: number | null;
+  ownerUserUuid: string | null;
   eventName: string;
   addressData: AddressData | null;
   seats: number | null;
@@ -38,7 +38,7 @@ export type CurrentEventState = {
   selectedStatus: EventStatus;
   notes: string;
   mustBeClean: boolean;
-  bleacherIds: number[];
+  bleacherUuids: string[];
   isFormExpanded: boolean;
   isFormMinimized: boolean;
   hslHue: number | null;
@@ -57,8 +57,8 @@ export type CurrentEventStore = CurrentEventState & {
 };
 
 const initialState: CurrentEventState = {
-  eventId: null,
-  ownerUserId: null,
+  eventUuid: null,
+  ownerUserUuid: null,
   eventName: "",
   addressData: null,
   seats: 0,
@@ -75,7 +75,7 @@ const initialState: CurrentEventState = {
   selectedStatus: "Quoted",
   notes: "",
   mustBeClean: false,
-  bleacherIds: [],
+  bleacherUuids: [],
   isFormExpanded: false,
   isFormMinimized: false,
   hslHue: null,

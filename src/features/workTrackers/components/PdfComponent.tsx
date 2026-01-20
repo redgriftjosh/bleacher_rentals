@@ -150,7 +150,7 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
               {row.workTracker.date}
             </Text>
             <Text style={[styles.bodyCell, { width: columnWidths[1] }]}>
-              {row.workTracker.bleacher_id}
+              {row.workTracker.bleacher_uuid}
             </Text>
             <Text style={[styles.bodyCell, { width: columnWidths[2] }]}>
               {row.pickup_address?.street ?? ""}

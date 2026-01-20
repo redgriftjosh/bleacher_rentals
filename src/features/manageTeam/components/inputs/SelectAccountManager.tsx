@@ -17,8 +17,8 @@ import { useAccountManagers } from "../../hooks/useAccountManagers";
 import { UserSmall } from "../util/UserSmall";
 
 type SelectAccountManagerProps = {
-  value: number | null;
-  onChange: (accountManagerId: number | null) => void;
+  value: string | null;
+  onChange: (accountManagerId: string | null) => void;
   placeholder?: string;
 };
 
@@ -31,11 +31,11 @@ export function SelectAccountManager({
   const accountManagers = useAccountManagers();
 
   const selectedAccountManager = useMemo(() => {
-    return accountManagers.find((am) => am.accountManagerId === value);
+    return accountManagers.find((am) => am.accountManagerUuid === value);
   }, [accountManagers, value]);
 
-  const handleSelect = (accountManagerId: number) => {
-    onChange(accountManagerId === value ? null : accountManagerId);
+  const handleSelect = (accountManagerUuid: string) => {
+    onChange(accountManagerUuid === value ? null : accountManagerUuid);
     setOpen(false);
   };
 
@@ -81,14 +81,14 @@ export function SelectAccountManager({
             <CommandGroup>
               {accountManagers.map((am) => (
                 <CommandItem
-                  key={am.accountManagerId}
+                  key={am.accountManagerUuid}
                   value={`${am.firstName} ${am.lastName} ${am.email}`}
-                  onSelect={() => handleSelect(am.accountManagerId)}
+                  onSelect={() => handleSelect(am.accountManagerUuid)}
                 >
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === am.accountManagerId ? "opacity-100" : "opacity-0"
+                      value === am.accountManagerUuid ? "opacity-100" : "opacity-0"
                     )}
                   />
                   <UserSmall

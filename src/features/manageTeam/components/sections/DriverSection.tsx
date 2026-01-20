@@ -14,7 +14,7 @@ export function DriverSection() {
   const payRateCents = useCurrentUserStore((s) => s.payRateCents);
   const payCurrency = useCurrentUserStore((s) => s.payCurrency);
   const payPerUnit = useCurrentUserStore((s) => s.payPerUnit);
-  const accountManagerId = useCurrentUserStore((s) => s.accountManagerId);
+  const accountManagerUuid = useCurrentUserStore((s) => s.accountManagerUuid);
   const setField = useCurrentUserStore((s) => s.setField);
 
   const handlePayRateChange = (input: string) => {
@@ -76,8 +76,8 @@ export function DriverSection() {
             </div>
             <div className="col-span-3">
               <SelectAccountManager
-                value={accountManagerId}
-                onChange={(value) => setField("accountManagerId", value)}
+                value={accountManagerUuid}
+                onChange={(value) => setField("accountManagerUuid", value)}
                 placeholder="Select Account Manager..."
               />
             </div>
