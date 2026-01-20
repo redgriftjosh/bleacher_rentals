@@ -1188,9 +1188,13 @@ commit;
 
 -- Create a role/user with replication privileges for PowerSync
 -- CREATE ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN PASSWORD 'myhighlyrandompassword';
-IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'powersync_role') THEN
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'powersync_role') THEN
     CREATE ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN PASSWORD 'myhighlyrandompassword';
   END IF;
+END
+$$;
 -- Set up permissions for the newly created role
 -- Read-only (SELECT) access is required
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO powersync_role;
