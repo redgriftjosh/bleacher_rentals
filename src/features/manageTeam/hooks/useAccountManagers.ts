@@ -2,11 +2,9 @@
 
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
-import { useUsersStore } from "@/state/userStore";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
-import { useUser } from "@clerk/nextjs";
 import { sql } from "@powersync/kysely-driver";
-import { useEffect, useState } from "react";
+import { filterBySearch } from "../util/filterBySearch";
+import { useSearchQueryStore } from "../state/useSearchQueryStore";
 
 export type AccountManagerOption = {
   accountManagerUuid: string;
@@ -49,6 +47,7 @@ export function useAccountManagers(): AccountManagerOption[] {
     .compile();
 
   const { data } = useTypedQuery(compiled, expect<AccountManagerOption>());
+  const searchQuery = useSearchQueryStore((s) => s.searchQuery);
 
-  return data ?? [];
+  return filterBySearch(data ?? [], searchQuery);
 }

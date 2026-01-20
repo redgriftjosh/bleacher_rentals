@@ -1,15 +1,19 @@
 "use client";
 import { Color } from "@/types/Color";
-import { UserList } from "../../features/manageTeam/components/UserList";
+// import { UserList } from "../../features/manageTeam/components/lists/UserList";
 import { UserConfigurationModal } from "@/features/manageTeam/components/UserConfigurationModal";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useCurrentUserStore } from "@/features/manageTeam/state/useCurrentUserStore";
-import { DriverList } from "@/features/manageTeam/components/DriverList";
-import { AccountManagerList } from "@/features/manageTeam/components/AccountManagerList";
-import { AdminList } from "@/features/manageTeam/components/AdminList";
-import TabNavigation, { TeamTab } from "./_lib/components/TabNavigation";
+import { DriverList } from "@/features/manageTeam/components/lists/DriverList";
+import { AccountManagerList } from "@/features/manageTeam/components/lists/AccountManagerList";
+import { AdminList } from "@/features/manageTeam/components/lists/AdminList";
+import { IncompleteList } from "@/features/manageTeam/components/lists/IncompleteList";
+import TabNavigation, { TeamTab } from "../../features/manageTeam/components/inputs/TabNavigation";
+import SearchBar from "../../features/manageTeam/components/inputs/SearchBar";
 import { Toggle } from "@/components/Toggle";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchQueryStore } from "@/features/manageTeam/state/useSearchQueryStore";
+import { useRealtimeHydrateCurrentUserStore } from "@/features/manageTeam/hooks/useUserById";
 
 export type ExistingUser = {
   user_id: number;
@@ -23,9 +27,18 @@ export type ExistingUser = {
 } | null;
 
 export default function TeamPage() {
+  useRealtimeHydrateCurrentUserStore();
   const openForNewUser = useCurrentUserStore((s) => s.openForNewUser);
   const [activeTab, setActiveTab] = useState<TeamTab>("admins");
   const [showInactive, setShowInactive] = useState(false);
+  const setField = useSearchQueryStore((s) => s.setField);
+
+  // Reset search query when leaving page
+  useEffect(() => {
+    return () => {
+      setField("searchQuery", "");
+    };
+  }, [setField]);
 
   return (
     <main>
@@ -43,7 +56,10 @@ export default function TeamPage() {
       <UserConfigurationModal />
 
       <div className="flex justify-between items-center mb-6">
-        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+        <div className="flex items-center gap-4">
+          <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+          <SearchBar />
+        </div>
         <Toggle
           label="Show Inactive"
           tooltip={false}
@@ -52,6 +68,9 @@ export default function TeamPage() {
           inline={true}
         />
       </div>
+
+      {/* Incomplete Users Alert - Shows regardless of tab */}
+      <IncompleteList showInactive={showInactive} />
 
       {/* Admins Section */}
       {activeTab === "admins" && (

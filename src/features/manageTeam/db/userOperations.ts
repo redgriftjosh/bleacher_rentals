@@ -1,6 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { CurrentUserState } from "../state/useCurrentUserStore";
 import { Database } from "@/../database.types";
+import { STATUSES } from "../constants";
 
 type TypedSupabaseClient = SupabaseClient<Database>;
 
@@ -17,7 +18,7 @@ export async function createUser(
         last_name: state.lastName,
         email: state.email.toLowerCase(),
         is_admin: state.isAdmin,
-        status: 1, // Active
+        status_uuid: STATUSES.invited, // Active
       })
       .select("id")
       .single();

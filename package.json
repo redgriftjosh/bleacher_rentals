@@ -6,12 +6,16 @@
     "generate-types-staging": "supabase gen types typescript --project-id \"sycrvbdpdbaczyfdwcnc\" --schema public > database.types.ts",
     "generate-types-local": "supabase gen types typescript --local --schema public > database.types.ts",
     "dev": "concurrently \"next dev\" \"ngrok http --url=up-marmot-tops.ngrok-free.app 3000\"",
+    "dev:e2e": "next dev -p 3000",
     "check-deprecated": "tsx scripts/check-deprecated-db.mts",
     "prebuild": "npm run check-deprecated",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
+    "test:e2e": "set -a && source .env.local && set +a && playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:auth": "playwright test src/features/manageTeam/e2e/auth.setup.ts --headed --project=chromium",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -50,7 +54,6 @@
     "pusher-js": "^8.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-mobile-app-button": "^1.0.13",
     "react-virtualized": "^9.22.6",
     "sonner": "^2.0.3",
     "svix": "^1.63.1",
@@ -60,7 +63,9 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@clerk/testing": "^1.13.28",
     "@pixi/devtools": "^2.0.1",
+    "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4",
     "@types/luxon": "^3.6.0",
     "@types/node": "^20",

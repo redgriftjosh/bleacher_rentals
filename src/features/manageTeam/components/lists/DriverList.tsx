@@ -1,7 +1,8 @@
 "use client";
-import { useAdmins } from "../hooks/useAdmins";
-import { UserAvatar } from "./util/UserAvatar";
-import { STATUSES } from "@/app/team/_lib/constants";
+import { useDrivers } from "../../hooks/useDrivers";
+import { useCurrentUserStore } from "../../state/useCurrentUserStore";
+import { UserAvatar } from "../util/UserAvatar";
+import { STATUSES } from "@/features/manageTeam/constants";
 import { useMemo } from "react";
 
 function StatusBadge({ statusUuid }: { statusUuid: string | null }) {
@@ -25,6 +26,15 @@ function StatusBadge({ statusUuid }: { statusUuid: string | null }) {
   );
 }
 
+function formatAmount(cents: number | null) {
+  if (cents === null) return "—";
+  const dollars = cents / 100;
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(dollars);
+}
+
 function formatDate(dateString: string | null) {
   if (!dateString) return "Unknown";
   const date = new Date(dateString);
@@ -35,17 +45,22 @@ function formatDate(dateString: string | null) {
   }).format(date);
 }
 
-export function AdminList({ showInactive = false }: { showInactive?: boolean }) {
-  const admins = useAdmins();
+export function DriverList({ showInactive = false }: { showInactive?: boolean }) {
+  const drivers = useDrivers();
+  const loadExistingUser = useCurrentUserStore((s) => s.loadExistingUser);
 
-  const filteredAdmins = showInactive
-    ? admins
-    : admins.filter((admin) => admin.statusUuid !== STATUSES.inactive);
+  const handleClick = (userUuid: string) => {
+    loadExistingUser(userUuid);
+  };
 
-  if (filteredAdmins.length === 0) {
+  const filteredDrivers = showInactive
+    ? drivers
+    : drivers.filter((driver) => driver.statusUuid !== STATUSES.inactive);
+
+  if (filteredDrivers.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-        <p className="text-gray-500">No admins found</p>
+        <p className="text-gray-500">No drivers found</p>
       </div>
     );
   }
@@ -57,7 +72,7 @@ export function AdminList({ showInactive = false }: { showInactive?: boolean }) 
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Admin
+                Driver
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Contact
@@ -66,55 +81,65 @@ export function AdminList({ showInactive = false }: { showInactive?: boolean }) 
                 Status
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Additional Roles
+                Compensation
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Manager
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredAdmins.map((admin) => (
+            {filteredDrivers.map((driver) => (
               <tr
-                key={admin.userUuid}
+                key={driver.driverUuid}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => handleClick(driver.userUuid)}
               >
                 <td className="px-4 py-2">
                   <div className="flex items-start gap-3">
                     <UserAvatar
-                      clerkUserId={admin.clerkUserId}
-                      firstName={admin.firstName}
-                      lastName={admin.lastName}
+                      clerkUserId={driver.clerkUserId}
+                      firstName={driver.firstName}
+                      lastName={driver.lastName}
                       className="w-10 h-10 flex-shrink-0"
                     />
                     <div className="min-w-0">
                       <div className="text-sm font-medium text-gray-900 truncate">
-                        {admin.firstName} {admin.lastName}
+                        {driver.firstName} {driver.lastName}
                       </div>
                       <div className="text-xs text-gray-500">
-                        Member since {formatDate(admin.createdAt)}
+                        Member since {formatDate(driver.createdAt)}
                       </div>
                     </div>
                   </div>
                 </td>
                 <td className="px-4 py-4">
-                  <div className="text-sm text-gray-900 break-words">{admin.email}</div>
+                  <div className="text-sm text-gray-900 break-words">{driver.email}</div>
                 </td>
                 <td className="px-4 py-4">
-                  <StatusBadge statusUuid={admin.statusUuid} />
+                  <StatusBadge statusUuid={driver.statusUuid} />
                 </td>
                 <td className="px-4 py-4">
-                  <div className="flex flex-wrap gap-2">
-                    {admin.isAccountManager ? (
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        Account Manager
+                  <div className="text-sm">
+                    <div className="font-medium text-gray-900">
+                      <span className="text-xs text-gray-500 mr-1">
+                        {driver.payCurrency || "USD"}
                       </span>
-                    ) : null}
-                    {admin.isDriver ? (
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        Driver
-                      </span>
-                    ) : null}
-                    {!admin.isAccountManager && !admin.isDriver ? (
-                      <span className="text-sm text-gray-400">—</span>
-                    ) : null}
+                      ${formatAmount(driver.payRateCents)}
+                      {driver.payPerUnit && `/${driver.payPerUnit.toLowerCase()}`}
+                    </div>
+                    {driver.tax !== null && (
+                      <div className="text-xs text-gray-500">Tax: {driver.tax}%</div>
+                    )}
+                  </div>
+                </td>
+                <td className="px-4 py-4">
+                  <div className="text-sm text-gray-900">
+                    {driver.accountManagerFirstName ? (
+                      <span>{driver.accountManagerFirstName}</span>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
                   </div>
                 </td>
               </tr>

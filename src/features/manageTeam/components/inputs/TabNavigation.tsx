@@ -17,7 +17,7 @@ type TabNavigationProps = {
 
 export default function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
   return (
-    <div className="flex justify-start mb-6">
+    <div className="flex justify-start">
       <div className="flex border border-gray-300 bg-gray-100 rounded-lg overflow-hidden">
         {tabs.map((tab) => (
           <button

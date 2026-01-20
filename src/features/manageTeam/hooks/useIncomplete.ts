@@ -6,7 +6,7 @@ import { sql } from "@powersync/kysely-driver";
 import { filterBySearch } from "../util/filterBySearch";
 import { useSearchQueryStore } from "../state/useSearchQueryStore";
 
-type Admin = {
+type IncompleteUser = {
   userUuid: string;
   firstName: string | null;
   lastName: string | null;
@@ -14,14 +14,12 @@ type Admin = {
   clerkUserId: string | null;
   createdAt: string | null;
   statusUuid: string | null;
-  isAccountManager: number;
-  isDriver: number;
 };
 
 /**
- * Hook to fetch all account managers with their account_manager_id from the database
+ * Hook to fetch users who have no roles assigned (not admin, not account manager, not driver)
  */
-export function useAdmins(): Admin[] {
+export function useIncomplete(): IncompleteUser[] {
   const compiled = db
     .selectFrom("Users as u")
     .leftJoin("AccountManagers as am", (join) =>
@@ -38,18 +36,19 @@ export function useAdmins(): Admin[] {
       "u.clerk_user_id as clerkUserId",
       "u.created_at as createdAt",
       "u.status_uuid as statusUuid",
-
-      // booleans derived from whether the left-joined row exists
-      sql<number>`case when am.id is null then 0 else 1 end`.as("isAccountManager"),
-      sql<number>`case when d.id is null then 0 else 1 end`.as("isDriver"),
     ])
-    .where("u.is_admin", "=", 1)
-    .groupBy(["u.id", "u.first_name", "u.last_name", "u.email", "u.clerk_user_id"])
+    .where((eb) =>
+      eb.and([
+        eb("u.is_admin", "=", 0),
+        eb("am.id", "is", null),
+        eb("d.id", "is", null),
+      ])
+    )
     .orderBy("u.first_name", "asc")
     .orderBy("u.last_name", "asc")
     .compile();
 
-  const { data } = useTypedQuery(compiled, expect<Admin>());
+  const { data } = useTypedQuery(compiled, expect<IncompleteUser>());
   const searchQuery = useSearchQueryStore((s) => s.searchQuery);
 
   return filterBySearch(data ?? [], searchQuery);

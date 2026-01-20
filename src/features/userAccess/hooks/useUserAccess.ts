@@ -1,16 +1,12 @@
+"use client";
 import { useUser } from "@clerk/nextjs";
 import { AccessLevel, determineUserAccess } from "../logic/determineAccess";
 import { useMemo } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import type { UserAccessData } from "../types";
 
-export type UserAccessData = {
-  status_uuid: string | null;
-  id: string;
-  is_admin: number | null;
-  account_manager_id: string | null;
-  driver_id: string | null;
-};
+export type { UserAccessData } from "../types";
 
 /**
  * React Query hook to fetch and determine user access level.
