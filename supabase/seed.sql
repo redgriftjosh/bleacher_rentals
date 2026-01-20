@@ -4,7 +4,7 @@ SET session_replication_role = replica;
 -- PostgreSQL database dump
 --
 
--- \restrict xq23WcklPlMpODsQrcZXhf6caYahj6Jh0QxEKqDQJ2f4lm5gbHflP3JlWxsBIBW
+-- \restrict nrZY4OlOXiYLVsAOS7S02zA9s9iVH4ElEtT5VJ0lzmDbDrRkXPm0Ni8F8a5ueNF
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -88,12 +88,6 @@ SET row_security = off;
 
 
 --
--- Data for Name: oauth_client_states; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
-
-
-
---
 -- Data for Name: oauth_consents; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 
@@ -136,6 +130,16 @@ SET row_security = off;
 
 
 --
+-- Data for Name: UserStatuses; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO "public"."UserStatuses" ("created_at", "status", "id") VALUES
+	('2025-05-21 16:29:54.749727+00', 'Invited', '75dfeb9e-6c28-4839-a91c-a7333b0921c6'),
+	('2025-05-21 16:30:01.377311+00', 'Active', '5d314da7-0a1e-4294-b012-ab74f6e07cd6'),
+	('2025-05-21 16:30:07.124225+00', 'Inactive', '7b65d5a1-8ee0-4b7a-816d-d3ec1ed123c5');
+
+
+--
 -- Data for Name: Users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -169,7 +173,8 @@ INSERT INTO "public"."Users" ("created_at", "first_name", "last_name", "email", 
 	('2025-12-18 17:33:53.191093+00', 'Brent', 'Brown', 'southlandfarmsga@gmail.com', NULL, NULL, 3, NULL, false, '75dfeb9e-6c28-4839-a91c-a7333b0921c6', '5115f242-1319-4df5-b6a2-7b1bd015bee7'),
 	('2025-12-18 17:40:29.213111+00', 'Matthew', 'Nauss', 'matt@hussaryachts.com', NULL, NULL, 3, NULL, false, '75dfeb9e-6c28-4839-a91c-a7333b0921c6', '51177a55-31dd-4c94-a263-332512f51bed'),
 	('2025-12-18 17:43:41.804843+00', 'Kevin', 'Harrison', 'abs.tktransport@gmail.com', NULL, NULL, 3, NULL, false, '75dfeb9e-6c28-4839-a91c-a7333b0921c6', '9a21116c-adfb-4750-a3a2-0b857ba1d9ce'),
-	('2025-10-10 16:45:42.896319+00', 'Devin', '- Dk Ferrier', 'dkfarrierservice@gmail.com', NULL, NULL, 3, NULL, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', 'ab7a8616-f42d-43a9-ae88-ae61c37e8aa1');
+	('2025-10-10 16:45:42.896319+00', 'Devin', '- Dk Ferrier', 'dkfarrierservice@gmail.com', NULL, NULL, 3, NULL, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', 'ab7a8616-f42d-43a9-ae88-ae61c37e8aa1'),
+	('2026-01-14 15:35:06.935722+00', 'Sarah', 'Joo', 'sarahjoo8888@gmail.com', NULL, 'user_37qEDkzrCMtsUuNPnVUjPiLMitC', 2, NULL, true, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '15597d9e-7a32-44df-a02f-bce4c39dfdee');
 
 
 --
@@ -189,7 +194,8 @@ INSERT INTO "public"."AccountManagers" ("created_at", "is_active", "id", "user_u
 	('2025-11-28 15:49:12.942723+00', true, 'ff99880a-07ed-4849-af96-c252515cfb91', '77aa4175-61f7-4d56-9015-d3323ec80bf3'),
 	('2025-11-28 15:49:12.942723+00', true, '0f5a4794-d521-47ec-8e50-9b7f6bebcda6', '35a4c266-1197-46b4-af4d-d4b805f57d9a'),
 	('2025-12-02 13:36:50.40714+00', true, '11d5e426-c1ed-4e1d-aef8-aea5f7194766', 'ba661483-ea76-40eb-9adc-65cca26390e8'),
-	('2025-12-02 13:38:19.481959+00', true, '6b2f41dc-7efc-400c-98e6-4bf6f8bef573', '55c1253d-6460-456d-91c9-e97290e8e599');
+	('2025-12-02 13:38:19.481959+00', true, '6b2f41dc-7efc-400c-98e6-4bf6f8bef573', '55c1253d-6460-456d-91c9-e97290e8e599'),
+	('2026-01-14 15:35:39.430255+00', true, 'b5557f16-b67f-4aaf-a47e-1a2c8680db55', '15597d9e-7a32-44df-a02f-bce4c39dfdee');
 
 
 --
@@ -527,7 +533,9 @@ INSERT INTO "public"."Addresses" ("created_at", "street", "city", "state_provinc
 	('2025-12-30 13:36:05.138878+00', 'The International Center, Airport Road, Mississauga, ON, Canada', 'Mississauga', 'Ontario', 'L4V 1E8', '35c039af-824e-4a71-8e31-c46b236aec48'),
 	('2026-01-06 14:22:42.886211+00', '62126 Louisiana 1090, Pearl River, LA, USA', 'Pearl River', 'Louisiana', '70452', '14fed438-5fde-484a-8179-00dc12c3c69f'),
 	('2026-01-07 14:53:04.297299+00', '500 Boulevard Cote Vertu Ouest, Dorval, Montreal, QC H4S 1Y9, Canada', 'Dorval', 'Quebec', 'H4S 1Y9', 'd5e6327a-cbd3-4f7b-98c5-cfaf0fb696e5'),
-	('2026-01-07 20:52:55.948234+00', '155 Wellington St, Mitchell, Perth County, ON N0K 1N0, Canada', 'Mitchell', 'Ontario', 'N0K 1N0', '4f9db35e-3a9d-4cb0-8e5c-f0b9280c6682');
+	('2026-01-07 20:52:55.948234+00', '155 Wellington St, Mitchell, Perth County, ON N0K 1N0, Canada', 'Mitchell', 'Ontario', 'N0K 1N0', '4f9db35e-3a9d-4cb0-8e5c-f0b9280c6682'),
+	('2026-01-14 15:51:06.18308+00', '123 Laird Drive, East York, ON, Canada', 'Toronto', 'Ontario', 'M4G 3T7', '51314c5d-ffb8-44b5-89b8-acc1141d9e49'),
+	('2026-01-14 15:51:06.200019+00', 'Finch TTC Subway Station, Yonge Street, North York, ON, Canada', 'Toronto', 'Ontario', 'M2N 5S2', '24e4ca19-21fd-48fd-9f17-9c1cf44e0144');
 
 
 --
@@ -2740,7 +2748,8 @@ INSERT INTO "public"."Drivers" ("created_at", "tax", "pay_rate_cents", "pay_curr
 	('2025-12-18 17:33:53.395811+00', 0, 300, 'CAD', 'KM', true, '08d9105d-c455-419d-92f4-49907f19c324', '5e68d889-dfb4-405d-9473-7bc6c667582c', '5115f242-1319-4df5-b6a2-7b1bd015bee7'),
 	('2025-12-18 17:40:29.401632+00', 0, 300, 'CAD', 'KM', true, '08d9105d-c455-419d-92f4-49907f19c324', 'c55c515b-13f1-4cd7-9479-58347efd2d86', '51177a55-31dd-4c94-a263-332512f51bed'),
 	('2025-12-18 17:43:42.070995+00', 0, 300, 'CAD', 'KM', true, '08d9105d-c455-419d-92f4-49907f19c324', '3fcc3418-8106-4b56-80a1-142f280bb304', '9a21116c-adfb-4750-a3a2-0b857ba1d9ce'),
-	('2025-10-10 16:45:43.001958+00', 13, 400, 'CAD', 'KM', true, 'b9c64484-356b-40aa-8d31-82de8df9700e', '9ce519ec-0ea2-432a-8603-77b09c16f5bf', 'ab7a8616-f42d-43a9-ae88-ae61c37e8aa1');
+	('2025-10-10 16:45:43.001958+00', 13, 400, 'CAD', 'KM', true, 'b9c64484-356b-40aa-8d31-82de8df9700e', '9ce519ec-0ea2-432a-8603-77b09c16f5bf', 'ab7a8616-f42d-43a9-ae88-ae61c37e8aa1'),
+	('2026-01-14 15:49:58.002404+00', 13, 1500, 'CAD', 'KM', true, NULL, 'd4124aec-47af-4187-8ab0-e4e102a1c436', '15597d9e-7a32-44df-a02f-bce4c39dfdee');
 
 
 --
@@ -2951,16 +2960,6 @@ INSERT INTO "public"."UserRoles" ("created_at", "role", "id") VALUES
 
 
 --
--- Data for Name: UserStatuses; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-INSERT INTO "public"."UserStatuses" ("created_at", "status", "id") VALUES
-	('2025-05-21 16:29:54.749727+00', 'Invited', '75dfeb9e-6c28-4839-a91c-a7333b0921c6'),
-	('2025-05-21 16:30:01.377311+00', 'Active', '5d314da7-0a1e-4294-b012-ab74f6e07cd6'),
-	('2025-05-21 16:30:07.124225+00', 'Inactive', '7b65d5a1-8ee0-4b7a-816d-d3ec1ed123c5');
-
-
---
 -- Data for Name: WorkTrackers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -3013,7 +3012,8 @@ INSERT INTO "public"."WorkTrackers" ("created_at", "date", "pickup_time", "picku
 	('2026-01-02 19:07:49.067177+00', '2026-01-08', '-', '-', '9am', 'Justin (Br Driver)', 57242, 'taking 15 row to international center for set up. Justin will be the lead on this one. Hall 5, entrance is through the south door', NULL, '101b68aa-2c48-424b-983b-b2fbb00f2abb', 'a30c36fc-883f-49f1-882f-ee95d825dd25', 'a7a3468b-72c1-46b1-939a-8b2c4d9b65fb', '15db0a3a-f7dc-4039-828c-333c205b5166', '4cdd98be-fa43-4355-b67f-9f3cbd898ded', 'f2ba4af1-782f-4d68-bdc7-e3fbe477032c'),
 	('2026-01-02 19:08:52.607009+00', '2026-01-08', '-', '-', '9am', 'Justin (Br Driver)', 57242, 'Taking 15 row for set up at the Motorcross Event. Justin will be the lead. Please make sure bleacher is clean.', NULL, '7bdfb7a8-79b3-4ef8-8ca1-43acf97aad9f', '894922c1-cb00-485e-8d38-dd6d9da6edd4', '19b8a74c-9452-4245-b859-1e22ad04fd0c', '15db0a3a-f7dc-4039-828c-333c205b5166', '4cdd98be-fa43-4355-b67f-9f3cbd898ded', '408cd61d-75b4-4e87-a4e1-0205ebc34fe5'),
 	('2026-01-02 19:09:54.912986+00', '2026-01-08', '-', '-', '9am', 'Justin ( Br Driver)', 57242, NULL, '15 row set up @ International Center for Motorcross show. Justin will be the lead. Going into Hall 5, south door entrance.', '86e7fd62-7b67-4728-b754-64d8215c4a00', 'ab79bce2-e149-4adf-94bf-f31c3133097c', '67baa28d-b207-4f1a-a570-c683c751d59b', '51d5d980-56bd-4f07-a3a5-7b448668387f', '17dac0a8-3125-4d03-ac2b-0ed0798af461', '14a4167c-0c03-44bd-a1c1-266926f83aef'),
-	('2026-01-02 19:10:55.189988+00', '2026-01-08', '-', '-', '9am', 'Justin (BR Driver)', 57242, '15 row set up @ international center for Motorcross show. Justin will be the lead. Going into Hall 5, via the south entrance', NULL, 'e7283b7c-5045-4771-8a96-84049482e767', '8f78e73c-77a9-42ed-8fcc-f3952329dcd1', 'f68e3b15-dc65-44e9-8874-e000b3262c68', '51d5d980-56bd-4f07-a3a5-7b448668387f', '17dac0a8-3125-4d03-ac2b-0ed0798af461', 'b0a08224-578b-477f-8d3d-d0e259e08bd4');
+	('2026-01-02 19:10:55.189988+00', '2026-01-08', '-', '-', '9am', 'Justin (BR Driver)', 57242, '15 row set up @ international center for Motorcross show. Justin will be the lead. Going into Hall 5, via the south entrance', NULL, 'e7283b7c-5045-4771-8a96-84049482e767', '8f78e73c-77a9-42ed-8fcc-f3952329dcd1', 'f68e3b15-dc65-44e9-8874-e000b3262c68', '51d5d980-56bd-4f07-a3a5-7b448668387f', '17dac0a8-3125-4d03-ac2b-0ed0798af461', 'b0a08224-578b-477f-8d3d-d0e259e08bd4'),
+	('2026-01-14 15:51:06.218649+00', '2026-01-14', '9am', 'pickup poc', '3pm', 'dropoff poc', 18695, 'Testing Notes', 'Internal Notes', '51314c5d-ffb8-44b5-89b8-acc1141d9e49', '24e4ca19-21fd-48fd-9f17-9c1cf44e0144', '35360ffe-98a3-4949-9f5b-0b2d621a9069', 'd4124aec-47af-4187-8ab0-e4e102a1c436', NULL, '629fb316-081c-4c1a-a498-4ecc287ba767');
 
 
 --
@@ -3100,6 +3100,6 @@ SELECT pg_catalog.setval('"supabase_functions"."hooks_id_seq"', 1, false);
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict xq23WcklPlMpODsQrcZXhf6caYahj6Jh0QxEKqDQJ2f4lm5gbHflP3JlWxsBIBW
+-- \unrestrict nrZY4OlOXiYLVsAOS7S02zA9s9iVH4ElEtT5VJ0lzmDbDrRkXPm0Ni8F8a5ueNF
 
 RESET ALL;
