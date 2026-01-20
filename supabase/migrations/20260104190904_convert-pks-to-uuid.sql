@@ -952,7 +952,16 @@ alter table "public"."UserStatuses" rename column id to user_status_id;
 alter table "public"."UserStatuses" add column if not exists id uuid;
 
 -- 2) backfill uuid ids
-update "public"."UserStatuses" set id = gen_random_uuid() where id is null;
+-- update "public"."UserStatuses" set id = gen_random_uuid() where id is null;
+update "public"."UserStatuses"
+set id = case
+  when user_status_id = 1 then '75dfeb9e-6c28-4839-a91c-a7333b0921c6'::uuid -- invited
+  when user_status_id = 2 then '5d314da7-0a1e-4294-b012-ab74f6e07cd6'::uuid -- active
+  when user_status_id = 3 then '7b65d5a1-8ee0-4b7a-816d-d3ec1ed123c5'::uuid -- inactive
+  else id
+end
+where id is null;
+
 
 -- 3) set "id" not null, with default
 alter table "public"."UserStatuses" alter column id set not null, alter column id set default gen_random_uuid();
