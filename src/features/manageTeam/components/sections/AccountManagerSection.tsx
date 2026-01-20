@@ -84,6 +84,7 @@ export function AccountManagerSection() {
                 placeholder="Select Summer Bleachers"
                 season="summer"
                 currentUserUuid={existingUserUuid}
+                testId="manage-team-summer-bleachers"
               />
             </div>
           </div>
@@ -110,6 +111,7 @@ export function AccountManagerSection() {
                 placeholder="Select Winter Bleachers"
                 season="winter"
                 currentUserUuid={existingUserUuid}
+                testId="manage-team-winter-bleachers"
               />
             </div>
           </div>

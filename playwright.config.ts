@@ -44,9 +44,9 @@ export default defineConfig({
     process.env.E2E_START_WEB === "false"
       ? undefined
       : {
-          command: "npm run dev:e2e",
+          command: "npm run dev",
           url: baseURL,
           reuseExistingServer: !process.env.CI,
-          timeout: 120_000,
+          timeout: 30_000,
         },
 });

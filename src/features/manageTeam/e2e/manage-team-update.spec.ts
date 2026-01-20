@@ -52,13 +52,13 @@ test.describe("Manage Team updates", () => {
       await page.getByRole("button", { name: "Make Account Manager" }).click();
 
       // Summer
-      await page.getByRole("combobox", { name: "Select Summer Bleachers" }).click();
+      await page.getByTestId("manage-team-summer-bleachers").click();
       await page.getByPlaceholder("Search bleacher number...").fill(String(summerBleacher.bleacher_number));
       await page.getByRole("button", { name: new RegExp(`#${summerBleacher.bleacher_number}\\b`) }).click();
       await page.keyboard.press("Escape");
 
       // Winter
-      await page.getByRole("combobox", { name: "Select Winter Bleachers" }).click();
+      await page.getByTestId("manage-team-winter-bleachers").click();
       await page.getByPlaceholder("Search bleacher number...").fill(String(winterBleacher.bleacher_number));
       await page.getByRole("button", { name: new RegExp(`#${winterBleacher.bleacher_number}\\b`) }).click();
       await page.keyboard.press("Escape");

@@ -123,8 +123,16 @@ test.describe("Manage Team DB + UI", () => {
     const email = makeE2EEmail("e2e-am");
 
     // Pick bleachers that are currently unassigned so we don't fight seed data.
-    const [summerBleacher] = await pickUnassignedBleachers({ supabase, season: "summer", limit: 1 });
-    const [winterBleacher] = await pickUnassignedBleachers({ supabase, season: "winter", limit: 1 });
+    const [summerBleacher] = await pickUnassignedBleachers({
+      supabase,
+      season: "summer",
+      limit: 1,
+    });
+    const [winterBleacher] = await pickUnassignedBleachers({
+      supabase,
+      season: "winter",
+      limit: 1,
+    });
 
     test.skip(!summerBleacher || !winterBleacher, "No unassigned bleachers available to test with");
 
@@ -138,16 +146,24 @@ test.describe("Manage Team DB + UI", () => {
 
       await page.getByRole("button", { name: "Make Account Manager" }).click();
 
-      // Summer bleachers: open the combobox, search, select
-      await page.getByRole("combobox", { name: "Select Summer Bleachers" }).click();
-      await page.getByPlaceholder("Search bleacher number...").fill(String(summerBleacher.bleacher_number));
-      await page.getByRole("button", { name: new RegExp(`#${summerBleacher.bleacher_number}\\b`) }).click();
+      // Summer bleachers: open the popover trigger, search, select
+      await page.getByTestId("manage-team-summer-bleachers").click();
+      await page
+        .getByPlaceholder("Search bleacher number...")
+        .fill(String(summerBleacher.bleacher_number));
+      await page
+        .getByRole("button", { name: new RegExp(`#${summerBleacher.bleacher_number}\\b`) })
+        .click();
       await page.keyboard.press("Escape");
 
       // Winter bleachers
-      await page.getByRole("combobox", { name: "Select Winter Bleachers" }).click();
-      await page.getByPlaceholder("Search bleacher number...").fill(String(winterBleacher.bleacher_number));
-      await page.getByRole("button", { name: new RegExp(`#${winterBleacher.bleacher_number}\\b`) }).click();
+      await page.getByTestId("manage-team-winter-bleachers").click();
+      await page
+        .getByPlaceholder("Search bleacher number...")
+        .fill(String(winterBleacher.bleacher_number));
+      await page
+        .getByRole("button", { name: new RegExp(`#${winterBleacher.bleacher_number}\\b`) })
+        .click();
       await page.keyboard.press("Escape");
 
       await page.getByRole("button", { name: "Send Invite" }).click();
@@ -160,7 +176,10 @@ test.describe("Manage Team DB + UI", () => {
       expect(am?.is_active).toBe(true);
 
       // Verify bleachers updated to point at AccountManagers.id (not Users.id)
-      const bleachers = await getBleachersByIds({ supabase, ids: [summerBleacher.id, winterBleacher.id] });
+      const bleachers = await getBleachersByIds({
+        supabase,
+        ids: [summerBleacher.id, winterBleacher.id],
+      });
 
       const summerRow = bleachers.find((b) => b.id === summerBleacher.id);
       const winterRow = bleachers.find((b) => b.id === winterBleacher.id);
@@ -171,7 +190,7 @@ test.describe("Manage Team DB + UI", () => {
       // UI: Account Managers tab shows new manager
       await page.getByRole("button", { name: "Account Managers" }).click();
       await page.getByPlaceholder("Search by name or email...").fill(email);
-      await expect(page.getByText(email)).toBeVisible({ timeout: 90_000 });
+      await expect(page.getByText(email)).toBeVisible({ timeout: 10_000 });
       await expect(page.getByText("Pending")).toBeVisible();
       await expect(page.getByText("No drivers")).toBeVisible();
     } finally {

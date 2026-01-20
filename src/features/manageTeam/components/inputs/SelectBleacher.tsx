@@ -21,6 +21,7 @@ type SelectBleacherProps = {
   placeholder?: string;
   season: "summer" | "winter";
   currentUserUuid?: string | null;
+  testId?: string;
 };
 
 export function SelectBleacher({
@@ -29,6 +30,7 @@ export function SelectBleacher({
   placeholder = "Select Bleachers...",
   season,
   currentUserUuid,
+  testId,
 }: SelectBleacherProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -72,6 +74,7 @@ export function SelectBleacher({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          data-testid={testId}
           className="w-full justify-between text-left font-normal h-auto min-h-[40px] py-2"
         >
           {selectedCount > 0 ? (
