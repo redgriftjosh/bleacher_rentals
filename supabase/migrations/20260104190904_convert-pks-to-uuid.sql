@@ -1,3 +1,6 @@
+drop trigger if exists sync_worktracker_user_driver_trigger on public."WorkTrackers";
+drop function if exists public.sync_worktracker_user_driver();
+
 -- ===============================================================================
 --                                   AccountManagers
 -- ===============================================================================
@@ -1041,9 +1044,6 @@ update "public"."WorkTrackers" ref set user_uuid = curr.id from "public"."Users"
 update "public"."Drivers" ref set user_uuid = curr.id from "public"."Users" curr where ref.user_id is not null and ref.user_id = curr.user_id;
 update "public"."Tasks" ref set created_by_user_uuid = curr.id from "public"."Users" curr where ref.created_by_user_id is not null and ref.created_by_user_id = curr.user_id;
 update "public"."AccountManagers" ref set user_uuid = curr.id from "public"."Users" curr where ref.user_id is not null and ref.user_id = curr.user_id;
-
-drop trigger if exists sync_worktracker_user_driver_trigger on public."WorkTrackers";
-drop function if exists public.sync_worktracker_user_driver();
 
 -- 7) add sql from 6) to end of seed.sql, run supabase db reset, then supabase db dump --local --data-only -f supabase/seed.sql
 
