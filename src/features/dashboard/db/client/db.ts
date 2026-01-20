@@ -1,10 +1,5 @@
 import { useBleachersStore } from "@/state/bleachersStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
-import {
-  calculateEventAlerts,
-  calculateNumDays,
-  checkEventFormRules,
-} from "../../../oldDashboard/functions";
 import { toast } from "sonner";
 import React from "react";
 import { createErrorToast, ErrorToast } from "@/components/toasts/ErrorToast";
@@ -20,12 +15,17 @@ import { useMemo } from "react";
 import { UserResource } from "@clerk/types";
 import { updateDataBase } from "@/app/actions/db.actions";
 import { useBlocksStore } from "@/state/blocksStore";
-import { EditBlock } from "../../../oldDashboard/_components/dashboard/MainScrollableGrid";
-import { SetupTeardownBlock } from "../../../oldDashboard/_components/dashboard/SetupTeardownBlockModal";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { useWorkTrackersStore } from "@/state/workTrackersStore";
-import { DashboardBleacher, DashboardBlock, DashboardEvent } from "../../types";
+import {
+  DashboardBleacher,
+  DashboardBlock,
+  DashboardEvent,
+  EditBlock,
+  SetupTeardownBlock,
+} from "../../types";
 import { Database, Tables, TablesInsert } from "../../../../../database.types";
+import { calculateEventAlerts, calculateNumDays, checkEventFormRules } from "../../functions";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.

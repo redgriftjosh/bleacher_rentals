@@ -111,8 +111,21 @@ const DriversCols = {
   is_active: column.integer,
   account_manager_uuid: column.text,
   user_uuid: column.text,
+  phone_number: column.text,
+  address_uuid: column.text,
+  license_photo_path: column.text,
+  insurance_photo_path: column.text,
+  medical_card_photo_path: column.text,
+  vehicle_uuid: column.text,
 } satisfies PowerSyncColsFor<"Drivers">;
-const Drivers = new Table(DriversCols, { indexes: { user_uuid: ["user_uuid"] } });
+const Drivers = new Table(DriversCols, {
+  indexes: {
+    account_manager_uuid: ["account_manager_uuid"],
+    user_uuid: ["user_uuid"],
+    address_uuid: ["address_uuid"],
+    vehicle_uuid: ["vehicle_uuid"],
+  },
+});
 
 const UsersCols = {
   first_name: column.text,
@@ -143,9 +156,25 @@ const WorkTrackersCols = {
   bleacher_uuid: column.text,
   driver_uuid: column.text,
   user_uuid: column.text,
+  status: column.text,
+  released_at: column.text,
+  accepted_at: column.text,
+  started_at: column.text,
+  completed_at: column.text,
+  updated_at: column.text,
+  pre_inspection_uuid: column.text,
+  post_inspection_uuid: column.text,
 } satisfies PowerSyncColsFor<"WorkTrackers">;
 const WorkTrackers = new Table(WorkTrackersCols, {
-  indexes: { user_uuid: ["user_uuid"], driver_uuid: ["driver_uuid"] },
+  indexes: {
+    pickup_address_uuid: ["pickup_address_uuid"],
+    dropoff_address_uuid: ["dropoff_address_uuid"],
+    bleacher_uuid: ["bleacher_uuid"],
+    driver_uuid: ["driver_uuid"],
+    user_uuid: ["user_uuid"],
+    pre_inspection_uuid: ["pre_inspection_uuid"],
+    post_inspection_uuid: ["post_inspection_uuid"],
+  },
 });
 
 const BleacherUsersCols = {

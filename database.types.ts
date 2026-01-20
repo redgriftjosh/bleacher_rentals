@@ -264,36 +264,54 @@ export type Database = {
       Drivers: {
         Row: {
           account_manager_uuid: string | null
+          address_uuid: string | null
           created_at: string
           id: string
+          insurance_photo_path: string | null
           is_active: boolean
+          license_photo_path: string | null
+          medical_card_photo_path: string | null
           pay_currency: string
           pay_per_unit: string
           pay_rate_cents: number
+          phone_number: string | null
           tax: number
           user_uuid: string | null
+          vehicle_uuid: string | null
         }
         Insert: {
           account_manager_uuid?: string | null
+          address_uuid?: string | null
           created_at?: string
           id?: string
+          insurance_photo_path?: string | null
           is_active?: boolean
+          license_photo_path?: string | null
+          medical_card_photo_path?: string | null
           pay_currency?: string
           pay_per_unit?: string
           pay_rate_cents?: number
+          phone_number?: string | null
           tax?: number
           user_uuid?: string | null
+          vehicle_uuid?: string | null
         }
         Update: {
           account_manager_uuid?: string | null
+          address_uuid?: string | null
           created_at?: string
           id?: string
+          insurance_photo_path?: string | null
           is_active?: boolean
+          license_photo_path?: string | null
+          medical_card_photo_path?: string | null
           pay_currency?: string
           pay_per_unit?: string
           pay_rate_cents?: number
+          phone_number?: string | null
           tax?: number
           user_uuid?: string | null
+          vehicle_uuid?: string | null
         }
         Relationships: [
           {
@@ -304,10 +322,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "Drivers_address_uuid_fkey"
+            columns: ["address_uuid"]
+            isOneToOne: false
+            referencedRelation: "Addresses"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "Drivers_user_uuid_fkey"
             columns: ["user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Drivers_vehicle_uuid_fkey"
+            columns: ["vehicle_uuid"]
+            isOneToOne: false
+            referencedRelation: "Vehicles"
             referencedColumns: ["id"]
           },
         ]
@@ -410,6 +442,38 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      InspectionPhotos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          inspection_uuid: string
+          storage_path: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          inspection_uuid: string
+          storage_path: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          inspection_uuid?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "InspectionPhotos_inspection_uuid_fkey"
+            columns: ["inspection_uuid"]
+            isOneToOne: false
+            referencedRelation: "WorkTrackerInspections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       Tasks: {
         Row: {
@@ -624,9 +688,62 @@ export type Database = {
         }
         Relationships: []
       }
+      Vehicles: {
+        Row: {
+          created_at: string
+          id: string
+          make: string
+          model: string
+          vin_number: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          make: string
+          model: string
+          vin_number?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          make?: string
+          model?: string
+          vin_number?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
+      WorkTrackerInspections: {
+        Row: {
+          created_at: string
+          id: string
+          issue_description: string | null
+          issues_found: boolean
+          walk_around_complete: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          issue_description?: string | null
+          issues_found?: boolean
+          walk_around_complete?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          issue_description?: string | null
+          issues_found?: boolean
+          walk_around_complete?: boolean
+        }
+        Relationships: []
+      }
       WorkTrackers: {
         Row: {
+          accepted_at: string | null
           bleacher_uuid: string | null
+          completed_at: string | null
           created_at: string
           date: string | null
           driver_uuid: string | null
@@ -640,10 +757,18 @@ export type Database = {
           pickup_address_uuid: string | null
           pickup_poc: string | null
           pickup_time: string | null
+          post_inspection_uuid: string | null
+          pre_inspection_uuid: string | null
+          released_at: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["worktracker_status"]
+          updated_at: string
           user_uuid: string | null
         }
         Insert: {
+          accepted_at?: string | null
           bleacher_uuid?: string | null
+          completed_at?: string | null
           created_at?: string
           date?: string | null
           driver_uuid?: string | null
@@ -657,10 +782,18 @@ export type Database = {
           pickup_address_uuid?: string | null
           pickup_poc?: string | null
           pickup_time?: string | null
+          post_inspection_uuid?: string | null
+          pre_inspection_uuid?: string | null
+          released_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["worktracker_status"]
+          updated_at?: string
           user_uuid?: string | null
         }
         Update: {
+          accepted_at?: string | null
           bleacher_uuid?: string | null
+          completed_at?: string | null
           created_at?: string
           date?: string | null
           driver_uuid?: string | null
@@ -674,6 +807,12 @@ export type Database = {
           pickup_address_uuid?: string | null
           pickup_poc?: string | null
           pickup_time?: string | null
+          post_inspection_uuid?: string | null
+          pre_inspection_uuid?: string | null
+          released_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["worktracker_status"]
+          updated_at?: string
           user_uuid?: string | null
         }
         Relationships: [
@@ -706,6 +845,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "WorkTrackers_post_inspection_uuid_fkey"
+            columns: ["post_inspection_uuid"]
+            isOneToOne: false
+            referencedRelation: "WorkTrackerInspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "WorkTrackers_pre_inspection_uuid_fkey"
+            columns: ["pre_inspection_uuid"]
+            isOneToOne: false
+            referencedRelation: "WorkTrackerInspections"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "WorkTrackers_user_uuid_fkey"
             columns: ["user_uuid"]
             isOneToOne: false
@@ -722,7 +875,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      worktracker_status:
+        | "draft"
+        | "released"
+        | "accepted"
+        | "dest_pickup"
+        | "pickup_inspection"
+        | "dest_dropoff"
+        | "dropoff_inspection"
+        | "completed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -849,7 +1011,19 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      worktracker_status: [
+        "draft",
+        "released",
+        "accepted",
+        "dest_pickup",
+        "pickup_inspection",
+        "dest_dropoff",
+        "dropoff_inspection",
+        "completed",
+        "cancelled",
+      ],
+    },
   },
 } as const
 

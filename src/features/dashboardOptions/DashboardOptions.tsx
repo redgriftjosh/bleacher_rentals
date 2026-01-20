@@ -19,9 +19,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { MultiSelect } from "@/components/MultiSelect";
 import { useFilterDashboardStore, YAxis } from "./useFilterDashboardStore";
 import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEventStore";
-import { getRowOptions, getStateProvOptions } from "../oldDashboard/functions";
 import { getHomeBaseOptions } from "@/utils/utils";
 import { useCurrentEventStore as useTestDashboardStore } from "@/features/dashboard/state/useTestDashboardStore";
+import { getRowOptions, getStateProvOptions } from "../dashboard/functions";
 
 export function DashboardOptions() {
   // Stores
@@ -133,14 +133,14 @@ export function DashboardOptions() {
             >
               Only Show My Events
             </MenubarCheckboxItem>
-            <MenubarSeparator />
+            {/* <MenubarSeparator />
             <MenubarItem
               inset
               // when clicked go to /old-dashboard
               onClick={() => (window.location.href = "/old-dashboard")}
             >
               Old Dashboard
-            </MenubarItem>
+            </MenubarItem> */}
           </MenubarContent>
         </MenubarMenu>
       </Menubar>

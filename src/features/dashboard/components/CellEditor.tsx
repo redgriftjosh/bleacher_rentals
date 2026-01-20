@@ -94,7 +94,9 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       id: workTrackerUuid ?? "-1",
       bleacher_uuid: bleacherUuid,
       created_at: "",
+      updated_at: "",
       date: date,
+      status: "draft",
       dropoff_address_uuid: null,
       dropoff_poc: null,
       dropoff_time: null,
@@ -106,6 +108,12 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       user_uuid: null,
       internal_notes: null,
       driver_uuid: null,
+      accepted_at: null,
+      released_at: null,
+      started_at: null,
+      completed_at: null,
+      post_inspection_uuid: null,
+      pre_inspection_uuid: null,
     };
 
     onWorkTrackerOpen?.(workTracker);

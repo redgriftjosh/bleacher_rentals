@@ -10,8 +10,6 @@ import {
 import { AddressData } from "../../eventConfiguration/state/useCurrentEventStore";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchWorkTrackerByUuid } from "../../oldDashboard/db/setupTeardownBlock/fetchWorkTracker";
-import { EditBlock } from "../../oldDashboard/_components/dashboard/MainScrollableGrid";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";
 import { fetchBleachersForOptions, fetchDriverPaymentData } from "@/app/team/_lib/db";
@@ -20,6 +18,8 @@ import RouteMapPreview from "./RouteMapPreview";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { getDriversWithUsers } from "../db/getDrivers.db";
 import WorkTrackerStatusBadge from "./WorkTrackerStatusBadge";
+import { EditBlock } from "@/features/dashboard/types";
+import { fetchWorkTrackerByUuid } from "@/features/dashboard/db/client/fetchWorkTracker";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;

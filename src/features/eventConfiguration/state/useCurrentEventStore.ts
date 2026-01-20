@@ -2,8 +2,8 @@
 
 import { create } from "zustand";
 import { useEventsStore } from "@/state/eventsStore";
-import { calculateBestHue, updateCurrentEventAlerts } from "../../oldDashboard/functions";
 import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
+import { calculateBestHue, updateCurrentEventAlerts } from "@/features/dashboard/functions";
 
 export type AddressData = {
   addressUuid: string | null;

@@ -1,14 +1,11 @@
 import { CurrentEventStore } from "../../../eventConfiguration/state/useCurrentEventStore";
 import { UserResource } from "@clerk/types";
-import { checkEventFormRules } from "../../../oldDashboard/functions";
-import { toast } from "sonner";
-import { createErrorToast, ErrorToast } from "@/components/toasts/ErrorToast";
-import React from "react";
+import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { updateDataBase } from "@/app/actions/db.actions";
-import { createSuccessToast, SuccessToast } from "@/components/toasts/SuccessToast";
+import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { Database, Tables, TablesInsert } from "../../../../../database.types";
+import { checkEventFormRules } from "../../functions";
 
 export async function updateEvent(
   state: CurrentEventStore,

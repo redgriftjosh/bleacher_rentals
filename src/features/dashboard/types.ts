@@ -1,5 +1,22 @@
 import { AddressData } from "../eventConfiguration/state/useCurrentEventStore";
 
+export type EditBlock = {
+  key: string;
+  blockUuid: string | null;
+  bleacherUuid: string;
+  date: string;
+  text: string;
+  workTrackerUuid: string | null;
+};
+
+export type SetupTeardownBlock = {
+  bleacherEventUuid: string;
+  bleacherUuid: string;
+  text: string;
+  confirmed: boolean;
+  type: "setup" | "teardown";
+};
+
 export type Bleacher = {
   bleacherUuid: string;
   bleacherNumber: number;
