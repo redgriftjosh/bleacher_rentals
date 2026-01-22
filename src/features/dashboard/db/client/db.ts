@@ -335,6 +335,7 @@ export async function saveWorkTracker(
         bleacher_uuid: workTracker.bleacher_uuid,
         internal_notes: workTracker.internal_notes,
         driver_uuid: workTracker.driver_uuid,
+        status: workTracker.status,
       })
       .eq("id", workTracker.id);
 
@@ -357,6 +358,7 @@ export async function saveWorkTracker(
         bleacher_uuid: workTracker.bleacher_uuid,
         internal_notes: workTracker.internal_notes,
         driver_uuid: workTracker.driver_uuid,
+        status: workTracker.status,
       })
       .select("id")
       .single();
