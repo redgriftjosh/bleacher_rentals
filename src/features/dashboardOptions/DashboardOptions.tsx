@@ -195,9 +195,9 @@ export function DashboardOptions() {
             <DialogTitle>Rows</DialogTitle>
           </DialogHeader>
           <MultiSelect
-            options={rowOptions.map((value) => ({
-              value: value.toString(),
-              label: value.label,
+            options={rowOptions.map((o) => ({
+              value: String(o.value),
+              label: o.label,
             }))}
             onValueChange={(value) => {
                 const nextRows = value.map(Number);
@@ -220,9 +220,9 @@ export function DashboardOptions() {
             <DialogTitle>States & Provinces</DialogTitle>
           </DialogHeader>
           <MultiSelect
-            options={stateProvOptions.map((value) => ({
-              value: value.toString(),
-              label: value.label,
+            options={stateProvOptions.map((o) => ({
+              value: String(o.value),
+              label: o.label,
             }))}
             onValueChange={(value) => void setField("stateProvinces", value.map(Number))}
             forceSelectedValues={stateProvinces.map(String)}
