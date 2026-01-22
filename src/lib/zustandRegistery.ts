@@ -25,6 +25,7 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   Bleachers: () => useBleachersStore.getState().setStale(true),
   Blocks: () => useBlocksStore.getState().setStale(true),
   Drivers: () => useDriversStore.getState().setStale(true),
+  DashboardFilterSettings: () => {},
   Events: () => useEventsStore.getState().setStale(true),
   Tasks: () => useTasksStore.getState().setStale(true),
   TaskStatuses: () => useTaskStatusesStore.getState().setStale(true),

@@ -2,6 +2,7 @@ import { column, Schema, Table } from "@powersync/web";
 import { PowerSyncColsFor } from "./types";
 
 export const ACCOUNT_MANAGERS_TABLE = "AccountManagers";
+export const DASHBOARD_FILTER_SETTINGS_TABLE = "DashboardFilterSettings";
 export const DRIVERS_TABLE = "Drivers";
 export const USERS_TABLE = "Users";
 export const WORK_TRACKERS_TABLE = "WorkTrackers";
@@ -127,6 +128,28 @@ const Drivers = new Table(DriversCols, {
   },
 });
 
+const DashboardFilterSettingsCols = {
+  created_at: column.text,
+  updated_at: column.text,
+  user_uuid: column.text,
+  y_axis: column.text,
+  summer_home_base_uuids: column.text,
+  winter_home_base_uuids: column.text,
+  rows: column.text,
+  state_provinces: column.text,
+  only_show_my_events: column.integer,
+  optimization_mode: column.integer,
+  season: column.text,
+  account_manager_uuid: column.text,
+  rows_quick_filter: column.integer,
+} satisfies PowerSyncColsFor<"DashboardFilterSettings">;
+const DashboardFilterSettings = new Table(DashboardFilterSettingsCols, {
+  indexes: {
+    user_uuid: ["user_uuid"],
+    account_manager_uuid: ["account_manager_uuid"],
+  },
+});
+
 const UsersCols = {
   first_name: column.text,
   last_name: column.text,
@@ -190,6 +213,7 @@ const BleacherUsers = new Table(BleacherUsersCols, {
 export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
+  DashboardFilterSettings,
   Bleachers,
   BleacherEvents,
   BleacherUsers,
@@ -205,6 +229,7 @@ export type PowerSyncDB = (typeof AppSchema)["types"];
 export type BlocksRecord = PowerSyncDB["Blocks"];
 export type AddressRecord = PowerSyncDB["Addresses"];
 export type AccountManagerRecord = PowerSyncDB["AccountManagers"];
+export type DashboardFilterSettingsRecord = PowerSyncDB["DashboardFilterSettings"];
 export type DriverRecord = PowerSyncDB["Drivers"];
 export type UserRecord = PowerSyncDB["Users"];
 export type HomeBasesRecord = PowerSyncDB["HomeBases"];

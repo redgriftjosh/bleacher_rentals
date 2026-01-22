@@ -25,7 +25,7 @@ import { createEvent, deleteEvent } from "@/features/dashboard/db/client/db";
 import { updateEvent } from "@/features/dashboard/db/client/updateEvent";
 import { FetchDashboardBleachers } from "@/features/dashboard/db/client/bleachers";
 import { FetchDashboardEvents } from "@/features/dashboard/db/client/events";
-import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
+import { useDashboardFilterSettings } from "@/features/dashboardOptions/useDashboardFilterSettings";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
@@ -43,7 +43,8 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const supabase = useClerkSupabaseClient();
-  const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
+  const { state: dashboardFilters } = useDashboardFilterSettings();
+  const onlyShowMyEvents = dashboardFilters?.onlyShowMyEvents ?? true;
 
   // Refresh zustand stores directly without invalidating the page query
   const refreshDashboardStores = async () => {

@@ -344,6 +344,72 @@ export type Database = {
           },
         ]
       }
+      DashboardFilterSettings: {
+        Row: {
+          account_manager_uuid: string | null
+          created_at: string
+          id: string
+          optimization_mode: boolean
+          only_show_my_events: boolean
+          rows: string
+          rows_quick_filter: number | null
+          season: string | null
+          state_provinces: string
+          summer_home_base_uuids: string
+          updated_at: string
+          user_uuid: string
+          winter_home_base_uuids: string
+          y_axis: string
+        }
+        Insert: {
+          account_manager_uuid?: string | null
+          created_at?: string
+          id?: string
+          optimization_mode?: boolean
+          only_show_my_events?: boolean
+          rows?: string
+          rows_quick_filter?: number | null
+          season?: string | null
+          state_provinces?: string
+          summer_home_base_uuids?: string
+          updated_at?: string
+          user_uuid: string
+          winter_home_base_uuids?: string
+          y_axis?: string
+        }
+        Update: {
+          account_manager_uuid?: string | null
+          created_at?: string
+          id?: string
+          optimization_mode?: boolean
+          only_show_my_events?: boolean
+          rows?: string
+          rows_quick_filter?: number | null
+          season?: string | null
+          state_provinces?: string
+          summer_home_base_uuids?: string
+          updated_at?: string
+          user_uuid?: string
+          winter_home_base_uuids?: string
+          y_axis?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "DashboardFilterSettings_account_manager_uuid_fkey"
+            columns: ["account_manager_uuid"]
+            isOneToOne: false
+            referencedRelation: "AccountManagers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "DashboardFilterSettings_user_uuid_fkey"
+            columns: ["user_uuid"]
+            isOneToOne: true
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Events: {
         Row: {
           address_uuid: string | null

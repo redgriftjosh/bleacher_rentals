@@ -4,29 +4,28 @@ import { Application } from "pixi.js";
 import { useEffect, useRef } from "react";
 import { main } from "./main";
 import { Baker } from "./util/Baker";
-import { useFilterDashboardStore } from "../dashboardOptions/useFilterDashboardStore";
+import { useDashboardFilterSettings } from "../dashboardOptions/useDashboardFilterSettings";
 
-type Props = {
-  summerAssignedBleacherUuids?: string[];
-  winterAssignedBleacherUuids?: string[];
-};
-
-export default function DashboardApp({
-  summerAssignedBleacherUuids = [],
-  winterAssignedBleacherUuids = [],
-}: Props) {
+export default function DashboardApp() {
   const hostRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const dashboardRef = useRef<any>(null);
   const hostResizeObserverRef = useRef<ResizeObserver | null>(null);
   // No callback plumbing; click handling writes to a zustand store from inside Pixi
 
-  // Store assignment IDs into filter store for downstream filtering logic
+  const { state: dashboardFilters } = useDashboardFilterSettings();
+  const dashboardFiltersRef = useRef(dashboardFilters);
+
+  // Push filter changes into Pixi dashboard instance
   useEffect(() => {
-    const state = useFilterDashboardStore.getState();
-    state.setField("summerAssignedBleacherUuids", summerAssignedBleacherUuids);
-    state.setField("winterAssignedBleacherUuids", winterAssignedBleacherUuids);
-  }, [summerAssignedBleacherUuids, winterAssignedBleacherUuids]);
+    dashboardFiltersRef.current = dashboardFilters;
+
+    if (!dashboardFilters) return;
+    if (!dashboardRef.current) return;
+    try {
+      dashboardRef.current.setFilters(dashboardFilters);
+    } catch {}
+  }, [dashboardFilters]);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,7 +73,7 @@ export default function DashboardApp({
             return;
           }
 
-          const dashboard = main(app, {});
+          const dashboard = main(app, { filters: dashboardFiltersRef.current ?? undefined });
           dashboardRef.current = dashboard;
 
           // Observe host element size so CSS-driven changes (e.g., sliding panels)
