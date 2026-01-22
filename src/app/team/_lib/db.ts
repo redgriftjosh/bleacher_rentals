@@ -18,18 +18,20 @@ export async function fetchDriverTaxById(
     .from("Drivers")
     .select("tax")
     .eq("user_uuid", userUuid)
-    .single();
-  if (error && error.code === "PGRST116") {
-    const insertError = await insertDriver(userUuid, 0, 0, "CAD", "KM", supabase);
-    if (insertError) {
-      return 0;
-    }
-    return 0;
-  } else if (error) {
+    .maybeSingle();
+
+  if (error) {
     createErrorToastNoThrow(["Failed to fetch driver tax.", error.message]);
     return 0;
   }
-  return data?.tax ?? 0;
+
+  // `maybeSingle()` avoids the noisy 406 (PGRST116) when no rows.
+  if (!data) {
+    await ensureDriverExists(userUuid, 0, 0, "CAD", "KM", supabase);
+    return 0;
+  }
+
+  return data.tax ?? 0;
 }
 
 export type DriverPaymentData = {
@@ -51,27 +53,28 @@ export async function fetchDriverPaymentData(
     .from("Drivers")
     .select("tax, pay_rate_cents, pay_currency, pay_per_unit")
     .eq("user_uuid", userUuid)
-    .single();
-  if (error && error.code === "PGRST116") {
-    // No driver record exists, create one with defaults
-    const insertError = await insertDriver(userUuid, 0, 0, "CAD", "KM", supabase);
-    if (insertError) {
-      return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM" };
-    }
-    return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM" };
-  } else if (error) {
+    .maybeSingle();
+
+  if (error) {
     createErrorToastNoThrow(["Failed to fetch driver payment data.", error.message]);
     return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM" };
   }
+
+  // `maybeSingle()` avoids the noisy 406 (PGRST116) when no rows.
+  if (!data) {
+    await ensureDriverExists(userUuid, 0, 0, "CAD", "KM", supabase);
+    return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM" };
+  }
+
   return {
-    tax: data?.tax ?? 0,
-    payRateCents: data?.pay_rate_cents ?? 0,
-    payCurrency: (data?.pay_currency as "CAD" | "USD") ?? "CAD",
-    payPerUnit: (data?.pay_per_unit as "KM" | "MI" | "HR") ?? "KM",
+    tax: data.tax ?? 0,
+    payRateCents: data.pay_rate_cents ?? 0,
+    payCurrency: (data.pay_currency as "CAD" | "USD") ?? "CAD",
+    payPerUnit: (data.pay_per_unit as "KM" | "MI" | "HR") ?? "KM",
   };
 }
 
-async function insertDriver(
+async function ensureDriverExists(
   userUuid: string,
   tax: number,
   payRateCents: number,
@@ -79,17 +82,25 @@ async function insertDriver(
   payPerUnit: string,
   supabaseClient: SupabaseClient<Database>
 ) {
-  const { error } = await supabaseClient.from("Drivers").insert({
-    user_uuid: userUuid,
-    tax,
-    pay_rate_cents: payRateCents,
-    pay_currency: payCurrency,
-    pay_per_unit: payPerUnit,
-  });
+  // Use an upsert that *ignores* duplicates so we don't spam 409 conflicts.
+  // This also keeps behavior safe: if a real driver row exists, we don't overwrite it.
+  const { error } = await supabaseClient.from("Drivers").upsert(
+    {
+      user_uuid: userUuid,
+      tax,
+      pay_rate_cents: payRateCents,
+      pay_currency: payCurrency,
+      pay_per_unit: payPerUnit,
+    },
+    { onConflict: "user_uuid", ignoreDuplicates: true }
+  );
+
   if (error) {
-    createErrorToastNoThrow(["Failed to insert driver.", error.message]);
+    // Don't throw here; this runs in queryFns and we prefer returning defaults.
+    createErrorToastNoThrow(["Failed to ensure driver exists.", error.message]);
     return error;
   }
+
   return null;
 }
 

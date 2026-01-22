@@ -7,7 +7,7 @@ import { fetchAddressFromUuid } from "@/features/dashboard/db/client/db";
 
 export async function fetchDriverName(
   userUuid: string,
-  supabaseClient: SupabaseClient<Database>
+  supabaseClient: SupabaseClient<Database>,
 ): Promise<string> {
   const { data, error } = await supabaseClient
     .from("Users")
@@ -26,7 +26,7 @@ export async function fetchDriverName(
 
 export async function fetchUserByUuid(
   supabase: SupabaseClient<Database>,
-  userUuid: string
+  userUuid: string,
 ): Promise<string> {
   if (!supabase) {
     createErrorToast(["No supabase client found"]);
@@ -45,7 +45,7 @@ export async function fetchUserByUuid(
 }
 
 export async function fetchAllWorkTrackerWeeks(
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
 ): Promise<string[]> {
   if (!supabase) {
     createErrorToast(["No supabase client found"]);
@@ -80,7 +80,7 @@ export async function fetchDriversForWeek(
   supabase: SupabaseClient<Database>,
   startDate: string,
   showAllDrivers: boolean = false,
-  currentUserUuid?: string
+  currentUserUuid?: string,
 ): Promise<{
   drivers: (Tables<"Users"> & { tripCount: number })[] | null;
 }> {
@@ -98,7 +98,7 @@ export async function fetchDriversForWeek(
         `
         id,
         user:Users!Drivers_user_uuid_fkey(*)
-      `
+      `,
       )
       .eq("is_active", true);
 
@@ -160,7 +160,7 @@ export async function fetchDriversForWeek(
         `
         id,
         user:Users!Drivers_user_uuid_fkey(*)
-      `
+      `,
       )
       .eq("account_manager_uuid", accountManager.id)
       .eq("is_active", true);
@@ -205,7 +205,7 @@ export async function fetchDriversForWeek(
 
 export async function checkUserAccess(
   supabase: SupabaseClient<Database>,
-  userUuid: string
+  userUuid: string,
 ): Promise<{
   isAdmin: boolean;
   isAccountManager: boolean;
@@ -248,34 +248,38 @@ export type WorkTrackersResult = {
 
 async function fetchDriverTaxByUuidServer(
   userUuid: string,
-  supabaseClient: SupabaseClient<Database>
+  supabaseClient: SupabaseClient<Database>,
 ): Promise<number> {
   const { data, error } = await supabaseClient
     .from("Drivers")
     .select("tax")
     .eq("user_uuid", userUuid)
-    .single();
-  if (error && error.code === "PGRST116") {
-    const insertError = await insertDriverServer(userUuid, 0, supabaseClient);
-    if (insertError) {
-      return 0;
-    }
+    .maybeSingle();
+
+  if (!data) {
+    await insertDriverServer(userUuid, 0, supabaseClient);
     return 0;
   }
-  return data?.tax ?? 0;
+
+  if (error) return 0;
+  return data.tax ?? 0;
 }
 
 async function insertDriverServer(
   userUuid: string,
   tax: number,
-  supabaseClient: SupabaseClient<Database>
+  supabaseClient: SupabaseClient<Database>,
 ) {
-  const { error } = await supabaseClient.from("Drivers").insert({
-    user_uuid: userUuid,
-    tax,
-  });
+  const { error } = await supabaseClient.from("Drivers").upsert(
+    {
+      user_uuid: userUuid,
+      tax,
+    },
+    { onConflict: "user_uuid", ignoreDuplicates: true },
+  );
   if (error) {
-    throw error;
+    // Non-fatal here; this is a best-effort helper.
+    return error;
   }
   return null;
 }
@@ -284,7 +288,7 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
   supabase: SupabaseClient<Database>,
   userUuid: string,
   startDate: string,
-  isServer: boolean
+  isServer: boolean,
 ): Promise<WorkTrackersResult> {
   // console.log("supabaseClient", supabaseClient);
   if (!supabase && !isServer) {
@@ -303,7 +307,7 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
       createErrorToast(["Failed to fetch driver", driverError?.message || "Driver not found"]);
     } else {
       throw new Error(
-        ["Failed to fetch driver", driverError?.message || "Driver not found"].join("\n")
+        ["Failed to fetch driver", driverError?.message || "Driver not found"].join("\n"),
       );
     }
     return { workTrackers: [], driverTax: 0 };
@@ -328,7 +332,7 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
       `
       *,
       bleacher:Bleachers(bleacher_number)
-    `
+    `,
     )
     .eq("driver_uuid", driverUuid)
     .gte("date", startDate)
@@ -362,7 +366,7 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
         pickup_address: pickup,
         dropoff_address: dropoff,
       };
-    })
+    }),
   );
 
   const driverTax = await fetchDriverTaxByUuidServer(driverUuid, supabase);
