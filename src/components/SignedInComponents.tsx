@@ -9,6 +9,9 @@ import { LayoutProvider } from "@/contexts/LayoutContexts";
 import { DriverWelcome } from "./DriverWelcome";
 import { useUserAccess } from "@/features/userAccess/client";
 import LoadingSpinner from "./LoadingSpinner";
+import { CannotFindAccount } from "../features/userAccess/components/CannotFindAccount";
+import { NoRolesAssigned } from "../features/userAccess/components/NoRolesAssigned";
+import { AccountDeactivated } from "../features/userAccess/components/AccountDeactivated";
 
 export function SignedInComponents({ children }: { children: React.ReactNode }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -18,31 +21,27 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
   // Wait for both session and user to be loaded
   if (accessLevel === "loading") {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center justify-center min-h-screen text-center">
         <LoadingSpinner />
+        <div className="mt-6">
+          <SignOutButton>
+            <Button variant="outline">Log out</Button>
+          </SignOutButton>
+        </div>
       </div>
     );
   }
 
-  // Denied access (deactivated, no roles, or user not found)
-  if (accessLevel === "denied") {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen text-center bg-gray-100">
-        <h1 className="text-2xl font-semibold mb-4">
-          {reason === "Account deactivated"
-            ? "Your account has been deactivated."
-            : "Access Denied"}
-        </h1>
-        <p className="text-gray-600 mb-6">
-          {reason === "Account deactivated"
-            ? "Please contact support if you believe this is a mistake."
-            : "You do not have the necessary permissions to access this application."}
-        </p>
-        <SignOutButton>
-          <Button variant="destructive">Log out</Button>
-        </SignOutButton>
-      </div>
-    );
+  if (accessLevel === "cannot-find-account") {
+    return <CannotFindAccount />;
+  }
+
+  if (accessLevel === "account-deactivated") {
+    return <AccountDeactivated />;
+  }
+
+  if (accessLevel === "no-roles-assigned") {
+    return <NoRolesAssigned />;
   }
 
   // Driver-only access

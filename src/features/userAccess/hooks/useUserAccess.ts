@@ -20,9 +20,9 @@ export function useUserAccess(): {
   const clerkUserId = user?.id ?? null;
 
   // Build the SQL with Kysely (type-safe tables/columns)
-  const compiled = useMemo(() => {
-    if (!clerkUserId) return null;
+  const clerkUserIdForQuery = clerkUserId ?? "__no_clerk_user__";
 
+  const compiled = useMemo(() => {
     return db
       .selectFrom("Users as u")
       .leftJoin("AccountManagers as am", (join) =>
@@ -38,27 +38,43 @@ export function useUserAccess(): {
         "am.id as account_manager_id",
         "d.id as driver_id",
       ])
-      .where("u.clerk_user_id", "=", clerkUserId)
+      .where("u.clerk_user_id", "=", clerkUserIdForQuery)
       .limit(1)
       .compile();
-  }, [clerkUserId]);
+  }, [clerkUserIdForQuery]);
 
-  if (!compiled) {
+  const { data, isLoading, error } = useTypedQuery(compiled, expect<UserAccessData>());
+
+  // Premise: user is signed in. If Clerk hasn't hydrated yet, show loading.
+  if (!clerkUserId) {
     return {
       accessLevel: "loading",
       reason: "Loading user data...",
     };
   }
 
-  const { data } = useTypedQuery(compiled, expect<UserAccessData>());
-
-  const result = data?.[0];
-
-  // Return early if data hasn't loaded yet
-  if (!result) {
+  // Per request: loading should only be shown if queries are `isLoading`.
+  if (isLoading) {
     return {
       accessLevel: "loading",
       reason: "Loading user data...",
+    };
+  }
+
+  if (error) {
+    return {
+      accessLevel: "cannot-find-account",
+      reason: "Failed to load user access. Please contact support.",
+    };
+  }
+
+  const result = data?.[0] ?? null;
+
+  // Query completed but found no user row
+  if (!result) {
+    return {
+      accessLevel: "cannot-find-account",
+      reason: "User not found (no Users row for this Clerk user)",
     };
   }
 

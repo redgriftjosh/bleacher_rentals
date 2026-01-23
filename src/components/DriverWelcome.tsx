@@ -65,7 +65,7 @@ export function DriverWelcome() {
         {/* Support */}
         <p className="text-sm text-gray-500 mt-6">
           Need help?{" "}
-          <a href="mailto:support@bleacherrentals.com" className="text-greenAccent hover:underline">
+          <a href="mailto:josh@bleacherrentals.com" className="text-greenAccent hover:underline">
             Contact Support
           </a>
         </p>
