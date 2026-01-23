@@ -2,6 +2,7 @@
 import { useUser } from "@clerk/nextjs";
 import { AccessLevel, determineUserAccess } from "../logic/determineAccess";
 import { useMemo } from "react";
+import { usePowerSync } from "@powersync/react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import type { UserAccessData } from "../types";
@@ -16,6 +17,7 @@ export function useUserAccess(): {
   accessLevel: AccessLevel;
   reason?: string;
 } {
+  const powerSync = usePowerSync();
   const { user } = useUser();
   const clerkUserId = user?.id ?? null;
 
@@ -26,10 +28,10 @@ export function useUserAccess(): {
     return db
       .selectFrom("Users as u")
       .leftJoin("AccountManagers as am", (join) =>
-        join.onRef("am.user_uuid", "=", "u.id").on("am.is_active", "=", 1)
+        join.onRef("am.user_uuid", "=", "u.id").on("am.is_active", "=", 1),
       )
       .leftJoin("Drivers as d", (join) =>
-        join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1)
+        join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1),
       )
       .select([
         "u.id as id",
@@ -44,6 +46,31 @@ export function useUserAccess(): {
   }, [clerkUserIdForQuery]);
 
   const { data, isLoading, error } = useTypedQuery(compiled, expect<UserAccessData>());
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log("User Access Data:", JSON.stringify(data, null, 2));
+    console.log("User Access Query Error:", error);
+    console.log("User Access Query Loading:", isLoading);
+
+    const hasSynced = powerSync.currentStatus?.hasSynced === true;
+    const downloading = powerSync.currentStatus?.dataFlowStatus?.downloading === true;
+    const downloadError = powerSync.currentStatus?.dataFlowStatus?.downloadError;
+
+    console.log("[PowerSync] status", {
+      hasSynced,
+      downloading,
+      downloadError: downloadError?.message,
+    });
+
+    // Your requested checks as a single warning when not satisfied.
+    if (!hasSynced || downloading || downloadError) {
+      console.warn("[PowerSync] Not fully synced yet", {
+        hasSynced,
+        downloading,
+        downloadError: downloadError?.message,
+      });
+    }
+  }
 
   // Premise: user is signed in. If Clerk hasn't hydrated yet, show loading.
   if (!clerkUserId) {

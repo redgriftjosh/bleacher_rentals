@@ -6,12 +6,12 @@ import { SignOutButton, useSession, useUser } from "@clerk/nextjs";
 import { Button } from "./ui/button";
 import { useRef } from "react";
 import { LayoutProvider } from "@/contexts/LayoutContexts";
-import { DriverWelcome } from "./DriverWelcome";
 import { useUserAccess } from "@/features/userAccess/client";
 import LoadingSpinner from "./LoadingSpinner";
 import { CannotFindAccount } from "../features/userAccess/components/CannotFindAccount";
 import { NoRolesAssigned } from "../features/userAccess/components/NoRolesAssigned";
 import { AccountDeactivated } from "../features/userAccess/components/AccountDeactivated";
+import { DriverWelcome } from "@/features/userAccess/components/DriverWelcome";
 
 export function SignedInComponents({ children }: { children: React.ReactNode }) {
   const scrollRef = useRef<HTMLDivElement>(null);
