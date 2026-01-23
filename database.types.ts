@@ -261,6 +261,72 @@ export type Database = {
           },
         ]
       }
+      DashboardFilterSettings: {
+        Row: {
+          account_manager_uuid: string | null
+          created_at: string
+          id: string
+          only_show_my_events: boolean
+          optimization_mode: boolean
+          rows: string
+          rows_quick_filter: number | null
+          season: string | null
+          state_provinces: string
+          summer_home_base_uuids: string
+          updated_at: string
+          user_uuid: string
+          winter_home_base_uuids: string
+          y_axis: string
+        }
+        Insert: {
+          account_manager_uuid?: string | null
+          created_at?: string
+          id?: string
+          only_show_my_events?: boolean
+          optimization_mode?: boolean
+          rows?: string
+          rows_quick_filter?: number | null
+          season?: string | null
+          state_provinces?: string
+          summer_home_base_uuids?: string
+          updated_at?: string
+          user_uuid: string
+          winter_home_base_uuids?: string
+          y_axis?: string
+        }
+        Update: {
+          account_manager_uuid?: string | null
+          created_at?: string
+          id?: string
+          only_show_my_events?: boolean
+          optimization_mode?: boolean
+          rows?: string
+          rows_quick_filter?: number | null
+          season?: string | null
+          state_provinces?: string
+          summer_home_base_uuids?: string
+          updated_at?: string
+          user_uuid?: string
+          winter_home_base_uuids?: string
+          y_axis?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "DashboardFilterSettings_account_manager_uuid_fkey"
+            columns: ["account_manager_uuid"]
+            isOneToOne: false
+            referencedRelation: "AccountManagers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "DashboardFilterSettings_user_uuid_fkey"
+            columns: ["user_uuid"]
+            isOneToOne: true
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Drivers: {
         Row: {
           account_manager_uuid: string | null
@@ -340,72 +406,6 @@ export type Database = {
             columns: ["vehicle_uuid"]
             isOneToOne: false
             referencedRelation: "Vehicles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      DashboardFilterSettings: {
-        Row: {
-          account_manager_uuid: string | null
-          created_at: string
-          id: string
-          optimization_mode: boolean
-          only_show_my_events: boolean
-          rows: string
-          rows_quick_filter: number | null
-          season: string | null
-          state_provinces: string
-          summer_home_base_uuids: string
-          updated_at: string
-          user_uuid: string
-          winter_home_base_uuids: string
-          y_axis: string
-        }
-        Insert: {
-          account_manager_uuid?: string | null
-          created_at?: string
-          id?: string
-          optimization_mode?: boolean
-          only_show_my_events?: boolean
-          rows?: string
-          rows_quick_filter?: number | null
-          season?: string | null
-          state_provinces?: string
-          summer_home_base_uuids?: string
-          updated_at?: string
-          user_uuid: string
-          winter_home_base_uuids?: string
-          y_axis?: string
-        }
-        Update: {
-          account_manager_uuid?: string | null
-          created_at?: string
-          id?: string
-          optimization_mode?: boolean
-          only_show_my_events?: boolean
-          rows?: string
-          rows_quick_filter?: number | null
-          season?: string | null
-          state_provinces?: string
-          summer_home_base_uuids?: string
-          updated_at?: string
-          user_uuid?: string
-          winter_home_base_uuids?: string
-          y_axis?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "DashboardFilterSettings_account_manager_uuid_fkey"
-            columns: ["account_manager_uuid"]
-            isOneToOne: false
-            referencedRelation: "AccountManagers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "DashboardFilterSettings_user_uuid_fkey"
-            columns: ["user_uuid"]
-            isOneToOne: true
-            referencedRelation: "Users"
             referencedColumns: ["id"]
           },
         ]
@@ -548,8 +548,8 @@ export type Database = {
           description: string
           id: string
           name: string
-          task_status_uuid: string | null
-          task_type_uuid: string | null
+          status: Database["public"]["Enums"]["task_status"] | null
+          type: Database["public"]["Enums"]["task_type"] | null
         }
         Insert: {
           created_at?: string
@@ -557,8 +557,8 @@ export type Database = {
           description: string
           id?: string
           name: string
-          task_status_uuid?: string | null
-          task_type_uuid?: string | null
+          status?: Database["public"]["Enums"]["task_status"] | null
+          type?: Database["public"]["Enums"]["task_type"] | null
         }
         Update: {
           created_at?: string
@@ -566,8 +566,8 @@ export type Database = {
           description?: string
           id?: string
           name?: string
-          task_status_uuid?: string | null
-          task_type_uuid?: string | null
+          status?: Database["public"]["Enums"]["task_status"] | null
+          type?: Database["public"]["Enums"]["task_type"] | null
         }
         Relationships: [
           {
@@ -577,60 +577,7 @@ export type Database = {
             referencedRelation: "Users"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "Tasks_task_status_uuid_fkey"
-            columns: ["task_status_uuid"]
-            isOneToOne: false
-            referencedRelation: "TaskStatuses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "Tasks_task_type_uuid_fkey"
-            columns: ["task_type_uuid"]
-            isOneToOne: false
-            referencedRelation: "TaskTypes"
-            referencedColumns: ["id"]
-          },
         ]
-      }
-      TaskStatuses: {
-        Row: {
-          created_at: string
-          hex: string
-          id: string
-          label: string
-        }
-        Insert: {
-          created_at?: string
-          hex: string
-          id?: string
-          label: string
-        }
-        Update: {
-          created_at?: string
-          hex?: string
-          id?: string
-          label?: string
-        }
-        Relationships: []
-      }
-      TaskTypes: {
-        Row: {
-          created_at: string
-          id: string
-          label: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          label: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          label?: string
-        }
-        Relationships: []
       }
       UserHomeBases: {
         Row: {
@@ -941,6 +888,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      task_status:
+        | "in_progress"
+        | "backlog"
+        | "complete"
+        | "approved"
+        | "in_staging"
+        | "paused"
+      task_type: "feature" | "bug"
       worktracker_status:
         | "draft"
         | "released"
@@ -1078,6 +1033,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      task_status: [
+        "in_progress",
+        "backlog",
+        "complete",
+        "approved",
+        "in_staging",
+        "paused",
+      ],
+      task_type: ["feature", "bug"],
       worktracker_status: [
         "draft",
         "released",

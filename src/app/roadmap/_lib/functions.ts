@@ -1,37 +1,17 @@
-import { UserResource } from "@clerk/types";
-import { Database, Tables } from "../../../../database.types";
 import { TASK_ADMIN_IDS } from "./constants";
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { TaskType } from "./constants";
 
-export function findUserId(
-  clerkUser: UserResource | null,
-  allusers: Tables<"Users">[]
-): string | undefined {
-  return allusers.find((u) => u.clerk_user_id === clerkUser?.id)?.id;
-}
 
 export function checkInsertTaskFormRules(
   taskUuid: string | null,
   taskUserUuid: string | null,
   name: string | null,
   description: string | null,
-  typeUuid: string | null,
-  clerkUser: UserResource | null,
-  allusers: Tables<"Users">[],
-  supabase: SupabaseClient<Database>
+  type: TaskType | null,
+  userUuid: string | null
 ): string[] | null {
   // check if all required fields are filled in
   let errors = [];
-  if (!supabase) {
-    errors.push(
-      "Missing: Supabase Client. Please let Josh Redgrift (josh@tpi-3.ca) know you saw this message, refresh your page and try again."
-    );
-  }
-
-  if (!clerkUser) {
-    errors.push("Cannot Find Authenticated User!");
-  }
-  const userUuid = findUserId(clerkUser, allusers);
   if (!userUuid) {
     errors.push("Cannot Link Authenticated User To Database!");
   }
@@ -43,7 +23,7 @@ export function checkInsertTaskFormRules(
   if (!name || name === "") {
     errors.push("Missing: Name");
   }
-  if (!typeUuid) {
+  if (!type) {
     errors.push("Missing: Type");
   }
   if (name && name.length > 200) {
@@ -63,21 +43,10 @@ export function checkInsertTaskFormRules(
 export function checkDeleteTaskFormRules(
   taskUuid: string | null,
   taskUserUuid: string | null,
-  clerkUser: UserResource | null,
-  allusers: Tables<"Users">[],
-  supabase: SupabaseClient<Database>
+  userUuid: string | null
 ): string[] | null {
   // check if all required fields are filled in
   let errors = [];
-  if (!supabase) {
-    errors.push(
-      "Missing: Supabase Client. Please let Josh Redgrift (josh@tpi-3.ca) know you saw this message, refresh your page and try again."
-    );
-  }
-  if (!clerkUser) {
-    errors.push("Cannot Find Authenticated User!");
-  }
-  const userUuid = findUserId(clerkUser, allusers);
   if (!userUuid) {
     errors.push("Cannot Link Authenticated User To Database!");
   }

@@ -150,6 +150,22 @@ const DashboardFilterSettings = new Table(DashboardFilterSettingsCols, {
   },
 });
 
+const TasksCols = {
+  created_at: column.text,
+  name: column.text,
+  description: column.text,
+  type: column.text,
+  status: column.text,
+  created_by_user_uuid: column.text,
+} satisfies PowerSyncColsFor<"Tasks">;
+const Tasks = new Table(TasksCols, {
+  indexes: {
+    created_by_user_uuid: ["created_by_user_uuid"],
+    type: ["type"],
+    status: ["status"],
+  },
+});
+
 const UsersCols = {
   first_name: column.text,
   last_name: column.text,
@@ -214,6 +230,7 @@ export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
   DashboardFilterSettings,
+  Tasks,
   Bleachers,
   BleacherEvents,
   BleacherUsers,
@@ -230,6 +247,7 @@ export type BlocksRecord = PowerSyncDB["Blocks"];
 export type AddressRecord = PowerSyncDB["Addresses"];
 export type AccountManagerRecord = PowerSyncDB["AccountManagers"];
 export type DashboardFilterSettingsRecord = PowerSyncDB["DashboardFilterSettings"];
+export type TaskRecord = PowerSyncDB["Tasks"];
 export type DriverRecord = PowerSyncDB["Drivers"];
 export type UserRecord = PowerSyncDB["Users"];
 export type HomeBasesRecord = PowerSyncDB["HomeBases"];

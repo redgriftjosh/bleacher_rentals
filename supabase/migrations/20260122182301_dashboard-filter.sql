@@ -69,3 +69,71 @@ create policy "Allow All for Auth"
   for all
   to authenticated
   using (true);
+
+
+-- =============================================================================
+-- TaskTypes/TaskStatuses -> Postgres enum types (no backwards compatibility)
+-- =============================================================================
+
+-- Custom enum types (snake_case)
+do $$
+begin
+  if not exists (select 1 from pg_type where typname = 'task_type') then
+    create type public.task_type as enum ('feature', 'bug');
+  end if;
+
+  if not exists (select 1 from pg_type where typname = 'task_status') then
+    create type public.task_status as enum (
+      'in_progress',
+      'backlog',
+      'complete',
+      'approved',
+      'in_staging',
+      'paused'
+    );
+  end if;
+end $$;
+
+-- Add new columns
+alter table public."Tasks"
+  add column if not exists type public.task_type,
+  add column if not exists status public.task_status;
+
+-- Backfill from the existing lookup tables
+update public."Tasks" t
+set type = case tt.label
+  when 'Feature' then 'feature'::public.task_type
+  when 'Bug' then 'bug'::public.task_type
+  else null
+end
+from public."TaskTypes" tt
+where t.task_type_uuid = tt.id;
+
+update public."Tasks" t
+set status = case ts.label
+  when 'In Progress' then 'in_progress'::public.task_status
+  when 'Backlog' then 'backlog'::public.task_status
+  when 'Complete' then 'complete'::public.task_status
+  when 'Approved' then 'approved'::public.task_status
+  when 'In Staging' then 'in_staging'::public.task_status
+  when 'Paused' then 'paused'::public.task_status
+  else null
+end
+from public."TaskStatuses" ts
+where t.task_status_uuid = ts.id;
+
+-- Drop old FK constraints + indexes + columns
+alter table public."Tasks" drop constraint if exists "Tasks_task_status_uuid_fkey";
+alter table public."Tasks" drop constraint if exists "Tasks_task_type_uuid_fkey";
+
+drop index if exists public."Tasks_task_status_uuid_idx";
+drop index if exists public."Tasks_task_type_uuid_idx";
+
+alter table public."Tasks"
+  drop column if exists task_status_uuid,
+  drop column if exists task_type_uuid;
+
+-- Drop old lookup tables
+-- (Tasks no longer references them; you requested no backwards compatibility.)
+drop table if exists public."TaskStatuses";
+drop table if exists public."TaskTypes";
