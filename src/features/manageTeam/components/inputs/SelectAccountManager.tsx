@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { useAccountManagers } from "../../hooks/useAccountManagers";
 import { UserSmall } from "../util/UserSmall";
+import { STATUSES } from "../../constants";
 
 type SelectAccountManagerProps = {
   value: string | null;
@@ -29,6 +30,7 @@ export function SelectAccountManager({
 }: SelectAccountManagerProps) {
   const [open, setOpen] = useState(false);
   const accountManagers = useAccountManagers();
+  console.log("Account Managers:", JSON.stringify(accountManagers, null, 2));
 
   const selectedAccountManager = useMemo(() => {
     return accountManagers.find((am) => am.accountManagerUuid === value);
@@ -79,25 +81,27 @@ export function SelectAccountManager({
           <CommandList>
             <CommandEmpty>No account manager found.</CommandEmpty>
             <CommandGroup>
-              {accountManagers.map((am) => (
-                <CommandItem
-                  key={am.accountManagerUuid}
-                  value={`${am.firstName} ${am.lastName} ${am.email}`}
-                  onSelect={() => handleSelect(am.accountManagerUuid)}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === am.accountManagerUuid ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <UserSmall
-                    clerkUserId={am.clerkUserId}
-                    firstName={am.firstName}
-                    lastName={am.lastName}
-                  />
-                </CommandItem>
-              ))}
+              {accountManagers
+                .filter((am) => am.statusUuid === STATUSES.active)
+                .map((am) => (
+                  <CommandItem
+                    key={am.accountManagerUuid}
+                    value={`${am.firstName} ${am.lastName} ${am.email}`}
+                    onSelect={() => handleSelect(am.accountManagerUuid)}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === am.accountManagerUuid ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                    <UserSmall
+                      clerkUserId={am.clerkUserId}
+                      firstName={am.firstName}
+                      lastName={am.lastName}
+                    />
+                  </CommandItem>
+                ))}
             </CommandGroup>
           </CommandList>
         </Command>

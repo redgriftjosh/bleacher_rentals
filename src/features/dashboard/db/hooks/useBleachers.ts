@@ -10,6 +10,8 @@ type BleacherFlatRow = {
   bleacher_rows: number | null;
   bleacher_seats: number | null;
   linxup_device_id: string | null;
+  summer_account_manager_uuid: string | null;
+  winter_account_manager_uuid: string | null;
   booked: number | null;
   event_end: string | null;
   event_name: string | null;
@@ -56,6 +58,9 @@ function reshapeBleachers(rows: BleacherFlatRow[]): Bleacher[] {
         bleacherRows: r.bleacher_rows || 0,
         bleacherSeats: r.bleacher_seats || 0,
         linxupDeviceId: r.linxup_device_id,
+
+        summerAccountManagerUuid: r.summer_account_manager_uuid,
+        winterAccountManagerUuid: r.winter_account_manager_uuid,
 
         summerHomeBase: r.summer_home_base_uuid
           ? { homeBaseUuid: r.summer_home_base_uuid, name: r.summer_home_base_name ?? "" }
@@ -144,6 +149,8 @@ export function useBleachers() {
       "b.bleacher_rows",
       "b.bleacher_seats",
       "b.linxup_device_id",
+      "b.summer_account_manager_uuid",
+      "b.winter_account_manager_uuid",
 
       "summer_hb.id as summer_home_base_uuid",
       "summer_hb.home_base_name as summer_home_base_name",

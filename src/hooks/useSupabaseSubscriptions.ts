@@ -12,9 +12,6 @@ import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { useUserHomeBasesStore } from "@/state/userHomeBasesStore";
 import useSubToDbChanges from "./useSubscribeToDbChanges";
 import { useBlocksStore } from "@/state/blocksStore";
-import { useTasksStore } from "@/state/tasksStore";
-import { useTaskStatusesStore } from "@/state/taskStatusesStore";
-import { useTaskTypesStore } from "@/state/taskTypesStore";
 import { useWorkTrackersStore } from "@/state/workTrackersStore";
 
 // I made a video explaining this code
@@ -112,35 +109,6 @@ export default function useSupabaseSubscriptions() {
     // subscriptionId,
   });
 
-  const tasksStore = useTasksStore();
-  useSetupTable({
-    tableName: "Tasks",
-    // channelName: "tasks-channel",
-    setStore: tasksStore.setTasks,
-    stale: tasksStore.stale,
-    setStale: tasksStore.setStale,
-    // subscriptionId,
-  });
-
-  const taskStatusesStore = useTaskStatusesStore();
-  useSetupTable({
-    tableName: "TaskStatuses",
-    // channelName: "taskStatuses-channel",
-    setStore: taskStatusesStore.setTaskStatuses,
-    stale: taskStatusesStore.stale,
-    setStale: taskStatusesStore.setStale,
-    // subscriptionId,
-  });
-
-  const taskTypesStore = useTaskTypesStore();
-  useSetupTable({
-    tableName: "TaskTypes",
-    // channelName: "taskTypes-channel",
-    setStore: taskTypesStore.setTaskTypes,
-    stale: taskTypesStore.stale,
-    setStale: taskTypesStore.setStale,
-    // subscriptionId,
-  });
 
   const addressesStore = useAddressesStore();
   useSetupTable({

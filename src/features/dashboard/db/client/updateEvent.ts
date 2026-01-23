@@ -73,18 +73,26 @@ export async function updateEvent(
     createErrorToast(["Failed to update event.", eventError?.message ?? ""]);
   }
 
-  await updateBleacherEvents(state, supabase, bleacherEvents);
+  await updateBleacherEvents(state, supabase);
 
   createSuccessToast(["Event Updated"]);
   updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
 }
 
-async function updateBleacherEvents(
-  state: CurrentEventStore,
-  supabase: SupabaseClient<Database>,
-  bleacherEvents: Tables<"BleacherEvents">[]
-) {
-  const existingLinks = bleacherEvents.filter((be) => be.event_uuid === state.eventUuid);
+async function updateBleacherEvents(state: CurrentEventStore, supabase: SupabaseClient<Database>) {
+  // IMPORTANT: Don't rely on the in-memory `bleacherEvents` store here.
+  // That store is populated via a background fetch that can be briefly empty or stale
+  // (e.g. during navigation/session refresh), which makes updates "hit or miss".
+  // Always diff against the source of truth.
+  const { data: existingLinks, error: existingError } = await supabase
+    .from("BleacherEvents")
+    .select("bleacher_uuid")
+    .eq("event_uuid", state.eventUuid!);
+
+  if (existingError) {
+    createErrorToast(["Failed to load existing bleacher links.", existingError?.message ?? ""]);
+    throw new Error(existingError?.message ?? "Failed to load existing bleacher links");
+  }
 
   const existingBleacherUuids = new Set(
     existingLinks?.map((b) => b.bleacher_uuid).filter((uuid): uuid is string => uuid !== null) ?? []
@@ -105,6 +113,7 @@ async function updateBleacherEvents(
 
     if (deleteError) {
       createErrorToast(["Failed to delete removed bleacher links.", deleteError?.message ?? ""]);
+      throw new Error(deleteError?.message ?? "Failed to delete removed bleacher links");
     }
   }
 
@@ -122,6 +131,7 @@ async function updateBleacherEvents(
 
     if (insertError) {
       createErrorToast(["Failed to insert new bleacher links.", insertError?.message ?? ""]);
+      throw new Error(insertError?.message ?? "Failed to insert new bleacher links");
     }
   }
 }

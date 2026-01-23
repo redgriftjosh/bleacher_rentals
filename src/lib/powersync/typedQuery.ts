@@ -31,3 +31,13 @@ export function typedGetAll<C extends CompiledQuery<any>, TExpected>(
 ) {
   return powerSyncDb.getAll<TExpected>(compiled.sql, compiled.parameters as any[]);
 }
+
+/**
+ * Execute a compiled Kysely query (INSERT/UPDATE/DELETE).
+ *
+ * Note: `execute()` returns a driver-specific result shape, so this helper
+ * focuses on making sure the SQL was built via the typed `db` instance.
+ */
+export function typedExecute(compiled: CompiledQuery<any>) {
+  return powerSyncDb.execute(compiled.sql, compiled.parameters as any[]);
+}

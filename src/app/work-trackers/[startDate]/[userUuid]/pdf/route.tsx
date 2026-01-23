@@ -14,7 +14,7 @@ export async function GET(
   request: Request,
   context: {
     params: Promise<{ userUuid: string; startDate: string }>;
-  }
+  },
 ) {
   const { userUuid, startDate } = await context.params;
   // const numericUserId = Number(userId);
@@ -37,7 +37,7 @@ export async function GET(
       workTrackers={data.workTrackers}
       header={{ dateRange, driverName: driverName }}
       financialTotals={financialTotals}
-    />
+    />,
   );
 
   return new NextResponse(stream as unknown as ReadableStream);

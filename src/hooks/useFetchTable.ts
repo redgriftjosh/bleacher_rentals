@@ -20,13 +20,17 @@ export function useFetchTable<T>({
   const supabaseClient = useClerkSupabaseClient();
   useEffect(() => {
     if (!stale) return;
+
     const run = async () => {
-      await fetchTableSetStoreAndCache(tableName, setStore, supabaseClient);
-      setStale(false);
+      const ok = await fetchTableSetStoreAndCache(tableName, setStore, supabaseClient);
+      // Only mark fresh if the fetch succeeded.
+      // If it failed (often due to auth/session not ready), keep `stale=true`
+      // so the effect can retry when the client/session changes.
+      if (ok) setStale(false);
     };
 
     run();
 
     return () => {};
-  }, [stale]);
+  }, [setStale, setStore, stale, supabaseClient, tableName]);
 }

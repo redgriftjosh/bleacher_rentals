@@ -3,18 +3,23 @@ import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Dropdown } from "@/components/DropDown";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import { useUsersStore } from "@/state/userStore";
 import React from "react";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { Tab, Task } from "../types";
-import { DEFAULT_STATUS, DEFAULT_TYPE, TASK_ADMIN_IDS } from "../constants";
-import { checkDeleteTaskFormRules, checkInsertTaskFormRules, findUserId } from "../functions";
+import {
+  DEFAULT_STATUS,
+  DEFAULT_TYPE,
+  TASK_ADMIN_IDS,
+  TASK_STATUS_OPTIONS,
+  TASK_TYPE_OPTIONS,
+  type TaskStatus,
+  type TaskType,
+} from "../constants";
+import { checkDeleteTaskFormRules, checkInsertTaskFormRules } from "../functions";
 import { deleteTask, saveTask } from "../db";
 import { Textarea } from "@/components/TextArea";
-import { useTaskTypesStore } from "@/state/taskTypesStore";
 import { useLayoutContext } from "@/contexts/LayoutContexts";
-import { useTaskStatusesStore } from "@/state/taskStatusesStore";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { useRoadmapCurrentUserUuid } from "../hooks/useRoadmapCurrentUserUuid";
 
 export function SheetAddFeature({
   isOpen,
@@ -30,30 +35,23 @@ export function SheetAddFeature({
   setSelectedTab: (tab: Tab) => void;
 }) {
   const { user, isLoaded } = useUser();
-  if (!isLoaded) return null;
   const { scrollRef } = useLayoutContext();
-  const users = useUsersStore((s) => s.users);
-  const taskTypes = useTaskTypesStore((s) => s.taskTypes);
-  const taskStatuses = useTaskStatusesStore((s) => s.taskStatuses);
-  const supabase = useClerkSupabaseClient();
+  const { userUuid, isLoading: isUserUuidLoading } = useRoadmapCurrentUserUuid();
 
   const [name, setName] = useState<string | null>(existingTask?.name ?? null);
   const [description, setDescription] = useState<string | null>(existingTask?.description ?? null);
-  const [typeUuid, setTypeUuid] = useState<string>(existingTask?.task_type.id ?? DEFAULT_TYPE);
-  const [statusUuid, setStatusUuid] = useState<string>(
-    existingTask?.task_status.id ?? DEFAULT_STATUS
-  );
+  const [type, setType] = useState<TaskType>(existingTask?.type ?? DEFAULT_TYPE);
+  const [status, setStatus] = useState<TaskStatus>(existingTask?.status ?? DEFAULT_STATUS);
+
   const [submitting, setSubmitting] = useState(false);
 
-  const userUuid = findUserId(user, users);
-
   const isSavable = existingTask
-    ? userUuid === existingTask.created_by_user.id || TASK_ADMIN_IDS.includes(userUuid ?? "-1")
+    ? userUuid === existingTask.created_by_user_uuid || TASK_ADMIN_IDS.includes(userUuid ?? "-1")
     : true;
 
   const isDeletable =
     !!existingTask &&
-    (userUuid === existingTask.created_by_user.id || TASK_ADMIN_IDS.includes(userUuid ?? "-1"));
+    (userUuid === existingTask.created_by_user_uuid || TASK_ADMIN_IDS.includes(userUuid ?? "-1"));
 
   const isEscalatable = TASK_ADMIN_IDS.includes(userUuid ?? "-1");
 
@@ -62,18 +60,18 @@ export function SheetAddFeature({
     if (!isOpen) {
       setName(null);
       setDescription(null);
-      setTypeUuid(DEFAULT_TYPE);
-      setStatusUuid(DEFAULT_STATUS);
+      setType(DEFAULT_TYPE);
+      setStatus(DEFAULT_STATUS);
       setExistingTask(null);
     }
-  }, [isOpen]);
+  }, [isOpen, setExistingTask]);
 
   useEffect(() => {
     if (existingTask) {
       setName(existingTask.name);
       setDescription(existingTask.description);
-      setTypeUuid(existingTask.task_type.id);
-      setStatusUuid(existingTask.task_status.id);
+      setType(existingTask.type ?? DEFAULT_TYPE);
+      setStatus(existingTask.status ?? DEFAULT_STATUS);
     }
   }, [existingTask]);
 
@@ -98,29 +96,32 @@ export function SheetAddFeature({
     setSubmitting(true);
     const errors = checkInsertTaskFormRules(
       existingTask?.id ?? null,
-      existingTask?.created_by_user.id ?? null,
+      existingTask?.created_by_user_uuid ?? null,
       name,
       description,
-      typeUuid,
-      user,
-      users,
-      supabase
+      type,
+      userUuid
     );
     if (errors) {
       setSubmitting(false);
       createErrorToast(errors);
     } else {
-      await saveTask(
-        existingTask?.id ?? null,
-        name!,
-        description!,
-        typeUuid!,
-        statusUuid!,
-        user,
-        users,
-        supabase,
-        setSubmitting
-      );
+      if (!userUuid) {
+        setSubmitting(false);
+        createErrorToast(["Cannot link authenticated user to database."]);
+        return;
+      }
+
+      await saveTask({
+        taskUuid: existingTask?.id ?? null,
+        name: name!,
+        description: description!,
+        type,
+        status,
+        createdByUserUuid: userUuid,
+      });
+      setSubmitting(false);
+
       setIsOpen(false);
     }
   };
@@ -130,19 +131,21 @@ export function SheetAddFeature({
     setSubmitting(true);
     const errors = checkDeleteTaskFormRules(
       existingTask?.id ?? null,
-      existingTask?.created_by_user.id ?? null,
-      user,
-      users,
-      supabase
+      existingTask?.created_by_user_uuid ?? null,
+      userUuid
     );
     if (errors) {
       setSubmitting(false);
       createErrorToast(errors);
     } else {
-      await deleteTask(existingTask?.id!, supabase, setSubmitting);
+      await deleteTask(existingTask?.id!);
+      setSubmitting(false);
       setIsOpen(false);
     }
   };
+
+  // Never early-return before hooks; gate rendering here instead.
+  if (!isLoaded || isUserUuidLoading) return null;
 
   return (
     <>
@@ -191,15 +194,12 @@ export function SheetAddFeature({
                     <label htmlFor="name">Type</label>
                   </div>
                   <div className="col-span-3">
-                    <Dropdown
-                      options={taskTypes.map((type) => ({
-                        label: type.label,
-                        value: type.id,
-                      }))}
-                      selected={typeUuid}
-                      onSelect={(id) => setTypeUuid(id)}
-                      placeholder="Select Task Type"
-                    />
+                      <Dropdown
+                        options={TASK_TYPE_OPTIONS}
+                        selected={type}
+                        onSelect={(value) => setType(value as TaskType)}
+                        placeholder="Select Task Type"
+                      />
                   </div>
                 </div>
               </div>
@@ -211,12 +211,9 @@ export function SheetAddFeature({
                     </div>
                     <div className="col-span-3">
                       <Dropdown
-                        options={taskStatuses.map((status) => ({
-                          label: status.label,
-                          value: status.id,
-                        }))}
-                        selected={statusUuid}
-                        onSelect={(id) => setStatusUuid(id)}
+                        options={TASK_STATUS_OPTIONS}
+                        selected={status}
+                        onSelect={(value) => setStatus(value as TaskStatus)}
                         placeholder="Select Status"
                       />
                     </div>

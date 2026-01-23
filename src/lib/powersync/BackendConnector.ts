@@ -46,7 +46,7 @@ export class BackendConnector implements PowerSyncBackendConnector {
     if (!res.ok) throw new Error(await res.text());
     const { endpoint, token } = await res.json();
 
-    console.debug("Fetched PowerSync credentials from Clerk");
+    // console.debug("Fetched PowerSync credentials from Clerk");
     // console.log(getJwtPayload(token));
 
     return {
@@ -87,7 +87,7 @@ export class BackendConnector implements PowerSyncBackendConnector {
         if (result.error) {
           console.error(result.error);
           result.error.message = `Could not ${op.op} data to Supabase error: ${JSON.stringify(
-            result
+            result,
           )}`;
           throw result.error;
         }
