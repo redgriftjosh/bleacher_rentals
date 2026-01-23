@@ -20,6 +20,7 @@ const getRandomLoadingMessage = () => {
     "Hold your horses...",
     "Here we go again...",
     "Generating PDF (reluctantly)...",
+    "On it boss!",
   ];
   return messages[Math.floor(Math.random() * messages.length)];
 };
@@ -52,7 +53,7 @@ export default function WorkTrackersForUserPage() {
 
     if (!res.ok) {
       setIsLoading(false);
-      createErrorToast(["Failed to download PDF", res.statusText]);
+      createErrorToast(["We Got a Problem, Boss...", "Failed to download PDF", res.statusText]);
     } else {
       setIsLoading(false);
       createSuccessToast(["PDF Downloaded"]);
