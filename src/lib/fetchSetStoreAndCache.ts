@@ -11,7 +11,7 @@
 export const fetchTableSetStoreAndCache = async <T>(
   tableName: string,
   setStore: (data: T[]) => void,
-  supabaseClient: any
+  supabaseClient: any,
 ): Promise<boolean> => {
   const STORAGE_KEY = `cached-${tableName}`;
   // console.log(`Token ${token}`);
@@ -23,7 +23,7 @@ export const fetchTableSetStoreAndCache = async <T>(
   // supabase.realtime.setAuth(token);
 
   const { data, error } = await supabaseClient.from(tableName).select("*");
-  console.log(`Fetched ${tableName}:`, data);
+  // console.log(`Fetched ${tableName}:`, data);
   if (tableName === "Blocks") {
     // console.log("Blocks data:", data);
   }
