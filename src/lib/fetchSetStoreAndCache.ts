@@ -11,8 +11,8 @@
 export const fetchTableSetStoreAndCache = async <T>(
   tableName: string,
   setStore: (data: T[]) => void,
-  supabaseClient: any
-) => {
+  supabaseClient: any,
+): Promise<boolean> => {
   const STORAGE_KEY = `cached-${tableName}`;
   // console.log(`Token ${token}`);
   // if (!token) return;
@@ -23,18 +23,21 @@ export const fetchTableSetStoreAndCache = async <T>(
   // supabase.realtime.setAuth(token);
 
   const { data, error } = await supabaseClient.from(tableName).select("*");
-  console.log(`Fetched ${tableName}:`, data);
+  // console.log(`Fetched ${tableName}:`, data);
   if (tableName === "Blocks") {
     // console.log("Blocks data:", data);
   }
 
   if (error) {
     console.error(`Failed to fetch ${tableName}:`, error);
-    return;
+    return false;
   }
 
   if (data) {
     setStore(data);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    return true;
   }
+
+  return false;
 };

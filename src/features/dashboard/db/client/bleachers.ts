@@ -13,6 +13,9 @@ type Row = {
   bleacher_seats: number;
   linxup_device_id: string | null;
 
+  summer_account_manager_uuid: string | null;
+  winter_account_manager_uuid: string | null;
+
   summer: { home_base_name: string; id: string } | null; // HomeBases.id (uuid)
   winter: { home_base_name: string; id: string } | null;
 
@@ -57,6 +60,8 @@ export async function FetchDashboardBleachers(
     bleacher_rows,
     bleacher_seats,
     linxup_device_id,
+    summer_account_manager_uuid,
+    winter_account_manager_uuid,
 
     summer:HomeBases!bleachers_summer_home_base_uuid_fkey(
       home_base_name,
@@ -108,6 +113,9 @@ export async function FetchDashboardBleachers(
     bleacherRows: r.bleacher_rows,
     bleacherSeats: r.bleacher_seats,
     linxupDeviceId: r.linxup_device_id,
+
+    summerAccountManagerUuid: r.summer_account_manager_uuid,
+    winterAccountManagerUuid: r.winter_account_manager_uuid,
 
     summerHomeBase: r.summer ? { name: r.summer.home_base_name, homeBaseUuid: r.summer.id } : null,
 

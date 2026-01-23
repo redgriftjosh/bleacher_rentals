@@ -1,6 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
-import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
 import { Database } from "../../../../../database.types";
 
 /**
@@ -76,13 +75,6 @@ export async function loadEventById(
     setField("hslHue", eventData.hsl_hue);
     setField("goodshuffleUrl", eventData.goodshuffle_url);
     setField("ownerUserUuid", eventData.created_by_user_uuid ?? null);
-    // Ensure the dashboard flips to Bleachers view and highlights selected bleachers
-    try {
-      const filterStore = useFilterDashboardStore.getState();
-      filterStore.setField("yAxis", "Bleachers");
-    } catch (error) {
-      console.error("Failed to set dashboard axis:", error);
-    }
   } catch (error) {
     console.error("Failed to load event:", error);
   }

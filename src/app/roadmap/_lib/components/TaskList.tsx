@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { getTasks } from "../db";
-import { Tab, Task } from "../types";
-import { useTasksStore } from "@/state/tasksStore";
+import { useRoadmapTasks } from "../hooks/useRoadmapTasks";
+import type { Tab, Task } from "../types";
 import { useLayoutContext } from "@/contexts/LayoutContexts";
-import { COLUMN_WIDTHS, TASK_TYPES } from "../constants";
+import { COLUMN_WIDTHS, TASK_STATUS_META } from "../constants";
 
 export default function TaskList({
   selectedTab,
@@ -16,24 +15,23 @@ export default function TaskList({
   setExistingTask: (tab: Task) => void;
   setIsOpen: (isOpen: boolean) => void;
 }) {
-  const tasks = getTasks(selectedTab);
+  const { tasks } = useRoadmapTasks(selectedTab);
   const { scrollRef } = useLayoutContext();
 
   // if you're in the backlog, scroll to the bottom when data changes
-  const stale = useTasksStore((s) => s.stale);
   useEffect(() => {
-    if (!stale && selectedTab === "backlog" && scrollRef?.current) {
-      setTimeout(() => {
-        if (scrollRef?.current) {
-          scrollRef.current.scrollTo({
-            top: scrollRef.current.scrollHeight,
-            behavior: "smooth",
-          });
-        }
-      }, 100);
-    }
-  }, [stale]);
+    if (selectedTab !== "backlog") return;
+    if (!scrollRef?.current) return;
 
+    setTimeout(() => {
+      if (scrollRef?.current) {
+        scrollRef.current.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
+  }, [scrollRef, selectedTab, tasks.length]);
   const handleClick = (task: Task) => {
     setExistingTask(task);
     setIsOpen(true);
@@ -60,20 +58,23 @@ export default function TaskList({
               {task.description}
             </div>
           </td>
-          <td
-            className={`py-1 px-3 text-left font-bold ${
-              TASK_TYPES.feature === task.task_type.id ? "text-blue-600" : "text-red-600"
-            }`}
-            style={{ width: `${COLUMN_WIDTHS.type}px` }}
-          >
-            {task.task_type.label}
-          </td>
-          <td
-            style={{ backgroundColor: task.task_status.hex, width: `${COLUMN_WIDTHS.status}px` }}
-            className="py-1 px-3 text-left"
-          >
-            {task.task_status.label}
-          </td>
+            <td
+              className={`py-1 px-3 text-left font-bold ${
+                task.type === "feature" ? "text-blue-600" : "text-red-600"
+              }`}
+              style={{ width: `${COLUMN_WIDTHS.type}px` }}
+            >
+              {task.type === "feature" ? "Feature" : "Bug"}
+            </td>
+            <td
+              style={{
+                backgroundColor: task.status ? TASK_STATUS_META[task.status].hex : "transparent",
+                width: `${COLUMN_WIDTHS.status}px`,
+              }}
+              className="py-1 px-3 text-left"
+            >
+              {task.status ? TASK_STATUS_META[task.status].label : ""}
+            </td>
         </tr>
       ))}
     </tbody>

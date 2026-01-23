@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { createServiceRoleClient } from "@/utils/supabase/server";
 import { updateDataBase } from "@/app/actions/db.actions";
+import { STATUSES } from "@/features/manageTeam/constants";
 
 export async function POST(req: Request) {
   try {
@@ -84,10 +85,10 @@ export async function POST(req: Request) {
           email: emailToUse,
           // email: email_addresses?.[0]?.email_address || null,
           phone: phone_numbers?.[0]?.phone_number || null,
-          status: 2,
+          status_uuid: STATUSES.active,
           // role: 1,
         },
-        { onConflict: "email" }
+        { onConflict: "email" },
       );
 
       if (result.error) {
@@ -124,7 +125,7 @@ export async function POST(req: Request) {
       const result = await supabase
         .from("Users")
         .update({
-          status: 3,
+          status_uuid: STATUSES.inactive,
         })
         .eq("clerk_user_id", id);
 

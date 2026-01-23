@@ -11,8 +11,7 @@ import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useW
 import { Tables } from "../../../database.types";
 import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
 // import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
-import { fetchUserBleacherAssignmentsForSeason } from "@/features/dashboard/db/client/accountManagerBleachers";
-import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
+import { useDashboardFilterSettings } from "@/features/dashboardOptions/useDashboardFilterSettings";
 import WorkTrackerModal from "@/features/workTrackers/components/WorkTrackerModal";
 import { DashboardOptions } from "@/features/dashboardOptions/DashboardOptions";
 import { SeasonToggle } from "@/features/dashboardOptions/SeasonToggle";
@@ -22,13 +21,13 @@ import BleacherLocationModal from "@/features/dashboard/components/BleacherLocat
 import { useBleacherLocationModalStore } from "@/features/dashboard/state/useBleacherLocationModalStore";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { supabaseClientRegistry } from "@/features/dashboard/util/supabaseClientRegistry";
-import { useBleachers } from "@/features/dashboard/db/hooks/useBleachers";
 
 export default function Page() {
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
     null
   );
-  const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
+  const { state: dashboardFilters } = useDashboardFilterSettings();
+  const onlyShowMyEvents = dashboardFilters?.onlyShowMyEvents ?? true;
   const refreshToken = useDataRefreshTokenStore((s) => s.token);
   const { isLoaded, userId } = useAuth();
   const supabase = useClerkSupabaseClient();
@@ -56,14 +55,9 @@ export default function Page() {
       // Fetch BleacherUsers assignments for the logged-in user
       // const supabase = await getSupabaseClient(token!);
 
-      const { summerAssignedBleacherUuids, winterAssignedBleacherUuids } =
-        await fetchUserBleacherAssignmentsForSeason(supabase, userId!);
-
       return {
         bleachers: b.bleachers,
         events: e.events,
-        summerAssignedBleacherUuids,
-        winterAssignedBleacherUuids,
       };
     },
   });
@@ -140,10 +134,7 @@ export default function Page() {
         <EventConfiguration showSetupTeardown={false} />
       </div>
       <div className="min-h-0 min-w-0 overflow-hidden">
-        <DashboardApp
-          summerAssignedBleacherUuids={data.summerAssignedBleacherUuids}
-          winterAssignedBleacherUuids={data.winterAssignedBleacherUuids}
-        />
+        <DashboardApp />
       </div>
     </div>
   );

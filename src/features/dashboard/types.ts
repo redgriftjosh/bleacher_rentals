@@ -28,6 +28,9 @@ export type Bleacher = {
   blocks: BleacherBlock[];
   workTrackers: BleacherWorkTracker[];
   linxupDeviceId: string | null;
+
+  summerAccountManagerUuid: string | null;
+  winterAccountManagerUuid: string | null;
 };
 
 export type BleacherEvent = {

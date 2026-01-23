@@ -4,13 +4,13 @@ import type { UserAccessData } from "../types";
 import { STATUSES } from "@/features/manageTeam/constants";
 
 describe("determineUserAccess", () => {
-  it("denies access when user data is null", () => {
+  it("cannot-find-account when user data is null", () => {
     const result = determineUserAccess(null);
-    expect(result.accessLevel).toBe("denied");
+    expect(result.accessLevel).toBe("cannot-find-account");
     expect(result.reason).toBe("User not found");
   });
 
-  it("denies access for deactivated users regardless of roles", () => {
+  it("account-deactivated regardless of roles", () => {
     const userData: UserAccessData = {
       id: "1",
       status_uuid: STATUSES.inactive,
@@ -20,8 +20,7 @@ describe("determineUserAccess", () => {
     };
 
     const result = determineUserAccess(userData);
-    expect(result.accessLevel).toBe("denied");
-    expect(result.reason).toBe("Account deactivated");
+    expect(result.accessLevel).toBe("account-deactivated");
   });
 
   it("grants full access to admins", () => {
@@ -63,7 +62,7 @@ describe("determineUserAccess", () => {
     expect(result.accessLevel).toBe("driver-only");
   });
 
-  it("denies access to users with no roles", () => {
+  it("no-roles-assigned when no roles", () => {
     const userData: UserAccessData = {
       id: "1",
       status_uuid: null,
@@ -73,7 +72,6 @@ describe("determineUserAccess", () => {
     };
 
     const result = determineUserAccess(userData);
-    expect(result.accessLevel).toBe("denied");
-    expect(result.reason).toBe("No active roles");
+    expect(result.accessLevel).toBe("no-roles-assigned");
   });
 });

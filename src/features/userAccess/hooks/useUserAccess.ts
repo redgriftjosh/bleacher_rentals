@@ -2,6 +2,7 @@
 import { useUser } from "@clerk/nextjs";
 import { AccessLevel, determineUserAccess } from "../logic/determineAccess";
 import { useMemo } from "react";
+import { usePowerSync } from "@powersync/react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import type { UserAccessData } from "../types";
@@ -16,20 +17,21 @@ export function useUserAccess(): {
   accessLevel: AccessLevel;
   reason?: string;
 } {
+  const powerSync = usePowerSync();
   const { user } = useUser();
   const clerkUserId = user?.id ?? null;
 
   // Build the SQL with Kysely (type-safe tables/columns)
-  const compiled = useMemo(() => {
-    if (!clerkUserId) return null;
+  const clerkUserIdForQuery = clerkUserId ?? "__no_clerk_user__";
 
+  const compiled = useMemo(() => {
     return db
       .selectFrom("Users as u")
       .leftJoin("AccountManagers as am", (join) =>
-        join.onRef("am.user_uuid", "=", "u.id").on("am.is_active", "=", 1)
+        join.onRef("am.user_uuid", "=", "u.id").on("am.is_active", "=", 1),
       )
       .leftJoin("Drivers as d", (join) =>
-        join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1)
+        join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1),
       )
       .select([
         "u.id as id",
@@ -38,27 +40,68 @@ export function useUserAccess(): {
         "am.id as account_manager_id",
         "d.id as driver_id",
       ])
-      .where("u.clerk_user_id", "=", clerkUserId)
+      .where("u.clerk_user_id", "=", clerkUserIdForQuery)
       .limit(1)
       .compile();
-  }, [clerkUserId]);
+  }, [clerkUserIdForQuery]);
 
-  if (!compiled) {
+  const { data, isLoading, error } = useTypedQuery(compiled, expect<UserAccessData>());
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log("User Access Data:", JSON.stringify(data, null, 2));
+    console.log("User Access Query Error:", error);
+    console.log("User Access Query Loading:", isLoading);
+
+    const hasSynced = powerSync.currentStatus?.hasSynced === true;
+    const downloading = powerSync.currentStatus?.dataFlowStatus?.downloading === true;
+    const downloadError = powerSync.currentStatus?.dataFlowStatus?.downloadError;
+
+    console.log("[PowerSync] status", {
+      hasSynced,
+      downloading,
+      downloadError: downloadError?.message,
+    });
+
+    // Your requested checks as a single warning when not satisfied.
+    if (!hasSynced || downloading || downloadError) {
+      console.warn("[PowerSync] Not fully synced yet", {
+        hasSynced,
+        downloading,
+        downloadError: downloadError?.message,
+      });
+    }
+  }
+
+  // Premise: user is signed in. If Clerk hasn't hydrated yet, show loading.
+  if (!clerkUserId) {
     return {
       accessLevel: "loading",
       reason: "Loading user data...",
     };
   }
 
-  const { data } = useTypedQuery(compiled, expect<UserAccessData>());
-
-  const result = data?.[0];
-
-  // Return early if data hasn't loaded yet
-  if (!result) {
+  // Per request: loading should only be shown if queries are `isLoading`.
+  if (isLoading) {
     return {
       accessLevel: "loading",
       reason: "Loading user data...",
+    };
+  }
+
+  if (error) {
+    return {
+      accessLevel: "cannot-find-account",
+      reason: "Failed to load user access. Please contact support.",
+    };
+  }
+
+  const result = data?.[0] ?? null;
+
+  // Query completed but found no user row
+  if (!result) {
+    return {
+      accessLevel: "cannot-find-account",
+      reason: "User not found (no Users row for this Clerk user)",
     };
   }
 
