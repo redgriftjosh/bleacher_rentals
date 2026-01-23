@@ -1,6 +1,6 @@
 import {
   fetchDriverName,
-  fetchWorkTrackersForUserIdAndStartDate,
+  fetchWorkTrackersForUserUuidAndStartDate,
 } from "@/features/workTrackers/db/db";
 import { headers } from "next/headers";
 import React from "react";
@@ -13,36 +13,31 @@ import { createServerSupabaseClient } from "@/utils/supabase/getClerkSupabaseSer
 export async function GET(
   request: Request,
   context: {
-    params: Promise<{ userId: string; startDate: string }>;
-  }
+    params: Promise<{ userUuid: string; startDate: string }>;
+  },
 ) {
-  const { userId, startDate } = await context.params;
-  const numericUserId = Number(userId);
+  const { userUuid, startDate } = await context.params;
+  // const numericUserId = Number(userId);
 
   const headerStore = headers();
   // const authHeader = (await headerStore).get("authorization");
 
   const supabase = createServerSupabaseClient();
-  const data = await fetchWorkTrackersForUserIdAndStartDate(
-    supabase,
-    numericUserId,
-    startDate,
-    true
-  );
+  const data = await fetchWorkTrackersForUserUuidAndStartDate(supabase, userUuid, startDate, true);
   const financialTotals = calculateFinancialTotals(data);
   //   console.log("subtotal", subtotal);
   //   console.log("tax", tax);
   //   console.log("total", total);
   console.log("financialTotals", financialTotals);
   const dateRange = getDateRange(startDate);
-  const driverName = await fetchDriverName(numericUserId, supabase);
+  const driverName = await fetchDriverName(userUuid, supabase);
 
   const stream = await renderToStream(
     <MyDocument
       workTrackers={data.workTrackers}
       header={{ dateRange, driverName: driverName }}
       financialTotals={financialTotals}
-    />
+    />,
   );
 
   return new NextResponse(stream as unknown as ReadableStream);

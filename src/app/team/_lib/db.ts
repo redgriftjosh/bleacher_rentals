@@ -1,13 +1,13 @@
 "use client";
 import { updateDataBase } from "@/app/actions/db.actions";
-import { STATUSES } from "./constants";
+import { STATUSES } from "../../../features/manageTeam/constants";
 import { createErrorToast, createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { Database } from "../../../../database.types";
 
 export async function fetchDriverTaxById(
-  userId: number,
+  userUuid: string,
   supabase: SupabaseClient<Database>
 ): Promise<number> {
   if (!supabase) {
@@ -17,19 +17,21 @@ export async function fetchDriverTaxById(
   const { data, error } = await supabase
     .from("Drivers")
     .select("tax")
-    .eq("user_id", userId)
-    .single();
-  if (error && error.code === "PGRST116") {
-    const insertError = await insertDriver(userId, 0, 0, "CAD", "KM", supabase);
-    if (insertError) {
-      return 0;
-    }
-    return 0;
-  } else if (error) {
+    .eq("user_uuid", userUuid)
+    .maybeSingle();
+
+  if (error) {
     createErrorToastNoThrow(["Failed to fetch driver tax.", error.message]);
     return 0;
   }
-  return data?.tax ?? 0;
+
+  // `maybeSingle()` avoids the noisy 406 (PGRST116) when no rows.
+  if (!data) {
+    await ensureDriverExists(userUuid, 0, 0, "CAD", "KM", supabase);
+    return 0;
+  }
+
+  return data.tax ?? 0;
 }
 
 export type DriverPaymentData = {
@@ -40,7 +42,7 @@ export type DriverPaymentData = {
 };
 
 export async function fetchDriverPaymentData(
-  userId: number,
+  userUuid: string,
   supabase: SupabaseClient<Database>
 ): Promise<DriverPaymentData> {
   if (!supabase) {
@@ -50,46 +52,55 @@ export async function fetchDriverPaymentData(
   const { data, error } = await supabase
     .from("Drivers")
     .select("tax, pay_rate_cents, pay_currency, pay_per_unit")
-    .eq("user_id", userId)
-    .single();
-  if (error && error.code === "PGRST116") {
-    // No driver record exists, create one with defaults
-    const insertError = await insertDriver(userId, 0, 0, "CAD", "KM", supabase);
-    if (insertError) {
-      return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM" };
-    }
-    return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM" };
-  } else if (error) {
+    .eq("user_uuid", userUuid)
+    .maybeSingle();
+
+  if (error) {
     createErrorToastNoThrow(["Failed to fetch driver payment data.", error.message]);
     return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM" };
   }
+
+  // `maybeSingle()` avoids the noisy 406 (PGRST116) when no rows.
+  if (!data) {
+    await ensureDriverExists(userUuid, 0, 0, "CAD", "KM", supabase);
+    return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM" };
+  }
+
   return {
-    tax: data?.tax ?? 0,
-    payRateCents: data?.pay_rate_cents ?? 0,
-    payCurrency: (data?.pay_currency as "CAD" | "USD") ?? "CAD",
-    payPerUnit: (data?.pay_per_unit as "KM" | "MI" | "HR") ?? "KM",
+    tax: data.tax ?? 0,
+    payRateCents: data.pay_rate_cents ?? 0,
+    payCurrency: (data.pay_currency as "CAD" | "USD") ?? "CAD",
+    payPerUnit: (data.pay_per_unit as "KM" | "MI" | "HR") ?? "KM",
   };
 }
 
-async function insertDriver(
-  userId: number,
+async function ensureDriverExists(
+  userUuid: string,
   tax: number,
   payRateCents: number,
   payCurrency: string,
   payPerUnit: string,
   supabaseClient: SupabaseClient<Database>
 ) {
-  const { error } = await supabaseClient.from("Drivers").insert({
-    user_id: userId,
-    tax,
-    pay_rate_cents: payRateCents,
-    pay_currency: payCurrency,
-    pay_per_unit: payPerUnit,
-  });
+  // Use an upsert that *ignores* duplicates so we don't spam 409 conflicts.
+  // This also keeps behavior safe: if a real driver row exists, we don't overwrite it.
+  const { error } = await supabaseClient.from("Drivers").upsert(
+    {
+      user_uuid: userUuid,
+      tax,
+      pay_rate_cents: payRateCents,
+      pay_currency: payCurrency,
+      pay_per_unit: payPerUnit,
+    },
+    { onConflict: "user_uuid", ignoreDuplicates: true }
+  );
+
   if (error) {
-    createErrorToastNoThrow(["Failed to insert driver.", error.message]);
+    // Don't throw here; this runs in queryFns and we prefer returning defaults.
+    createErrorToastNoThrow(["Failed to ensure driver exists.", error.message]);
     return error;
   }
+
   return null;
 }
 
@@ -101,7 +112,7 @@ export async function updateUserStatusToInvited(email: string, supabase: Supabas
   const { error } = await supabase
     .from("Users")
     .update({
-      status: STATUSES.invited,
+      status_uuid: STATUSES.invited,
     })
     .eq("email", email);
 
@@ -114,7 +125,7 @@ export async function updateUserStatusToInvited(email: string, supabase: Supabas
 
 // ------- BleacherUsers helpers -------
 
-export type SimpleOption = { id: number; label: string };
+export type SimpleOption = { uuid: string; label: string };
 
 export async function fetchBleachersForOptions(
   supabase: SupabaseClient<Database>
@@ -125,17 +136,17 @@ export async function fetchBleachersForOptions(
   // const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from("Bleachers")
-    .select("bleacher_id, bleacher_number")
+    .select("id, bleacher_number")
     .order("bleacher_number", { ascending: true });
   if (error) {
-    createErrorToastNoThrow(["Failed to fetch bleachers.", error.message]);
+    createErrorToastNoThrow(["Failed to fetch bleachers!", error.message]);
     return [];
   }
-  return (data ?? []).map((b: any) => ({ id: b.bleacher_id, label: String(b.bleacher_number) }));
+  return (data ?? []).map((b: any) => ({ uuid: b.id, label: String(b.bleacher_number) }));
 }
 
 export async function fetchUserBleacherAssignments(
-  userId: number,
+  userUuid: string,
   supabase: SupabaseClient<Database>
 ): Promise<{ summer: number[]; winter: number[] }> {
   if (!supabase) {
@@ -144,25 +155,25 @@ export async function fetchUserBleacherAssignments(
   // const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from("BleacherUsers")
-    .select("bleacher_id, season")
-    .eq("user_id", userId);
+    .select("bleacher_uuid, season")
+    .eq("user_uuid", userUuid);
   if (error) {
     createErrorToastNoThrow(["Failed to fetch bleacher assignments.", error.message]);
     return { summer: [], winter: [] };
   }
   const summer = (data ?? [])
     .filter((r: any) => r.season === "SUMMER")
-    .map((r: any) => r.bleacher_id);
+    .map((r: any) => r.bleacher_uuid);
   const winter = (data ?? [])
     .filter((r: any) => r.season === "WINTER")
-    .map((r: any) => r.bleacher_id);
+    .map((r: any) => r.bleacher_uuid);
   return { summer, winter };
 }
 
 export async function upsertUserBleacherAssignments(
-  userId: number,
-  summerIds: number[],
-  winterIds: number[],
+  userUuid: string,
+  summerUuids: string[],
+  winterUuids: string[],
   supabase: SupabaseClient<Database>
 ): Promise<void> {
   if (!supabase) {
@@ -171,15 +182,18 @@ export async function upsertUserBleacherAssignments(
   // const supabase = await getSupabaseClient(token);
 
   // Replace strategy: delete then insert
-  const { error: delError } = await supabase.from("BleacherUsers").delete().eq("user_id", userId);
+  const { error: delError } = await supabase
+    .from("BleacherUsers")
+    .delete()
+    .eq("user_uuid", userUuid);
   if (delError) {
     createErrorToastNoThrow(["Failed to clear previous assignments.", delError.message]);
     return;
   }
 
   const rows = [
-    ...summerIds.map((id) => ({ user_id: userId, bleacher_id: id, season: "SUMMER" })),
-    ...winterIds.map((id) => ({ user_id: userId, bleacher_id: id, season: "WINTER" })),
+    ...summerUuids.map((id) => ({ user_uuid: userUuid, bleacher_uuid: id, season: "SUMMER" })),
+    ...winterUuids.map((id) => ({ user_uuid: userUuid, bleacher_uuid: id, season: "WINTER" })),
   ];
   if (rows.length > 0) {
     const { error: insError } = await supabase.from("BleacherUsers").insert(rows);
@@ -190,32 +204,32 @@ export async function upsertUserBleacherAssignments(
   }
 }
 
-export async function deactivateUser(userId: number, supabase: SupabaseClient<Database>) {
+export async function deactivateUser(userUuid: string, supabase: SupabaseClient<Database>) {
   const { error: updateError } = await supabase
     .from("Users")
     .update({
-      status: 3,
+      status_uuid: STATUSES.inactive,
     })
-    .eq("user_id", userId);
+    .eq("id", userUuid);
 
   if (updateError) throw updateError;
   updateDataBase(["Users", "UserStatuses"]);
 }
 
-export async function reactivateUser(userId: number, supabase: SupabaseClient<Database>) {
+export async function reactivateUser(userUuid: string, supabase: SupabaseClient<Database>) {
   const { error: updateError } = await supabase
     .from("Users")
     .update({
-      status: 2,
+      status_uuid: STATUSES.active,
     })
-    .eq("user_id", userId);
+    .eq("id", userUuid);
 
   if (updateError) throw updateError;
   updateDataBase(["Users", "UserStatuses"]);
 }
 
-export async function deleteUser(userId: number, supabase: SupabaseClient<Database>) {
-  const { error: updateError } = await supabase.from("Users").delete().eq("user_id", userId);
+export async function deleteUser(userUuid: string, supabase: SupabaseClient<Database>) {
+  const { error: updateError } = await supabase.from("Users").delete().eq("id", userUuid);
 
   if (updateError) throw updateError;
   updateDataBase(["UserStatuses", "Users", "UserHomeBases"]);

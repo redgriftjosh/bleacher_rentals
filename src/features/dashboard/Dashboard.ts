@@ -17,7 +17,7 @@ import { getColumnsAndDates } from "./util/scrollbar";
 import { ResizeManager } from "./util/ResizeManager";
 import { useDashboardBleachersStore } from "./state/useDashboardBleachersStore";
 import { useDashboardEventsStore } from "./state/useDashboardEventsStore";
-import { useFilterDashboardStore } from "../dashboardOptions/useFilterDashboardStore";
+import type { DashboardFilterState } from "../dashboardOptions/types";
 import { filterEvents, filterSortPixiBleachers } from "../dashboardOptions/util";
 import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEventStore";
 
@@ -43,9 +43,10 @@ export class Dashboard {
   private app: Application;
 
   private yAxis: "Bleachers" | "Events";
+  private filters: DashboardFilterState;
+  private scheduleRecompute?: () => void;
   private unsubBleachers?: () => void;
   private unsubEvents?: () => void;
-  private unsubFilters?: () => void;
   private unsubCurrentEvent?: () => void;
   private bleachers: Bleacher[] = [];
   private events: DashboardEvent[] = [];
@@ -64,6 +65,7 @@ export class Dashboard {
     opts?: {
       initialScrollX?: number | null;
       initialScrollY?: number | null;
+      filters?: DashboardFilterState;
     }
   ) {
     this.app = app;
@@ -71,32 +73,47 @@ export class Dashboard {
     const { columns: contentColumns, dates } = getColumnsAndDates();
     this.dates = dates;
     this.contentColumns = contentColumns;
-    this.yAxis = useFilterDashboardStore.getState().yAxis;
+
+    this.filters =
+      opts?.filters ??
+      ({
+        yAxis: "Bleachers",
+        summerHomeBaseUuids: [],
+        winterHomeBaseUuids: [],
+        rows: [],
+        stateProvinces: [],
+        onlyShowMyEvents: true,
+        optimizationMode: false,
+        season: null,
+        accountManagerUuid: null,
+        rowsQuickFilter: null,
+      } satisfies DashboardFilterState);
+
+    this.yAxis = this.filters.yAxis;
 
     // Build initial filtered datasets
     const allBleachers = useDashboardBleachersStore.getState().data;
     const allEvents = useDashboardEventsStore.getState().data;
-    const filters = useFilterDashboardStore.getState();
     const currentEvent = useCurrentEventStore.getState();
-    const filteredBleachers = filterSortPixiBleachers(
-      filters.homeBaseIds,
-      filters.winterHomeBaseIds,
-      filters.rows,
-      allBleachers,
-      currentEvent.bleacherIds ?? [],
-      currentEvent.isFormExpanded,
-      filters.optimizationMode,
-      filters.season,
-      filters.summerAssignedBleacherIds ?? [],
-      filters.winterAssignedBleacherIds ?? []
-    );
+
+    const filteredBleachers = filterSortPixiBleachers(allBleachers, {
+      summerHomeBaseUuids: this.filters.summerHomeBaseUuids,
+      winterHomeBaseUuids: this.filters.winterHomeBaseUuids,
+      rows: this.filters.rows,
+      season: this.filters.season,
+      accountManagerUuid: this.filters.accountManagerUuid,
+      alwaysIncludeBleacherUuids: currentEvent.bleacherUuids ?? [],
+      isFormExpanded: currentEvent.isFormExpanded,
+      optimizationMode: this.filters.optimizationMode,
+    });
+
     const filteredEvents =
-      this.yAxis === "Events" && filters.stateProvinces.length > 0
-        ? filterEvents(allEvents, filters.stateProvinces)
+      this.yAxis === "Events" && this.filters.stateProvinces.length > 0
+        ? filterEvents(allEvents, this.filters.stateProvinces)
         : allEvents;
+
     this.bleachers = filteredBleachers;
     this.events = filteredEvents;
-    // this.recompute();
 
     this.initGrids(opts);
 
@@ -110,14 +127,14 @@ export class Dashboard {
     this.resizeManager.start();
 
     // Unified recompute method
-    const computeSpanSignatures = (bleachers: Bleacher[]): Map<number, string> => {
-      const map = new Map<number, string>();
+    const computeSpanSignatures = (bleachers: Bleacher[]): Map<string, string> => {
+      const map = new Map<string, string>();
       for (const b of bleachers) {
         const sig = (b.bleacherEvents || [])
-          .map((ev: any) => `${ev.eventId}:${ev.eventStart}:${ev.eventEnd}`)
+          .map((ev: any) => `${ev.eventUuid}:${ev.eventStart}:${ev.eventEnd}`)
           .sort()
           .join("|");
-        map.set(b.bleacherId, sig);
+        map.set(b.bleacherUuid, sig);
       }
       return map;
     };
@@ -137,8 +154,9 @@ export class Dashboard {
     // not important until we want to compare with previous state to conditionally re-render things.
     // this.spanSignaturesByBleacherId = computeSpanSignatures(this.bleachers);
 
+    this.scheduleRecompute = scheduleRecompute;
+
     // Subscribe once and coalesce recomputes
-    this.unsubFilters = useFilterDashboardStore.subscribe(() => scheduleRecompute());
     this.unsubCurrentEvent = useCurrentEventStore.subscribe(() => scheduleRecompute());
     this.unsubEvents = useDashboardEventsStore.subscribe(() => scheduleRecompute());
     this.unsubBleachers = useDashboardBleachersStore.subscribe(() => scheduleRecompute());
@@ -155,28 +173,24 @@ export class Dashboard {
    * Unified recompute: reads all stores, computes filtered data, and applies minimal updates
    */
   private recompute() {
-    const filters = useFilterDashboardStore.getState();
-    const prevYAxis = this.yAxis;
+    const filters = this.filters;
     this.yAxis = filters.yAxis;
 
     const allBleachers = useDashboardBleachersStore.getState().data;
     const allEvents = useDashboardEventsStore.getState().data;
     const currentEvent = useCurrentEventStore.getState();
 
-    const filteredBleachers = filterSortPixiBleachers(
-      filters.homeBaseIds,
-      filters.winterHomeBaseIds,
-      filters.rows,
-      allBleachers,
-      currentEvent.bleacherIds ?? [],
-      currentEvent.isFormExpanded,
-      filters.optimizationMode,
-      filters.season,
-      filters.summerAssignedBleacherIds ?? [],
-      filters.winterAssignedBleacherIds ?? []
-    );
-    console.log("filteredBleachers: ", filteredBleachers);
-    console.log("filters.optimizationMode: ", filters.optimizationMode);
+    const filteredBleachers = filterSortPixiBleachers(allBleachers, {
+      summerHomeBaseUuids: filters.summerHomeBaseUuids,
+      winterHomeBaseUuids: filters.winterHomeBaseUuids,
+      rows: filters.rows,
+      season: filters.season,
+      accountManagerUuid: filters.accountManagerUuid,
+      alwaysIncludeBleacherUuids: currentEvent.bleacherUuids ?? [],
+      isFormExpanded: currentEvent.isFormExpanded,
+      optimizationMode: filters.optimizationMode,
+    });
+
     const filteredEvents =
       this.yAxis === "Events" && filters.stateProvinces.length > 0
         ? filterEvents(allEvents, filters.stateProvinces)
@@ -186,6 +200,11 @@ export class Dashboard {
     this.bleachers = filteredBleachers;
     this.events = filteredEvents;
     this.rebuildGrids(); // rebuild grids no matter what for now. Removes any animations for displaying new components.
+  }
+
+  public setFilters(filters: DashboardFilterState) {
+    this.filters = filters;
+    this.scheduleRecompute?.();
   }
 
   /**
@@ -496,9 +515,6 @@ export class Dashboard {
     } catch {}
     try {
       this.unsubEvents?.();
-    } catch {}
-    try {
-      this.unsubFilters?.();
     } catch {}
     this.cellEditor.destroy();
     this.stickyTopLeftCell.destroy();

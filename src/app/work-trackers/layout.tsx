@@ -2,25 +2,25 @@
 import { Color } from "@/types/Color";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { fetchUserById } from "../../features/workTrackers/db/db";
+import { fetchUserByUuid } from "../../features/workTrackers/db/db";
 import { DateTime } from "luxon";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export default function WorkTrackersLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
-  const userId = params.userId ? parseInt(params.userId as string, 10) : undefined;
+  const userUuid = params.userUuid as string | undefined;
   const startDate = params.startDate as string | undefined;
   const supabase = useClerkSupabaseClient();
 
   const { data: user } = useQuery({
-    queryKey: ["user", userId],
+    queryKey: ["user", userUuid],
     queryFn: async () => {
-      if (userId === undefined) return null;
-      return fetchUserById(supabase, userId);
+      if (userUuid === undefined) return null;
+      return fetchUserByUuid(supabase, userUuid);
     },
-    enabled: userId !== undefined,
+    enabled: userUuid !== undefined,
   });
-  const name = userId && user ? ` - ${user}` : "";
+  const name = userUuid && user ? ` - ${user}` : "";
   const dateRange = startDate
     ? (() => {
         const start = DateTime.fromISO(startDate);

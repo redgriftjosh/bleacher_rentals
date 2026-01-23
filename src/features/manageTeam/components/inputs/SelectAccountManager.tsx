@@ -15,10 +15,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { useAccountManagers } from "../../hooks/useAccountManagers";
 import { UserSmall } from "../util/UserSmall";
+import { STATUSES } from "../../constants";
 
 type SelectAccountManagerProps = {
-  value: number | null;
-  onChange: (accountManagerId: number | null) => void;
+  value: string | null;
+  onChange: (accountManagerId: string | null) => void;
   placeholder?: string;
 };
 
@@ -29,13 +30,14 @@ export function SelectAccountManager({
 }: SelectAccountManagerProps) {
   const [open, setOpen] = useState(false);
   const accountManagers = useAccountManagers();
+  console.log("Account Managers:", JSON.stringify(accountManagers, null, 2));
 
   const selectedAccountManager = useMemo(() => {
-    return accountManagers.find((am) => am.accountManagerId === value);
+    return accountManagers.find((am) => am.accountManagerUuid === value);
   }, [accountManagers, value]);
 
-  const handleSelect = (accountManagerId: number) => {
-    onChange(accountManagerId === value ? null : accountManagerId);
+  const handleSelect = (accountManagerUuid: string) => {
+    onChange(accountManagerUuid === value ? null : accountManagerUuid);
     setOpen(false);
   };
 
@@ -79,25 +81,27 @@ export function SelectAccountManager({
           <CommandList>
             <CommandEmpty>No account manager found.</CommandEmpty>
             <CommandGroup>
-              {accountManagers.map((am) => (
-                <CommandItem
-                  key={am.accountManagerId}
-                  value={`${am.firstName} ${am.lastName} ${am.email}`}
-                  onSelect={() => handleSelect(am.accountManagerId)}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === am.accountManagerId ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <UserSmall
-                    clerkUserId={am.clerkUserId}
-                    firstName={am.firstName}
-                    lastName={am.lastName}
-                  />
-                </CommandItem>
-              ))}
+              {accountManagers
+                .filter((am) => am.statusUuid === STATUSES.active)
+                .map((am) => (
+                  <CommandItem
+                    key={am.accountManagerUuid}
+                    value={`${am.firstName} ${am.lastName} ${am.email}`}
+                    onSelect={() => handleSelect(am.accountManagerUuid)}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === am.accountManagerUuid ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                    <UserSmall
+                      clerkUserId={am.clerkUserId}
+                      firstName={am.firstName}
+                      lastName={am.lastName}
+                    />
+                  </CommandItem>
+                ))}
             </CommandGroup>
           </CommandList>
         </Command>

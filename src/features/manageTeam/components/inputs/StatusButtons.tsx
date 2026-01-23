@@ -17,17 +17,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-const STATUSES = {
-  invited: 1,
-  active: 2,
-  inactive: 3,
-};
+import { STATUSES } from "../../constants";
 
 export default function StatusButtons() {
   const supabase = useClerkSupabaseClient();
-  const existingUserId = useCurrentUserStore((s) => s.existingUserId);
-  const status = useCurrentUserStore((s) => s.status);
+  const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
+  console.log("StatusButtons existingUserUuid:", existingUserUuid);
+  const statusUuid = useCurrentUserStore((s) => s.statusUuid);
+  console.log("StatusButtons statusUuid:", statusUuid);
   const email = useCurrentUserStore((s) => s.email);
   const isSubmitting = useCurrentUserStore((s) => s.isSubmitting);
   const setField = useCurrentUserStore((s) => s.setField);
@@ -65,7 +62,7 @@ export default function StatusButtons() {
         throw new Error("Failed to revoke invite");
       }
 
-      const deleteResult = await deleteUser(supabase, existingUserId!);
+      const deleteResult = await deleteUser(supabase, existingUserUuid!);
       if (!deleteResult.success) {
         throw new Error(deleteResult.error || "Failed to delete user");
       }
@@ -85,7 +82,7 @@ export default function StatusButtons() {
   const handleDeactivate = async () => {
     setField("isSubmitting", true);
     try {
-      const result = await deactivateUser(supabase, existingUserId!);
+      const result = await deactivateUser(supabase, existingUserUuid!);
       if (!result.success) {
         throw new Error(result.error || "Failed to deactivate user");
       }
@@ -104,7 +101,7 @@ export default function StatusButtons() {
   const handleReactivate = async () => {
     setField("isSubmitting", true);
     try {
-      const result = await reactivateUser(supabase, existingUserId!);
+      const result = await reactivateUser(supabase, existingUserUuid!);
       if (!result.success) {
         throw new Error(result.error || "Failed to reactivate user");
       }
@@ -120,12 +117,12 @@ export default function StatusButtons() {
     }
   };
 
-  if (!existingUserId) return null;
+  if (!existingUserUuid) return null;
 
   return (
     <div className="flex flex-wrap gap-2 justify-end">
       {/* Invited Status Actions */}
-      {status === STATUSES.invited && (
+      {statusUuid === STATUSES.invited && (
         <>
           <button
             onClick={handleResendInvite}
@@ -166,7 +163,7 @@ export default function StatusButtons() {
       )}
 
       {/* Active Status Actions */}
-      {status === STATUSES.active && (
+      {statusUuid === STATUSES.active && (
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <button
@@ -198,7 +195,7 @@ export default function StatusButtons() {
       )}
 
       {/* Inactive Status Actions */}
-      {status === STATUSES.inactive && (
+      {statusUuid === STATUSES.inactive && (
         <button
           onClick={handleReactivate}
           disabled={isSubmitting}

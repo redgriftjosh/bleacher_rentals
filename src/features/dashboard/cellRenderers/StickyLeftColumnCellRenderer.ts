@@ -24,7 +24,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
   private cellPool: Map<number, BleacherCell> = new Map();
   private unsub?: () => void;
   private isFormExpanded = false;
-  private selectedBleacherIds: number[] = [];
+  private selectedBleacherUuids: string[] = [];
 
   private yAxis: "Bleachers" | "Events" = "Bleachers";
   private events: DashboardEvent[];
@@ -46,13 +46,13 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
   private bootstrapStateSync() {
     const st = useCurrentEventStore.getState();
     this.isFormExpanded = !!st.isFormExpanded;
-    this.selectedBleacherIds = st.bleacherIds.slice();
+    this.selectedBleacherUuids = st.bleacherUuids.slice();
     this.unsub = useCurrentEventStore.subscribe((s) => {
       const expandedChanged = s.isFormExpanded !== this.isFormExpanded;
-      const selectedChanged = s.bleacherIds !== this.selectedBleacherIds;
+      const selectedChanged = s.bleacherUuids !== this.selectedBleacherUuids;
       if (!expandedChanged && !selectedChanged) return;
       if (expandedChanged) this.isFormExpanded = s.isFormExpanded;
-      if (selectedChanged) this.selectedBleacherIds = s.bleacherIds.slice();
+      if (selectedChanged) this.selectedBleacherUuids = s.bleacherUuids.slice();
 
       // Defer UI updates to next tick to avoid mid-build churn
       const ticker = (this.app as any)?.ticker;
@@ -62,7 +62,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
             if (expandedChanged) cell.setFormExpanded(this.isFormExpanded);
             if (selectedChanged) {
               const b = this.bleachers[row];
-              if (b) cell.setSelected(this.selectedBleacherIds.includes(b.bleacherId));
+              if (b) cell.setSelected(this.selectedBleacherUuids.includes(b.bleacherUuid));
             }
           }
         });
@@ -72,7 +72,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
           if (expandedChanged) cell.setFormExpanded(this.isFormExpanded);
           if (selectedChanged) {
             const b = this.bleachers[row];
-            if (b) cell.setSelected(this.selectedBleacherIds.includes(b.bleacherId));
+            if (b) cell.setSelected(this.selectedBleacherUuids.includes(b.bleacherUuid));
           }
         }
       }
@@ -90,21 +90,21 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
       cell.setToggleHandler((id) => {
         const st = useCurrentEventStore.getState();
         if (!st.isFormExpanded) return;
-        const selected = st.bleacherIds;
+        const selected = st.bleacherUuids;
         const updated = selected.includes(id)
           ? selected.filter((n) => n !== id)
           : [...selected, id];
-        st.setField("bleacherIds", updated);
+        st.setField("bleacherUuids", updated);
       });
 
       // Wire map pin click handler
       cell.setMapPinClickHandler((id) => {
-        const bleacher = this.bleachers.find((b) => b.bleacherId === id);
+        const bleacher = this.bleachers.find((b) => b.bleacherUuid === id);
         if (bleacher && bleacher.linxupDeviceId) {
           const modalStore = useBleacherLocationModalStore.getState();
           modalStore.openModal(
             bleacher.bleacherNumber,
-            bleacher.bleacherId,
+            bleacher.bleacherUuid,
             bleacher.linxupDeviceId
           );
         }
@@ -112,7 +112,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
 
       // Initial state application
       cell.setFormExpanded(this.isFormExpanded);
-      if (bleacher) cell.setSelected(this.selectedBleacherIds.includes(bleacher.bleacherId));
+      if (bleacher) cell.setSelected(this.selectedBleacherUuids.includes(bleacher.bleacherUuid));
       this.cellPool.set(row, cell);
     }
     return cell;

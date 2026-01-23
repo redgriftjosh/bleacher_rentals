@@ -91,6 +91,7 @@ type MyDocumentProps = {
     workTracker: Tables<"WorkTrackers">;
     pickup_address: Tables<"Addresses"> | null;
     dropoff_address: Tables<"Addresses"> | null;
+    bleacherNumber: number | null;
   }[];
   header: {
     dateRange: string;
@@ -150,7 +151,7 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
               {row.workTracker.date}
             </Text>
             <Text style={[styles.bodyCell, { width: columnWidths[1] }]}>
-              {row.workTracker.bleacher_id}
+              {row.bleacherNumber ?? ""}
             </Text>
             <Text style={[styles.bodyCell, { width: columnWidths[2] }]}>
               {row.pickup_address?.street ?? ""}

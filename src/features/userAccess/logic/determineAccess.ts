@@ -1,15 +1,22 @@
-import { UserAccessData } from "../db/getUserAccess.db";
+import { STATUSES } from "@/features/manageTeam/constants";
+import type { UserAccessData } from "../types";
 
-export const USER_STATUS = {
-  ACTIVE: 1,
-  INACTIVE: 2,
-  DEACTIVATED: 3,
-} as const;
+// export const USER_STATUS = {
+//   ACTIVE: 1,
+//   INACTIVE: 2,
+//   DEACTIVATED: 3,
+// } as const;
 
-export type AccessLevel = "full" | "driver-only" | "denied";
+export type AccessLevel =
+  | "full"
+  | "driver-only"
+  | "account-deactivated"
+  | "no-roles-assigned"
+  | "cannot-find-account"
+  | "loading";
 
 export type AccessResult = {
-  accessLevel: AccessLevel;
+  accessLevel: Exclude<AccessLevel, "loading">;
   reason?: string;
 };
 
@@ -17,45 +24,46 @@ export type AccessResult = {
  * Determines the access level for a user based on their status and roles.
  *
  * Rules:
- * 1. Deactivated users (status === 3) are always denied
+ * 1. Deactivated users are blocked
  * 2. Admins get full access
  * 3. Users with active AccountManager role get full access
- * 4. Users with only active Driver role (and not admin/account manager) get driver-only access
- * 5. Users with no roles are denied
+ * 4. Users with only active Driver role get driver-only access
+ * 5. Users with no roles get no-roles-assigned
  */
 export function determineUserAccess(userData: UserAccessData | null): AccessResult {
   // No user data found
   if (!userData) {
     return {
-      accessLevel: "denied",
+      accessLevel: "cannot-find-account",
       reason: "User not found",
     };
   }
 
   // Check if user is deactivated
-  if (userData.status === USER_STATUS.DEACTIVATED) {
+  if (userData.status_uuid === STATUSES.inactive) {
     return {
-      accessLevel: "denied",
-      reason: "Account deactivated",
+      accessLevel: "account-deactivated",
     };
   }
 
+  const isAdmin = Boolean(userData.is_admin);
+
   // Admins get full access
-  if (userData.is_admin) {
+  if (isAdmin) {
     return {
       accessLevel: "full",
     };
   }
 
   // Account managers get full access
-  if (userData.hasAccountManagerRole) {
+  if (userData.account_manager_id) {
     return {
       accessLevel: "full",
     };
   }
 
   // Driver-only users get limited access
-  if (userData.hasDriverRole && !userData.hasAccountManagerRole && !userData.is_admin) {
+  if (userData.driver_id) {
     return {
       accessLevel: "driver-only",
     };
@@ -63,7 +71,6 @@ export function determineUserAccess(userData: UserAccessData | null): AccessResu
 
   // No roles assigned
   return {
-    accessLevel: "denied",
-    reason: "No active roles",
+    accessLevel: "no-roles-assigned",
   };
 }

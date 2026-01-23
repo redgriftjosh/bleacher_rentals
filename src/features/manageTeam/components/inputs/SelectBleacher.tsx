@@ -16,36 +16,36 @@ import { BleacherCard } from "../util/BleacherCard";
 import { Badge } from "@/components/ui/badge";
 
 type SelectBleacherProps = {
-  selectedBleacherIds: number[];
-  onChange: (bleacherIds: number[]) => void;
+  selectedBleacherUuids: string[];
+  onChange: (bleacherUuids: string[]) => void;
   placeholder?: string;
   season: "summer" | "winter";
-  currentUserId?: number | null;
+  currentUserUuid?: string | null;
 };
 
 export function SelectBleacher({
-  selectedBleacherIds,
+  selectedBleacherUuids,
   onChange,
   placeholder = "Select Bleachers...",
   season,
-  currentUserId,
+  currentUserUuid,
 }: SelectBleacherProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [hideAssigned, setHideAssigned] = useState(false);
   const { data: bleachers = [], isLoading } = useBleachers();
 
-  const handleToggle = (bleacherId: number) => {
-    if (selectedBleacherIds.includes(bleacherId)) {
-      onChange(selectedBleacherIds.filter((id) => id !== bleacherId));
+  const handleToggle = (bleacherUuid: string) => {
+    if (selectedBleacherUuids.includes(bleacherUuid)) {
+      onChange(selectedBleacherUuids.filter((id) => id !== bleacherUuid));
     } else {
-      onChange([...selectedBleacherIds, bleacherId]);
+      onChange([...selectedBleacherUuids, bleacherUuid]);
     }
   };
 
-  const selectedCount = selectedBleacherIds.length;
+  const selectedCount = selectedBleacherUuids.length;
   const selectedBleacherNumbers = bleachers
-    .filter((b) => selectedBleacherIds.includes(b.bleacherId))
+    .filter((b) => selectedBleacherUuids.includes(b.bleacherUuid))
     .map((b) => b.bleacherNumber)
     .sort((a, b) => a - b);
 
@@ -58,7 +58,7 @@ export function SelectBleacher({
     if (hideAssigned) {
       const assignedUser =
         season === "summer" ? bleacher.summerAssignedUser : bleacher.winterAssignedUser;
-      const isAssignedToOtherUser = !!assignedUser && assignedUser.userId !== currentUserId;
+      const isAssignedToOtherUser = !!assignedUser && assignedUser.userUuid !== currentUserUuid;
       return !isAssignedToOtherUser;
     }
 
@@ -119,18 +119,18 @@ export function SelectBleacher({
                   const assignedUser =
                     season === "summer" ? bleacher.summerAssignedUser : bleacher.winterAssignedUser;
                   const isAssignedToOtherUser =
-                    !!assignedUser && assignedUser.userId !== currentUserId;
+                    !!assignedUser && assignedUser.userUuid !== currentUserUuid;
 
                   return (
                     <BleacherCard
-                      key={bleacher.bleacherId}
+                      key={bleacher.bleacherUuid}
                       bleacherNumber={bleacher.bleacherNumber}
-                      homeBaseName={bleacher.homeBaseName}
+                      homeBaseName={bleacher.summerHomeBaseName}
                       winterHomeBaseName={bleacher.winterHomeBaseName}
                       bleacherRows={bleacher.bleacherRows}
                       bleacherSeats={bleacher.bleacherSeats}
-                      isSelected={selectedBleacherIds.includes(bleacher.bleacherId)}
-                      onClick={() => handleToggle(bleacher.bleacherId)}
+                      isSelected={selectedBleacherUuids.includes(bleacher.bleacherUuid)}
+                      onClick={() => handleToggle(bleacher.bleacherUuid)}
                       assignedUser={assignedUser}
                       isDisabled={isAssignedToOtherUser}
                     />

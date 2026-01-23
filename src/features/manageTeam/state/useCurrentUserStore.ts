@@ -11,7 +11,7 @@ export type CurrentUserState = {
   lastName: string;
   email: string;
   isAdmin: boolean;
-  status: number | null;
+  statusUuid: string | null;
 
   // Role flags
   isDriver: boolean;
@@ -22,15 +22,15 @@ export type CurrentUserState = {
   payRateCents: number | null;
   payCurrency: "CAD" | "USD";
   payPerUnit: "KM" | "MI" | "HR";
-  accountManagerId: number | null;
+  accountManagerUuid: string | null;
 
   // Account Manager-specific fields
-  summerBleacherIds: number[];
-  winterBleacherIds: number[];
-  assignedDriverIds: number[];
+  summerBleacherUuids: string[];
+  winterBleacherUuids: string[];
+  assignedDriverUuids: string[];
 
   // UI state
-  existingUserId: number | null;
+  existingUserUuid: string | null;
   isOpen: boolean;
   isSubmitting: boolean;
 };
@@ -39,7 +39,7 @@ export type CurrentUserStore = CurrentUserState & {
   setField: <K extends keyof CurrentUserState>(key: K, value: CurrentUserState[K]) => void;
   setIsOpen: (isOpen: boolean) => void;
   resetForm: () => void;
-  loadExistingUser: (userId: number, supabase: SupabaseClient<Database>) => Promise<void>;
+  loadExistingUser: (userUuid: string) => Promise<void>;
   openForNewUser: () => void;
 };
 
@@ -48,18 +48,18 @@ const initialState: CurrentUserState = {
   lastName: "",
   email: "",
   isAdmin: false,
-  status: null,
+  statusUuid: null,
   isDriver: false,
   isAccountManager: false,
   tax: undefined,
   payRateCents: null,
   payCurrency: "CAD",
   payPerUnit: "KM",
-  accountManagerId: null,
-  summerBleacherIds: [],
-  winterBleacherIds: [],
-  assignedDriverIds: [],
-  existingUserId: null,
+  accountManagerUuid: null,
+  summerBleacherUuids: [],
+  winterBleacherUuids: [],
+  assignedDriverUuids: [],
+  existingUserUuid: null,
   isOpen: false,
   isSubmitting: false,
 };
@@ -73,36 +73,16 @@ export const useCurrentUserStore = create<CurrentUserStore>((set) => ({
 
   resetForm: () => set(initialState),
 
-  loadExistingUser: async (userId, supabase) => {
-    set({ existingUserId: userId, isSubmitting: true });
+  loadExistingUser: async (userUuid) => {
+    set({ existingUserUuid: userUuid, isOpen: true });
 
-    const result = await fetchUserById(supabase, userId);
+    // const result = await fetchUserById(userUuid);
 
-    if (result.success && result.data) {
-      set({
-        firstName: result.data.firstName ?? "",
-        lastName: result.data.lastName ?? "",
-        email: result.data.email,
-        isAdmin: result.data.isAdmin,
-        status: result.data.status,
-        isDriver: result.data.isDriver,
-        isAccountManager: result.data.isAccountManager,
-        tax: result.data.tax,
-        payRateCents: result.data.payRateCents,
-        payCurrency: result.data.payCurrency,
-        payPerUnit: result.data.payPerUnit,
-        accountManagerId: result.data.accountManagerId,
-        summerBleacherIds: result.data.summerBleacherIds,
-        winterBleacherIds: result.data.winterBleacherIds,
-        assignedDriverIds: result.data.assignedDriverIds,
-        existingUserId: userId,
-        isOpen: true,
-        isSubmitting: false,
-      });
-    } else {
-      console.error("Failed to load user:", result.error);
-      set({ isSubmitting: false });
-    }
+    // set(
+    //   result
+    //     ? { ...result, existingUserUuid: userUuid, isOpen: true, isSubmitting: false }
+    //     : { isSubmitting: false }
+    // );
   },
 
   openForNewUser: () => {

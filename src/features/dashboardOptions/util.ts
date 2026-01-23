@@ -1,108 +1,120 @@
 import { PROVINCES, STATES } from "@/types/Constants";
 import { Bleacher, DashboardEvent } from "../dashboard/types";
 
+type BleacherFilterSortOptions = {
+  // allowed home base uuids
+  summerHomeBaseUuids: string[];
+  winterHomeBaseUuids: string[];
+
+  // allowed row counts
+  rows: number[];
+
+  // null = all bleachers
+  season: "SUMMER" | "WINTER" | null;
+
+  // only applied when season is SUMMER/WINTER
+  accountManagerUuid?: string | null;
+
+  // ids to always include when expanded/optimizing
+  alwaysIncludeBleacherUuids: string[];
+  isFormExpanded: boolean;
+  optimizationMode: boolean;
+};
+
 export function filterSortPixiBleachers(
-  homeBaseIds: number[], // allowed summer home base ids
-  winterHomeBaseIds: number[], // allowed winter home base ids
-  rows: number[], // allowed row counts
-  bleachers: Bleacher[], // all bleachers (unfiltered, original order)
-  alwaysIncludeBleacherIds: number[], // ids to always include if form expanded
-  isFormExpanded: boolean,
-  optimizationMode: boolean,
-  season: "SUMMER" | "WINTER" | null,
-  summerAssignedBleacherIds: number[] = [], // allowable bleachers if season === SUMMER
-  winterAssignedBleacherIds: number[] = [] // allowable bleachers if season === WINTER
+  bleachers: Bleacher[],
+  opts: BleacherFilterSortOptions
 ): Bleacher[] {
-  // console.log("filterSortPixiBleachers", {
-  //   homeBaseIds,
-  //   winterHomeBaseIds,
-  //   rows,
-  //   bleachers,
-  //   alwaysIncludeBleacherIds,
-  //   isFormExpanded,
-  //   optimizationMode,
-  //   season,
-  //   summerAssignedBleacherIds,
-  //   winterAssignedBleacherIds,
-  // });
-  // Fast lookups
-  const summerHBSet = new Set(homeBaseIds);
-  const winterHBSet = new Set(winterHomeBaseIds);
-  const rowsSet = new Set(rows);
-  const alwaysSet = new Set(alwaysIncludeBleacherIds);
-  const summerAssignSet = new Set(summerAssignedBleacherIds);
-  const winterAssignSet = new Set(winterAssignedBleacherIds);
+  const {
+    summerHomeBaseUuids,
+    winterHomeBaseUuids,
+    rows,
+    season,
+    accountManagerUuid,
+    alwaysIncludeBleacherUuids,
+    isFormExpanded,
+    optimizationMode,
+  } = opts;
 
-  // Map id -> bleacher and original index (to keep stable order later)
-  const byId = new Map<number, Bleacher>();
-  const indexOfId = new Map<number, number>();
-  bleachers.forEach((b, i) => {
-    byId.set(b.bleacherId, b);
-    indexOfId.set(b.bleacherId, i);
-  });
+  const summerHBSet = summerHomeBaseUuids.length > 0 ? new Set(summerHomeBaseUuids) : null;
+  const winterHBSet = winterHomeBaseUuids.length > 0 ? new Set(winterHomeBaseUuids) : null;
+  const rowsSet = rows.length > 0 ? new Set(rows) : null;
+  const alwaysSet = new Set(alwaysIncludeBleacherUuids);
 
-  // 1) Start with all; apply filters in order
-  let filteredIds: number[] = [];
-  for (const b of bleachers) {
-    // Summer home base filter
-    const sid = b.summerHomeBase?.id ?? null;
-    if (!sid || !summerHBSet.has(sid)) continue;
+  const passesSeasonFilters = (b: Bleacher): boolean => {
+    // Rows filter (always applies)
+    if (rowsSet && !rowsSet.has(b.bleacherRows)) return false;
 
-    // Winter home base filter
-    const wid = b.winterHomeBase?.id ?? null;
-    if (!wid || !winterHBSet.has(wid)) continue;
-
-    // Rows filter
-    if (!rowsSet.has(b.bleacherRows)) continue;
-
-    // Season filter (use assigned lists when provided)
+    // Season-specific home base filter
     if (season === "SUMMER") {
-      if (!summerAssignSet.has(b.bleacherId)) continue;
-    }
-    if (season === "WINTER") {
-      if (!winterAssignSet.has(b.bleacherId)) continue;
-    }
+      const sid = b.summerHomeBase?.homeBaseUuid ?? null;
+      if (!sid) return false;
+      if (summerHBSet && !summerHBSet.has(sid)) return false;
 
-    filteredIds.push(b.bleacherId);
-  }
-
-  // 2) Ensure always-include IDs are present when form expanded OR optimization mode is ON
-  // In optimization mode we include them but do not promote them to the top (ordering handled below)
-  if (isFormExpanded || optimizationMode) {
-    const present = new Set(filteredIds);
-    for (const id of alwaysSet) {
-      if (!present.has(id) && byId.has(id)) {
-        filteredIds.push(id);
-        present.add(id);
+      if (accountManagerUuid) {
+        if (b.summerAccountManagerUuid !== accountManagerUuid) return false;
       }
+
+      return true;
+    }
+
+    if (season === "WINTER") {
+      const wid = b.winterHomeBase?.homeBaseUuid ?? null;
+      if (!wid) return false;
+      if (winterHBSet && !winterHBSet.has(wid)) return false;
+
+      if (accountManagerUuid) {
+        if (b.winterAccountManagerUuid !== accountManagerUuid) return false;
+      }
+
+      return true;
+    }
+
+    // season === null (all bleachers)
+    // Apply both home base filters (when present) and *never* apply account manager filtering.
+    const sid = b.summerHomeBase?.homeBaseUuid ?? null;
+    if (!sid) return false;
+    if (summerHBSet && !summerHBSet.has(sid)) return false;
+
+    const wid = b.winterHomeBase?.homeBaseUuid ?? null;
+    if (!wid) return false;
+    if (winterHBSet && !winterHBSet.has(wid)) return false;
+
+    return true;
+  };
+
+  // 1) Filter bleachers (stable)
+  const included = new Set<string>();
+  for (const b of bleachers) {
+    if (!passesSeasonFilters(b)) continue;
+    included.add(b.bleacherUuid);
+  }
+
+  // 2) Ensure always-include IDs are present when form expanded OR optimization mode is ON.
+  if (isFormExpanded || optimizationMode) {
+    for (const id of alwaysSet) {
+      included.add(id);
     }
   }
 
-  // 3) Return in the right order
-  // Default: keep original order of incoming array for stability.
-  // If form expanded AND NOT optimizationMode, move always-include to the top (still stable).
-  const finalSet = new Set(filteredIds);
-
-  // If optimization mode is OFF, promote always-includes to the top (regardless of form expansion)
+  // 3) Stable ordering + promotion rules
   if (!optimizationMode) {
-    // Always-includes first (in original order), then the rest (in original order)
     const top: Bleacher[] = [];
     const rest: Bleacher[] = [];
 
     for (const b of bleachers) {
-      if (!finalSet.has(b.bleacherId)) continue;
-      if (alwaysSet.has(b.bleacherId)) top.push(b);
+      if (!included.has(b.bleacherUuid)) continue;
+      if (alwaysSet.has(b.bleacherUuid)) top.push(b);
       else rest.push(b);
     }
+
     return [...top, ...rest];
   }
 
-  // Otherwise: keep original order for everything (including reinserted always-includes)
   const result: Bleacher[] = [];
   for (const b of bleachers) {
-    if (finalSet.has(b.bleacherId)) result.push(b);
+    if (included.has(b.bleacherUuid)) result.push(b);
   }
-  // console.log("filterSortPixiBleachers result", result);
   return result;
 }
 
