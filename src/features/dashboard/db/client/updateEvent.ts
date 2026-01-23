@@ -1,14 +1,11 @@
 import { CurrentEventStore } from "../../../eventConfiguration/state/useCurrentEventStore";
 import { UserResource } from "@clerk/types";
-import { checkEventFormRules } from "../../../oldDashboard/functions";
-import { toast } from "sonner";
-import { createErrorToast, ErrorToast } from "@/components/toasts/ErrorToast";
-import React from "react";
+import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { updateDataBase } from "@/app/actions/db.actions";
-import { createSuccessToast, SuccessToast } from "@/components/toasts/SuccessToast";
+import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { useBleacherEventsStore } from "@/state/bleacherEventStore";
 import { Database, Tables, TablesInsert } from "../../../../../database.types";
+import { checkEventFormRules } from "../../functions";
 
 export async function updateEvent(
   state: CurrentEventStore,
@@ -20,8 +17,8 @@ export async function updateEvent(
     createErrorToast(["No Supabase Client found"]);
   }
 
-  if (state.eventId === null) {
-    createErrorToast(["No eventId provided for update"]);
+  if (state.eventUuid === null) {
+    createErrorToast(["No eventUuid provided for update"]);
   }
 
   if (!checkEventFormRules(state, user)) {
@@ -29,7 +26,7 @@ export async function updateEvent(
   }
 
   // 1. Update Address (if address exists)
-  if (state.addressData && state.addressData.addressId) {
+  if (state.addressData && state.addressData.addressUuid) {
     const updatedAddress: Partial<TablesInsert<"Addresses">> = {
       city: state.addressData.city ?? "",
       state_province: state.addressData.state ?? "",
@@ -40,7 +37,7 @@ export async function updateEvent(
     const { error: addressError } = await supabase
       .from("Addresses")
       .update(updatedAddress)
-      .eq("address_id", state.addressData.addressId);
+      .eq("id", state.addressData.addressUuid);
 
     if (addressError) {
       createErrorToast(["Failed to update address.", addressError?.message ?? ""]);
@@ -64,56 +61,67 @@ export async function updateEvent(
     hsl_hue: state.hslHue,
     must_be_clean: state.mustBeClean,
     goodshuffle_url: state.goodshuffleUrl ?? null,
-    created_by_user_id: state.ownerUserId ?? null,
+    created_by_user_uuid: state.ownerUserUuid ?? null,
   };
 
   const { error: eventError } = await supabase
     .from("Events")
     .update(updatedEvent)
-    .eq("event_id", state.eventId);
+    .eq("id", state.eventUuid);
 
   if (eventError) {
     createErrorToast(["Failed to update event.", eventError?.message ?? ""]);
   }
 
-  await updateBleacherEvents(state, supabase, bleacherEvents);
+  await updateBleacherEvents(state, supabase);
 
   createSuccessToast(["Event Updated"]);
   updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
 }
 
-async function updateBleacherEvents(
-  state: CurrentEventStore,
-  supabase: SupabaseClient<Database>,
-  bleacherEvents: Tables<"BleacherEvents">[]
-) {
-  const existingLinks = bleacherEvents.filter((be) => be.event_id === state.eventId);
+async function updateBleacherEvents(state: CurrentEventStore, supabase: SupabaseClient<Database>) {
+  // IMPORTANT: Don't rely on the in-memory `bleacherEvents` store here.
+  // That store is populated via a background fetch that can be briefly empty or stale
+  // (e.g. during navigation/session refresh), which makes updates "hit or miss".
+  // Always diff against the source of truth.
+  const { data: existingLinks, error: existingError } = await supabase
+    .from("BleacherEvents")
+    .select("bleacher_uuid")
+    .eq("event_uuid", state.eventUuid!);
 
-  const existingBleacherIds = new Set(existingLinks?.map((b) => b.bleacher_id) ?? []);
-  const incomingBleacherIds = new Set(state.bleacherIds);
+  if (existingError) {
+    createErrorToast(["Failed to load existing bleacher links.", existingError?.message ?? ""]);
+    throw new Error(existingError?.message ?? "Failed to load existing bleacher links");
+  }
+
+  const existingBleacherUuids = new Set(
+    existingLinks?.map((b) => b.bleacher_uuid).filter((uuid): uuid is string => uuid !== null) ?? []
+  );
+  const incomingBleacherUuids = new Set(state.bleacherUuids);
 
   // Identify removals and additions
-  const toDelete = [...existingBleacherIds].filter((id) => !incomingBleacherIds.has(id));
-  const toAdd = [...incomingBleacherIds].filter((id) => !existingBleacherIds.has(id));
+  const toDelete = [...existingBleacherUuids].filter((id) => !incomingBleacherUuids.has(id));
+  const toAdd = [...incomingBleacherUuids].filter((id) => !existingBleacherUuids.has(id));
 
   // Delete removed bleacher links
   if (toDelete.length > 0) {
     const { error: deleteError } = await supabase
       .from("BleacherEvents")
       .delete()
-      .eq("event_id", state.eventId!)
-      .in("bleacher_id", toDelete);
+      .eq("event_uuid", state.eventUuid!)
+      .in("bleacher_uuid", toDelete);
 
     if (deleteError) {
       createErrorToast(["Failed to delete removed bleacher links.", deleteError?.message ?? ""]);
+      throw new Error(deleteError?.message ?? "Failed to delete removed bleacher links");
     }
   }
 
   // Insert new links
   if (toAdd.length > 0) {
-    const newBleacherLinks = toAdd.map((bleacher_id) => ({
-      bleacher_id,
-      event_id: state.eventId!,
+    const newBleacherLinks = toAdd.map((bleacher_uuid) => ({
+      bleacher_uuid,
+      event_uuid: state.eventUuid!,
       setup_text: "",
       setup_confirmed: false,
       teardown_text: "",
@@ -123,6 +131,7 @@ async function updateBleacherEvents(
 
     if (insertError) {
       createErrorToast(["Failed to insert new bleacher links.", insertError?.message ?? ""]);
+      throw new Error(insertError?.message ?? "Failed to insert new bleacher links");
     }
   }
 }

@@ -25,7 +25,7 @@ import { createEvent, deleteEvent } from "@/features/dashboard/db/client/db";
 import { updateEvent } from "@/features/dashboard/db/client/updateEvent";
 import { FetchDashboardBleachers } from "@/features/dashboard/db/client/bleachers";
 import { FetchDashboardEvents } from "@/features/dashboard/db/client/events";
-import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
+import { useDashboardFilterSettings } from "@/features/dashboardOptions/useDashboardFilterSettings";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
@@ -43,7 +43,8 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const supabase = useClerkSupabaseClient();
-  const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
+  const { state: dashboardFilters } = useDashboardFilterSettings();
+  const onlyShowMyEvents = dashboardFilters?.onlyShowMyEvents ?? true;
 
   // Refresh zustand stores directly without invalidating the page query
   const refreshDashboardStores = async () => {
@@ -85,7 +86,7 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
     setLoading(true);
     const state = useCurrentEventStore.getState();
     try {
-      await deleteEvent(state.eventId, state.addressData?.state ?? "", supabase, user ?? null);
+      await deleteEvent(state.eventUuid, state.addressData?.state ?? "", supabase, user ?? null);
       await refreshDashboardStores();
       currentEventStore.resetForm();
       setLoading(false);
@@ -178,7 +179,7 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
                 <Palette className="w-4 h-4" />
               )}
             </button>
-            {currentEventStore.eventId && (
+            {currentEventStore.eventUuid && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <button className="px-4 py-2 mr-2 bg-white text-red-800 text-sm font-semibold border border-red-800 rounded-sm hover:bg-red-800 hover:text-white transition cursor-pointer">
@@ -209,10 +210,10 @@ export const EventConfiguration = ({ showSetupTeardown }: Props) => {
             {!loading ? (
               <button
                 className="px-4 py-2 bg-darkBlue text-white text-sm font-semibold rounded-sm shadow-md hover:bg-lightBlue transition cursor-pointer"
-                onClick={currentEventStore.eventId ? handleUpdateEvent : handleCreateEvent}
+                onClick={currentEventStore.eventUuid ? handleUpdateEvent : handleCreateEvent}
                 disabled={loading}
               >
-                {currentEventStore.eventId ? "Update Event" : "Create Event"}
+                {currentEventStore.eventUuid ? "Update Event" : "Create Event"}
               </button>
             ) : (
               <button

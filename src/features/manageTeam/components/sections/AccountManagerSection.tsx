@@ -11,11 +11,11 @@ import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient"
 
 export function AccountManagerSection() {
   const supabase = useClerkSupabaseClient();
-  const existingUserId = useCurrentUserStore((s) => s.existingUserId);
+  const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
   const isAccountManager = useCurrentUserStore((s) => s.isAccountManager);
-  const summerBleacherIds = useCurrentUserStore((s) => s.summerBleacherIds);
-  const winterBleacherIds = useCurrentUserStore((s) => s.winterBleacherIds);
-  const assignedDriverIds = useCurrentUserStore((s) => s.assignedDriverIds);
+  const summerBleacherUuids = useCurrentUserStore((s) => s.summerBleacherUuids);
+  const winterBleacherUuids = useCurrentUserStore((s) => s.winterBleacherUuids);
+  const assignedDriverUuids = useCurrentUserStore((s) => s.assignedDriverUuids);
   const setField = useCurrentUserStore((s) => s.setField);
 
   // Fetch driver options from Drivers table with user data
@@ -26,21 +26,20 @@ export function AccountManagerSection() {
         .from("Drivers")
         .select(
           `
-          driver_id,
-          user:Users!Drivers_user_id_fkey(
-            user_id,
+          id,
+          user:Users!Drivers_user_uuid_fkey(
+            id,
             first_name,
             last_name
           )
         `
         )
-        .eq("is_active", true)
-        .order("user_id", { ascending: true });
+        .eq("is_active", true);
 
       if (error) throw error;
       return (data || []).map((d: any) => ({
         label: `${d.user.first_name} ${d.user.last_name}`,
-        value: d.driver_id,
+        value: d.id,
       }));
     },
   });
@@ -80,11 +79,11 @@ export function AccountManagerSection() {
             </div>
             <div className="col-span-3">
               <SelectBleacher
-                selectedBleacherIds={summerBleacherIds}
-                onChange={(ids) => setField("summerBleacherIds", ids)}
+                selectedBleacherUuids={summerBleacherUuids}
+                onChange={(ids) => setField("summerBleacherUuids", ids)}
                 placeholder="Select Summer Bleachers"
                 season="summer"
-                currentUserId={existingUserId}
+                currentUserUuid={existingUserUuid}
               />
             </div>
           </div>
@@ -106,11 +105,11 @@ export function AccountManagerSection() {
             </div>
             <div className="col-span-3">
               <SelectBleacher
-                selectedBleacherIds={winterBleacherIds}
-                onChange={(ids) => setField("winterBleacherIds", ids)}
+                selectedBleacherUuids={winterBleacherUuids}
+                onChange={(ids) => setField("winterBleacherUuids", ids)}
                 placeholder="Select Winter Bleachers"
                 season="winter"
-                currentUserId={existingUserId}
+                currentUserUuid={existingUserUuid}
               />
             </div>
           </div>

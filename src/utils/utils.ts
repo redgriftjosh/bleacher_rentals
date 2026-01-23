@@ -13,21 +13,21 @@ export function encodedRedirect(type: "error" | "success", path: string, message
   return redirect(`${path}?${type}=${encodeURIComponent(message)}`);
 }
 
-export function getHomeBaseIdByName(name: string): number | null {
+export function getHomeBaseUuidByName(name: string): string | null {
   const homeBases = useHomeBasesStore.getState().homeBases;
 
   const match = homeBases.find(
     (hb) => hb.home_base_name.trim().toLowerCase() === name.trim().toLowerCase()
   );
 
-  return match?.home_base_id ?? null;
+  return match?.id ?? null;
 }
 
 export function getHomeBaseOptions() {
   const homeBases = useHomeBasesStore((s) => s.homeBases) as SelectHomeBase[];
 
   return homeBases.map((homeBase) => ({
-    value: homeBase.home_base_id,
+    value: homeBase.id,
     label: homeBase.home_base_name,
   }));
 }

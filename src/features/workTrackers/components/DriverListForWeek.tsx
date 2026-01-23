@@ -21,36 +21,36 @@ export function DriverListForWeek({ startDate }: Props) {
   const [showAllDrivers, setShowAllDrivers] = useState(false);
 
   // Get current user's ID from metadata or Clerk ID
-  const getCurrentUserId = () => {
-    const metaId = user?.publicMetadata?.user_id as string | number | undefined;
-    if (metaId !== undefined && metaId !== null) {
-      const num = typeof metaId === "string" ? parseInt(metaId, 10) : metaId;
-      if (!Number.isNaN(num)) return num as number;
-    }
+  const getCurrentUserUuid = () => {
+    // const metaId = user?.publicMetadata?.user_id as string | number | undefined;
+    // if (metaId !== undefined && metaId !== null) {
+    //   const num = typeof metaId === "string" ? parseInt(metaId, 10) : metaId;
+    //   if (!Number.isNaN(num)) return num as number;
+    // }
     const clerkId = user?.id;
     if (clerkId) {
       const match = users.find((u) => u.clerk_user_id === clerkId);
-      if (match) return match.user_id;
+      if (match) return match.id;
     }
     return null;
   };
 
-  const currentUserId = getCurrentUserId();
+  const currentUserUuid = getCurrentUserUuid();
 
   // Check user access
   const { data: accessData, isLoading: accessLoading } = useQuery({
-    queryKey: ["user-access", currentUserId],
+    queryKey: ["user-access", currentUserUuid],
     queryFn: async () => {
-      if (!currentUserId) return null;
-      return checkUserAccess(supabase, currentUserId);
+      if (!currentUserUuid) return null;
+      return checkUserAccess(supabase, currentUserUuid);
     },
-    enabled: !!currentUserId && !!supabase,
+    enabled: !!currentUserUuid && !!supabase,
   });
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["drivers-for-week", startDate, showAllDrivers, currentUserId],
+    queryKey: ["drivers-for-week", startDate, showAllDrivers, currentUserUuid],
     queryFn: async () => {
-      return fetchDriversForWeek(supabase, startDate, showAllDrivers, currentUserId ?? undefined);
+      return fetchDriversForWeek(supabase, startDate, showAllDrivers, currentUserUuid ?? undefined);
     },
     enabled: !!supabase && !!accessData && (accessData.isAdmin || accessData.isAccountManager),
   });
@@ -127,7 +127,7 @@ export function DriverListForWeek({ startDate }: Props) {
           <tr
             key={index}
             className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer"
-            onClick={() => router.push(`/work-trackers/${startDate}/${row.user_id.toString()}`)}
+            onClick={() => router.push(`/work-trackers/${startDate}/${row.id.toString()}`)}
           >
             <td className="py-1 px-3 text-left">
               <div className="flex items-center justify-between">

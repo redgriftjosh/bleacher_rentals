@@ -61,7 +61,7 @@ export class PinnableSection extends Container {
       return;
     }
 
-    await loadEventById(this.eventInfo.ev.eventId, supabase);
+    await loadEventById(this.eventInfo.ev.eventUuid, supabase);
   }
 
   /**

@@ -1,10 +1,5 @@
 import { useBleachersStore } from "@/state/bleachersStore";
 import { useHomeBasesStore } from "@/state/homeBaseStore";
-import {
-  calculateEventAlerts,
-  calculateNumDays,
-  checkEventFormRules,
-} from "../../../oldDashboard/functions";
 import { toast } from "sonner";
 import React from "react";
 import { createErrorToast, ErrorToast } from "@/components/toasts/ErrorToast";
@@ -20,12 +15,17 @@ import { useMemo } from "react";
 import { UserResource } from "@clerk/types";
 import { updateDataBase } from "@/app/actions/db.actions";
 import { useBlocksStore } from "@/state/blocksStore";
-import { EditBlock } from "../../../oldDashboard/_components/dashboard/MainScrollableGrid";
-import { SetupTeardownBlock } from "../../../oldDashboard/_components/dashboard/SetupTeardownBlockModal";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { useWorkTrackersStore } from "@/state/workTrackersStore";
-import { DashboardBleacher, DashboardBlock, DashboardEvent } from "../../types";
+import {
+  DashboardBleacher,
+  DashboardBlock,
+  DashboardEvent,
+  EditBlock,
+  SetupTeardownBlock,
+} from "../../types";
 import { Database, Tables, TablesInsert } from "../../../../../database.types";
+import { calculateEventAlerts, calculateNumDays, checkEventFormRules } from "../../functions";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -51,46 +51,42 @@ export function fetchBleachers() {
 
     const formattedBleachers: DashboardBleacher[] = bleachers
       .map((bleacher) => {
-        const homeBase = homeBases.find((base) => base.home_base_id === bleacher.home_base_id);
-        const winterHomeBase = homeBases.find(
-          (base) => base.home_base_id === bleacher.winter_home_base_id
-        );
+        const homeBase = homeBases.find((base) => base.id === bleacher.summer_home_base_uuid);
+        const winterHomeBase = homeBases.find((base) => base.id === bleacher.winter_home_base_uuid);
 
-        const relatedWorkTrackers = workTrackers.filter(
-          (wt) => wt.bleacher_id === bleacher.bleacher_id
-        );
+        const relatedWorkTrackers = workTrackers.filter((wt) => wt.bleacher_uuid === bleacher.id);
 
         const relatedBlocks: DashboardBlock[] = blocks
-          .filter((block) => block.bleacher_id === bleacher.bleacher_id)
+          .filter((block) => block.bleacher_uuid === bleacher.id)
           .map((block) => ({
-            blockId: block.block_id,
-            bleacherId: bleacher.bleacher_id,
+            blockUuid: block.id,
+            bleacherUuid: bleacher.id,
             text: block.text ?? "",
             date: block.date ?? "",
           }));
 
         // ✅ Find all bleacherEvents for this bleacher
         const relatedBleacherEvents = bleacherEvents.filter(
-          (be) => be.bleacher_id === bleacher.bleacher_id
+          (be) => be.bleacher_uuid === bleacher.id
         );
 
         // ✅ Map event_ids to full DashboardEvent objects
         const relatedEvents: DashboardEvent[] = relatedBleacherEvents
           .map((be) => {
-            const event = events.find((e) => e.event_id === be.event_id);
+            const event = events.find((e) => e.id === be.event_uuid);
             if (!event) return null;
 
-            const address = addresses.find((a) => a.address_id === event.address_id);
+            const address = addresses.find((a) => a.id === event.address_uuid);
 
-            const relatedAlerts = eventAlerts[event.event_id] || [];
+            const relatedAlerts = eventAlerts[event.id] || [];
 
             return {
-              eventId: event.event_id,
-              bleacherEventId: be.bleacher_event_id,
+              eventUuid: event.id,
+              bleacherEventUuid: be.id,
               eventName: event.event_name,
               addressData: address
                 ? {
-                    addressId: address.address_id,
+                    addressUuid: address.id,
                     address: address.street,
                     city: address.city,
                     state: address.state_province,
@@ -120,32 +116,32 @@ export function fetchBleachers() {
               hslHue: event.hsl_hue,
               alerts: relatedAlerts,
               mustBeClean: event.must_be_clean,
-              bleacherIds: bleacherEvents
-                .filter((be) => be.event_id === event.event_id)
-                .map((be) => be.bleacher_id), // find all bleachers linked to this event
+              bleacherUuids: bleacherEvents
+                .filter((be) => be.event_uuid === event.id)
+                .map((be) => be.bleacher_uuid), // find all bleachers linked to this event
               goodshuffleUrl: event.goodshuffle_url ?? null,
-              ownerUserId: event.created_by_user_id ?? null,
+              ownerUserUuid: event.created_by_user_uuid ?? null,
             };
           })
           .filter((e) => e !== null) as DashboardEvent[]; // filter out nulls
 
         return {
-          bleacherId: bleacher.bleacher_id,
+          bleacherUuid: bleacher.id,
           bleacherNumber: bleacher.bleacher_number,
           bleacherRows: bleacher.bleacher_rows,
           bleacherSeats: bleacher.bleacher_seats,
-          homeBase: {
-            homeBaseId: homeBase?.home_base_id ?? 0,
+          summerHomeBase: {
+            homeBaseUuid: homeBase?.id ?? "",
             homeBaseName: homeBase?.home_base_name ?? "",
           },
           winterHomeBase: {
-            homeBaseId: winterHomeBase?.home_base_id ?? 0,
+            homeBaseUuid: winterHomeBase?.id ?? "",
             homeBaseName: winterHomeBase?.home_base_name ?? "",
           },
           events: relatedEvents,
           blocks: relatedBlocks,
           relatedWorkTrackers: relatedWorkTrackers.map((wt) => ({
-            workTrackerId: wt.work_tracker_id,
+            workTrackerUuid: wt.id,
             date: wt.date ?? "",
           })),
         };
@@ -167,16 +163,22 @@ export function fetchDashboardEvents() {
     if (!events) return [];
 
     const dashboardEvents: DashboardEvent[] = events.map((event) => {
-      const address = addresses.find((a) => a.address_id === event.address_id);
-      const relatedAlerts = eventAlerts[event.event_id] || [];
+      const address = addresses.find((a) => a.id === event.address_uuid);
+      const relatedAlerts = eventAlerts[event.id] || [];
+
+      // ✅ Filter out null values from bleacher UUIDs
+      const eventBleachers = bleacherEvents.filter((be) => be.event_uuid === event.id);
+      const bleacherUuids = eventBleachers
+        .map((be) => be.bleacher_uuid)
+        .filter((uuid): uuid is string => uuid !== null); // Type guard to remove nulls
 
       return {
-        eventId: event.event_id,
-        bleacherEventId: -1, // unused
+        eventUuid: event.id,
+        bleacherEventUuid: "-1", // unused
         eventName: event.event_name,
         addressData: address
           ? {
-              addressId: address.address_id,
+              addressUuid: address.id,
               address: address.street,
               city: address.city,
               state: address.state_province,
@@ -206,11 +208,9 @@ export function fetchDashboardEvents() {
         hslHue: event.hsl_hue,
         alerts: relatedAlerts,
         mustBeClean: event.must_be_clean,
-        bleacherIds: bleacherEvents
-          .filter((be) => be.event_id === event.event_id)
-          .map((be) => be.bleacher_id),
+        bleacherUuids: bleacherUuids,
         goodshuffleUrl: event.goodshuffle_url ?? null,
-        ownerUserId: event.created_by_user_id ?? null,
+        ownerUserUuid: event.created_by_user_uuid ?? null,
       };
     });
     // console.log("dashboardEvents", dashboardEvents);
@@ -227,12 +227,12 @@ export function fetchDashboardEvents() {
 
 async function saveAddress(
   address: AddressData | null,
-  addressId: number | null,
+  addressUuid: string | null,
   supabase: SupabaseClient<Database>
-): Promise<number | null> {
+): Promise<string | null> {
   if (!address) return null;
 
-  if (addressId) {
+  if (addressUuid) {
     const { error: addressError } = await supabase
       .from("Addresses")
       .update({
@@ -241,12 +241,12 @@ async function saveAddress(
         street: address.address ?? "",
         zip_postal: address.postalCode ?? "",
       })
-      .eq("address_id", addressId);
+      .eq("id", addressUuid);
 
     if (addressError) {
       createErrorToast(["Failed to update address.", addressError?.message ?? ""]);
     }
-    return addressId;
+    return addressUuid;
   } else {
     const { data: addressData, error: addressError } = await supabase
       .from("Addresses")
@@ -256,26 +256,26 @@ async function saveAddress(
         street: address.address ?? "",
         zip_postal: address.postalCode ?? "",
       })
-      .select("address_id")
+      .select("id")
       .single();
 
     if (addressError || !addressData) {
       createErrorToast(["Failed to insert address.", addressError?.message ?? ""]);
     }
-    if (!addressData?.address_id) {
+    if (!addressData?.id) {
       createErrorToast(["Inserted an address, but no address_id returned."]);
     }
-    return addressData?.address_id;
+    return addressData?.id;
   }
 }
 
-export function getAddressFromId(addressId: number | null): AddressData | null {
+export function getAddressFromUuid(addressUuid: string | null): AddressData | null {
   const addresses = useAddressesStore.getState().addresses;
-  if (!addressId) return null;
-  const address = addresses.find((a) => a.address_id === addressId);
+  if (!addressUuid) return null;
+  const address = addresses.find((a) => a.id === addressUuid);
   if (!address) return null;
   return {
-    addressId: address.address_id,
+    addressUuid: address.id,
     address: address.street,
     city: address.city,
     state: address.state_province,
@@ -283,16 +283,12 @@ export function getAddressFromId(addressId: number | null): AddressData | null {
   };
 }
 
-export async function fetchAddressFromId(
-  id: number,
+export async function fetchAddressFromUuid(
+  uuid: string,
   supabase: SupabaseClient<Database>,
   isServer?: boolean
 ): Promise<Tables<"Addresses"> | null> {
-  const { data, error } = await supabase
-    .from("Addresses")
-    .select("*")
-    .eq("address_id", id)
-    .single();
+  const { data, error } = await supabase.from("Addresses").select("*").eq("id", uuid).single();
 
   if (error) {
     if (isServer) {
@@ -318,29 +314,30 @@ export async function saveWorkTracker(
   }
   // const payCents = Math.round(payInput * 100);
 
-  let pickUpAddressId: number | null = workTracker.pickup_address_id;
-  let dropOffAddressId: number | null = workTracker.dropoff_address_id;
-  pickUpAddressId = await saveAddress(pickUpAddress, pickUpAddressId, supabase);
-  dropOffAddressId = await saveAddress(dropOffAddress, dropOffAddressId, supabase);
+  let pickUpAddressUuid: string | null = workTracker.pickup_address_uuid;
+  let dropOffAddressUuid: string | null = workTracker.dropoff_address_uuid;
+  pickUpAddressUuid = await saveAddress(pickUpAddress, pickUpAddressUuid, supabase);
+  dropOffAddressUuid = await saveAddress(dropOffAddress, dropOffAddressUuid, supabase);
 
-  if (workTracker.work_tracker_id !== -1) {
+  if (workTracker.id !== "-1") {
     const { error: workTrackerError } = await supabase
       .from("WorkTrackers")
       .update({
         date: workTracker.date,
-        pickup_address_id: pickUpAddressId,
+        pickup_address_uuid: pickUpAddressUuid,
         pickup_poc: workTracker.pickup_poc,
         pickup_time: workTracker.pickup_time,
-        dropoff_address_id: dropOffAddressId,
+        dropoff_address_uuid: dropOffAddressUuid,
         dropoff_poc: workTracker.dropoff_poc,
         dropoff_time: workTracker.dropoff_time,
         notes: workTracker.notes,
         pay_cents: workTracker.pay_cents,
-        bleacher_id: workTracker.bleacher_id,
+        bleacher_uuid: workTracker.bleacher_uuid,
         internal_notes: workTracker.internal_notes,
-        driver_id: workTracker.driver_id,
+        driver_uuid: workTracker.driver_uuid,
+        status: workTracker.status,
       })
-      .eq("work_tracker_id", workTracker.work_tracker_id);
+      .eq("id", workTracker.id);
 
     if (workTrackerError) {
       createErrorToast(["Failed to update work tracker.", workTrackerError?.message ?? ""]);
@@ -350,25 +347,26 @@ export async function saveWorkTracker(
       .from("WorkTrackers")
       .insert({
         date: workTracker.date,
-        pickup_address_id: pickUpAddressId,
+        pickup_address_uuid: pickUpAddressUuid,
         pickup_poc: workTracker.pickup_poc,
         pickup_time: workTracker.pickup_time,
-        dropoff_address_id: dropOffAddressId,
+        dropoff_address_uuid: dropOffAddressUuid,
         dropoff_poc: workTracker.dropoff_poc,
         dropoff_time: workTracker.dropoff_time,
         notes: workTracker.notes,
         pay_cents: workTracker.pay_cents,
-        bleacher_id: workTracker.bleacher_id,
+        bleacher_uuid: workTracker.bleacher_uuid,
         internal_notes: workTracker.internal_notes,
-        driver_id: workTracker.driver_id,
+        driver_uuid: workTracker.driver_uuid,
+        status: workTracker.status,
       })
-      .select("work_tracker_id")
+      .select("id")
       .single();
 
     if (workTrackerError || !workTrackerData) {
       createErrorToast(["Failed to insert work tracker.", workTrackerError?.message ?? ""]);
     }
-    if (!workTrackerData?.work_tracker_id) {
+    if (!workTrackerData?.id) {
       createErrorToast(["Inserted a work tracker, but no work_tracker_id returned."]);
     }
   }
@@ -377,22 +375,19 @@ export async function saveWorkTracker(
 }
 
 export async function deleteWorkTracker(
-  workTrackerId: number | null,
+  workTrackerUuid: string | null,
   supabase: SupabaseClient<Database>
 ): Promise<void> {
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);
   }
 
-  if (!workTrackerId || workTrackerId === -1) {
+  if (!workTrackerUuid || workTrackerUuid === "-1") {
     createErrorToast(["Invalid work tracker ID"]);
     throw new Error("Invalid work tracker ID");
   }
 
-  const { error } = await supabase
-    .from("WorkTrackers")
-    .delete()
-    .eq("work_tracker_id", workTrackerId);
+  const { error } = await supabase.from("WorkTrackers").delete().eq("id", workTrackerUuid);
 
   if (error) {
     createErrorToast(["Failed to delete work tracker.", error?.message ?? ""]);
@@ -433,7 +428,7 @@ export async function saveSetupTeardownBlock(
     throw new Error("No setup block selected to save.");
   }
 
-  if (block.bleacherEventId) {
+  if (block.bleacherEventUuid) {
     const data =
       block.type === "setup"
         ? {
@@ -447,7 +442,7 @@ export async function saveSetupTeardownBlock(
     const { error } = await supabase
       .from("BleacherEvents")
       .update(data)
-      .eq("bleacher_event_id", block.bleacherEventId);
+      .eq("bleacher_event_uuid", block.bleacherEventUuid);
     if (error) {
       console.error("Failed to update BleacherEvent:", error);
       toast.custom(
@@ -461,16 +456,16 @@ export async function saveSetupTeardownBlock(
       throw new Error(`Failed to update ${block.type} block: ${error.message}`);
     }
   } else {
-    console.error(`Failed to update ${block.type} block: No BleacherEventId provided.`);
+    console.error(`Failed to update ${block.type} block: No BleacherEventUuid provided.`);
     toast.custom(
       (t) =>
         React.createElement(ErrorToast, {
           id: t,
-          lines: [`Failed to update ${block.type} block: No BleacherEventId provided.`],
+          lines: [`Failed to update ${block.type} block: No BleacherEventUuid provided.`],
         }),
       { duration: 10000 }
     );
-    throw new Error(`Failed to update ${block.type} block: No BleacherEventId provided.`);
+    throw new Error(`Failed to update ${block.type} block: No BleacherEventUuid provided.`);
   }
   toast.custom(
     (t) =>
@@ -513,11 +508,11 @@ export async function saveBlock(
     throw new Error("No block selected to save.");
   }
 
-  if (block.blockId) {
+  if (block.blockUuid) {
     const { error } = await supabase
       .from("Blocks")
       .update({ text: block.text })
-      .eq("block_id", block.blockId);
+      .eq("id", block.blockUuid);
     if (error) {
       console.error("Failed to update block:", error);
       toast.custom(
@@ -532,7 +527,7 @@ export async function saveBlock(
     }
   } else {
     const { error } = await supabase.from("Blocks").insert({
-      bleacher_id: block.bleacherId,
+      bleacher_uuid: block.bleacherUuid,
       date: block.date,
       text: block.text,
     });
@@ -590,8 +585,8 @@ export async function deleteBlock(
     throw new Error("No block selected to save.");
   }
 
-  if (block.blockId) {
-    const { error } = await supabase.from("Blocks").delete().eq("block_id", block.blockId);
+  if (block.blockUuid) {
+    const { error } = await supabase.from("Blocks").delete().eq("id", block.blockUuid);
     if (error) {
       console.error("Failed to delete block:", error);
       toast.custom(
@@ -651,7 +646,7 @@ export async function createEvent(
   const { data: addressData, error: addressError } = await supabase
     .from("Addresses")
     .insert(newAddress)
-    .select("address_id")
+    .select("id")
     .single();
 
   if (addressError || !addressData) {
@@ -667,7 +662,7 @@ export async function createEvent(
     throw new Error(`Failed to insert address: ${addressError?.message}`);
   }
 
-  const address_id = addressData.address_id;
+  const address_uuid = addressData.id;
 
   // 2. Insert Event
   const newEvent: TablesInsert<"Events"> = {
@@ -681,20 +676,20 @@ export async function createEvent(
     seven_row: state.sevenRow,
     ten_row: state.tenRow,
     fifteen_row: state.fifteenRow,
-    address_id: address_id,
+    address_uuid: address_uuid,
     booked: state.selectedStatus === "Booked",
     notes: state.notes,
     hsl_hue: state.hslHue,
     must_be_clean: state.mustBeClean,
     goodshuffle_url: state.goodshuffleUrl ?? null,
-    created_by_user_id: state.ownerUserId ?? null,
+    created_by_user_uuid: state.ownerUserUuid ?? null,
     // NOTE: ownerUserId not persisted yet; add column (e.g., owner_user_id INT FK -> Users.user_id) if needed.
   };
 
   const { data: eventData, error: eventError } = await supabase
     .from("Events")
     .insert(newEvent)
-    .select("event_id")
+    .select("id")
     .single();
 
   if (eventError || !eventData) {
@@ -705,7 +700,7 @@ export async function createEvent(
     const { error: rollbackError } = await supabase
       .from("Addresses")
       .delete()
-      .eq("address_id", address_id);
+      .eq("id", address_uuid);
 
     if (rollbackError) {
       console.error("Failed to rollback address insert:", rollbackError);
@@ -724,12 +719,12 @@ export async function createEvent(
     throw new Error(`Failed to insert event: ${eventError?.message}`);
   }
 
-  const event_id = eventData.event_id;
+  const event_uuid = eventData.id;
 
   // ✅ 4. Insert into BleacherEvents
-  const bleacherEventInserts = state.bleacherIds.map((bleacher_id) => ({
-    event_id,
-    bleacher_id,
+  const bleacherEventInserts = state.bleacherUuids.map((bleacher_uuid) => ({
+    event_uuid,
+    bleacher_uuid,
   }));
 
   const { error: bleacherEventError } = await supabase
@@ -761,7 +756,7 @@ export async function createEvent(
 }
 
 export async function deleteEvent(
-  eventId: number | null,
+  eventUuid: string | null,
   stateProv: string,
   supabase: SupabaseClient<Database>,
   user: UserResource | null
@@ -771,18 +766,18 @@ export async function deleteEvent(
     throw new Error("No Supabase Client found");
   }
 
-  if (!eventId) {
-    console.error("No eventId provided for deletion");
+  if (!eventUuid) {
+    console.error("No eventUuid provided for deletion");
     throw new Error("No event selected to delete.");
   }
 
   // isUserPermitted(stateProv, user);
 
-  // 1. Find the event to get address_id
+  // 1. Find the event to get address_uuid
   const { data: eventData, error: fetchEventError } = await supabase
     .from("Events")
-    .select("address_id")
-    .eq("event_id", eventId)
+    .select("address_uuid")
+    .eq("id", eventUuid)
     .single();
 
   if (fetchEventError || !eventData) {
@@ -790,13 +785,13 @@ export async function deleteEvent(
     throw new Error(`Failed to fetch event: ${fetchEventError?.message}`);
   }
 
-  const address_id = eventData.address_id;
+  const address_uuid = eventData.address_uuid;
 
   // 2. Delete from BleacherEvents
   const { error: bleacherEventError } = await supabase
     .from("BleacherEvents")
     .delete()
-    .eq("event_id", eventId);
+    .eq("event_uuid", eventUuid);
   // NOTE: ownerUserId not persisted yet; requires schema change to store owner.
 
   if (bleacherEventError) {
@@ -813,10 +808,7 @@ export async function deleteEvent(
   }
 
   // 3. Delete Event
-  const { error: eventDeleteError } = await supabase
-    .from("Events")
-    .delete()
-    .eq("event_id", eventId);
+  const { error: eventDeleteError } = await supabase.from("Events").delete().eq("id", eventUuid);
 
   if (eventDeleteError) {
     console.error("Failed to delete event:", eventDeleteError);
@@ -832,11 +824,11 @@ export async function deleteEvent(
   }
 
   // 4. Delete Address
-  if (address_id) {
+  if (address_uuid) {
     const { error: addressDeleteError } = await supabase
       .from("Addresses")
       .delete()
-      .eq("address_id", address_id);
+      .eq("id", address_uuid);
 
     if (addressDeleteError) {
       console.error("Failed to delete address:", addressDeleteError);

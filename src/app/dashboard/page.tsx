@@ -11,8 +11,7 @@ import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useW
 import { Tables } from "../../../database.types";
 import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
 // import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
-import { fetchUserBleacherAssignmentsForSeason } from "@/features/dashboard/db/client/accountManagerBleachers";
-import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
+import { useDashboardFilterSettings } from "@/features/dashboardOptions/useDashboardFilterSettings";
 import WorkTrackerModal from "@/features/workTrackers/components/WorkTrackerModal";
 import { DashboardOptions } from "@/features/dashboardOptions/DashboardOptions";
 import { SeasonToggle } from "@/features/dashboardOptions/SeasonToggle";
@@ -27,7 +26,8 @@ export default function Page() {
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
     null
   );
-  const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
+  const { state: dashboardFilters } = useDashboardFilterSettings();
+  const onlyShowMyEvents = dashboardFilters?.onlyShowMyEvents ?? true;
   const refreshToken = useDataRefreshTokenStore((s) => s.token);
   const { isLoaded, userId } = useAuth();
   const supabase = useClerkSupabaseClient();
@@ -55,14 +55,9 @@ export default function Page() {
       // Fetch BleacherUsers assignments for the logged-in user
       // const supabase = await getSupabaseClient(token!);
 
-      const { summerAssignedBleacherIds, winterAssignedBleacherIds } =
-        await fetchUserBleacherAssignmentsForSeason(supabase, userId!);
-
       return {
         bleachers: b.bleachers,
         events: e.events,
-        summerAssignedBleacherIds,
-        winterAssignedBleacherIds,
       };
     },
   });
@@ -78,20 +73,20 @@ export default function Page() {
       const wt = s.selected;
       if (!wt) return;
       setSelectedWorkTracker({
-        work_tracker_id: wt.work_tracker_id,
-        bleacher_id: wt.bleacher_id,
+        id: wt.id,
+        bleacher_uuid: wt.bleacher_uuid,
         date: wt.date,
         created_at: "",
-        dropoff_address_id: null,
+        dropoff_address_uuid: null,
         dropoff_poc: null,
         dropoff_time: null,
         notes: null,
         pay_cents: null,
-        pickup_address_id: null,
+        pickup_address_uuid: null,
         pickup_poc: null,
         pickup_time: null,
         // user_id: null,
-        driver_id: null,
+        driver_uuid: null,
       } as Tables<"WorkTrackers">);
     });
     return () => unsub();
@@ -139,10 +134,7 @@ export default function Page() {
         <EventConfiguration showSetupTeardown={false} />
       </div>
       <div className="min-h-0 min-w-0 overflow-hidden">
-        <DashboardApp
-          summerAssignedBleacherIds={data.summerAssignedBleacherIds}
-          winterAssignedBleacherIds={data.winterAssignedBleacherIds}
-        />
+        <DashboardApp />
       </div>
     </div>
   );

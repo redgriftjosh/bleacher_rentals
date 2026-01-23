@@ -17,24 +17,25 @@ import {
 } from "@/components/ui/menubar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MultiSelect } from "@/components/MultiSelect";
-import { useFilterDashboardStore, YAxis } from "./useFilterDashboardStore";
+import { useDashboardFilterSettings } from "./useDashboardFilterSettings";
+import type { YAxis } from "./types";
 import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEventStore";
-import { getRowOptions, getStateProvOptions } from "../oldDashboard/functions";
 import { getHomeBaseOptions } from "@/utils/utils";
 import { useCurrentEventStore as useTestDashboardStore } from "@/features/dashboard/state/useTestDashboardStore";
+import { getRowOptions, getStateProvOptions } from "../dashboard/functions";
 
 export function DashboardOptions() {
-  // Stores
-  const yAxis = useFilterDashboardStore((s) => s.yAxis);
-  const setField = useFilterDashboardStore((s) => s.setField);
+  const { state, setField } = useDashboardFilterSettings();
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
-  const homeBaseIds = useFilterDashboardStore((s) => s.homeBaseIds);
-  const winterHomeBaseIds = useFilterDashboardStore((s) => s.winterHomeBaseIds);
-  const rows = useFilterDashboardStore((s) => s.rows);
-  const stateProvinces = useFilterDashboardStore((s) => s.stateProvinces);
-  const onlyShowMyEvents = useFilterDashboardStore((s) => s.onlyShowMyEvents);
-  const optimizationMode = useFilterDashboardStore((s) => s.optimizationMode);
-  const season = useFilterDashboardStore((s) => s.season);
+
+  const yAxis = state?.yAxis ?? "Bleachers";
+  const summerHomeBaseUuids = state?.summerHomeBaseUuids ?? [];
+  const winterHomeBaseUuids = state?.winterHomeBaseUuids ?? [];
+  const rows = state?.rows ?? [];
+  const stateProvinces = state?.stateProvinces ?? [];
+  const onlyShowMyEvents = state?.onlyShowMyEvents ?? true;
+  const optimizationMode = state?.optimizationMode ?? false;
+  const season = state?.season ?? null;
 
   // Options
   const homeBaseOptions = getHomeBaseOptions();
@@ -53,14 +54,17 @@ export function DashboardOptions() {
     if (homeBaseOptions.length === 0 || rowOptions.length === 0 || stateProvOptions.length === 0)
       return;
     setInitialized(true);
-    const allHomeIds = homeBaseOptions.map((o) => o.value);
+    const allHomeUuids = homeBaseOptions.map((o) => o.value);
     const allRowVals = rowOptions.map((o) => o.value);
     const allStates = stateProvOptions.map((o) => o.value);
-    setField("homeBaseIds", allHomeIds);
-    setField("winterHomeBaseIds", allHomeIds);
-    setField("rows", allRowVals);
-    setField("stateProvinces", allStates);
-  }, [initialized, homeBaseOptions, rowOptions, stateProvOptions, setField]);
+    if (!state) return;
+
+    // Only fill defaults once (and only when uninitialized)
+    if (summerHomeBaseUuids.length === 0) void setField("summerHomeBaseUuids", allHomeUuids);
+    if (winterHomeBaseUuids.length === 0) void setField("winterHomeBaseUuids", allHomeUuids);
+    if (rows.length === 0) void setField("rows", allRowVals);
+    if (stateProvinces.length === 0) void setField("stateProvinces", allStates);
+  }, [initialized, homeBaseOptions, rowOptions, stateProvOptions, setField, state, rows.length, stateProvinces.length, summerHomeBaseUuids.length, winterHomeBaseUuids.length]);
 
   return (
     <>
@@ -75,7 +79,7 @@ export function DashboardOptions() {
                 <MenubarSubContent>
                   <MenubarRadioGroup
                     value={yAxis}
-                    onValueChange={(val) => setField("yAxis", val as YAxis)}
+                    onValueChange={(val) => void setField("yAxis", val as YAxis)}
                   >
                     <MenubarRadioItem value="Bleachers">Bleachers</MenubarRadioItem>
                     <MenubarRadioItem value="Events">Events</MenubarRadioItem>
@@ -91,13 +95,13 @@ export function DashboardOptions() {
               </MenubarSubTrigger>
               <MenubarSubContent>
                 <MenubarRadioGroup value={season ?? "Don't Filter"}>
-                  <MenubarRadioItem value="SUMMER" onClick={() => setField("season", "SUMMER")}>
+                  <MenubarRadioItem value="SUMMER" onClick={() => void setField("season", "SUMMER")}>
                     Summer
                   </MenubarRadioItem>
-                  <MenubarRadioItem value="WINTER" onClick={() => setField("season", "WINTER")}>
+                  <MenubarRadioItem value="WINTER" onClick={() => void setField("season", "WINTER")}>
                     Winter
                   </MenubarRadioItem>
-                  <MenubarRadioItem value="Don't Filter" onClick={() => setField("season", null)}>
+                  <MenubarRadioItem value="Don't Filter" onClick={() => void setField("season", null)}>
                     Don't Filter
                   </MenubarRadioItem>
                 </MenubarRadioGroup>
@@ -123,24 +127,24 @@ export function DashboardOptions() {
             <MenubarSeparator />
             <MenubarCheckboxItem
               checked={optimizationMode}
-              onCheckedChange={(checked) => setField("optimizationMode", Boolean(checked))}
+              onCheckedChange={(checked) => void setField("optimizationMode", Boolean(checked))}
             >
               Optimization Mode
             </MenubarCheckboxItem>
             <MenubarCheckboxItem
               checked={onlyShowMyEvents}
-              onCheckedChange={(checked) => setField("onlyShowMyEvents", Boolean(checked))}
+              onCheckedChange={(checked) => void setField("onlyShowMyEvents", Boolean(checked))}
             >
               Only Show My Events
             </MenubarCheckboxItem>
-            <MenubarSeparator />
+            {/* <MenubarSeparator />
             <MenubarItem
               inset
               // when clicked go to /old-dashboard
               onClick={() => (window.location.href = "/old-dashboard")}
             >
               Old Dashboard
-            </MenubarItem>
+            </MenubarItem> */}
           </MenubarContent>
         </MenubarMenu>
       </Menubar>
@@ -158,8 +162,8 @@ export function DashboardOptions() {
                 <MultiSelect
                   options={homeBaseOptions}
                   color="bg-amber-500"
-                  onValueChange={(value) => setField("homeBaseIds", value)}
-                  forceSelectedValues={homeBaseIds}
+                  onValueChange={(value) => void setField("summerHomeBaseUuids", value)}
+                  forceSelectedValues={summerHomeBaseUuids}
                   placeholder="Home Bases"
                   variant="inverted"
                   maxCount={1}
@@ -172,8 +176,8 @@ export function DashboardOptions() {
                 <MultiSelect
                   options={homeBaseOptions}
                   color="bg-blue-500"
-                  onValueChange={(value) => setField("winterHomeBaseIds", value)}
-                  forceSelectedValues={winterHomeBaseIds}
+                  onValueChange={(value) => void setField("winterHomeBaseUuids", value)}
+                  forceSelectedValues={winterHomeBaseUuids}
                   placeholder="Home Bases"
                   variant="inverted"
                   maxCount={1}
@@ -191,9 +195,17 @@ export function DashboardOptions() {
             <DialogTitle>Rows</DialogTitle>
           </DialogHeader>
           <MultiSelect
-            options={rowOptions}
-            onValueChange={(value) => setField("rows", value)}
-            forceSelectedValues={rows}
+            options={rowOptions.map((o) => ({
+              value: String(o.value),
+              label: o.label,
+            }))}
+            onValueChange={(value) => {
+                const nextRows = value.map(Number);
+                void setField("rows", nextRows);
+                const quick = nextRows.length === 1 && (nextRows[0] === 10 || nextRows[0] === 15) ? nextRows[0] : null;
+                void setField("rowsQuickFilter", quick as any);
+              }}
+            forceSelectedValues={rows.map(String)}
             placeholder="Rows"
             variant="inverted"
             maxCount={1}
@@ -208,9 +220,12 @@ export function DashboardOptions() {
             <DialogTitle>States & Provinces</DialogTitle>
           </DialogHeader>
           <MultiSelect
-            options={stateProvOptions}
-            onValueChange={(value) => setField("stateProvinces", value)}
-            forceSelectedValues={stateProvinces}
+            options={stateProvOptions.map((o) => ({
+              value: String(o.value),
+              label: o.label,
+            }))}
+            onValueChange={(value) => void setField("stateProvinces", value.map(Number))}
+            forceSelectedValues={stateProvinces.map(String)}
             placeholder="States & Provinces"
             variant="inverted"
             maxCount={1}

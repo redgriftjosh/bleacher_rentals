@@ -15,7 +15,7 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
   const users = useUsersStore((s) => s.users);
   const ownerOptions = users.map((u) => ({
     label: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.email,
-    value: String(u.user_id),
+    value: String(u.id),
   }));
 
   // Ensure ownerUserId defaults when users load and it's still null
@@ -23,16 +23,16 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
     // Only auto-fill for brand new unsaved events where user has just opened the form.
     if (
       currentEventStore.isFormExpanded &&
-      currentEventStore.eventId === null &&
-      !currentEventStore.ownerUserId &&
+      currentEventStore.eventUuid === null &&
+      !currentEventStore.ownerUserUuid &&
       users.length > 0
     ) {
-      currentEventStore.setField("ownerUserId", users[0].user_id);
+      currentEventStore.setField("ownerUserUuid", users[0].id);
     }
   }, [
     users,
-    currentEventStore.ownerUserId,
-    currentEventStore.eventId,
+    currentEventStore.ownerUserUuid,
+    currentEventStore.eventUuid,
     currentEventStore.isFormExpanded,
   ]);
 
@@ -104,7 +104,7 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
           onAddressSelect={(data) =>
             currentEventStore.setField("addressData", {
               ...data,
-              addressId: currentEventStore.addressData?.addressId ?? null,
+              addressUuid: currentEventStore.addressData?.addressUuid ?? null,
             })
           }
           initialValue={currentEventStore.addressData?.address || ""}
@@ -207,13 +207,13 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
         <Dropdown
           options={ownerOptions}
           selected={
-            currentEventStore.ownerUserId ? String(currentEventStore.ownerUserId) : undefined
+            currentEventStore.ownerUserUuid ? String(currentEventStore.ownerUserUuid) : undefined
           }
           onSelect={(val) => {
             if (!val) {
-              currentEventStore.setField("ownerUserId", null);
+              currentEventStore.setField("ownerUserUuid", null);
             } else {
-              currentEventStore.setField("ownerUserId", parseInt(val as string, 10));
+              currentEventStore.setField("ownerUserUuid", val as string);
             }
           }}
           placeholder="Select owner"

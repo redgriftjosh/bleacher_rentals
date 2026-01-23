@@ -11,8 +11,6 @@ import { useUserStatusesStore } from "@/state/userStatusesStore";
 import { useUsersStore } from "@/state/userStore";
 import { Database } from "../../database.types";
 import { useTasksStore } from "@/state/tasksStore";
-import { useTaskStatusesStore } from "@/state/taskStatusesStore";
-import { useTaskTypesStore } from "@/state/taskTypesStore";
 import { useWorkTrackersStore } from "@/state/workTrackersStore";
 
 export type TableName = keyof Database["public"]["Tables"];
@@ -25,10 +23,9 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   Bleachers: () => useBleachersStore.getState().setStale(true),
   Blocks: () => useBlocksStore.getState().setStale(true),
   Drivers: () => useDriversStore.getState().setStale(true),
+  DashboardFilterSettings: () => {},
   Events: () => useEventsStore.getState().setStale(true),
   Tasks: () => useTasksStore.getState().setStale(true),
-  TaskStatuses: () => useTaskStatusesStore.getState().setStale(true),
-  TaskTypes: () => useTaskTypesStore.getState().setStale(true),
   HomeBases: () => useHomeBasesStore.getState().setStale(true),
   UserHomeBases: () => useUserHomeBasesStore.getState().setStale(true),
   UserRoles: () => {},
@@ -37,4 +34,7 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   WorkTrackers: () => useWorkTrackersStore.getState().setStale(true),
   BleacherUsers: () => {},
   AccountManagers: () => {},
+  WorkTrackerInspections: () => {},
+  InspectionPhotos: () => {},
+  Vehicles: () => {},
 };

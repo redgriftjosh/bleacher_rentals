@@ -4,9 +4,9 @@ import { BleacherItemRow } from "./BleacherItemRow";
 import { BleacherListSkeleton } from "./BleacherListSkeleton";
 
 export function BleacherList() {
-  const { data: bleachers, isLoading } = useBleachersQuery();
+  const bleachers = useBleachersQuery();
 
-  if (isLoading) return <BleacherListSkeleton />;
+  // if (isLoading) return <BleacherListSkeleton />;
   if (!bleachers) return null;
 
   return (

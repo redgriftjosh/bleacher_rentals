@@ -6,7 +6,7 @@ import { DashboardEvent } from "../types";
 export class EventLeftColumnCell extends Sprite {
   constructor(dimensions: { width: number; height: number }, baker: Baker, event: DashboardEvent) {
     super();
-    const key = `EventLeftColumnCell:${event.eventId}:${dimensions.width}x${dimensions.height}`;
+    const key = `EventLeftColumnCell:${event.eventUuid}:${dimensions.width}x${dimensions.height}`;
     const texture = baker.getTexture(key, dimensions, (c) => {
       const tile = new Tile(dimensions, baker, 0, 0);
 

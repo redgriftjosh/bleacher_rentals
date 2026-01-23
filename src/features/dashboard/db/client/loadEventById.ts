@@ -1,6 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
-import { useFilterDashboardStore } from "@/features/dashboardOptions/useFilterDashboardStore";
 import { Database } from "../../../../../database.types";
 
 /**
@@ -9,7 +8,7 @@ import { Database } from "../../../../../database.types";
  * @param supabase - Supabase client instance
  */
 export async function loadEventById(
-  eventId: number,
+  eventUuid: string,
   supabase: SupabaseClient<Database>
 ): Promise<void> {
   if (!supabase) {
@@ -24,11 +23,11 @@ export async function loadEventById(
       .select(
         `
         *,
-        address:Addresses!Events_address_id_fkey(*),
-        bleacher_events:BleacherEvents!BleacherEvents_event_id_fkey(bleacher_id)
+        address:Addresses!Events_address_uuid_fkey(*),
+        bleacher_events:BleacherEvents!BleacherEvents_event_uuid_fkey(bleacher_uuid)
       `
       )
-      .eq("event_id", eventId)
+      .eq("id", eventUuid)
       .single();
 
     if (eventError || !eventData) {
@@ -37,19 +36,19 @@ export async function loadEventById(
     }
 
     // Extract bleacher IDs from the relationship
-    const eventBleacherIds = eventData.bleacher_events?.map((be: any) => be.bleacher_id) ?? [];
+    const eventBleacherUuids = eventData.bleacher_events?.map((be: any) => be.bleacher_uuid) ?? [];
 
     // Load all event data into the store
     const store = useCurrentEventStore.getState();
     const { setField } = store;
 
-    setField("eventId", eventData.event_id);
+    setField("eventUuid", eventData.id);
     setField("eventName", eventData.event_name);
     setField(
       "addressData",
       eventData.address
         ? {
-            addressId: eventData.address.address_id,
+            addressUuid: eventData.address.id,
             address: eventData.address.street,
             city: eventData.address.city,
             state: eventData.address.state_province,
@@ -71,19 +70,11 @@ export async function loadEventById(
     setField("selectedStatus", eventData.booked ? "Booked" : "Quoted");
     setField("notes", eventData.notes ?? "");
     setField("mustBeClean", eventData.must_be_clean);
-    setField("bleacherIds", eventBleacherIds);
+    setField("bleacherUuids", eventBleacherUuids);
     setField("isFormExpanded", true); // Open the configuration panel
     setField("hslHue", eventData.hsl_hue);
     setField("goodshuffleUrl", eventData.goodshuffle_url);
-    setField("ownerUserId", eventData.created_by_user_id ?? null);
-
-    // Ensure the dashboard flips to Bleachers view and highlights selected bleachers
-    try {
-      const filterStore = useFilterDashboardStore.getState();
-      filterStore.setField("yAxis", "Bleachers");
-    } catch (error) {
-      console.error("Failed to set dashboard axis:", error);
-    }
+    setField("ownerUserUuid", eventData.created_by_user_uuid ?? null);
   } catch (error) {
     console.error("Failed to load event:", error);
   }

@@ -1,23 +1,24 @@
 "use client"; // Will run on server without this
 
 import { create } from "zustand";
-import { Tables } from "../../database.types";
-import { updateCurrentEventAlerts } from "@/features/oldDashboard/functions";
+import type { Database } from "../../database.types";
 
-type Store = {
-  taskTypes: Tables<"TaskTypes">[];
-  stale: boolean;
-  setTaskTypes: (data: Tables<"TaskTypes">[]) => void;
-  setStale: (stale: boolean) => void;
+export type TaskType = Database["public"]["Enums"]["task_type"];
+
+export type TaskTypeOption = {
+  value: TaskType;
+  label: string;
 };
 
-export const useTaskTypesStore = create<Store>((set) => ({
-  taskTypes: [],
-  stale: true,
-  setTaskTypes: (data) => set({ taskTypes: data }),
-  setStale: (stale) => set({ stale: stale }),
-}));
+const DEFAULT_TYPES: TaskTypeOption[] = [
+  { value: "feature", label: "Feature" },
+  { value: "bug", label: "Bug" },
+];
 
-useTaskTypesStore.subscribe((state) => {
-  updateCurrentEventAlerts();
-});
+type Store = {
+  taskTypes: TaskTypeOption[];
+};
+
+export const useTaskTypesStore = create<Store>(() => ({
+  taskTypes: DEFAULT_TYPES,
+}));

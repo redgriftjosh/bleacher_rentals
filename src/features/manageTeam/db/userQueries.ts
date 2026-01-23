@@ -1,88 +1,124 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "@/../database.types";
+"use client";
+import { db } from "@/components/providers/SystemProvider";
+import { sql } from "@powersync/kysely-driver";
+import { typedGetAll, expect } from "@/lib/powersync/typedQuery";
+import { CurrentUserState } from "../state/useCurrentUserStore";
 
-type TypedSupabaseClient = SupabaseClient<Database>;
+type FetchUserResult = {
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  isAdmin: number | null;
+  statusUuid: string | null;
+  isDriver: number;
+  isAccountManager: number;
+  tax: number | null;
+  payRateCents: number | null;
+  payCurrency: string | null;
+  payPerUnit: string | null;
+  accountManagerUuid: string | null;
+  summerBleacherUuids: string;
+  winterBleacherUuids: string;
+  assignedDriverUuids: string;
+};
 
-export async function fetchUserById(supabase: TypedSupabaseClient, userId: number) {
-  try {
-    // 1. Fetch user data
-    const { data: userData, error: userError } = await supabase
-      .from("Users")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
+export async function fetchUserById(userUuid: string): Promise<CurrentUserState | null> {
+  const compiled = db
+    .selectFrom("Users as u")
+    .leftJoin("Drivers as d", (join) =>
+      join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1)
+    )
+    .leftJoin("AccountManagers as am", (join) =>
+      join.onRef("am.user_uuid", "=", "u.id").on("am.is_active", "=", 1)
+    )
+    .select((eb) => {
+      const summerDistinct = eb
+        .selectFrom("BleacherUsers as bu")
+        .select(["bu.bleacher_uuid as bleacher_uuid"])
+        .whereRef("bu.user_uuid", "=", "u.id")
+        .where("bu.season", "=", "SUMMER")
+        .where("bu.bleacher_uuid", "is not", null)
+        .distinct()
+        .as("summer_rows");
 
-    if (userError) throw userError;
+      const winterDistinct = eb
+        .selectFrom("BleacherUsers as bu")
+        .select(["bu.bleacher_uuid as bleacher_uuid"])
+        .whereRef("bu.user_uuid", "=", "u.id")
+        .where("bu.season", "=", "WINTER")
+        .where("bu.bleacher_uuid", "is not", null)
+        .distinct()
+        .as("winter_rows");
 
-    // 2. Check if user is a driver (and active)
-    const { data: driverData } = await supabase
-      .from("Drivers")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("is_active", true)
-      .maybeSingle();
+      return [
+        "u.first_name as firstName",
+        "u.last_name as lastName",
+        "u.email as email",
+        "u.is_admin as isAdmin",
+        "u.status_uuid as statusUuid",
 
-    // 3. Check if user is an account manager (and active)
-    const { data: accountManagerData } = await supabase
-      .from("AccountManagers")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("is_active", true)
-      .maybeSingle();
+        // ✅ fully type-safe flags derived from LEFT JOIN presence
+        sql<number>`case when ${sql.ref("d.id")} is null then 0 else 1 end`.as("isDriver"),
+        sql<number>`case when ${sql.ref("am.id")} is null then 0 else 1 end`.as("isAccountManager"),
 
-    // 4. If account manager, fetch bleacher assignments
-    let summerBleacherIds: number[] = [];
-    let winterBleacherIds: number[] = [];
-    let assignedDriverIds: number[] = [];
+        // driver fields
+        "d.tax as tax",
+        "d.pay_rate_cents as payRateCents",
+        "d.pay_currency as payCurrency",
+        "d.pay_per_unit as payPerUnit",
+        "d.account_manager_uuid as accountManagerUuid",
 
-    if (accountManagerData) {
-      const accountManagerId = accountManagerData.account_manager_id;
+        // bleacher arrays
+        sql<string>`coalesce((
+          select json_group_array(bleacher_uuid)
+          from (${summerDistinct})
+        ), '[]')`.as("summerBleacherUuids"),
 
-      const { data: bleachers } = await supabase
-        .from("Bleachers")
-        .select("bleacher_id, summer_account_manager_id, winter_account_manager_id")
-        .or(
-          `summer_account_manager_id.eq.${accountManagerId},winter_account_manager_id.eq.${accountManagerId}`
-        );
+        sql<string>`coalesce((
+          select json_group_array(bleacher_uuid)
+          from (${winterDistinct})
+        ), '[]')`.as("winterBleacherUuids"),
 
-      if (bleachers) {
-        summerBleacherIds = bleachers
-          .filter((b) => b.summer_account_manager_id === accountManagerId)
-          .map((b) => b.bleacher_id);
-        winterBleacherIds = bleachers
-          .filter((b) => b.winter_account_manager_id === accountManagerId)
-          .map((b) => b.bleacher_id);
-      }
+        sql<string>`'[]'`.as("assignedDriverUuids"),
+      ];
+    })
+    .where("u.id", "=", userUuid)
+    .limit(1)
+    .compile();
 
-      // TODO: Fetch assigned drivers when that relationship is implemented
-      // For now, leaving as empty array
-    }
+  const data = await typedGetAll(compiled, expect<FetchUserResult>());
+  const raw = data[0];
 
-    return {
-      success: true,
-      data: {
-        firstName: userData.first_name,
-        lastName: userData.last_name,
-        email: userData.email,
-        isAdmin: userData.is_admin,
-        status: userData.status,
-        isDriver: !!driverData,
-        isAccountManager: !!accountManagerData,
-        tax: driverData?.tax ?? undefined,
-        payRateCents: driverData?.pay_rate_cents ?? null,
-        payCurrency: (driverData?.pay_currency as "CAD" | "USD") ?? "CAD",
-        payPerUnit: (driverData?.pay_per_unit as "KM" | "MI" | "HR") ?? "KM",
-        accountManagerId: driverData?.account_manager_id ?? null,
-        summerBleacherIds,
-        winterBleacherIds,
-        assignedDriverIds,
-      },
-    };
-  } catch (error) {
-    console.error("Error fetching user:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+  if (!raw) return null;
+
+  // Map to CurrentUserState
+  return {
+    // Basic user info
+    firstName: raw.firstName ?? "",
+    lastName: raw.lastName ?? "",
+    email: raw.email ?? "",
+    isAdmin: Boolean(raw.isAdmin),
+    statusUuid: raw.statusUuid,
+
+    // Role flags
+    isDriver: Boolean(raw.isDriver),
+    isAccountManager: Boolean(raw.isAccountManager),
+
+    // Driver-specific fields
+    tax: raw.tax ?? undefined,
+    payRateCents: raw.payRateCents,
+    payCurrency: (raw.payCurrency as "CAD" | "USD") ?? "USD",
+    payPerUnit: (raw.payPerUnit as "KM" | "MI" | "HR") ?? "KM",
+    accountManagerUuid: raw.accountManagerUuid,
+
+    // Account Manager-specific fields
+    summerBleacherUuids: JSON.parse(raw.summerBleacherUuids),
+    winterBleacherUuids: JSON.parse(raw.winterBleacherUuids),
+    assignedDriverUuids: JSON.parse(raw.assignedDriverUuids),
+
+    // UI state defaults
+    existingUserUuid: null,
+    isOpen: false,
+    isSubmitting: false,
+  };
 }
