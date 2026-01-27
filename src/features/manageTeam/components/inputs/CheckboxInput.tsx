@@ -11,6 +11,7 @@ interface CheckboxInputProps {
   description: string;
   icon?: ReactNode;
   tooltip?: ReactNode;
+  disabled?: boolean;
 }
 
 export function CheckboxInput({
@@ -21,6 +22,7 @@ export function CheckboxInput({
   description,
   icon,
   tooltip,
+  disabled,
 }: CheckboxInputProps) {
   return (
     <div className="grid grid-cols-4 items-center gap-4">
@@ -40,6 +42,7 @@ export function CheckboxInput({
           id={id}
           checked={checked}
           onCheckedChange={(checked) => onChange(checked as boolean)}
+          disabled={disabled}
         />
         <label htmlFor={id} className="text-sm text-gray-600 cursor-pointer">
           {description}
