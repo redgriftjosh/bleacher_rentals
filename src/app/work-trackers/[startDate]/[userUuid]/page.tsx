@@ -88,6 +88,7 @@ export default function WorkTrackersForUserPage() {
         {/* Header */}
         <thead className="bg-gray-100">
           <tr>
+            <th className={`w-0 whitespace-nowrap ${className}`}>Status</th>
             <th className={`w-[8%] ${className}`}>Date</th>
             <th className={`w-[8%] ${className}`}>Bleacher</th>
             <th className={`w-[12%] ${className}`}>Pickup Location</th>
