@@ -5,6 +5,8 @@ import { TextInput } from "../inputs/TextInput";
 import { CheckboxInput } from "../inputs/CheckboxInput";
 import Warning from "../util/Warning";
 import StatusButtons from "../inputs/StatusButtons";
+import { useSession } from "@clerk/nextjs";
+import { useCurrentUser } from "@/hooks/db/useCurrentUser";
 
 export function UserSection() {
   const firstName = useCurrentUserStore((s) => s.firstName);
@@ -13,6 +15,7 @@ export function UserSection() {
   const isAdmin = useCurrentUserStore((s) => s.isAdmin);
   const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
   const setField = useCurrentUserStore((s) => s.setField);
+  const { data } = useCurrentUser();
 
   const isEditing = existingUserUuid !== null;
 
@@ -28,7 +31,6 @@ export function UserSection() {
           required
           readOnly={isEditing}
         />
-
         <TextInput
           id="lastName"
           label="Last Name"
@@ -38,7 +40,6 @@ export function UserSection() {
           required
           readOnly={isEditing}
         />
-
         <TextInput
           id="email"
           label="Email"
@@ -49,7 +50,6 @@ export function UserSection() {
           required
           readOnly={isEditing}
         />
-
         <CheckboxInput
           id="isAdmin"
           label="Admin"
@@ -63,10 +63,9 @@ export function UserSection() {
               <p>Make sure you trust this user.</p>
             </>
           }
+          disabled={data?.[0]?.is_admin !== 1}
         />
-
-        <StatusButtons />
-
+        {data && data[0]?.id !== existingUserUuid && data[0]?.is_admin === 1 && <StatusButtons />}
         {isAdmin && (
           // <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           //   <p className="text-sm text-yellow-800">
