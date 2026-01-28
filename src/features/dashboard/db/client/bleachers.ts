@@ -42,6 +42,7 @@ type Row = {
   work_trackers: {
     id: string; // WorkTrackers.id (uuid)
     date: string | null;
+    status: string;
   }[];
 };
 
@@ -96,7 +97,8 @@ export async function FetchDashboardBleachers(
 
     work_trackers:WorkTrackers!WorkTrackers_bleacher_uuid_fkey(
       id,
-      date
+      date,
+      status
     )
       `
     )
@@ -145,6 +147,7 @@ export async function FetchDashboardBleachers(
     workTrackers: (r.work_trackers ?? []).map((wt) => ({
       workTrackerUuid: wt.id,
       date: wt.date ?? "",
+      status: wt.status as Database["public"]["Enums"]["worktracker_status"],
     })),
   }));
 

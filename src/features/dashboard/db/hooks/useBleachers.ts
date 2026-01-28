@@ -3,6 +3,7 @@ import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { Bleacher } from "../../types";
+import { Database } from "../../../../../database.types";
 import { useMemo } from "react";
 
 type BleacherFlatRow = {
@@ -33,6 +34,7 @@ type BleacherFlatRow = {
 
   work_tracker_uuid: string | null;
   work_tracker_date: string | null;
+  work_tracker_status: string | null;
 };
 
 function toBool(v: BleacherFlatRow["booked"]): boolean {
@@ -125,6 +127,7 @@ function reshapeBleachers(rows: BleacherFlatRow[]): Bleacher[] {
         b.workTrackers.push({
           workTrackerUuid: r.work_tracker_uuid,
           date: r.work_tracker_date ?? "",
+          status: (r.work_tracker_status ?? "draft") as Database["public"]["Enums"]["worktracker_status"],
         });
       }
     }
@@ -174,6 +177,7 @@ export function useBleachers() {
 
       "wt.id as work_tracker_uuid",
       "wt.date as work_tracker_date",
+      "wt.status as work_tracker_status",
     ])
     .orderBy("b.bleacher_number", "asc")
     .compile();
