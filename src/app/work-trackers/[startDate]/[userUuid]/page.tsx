@@ -18,6 +18,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useQueryClient } from "@tanstack/react-query";
+import { releaseAllDraftWorkTrackers } from "@/features/workTrackers/db/releaseAllDraftWorkTrackers";
 
 const getRandomLoadingMessage = () => {
   const messages = [
@@ -52,37 +53,20 @@ export default function WorkTrackersForUserPage() {
   const handleReleaseAll = async () => {
     if (!supabase) return;
     setIsReleasing(true);
-    const { data: drafts, error: fetchErr } = await supabase
-      .from("WorkTrackers")
-      .select("id")
-      .eq("user_uuid", userUuid)
-      .eq("status", "draft")
-      .gte("date", startDate);
-
-    if (fetchErr || !drafts?.length) {
-      setIsReleasing(false);
+    try {
+      const count = await releaseAllDraftWorkTrackers(supabase, userUuid, startDate);
       setShowReleaseModal(false);
-      if (fetchErr) {
-        createErrorToast(["Failed to fetch draft work trackers", fetchErr.message]);
-      } else {
+      if (count === 0) {
         createErrorToast(["No draft work trackers to release."]);
+      } else {
+        createSuccessToast([`Released ${count} trip${count > 1 ? "s" : ""}`]);
+        queryClient.invalidateQueries({ queryKey: ["work-trackers", userUuid, startDate] });
       }
-      return;
-    }
-
-    const { error: updateErr } = await supabase
-      .from("WorkTrackers")
-      .update({ status: "released" })
-      .in("id", drafts.map((d) => d.id));
-
-    setIsReleasing(false);
-    setShowReleaseModal(false);
-
-    if (updateErr) {
-      createErrorToast(["Failed to release work trackers", updateErr.message]);
-    } else {
-      createSuccessToast([`Released ${drafts.length} trip${drafts.length > 1 ? "s" : ""}`]);
-      queryClient.invalidateQueries({ queryKey: ["work-trackers", userUuid, startDate] });
+    } catch (err: any) {
+      setShowReleaseModal(false);
+      createErrorToast(["Failed to release work trackers", err?.message ?? ""]);
+    } finally {
+      setIsReleasing(false);
     }
   };
 
@@ -174,8 +158,8 @@ export default function WorkTrackersForUserPage() {
           </DialogHeader>
           <p className="text-sm text-gray-600">
             Are you sure you want to release these trips to the Driver? All work trackers currently
-            marked as <span className="font-semibold text-yellow-700">Draft</span> will be set
-            to <span className="font-semibold text-blue-700">Released</span>.
+            marked as <span className="font-semibold text-yellow-700">Draft</span> will be set to{" "}
+            <span className="font-semibold text-blue-700">Released</span>.
           </p>
           <p className="text-xs text-gray-400 mt-1">
             Work trackers that are already released or in a later status will not be affected.
