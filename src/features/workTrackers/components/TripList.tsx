@@ -6,6 +6,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";
 import { calculateFinancialTotals } from "../util";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import WorkTrackerStatusBadge from "./WorkTrackerStatusBadge";
 
 type Props = {
   userUuid: string;
@@ -59,6 +60,9 @@ export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
           onClick={() => onSelectWorkTracker && onSelectWorkTracker(row.workTracker)}
           className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer"
         >
+          <th className={`w-0 whitespace-nowrap px-2 ${className}`}>
+            <WorkTrackerStatusBadge status={row.workTracker.status} showText={false} />
+          </th>
           <th className={`w-[8%] ${className}`}>{row.workTracker.date}</th>
           <th className={`w-[8%] ${className}`}>{row.bleacherNumber}</th>
           <th className={`w-[12%] ${className}`}>{row.pickup_address?.street ?? ""}</th>
@@ -74,6 +78,7 @@ export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
         </tr>
       ))}
       <tr className="border-b h-12 border-gray-200 ">
+        <th className={`w-0 ${className}`}></th>
         <th className={`w-[8%] ${classNameBold}`}>SubTotal</th>
         <th className={`w-[8%] ${className}`}></th>
         <th className={`w-[12%] ${className}`}></th>
@@ -88,6 +93,7 @@ export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
         <th className={` ${className}`}></th>
       </tr>
       <tr className="border-b h-12 border-gray-200 ">
+        <th className={`w-0 ${className}`}></th>
         <th className={`w-[8%] ${classNameBold}`}>{`HST (${data?.driverTax}%)`}</th>
         <th className={`w-[8%] ${className}`}></th>
         <th className={`w-[12%] ${className}`}></th>
@@ -102,6 +108,7 @@ export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
         <th className={` ${className}`}></th>
       </tr>
       <tr className="border-b h-12 border-gray-200 ">
+        <th className={`w-0 ${className}`}></th>
         <th className={`w-[8%] ${classNameBold}`}>Total Amount To Be Paid</th>
         <th className={`w-[8%] ${className}`}></th>
         <th className={`w-[12%] ${className}`}></th>

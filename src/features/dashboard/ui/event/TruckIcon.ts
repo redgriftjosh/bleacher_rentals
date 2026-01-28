@@ -1,6 +1,22 @@
 import { Container, Graphics, Sprite, Texture, BlurFilter, FederatedPointerEvent } from "pixi.js";
 import { Baker } from "../../util/Baker";
 import { PngManager } from "../../util/PngManager";
+import type { Database } from "../../../../../database.types";
+
+type WorkTrackerStatus = Database["public"]["Enums"]["worktracker_status"];
+
+/** Map work-tracker statuses to hex tint colours (matching Tailwind -600/-800 palette). */
+const STATUS_TINT: Record<WorkTrackerStatus, number> = {
+  draft: 0xca8a04, // yellow-600
+  released: 0x2563eb, // blue-600
+  accepted: 0x16c958, // green-600
+  dest_pickup: 0x17e3a4, // emerald-600
+  pickup_inspection: 0x17e3a4, // emerald-600
+  dest_dropoff: 0x17e3a4, // emerald-600
+  dropoff_inspection: 0x17e3a4, // emerald-600
+  completed: 0x166534, // green-800
+  cancelled: 0xdc2626, // red-600
+};
 
 /**
  * Truck icon with hover animation + shadow and click interaction.
@@ -141,6 +157,10 @@ export class TruckIcon extends Container {
 
     const blurFilter = new BlurFilter({});
     this.shadowGraphics.filters = [blurFilter];
+  }
+
+  public setStatus(status: WorkTrackerStatus) {
+    this.iconSprite.tint = STATUS_TINT[status] ?? 0xffffff;
   }
 
   public resetHoverState() {

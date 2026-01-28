@@ -7,6 +7,9 @@ import { EventLeftColumnCell } from "../ui/EventLeftColumnCell";
 import { Bleacher, DashboardEvent } from "../types";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 import { useBleacherLocationModalStore } from "../state/useBleacherLocationModalStore";
+import { useSwapStore } from "../state/useSwapStore";
+import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
+import { computeAffectedSwaps } from "../db/client/swapBleacherEvents";
 
 /**
  * CellRenderer for the sticky left column that displays bleacher information
@@ -23,6 +26,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
   // Maintain a pool keyed by row index so per-row toggle state can persist across rebuilds
   private cellPool: Map<number, BleacherCell> = new Map();
   private unsub?: () => void;
+  private unsubSwap?: () => void;
   private isFormExpanded = false;
   private selectedBleacherUuids: string[] = [];
 
@@ -59,12 +63,20 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
       if (ticker && typeof ticker.addOnce === "function") {
         ticker.addOnce(() => {
           for (const [row, cell] of this.cellPool.entries()) {
-            if (expandedChanged) cell.setFormExpanded(this.isFormExpanded);
+            if (expandedChanged) {
+              cell.setFormExpanded(this.isFormExpanded);
+              // Reset swap state when form collapses
+              if (!this.isFormExpanded) {
+                useSwapStore.getState().reset();
+              }
+            }
             if (selectedChanged) {
               const b = this.bleachers[row];
               if (b) cell.setSelected(this.selectedBleacherUuids.includes(b.bleacherUuid));
             }
           }
+          // Update swap button visibility when form expansion or selection changes
+          this.updateSwapButtons();
         });
       } else {
         // Fallback: update immediately if ticker missing (likely during teardown)
@@ -75,8 +87,66 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
             if (b) cell.setSelected(this.selectedBleacherUuids.includes(b.bleacherUuid));
           }
         }
+        this.updateSwapButtons();
       }
     });
+
+    // Subscribe to swap store for UI updates
+    this.unsubSwap = useSwapStore.subscribe(() => {
+      const ticker = (this.app as any)?.ticker;
+      if (ticker && typeof ticker.addOnce === "function") {
+        ticker.addOnce(() => this.updateSwapButtons());
+      } else {
+        this.updateSwapButtons();
+      }
+    });
+  }
+
+  /**
+   * Compute the swap button state for a single bleacher given current store state.
+   */
+  private getSwapStateForBleacher(bleacher: Bleacher | undefined): "default" | "selected" | "prominent" | "hidden" {
+    if (!bleacher) return "hidden";
+    const swapState = useSwapStore.getState();
+    const eventState = useCurrentEventStore.getState();
+    const currentEventUuid = eventState.eventUuid;
+
+    if (!this.isFormExpanded || !currentEventUuid) return "hidden";
+
+    const bleacherHasCurrentEvent = bleacher.bleacherEvents.some(
+      (e) => e.eventUuid === currentEventUuid
+    );
+
+    if (swapState.mode === "idle") {
+      return "default";
+    } else if (swapState.mode === "selecting") {
+      if (bleacher.bleacherUuid === swapState.firstBleacherUuid) {
+        return "selected";
+      } else if (swapState.firstHasCurrentEvent) {
+        return bleacherHasCurrentEvent ? "hidden" : "prominent";
+      } else {
+        return bleacherHasCurrentEvent ? "prominent" : "hidden";
+      }
+    }
+    // confirming mode
+    return "hidden";
+  }
+
+  /**
+   * Apply swap state to a single cell (used on initial creation).
+   */
+  private applySwapStateToCell(cell: BleacherCell, bleacher: Bleacher | undefined) {
+    cell.setSwapState(this.getSwapStateForBleacher(bleacher));
+  }
+
+  /**
+   * Update swap button states across all visible cells based on current swap/event state.
+   */
+  private updateSwapButtons() {
+    for (const [row, cell] of this.cellPool.entries()) {
+      const bleacher = this.bleachers[row];
+      cell.setSwapState(this.getSwapStateForBleacher(bleacher));
+    }
   }
 
   private getOrCreateCell(row: number): BleacherCell {
@@ -110,9 +180,55 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
         }
       });
 
+      // Wire swap handler
+      cell.setSwapHandler((bleacherUuid) => {
+        const eventState = useCurrentEventStore.getState();
+        const currentEventUuid = eventState.eventUuid;
+        if (!currentEventUuid || !eventState.isFormExpanded) return;
+
+        const swapState = useSwapStore.getState();
+        const bl = this.bleachers.find((b) => b.bleacherUuid === bleacherUuid);
+        if (!bl) return;
+
+        const hasCurrentEvent = bl.bleacherEvents.some(
+          (e) => e.eventUuid === currentEventUuid
+        );
+
+        if (swapState.mode === "idle") {
+          // First selection
+          swapState.selectFirst(bleacherUuid, hasCurrentEvent);
+        } else if (swapState.mode === "selecting") {
+          if (bleacherUuid === swapState.firstBleacherUuid) {
+            // Deselect - go back to idle
+            swapState.reset();
+            return;
+          }
+
+          // Second selection - compute affected swaps and open modal
+          const allBleachers = useDashboardBleachersStore.getState().data;
+          const sourceBleacherUuid = swapState.firstHasCurrentEvent
+            ? swapState.firstBleacherUuid!
+            : bleacherUuid;
+          const targetBleacherUuid = swapState.firstHasCurrentEvent
+            ? bleacherUuid
+            : swapState.firstBleacherUuid!;
+
+          const swaps = computeAffectedSwaps(
+            sourceBleacherUuid,
+            targetBleacherUuid,
+            currentEventUuid,
+            allBleachers
+          );
+
+          swapState.confirmSecond(bleacherUuid, swaps);
+        }
+      });
+
       // Initial state application
       cell.setFormExpanded(this.isFormExpanded);
       if (bleacher) cell.setSelected(this.selectedBleacherUuids.includes(bleacher.bleacherUuid));
+      // Apply initial swap button state for this cell
+      this.applySwapStateToCell(cell, bleacher);
       this.cellPool.set(row, cell);
     }
     return cell;
@@ -161,7 +277,11 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     try {
       this.unsub?.();
     } catch {}
+    try {
+      this.unsubSwap?.();
+    } catch {}
     this.unsub = undefined;
+    this.unsubSwap = undefined;
     this.cellPool.clear();
     this.baker.destroyAll();
   }

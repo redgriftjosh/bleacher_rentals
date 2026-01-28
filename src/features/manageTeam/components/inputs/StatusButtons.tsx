@@ -18,6 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { STATUSES } from "../../constants";
+import { useSession } from "@clerk/nextjs";
 
 export default function StatusButtons() {
   const supabase = useClerkSupabaseClient();

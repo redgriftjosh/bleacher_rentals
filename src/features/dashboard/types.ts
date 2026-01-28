@@ -1,3 +1,4 @@
+import { Database } from "../../../database.types";
 import { AddressData } from "../eventConfiguration/state/useCurrentEventStore";
 
 export type EditBlock = {
@@ -56,6 +57,7 @@ export type BleacherBlock = {
 export type BleacherWorkTracker = {
   workTrackerUuid: string;
   date: string;
+  status: Database["public"]["Enums"]["worktracker_status"];
 };
 
 export type DashboardBleacher = {
