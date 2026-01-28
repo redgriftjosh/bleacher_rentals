@@ -1,6 +1,7 @@
 import { Container, Sprite, Text } from "pixi.js";
 import { Baker } from "../util/Baker";
 import { BleacherCellToggle } from "./BleacherCellToggle";
+import { SwapButton, SwapButtonState } from "./SwapButton";
 import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT } from "../values/constants";
 import { Bleacher } from "../types";
 import { MapPinIcon } from "./event/MapPinIcon";
@@ -39,9 +40,11 @@ export class BleacherCell extends Container {
   private baker: Baker;
   private bleacherUuid?: string; // reuse-safe id
   private toggle: BleacherCellToggle; // added toggle
+  private swapButton: SwapButton; // swap button
   private mapPinIcon: MapPinIcon; // added map pin icon
   private onToggle?: (bleacherUuid: string) => void;
   private onMapPinClick?: (bleacherUuid: string) => void;
+  private onSwap?: (bleacherUuid: string) => void;
 
   // Map bleacherRows to Tailwind-like colors:
   // 7 -> green-700 (#15803d), 10 -> red-700 (#b91c1c), 15 -> yellow-500 (#eab308), else black
@@ -80,6 +83,17 @@ export class BleacherCell extends Container {
 
     this.toggle.on("pointertap", () => {
       if (this.bleacherUuid != null && this.onToggle) this.onToggle(this.bleacherUuid);
+    });
+
+    // swap button setup - positioned just left of the toggle button
+    this.swapButton = new SwapButton(baker);
+    this.swapButton.x = this.toggle.x - this.swapButton.buttonWidth - 4;
+    this.swapButton.y = Math.max(2, (CELL_HEIGHT - this.swapButton.buttonHeight) / 2 - 2);
+    this.swapButton.visible = false;
+    this.addChild(this.swapButton);
+
+    this.swapButton.on("pointertap", () => {
+      if (this.bleacherUuid != null && this.onSwap) this.onSwap(this.bleacherUuid);
     });
 
     // map pin icon setup
@@ -150,6 +164,14 @@ export class BleacherCell extends Container {
 
   setSelected(selected: boolean) {
     this.toggle.setMode(selected ? "minus" : "plus");
+  }
+
+  setSwapHandler(fn: (bleacherUuid: string) => void) {
+    this.onSwap = fn;
+  }
+
+  setSwapState(state: SwapButtonState) {
+    this.swapButton.setState(state);
   }
 
   /**
