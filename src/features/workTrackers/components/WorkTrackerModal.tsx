@@ -27,6 +27,9 @@ type WorkTrackerModalProps = {
   setSelectedBlock: (block: EditBlock | null) => void;
 };
 
+import { useDrivers } from "../hooks/useDrivers.db";
+import { useCurrentUser } from "@/hooks/db/useCurrentUser";
+
 export default function WorkTrackerModal({
   selectedWorkTracker,
   setSelectedWorkTracker,
@@ -34,21 +37,15 @@ export default function WorkTrackerModal({
 }: WorkTrackerModalProps) {
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
+  const { data: currentUserData } = useCurrentUser();
+  const currentUser = currentUserData?.[0];
+  const isAdmin = currentUser?.is_admin === 1;
 
-  // Fetch drivers with user data using React Query
-  const {
-    data: drivers = [],
-    isLoading: isDriversLoading,
-    isError: isDriversError,
-  } = useQuery({
-    queryKey: ["drivers-with-users"],
-    queryFn: async () => {
-      return getDriversWithUsers(supabase);
-    },
-  });
+  // Fetch drivers with user data using PowerSync
+  const { data: drivers = [], isLoading: isDriversLoading, error: driversError } = useDrivers();
 
   const [workTracker, setWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
-    selectedWorkTracker
+    selectedWorkTracker,
   );
   const pickupAddress = getAddressFromUuid(selectedWorkTracker?.pickup_address_uuid ?? null);
   const dropoffAddress = getAddressFromUuid(selectedWorkTracker?.dropoff_address_uuid ?? null);
@@ -56,7 +53,7 @@ export default function WorkTrackerModal({
   const [dropOffAddress, setDropOffAddress] = useState<AddressData | null>(dropoffAddress);
 
   const [payInput, setPayInput] = useState(
-    selectedWorkTracker?.pay_cents != null ? (selectedWorkTracker?.pay_cents / 100).toFixed(2) : ""
+    selectedWorkTracker?.pay_cents != null ? (selectedWorkTracker?.pay_cents / 100).toFixed(2) : "",
   );
 
   // Helper to format address for Distance Matrix API
@@ -103,7 +100,7 @@ export default function WorkTrackerModal({
     refetchOnWindowFocus: false,
     queryFn: async () => {
       const res = await fetch(
-        `/api/distance?origin=${encodeURIComponent(origin)}&dest=${encodeURIComponent(dest)}`
+        `/api/distance?origin=${encodeURIComponent(origin)}&dest=${encodeURIComponent(dest)}`,
       );
       if (!res.ok) throw new Error(`Distance API failed (${res.status})`);
       return res.json() as Promise<{
@@ -122,7 +119,7 @@ export default function WorkTrackerModal({
     setPayInput(
       selectedWorkTracker?.pay_cents != null
         ? (selectedWorkTracker?.pay_cents / 100).toFixed(2)
-        : ""
+        : "",
     );
   }, [selectedWorkTracker]);
 
@@ -147,7 +144,7 @@ export default function WorkTrackerModal({
   });
 
   // Fetch driver payment data when driver is selected
-  const selectedDriver = drivers.find((d) => d.driver_uuid === workTracker?.driver_uuid);
+  const selectedDriver = drivers?.find((d) => d.driver_uuid === workTracker?.driver_uuid);
   const {
     data: driverPaymentData,
     isLoading: isDriverPaymentLoading,
@@ -184,7 +181,7 @@ export default function WorkTrackerModal({
       setPayInput(
         fetchedWorkTracker.workTracker && fetchedWorkTracker.workTracker.pay_cents != null
           ? (fetchedWorkTracker.workTracker.pay_cents / 100).toFixed(2)
-          : ""
+          : "",
       );
       setPickUpAddress({
         addressUuid: fetchedWorkTracker.pickupAddress?.id ?? null,
@@ -208,9 +205,8 @@ export default function WorkTrackerModal({
       await saveWorkTracker(workTracker, pickUpAddress, dropOffAddress, supabase);
       // Refresh bleachers directly into the zustand store so Pixi updates without remounting
       try {
-        const { FetchDashboardBleachers } = await import(
-          "@/features/dashboard/db/client/bleachers"
-        );
+        const { FetchDashboardBleachers } =
+          await import("@/features/dashboard/db/client/bleachers");
         await FetchDashboardBleachers(supabase);
       } catch {}
       // Optionally refresh any active work-tracker-specific queries used elsewhere
@@ -236,9 +232,8 @@ export default function WorkTrackerModal({
       await deleteWorkTracker(workTracker.id, supabase);
       // Refresh bleachers directly into the zustand store so Pixi updates without remounting
       try {
-        const { FetchDashboardBleachers } = await import(
-          "@/features/dashboard/db/client/bleachers"
-        );
+        const { FetchDashboardBleachers } =
+          await import("@/features/dashboard/db/client/bleachers");
         await FetchDashboardBleachers(supabase);
       } catch {}
       // Optionally refresh any active work-tracker-specific queries used elsewhere
@@ -356,8 +351,8 @@ export default function WorkTrackerModal({
                   <div className="flex-[2]">
                     <label className={labelClassName}>Driver</label>
                     <Dropdown
-                      options={drivers.map((driver) => ({
-                        label: (driver.user.first_name || "") + " " + (driver.user.last_name || ""),
+                      options={(drivers ?? []).map((driver) => ({
+                        label: (driver.first_name || "") + " " + (driver.last_name || ""),
                         value: driver.driver_uuid,
                       }))}
                       selected={workTracker?.driver_uuid}
@@ -369,6 +364,12 @@ export default function WorkTrackerModal({
                       }
                       placeholder={isDriversLoading ? "Loading..." : "Select Driver"}
                     />
+                    {!isAdmin && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        You're only seeing drivers assigned to you. You need to be an Admin to see
+                        all Drivers.
+                      </p>
+                    )}
                   </div>
                   <div className="flex-1">
                     <label className={labelClassName}>Bleacher</label>
