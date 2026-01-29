@@ -16,19 +16,17 @@ import { fetchBleachersForOptions, fetchDriverPaymentData } from "@/app/team/_li
 import { toLatLngString, calculateDriverPay } from "../util";
 import RouteMapPreview from "./RouteMapPreview";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
-import { getDriversWithUsers } from "../db/getDrivers.db";
 import WorkTrackerStatusBadge from "./WorkTrackerStatusBadge";
 import { EditBlock } from "@/features/dashboard/types";
 import { fetchWorkTrackerByUuid } from "@/features/dashboard/db/client/fetchWorkTracker";
+import { SelectDriver } from "./SelectDriver";
+import { useDrivers } from "../hooks/useDrivers.db";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
   setSelectedWorkTracker: (block: Tables<"WorkTrackers"> | null) => void;
   setSelectedBlock: (block: EditBlock | null) => void;
 };
-
-import { useDrivers } from "../hooks/useDrivers.db";
-import { useCurrentUser } from "@/hooks/db/useCurrentUser";
 
 export default function WorkTrackerModal({
   selectedWorkTracker,
@@ -37,12 +35,9 @@ export default function WorkTrackerModal({
 }: WorkTrackerModalProps) {
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
-  const { data: currentUserData } = useCurrentUser();
-  const currentUser = currentUserData?.[0];
-  const isAdmin = currentUser?.is_admin === 1;
 
   // Fetch drivers with user data using PowerSync
-  const { data: drivers = [], isLoading: isDriversLoading, error: driversError } = useDrivers();
+  const { data: drivers = [] } = useDrivers();
 
   const [workTracker, setWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
     selectedWorkTracker,
@@ -350,26 +345,16 @@ export default function WorkTrackerModal({
                 <div className="flex flex-row gap-2">
                   <div className="flex-[2]">
                     <label className={labelClassName}>Driver</label>
-                    <Dropdown
-                      options={(drivers ?? []).map((driver) => ({
-                        label: (driver.first_name || "") + " " + (driver.last_name || ""),
-                        value: driver.driver_uuid,
-                      }))}
-                      selected={workTracker?.driver_uuid}
-                      onSelect={(id) =>
+                    <SelectDriver
+                      value={workTracker?.driver_uuid ?? null}
+                      onChange={(id) =>
                         setWorkTracker((prev) => ({
                           ...prev!,
                           driver_uuid: id,
                         }))
                       }
-                      placeholder={isDriversLoading ? "Loading..." : "Select Driver"}
+                      placeholder="Select Driver"
                     />
-                    {!isAdmin && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        You're only seeing drivers assigned to you. You need to be an Admin to see
-                        all Drivers.
-                      </p>
-                    )}
                   </div>
                   <div className="flex-1">
                     <label className={labelClassName}>Bleacher</label>
