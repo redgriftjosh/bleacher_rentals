@@ -21,13 +21,13 @@ export type AccountManagerOption = {
 /**
  * Hook to fetch all account managers with their account_manager_id from the database
  */
-export function useAccountManagers(): AccountManagerOption[] {
+export function useAccountManagers(filter: boolean = true): AccountManagerOption[] {
   const compiled = db
     .selectFrom("AccountManagers as am")
     .innerJoin("Users as u", "u.id", "am.user_uuid")
     .leftJoin(
       "Drivers as d",
-      (join) => join.onRef("d.account_manager_uuid", "=", "am.id").on("d.is_active", "=", 1) // only active drivers
+      (join) => join.onRef("d.account_manager_uuid", "=", "am.id").on("d.is_active", "=", 1), // only active drivers
     )
     .select([
       "am.id as accountManagerUuid",
@@ -49,5 +49,5 @@ export function useAccountManagers(): AccountManagerOption[] {
   const { data } = useTypedQuery(compiled, expect<AccountManagerOption>());
   const searchQuery = useSearchQueryStore((s) => s.searchQuery);
 
-  return filterBySearch(data ?? [], searchQuery);
+  return filter ? filterBySearch(data ?? [], searchQuery) : (data ?? []);
 }

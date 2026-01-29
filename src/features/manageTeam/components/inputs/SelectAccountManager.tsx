@@ -29,7 +29,7 @@ export function SelectAccountManager({
   placeholder = "Select Account Manager...",
 }: SelectAccountManagerProps) {
   const [open, setOpen] = useState(false);
-  const accountManagers = useAccountManagers();
+  const accountManagers = useAccountManagers(false);
   console.log("Account Managers:", JSON.stringify(accountManagers, null, 2));
 
   const selectedAccountManager = useMemo(() => {
