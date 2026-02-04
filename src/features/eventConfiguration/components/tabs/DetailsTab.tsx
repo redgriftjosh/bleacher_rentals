@@ -13,10 +13,10 @@ export const DetailsTab = () => {
   const selectedStatus = useCurrentEventStore((s) => s.selectedStatus);
   const mustBeClean = useCurrentEventStore((s) => s.mustBeClean);
   const notes = useCurrentEventStore((s) => s.notes);
-  const eventId = useCurrentEventStore((s) => s.eventId);
+  const eventId = useCurrentEventStore((s) => s.eventUuid);
 
   const [revenueDisplay, setRevenueDisplay] = React.useState(
-    contractRevenueCents !== null ? (contractRevenueCents / 100).toFixed(2) : ""
+    contractRevenueCents !== null ? (contractRevenueCents / 100).toFixed(2) : "",
   );
 
   // Only sync when eventId changes (loading a different event)

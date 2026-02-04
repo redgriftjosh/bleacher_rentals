@@ -3115,3 +3115,10 @@ SELECT pg_catalog.setval('"supabase_functions"."hooks_id_seq"', 1, false);
 -- \unrestrict jgJy3fnWmS0SoPNV6b1r91tslqqoBgNrgoqc0zkztaaDhe7qSbRLfbUNs4kdddj
 
 RESET ALL;
+
+UPDATE public."Events"
+SET event_status = CASE
+  WHEN booked = true THEN 'booked'::public.event_status
+  ELSE 'quoted'::public.event_status
+END
+WHERE event_status IS NULL;
