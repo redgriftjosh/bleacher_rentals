@@ -12,11 +12,13 @@ import {
   FileText,
 } from "lucide-react";
 import { SideNavButton } from "./SideNavButton";
+import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 
 const SideBar = () => {
   const { user } = useUser();
   const users = useUsersStore((s) => s.users);
   const currentUser = users.find((u) => u.clerk_user_id === user?.id);
+  const openModal = useCurrentEventStore((s) => s.openModal);
 
   if (!currentUser) return null;
 
@@ -28,7 +30,10 @@ const SideBar = () => {
       data-testid="sidebar"
     >
       <div className="py-2 px-1 ">
-        <button className="w-full cursor-pointer rounded p-1 border-1 border-gray-300 shadow-none bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center gap-2">
+        <button
+          onClick={openModal}
+          className="w-full cursor-pointer rounded p-1 border-1 border-gray-300 shadow-none bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center gap-2"
+        >
           <Plus className="h-4 w-4" />
           Create Quote
         </button>

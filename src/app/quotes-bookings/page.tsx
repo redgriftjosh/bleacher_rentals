@@ -6,6 +6,7 @@ import { DateTime } from "luxon";
 import { PageHeader } from "@/components/PageHeader";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { DataTable, Column, CellText, CellSecondary, CellBadge } from "@/components/DataTable";
+import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 
 type EventWithAccountManager = {
   id: string;
@@ -50,6 +51,8 @@ function capitalizeStatus(status: string | null): string {
 }
 
 export default function QuotesBookingsPage() {
+  const openModal = useCurrentEventStore((s) => s.openModal);
+
   const compiled = useMemo(() => {
     return db
       .selectFrom("Events as e")
@@ -127,7 +130,7 @@ export default function QuotesBookingsPage() {
       <PageHeader
         title="Quotes & Bookings"
         subtitle="View all events ordered by most recent creation date"
-        action={<PrimaryButton onClick={() => {}}>+ Create Quote</PrimaryButton>}
+        action={<PrimaryButton onClick={openModal}>+ Create Quote</PrimaryButton>}
       />
 
       <DataTable

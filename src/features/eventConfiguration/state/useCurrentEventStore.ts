@@ -45,6 +45,8 @@ export type CurrentEventState = {
   goodshuffleUrl: string | null;
   hueOpen: boolean;
   contractRevenueCents: number | null;
+  // Modal state for Create Quote modal
+  isModalOpen: boolean;
 };
 
 // Me take event form stuff, add tools to change it.
@@ -54,6 +56,12 @@ export type CurrentEventStore = CurrentEventState & {
 
   // Me smash reset. Everything go back to start.
   resetForm: () => void;
+
+  // Open the Create Quote modal
+  openModal: () => void;
+
+  // Close the Create Quote modal
+  closeModal: () => void;
 };
 
 const initialState: CurrentEventState = {
@@ -83,6 +91,7 @@ const initialState: CurrentEventState = {
   goodshuffleUrl: null,
   hueOpen: false,
   contractRevenueCents: null,
+  isModalOpen: false,
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.
@@ -95,6 +104,12 @@ export const useCurrentEventStore = create<CurrentEventStore>((set) => ({
 
   // Boom. Reset everything.
   resetForm: () => set(initialState),
+
+  // Open modal with fresh form
+  openModal: () => set({ ...initialState, isModalOpen: true }),
+
+  // Close modal and reset form
+  closeModal: () => set(initialState),
 }));
 
 useCurrentEventStore.subscribe((state) => {
