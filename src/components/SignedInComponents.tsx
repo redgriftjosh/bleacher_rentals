@@ -1,6 +1,6 @@
 "use client";
 import Header from "@/components/Header";
-import SideBar from "@/components/Sidebar";
+import SideBar from "@/components/sidebar/Sidebar";
 import useSupabaseSubscriptions from "@/hooks/useSupabaseSubscriptions";
 import { SignOutButton, useSession, useUser } from "@clerk/nextjs";
 import { Button } from "./ui/button";
