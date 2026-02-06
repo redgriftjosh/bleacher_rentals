@@ -5,8 +5,9 @@
   "scripts": {
     "generate-types-staging": "supabase gen types typescript --project-id \"sycrvbdpdbaczyfdwcnc\" --schema public > database.types.ts",
     "generate-types-local": "supabase gen types typescript --local --schema public > database.types.ts",
-    "dev": "concurrently \"next dev --webpack\" \"ngrok http --url=up-marmot-tops.ngrok-free.app 3000\"",
-    "dev:e2e": "next dev -p 3000 --webpack",
+    "postinstall": "powersync-web copy-assets -o public",
+    "dev": "concurrently \"next dev\" \"ngrok http --url=up-marmot-tops.ngrok-free.app 3000\"",
+    "dev:e2e": "next dev -p 3000",
     "check-deprecated": "tsx scripts/check-deprecated-db.mts",
     "prebuild": "npm run check-deprecated",
     "build": "next build",
