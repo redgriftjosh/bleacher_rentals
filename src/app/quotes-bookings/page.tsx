@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { DataTable, Column, CellText, CellSecondary, CellBadge } from "@/components/DataTable";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
+import { loadEventForModal } from "@/features/eventConfiguration/functions/loadEventForModal";
 
 type EventWithAccountManager = {
   id: string;
@@ -140,6 +141,7 @@ export default function QuotesBookingsPage() {
         emptyMessage="No events found"
         isLoading={isLoading}
         loadingMessage="Loading events..."
+        onRowClick={(event) => loadEventForModal(event.id)}
       />
     </main>
   );

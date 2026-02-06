@@ -14,6 +14,7 @@ type DataTableProps<T> = {
   emptyMessage?: string;
   isLoading?: boolean;
   loadingMessage?: string;
+  onRowClick?: (row: T) => void;
 };
 
 export function DataTable<T>({
@@ -23,6 +24,7 @@ export function DataTable<T>({
   emptyMessage = "No data found",
   isLoading = false,
   loadingMessage = "Loading...",
+  onRowClick,
 }: DataTableProps<T>) {
   if (isLoading) {
     return (
@@ -57,7 +59,11 @@ export function DataTable<T>({
               </tr>
             ) : (
               data.map((row) => (
-                <tr key={keyExtractor(row)} className="hover:bg-gray-50 transition-colors">
+                <tr
+                  key={keyExtractor(row)}
+                  className={`hover:bg-gray-50 transition-colors ${onRowClick ? "cursor-pointer" : ""}`}
+                  onClick={() => onRowClick?.(row)}
+                >
                   {columns.map((column) => (
                     <td key={column.key} className="px-4 py-4 whitespace-nowrap">
                       {column.render(row)}
