@@ -547,6 +547,71 @@ export type Database = {
           },
         ]
       }
+      ScorecardTargets: {
+        Row: {
+          created_at: string
+          id: string
+          quotes_annually: number
+          quotes_quarterly: number
+          quotes_weekly: number
+          sales_annually: number
+          sales_quarterly: number
+          sales_weekly: number
+          updated_at: string
+          user_uuid: string
+          value_of_revenue_annually_cents: number
+          value_of_revenue_quarterly_cents: number
+          value_of_revenue_weekly_cents: number
+          value_of_sales_annually_cents: number
+          value_of_sales_quarterly_cents: number
+          value_of_sales_weekly_cents: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          quotes_annually?: number
+          quotes_quarterly?: number
+          quotes_weekly?: number
+          sales_annually?: number
+          sales_quarterly?: number
+          sales_weekly?: number
+          updated_at?: string
+          user_uuid: string
+          value_of_revenue_annually_cents?: number
+          value_of_revenue_quarterly_cents?: number
+          value_of_revenue_weekly_cents?: number
+          value_of_sales_annually_cents?: number
+          value_of_sales_quarterly_cents?: number
+          value_of_sales_weekly_cents?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          quotes_annually?: number
+          quotes_quarterly?: number
+          quotes_weekly?: number
+          sales_annually?: number
+          sales_quarterly?: number
+          sales_weekly?: number
+          updated_at?: string
+          user_uuid?: string
+          value_of_revenue_annually_cents?: number
+          value_of_revenue_quarterly_cents?: number
+          value_of_revenue_weekly_cents?: number
+          value_of_sales_annually_cents?: number
+          value_of_sales_quarterly_cents?: number
+          value_of_sales_weekly_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ScorecardTargets_user_uuid_fkey"
+            columns: ["user_uuid"]
+            isOneToOne: true
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Tasks: {
         Row: {
           created_at: string
