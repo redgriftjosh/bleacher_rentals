@@ -3,6 +3,9 @@ import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { useMemo } from "react";
 import { DateTime } from "luxon";
+import { PageHeader } from "@/components/PageHeader";
+import { PrimaryButton } from "@/components/PrimaryButton";
+import { DataTable, Column, CellText, CellSecondary, CellBadge } from "@/components/DataTable";
 
 type EventWithAccountManager = {
   id: string;
@@ -28,16 +31,16 @@ function formatDate(dateString: string | null): string {
   return date.toFormat("MMM d, yyyy");
 }
 
-function getStatusBadgeClass(status: string | null): string {
+function getStatusVariant(status: string | null): "success" | "warning" | "error" | "default" {
   switch (status?.toLowerCase()) {
     case "booked":
-      return "bg-green-100 text-green-800 border-green-300";
+      return "success";
     case "quoted":
-      return "bg-yellow-100 text-yellow-800 border-yellow-300";
+      return "warning";
     case "lost":
-      return "bg-red-100 text-red-800 border-red-300";
+      return "error";
     default:
-      return "bg-gray-100 text-gray-800 border-gray-300";
+      return "default";
   }
 }
 
@@ -68,13 +71,48 @@ export default function QuotesBookingsPage() {
 
   const { data, isLoading, error } = useTypedQuery(compiled, expect<EventWithAccountManager>());
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500">Loading events...</div>
-      </div>
-    );
-  }
+  const columns: Column<EventWithAccountManager>[] = [
+    {
+      key: "event_name",
+      header: "Event Name",
+      render: (event) => <CellText bold>{event.event_name}</CellText>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (event) => (
+        <CellBadge variant={getStatusVariant(event.event_status)}>
+          {capitalizeStatus(event.event_status)}
+        </CellBadge>
+      ),
+    },
+    {
+      key: "account_manager",
+      header: "Account Manager",
+      render: (event) => (
+        <CellText>
+          {event.account_manager_first_name || event.account_manager_last_name
+            ? `${event.account_manager_first_name || ""} ${event.account_manager_last_name || ""}`.trim()
+            : "Not Assigned"}
+        </CellText>
+      ),
+    },
+    {
+      key: "start_date",
+      header: "Start Date",
+      render: (event) => <CellSecondary>{formatDate(event.event_start)}</CellSecondary>,
+    },
+    {
+      key: "end_date",
+      header: "End Date",
+      render: (event) => <CellSecondary>{formatDate(event.event_end)}</CellSecondary>,
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      render: (event) => <CellText bold>{formatCurrency(event.contract_revenue_cents)}</CellText>,
+    },
+  ];
 
   if (error) {
     return (
@@ -85,86 +123,21 @@ export default function QuotesBookingsPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Quotes & Bookings</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          View all events ordered by most recent creation date
-        </p>
-      </div>
+    <main>
+      <PageHeader
+        title="Quotes & Bookings"
+        subtitle="View all events ordered by most recent creation date"
+        action={<PrimaryButton onClick={() => {}}>+ Create Quote</PrimaryButton>}
+      />
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Event Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Account Manager
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Start Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  End Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {!data || data.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                    No events found
-                  </td>
-                </tr>
-              ) : (
-                data.map((event) => (
-                  <tr key={event.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{event.event_name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusBadgeClass(
-                          event.event_status,
-                        )}`}
-                      >
-                        {capitalizeStatus(event.event_status)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {event.account_manager_first_name || event.account_manager_last_name
-                          ? `${event.account_manager_first_name || ""} ${event.account_manager_last_name || ""}`.trim()
-                          : "Not Assigned"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{formatDate(event.event_start)}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{formatDate(event.event_end)}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {formatCurrency(event.contract_revenue_cents)}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+      <DataTable
+        columns={columns}
+        data={data}
+        keyExtractor={(event) => event.id}
+        emptyMessage="No events found"
+        isLoading={isLoading}
+        loadingMessage="Loading events..."
+      />
+    </main>
   );
 }
