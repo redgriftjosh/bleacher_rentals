@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
 import { fetchEventsGroupedByWeek, WeekData } from "../db";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/accordion";
 import { WeekHeader } from "./WeekHeader";
 import { WeekTable } from "./WeekTable";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 type WeekMetrics = {
   totalQuotes: number;
@@ -31,13 +31,13 @@ function calculateWeekMetrics(week: WeekData): WeekMetrics {
   let totalLostValue = 0;
 
   week.events.forEach((event) => {
-    if (event.contract_status === "QUOTED") {
+    if (event.contract_status === "quoted") {
       totalQuotes++;
       totalQuotedValue += event.contract_revenue_cents || 0;
-    } else if (event.contract_status === "BOOKED") {
+    } else if (event.contract_status === "booked") {
       totalBooked++;
       totalSignedValue += event.contract_revenue_cents || 0;
-    } else if (event.contract_status === "LOST") {
+    } else if (event.contract_status === "lost") {
       totalLost++;
       totalLostValue += event.contract_revenue_cents || 0;
     }
@@ -54,12 +54,11 @@ function calculateWeekMetrics(week: WeekData): WeekMetrics {
 }
 
 export function WeeksList() {
-  const { getToken } = useAuth();
+  const supabase = useClerkSupabaseClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ["scorecard-weeks"],
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchEventsGroupedByWeek(token);
+      return fetchEventsGroupedByWeek(supabase);
     },
   });
 
@@ -68,7 +67,7 @@ export function WeeksList() {
   if (error) {
     return (
       <div className="p-4">
-        <p>Uh Oh, Something went wrong... 😬</p>
+        <p>Uh Oh, Something went wrong... </p>
       </div>
     );
   }

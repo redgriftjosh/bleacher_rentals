@@ -40,6 +40,12 @@ const menuItems: MenuItem[] = [
     icon: TruckIcon,
     roles: [USER_ROLES.ADMIN, USER_ROLES.ACCOUNT_MANAGER],
   },
+  {
+    label: "Scorecard",
+    href: "/scorecard",
+    icon: CalendarIcon,
+    roles: [USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN],
+  },
 ];
 
 const SideBar = () => {

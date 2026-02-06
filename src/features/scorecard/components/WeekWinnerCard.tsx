@@ -25,7 +25,7 @@ export function WeekWinnerCard({ events }: WeekWinnerCardProps) {
   const managerTotals = new Map<string, WinnerData>();
 
   events.forEach((event) => {
-    if (event.contract_status === "BOOKED" && event.account_manager) {
+    if (event.contract_status === "booked" && event.account_manager) {
       const key = `${event.account_manager.first_name}_${event.account_manager.last_name}`;
       const existing = managerTotals.get(key);
       const value = event.contract_revenue_cents || 0;

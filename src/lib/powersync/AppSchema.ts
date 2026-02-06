@@ -89,6 +89,8 @@ const EventsCols = {
   goodshuffle_url: column.text,
   address_uuid: column.text,
   created_by_user_uuid: column.text,
+  event_status: column.text,
+  contract_revenue_cents: column.integer,
 } satisfies PowerSyncColsFor<"Events">;
 const Events = new Table(EventsCols, {
   indexes: {

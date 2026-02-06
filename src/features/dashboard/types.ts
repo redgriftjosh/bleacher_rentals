@@ -1,6 +1,8 @@
 import { Database } from "../../../database.types";
 import { AddressData } from "../eventConfiguration/state/useCurrentEventStore";
 
+export type EventStatus = "quoted" | "booked" | "lost";
+
 export type EditBlock = {
   key: string;
   blockUuid: string | null;
@@ -105,10 +107,10 @@ export type DashboardEvent = {
   sameDayTeardown: boolean;
   lenient: boolean;
   token: string;
-  selectedStatus: "Quoted" | "Booked";
+  selectedStatus: EventStatus;
   notes: string;
   numDays: number; // this is inserted into the css propery 2 days should be "200%"
-  status: "Quoted" | "Booked";
+  status: EventStatus;
   hslHue: number | null;
   alerts: string[];
   mustBeClean: boolean;

@@ -36,9 +36,9 @@ export const DetailsTab = () => {
             <label className="block text-sm font-medium text-black/70">Status</label>
             <Dropdown
               options={[
-                { label: "Quoted", value: "QUOTED" },
-                { label: "Booked", value: "BOOKED" },
-                { label: "Lost", value: "LOST" },
+                { label: "Quoted", value: "quoted" },
+                { label: "Booked", value: "booked" },
+                { label: "Lost", value: "lost" },
               ]}
               selected={selectedStatus}
               onSelect={(e) => setField("selectedStatus", e as EventStatus)}

@@ -15,7 +15,7 @@ export type AddressData = {
   placeId?: string;
 };
 
-export type EventStatus = "Quoted" | "Booked";
+import { EventStatus } from "@/features/dashboard/types";
 
 export type CurrentEventState = {
   eventUuid: string | null;
@@ -44,6 +44,7 @@ export type CurrentEventState = {
   alerts: string[];
   goodshuffleUrl: string | null;
   hueOpen: boolean;
+  contractRevenueCents: number | null;
 };
 
 // Me take event form stuff, add tools to change it.
@@ -71,7 +72,7 @@ const initialState: CurrentEventState = {
   teardownEnd: "",
   sameDayTeardown: true,
   lenient: false,
-  selectedStatus: "Quoted",
+  selectedStatus: "quoted",
   notes: "",
   mustBeClean: false,
   bleacherUuids: [],
@@ -81,6 +82,7 @@ const initialState: CurrentEventState = {
   alerts: [],
   goodshuffleUrl: null,
   hueOpen: false,
+  contractRevenueCents: null,
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.

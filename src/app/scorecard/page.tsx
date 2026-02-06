@@ -3,25 +3,23 @@ import { WeeksList } from "@/features/scorecard/components/WeeksList";
 import { RevenueSpeedometer } from "@/features/scorecard/components/RevenueSpeedometer";
 import { RevenueLineGraph } from "@/features/scorecard/components/RevenueLineGraph";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@clerk/nextjs";
 import { fetchYearToDateRevenue, fetchMonthlyRevenue } from "@/features/scorecard/db";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export default function ScorecardPage() {
-  const { getToken } = useAuth();
+  const supabase = useClerkSupabaseClient();
 
   const { data: ytdRevenue = 0 } = useQuery({
     queryKey: ["ytd-revenue"],
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchYearToDateRevenue(token);
+      return fetchYearToDateRevenue(supabase);
     },
   });
 
   const { data: monthlyRevenue = [] } = useQuery({
     queryKey: ["monthly-revenue"],
     queryFn: async () => {
-      const token = await getToken({ template: "supabase" });
-      return fetchMonthlyRevenue(token);
+      return fetchMonthlyRevenue(supabase);
     },
   });
 

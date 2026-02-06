@@ -1,14 +1,15 @@
 import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { Database } from "../../../database.types";
 
 export type EventWithUser = {
-  event_id: number;
+  event_id: string;
   event_name: string;
   created_at: string;
   event_start: string;
   event_end: string;
   contract_revenue_cents: number | null;
-  contract_status: string;
+  contract_status: string | null;
   account_manager: {
     first_name: string;
     last_name: string;
@@ -24,35 +25,30 @@ export type WeekData = {
   events: EventWithUser[];
 };
 
-export async function fetchEventsGroupedByWeek(token: string | null): Promise<{
+export async function fetchEventsGroupedByWeek(
+  supabase: SupabaseClient<Database>,
+): Promise<{
   weeks: WeekData[];
 }> {
-  if (!token) {
-    createErrorToast(["No token found"]);
-    return { weeks: [] };
-  }
-
-  const supabase = await getSupabaseClient(token);
-
   // Fetch events with their account manager data
   const { data: events, error } = await supabase
     .from("Events")
     .select(
       `
-      event_id,
+      id,
       event_name,
       created_at,
       event_start,
       event_end,
       contract_revenue_cents,
-      contract_status,
-      created_by_user_id,
-      Users!Events_created_by_user_id_fkey (
+      event_status,
+      created_by_user_uuid,
+      Users!Events_created_by_user_uuid_fkey (
         first_name,
         last_name,
         clerk_user_id
       )
-    `
+    `,
     )
     .order("event_start", { ascending: false });
 
@@ -64,7 +60,7 @@ export async function fetchEventsGroupedByWeek(token: string | null): Promise<{
   // Group events by week
   const weekMap = new Map<string, EventWithUser[]>();
 
-  events?.forEach((event) => {
+  events?.forEach((event: (typeof events)[number]) => {
     const eventStartDate = new Date(event.event_start);
     const weekStart = getWeekStart(eventStartDate);
     const weekEnd = new Date(weekStart);
@@ -72,13 +68,13 @@ export async function fetchEventsGroupedByWeek(token: string | null): Promise<{
     const weekLabel = formatWeekLabel(weekStart, weekEnd);
 
     const eventWithUser: EventWithUser = {
-      event_id: event.event_id,
+      event_id: event.id,
       event_name: event.event_name,
       created_at: event.created_at,
       event_start: event.event_start,
       event_end: event.event_end,
       contract_revenue_cents: event.contract_revenue_cents,
-      contract_status: event.contract_status,
+      contract_status: event.event_status,
       account_manager: Array.isArray(event.Users) ? event.Users[0] : event.Users,
     };
 
@@ -127,22 +123,12 @@ function formatWeekLabel(weekStart: Date, weekEnd: Date): string {
   const endMonth = weekEnd.toLocaleDateString("en-US", { month: "short" });
   const endDay = weekEnd.getDate();
 
-  // If same month, only show month once
-  //   if (startMonth === endMonth) {
-  //     return `${startMonth} ${startDay} - ${endDay}`;
-  //   }
-
   return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
 }
 
-export async function fetchYearToDateRevenue(token: string | null): Promise<number> {
-  if (!token) {
-    createErrorToast(["No token found"]);
-    return 0;
-  }
-
-  const supabase = await getSupabaseClient(token);
-
+export async function fetchYearToDateRevenue(
+  supabase: SupabaseClient<Database>,
+): Promise<number> {
   // Get the start of the current year
   const now = new Date();
   const yearStart = new Date(now.getFullYear(), 0, 1); // January 1st
@@ -151,7 +137,7 @@ export async function fetchYearToDateRevenue(token: string | null): Promise<numb
   const { data: events, error } = await supabase
     .from("Events")
     .select("contract_revenue_cents")
-    .eq("contract_status", "BOOKED")
+    .eq("event_status", "booked")
     .gte("event_start", yearStart.toISOString());
 
   if (error) {
@@ -161,7 +147,11 @@ export async function fetchYearToDateRevenue(token: string | null): Promise<numb
 
   // Sum up the revenue (convert from cents to dollars)
   const totalCents =
-    events?.reduce((sum, event) => sum + (event.contract_revenue_cents || 0), 0) || 0;
+    events?.reduce(
+      (sum: number, event: { contract_revenue_cents: number | null }) =>
+        sum + (event.contract_revenue_cents || 0),
+      0,
+    ) || 0;
   return totalCents / 100; // Convert cents to dollars
 }
 
@@ -171,14 +161,9 @@ export type MonthlyRevenueData = {
   eventCount: number;
 };
 
-export async function fetchMonthlyRevenue(token: string | null): Promise<MonthlyRevenueData[]> {
-  if (!token) {
-    createErrorToast(["No token found"]);
-    return [];
-  }
-
-  const supabase = await getSupabaseClient(token);
-
+export async function fetchMonthlyRevenue(
+  supabase: SupabaseClient<Database>,
+): Promise<MonthlyRevenueData[]> {
   // Get the start of the current year
   const now = new Date();
   const yearStart = new Date(now.getFullYear(), 0, 1); // January 1st
@@ -187,7 +172,7 @@ export async function fetchMonthlyRevenue(token: string | null): Promise<Monthly
   const { data: events, error } = await supabase
     .from("Events")
     .select("contract_revenue_cents, event_start")
-    .eq("contract_status", "BOOKED")
+    .eq("event_status", "booked")
     .gte("event_start", yearStart.toISOString())
     .order("event_start", { ascending: true });
 
@@ -199,18 +184,20 @@ export async function fetchMonthlyRevenue(token: string | null): Promise<Monthly
   // Group by month
   const monthMap = new Map<string, { revenue: number; count: number }>();
 
-  events?.forEach((event) => {
-    const eventDate = new Date(event.event_start);
-    const monthKey = eventDate.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  events?.forEach(
+    (event: { contract_revenue_cents: number | null; event_start: string }) => {
+      const eventDate = new Date(event.event_start);
+      const monthKey = eventDate.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 
-    if (!monthMap.has(monthKey)) {
-      monthMap.set(monthKey, { revenue: 0, count: 0 });
-    }
+      if (!monthMap.has(monthKey)) {
+        monthMap.set(monthKey, { revenue: 0, count: 0 });
+      }
 
-    const monthData = monthMap.get(monthKey)!;
-    monthData.revenue += (event.contract_revenue_cents || 0) / 100; // Convert to dollars
-    monthData.count += 1;
-  });
+      const monthData = monthMap.get(monthKey)!;
+      monthData.revenue += (event.contract_revenue_cents || 0) / 100; // Convert to dollars
+      monthData.count += 1;
+    },
+  );
 
   // Convert to array and fill in missing months
   const monthlyData: MonthlyRevenueData[] = [];

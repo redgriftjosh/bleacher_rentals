@@ -86,9 +86,9 @@ export function WeekTableRow({ event }: WeekTableRowProps) {
       <td className="py-1 px-3 text-left">
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            event.contract_status === "BOOKED"
+            event.contract_status === "booked"
               ? "bg-green-100 text-green-800"
-              : event.contract_status === "LOST"
+              : event.contract_status === "lost"
               ? "bg-red-100 text-red-800"
               : "bg-yellow-100 text-yellow-800"
           }`}
