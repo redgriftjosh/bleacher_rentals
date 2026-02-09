@@ -204,12 +204,8 @@ async function main() {
         bleacher_uuid: bleacherId,
         setup_confirmed: faker.datatype.boolean({ probability: 0.3 }),
         teardown_confirmed: faker.datatype.boolean({ probability: 0.3 }),
-        setup_text: faker.datatype.boolean({ probability: 0.2 })
-          ? faker.lorem.sentence()
-          : null,
-        teardown_text: faker.datatype.boolean({ probability: 0.2 })
-          ? faker.lorem.sentence()
-          : null,
+        setup_text: faker.datatype.boolean({ probability: 0.2 }) ? faker.lorem.sentence() : null,
+        teardown_text: faker.datatype.boolean({ probability: 0.2 }) ? faker.lorem.sentence() : null,
       });
     }
   }
@@ -243,7 +239,7 @@ async function main() {
   console.log(`   🎉 ${eventsToInsert.length} events`);
   console.log(`   🎪 ${bleacherEventsToInsert.length} bleacher assignments`);
   console.log(
-    `   💰 Total revenue: $${(eventsToInsert.reduce((sum, e) => sum + (e.contract_revenue_cents || 0), 0) / 100).toLocaleString()}`
+    `   💰 Total revenue: $${(eventsToInsert.reduce((sum, e) => sum + (e.contract_revenue_cents || 0), 0) / 100).toLocaleString()}`,
   );
 
   const statusCounts = eventsToInsert.reduce(
@@ -251,7 +247,7 @@ async function main() {
       acc[e.event_status || "unknown"]++;
       return acc;
     },
-    { booked: 0, quoted: 0, lost: 0, unknown: 0 }
+    { booked: 0, quoted: 0, lost: 0, unknown: 0 },
   );
 
   console.log(`   📊 Status breakdown:`);
