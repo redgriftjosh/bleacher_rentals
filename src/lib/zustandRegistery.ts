@@ -37,4 +37,5 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   WorkTrackerInspections: () => {},
   InspectionPhotos: () => {},
   Vehicles: () => {},
+  Notifications: () => {},
 };
