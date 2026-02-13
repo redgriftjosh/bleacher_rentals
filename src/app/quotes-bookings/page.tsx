@@ -1,25 +1,15 @@
 "use client";
-import { db } from "@/components/providers/SystemProvider";
-import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
-import { useMemo } from "react";
 import { DateTime } from "luxon";
 import { PageHeader } from "@/components/PageHeader";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { DataTable, Column, CellText, CellSecondary, CellBadge } from "@/components/DataTable";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 import { loadEventForModal } from "@/features/eventConfiguration/functions/loadEventForModal";
-
-type EventWithAccountManager = {
-  id: string;
-  event_name: string | null;
-  event_start: string | null;
-  event_end: string | null;
-  event_status: string | null;
-  contract_revenue_cents: number | null;
-  created_at: string | null;
-  account_manager_first_name: string | null;
-  account_manager_last_name: string | null;
-};
+import { FilterButton } from "@/features/quotesAndBookings/components/FilterButton";
+import { FilterPanel } from "@/features/quotesAndBookings/components/FilterPanel";
+import { useQuotesAndBookingsFilters } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsFilters";
+import { useQuotesAndBookingsData } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsData";
+import type { QuotesBookingsEvent } from "@/features/quotesAndBookings/types";
 
 function formatCurrency(cents: number | null): string {
   if (cents === null) return "$0.00";
@@ -53,29 +43,19 @@ function capitalizeStatus(status: string | null): string {
 
 export default function QuotesBookingsPage() {
   const openModal = useCurrentEventStore((s) => s.openModal);
+  const {
+    filters,
+    toggleOpen,
+    setStatuses,
+    setCreatedRange,
+    setEventRange,
+    setAccountManagerUserUuid,
+    clearFilters,
+  } = useQuotesAndBookingsFilters();
 
-  const compiled = useMemo(() => {
-    return db
-      .selectFrom("Events as e")
-      .leftJoin("Users as u", "e.created_by_user_uuid", "u.id")
-      .select([
-        "e.id as id",
-        "e.event_name as event_name",
-        "e.event_start as event_start",
-        "e.event_end as event_end",
-        "e.event_status as event_status",
-        "e.contract_revenue_cents as contract_revenue_cents",
-        "e.created_at as created_at",
-        "u.first_name as account_manager_first_name",
-        "u.last_name as account_manager_last_name",
-      ])
-      .orderBy("e.created_at", "desc")
-      .compile();
-  }, []);
+  const { data, isLoading, error } = useQuotesAndBookingsData(filters);
 
-  const { data, isLoading, error } = useTypedQuery(compiled, expect<EventWithAccountManager>());
-
-  const columns: Column<EventWithAccountManager>[] = [
+  const columns: Column<QuotesBookingsEvent>[] = [
     {
       key: "event_name",
       header: "Event Name",
@@ -131,8 +111,28 @@ export default function QuotesBookingsPage() {
       <PageHeader
         title="Quotes & Bookings"
         subtitle="View all events ordered by most recent creation date"
-        action={<PrimaryButton onClick={openModal}>+ Create Quote</PrimaryButton>}
+        action={
+          <div className="flex items-center gap-2">
+            <FilterButton isOpen={filters.isOpen} onClick={toggleOpen} />
+            <PrimaryButton onClick={openModal}>+ Create Quote</PrimaryButton>
+          </div>
+        }
       />
+
+      <div
+        className={`overflow-hidden transition-all duration-700 ease-in-out ${
+          filters.isOpen ? "max-h-[900px] mt-4" : "max-h-0"
+        }`}
+      >
+        <FilterPanel
+          filters={filters}
+          onStatusesChange={setStatuses}
+          onCreatedRangeChange={setCreatedRange}
+          onEventRangeChange={setEventRange}
+          onAccountManagerChange={setAccountManagerUserUuid}
+          onClear={clearFilters}
+        />
+      </div>
 
       <DataTable
         columns={columns}

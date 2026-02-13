@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MetricProgressBar } from "./MetricProgressBar";
+import { CompactStatWithRing } from "./CompactStatWithRing";
 import type { AccountManagerScorecard, TimeRange } from "../types";
 
 type AccountManagerCardProps = {
@@ -10,45 +11,47 @@ type AccountManagerCardProps = {
   timeRange: TimeRange;
 };
 
-function getMetrics(sc: AccountManagerScorecard, tr: TimeRange) {
-  return sc[tr];
-}
+const PLACEHOLDER_STATS = [
+  {
+    title: "Quotes Sent",
+    value: 42,
+    paceDelta: -4,
+    progress: 0.62,
+  },
+  {
+    title: "Quotes Signed",
+    value: 18,
+    paceDelta: -12,
+    progress: 0.38,
+  },
+  {
+    title: "Value Signed",
+    value: 125000,
+    paceDelta: 3,
+    progress: 0.74,
+    isMoney: true,
+  },
+  {
+    title: "Revenue",
+    value: 84000,
+    paceDelta: -2,
+    progress: 0.55,
+    isMoney: true,
+  },
+];
 
-function getTargets(sc: AccountManagerScorecard, tr: TimeRange) {
-  const t = sc.targets;
-  switch (tr) {
-    case "weekly":
-      return {
-        quotes: t.quotesWeekly,
-        sales: t.salesWeekly,
-        valueOfSalesCents: t.valueOfSalesWeeklyCents,
-        valueOfRevenueCents: t.valueOfRevenueWeeklyCents,
-      };
-    case "quarterly":
-      return {
-        quotes: t.quotesQuarterly,
-        sales: t.salesQuarterly,
-        valueOfSalesCents: t.valueOfSalesQuarterlyCents,
-        valueOfRevenueCents: t.valueOfRevenueQuarterlyCents,
-      };
-    case "annually":
-      return {
-        quotes: t.quotesAnnually,
-        sales: t.salesAnnually,
-        valueOfSalesCents: t.valueOfSalesAnnuallyCents,
-        valueOfRevenueCents: t.valueOfRevenueAnnuallyCents,
-      };
-  }
-}
-
-export function AccountManagerCard({ scorecard, timeRange }: AccountManagerCardProps) {
-  const metrics = getMetrics(scorecard, timeRange);
-  const targets = getTargets(scorecard, timeRange);
+export function AccountManagerCard({ scorecard, timeRange: _timeRange }: AccountManagerCardProps) {
   const { manager } = scorecard;
+  const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams.toString());
+  if (!params.get("dataType")) params.set("dataType", "all");
+  if (!params.get("timeRange")) params.set("timeRange", "weekly");
+  params.set("accountManager", manager.userUuid);
+  const href = `/scorecard?${params.toString()}`;
 
   return (
     <Link
-      href={`/scorecard/${manager.userUuid}`}
+      href={href}
       className="block bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md hover:border-gray-300 transition-all"
     >
       <div className="flex items-center gap-3 mb-4">
@@ -65,21 +68,17 @@ export function AccountManagerCard({ scorecard, timeRange }: AccountManagerCardP
         </div>
       </div>
 
-      <div className="space-y-3">
-        <MetricProgressBar label="Quotes" current={metrics.quotes} target={targets.quotes} />
-        <MetricProgressBar label="Sales" current={metrics.sales} target={targets.sales} />
-        <MetricProgressBar
-          label="Value of Sales"
-          current={metrics.valueOfSalesCents}
-          target={targets.valueOfSalesCents}
-          isMoney
-        />
-        <MetricProgressBar
-          label="Value of Revenue"
-          current={metrics.valueOfRevenueCents}
-          target={targets.valueOfRevenueCents}
-          isMoney
-        />
+      <div className="grid grid-cols-2 gap-4">
+        {PLACEHOLDER_STATS.map((stat) => (
+          <CompactStatWithRing
+            key={stat.title}
+            title={stat.title}
+            value={stat.value}
+            paceDelta={stat.paceDelta}
+            progress={stat.progress}
+            isMoney={stat.isMoney}
+          />
+        ))}
       </div>
     </Link>
   );

@@ -10,6 +10,7 @@ import {
   ClipboardList,
   BarChart3,
   FileText,
+  Trophy,
 } from "lucide-react";
 import { SideNavButton } from "./SideNavButton";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
@@ -64,6 +65,12 @@ const SideBar = () => {
           label="Scorecard"
           href="/scorecard"
           icon={BarChart3}
+          roles={[USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN]}
+        />
+        <SideNavButton
+          label="Leaderboard"
+          href="/leaderboard"
+          icon={Trophy}
           roles={[USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN]}
         />
       </nav>
