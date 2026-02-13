@@ -3116,4 +3116,54 @@ SELECT pg_catalog.setval('"supabase_functions"."hooks_id_seq"', 1, false);
 
 RESET ALL;
 
--- small change
+UPDATE public."Events"
+SET event_status = CASE
+  WHEN booked = true THEN 'booked'::public.event_status
+  ELSE 'quoted'::public.event_status
+END
+WHERE event_status IS NULL;
+
+-- Backfill ScorecardTargets for all account managers (with defaults)
+INSERT INTO public."ScorecardTargets" (user_uuid)
+SELECT am.user_uuid
+FROM public."AccountManagers" am
+WHERE am.user_uuid IS NOT NULL
+  AND am.is_active = true
+  AND NOT EXISTS (
+    SELECT 1 FROM public."ScorecardTargets" st WHERE st.user_uuid = am.user_uuid
+  )
+ON CONFLICT (user_uuid) DO NOTHING;
+
+-- Populate contract_revenue_cents based on number of bleachers assigned
+-- $1,200 per bleacher (120,000 cents)
+UPDATE public."Events" e
+SET contract_revenue_cents = (
+  SELECT COUNT(be.id) * 120000
+  FROM public."BleacherEvents" be
+  WHERE be.event_uuid = e.id
+)
+WHERE EXISTS (
+  SELECT 1 FROM public."BleacherEvents" be WHERE be.event_uuid = e.id
+);
+
+-- Mark every 3rd quoted event as "lost"
+WITH quoted_events AS (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY created_at) as rn
+  FROM public."Events"
+  WHERE event_status = 'quoted'
+)
+UPDATE public."Events" e
+SET event_status = 'lost'::public.event_status
+FROM quoted_events qe
+WHERE e.id = qe.id AND qe.rn % 3 = 0;
+
+-- Assign unassigned events to one of three account managers
+UPDATE public."Events"
+SET created_by_user_uuid = (
+  ARRAY[
+    '90e4c039-7d0b-41f3-b186-9a43fa26ad93'::uuid,
+    '8af93ecd-8ee7-457f-993c-7dd3374bc7d6'::uuid,
+    '35a4c266-1197-46b4-af4d-d4b805f57d9a'::uuid
+  ]
+)[1 + floor(random() * 3)::int]
+WHERE created_by_user_uuid IS NULL;
