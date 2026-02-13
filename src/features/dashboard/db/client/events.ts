@@ -13,6 +13,8 @@ type Row = {
   event_end: string;
   hsl_hue: number | null;
   booked: boolean;
+  event_status: Database["public"]["Enums"]["event_status"] | null;
+  contract_revenue_cents: number | null;
   goodshuffle_url: string | null;
   lenient: boolean;
   notes: string | null;
@@ -51,6 +53,8 @@ export async function FetchDashboardEvents(
       event_end,
       hsl_hue,
       booked,
+      event_status,
+      contract_revenue_cents,
       goodshuffle_url,
       lenient,
       notes,
@@ -124,10 +128,10 @@ export async function FetchDashboardEvents(
     sameDayTeardown: !e.teardown_end,
     lenient: e.lenient,
     token: "",
-    selectedStatus: e.booked ? "Booked" : "Quoted",
+    selectedStatus: e.event_status ?? (e.booked ? "booked" : "quoted"),
     notes: e.notes ?? "",
     numDays: 0, // optional; compute in UI if needed
-    status: e.booked ? "Booked" : "Quoted",
+    status: e.event_status ?? (e.booked ? "booked" : "quoted"),
     hslHue: e.hsl_hue,
     alerts: [],
     mustBeClean: e.must_be_clean,

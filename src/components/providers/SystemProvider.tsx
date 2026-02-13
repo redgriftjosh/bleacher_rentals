@@ -24,7 +24,8 @@ let _db: ReturnType<typeof wrapPowerSyncWithKysely<PowerSyncDB>> | undefined;
 function chooseVfs() {
   const isBrowser = typeof window !== "undefined";
   const isSecureContext = isBrowser && globalThis.isSecureContext === true;
-  const hasLocks = isBrowser && typeof navigator !== "undefined" && typeof navigator.locks !== "undefined";
+  const hasLocks =
+    isBrowser && typeof navigator !== "undefined" && typeof navigator.locks !== "undefined";
 
   // OPFS VFS depends on secure context + Web Locks.
   if (isSecureContext && hasLocks) return WASQLiteVFS.OPFSCoopSyncVFS;
@@ -37,7 +38,7 @@ function createPowerSyncDb() {
 
   if (vfs !== WASQLiteVFS.OPFSCoopSyncVFS) {
     logger.warn(
-      `[PowerSync] Using ${vfs} (OPFS disabled: secure context or navigator.locks unavailable).`
+      `[PowerSync] Using ${vfs} (OPFS disabled: secure context or navigator.locks unavailable).`,
     );
   }
 
@@ -50,9 +51,16 @@ function createPowerSyncDb() {
         enableMultiTabs: typeof SharedWorker !== "undefined",
         ssrMode: false,
       },
+      // Use pre-bundled worker from public/@powersync/ (required for Turbopack)
+      worker: "/@powersync/worker/WASQLiteDB.umd.js",
     }),
     flags: {
       enableMultiTabs: typeof SharedWorker !== "undefined",
+      disableSSRWarning: true,
+    },
+    sync: {
+      // Use pre-bundled sync worker from public/@powersync/ (required for Turbopack)
+      worker: "/@powersync/worker/SharedSyncImplementation.umd.js",
     },
   });
 }
@@ -83,9 +91,8 @@ function createBoundLazyProxy<T extends object>(getInstance: () => T): T {
 
 // Backwards-compatible exports so existing imports keep working.
 export const powerSyncDb: PowerSyncDatabase = createBoundLazyProxy(getPowerSyncDb);
-export const db: ReturnType<typeof wrapPowerSyncWithKysely<PowerSyncDB>> = createBoundLazyProxy(
-  getDb
-);
+export const db: ReturnType<typeof wrapPowerSyncWithKysely<PowerSyncDB>> =
+  createBoundLazyProxy(getDb);
 
 export const SystemProvider = ({ children }: { children: React.ReactNode }) => {
   const { isSignedIn } = useAuth();
@@ -93,7 +100,7 @@ export const SystemProvider = ({ children }: { children: React.ReactNode }) => {
 
   const connector = useMemo(
     () => (session?.getToken ? new BackendConnector(session) : undefined),
-    [session?.id]
+    [session?.id],
   );
 
   const instance = useMemo(() => {
