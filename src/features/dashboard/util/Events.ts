@@ -84,7 +84,7 @@ export class EventsUtil {
         eventName?: string;
         address?: string;
         hslHue?: number | null;
-        selectedStatus?: string;
+        selectedStatus?: "Quoted" | "Booked";
         goodshuffleUrl?: string | null;
       } | null;
     }
@@ -160,7 +160,7 @@ export class EventsUtil {
           eventStart: selected.eventStart,
           eventEnd: selected.eventEnd,
           hslHue: selected.hslHue ?? 220,
-          booked: (selected.selectedStatus ?? "quoted") === "booked",
+          booked: (selected.selectedStatus ?? "Quoted") === "Booked",
           goodshuffleUrl: selected.goodshuffleUrl ?? null,
           isSelected: true,
         } as any; // BleacherEvent compatible

@@ -414,13 +414,11 @@ export type Database = {
         Row: {
           address_uuid: string | null
           booked: boolean
-          contract_revenue_cents: number | null
           created_at: string
           created_by_user_uuid: string | null
           event_end: string
           event_name: string
           event_start: string
-          event_status: Database["public"]["Enums"]["event_status"] | null
           fifteen_row: number | null
           goodshuffle_url: string | null
           hsl_hue: number | null
@@ -437,13 +435,11 @@ export type Database = {
         Insert: {
           address_uuid?: string | null
           booked?: boolean
-          contract_revenue_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null
           event_end: string
           event_name: string
           event_start: string
-          event_status?: Database["public"]["Enums"]["event_status"] | null
           fifteen_row?: number | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
@@ -460,13 +456,11 @@ export type Database = {
         Update: {
           address_uuid?: string | null
           booked?: boolean
-          contract_revenue_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null
           event_end?: string
           event_name?: string
           event_start?: string
-          event_status?: Database["public"]["Enums"]["event_status"] | null
           fifteen_row?: number | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
@@ -543,71 +537,6 @@ export type Database = {
             columns: ["inspection_uuid"]
             isOneToOne: false
             referencedRelation: "WorkTrackerInspections"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ScorecardTargets: {
-        Row: {
-          created_at: string
-          id: string
-          quotes_annually: number
-          quotes_quarterly: number
-          quotes_weekly: number
-          sales_annually: number
-          sales_quarterly: number
-          sales_weekly: number
-          updated_at: string
-          user_uuid: string
-          value_of_revenue_annually_cents: number
-          value_of_revenue_quarterly_cents: number
-          value_of_revenue_weekly_cents: number
-          value_of_sales_annually_cents: number
-          value_of_sales_quarterly_cents: number
-          value_of_sales_weekly_cents: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          quotes_annually?: number
-          quotes_quarterly?: number
-          quotes_weekly?: number
-          sales_annually?: number
-          sales_quarterly?: number
-          sales_weekly?: number
-          updated_at?: string
-          user_uuid: string
-          value_of_revenue_annually_cents?: number
-          value_of_revenue_quarterly_cents?: number
-          value_of_revenue_weekly_cents?: number
-          value_of_sales_annually_cents?: number
-          value_of_sales_quarterly_cents?: number
-          value_of_sales_weekly_cents?: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          quotes_annually?: number
-          quotes_quarterly?: number
-          quotes_weekly?: number
-          sales_annually?: number
-          sales_quarterly?: number
-          sales_weekly?: number
-          updated_at?: string
-          user_uuid?: string
-          value_of_revenue_annually_cents?: number
-          value_of_revenue_quarterly_cents?: number
-          value_of_revenue_weekly_cents?: number
-          value_of_sales_annually_cents?: number
-          value_of_sales_quarterly_cents?: number
-          value_of_sales_weekly_cents?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ScorecardTargets_user_uuid_fkey"
-            columns: ["user_uuid"]
-            isOneToOne: true
-            referencedRelation: "Users"
             referencedColumns: ["id"]
           },
         ]
@@ -959,7 +888,6 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      event_status: "quoted" | "booked" | "lost"
       task_status:
         | "in_progress"
         | "backlog"
@@ -1105,7 +1033,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      event_status: ["quoted", "booked", "lost"],
       task_status: [
         "in_progress",
         "backlog",

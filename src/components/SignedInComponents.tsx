@@ -1,6 +1,6 @@
 "use client";
 import Header from "@/components/Header";
-import SideBar from "@/components/sidebar/Sidebar";
+import SideBar from "@/components/Sidebar";
 import useSupabaseSubscriptions from "@/hooks/useSupabaseSubscriptions";
 import { SignOutButton, useSession, useUser } from "@clerk/nextjs";
 import { Button } from "./ui/button";
@@ -12,7 +12,6 @@ import { CannotFindAccount } from "../features/userAccess/components/CannotFindA
 import { NoRolesAssigned } from "../features/userAccess/components/NoRolesAssigned";
 import { AccountDeactivated } from "../features/userAccess/components/AccountDeactivated";
 import { DriverWelcome } from "@/features/userAccess/components/DriverWelcome";
-import { EventConfigModal } from "@/features/eventConfiguration/components/EventConfigModal";
 
 export function SignedInComponents({ children }: { children: React.ReactNode }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -61,7 +60,6 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
           </main>
         </div>
       </div>
-      <EventConfigModal />
     </LayoutProvider>
   );
 }
