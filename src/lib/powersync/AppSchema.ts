@@ -177,6 +177,7 @@ const UsersCols = {
   avatar_image_url: column.text,
   is_admin: column.integer,
   created_at: column.text,
+  expo_push_token: column.text,
 } satisfies PowerSyncColsFor<"Users">;
 const Users = new Table(UsersCols, { indexes: { status_uuid: ["status_uuid"] } });
 

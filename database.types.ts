@@ -541,6 +541,38 @@ export type Database = {
           },
         ]
       }
+      Notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          title?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Tasks: {
         Row: {
           created_at: string
@@ -639,6 +671,7 @@ export type Database = {
           clerk_user_id: string | null
           created_at: string
           email: string
+          expo_push_token: string | null
           first_name: string | null
           id: string
           is_admin: boolean
@@ -652,6 +685,7 @@ export type Database = {
           clerk_user_id?: string | null
           created_at?: string
           email: string
+          expo_push_token?: string | null
           first_name?: string | null
           id?: string
           is_admin?: boolean
@@ -665,6 +699,7 @@ export type Database = {
           clerk_user_id?: string | null
           created_at?: string
           email?: string
+          expo_push_token?: string | null
           first_name?: string | null
           id?: string
           is_admin?: boolean
