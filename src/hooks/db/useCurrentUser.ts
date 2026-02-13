@@ -10,6 +10,7 @@ type CurrentUser = {
   avatar_image_url: string | null;
   clerk_user_id: string | null;
   email: string | null;
+  expo_push_token: string | null;
   first_name: string | null;
   is_admin: number | null;
   last_name: string | null;
