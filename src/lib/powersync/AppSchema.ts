@@ -89,6 +89,8 @@ const EventsCols = {
   goodshuffle_url: column.text,
   address_uuid: column.text,
   created_by_user_uuid: column.text,
+  event_status: column.text,
+  contract_revenue_cents: column.integer,
 } satisfies PowerSyncColsFor<"Events">;
 const Events = new Table(EventsCols, {
   indexes: {
@@ -217,6 +219,27 @@ const WorkTrackers = new Table(WorkTrackersCols, {
   },
 });
 
+const ScorecardTargetsCols = {
+  created_at: column.text,
+  updated_at: column.text,
+  user_uuid: column.text,
+  quotes_weekly: column.integer,
+  quotes_quarterly: column.integer,
+  quotes_annually: column.integer,
+  sales_weekly: column.integer,
+  sales_quarterly: column.integer,
+  sales_annually: column.integer,
+  value_of_sales_weekly_cents: column.integer,
+  value_of_sales_quarterly_cents: column.integer,
+  value_of_sales_annually_cents: column.integer,
+  value_of_revenue_weekly_cents: column.integer,
+  value_of_revenue_quarterly_cents: column.integer,
+  value_of_revenue_annually_cents: column.integer,
+} satisfies PowerSyncColsFor<"ScorecardTargets">;
+const ScorecardTargets = new Table(ScorecardTargetsCols, {
+  indexes: { user_uuid: ["user_uuid"] },
+});
+
 const BleacherUsersCols = {
   created_at: column.text,
   season: column.text,
@@ -239,6 +262,7 @@ export const AppSchema = new Schema({
   Events,
   HomeBases,
   Drivers,
+  ScorecardTargets,
   Users,
   WorkTrackers,
 });
@@ -256,4 +280,5 @@ export type BleachersRecord = PowerSyncDB["Bleachers"];
 export type BleacherUsersRecord = PowerSyncDB["BleacherUsers"];
 export type BleacherEventsRecord = PowerSyncDB["BleacherEvents"];
 export type EventsRecord = PowerSyncDB["Events"];
+export type ScorecardTargetsRecord = PowerSyncDB["ScorecardTargets"];
 export type WorkTrackerRecord = PowerSyncDB["WorkTrackers"];

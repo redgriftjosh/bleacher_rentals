@@ -202,6 +202,9 @@ export class MainGridCellRenderer implements ICellRenderer {
       const endCol = dateToIndex.get(endISO);
       if (startCol === undefined || endCol === undefined) return spans;
 
+      // // Skip LOST events - don't render them at all
+      // if (ev.selectedStatus === "LOST") return spans;
+
       // Map DashboardEvent to BleacherEvent-like object (only needed fields)
       const be = {
         eventUuid: ev.eventUuid,
@@ -211,7 +214,7 @@ export class MainGridCellRenderer implements ICellRenderer {
         eventStart: ev.eventStart,
         eventEnd: ev.eventEnd,
         hslHue: ev.hslHue ?? null,
-        booked: (ev.status ?? ev.selectedStatus) === "Booked",
+        contract_status: ev.selectedStatus,
         goodshuffleUrl: ev.goodshuffleUrl ?? null,
       } as any; // compatible with BleacherEvent used by EventBody
 
