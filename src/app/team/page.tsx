@@ -1,4 +1,5 @@
 "use client";
+import { Color } from "@/types/Color";
 // import { UserList } from "../../features/manageTeam/components/lists/UserList";
 import { UserConfigurationModal } from "@/features/manageTeam/components/UserConfigurationModal";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -13,7 +14,6 @@ import { Toggle } from "@/components/Toggle";
 import { useState, useEffect } from "react";
 import { useSearchQueryStore } from "@/features/manageTeam/state/useSearchQueryStore";
 import { useRealtimeHydrateCurrentUserStore } from "@/features/manageTeam/hooks/useUserById";
-import { PageHeader } from "@/components/PageHeader";
 
 export type ExistingUser = {
   user_id: number;
@@ -42,11 +42,16 @@ export default function TeamPage() {
 
   return (
     <main>
-      <PageHeader
-        title="Manage Team"
-        subtitle="Manage your team here."
-        action={<PrimaryButton onClick={openForNewUser}>+ Add Team Member</PrimaryButton>}
-      />
+      <div className="flex justify-between items-center mb-4">
+        {/* Left Side: Title & Description */}
+        <div>
+          <h1 className="text-2xl text-darkBlue font-bold">Manage Team</h1>
+          <p className="text-sm" style={{ color: Color.GRAY }}>
+            Manage your team here.
+          </p>
+        </div>
+        <PrimaryButton onClick={openForNewUser}>+ Add Team Member</PrimaryButton>
+      </div>
 
       <UserConfigurationModal />
 

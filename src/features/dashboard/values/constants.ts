@@ -14,6 +14,3 @@ export const THUMB_THICKNESS = 20;
 export const THUMB_LENGTH = 50;
 
 export const DATE_RANGE = 1000;
-
-// event colors
-export const LOST_EVENT_COLOR = 0xd3d3d3; // light grey for lost events
