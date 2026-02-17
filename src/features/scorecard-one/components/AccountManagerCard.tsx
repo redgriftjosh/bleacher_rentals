@@ -42,12 +42,7 @@ const PLACEHOLDER_STATS = [
 
 export function AccountManagerCard({ scorecard, timeRange: _timeRange }: AccountManagerCardProps) {
   const { manager } = scorecard;
-  const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams.toString());
-  if (!params.get("dataType")) params.set("dataType", "all");
-  if (!params.get("timeRange")) params.set("timeRange", "weekly");
-  params.set("accountManager", manager.userUuid);
-  const href = `/scorecard?${params.toString()}`;
+  const href = `/scorecard/account-manager/${manager.userUuid}`;
 
   return (
     <Link

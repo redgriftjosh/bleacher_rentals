@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { TimeRange } from "@/features/scorecard/types";
+import type { TimeRange } from "@/features/scorecard-one/types";
 import { RotateCw } from "lucide-react";
 
 const RANGE_LABELS: Record<TimeRange, string> = {
@@ -84,7 +84,7 @@ export function ScorecardHeaderNav({ managers }: ScorecardHeaderNavProps) {
           setIsRangeAnimating(true);
           window.setTimeout(() => setIsRangeAnimating(false), 220);
         }}
-        className="group text-3xl text-darkBlue font-bold border-2 border-gray-300 rounded-lg p-2 flex items-center gap-2 bg-white hover:bg-gray-50 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+        className="group text-3xl text-darkBlue font-bold border-1 border-gray-300 rounded-lg p-2 flex items-center gap-2 bg-white hover:bg-gray-50 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
       >
         <span
           className={`transition-all duration-200 ${

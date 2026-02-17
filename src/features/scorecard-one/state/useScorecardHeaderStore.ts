@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { TimeRange } from "@/features/scorecard/types";
+import type { TimeRange } from "@/features/scorecard-one/types";
 
 type ManagerOption = {
   id: string;

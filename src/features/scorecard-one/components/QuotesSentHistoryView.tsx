@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { TimeRange } from "@/features/scorecard/types";
-import { StatHistoryHeader } from "@/features/scorecard/components/history/StatHistoryHeader";
-import { StatHistoryControls } from "@/features/scorecard/components/history/StatHistoryControls";
-import { StatHistoryChart } from "@/features/scorecard/components/history/StatHistoryChart";
-import { StatHistoryNavBar } from "@/features/scorecard/components/history/StatHistoryNavBar";
+import type { TimeRange } from "@/features/scorecard-one/types";
+import { StatHistoryHeader } from "@/features/scorecard-one/components/history/StatHistoryHeader";
+import { StatHistoryControls } from "@/features/scorecard-one/components/history/StatHistoryControls";
+import { StatHistoryChart } from "@/features/scorecard-one/components/history/StatHistoryChart";
+import { StatHistoryNavBar } from "@/features/scorecard-one/components/history/StatHistoryNavBar";
 
 const HISTORY_POINTS = [
   { label: "Wk 1", value: 24 },

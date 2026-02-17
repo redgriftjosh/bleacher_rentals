@@ -581,6 +581,7 @@ export type Database = {
       }
       ScorecardTargets: {
         Row: {
+          account_manager_uuid: string
           created_at: string
           id: string
           quotes_annually: number
@@ -590,7 +591,6 @@ export type Database = {
           sales_quarterly: number
           sales_weekly: number
           updated_at: string
-          user_uuid: string
           value_of_revenue_annually_cents: number
           value_of_revenue_quarterly_cents: number
           value_of_revenue_weekly_cents: number
@@ -599,6 +599,7 @@ export type Database = {
           value_of_sales_weekly_cents: number
         }
         Insert: {
+          account_manager_uuid: string
           created_at?: string
           id?: string
           quotes_annually?: number
@@ -608,7 +609,6 @@ export type Database = {
           sales_quarterly?: number
           sales_weekly?: number
           updated_at?: string
-          user_uuid: string
           value_of_revenue_annually_cents?: number
           value_of_revenue_quarterly_cents?: number
           value_of_revenue_weekly_cents?: number
@@ -617,6 +617,7 @@ export type Database = {
           value_of_sales_weekly_cents?: number
         }
         Update: {
+          account_manager_uuid?: string
           created_at?: string
           id?: string
           quotes_annually?: number
@@ -626,7 +627,6 @@ export type Database = {
           sales_quarterly?: number
           sales_weekly?: number
           updated_at?: string
-          user_uuid?: string
           value_of_revenue_annually_cents?: number
           value_of_revenue_quarterly_cents?: number
           value_of_revenue_weekly_cents?: number
@@ -636,10 +636,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ScorecardTargets_user_uuid_fkey"
-            columns: ["user_uuid"]
+            foreignKeyName: "ScorecardTargets_account_manager_uuid_fkey"
+            columns: ["account_manager_uuid"]
             isOneToOne: true
-            referencedRelation: "Users"
+            referencedRelation: "AccountManagers"
             referencedColumns: ["id"]
           },
         ]

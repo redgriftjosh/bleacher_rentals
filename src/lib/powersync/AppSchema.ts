@@ -222,7 +222,7 @@ const WorkTrackers = new Table(WorkTrackersCols, {
 const ScorecardTargetsCols = {
   created_at: column.text,
   updated_at: column.text,
-  user_uuid: column.text,
+  account_manager_uuid: column.text,
   quotes_weekly: column.integer,
   quotes_quarterly: column.integer,
   quotes_annually: column.integer,
@@ -237,7 +237,7 @@ const ScorecardTargetsCols = {
   value_of_revenue_annually_cents: column.integer,
 } satisfies PowerSyncColsFor<"ScorecardTargets">;
 const ScorecardTargets = new Table(ScorecardTargetsCols, {
-  indexes: { user_uuid: ["user_uuid"] },
+  indexes: { account_manager_uuid: ["account_manager_uuid"] },
 });
 
 const BleacherUsersCols = {

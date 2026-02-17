@@ -2,16 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useScorecardData } from "@/features/scorecard/hooks/useScorecardData";
-import { useScorecardInsights } from "@/features/scorecard/hooks/useScorecardInsights";
-import { AccountManagerCard } from "@/features/scorecard/components/AccountManagerCard";
-import { TotalsCard } from "@/features/scorecard/components/TotalsCard";
-import { PaceForecastCard } from "@/features/scorecard/components/PaceForecastCard";
-import { LeaderboardPanel } from "@/features/scorecard/components/LeaderboardPanel";
-import { ReportsPanel } from "@/features/scorecard/components/ReportsPanel";
-import { UtilizationPanel } from "@/features/scorecard/components/UtilizationPanel";
-import { CompactDetailedStatWithGraph } from "@/features/scorecard/components/CompactDetailedStatWithGraph";
-import { ScorecardHeaderNav } from "@/features/scorecard/components/ScorecardHeaderNav";
+import { useScorecardData } from "@/features/scorecard-one/hooks/useScorecardData";
+import { useScorecardInsights } from "@/features/scorecard-one/hooks/useScorecardInsights";
+import { AccountManagerCard } from "@/features/scorecard-one/components/AccountManagerCard";
+import { TotalsCard } from "@/features/scorecard-one/components/TotalsCard";
+import { PaceForecastCard } from "@/features/scorecard-one/components/PaceForecastCard";
+import { LeaderboardPanel } from "@/features/scorecard-one/components/LeaderboardPanel";
+import { ReportsPanel } from "@/features/scorecard-one/components/ReportsPanel";
+import { UtilizationPanel } from "@/features/scorecard-one/components/UtilizationPanel";
+import { CompactDetailedStatWithGraph } from "@/features/scorecard-one/components/CompactDetailedStatWithGraph";
+import { ScorecardHeaderNav } from "@/features/scorecard-one/components/ScorecardHeaderNav";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 // ---- Old scorecard components (preserved, commented out) ----
@@ -87,66 +87,17 @@ export default function ScorecardPage() {
         <ScorecardHeaderNav managers={managerOptions} />
       </div>
 
-      {/* <div className="flex bg-gray-100 rounded-lg p-1 mb-6 w-fit">
-        {SCORECARD_VIEWS.map((view) => (
-          <button
-            key={view}
-            onClick={() => setActiveView(view)}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md capitalize transition-colors ${
-              activeView === view
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            {view}
-          </button>
-        ))}
-      </div> */}
-
       {activeView === "overview" && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
-            <CompactDetailedStatWithGraph />
-            <CompactDetailedStatWithGraph />
-            <CompactDetailedStatWithGraph />
-            {/* <CompactDetailedStatWithGraph /> */}
+            <CompactDetailedStatWithGraph statType="number-of-quotes-sent" />
+            <CompactDetailedStatWithGraph statType="number-of-quotes-signed" />
+            <CompactDetailedStatWithGraph statType="value-of-quotes-signed" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4 mb-6">
-            <CompactDetailedStatWithGraph />
-            <CompactDetailedStatWithGraph />
-            {/* <CompactDetailedStatWithGraph /> */}
+            <CompactDetailedStatWithGraph statType="revenue" />
+            <CompactDetailedStatWithGraph statType="bleacher-utilization" />
           </div>
-          <CompactDetailedStatWithGraph />
-          {/* <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
-            <TotalsCard scorecards={scorecards} timeRange={activeRange} />
-            <PaceForecastCard scorecards={scorecards} timeRange={activeRange} />
-          </div> */}
-
-          {/* <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm mb-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Conversion Snapshot</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-xs text-gray-500">Quotes</p>
-                <p className="text-lg font-semibold text-gray-900">{conversion.quotes}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Sales</p>
-                <p className="text-lg font-semibold text-gray-900">{conversion.sales}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Win Rate</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {conversion.winRateCount.toFixed(1)}%
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Avg Sale Value</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {formatMoney(Math.round(conversion.avgSaleValue))}
-                </p>
-              </div>
-            </div>
-          </div> */}
 
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Account Managers</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

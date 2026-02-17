@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS public."ScorecardTargets" (
   updated_at timestamptz NOT NULL DEFAULT now(),
 
   -- FK to the account manager user
-  user_uuid uuid NOT NULL REFERENCES public."Users"(id) ON DELETE CASCADE,
+  account_manager_uuid uuid NOT NULL REFERENCES public."AccountManagers"(id) ON DELETE CASCADE,
 
   -- Number of Quotes targets
   quotes_weekly     integer NOT NULL DEFAULT 7,
@@ -107,12 +107,12 @@ CREATE TABLE IF NOT EXISTS public."ScorecardTargets" (
   value_of_revenue_quarterly_cents  integer NOT NULL DEFAULT 120000000, -- $1,200,000
   value_of_revenue_annually_cents   integer NOT NULL DEFAULT 480000000, -- $4,800,000
 
-  CONSTRAINT scorecard_targets_user_unique UNIQUE (user_uuid)
+  CONSTRAINT scorecard_targets_account_manager_unique UNIQUE (account_manager_uuid)
 );
 
--- Index for quick lookup by user
-CREATE INDEX IF NOT EXISTS idx_scorecard_targets_user_uuid
-  ON public."ScorecardTargets"(user_uuid);
+-- Index for quick lookup by account manager
+CREATE INDEX IF NOT EXISTS idx_scorecard_targets_account_manager_uuid
+  ON public."ScorecardTargets"(account_manager_uuid);
 
 -- Auto-update updated_at on modification
 CREATE OR REPLACE FUNCTION public.scorecard_targets_touch_updated_at()

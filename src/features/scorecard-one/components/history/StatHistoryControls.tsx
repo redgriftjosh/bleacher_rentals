@@ -1,7 +1,7 @@
 "use client";
 
-import type { TimeRange } from "@/features/scorecard/types";
-import { TIME_RANGE_LABELS } from "@/features/scorecard/types";
+import type { TimeRange } from "@/features/scorecard-one/types";
+import { TIME_RANGE_LABELS } from "@/features/scorecard-one/types";
 
 const TIME_RANGES: TimeRange[] = ["weekly", "quarterly", "annually"];
 

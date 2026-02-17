@@ -1,44 +1,32 @@
 "use client";
 
-import { Flag, History, Target, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { Flag, History, Target } from "lucide-react";
 import Link from "next/link";
 import { LineChart, Line, ResponsiveContainer, XAxis, Tooltip as RechartsTooltip } from "recharts";
 import { useSearchParams } from "next/navigation";
+import { StatType } from "../hooks/types";
+import { useData } from "../hooks/useData";
+import { SetTargetsModal } from "./SetTargetsModal";
 
-const THIS_WEEK = {
-  quotesSent: 42,
-  goal: 98,
-  paceTarget: 42,
-  dayOfWeek: 3,
-  daysInWeek: 7,
-};
+interface CompactDetailedStatWithGraphProps {
+  statType: StatType;
+  accountManagerUuid?: string;
+}
 
-const LAST_WEEK = {
-  totalQuotes: 76,
-  paceAtDay: 36,
-  goal: 98,
-  dayOfWeek: 3,
-  daysInWeek: 7,
-};
-
-const CHART_POINTS = [
-  { day: "M", dayLabel: "Monday", thisWeek: 6, lastWeek: 8 },
-  { day: "T", dayLabel: "Tuesday", thisWeek: 14, lastWeek: 17 },
-  { day: "W", dayLabel: "Wednesday", thisWeek: 22, lastWeek: 26 },
-  { day: "T", dayLabel: "Thursday", thisWeek: null, lastWeek: 39 },
-  { day: "F", dayLabel: "Friday", thisWeek: null, lastWeek: 52 },
-  { day: "S", dayLabel: "Saturday", thisWeek: null, lastWeek: 64 },
-  { day: "S", dayLabel: "Sunday", thisWeek: null, lastWeek: 76 },
-];
-
-export function CompactDetailedStatWithGraph() {
+export function CompactDetailedStatWithGraph({
+  statType,
+  accountManagerUuid,
+}: CompactDetailedStatWithGraphProps) {
+  const data = useData({ statType, accountManagerUuid });
   const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams.toString());
-  params.set("dataType", "quotes-sent");
-  if (!params.get("timeRange")) params.set("timeRange", "weekly");
-  if (!params.get("accountManager")) params.set("accountManager", "all");
-  const historyHref = `/scorecard?${params.toString()}`;
-  const paceDelta = THIS_WEEK.paceTarget - THIS_WEEK.quotesSent;
+  const [targetsModalOpen, setTargetsModalOpen] = useState(false);
+
+  // Build history link with current stat type
+  const historyHref = `/scorecard/stat-history/${statType}`;
+
+  // Calculate pace status
+  const paceDelta = data.thisWeek.paceTarget - data.thisWeek.current;
   const paceStatus = paceDelta <= 0 ? "good" : paceDelta <= 5 ? "warn" : "bad";
 
   const paceColor =
@@ -47,41 +35,41 @@ export function CompactDetailedStatWithGraph() {
       : paceStatus === "warn"
         ? "text-amber-500"
         : "text-red-600";
-  const paceBadge =
-    paceStatus === "good" ? "bg-green-100" : paceStatus === "warn" ? "bg-amber-100" : "bg-red-100";
-  const paceIcon = paceStatus === "good" ? "✅" : paceStatus === "warn" ? "⚠️" : "⛔";
 
-  const thisWeekValues = CHART_POINTS.map((p) => p.thisWeek).filter(
-    (value): value is number => typeof value === "number",
-  );
+  // Calculate max values for chart scaling
+  const thisWeekValues = data.chartData
+    .map((p) => p.thisWeek)
+    .filter((value): value is number => typeof value === "number");
   const maxThisWeek = thisWeekValues.length > 0 ? Math.max(...thisWeekValues) : 0;
-  const maxLastWeek = Math.max(...CHART_POINTS.map((p) => p.lastWeek));
-  const maxYAxis = Math.max(THIS_WEEK.goal, maxThisWeek, maxLastWeek);
-
-  const weekdayTarget = THIS_WEEK.goal / 5;
-  const chartData = CHART_POINTS.map((point, idx) => {
-    const dayNumber = idx + 1; // Mon=1 ... Sun=7
-    const paceValue = dayNumber <= 5 ? weekdayTarget * dayNumber : THIS_WEEK.goal;
-    return {
-      ...point,
-      pace: Math.round(paceValue),
-    };
-  });
+  const maxLastWeek = Math.max(...data.chartData.map((p) => p.lastWeek));
+  const maxYAxis = Math.max(data.thisWeek.goal, maxThisWeek, maxLastWeek);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm mb-6">
       <div className="flex items-start justify-between">
         <span className="text-2xl font-semibold text-gray-500 -mt-2 mb-4 inline-block">
-          Quotes Sent
+          {data.label}
         </span>
-        <Link
-          href={historyHref}
-          className="text-gray-400 hover:text-gray-600 transition"
-          aria-label="View quotes sent history"
-          title="View history"
-        >
-          <History className="h-4 w-4" />
-        </Link>
+        <div className="flex items-center gap-2">
+          {accountManagerUuid && (
+            <button
+              onClick={() => setTargetsModalOpen(true)}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition"
+              title="Set targets"
+            >
+              <Target className="h-4 w-4" />
+              <span>Set targets</span>
+            </button>
+          )}
+          <Link
+            href={historyHref}
+            className="text-gray-400 hover:text-gray-600 transition"
+            aria-label={`View ${data.label.toLowerCase()} history`}
+            title="View history"
+          >
+            <History className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
         <div className="relative border border-gray-200 rounded-lg p-3 pt-4">
@@ -89,12 +77,11 @@ export function CompactDetailedStatWithGraph() {
             THIS WEEK
           </div>
           <div className="flex items-baseline gap-2 -mt-2">
-            <span className="text-4xl font-semibold text-green-600">{THIS_WEEK.quotesSent}</span>
-            <span className="text-sm font-medium text-gray-400">/ 42</span>
-            {/* <TrendingUp className="h-4 w-4 -ml-1 text-gray-400" /> */}
+            <span className="text-4xl font-semibold text-green-600">{data.thisWeek.current}</span>
+            <span className="text-sm font-medium text-gray-400">/ {data.thisWeek.paceTarget}</span>
           </div>
           <div className="flex items-center gap-2  text-sm text-gray-500">
-            <span>{THIS_WEEK.goal}</span>
+            <span>{data.thisWeek.goal}</span>
             <Target className="h-4 w-4 -ml-1 text-gray-400" />
           </div>
         </div>
@@ -104,24 +91,19 @@ export function CompactDetailedStatWithGraph() {
             LAST WEEK
           </div>
           <div className="flex items-baseline gap-2 -mt-2">
-            <span className="text-4xl font-semibold text-gray-400">{LAST_WEEK.paceAtDay}</span>
-            {/* <TrendingUp className="h-4 w-4 -ml-1 text-gray-400" /> */}
+            <span className="text-4xl font-semibold text-gray-400">{data.lastWeek.paceAtDay}</span>
           </div>
           <div className="flex items-center gap-2  text-sm text-gray-500">
-            <span>{LAST_WEEK.totalQuotes}</span>
+            <span>{data.lastWeek.totalAtEnd}</span>
             <Flag className="h-4 w-4 -ml-1 text-gray-400" />
           </div>
         </div>
       </div>
 
       <div className="mt-4 border border-gray-200 rounded-lg p-3">
-        {/* <div className="flex items-center justify-between mb-2">
-          <p className="text-xs text-gray-500">Weekly trend</p>
-          <span className={`text-xs font-medium ${paceColor}`}>Pace status {paceIcon}</span>
-        </div> */}
         <div className="h-44">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+            <LineChart data={data.chartData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
               <XAxis
                 dataKey="day"
                 tick={{ fontSize: 11 }}
@@ -132,14 +114,6 @@ export function CompactDetailedStatWithGraph() {
                 padding={{ left: 8, right: 8 }}
                 tickMargin={6}
               />
-              {/* <YAxis
-                tick={{ fontSize: 11 }}
-                stroke="#9CA3AF"
-                domain={[0, maxYAxis]}
-                width={28}
-                axisLine={false}
-                tickLine={false}
-              /> */}
               <RechartsTooltip
                 formatter={(value, name) => {
                   const numericValue = typeof value === "number" ? value : 0;
@@ -189,6 +163,15 @@ export function CompactDetailedStatWithGraph() {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {accountManagerUuid && (
+        <SetTargetsModal
+          open={targetsModalOpen}
+          onOpenChange={setTargetsModalOpen}
+          accountManagerUuid={accountManagerUuid}
+          statType={statType}
+        />
+      )}
     </div>
   );
 }

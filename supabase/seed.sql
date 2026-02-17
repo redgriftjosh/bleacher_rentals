@@ -3124,15 +3124,15 @@ END
 WHERE event_status IS NULL;
 
 -- Backfill ScorecardTargets for all account managers (with defaults)
-INSERT INTO public."ScorecardTargets" (user_uuid)
-SELECT am.user_uuid
+INSERT INTO public."ScorecardTargets" (account_manager_uuid)
+SELECT am.id
 FROM public."AccountManagers" am
 WHERE am.user_uuid IS NOT NULL
   AND am.is_active = true
   AND NOT EXISTS (
-    SELECT 1 FROM public."ScorecardTargets" st WHERE st.user_uuid = am.user_uuid
+    SELECT 1 FROM public."ScorecardTargets" st WHERE st.account_manager_uuid = am.id
   )
-ON CONFLICT (user_uuid) DO NOTHING;
+ON CONFLICT (account_manager_uuid) DO NOTHING;
 
 -- Populate contract_revenue_cents based on number of bleachers assigned
 -- $1,200 per bleacher (120,000 cents)
