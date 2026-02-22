@@ -33,7 +33,7 @@ type CompactDetailedStatWithGraphProps = {
   chartData: ChartDataPoint[];
 };
 
-export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraphProps) {
+export function TempCompactDetailedStatWithGraph(props: CompactDetailedStatWithGraphProps) {
   const [targetsModalOpen, setTargetsModalOpen] = useState(false);
 
   const unit = props.unit ?? "number";
@@ -144,7 +144,7 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
 
         <div className="relative border border-gray-200 rounded-lg p-3 pt-4">
           <div className="absolute -top-2 left-3 bg-white px-2 text-xs font-semibold text-gray-400 tracking-wide">
-            LAST WEEK
+            LAST PERIOD
           </div>
           <div className="flex items-baseline gap-2 -mt-2">
             <span className="text-4xl font-semibold text-gray-400">
@@ -171,14 +171,39 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
                 interval={0}
                 padding={{ left: 8, right: 8 }}
                 tickMargin={6}
+                tickFormatter={(value) => {
+                  const raw = String(value);
+                  const [month, day] = raw.split("/").map(Number);
+
+                  if (!month || !day || day !== 1) {
+                    return "";
+                  }
+
+                  const monthLabels: Record<number, string> = {
+                    1: "Jan",
+                    2: "Feb",
+                    3: "Mar",
+                    4: "Apr",
+                    5: "May",
+                    6: "Jun",
+                    7: "Jul",
+                    8: "Aug",
+                    9: "Sep",
+                    10: "Oct",
+                    11: "Nov",
+                    12: "Dec",
+                  };
+
+                  return monthLabels[month] ?? "";
+                }}
               />
               <RechartsTooltip
                 formatter={(value, name) => {
                   const numericValue = typeof value === "number" ? value : 0;
                   const formattedValue = formatValue(numericValue);
                   if (name === "pace") return [formattedValue, "Pace"];
-                  if (name === "lastWeek") return [formattedValue, "Last week"];
-                  return [formattedValue, "This week"];
+                  if (name === "lastPeriod") return [formattedValue, "Last period"];
+                  return [formattedValue, "This period"];
                 }}
                 labelFormatter={(_, payload) => {
                   const dayLabel = payload?.[0]?.payload?.dayLabel;
