@@ -53,3 +53,30 @@ export const lastQuarterStartDate = DateTime.local()
   .startOf("quarter")
   .minus({ quarters: 1 })
   .toFormat("yyyy-MM-dd");
+
+/* ======================== Annually ======================= */
+export const thisYearStartTimeStampTZ = DateTime.local()
+  .startOf("year")
+  .toUTC()
+  .toFormat("yyyy-LL-dd HH:mm:ss'Z'");
+export const thisYearStartDate = DateTime.local().startOf("year").toFormat("yyyy-MM-dd");
+
+export const thisYearEndTimeStampTZ = DateTime.local()
+  .startOf("year")
+  .plus({ years: 1 })
+  .toUTC()
+  .toFormat("yyyy-LL-dd HH:mm:ss'Z'");
+export const thisYearEndDate = DateTime.local()
+  .startOf("year")
+  .plus({ years: 1 })
+  .toFormat("yyyy-MM-dd");
+
+export const lastYearStartTimeStampTZ = DateTime.local()
+  .startOf("year")
+  .minus({ years: 1 })
+  .toUTC()
+  .toFormat("yyyy-LL-dd HH:mm:ss'Z'");
+export const lastYearStartDate = DateTime.local()
+  .startOf("year")
+  .minus({ years: 1 })
+  .toFormat("yyyy-MM-dd");

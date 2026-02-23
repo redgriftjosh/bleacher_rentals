@@ -4,10 +4,13 @@ import { ScorecardTarget } from "../hooks/queries/useTargets";
 import {
   lastQuarterStartTimeStampTZ,
   lastWeekStartTimeStampTZ,
+  lastYearStartTimeStampTZ,
   thisQuarterEndTimeStampTZ,
   thisQuarterStartTimeStampTZ,
   thisWeekEndTimeStampTZ,
   thisWeekStartTimeStampTZ,
+  thisYearEndTimeStampTZ,
+  thisYearStartTimeStampTZ,
 } from "../constants/time";
 import { getDateKeys, isWeekdayKey, toLocalDateKey } from "./datetime";
 import { roundToTwo } from "./math";
@@ -19,7 +22,7 @@ export function getGoalFromTargets(targets: ScorecardTarget[], timeRange: TimeRa
     } else if (timeRange === "quarterly") {
       return targets.reduce((sum, target) => sum + (target.quotes_quarterly ?? 0), 0);
     } else if (timeRange === "annually") {
-      // return targets.reduce((sum, target) => sum + (target.quotes_annual ?? 0), 0);
+      return targets.reduce((sum, target) => sum + (target.quotes_quarterly ?? 0), 0);
     }
     return targets.reduce((sum, target) => sum + (target.quotes_weekly ?? 0), 0);
   }, [timeRange, targets]);
@@ -31,6 +34,12 @@ export function getDayKeysForTimeRange(activeRange: TimeRange, period: "this" | 
       return getDateKeys(thisQuarterStartTimeStampTZ, thisQuarterEndTimeStampTZ);
     } else {
       return getDateKeys(lastQuarterStartTimeStampTZ, thisQuarterStartTimeStampTZ);
+    }
+  } else if (activeRange === "annually") {
+    if (period === "this") {
+      return getDateKeys(thisYearStartTimeStampTZ, thisYearEndTimeStampTZ);
+    } else {
+      return getDateKeys(lastYearStartTimeStampTZ, thisYearStartTimeStampTZ);
     }
     // default to weekly if somehow an invalid range is passed
   } else {
@@ -131,6 +140,12 @@ export function GetDayForXAxis(timeRange: TimeRange, dateKey: string): string {
   if (timeRange === "weekly") {
     const dayChars = ["S", "M", "T", "W", "T", "F", "S"];
     return dayChars[date.getDay()] ?? "";
+  } else if (timeRange === "annually") {
+    const month = date.getMonth();
+    const isQuarterStartMonth = month === 0 || month === 3 || month === 6 || month === 9;
+    return date.getDate() === 1 && isQuarterStartMonth
+      ? date.toLocaleDateString("en-US", { month: "short" })
+      : "";
   }
 
   return date.getDate() === 1 ? date.toLocaleDateString("en-US", { month: "short" }) : "";

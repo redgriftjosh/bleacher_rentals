@@ -40,6 +40,9 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
   const searchParams = useSearchParams();
   const timeRangeParam = searchParams.get("timeRange");
 
+  const periodLabel =
+    timeRangeParam === "quarterly" ? "Quarter" : timeRangeParam === "annually" ? "Year" : "Week";
+
   const unit = props.unit ?? "number";
 
   const formatCompactRounded = (value: number) => {
@@ -130,7 +133,7 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
         <div className="relative border border-gray-200 rounded-lg p-3 pt-4">
           <div className="absolute -top-2 left-3 bg-white px-2 text-xs font-semibold text-green-600 tracking-wide">
-            {`THIS ${timeRangeParam === "quarterly" ? "QUARTER" : timeRangeParam === "annually" ? "YEAR" : "WEEK"}`}
+            {`THIS ${periodLabel.toUpperCase()}`}
           </div>
           <div className="flex items-baseline gap-2 -mt-2">
             <span className="text-4xl font-semibold text-green-600">
@@ -148,7 +151,7 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
 
         <div className="relative border border-gray-200 rounded-lg p-3 pt-4">
           <div className="absolute -top-2 left-3 bg-white px-2 text-xs font-semibold text-gray-400 tracking-wide">
-            {`LAST ${timeRangeParam === "quarterly" ? "QUARTER" : timeRangeParam === "annually" ? "YEAR" : "WEEK"}`}
+            {`LAST ${periodLabel.toUpperCase()}`}
           </div>
           <div className="flex items-baseline gap-2 -mt-2">
             <span className="text-4xl font-semibold text-gray-400">
@@ -178,12 +181,19 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
                 tickMargin={6}
               />
               <RechartsTooltip
+                itemSorter={(item) => {
+                  const key = String(item.dataKey ?? item.name ?? "");
+                  if (key === "thisPeriod") return 0;
+                  if (key === "lastPeriod") return 1;
+                  if (key === "pace") return 2;
+                  return 99;
+                }}
                 formatter={(value, name) => {
                   const numericValue = typeof value === "number" ? value : 0;
                   const formattedValue = formatValue(numericValue);
                   if (name === "pace") return [formattedValue, "Pace"];
-                  if (name === "lastPeriod") return [formattedValue, "Last period"];
-                  return [formattedValue, "This week"];
+                  if (name === "lastPeriod") return [formattedValue, `Last ${periodLabel}`];
+                  return [formattedValue, `This ${periodLabel}`];
                 }}
                 labelFormatter={(_, payload) => {
                   const dayLabel = payload?.[0]?.payload?.dayLabel;
