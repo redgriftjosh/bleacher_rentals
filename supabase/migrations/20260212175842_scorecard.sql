@@ -135,31 +135,9 @@ EXECUTE FUNCTION public.scorecard_targets_touch_updated_at();
 -- Enable RLS
 ALTER TABLE public."ScorecardTargets" ENABLE ROW LEVEL SECURITY;
 
--- Read: any authenticated user can view targets
-CREATE POLICY "ScorecardTargets: authenticated read"
-  ON public."ScorecardTargets"
-  FOR SELECT
-  TO authenticated
-  USING (true);
-
--- Insert/Update/Delete: only admins (is_admin = true in Users table)
-CREATE POLICY "ScorecardTargets: admin write"
-  ON public."ScorecardTargets"
-  FOR ALL
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public."Users" u
-      WHERE u.clerk_user_id = (current_setting('request.jwt.claims', true)::json->>'sub')
-        AND u.is_admin = true
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public."Users" u
-      WHERE u.clerk_user_id = (current_setting('request.jwt.claims', true)::json->>'sub')
-        AND u.is_admin = true
-    )
-  );
-
--- Note: powersync publication is already FOR ALL TABLES, so no ALTER needed.
+CREATE POLICY "Allow All for Auth"
+ON public."ScorecardTargets" 
+as permissive
+FOR all
+TO authenticated
+using (true);

@@ -183,6 +183,12 @@ const UsersCols = {
 } satisfies PowerSyncColsFor<"Users">;
 const Users = new Table(UsersCols, { indexes: { status_uuid: ["status_uuid"] } });
 
+const UserStatusesCols = {
+  created_at: column.text,
+  status: column.text,
+} satisfies PowerSyncColsFor<"UserStatuses">;
+const UserStatuses = new Table(UserStatusesCols);
+
 const WorkTrackersCols = {
   created_at: column.text,
   date: column.text,
@@ -264,6 +270,7 @@ export const AppSchema = new Schema({
   Drivers,
   ScorecardTargets,
   Users,
+  UserStatuses,
   WorkTrackers,
 });
 
@@ -275,6 +282,7 @@ export type DashboardFilterSettingsRecord = PowerSyncDB["DashboardFilterSettings
 export type TaskRecord = PowerSyncDB["Tasks"];
 export type DriverRecord = PowerSyncDB["Drivers"];
 export type UserRecord = PowerSyncDB["Users"];
+export type UserStatusRecord = PowerSyncDB["UserStatuses"];
 export type HomeBasesRecord = PowerSyncDB["HomeBases"];
 export type BleachersRecord = PowerSyncDB["Bleachers"];
 export type BleacherUsersRecord = PowerSyncDB["BleacherUsers"];

@@ -46,25 +46,33 @@ export function AccountManagerCard({ accountManager }: AccountManagerCardProps) 
     onlyBooked: false,
     useValue: false,
     createdByUserUuid: accountManager?.userUuid || null,
+    accountManagerUuid: accountManager.accountManagerUuid,
     dateField: "created_at",
+    targetType: "quotes",
   });
   const quotesSignedData = useEventData({
     onlyBooked: true,
     useValue: false,
     createdByUserUuid: accountManager?.userUuid || null,
+    accountManagerUuid: accountManager.accountManagerUuid,
     dateField: "created_at",
+    targetType: "sales",
   });
   const valueOfQuotesSignedData = useEventData({
     onlyBooked: true,
     useValue: true,
     createdByUserUuid: accountManager?.userUuid || null,
+    accountManagerUuid: accountManager.accountManagerUuid,
     dateField: "created_at",
+    targetType: "value_of_sales",
   });
   const revenueData = useEventData({
     onlyBooked: true,
     useValue: true,
     createdByUserUuid: accountManager?.userUuid || null,
+    accountManagerUuid: accountManager.accountManagerUuid,
     dateField: "event_start",
+    targetType: "value_of_revenue",
   });
   const manager = accountManager;
   const href = `/${PAGE_NAME}/account-manager/${manager.accountManagerUuid}`;

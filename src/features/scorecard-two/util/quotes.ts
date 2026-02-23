@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { EventWithDate, TimeRange } from "../hooks/queries/useEventsWithinTimeRange";
-import { ScorecardTarget } from "../hooks/queries/useTargets";
 import {
   lastQuarterStartTimeStampTZ,
   lastWeekStartTimeStampTZ,
@@ -15,19 +14,6 @@ import {
 import { getDateKeys, isWeekdayKey, toLocalDateKey } from "./datetime";
 import { roundToTwo } from "./math";
 import { DateField } from "../hooks/overview/useEventData";
-
-export function getGoalFromTargets(targets: ScorecardTarget[], timeRange: TimeRange): number {
-  return useMemo(() => {
-    if (timeRange === "weekly") {
-      return targets.reduce((sum, target) => sum + (target.quotes_weekly ?? 0), 0);
-    } else if (timeRange === "quarterly") {
-      return targets.reduce((sum, target) => sum + (target.quotes_quarterly ?? 0), 0);
-    } else if (timeRange === "annually") {
-      return targets.reduce((sum, target) => sum + (target.quotes_quarterly ?? 0), 0);
-    }
-    return targets.reduce((sum, target) => sum + (target.quotes_weekly ?? 0), 0);
-  }, [timeRange, targets]);
-}
 
 export function getDayKeysForTimeRange(activeRange: TimeRange, period: "this" | "last"): string[] {
   if (activeRange === "quarterly") {

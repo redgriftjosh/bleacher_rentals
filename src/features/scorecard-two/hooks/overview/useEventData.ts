@@ -7,11 +7,10 @@ import {
   useEventsWithinTimeRange,
   validTimeRanges,
 } from "../queries/useEventsWithinTimeRange";
-import { useTargets } from "../queries/useTargets";
+import { TargetType, useTargets } from "../queries/useTargets";
 import {
   assembleChartData,
   getDayKeysForTimeRange,
-  getGoalFromTargets,
   getNumberForEachDay,
   getPaceForEachDay,
 } from "../../util/quotes";
@@ -22,7 +21,9 @@ export function useEventData(props: {
   onlyBooked: boolean;
   useValue: boolean;
   createdByUserUuid: string | null;
+  accountManagerUuid: string | null;
   dateField: DateField;
+  targetType: TargetType;
 }) {
   const currentDay = useMemo(() => getCurrentDay(), []);
   const searchParams = useSearchParams();
@@ -45,9 +46,7 @@ export function useEventData(props: {
     props.onlyBooked,
     props.createdByUserUuid,
   );
-  const targets = useTargets();
-
-  const goal = getGoalFromTargets(targets, activeRange);
+  const { goal } = useTargets(activeRange, props.targetType, props.accountManagerUuid);
 
   const thisPeriodDays = getDayKeysForTimeRange(activeRange, "this");
   const lastPeriodDays = getDayKeysForTimeRange(activeRange, "last");

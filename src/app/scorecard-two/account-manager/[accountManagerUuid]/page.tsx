@@ -16,25 +16,33 @@ export default function AccountManagerDetailPage() {
     onlyBooked: false,
     useValue: false,
     createdByUserUuid: accountManager?.userUuid || null,
+    accountManagerUuid: params.accountManagerUuid,
     dateField: "created_at",
+    targetType: "quotes",
   });
   const quotesSignedData = useEventData({
     onlyBooked: true,
     useValue: false,
     createdByUserUuid: accountManager?.userUuid || null,
+    accountManagerUuid: params.accountManagerUuid,
     dateField: "created_at",
+    targetType: "sales",
   });
   const valueOfQuotesSignedData = useEventData({
     onlyBooked: true,
     useValue: true,
     createdByUserUuid: accountManager?.userUuid || null,
+    accountManagerUuid: params.accountManagerUuid,
     dateField: "created_at",
+    targetType: "value_of_sales",
   });
   const revenueData = useEventData({
     onlyBooked: true,
     useValue: true,
     createdByUserUuid: accountManager?.userUuid || null,
+    accountManagerUuid: params.accountManagerUuid,
     dateField: "event_start",
+    targetType: "value_of_revenue",
   });
 
   if (!accountManager) {
@@ -64,6 +72,7 @@ export default function AccountManagerDetailPage() {
       <div className="grid grid-cols-3 gap-4 mb-6">
         <CompactDetailedStatWithGraph
           label="Number of Quotes Sent"
+          accountManagerUuid={params.accountManagerUuid}
           statType="number-of-quotes-sent"
           historyHref={`/${PAGE_NAME}/history/quotes-sent`}
           thisPeriod={quotesSentData.thisPeriod}
@@ -72,6 +81,7 @@ export default function AccountManagerDetailPage() {
         />
         <CompactDetailedStatWithGraph
           label="Number of Quotes Signed"
+          accountManagerUuid={params.accountManagerUuid}
           statType="number-of-quotes-signed"
           historyHref={`/${PAGE_NAME}/history/quotes-signed`}
           thisPeriod={quotesSignedData.thisPeriod}
@@ -80,6 +90,7 @@ export default function AccountManagerDetailPage() {
         />
         <CompactDetailedStatWithGraph
           label="Value of Quotes Signed"
+          accountManagerUuid={params.accountManagerUuid}
           statType="value-of-quotes-signed"
           historyHref={`/${PAGE_NAME}/history/value-of-quotes-signed`}
           unit="money"
@@ -91,6 +102,7 @@ export default function AccountManagerDetailPage() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <CompactDetailedStatWithGraph
           label="Revenue"
+          accountManagerUuid={params.accountManagerUuid}
           statType="revenue"
           historyHref={`/${PAGE_NAME}/history/revenue`}
           thisPeriod={revenueData.thisPeriod}

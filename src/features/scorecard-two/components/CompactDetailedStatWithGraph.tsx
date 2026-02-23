@@ -5,6 +5,7 @@ import { Flag, History, Target } from "lucide-react";
 import Link from "next/link";
 import { LineChart, Line, ResponsiveContainer, XAxis, Tooltip as RechartsTooltip } from "recharts";
 import { useSearchParams } from "next/navigation";
+import { SetTargetsModal, type StatType } from "./SetTargetsModal";
 
 type ChartDataPoint = {
   day: string;
@@ -19,8 +20,8 @@ type Unit = "money" | "number" | "percentage";
 
 type CompactDetailedStatWithGraphProps = {
   label: string;
-  accountManagerUuid?: string;
-  statType?: string;
+  accountManagerUuid?: string | null;
+  statType?: StatType;
   historyHref?: string;
   unit?: Unit;
   thisPeriod: {
@@ -39,6 +40,9 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
   const [targetsModalOpen, setTargetsModalOpen] = useState(false);
   const searchParams = useSearchParams();
   const timeRangeParam = searchParams.get("timeRange");
+  const canOpenTargets = Boolean(props.accountManagerUuid && props.statType);
+  const modalAccountManagerUuid = props.accountManagerUuid ?? undefined;
+  const modalStatType = props.statType;
 
   const periodLabel =
     timeRangeParam === "quarterly" ? "Quarter" : timeRangeParam === "annually" ? "Year" : "Week";
@@ -108,17 +112,17 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
           {props.label}
         </span>
         <div className="flex items-center gap-2">
-          {props.accountManagerUuid && (
+          {canOpenTargets && (
             <button
               onClick={() => setTargetsModalOpen(true)}
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition"
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition cursor-pointer"
               title="Set targets"
             >
               <Target className="h-4 w-4" />
-              <span>Set targets</span>
+              <span className="whitespace-nowrap">Set targets</span>
             </button>
           )}
-          {props.historyHref && (
+          {/* {props.historyHref && (
             <Link
               href={props.historyHref}
               className="text-gray-400 hover:text-gray-600 transition"
@@ -127,7 +131,7 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
             >
               <History className="h-4 w-4" />
             </Link>
-          )}
+          )} */}
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
@@ -238,14 +242,14 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
         </div>
       </div>
 
-      {/* {props.accountManagerUuid && props.statType && (
+      {canOpenTargets && modalAccountManagerUuid && modalStatType && (
         <SetTargetsModal
           open={targetsModalOpen}
           onOpenChange={setTargetsModalOpen}
-          accountManagerUuid={props.accountManagerUuid}
-          statType={props.statType}
+          accountManagerUuid={modalAccountManagerUuid}
+          statType={modalStatType}
         />
-      )} */}
+      )}
     </div>
   );
 }
