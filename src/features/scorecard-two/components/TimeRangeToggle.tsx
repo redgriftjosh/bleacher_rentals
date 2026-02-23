@@ -22,7 +22,7 @@ export default function TimeRangeToggle() {
     if (!searchParams.get("timeRange")) {
       const params = new URLSearchParams(searchParams.toString());
       params.set("timeRange", "weekly");
-      router.replace(`/${PAGE_NAME}?${params.toString()}`);
+      router.replace(`?${params.toString()}`);
     }
   }, [searchParams, router]);
 
@@ -34,7 +34,7 @@ export default function TimeRangeToggle() {
         const nextRange = RANGES[nextIndex];
         const params = new URLSearchParams(searchParams.toString());
         params.set("timeRange", nextRange);
-        router.replace(`/${PAGE_NAME}?${params.toString()}`);
+        router.replace(`?${params.toString()}`);
         setIsRangeAnimating(true);
         window.setTimeout(() => setIsRangeAnimating(false), 220);
       }}

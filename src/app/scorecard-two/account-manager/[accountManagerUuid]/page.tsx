@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useAccountManager } from "@/features/scorecard-two/hooks/accountManager/useAccountManager";
@@ -8,9 +8,12 @@ import { useAccountManager } from "@/features/scorecard-two/hooks/accountManager
 import { CompactDetailedStatWithGraph } from "@/features/scorecard-two/components/CompactDetailedStatWithGraph";
 import { PAGE_NAME } from "@/features/scorecard-two/constants/nav";
 import { useEventData } from "@/features/scorecard-two/hooks/overview/useEventData";
+import TimeRangeToggle from "@/features/scorecard-two/components/TimeRangeToggle";
 
 export default function AccountManagerDetailPage() {
   const params = useParams<{ accountManagerUuid: string }>();
+  const searchParams = useSearchParams();
+  const timeRangeParam = searchParams.get("timeRange");
   const accountManager = useAccountManager(params.accountManagerUuid);
   const quotesSentData = useEventData({
     onlyBooked: false,
@@ -56,17 +59,22 @@ export default function AccountManagerDetailPage() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <Link
-          href={`/${PAGE_NAME}`}
-          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition mb-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Scorecard
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-900">
-          {accountManager.firstName} {accountManager.lastName}
-        </h1>
-        <p className="text-gray-500">Account Manager Scorecard</p>
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <Link
+              href={`/${PAGE_NAME}?timeRange=${timeRangeParam ?? "weekly"}`}
+              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition mb-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Scorecard
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {accountManager.firstName} {accountManager.lastName}
+            </h1>
+            <p className="text-gray-500">Account Manager Scorecard</p>
+          </div>
+          <TimeRangeToggle />
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">

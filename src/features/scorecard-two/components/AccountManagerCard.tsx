@@ -42,6 +42,8 @@ const PLACEHOLDER_STATS = [
 ];
 
 export function AccountManagerCard({ accountManager }: AccountManagerCardProps) {
+  const searchParams = useSearchParams();
+  const timeRangeParam = searchParams.get("timeRange");
   const quotesSentData = useEventData({
     onlyBooked: false,
     useValue: false,
@@ -75,7 +77,7 @@ export function AccountManagerCard({ accountManager }: AccountManagerCardProps) 
     targetType: "value_of_revenue",
   });
   const manager = accountManager;
-  const href = `/${PAGE_NAME}/account-manager/${manager.accountManagerUuid}`;
+  const href = `/${PAGE_NAME}/account-manager/${manager.accountManagerUuid}?timeRange=${timeRangeParam ?? "weekly"}`;
 
   const stats = [
     {
