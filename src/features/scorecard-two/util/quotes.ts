@@ -14,6 +14,7 @@ import {
 } from "../constants/time";
 import { getDateKeys, isWeekdayKey, toLocalDateKey } from "./datetime";
 import { roundToTwo } from "./math";
+import { DateField } from "../hooks/overview/useEventData";
 
 export function getGoalFromTargets(targets: ScorecardTarget[], timeRange: TimeRange): number {
   return useMemo(() => {
@@ -54,6 +55,7 @@ export function getDayKeysForTimeRange(activeRange: TimeRange, period: "this" | 
 export function getNumberForEachDay(
   days: string[],
   events: EventWithDate[],
+  dateField: DateField,
   useValue?: boolean,
 ): Record<string, number> {
   return useMemo(() => {
@@ -67,7 +69,10 @@ export function getNumberForEachDay(
 
     events.forEach((event) => {
       if (!event.created_at) return;
-      const eventDateKey = toLocalDateKey(event.created_at);
+      if (!event.event_start) return;
+      const eventDateKey = toLocalDateKey(
+        dateField === "created_at" ? event.created_at : event.event_start,
+      );
       if (!daySet.has(eventDateKey)) return;
 
       const valueToAdd = useValue ? (event.contract_revenue_cents ?? 0) / 100 : 1;
@@ -81,7 +86,7 @@ export function getNumberForEachDay(
     });
 
     return cumulative;
-  }, [events, useValue, days]);
+  }, [events, useValue, days, dateField]);
 }
 
 export function getPaceForEachDay(days: string[], goal: number) {

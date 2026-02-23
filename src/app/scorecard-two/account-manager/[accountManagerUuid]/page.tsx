@@ -4,22 +4,38 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useAccountManager } from "@/features/scorecard-two/hooks/accountManager/useAccountManager";
-import { useQuotesSent } from "@/features/scorecard-two/hooks/overview/useQuotesSent";
-import { useQuotesSigned } from "@/features/scorecard-two/hooks/overview/useQuotesSigned";
-import { useValueOfQuotesSigned } from "@/features/scorecard-two/hooks/overview/useValueOfQuotesSigned";
 // import { useRevenue } from "@/features/scorecard-two/hooks/overview/useRevenue";
 import { CompactDetailedStatWithGraph } from "@/features/scorecard-two/components/CompactDetailedStatWithGraph";
 import { PAGE_NAME } from "@/features/scorecard-two/constants/nav";
+import { useEventData } from "@/features/scorecard-two/hooks/overview/useEventData";
 
 export default function AccountManagerDetailPage() {
   const params = useParams<{ accountManagerUuid: string }>();
   const accountManager = useAccountManager(params.accountManagerUuid);
-  console.log("Account Manager Data:", accountManager);
-  const quotesSent = useQuotesSent(accountManager?.userUuid);
-  //   console.log("Quotes Sent Data:", quotesSent);
-  const quotesSigned = useQuotesSigned(accountManager?.userUuid);
-  const valueOfQuotesSigned = useValueOfQuotesSigned(accountManager?.userUuid);
-  // const revenue = useRevenue(accountManager?.userUuid);
+  const quotesSentData = useEventData({
+    onlyBooked: false,
+    useValue: false,
+    createdByUserUuid: accountManager?.userUuid || null,
+    dateField: "created_at",
+  });
+  const quotesSignedData = useEventData({
+    onlyBooked: true,
+    useValue: false,
+    createdByUserUuid: accountManager?.userUuid || null,
+    dateField: "created_at",
+  });
+  const valueOfQuotesSignedData = useEventData({
+    onlyBooked: true,
+    useValue: true,
+    createdByUserUuid: accountManager?.userUuid || null,
+    dateField: "created_at",
+  });
+  const revenueData = useEventData({
+    onlyBooked: true,
+    useValue: true,
+    createdByUserUuid: accountManager?.userUuid || null,
+    dateField: "event_start",
+  });
 
   if (!accountManager) {
     return (
@@ -50,37 +66,37 @@ export default function AccountManagerDetailPage() {
           label="Number of Quotes Sent"
           statType="number-of-quotes-sent"
           historyHref={`/${PAGE_NAME}/history/quotes-sent`}
-          thisPeriod={quotesSent.thisPeriod}
-          lastPeriod={quotesSent.lastPeriod}
-          chartData={quotesSent.chartData}
+          thisPeriod={quotesSentData.thisPeriod}
+          lastPeriod={quotesSentData.lastPeriod}
+          chartData={quotesSentData.chartData}
         />
         <CompactDetailedStatWithGraph
           label="Number of Quotes Signed"
           statType="number-of-quotes-signed"
           historyHref={`/${PAGE_NAME}/history/quotes-signed`}
-          thisPeriod={quotesSigned.thisPeriod}
-          lastPeriod={quotesSigned.lastPeriod}
-          chartData={quotesSigned.chartData}
+          thisPeriod={quotesSignedData.thisPeriod}
+          lastPeriod={quotesSignedData.lastPeriod}
+          chartData={quotesSignedData.chartData}
         />
         <CompactDetailedStatWithGraph
           label="Value of Quotes Signed"
           statType="value-of-quotes-signed"
           historyHref={`/${PAGE_NAME}/history/value-of-quotes-signed`}
           unit="money"
-          thisPeriod={valueOfQuotesSigned.thisPeriod}
-          lastPeriod={valueOfQuotesSigned.lastPeriod}
-          chartData={valueOfQuotesSigned.chartData}
+          thisPeriod={valueOfQuotesSignedData.thisPeriod}
+          lastPeriod={valueOfQuotesSignedData.lastPeriod}
+          chartData={valueOfQuotesSignedData.chartData}
         />
       </div>
       <div className="grid grid-cols-2 gap-4 mb-6">
-        {/* <CompactDetailedStatWithGraph
+        <CompactDetailedStatWithGraph
           label="Revenue"
           statType="revenue"
           historyHref={`/${PAGE_NAME}/history/revenue`}
-          thisPeriod={revenue.thisPeriod}
-          lastPeriod={revenue.lastPeriod}
-          chartData={revenue.chartData}
-        /> */}
+          thisPeriod={revenueData.thisPeriod}
+          lastPeriod={revenueData.lastPeriod}
+          chartData={revenueData.chartData}
+        />
       </div>
     </div>
   );

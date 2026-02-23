@@ -16,7 +16,14 @@ import {
   getPaceForEachDay,
 } from "../../util/quotes";
 
-export function useQuotes(onlyBooked?: boolean, useValue?: boolean, createdByUserUuid?: string) {
+export type DateField = "created_at" | "event_start";
+
+export function useEventData(props: {
+  onlyBooked: boolean;
+  useValue: boolean;
+  createdByUserUuid: string | null;
+  dateField: DateField;
+}) {
   const currentDay = useMemo(() => getCurrentDay(), []);
   const searchParams = useSearchParams();
   const timeRangeParam = searchParams.get("timeRange");
@@ -27,14 +34,16 @@ export function useQuotes(onlyBooked?: boolean, useValue?: boolean, createdByUse
   const thisPeriodEvents = useEventsWithinTimeRange(
     activeRange,
     "this",
-    onlyBooked,
-    createdByUserUuid,
+    props.dateField,
+    props.onlyBooked,
+    props.createdByUserUuid,
   );
   const lastPeriodEvents = useEventsWithinTimeRange(
     activeRange,
     "last",
-    onlyBooked,
-    createdByUserUuid,
+    props.dateField,
+    props.onlyBooked,
+    props.createdByUserUuid,
   );
   const targets = useTargets();
 
@@ -48,8 +57,18 @@ export function useQuotes(onlyBooked?: boolean, useValue?: boolean, createdByUse
     currentDay,
   );
 
-  const thisPeriodCumulativeByDay = getNumberForEachDay(thisPeriodDays, thisPeriodEvents, useValue);
-  const lastPeriodCumulativeByDay = getNumberForEachDay(lastPeriodDays, lastPeriodEvents, useValue);
+  const thisPeriodCumulativeByDay = getNumberForEachDay(
+    thisPeriodDays,
+    thisPeriodEvents,
+    props.dateField,
+    props.useValue,
+  );
+  const lastPeriodCumulativeByDay = getNumberForEachDay(
+    lastPeriodDays,
+    lastPeriodEvents,
+    props.dateField,
+    props.useValue,
+  );
   const paceByDay = getPaceForEachDay(thisPeriodDays, goal);
 
   const chartData = assembleChartData(

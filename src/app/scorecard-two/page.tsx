@@ -5,12 +5,7 @@ import { CompactDetailedStatWithGraph } from "@/features/scorecard-two/component
 import { ScorecardHeader } from "@/features/scorecard-two/components/ScorecardHeader";
 import { TempCompactDetailedStatWithGraph } from "@/features/scorecard-two/components/TempQuarterlyComponent";
 import { PAGE_NAME } from "@/features/scorecard-two/constants/nav";
-import { useQuotesSent } from "@/features/scorecard-two/hooks/overview/useQuotesSent";
-import { useQuotesSigned } from "@/features/scorecard-two/hooks/overview/useQuotesSigned";
-// import { useRevenue } from "@/features/scorecard-two/hooks/overview/useRevenue";
-import { useValueOfQuotesSigned } from "@/features/scorecard-two/hooks/overview/useValueOfQuotesSigned";
-import { useEventsWithinTimeRange } from "@/features/scorecard-two/hooks/queries/useEventsWithinTimeRange";
-
+import { useEventData } from "@/features/scorecard-two/hooks/overview/useEventData";
 function buildQuarterlySampleData() {
   const start = new Date(2026, 0, 1);
   const end = new Date(2026, 2, 31);
@@ -112,13 +107,32 @@ function buildQuarterlySampleData() {
 const sampleQuarterly = buildQuarterlySampleData();
 
 export default function ScorecardPage() {
-  const quotesSentData = useQuotesSent();
-  console.log("Quotes Sent Data:", quotesSentData);
-  const quotesSignedData = useQuotesSigned();
-  const valueOfQuotesSignedData = useValueOfQuotesSigned();
+  const quotesSentData = useEventData({
+    onlyBooked: false,
+    useValue: false,
+    createdByUserUuid: null,
+    dateField: "created_at",
+  });
+  const quotesSignedData = useEventData({
+    onlyBooked: true,
+    useValue: false,
+    createdByUserUuid: null,
+    dateField: "created_at",
+  });
+  const valueOfQuotesSignedData = useEventData({
+    onlyBooked: true,
+    useValue: true,
+    createdByUserUuid: null,
+    dateField: "created_at",
+  });
+  const revenueData = useEventData({
+    onlyBooked: true,
+    useValue: true,
+    createdByUserUuid: null,
+    dateField: "event_start",
+  });
   // const revenueData = useRevenue();
   const accountManagers = useAccountManagers();
-  useEventsWithinTimeRange("quarterly", "this");
   console.log("Test");
 
   return (
@@ -133,15 +147,15 @@ export default function ScorecardPage() {
           lastPeriod={quotesSentData.lastPeriod}
           chartData={quotesSentData.chartData}
         />
-        {/* <CompactDetailedStatWithGraph
+        <CompactDetailedStatWithGraph
           label="Number of Quotes Signed"
           statType="number-of-quotes-signed"
           historyHref={`/${PAGE_NAME}/history/quotes-signed`}
-          thisWeek={quotesSignedData.thisWeek}
-          lastWeek={quotesSignedData.lastWeek}
+          thisPeriod={quotesSignedData.thisPeriod}
+          lastPeriod={quotesSignedData.lastPeriod}
           chartData={quotesSignedData.chartData}
-        /> */}
-        {/* <CompactDetailedStatWithGraph
+        />
+        <CompactDetailedStatWithGraph
           label="Value of Quotes Signed"
           statType="value-of-quotes-signed"
           historyHref={`/${PAGE_NAME}/history/value-of-quotes-signed`}
@@ -149,17 +163,17 @@ export default function ScorecardPage() {
           thisPeriod={valueOfQuotesSignedData.thisPeriod}
           lastPeriod={valueOfQuotesSignedData.lastPeriod}
           chartData={valueOfQuotesSignedData.chartData}
-        /> */}
+        />
       </div>
       <div className="grid grid-cols-2 gap-4 mb-6">
-        {/* <CompactDetailedStatWithGraph
+        <CompactDetailedStatWithGraph
           label="Revenue"
           statType="revenue"
           historyHref={`/${PAGE_NAME}/history/revenue`}
-          thisWeek={revenueData.thisWeek}
-          lastWeek={revenueData.lastWeek}
+          thisPeriod={revenueData.thisPeriod}
+          lastPeriod={revenueData.lastPeriod}
           chartData={revenueData.chartData}
-        /> */}
+        />
         <TempCompactDetailedStatWithGraph
           label="Q1"
           statType="quarter"

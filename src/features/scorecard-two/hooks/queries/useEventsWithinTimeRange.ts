@@ -14,10 +14,12 @@ import {
 } from "../../constants/time";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { useMemo } from "react";
+import { DateField } from "../overview/useEventData";
 
 export type EventWithDate = {
   id: string;
   created_at: string | null;
+  event_start: string | null;
   contract_revenue_cents: number | null;
 };
 
@@ -27,8 +29,9 @@ export const validTimeRanges = ["weekly", "quarterly", "annually"] as const;
 export function useEventsWithinTimeRange(
   activeRange: TimeRange,
   period: "this" | "last",
-  onlyBooked?: boolean,
-  createdByUserUuid?: string,
+  dateField: DateField,
+  onlyBooked: boolean,
+  createdByUserUuid: string | null,
 ) {
   const query = useMemo(() => {
     let eventsBuilder = db
@@ -36,39 +39,40 @@ export function useEventsWithinTimeRange(
       .select([
         "e.id as id",
         "e.created_at as created_at",
+        "e.event_start as event_start",
         "e.contract_revenue_cents as contract_revenue_cents",
       ]);
 
     if (activeRange === "annually") {
       if (period === "this") {
         eventsBuilder = eventsBuilder
-          .where("e.created_at", ">=", thisYearStartTimeStampTZ)
-          .where("e.created_at", "<", thisYearEndTimeStampTZ);
+          .where(`e.${dateField}`, ">=", thisYearStartTimeStampTZ)
+          .where(`e.${dateField}`, "<", thisYearEndTimeStampTZ);
       } else {
         eventsBuilder = eventsBuilder
-          .where("e.created_at", ">=", lastYearStartTimeStampTZ)
-          .where("e.created_at", "<", thisYearStartTimeStampTZ);
+          .where(`e.${dateField}`, ">=", lastYearStartTimeStampTZ)
+          .where(`e.${dateField}`, "<", thisYearStartTimeStampTZ);
       }
     } else if (activeRange === "quarterly") {
       if (period === "this") {
         eventsBuilder = eventsBuilder
-          .where("e.created_at", ">=", thisQuarterStartTimeStampTZ)
-          .where("e.created_at", "<", thisQuarterEndTimeStampTZ);
+          .where(`e.${dateField}`, ">=", thisQuarterStartTimeStampTZ)
+          .where(`e.${dateField}`, "<", thisQuarterEndTimeStampTZ);
       } else {
         eventsBuilder = eventsBuilder
-          .where("e.created_at", ">=", lastQuarterStartTimeStampTZ)
-          .where("e.created_at", "<", thisQuarterStartTimeStampTZ);
+          .where(`e.${dateField}`, ">=", lastQuarterStartTimeStampTZ)
+          .where(`e.${dateField}`, "<", thisQuarterStartTimeStampTZ);
       }
       // default to weekly if somehow an invalid range is passed
     } else {
       if (period === "this") {
         eventsBuilder = eventsBuilder
-          .where("e.created_at", ">=", thisWeekStartTimeStampTZ)
-          .where("e.created_at", "<", thisWeekEndTimeStampTZ);
+          .where(`e.${dateField}`, ">=", thisWeekStartTimeStampTZ)
+          .where(`e.${dateField}`, "<", thisWeekEndTimeStampTZ);
       } else {
         eventsBuilder = eventsBuilder
-          .where("e.created_at", ">=", lastWeekStartTimeStampTZ)
-          .where("e.created_at", "<", thisWeekStartTimeStampTZ);
+          .where(`e.${dateField}`, ">=", lastWeekStartTimeStampTZ)
+          .where(`e.${dateField}`, "<", thisWeekStartTimeStampTZ);
       }
     }
 

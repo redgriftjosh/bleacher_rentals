@@ -5,11 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CompactStatWithRing } from "./CompactStatWithRing";
 import { AccountManagerOption } from "@/features/manageTeam/hooks/useAccountManagers";
-import { useQuotesSent } from "../hooks/overview/useQuotesSent";
-// import { useRevenue } from "../hooks/overview/useRevenue";
-import { useQuotesSigned } from "../hooks/overview/useQuotesSigned";
-import { useValueOfQuotesSigned } from "../hooks/overview/useValueOfQuotesSigned";
 import { PAGE_NAME } from "../constants/nav";
+import { useEventData } from "../hooks/overview/useEventData";
 
 type AccountManagerCardProps = {
   accountManager: AccountManagerOption;
@@ -45,41 +42,63 @@ const PLACEHOLDER_STATS = [
 ];
 
 export function AccountManagerCard({ accountManager }: AccountManagerCardProps) {
-  const quotesSent = useQuotesSent(accountManager.userUuid);
-  const quotesSigned = useQuotesSigned(accountManager.userUuid);
-  const valueOfQuotesSigned = useValueOfQuotesSigned(accountManager.userUuid);
-  // const revenue = useRevenue(accountManager.userUuid);
+  const quotesSentData = useEventData({
+    onlyBooked: false,
+    useValue: false,
+    createdByUserUuid: accountManager?.userUuid || null,
+    dateField: "created_at",
+  });
+  const quotesSignedData = useEventData({
+    onlyBooked: true,
+    useValue: false,
+    createdByUserUuid: accountManager?.userUuid || null,
+    dateField: "created_at",
+  });
+  const valueOfQuotesSignedData = useEventData({
+    onlyBooked: true,
+    useValue: true,
+    createdByUserUuid: accountManager?.userUuid || null,
+    dateField: "created_at",
+  });
+  const revenueData = useEventData({
+    onlyBooked: true,
+    useValue: true,
+    createdByUserUuid: accountManager?.userUuid || null,
+    dateField: "event_start",
+  });
   const manager = accountManager;
   const href = `/${PAGE_NAME}/account-manager/${manager.accountManagerUuid}`;
 
   const stats = [
     {
       title: "Quotes Sent",
-      value: quotesSent.thisPeriod.current,
-      paceDelta: quotesSent.thisPeriod.current - quotesSent.lastPeriod.currentAtSameDay,
-      progress: quotesSent.thisPeriod.current / quotesSent.thisPeriod.goal,
+      value: quotesSentData.thisPeriod.current,
+      paceDelta: quotesSentData.thisPeriod.current - quotesSentData.lastPeriod.currentAtSameDay,
+      progress: quotesSentData.thisPeriod.current / quotesSentData.thisPeriod.goal,
     },
     {
       title: "Quotes Signed",
-      value: quotesSigned.thisPeriod.current,
-      paceDelta: quotesSigned.thisPeriod.current - quotesSigned.lastPeriod.currentAtSameDay,
-      progress: quotesSigned.thisPeriod.current / quotesSigned.thisPeriod.goal,
+      value: quotesSignedData.thisPeriod.current,
+      paceDelta: quotesSignedData.thisPeriod.current - quotesSignedData.lastPeriod.currentAtSameDay,
+      progress: quotesSignedData.thisPeriod.current / quotesSignedData.thisPeriod.goal,
     },
     {
       title: "Value Signed",
-      value: valueOfQuotesSigned.thisPeriod.current,
+      value: valueOfQuotesSignedData.thisPeriod.current,
       paceDelta:
-        valueOfQuotesSigned.thisPeriod.current - valueOfQuotesSigned.lastPeriod.currentAtSameDay,
-      progress: valueOfQuotesSigned.thisPeriod.current / valueOfQuotesSigned.thisPeriod.goal,
+        valueOfQuotesSignedData.thisPeriod.current -
+        valueOfQuotesSignedData.lastPeriod.currentAtSameDay,
+      progress:
+        valueOfQuotesSignedData.thisPeriod.current / valueOfQuotesSignedData.thisPeriod.goal,
       isMoney: true,
     },
-    // {
-    //   title: "Revenue",
-    //   value: revenue.thisPeriod.current,
-    //   paceDelta: revenue.thisPeriod.current - revenue.lastPeriod.currentAtSameDay,
-    //   progress: revenue.thisPeriod.current / revenue.thisPeriod.goal,
-    //   isMoney: true,
-    // },
+    {
+      title: "Revenue",
+      value: revenueData.thisPeriod.current,
+      paceDelta: revenueData.thisPeriod.current - revenueData.lastPeriod.currentAtSameDay,
+      progress: revenueData.thisPeriod.current / revenueData.thisPeriod.goal,
+      isMoney: true,
+    },
   ];
 
   return (
