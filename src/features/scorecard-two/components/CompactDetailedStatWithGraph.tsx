@@ -4,9 +4,11 @@ import { useState } from "react";
 import { Flag, History, Target } from "lucide-react";
 import Link from "next/link";
 import { LineChart, Line, ResponsiveContainer, XAxis, Tooltip as RechartsTooltip } from "recharts";
+import { useSearchParams } from "next/navigation";
 
 type ChartDataPoint = {
   day: string;
+  dayTick?: string;
   dayLabel: string;
   thisPeriod: number | null;
   lastPeriod: number;
@@ -35,6 +37,8 @@ type CompactDetailedStatWithGraphProps = {
 
 export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraphProps) {
   const [targetsModalOpen, setTargetsModalOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const timeRangeParam = searchParams.get("timeRange");
 
   const unit = props.unit ?? "number";
 
@@ -126,7 +130,7 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
         <div className="relative border border-gray-200 rounded-lg p-3 pt-4">
           <div className="absolute -top-2 left-3 bg-white px-2 text-xs font-semibold text-green-600 tracking-wide">
-            THIS WEEK
+            {`THIS ${timeRangeParam === "quarterly" ? "QUARTER" : timeRangeParam === "annually" ? "YEAR" : "WEEK"}`}
           </div>
           <div className="flex items-baseline gap-2 -mt-2">
             <span className="text-4xl font-semibold text-green-600">
@@ -144,7 +148,7 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
 
         <div className="relative border border-gray-200 rounded-lg p-3 pt-4">
           <div className="absolute -top-2 left-3 bg-white px-2 text-xs font-semibold text-gray-400 tracking-wide">
-            LAST WEEK
+            {`LAST ${timeRangeParam === "quarterly" ? "QUARTER" : timeRangeParam === "annually" ? "YEAR" : "WEEK"}`}
           </div>
           <div className="flex items-baseline gap-2 -mt-2">
             <span className="text-4xl font-semibold text-gray-400">
@@ -164,6 +168,7 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
             <LineChart data={props.chartData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
               <XAxis
                 dataKey="day"
+                tickFormatter={(_value, index) => props.chartData[index]?.dayTick ?? ""}
                 tick={{ fontSize: 11 }}
                 stroke="#9CA3AF"
                 axisLine={false}
@@ -177,7 +182,7 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
                   const numericValue = typeof value === "number" ? value : 0;
                   const formattedValue = formatValue(numericValue);
                   if (name === "pace") return [formattedValue, "Pace"];
-                  if (name === "lastWeek") return [formattedValue, "Last week"];
+                  if (name === "lastPeriod") return [formattedValue, "Last period"];
                   return [formattedValue, "This week"];
                 }}
                 labelFormatter={(_, payload) => {

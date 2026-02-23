@@ -19,7 +19,7 @@ import { createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
 
 type TargetRow = {
   id: string;
-  user_uuid: string | null;
+  account_manager_uuid: string | null;
   quotes_weekly: number | null;
   quotes_quarterly: number | null;
   quotes_annually: number | null;
@@ -63,7 +63,7 @@ export function SetTargetsModal({
         .selectFrom("ScorecardTargets as st")
         .select([
           "st.id as id",
-          "st.user_uuid as user_uuid",
+          "st.account_manager_uuid as account_manager_uuid",
           "st.quotes_weekly as quotes_weekly",
           "st.quotes_quarterly as quotes_quarterly",
           "st.quotes_annually as quotes_annually",
@@ -77,7 +77,7 @@ export function SetTargetsModal({
           "st.value_of_revenue_quarterly_cents as value_of_revenue_quarterly_cents",
           "st.value_of_revenue_annually_cents as value_of_revenue_annually_cents",
         ])
-        .where("st.user_uuid", "=", accountManagerUuid)
+        .where("st.account_manager_uuid", "=", accountManagerUuid)
         .compile(),
     [accountManagerUuid],
   );
@@ -142,9 +142,7 @@ export function SetTargetsModal({
       const q = isCents
         ? Math.round(parseFloat(quarterlyValue) * 100)
         : parseInt(quarterlyValue, 10);
-      const a = isCents
-        ? Math.round(parseFloat(annuallyValue) * 100)
-        : parseInt(annuallyValue, 10);
+      const a = isCents ? Math.round(parseFloat(annuallyValue) * 100) : parseInt(annuallyValue, 10);
 
       if (isNaN(w) || isNaN(q) || isNaN(a)) {
         createErrorToastNoThrow(["Please enter valid numbers for all fields"]);
@@ -153,18 +151,16 @@ export function SetTargetsModal({
       }
 
       // Upsert via Supabase — creates the row if it doesn't exist, updates if it does
-      const { error } = await supabase
-        .from("ScorecardTargets")
-        .upsert(
-          {
-            user_uuid: accountManagerUuid,
-            [columns.weekly]: w,
-            [columns.quarterly]: q,
-            [columns.annually]: a,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_uuid" },
-        );
+      const { error } = await supabase.from("ScorecardTargets").upsert(
+        {
+          account_manager_uuid: accountManagerUuid,
+          [columns.weekly]: w,
+          [columns.quarterly]: q,
+          [columns.annually]: a,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_uuid" },
+      );
 
       if (error) throw error;
 

@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CompactStatWithRing } from "./CompactStatWithRing";
 import { AccountManagerOption } from "@/features/manageTeam/hooks/useAccountManagers";
 import { useQuotesSent } from "../hooks/overview/useQuotesSent";
-import { useRevenue } from "../hooks/overview/useRevenue";
+// import { useRevenue } from "../hooks/overview/useRevenue";
 import { useQuotesSigned } from "../hooks/overview/useQuotesSigned";
 import { useValueOfQuotesSigned } from "../hooks/overview/useValueOfQuotesSigned";
 import { PAGE_NAME } from "../constants/nav";
@@ -48,7 +48,7 @@ export function AccountManagerCard({ accountManager }: AccountManagerCardProps) 
   const quotesSent = useQuotesSent(accountManager.userUuid);
   const quotesSigned = useQuotesSigned(accountManager.userUuid);
   const valueOfQuotesSigned = useValueOfQuotesSigned(accountManager.userUuid);
-  const revenue = useRevenue(accountManager.userUuid);
+  // const revenue = useRevenue(accountManager.userUuid);
   const manager = accountManager;
   const href = `/${PAGE_NAME}/account-manager/${manager.accountManagerUuid}`;
 

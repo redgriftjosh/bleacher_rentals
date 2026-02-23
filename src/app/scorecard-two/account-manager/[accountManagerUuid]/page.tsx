@@ -7,7 +7,7 @@ import { useAccountManager } from "@/features/scorecard-two/hooks/accountManager
 import { useQuotesSent } from "@/features/scorecard-two/hooks/overview/useQuotesSent";
 import { useQuotesSigned } from "@/features/scorecard-two/hooks/overview/useQuotesSigned";
 import { useValueOfQuotesSigned } from "@/features/scorecard-two/hooks/overview/useValueOfQuotesSigned";
-import { useRevenue } from "@/features/scorecard-two/hooks/overview/useRevenue";
+// import { useRevenue } from "@/features/scorecard-two/hooks/overview/useRevenue";
 import { CompactDetailedStatWithGraph } from "@/features/scorecard-two/components/CompactDetailedStatWithGraph";
 import { PAGE_NAME } from "@/features/scorecard-two/constants/nav";
 
@@ -19,7 +19,7 @@ export default function AccountManagerDetailPage() {
   //   console.log("Quotes Sent Data:", quotesSent);
   const quotesSigned = useQuotesSigned(accountManager?.userUuid);
   const valueOfQuotesSigned = useValueOfQuotesSigned(accountManager?.userUuid);
-  const revenue = useRevenue(accountManager?.userUuid);
+  // const revenue = useRevenue(accountManager?.userUuid);
 
   if (!accountManager) {
     return (

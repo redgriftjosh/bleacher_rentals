@@ -29,17 +29,62 @@ type FieldConfig = {
 
 const FIELDS: FieldConfig[] = [
   { key: "quotesWeekly", dbColumn: "quotes_weekly", label: "Quotes - Weekly", isCents: false },
-  { key: "quotesQuarterly", dbColumn: "quotes_quarterly", label: "Quotes - Quarterly", isCents: false },
-  { key: "quotesAnnually", dbColumn: "quotes_annually", label: "Quotes - Annually", isCents: false },
+  {
+    key: "quotesQuarterly",
+    dbColumn: "quotes_quarterly",
+    label: "Quotes - Quarterly",
+    isCents: false,
+  },
+  {
+    key: "quotesAnnually",
+    dbColumn: "quotes_annually",
+    label: "Quotes - Annually",
+    isCents: false,
+  },
   { key: "salesWeekly", dbColumn: "sales_weekly", label: "Sales - Weekly", isCents: false },
-  { key: "salesQuarterly", dbColumn: "sales_quarterly", label: "Sales - Quarterly", isCents: false },
+  {
+    key: "salesQuarterly",
+    dbColumn: "sales_quarterly",
+    label: "Sales - Quarterly",
+    isCents: false,
+  },
   { key: "salesAnnually", dbColumn: "sales_annually", label: "Sales - Annually", isCents: false },
-  { key: "valueOfSalesWeeklyCents", dbColumn: "value_of_sales_weekly_cents", label: "Value of Sales - Weekly ($)", isCents: true },
-  { key: "valueOfSalesQuarterlyCents", dbColumn: "value_of_sales_quarterly_cents", label: "Value of Sales - Quarterly ($)", isCents: true },
-  { key: "valueOfSalesAnnuallyCents", dbColumn: "value_of_sales_annually_cents", label: "Value of Sales - Annually ($)", isCents: true },
-  { key: "valueOfRevenueWeeklyCents", dbColumn: "value_of_revenue_weekly_cents", label: "Value of Revenue - Weekly ($)", isCents: true },
-  { key: "valueOfRevenueQuarterlyCents", dbColumn: "value_of_revenue_quarterly_cents", label: "Value of Revenue - Quarterly ($)", isCents: true },
-  { key: "valueOfRevenueAnnuallyCents", dbColumn: "value_of_revenue_annually_cents", label: "Value of Revenue - Annually ($)", isCents: true },
+  {
+    key: "valueOfSalesWeeklyCents",
+    dbColumn: "value_of_sales_weekly_cents",
+    label: "Value of Sales - Weekly ($)",
+    isCents: true,
+  },
+  {
+    key: "valueOfSalesQuarterlyCents",
+    dbColumn: "value_of_sales_quarterly_cents",
+    label: "Value of Sales - Quarterly ($)",
+    isCents: true,
+  },
+  {
+    key: "valueOfSalesAnnuallyCents",
+    dbColumn: "value_of_sales_annually_cents",
+    label: "Value of Sales - Annually ($)",
+    isCents: true,
+  },
+  {
+    key: "valueOfRevenueWeeklyCents",
+    dbColumn: "value_of_revenue_weekly_cents",
+    label: "Value of Revenue - Weekly ($)",
+    isCents: true,
+  },
+  {
+    key: "valueOfRevenueQuarterlyCents",
+    dbColumn: "value_of_revenue_quarterly_cents",
+    label: "Value of Revenue - Quarterly ($)",
+    isCents: true,
+  },
+  {
+    key: "valueOfRevenueAnnuallyCents",
+    dbColumn: "value_of_revenue_annually_cents",
+    label: "Value of Revenue - Annually ($)",
+    isCents: true,
+  },
 ];
 
 export function EditTargetsDialog({ manager, targets, children }: EditTargetsDialogProps) {
@@ -73,7 +118,7 @@ export function EditTargetsDialog({ manager, targets, children }: EditTargetsDia
       // Upsert via Supabase (RLS enforces admin-only writes)
       const { error } = await supabase.from("ScorecardTargets").upsert(
         {
-          user_uuid: manager.userUuid,
+          account_manager_uuid: manager.userUuid,
           quotes_weekly: values.quotesWeekly,
           quotes_quarterly: values.quotesQuarterly,
           quotes_annually: values.quotesAnnually,

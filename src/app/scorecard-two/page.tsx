@@ -7,8 +7,9 @@ import { TempCompactDetailedStatWithGraph } from "@/features/scorecard-two/compo
 import { PAGE_NAME } from "@/features/scorecard-two/constants/nav";
 import { useQuotesSent } from "@/features/scorecard-two/hooks/overview/useQuotesSent";
 import { useQuotesSigned } from "@/features/scorecard-two/hooks/overview/useQuotesSigned";
-import { useRevenue } from "@/features/scorecard-two/hooks/overview/useRevenue";
+// import { useRevenue } from "@/features/scorecard-two/hooks/overview/useRevenue";
 import { useValueOfQuotesSigned } from "@/features/scorecard-two/hooks/overview/useValueOfQuotesSigned";
+import { useEventsWithinTimeRange } from "@/features/scorecard-two/hooks/queries/useEventsWithinTimeRange";
 
 function buildQuarterlySampleData() {
   const start = new Date(2026, 0, 1);
@@ -115,8 +116,10 @@ export default function ScorecardPage() {
   console.log("Quotes Sent Data:", quotesSentData);
   const quotesSignedData = useQuotesSigned();
   const valueOfQuotesSignedData = useValueOfQuotesSigned();
-  const revenueData = useRevenue();
+  // const revenueData = useRevenue();
   const accountManagers = useAccountManagers();
+  useEventsWithinTimeRange("quarterly", "this");
+  console.log("Test");
 
   return (
     <div className="p-4">

@@ -30,7 +30,7 @@ type AccountManagerRow = {
 };
 
 type TargetRow = {
-  userUuid: string | null;
+  accountManagerUuid: string | null;
   quotesWeekly: number | null;
   quotesQuarterly: number | null;
   quotesAnnually: number | null;
@@ -72,7 +72,7 @@ const accountManagersQuery = db
 const targetsQuery = db
   .selectFrom("ScorecardTargets as st")
   .select([
-    "st.user_uuid as userUuid",
+    "st.account_manager_uuid as accountManagerUuid",
     "st.quotes_weekly as quotesWeekly",
     "st.quotes_quarterly as quotesQuarterly",
     "st.quotes_annually as quotesAnnually",
@@ -140,10 +140,7 @@ function computeMetrics(
     }
 
     // Value of revenue: revenue for booked events where event_start is in range
-    if (
-      e.eventStatus === "booked" &&
-      isInRange(e.eventStart, eventStartStart, eventStartEnd)
-    ) {
+    if (e.eventStatus === "booked" && isInRange(e.eventStart, eventStartStart, eventStartEnd)) {
       valueOfRevenueCents += e.contractRevenueCents ?? 0;
     }
   }
@@ -160,8 +157,7 @@ function targetRowToData(row: TargetRow | undefined): ScorecardTargetsData {
     salesWeekly: row.salesWeekly ?? DEFAULT_TARGETS.salesWeekly,
     salesQuarterly: row.salesQuarterly ?? DEFAULT_TARGETS.salesQuarterly,
     salesAnnually: row.salesAnnually ?? DEFAULT_TARGETS.salesAnnually,
-    valueOfSalesWeeklyCents:
-      row.valueOfSalesWeeklyCents ?? DEFAULT_TARGETS.valueOfSalesWeeklyCents,
+    valueOfSalesWeeklyCents: row.valueOfSalesWeeklyCents ?? DEFAULT_TARGETS.valueOfSalesWeeklyCents,
     valueOfSalesQuarterlyCents:
       row.valueOfSalesQuarterlyCents ?? DEFAULT_TARGETS.valueOfSalesQuarterlyCents,
     valueOfSalesAnnuallyCents:
@@ -197,26 +193,33 @@ export function useScorecardData(): {
 
     const targetsByUser = new Map<string, TargetRow>();
     for (const t of targetRows ?? []) {
-      targetsByUser.set(t.userUuid, t);
+      targetsByUser.set(t.accountManagerUuid ?? "", t);
     }
 
     const events = eventRows ?? [];
 
     return amRows.map((am): AccountManagerScorecard => {
       const manager: AccountManagerInfo = {
-        userUuid: am.userUuid,
+        userUuid: am.userUuid ?? "",
         firstName: am.firstName,
         lastName: am.lastName,
         clerkUserId: am.clerkUserId,
         avatarUrl: am.avatarUrl,
       };
 
-      const targets = targetRowToData(targetsByUser.get(am.userUuid));
+      const targets = targetRowToData(targetsByUser.get(am.userUuid ?? ""));
 
-      const weekly = computeMetrics(events, am.userUuid, weekStart, weekEnd, weekStart, weekEnd);
+      const weekly = computeMetrics(
+        events,
+        am.userUuid ?? "",
+        weekStart,
+        weekEnd,
+        weekStart,
+        weekEnd,
+      );
       const quarterly = computeMetrics(
         events,
-        am.userUuid,
+        am.userUuid ?? "",
         quarterStart,
         quarterEnd,
         quarterStart,
@@ -224,7 +227,7 @@ export function useScorecardData(): {
       );
       const annually = computeMetrics(
         events,
-        am.userUuid,
+        am.userUuid ?? "",
         yearStart,
         yearEnd,
         yearStart,
