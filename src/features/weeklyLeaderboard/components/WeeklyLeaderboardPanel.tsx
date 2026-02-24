@@ -45,7 +45,8 @@ function getRankStyles(rank: number) {
 }
 
 export function WeeklyLeaderboardPanel() {
-  const { rows, isLoading, error, weekLabel } = useWeeklyBookedLeaderboard();
+  const { rows, isLoading, error, weekLabel, lastWeekLabel, lastWeekWinner } =
+    useWeeklyBookedLeaderboard();
 
   const sorted = useMemo(() => {
     return [...rows].sort((a, b) => b.bookedValueCents - a.bookedValueCents);
@@ -78,6 +79,31 @@ export function WeeklyLeaderboardPanel() {
             <p className="text-sm text-gray-500">Booked value ({weekLabel})</p>
           </div>
         </div>
+
+        {lastWeekWinner && (
+          <div className="mb-4 border border-gray-200 rounded-lg p-3 bg-gray-50">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Last Week Winner ({lastWeekLabel})
+            </p>
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Avatar className="w-8 h-8 ring-2 ring-amber-500">
+                  <AvatarImage src={lastWeekWinner.avatarUrl ?? undefined} />
+                  <AvatarFallback className="text-xs">
+                    {lastWeekWinner.firstName?.[0] ?? lastWeekWinner.lastName?.[0] ?? "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="font-semibold text-gray-900">
+                  {`${lastWeekWinner.firstName ?? ""} ${lastWeekWinner.lastName ?? ""}`.trim() ||
+                    "Unknown"}
+                </span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">
+                {formatCurrency(lastWeekWinner.bookedValueCents)}
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
           {topThree.map((row, idx) => {
