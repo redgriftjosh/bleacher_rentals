@@ -261,6 +261,42 @@ export type Database = {
           },
         ]
       }
+      BlueBook: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          link: string | null
+          name: string
+          region: Database["public"]["Enums"]["bluebook_region"]
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          link?: string | null
+          name: string
+          region?: Database["public"]["Enums"]["bluebook_region"]
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          link?: string | null
+          name?: string
+          region?: Database["public"]["Enums"]["bluebook_region"]
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       DashboardFilterSettings: {
         Row: {
           account_manager_uuid: string | null
@@ -923,6 +959,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      bluebook_region: "CAN" | "US" | "Both"
       task_status:
         | "in_progress"
         | "backlog"
@@ -1068,6 +1105,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      bluebook_region: ["CAN", "US", "Both"],
       task_status: [
         "in_progress",
         "backlog",
