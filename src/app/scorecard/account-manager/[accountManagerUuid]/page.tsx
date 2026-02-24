@@ -3,12 +3,11 @@
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { useAccountManager } from "@/features/scorecard-two/hooks/accountManager/useAccountManager";
-// import { useRevenue } from "@/features/scorecard-two/hooks/overview/useRevenue";
-import { CompactDetailedStatWithGraph } from "@/features/scorecard-two/components/CompactDetailedStatWithGraph";
-import { PAGE_NAME } from "@/features/scorecard-two/constants/nav";
-import { useEventData } from "@/features/scorecard-two/hooks/overview/useEventData";
-import TimeRangeToggle from "@/features/scorecard-two/components/TimeRangeToggle";
+import { useAccountManager } from "@/features/scorecard/hooks/accountManager/useAccountManager";
+import { CompactDetailedStatWithGraph } from "@/features/scorecard/components/CompactDetailedStatWithGraph";
+import { PAGE_NAME } from "@/features/scorecard/constants/nav";
+import { useEventData } from "@/features/scorecard/hooks/overview/useEventData";
+import TimeRangeToggle from "@/features/scorecard/components/TimeRangeToggle";
 
 export default function AccountManagerDetailPage() {
   const params = useParams<{ accountManagerUuid: string }>();

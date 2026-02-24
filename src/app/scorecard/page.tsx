@@ -1,11 +1,11 @@
 "use client";
 
-import { AccountManagerCard } from "@/features/scorecard-two/components/AccountManagerCard";
-import { CompactDetailedStatWithGraph } from "@/features/scorecard-two/components/CompactDetailedStatWithGraph";
-import { ScorecardHeader } from "@/features/scorecard-two/components/ScorecardHeader";
-import { PAGE_NAME } from "@/features/scorecard-two/constants/nav";
-import { useAccountManagers } from "@/features/scorecard-two/hooks/accountManager/useAccountManagers";
-import { useEventData } from "@/features/scorecard-two/hooks/overview/useEventData";
+import { AccountManagerCard } from "@/features/scorecard/components/AccountManagerCard";
+import { CompactDetailedStatWithGraph } from "@/features/scorecard/components/CompactDetailedStatWithGraph";
+import { ScorecardHeader } from "@/features/scorecard/components/ScorecardHeader";
+import { PAGE_NAME } from "@/features/scorecard/constants/nav";
+import { useAccountManagers } from "@/features/scorecard/hooks/accountManager/useAccountManagers";
+import { useEventData } from "@/features/scorecard/hooks/overview/useEventData";
 
 export default function ScorecardPage() {
   const quotesSentData = useEventData({

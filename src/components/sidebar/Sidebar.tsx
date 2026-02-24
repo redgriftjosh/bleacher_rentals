@@ -62,14 +62,8 @@ const SideBar = () => {
           roles={[USER_ROLES.ADMIN, USER_ROLES.ACCOUNT_MANAGER]}
         />
         <SideNavButton
-          label="Scorecard One"
-          href="/scorecard-one"
-          icon={BarChart3}
-          roles={[USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN]}
-        />
-        <SideNavButton
-          label="Scorecard Two"
-          href="/scorecard-two"
+          label="Scorecard"
+          href="/scorecard"
           icon={BarChart3}
           roles={[USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN]}
         />

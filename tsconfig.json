@@ -28,7 +28,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "src/features/scorecard-two/hooks/overview/useEventData.ts"
+    "src/features/scorecard/hooks/overview/useEventData.ts"
   ],
   "exclude": ["node_modules", "supabase/functions"]
 }
