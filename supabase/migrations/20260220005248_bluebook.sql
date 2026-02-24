@@ -3,7 +3,11 @@
 -- Description: Creates the BlueBook reference documents table
 -- ============================================================
 
-CREATE TYPE bluebook_region AS ENUM ('CAN', 'US', 'Both');
+CREATE TYPE bluebook_region AS ENUM (
+    'CAN', 
+    'US', 
+    'Both'
+);
 
 CREATE TABLE "BlueBook" (
   -- Primary key
