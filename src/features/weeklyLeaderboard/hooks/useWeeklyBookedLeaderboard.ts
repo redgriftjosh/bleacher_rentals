@@ -30,8 +30,8 @@ export function useWeeklyBookedLeaderboard() {
         sql<number>`coalesce(sum(e.contract_revenue_cents), 0)`.as("bookedValueCents"),
       ])
       .where("e.event_status", "=", "booked")
-      .where("e.created_at", ">=", week.start)
-      .where("e.created_at", "<=", week.end)
+      .where("e.booked_at", ">=", week.start)
+      .where("e.booked_at", "<=", week.end)
       .groupBy(["u.id", "u.first_name", "u.last_name", "u.avatar_image_url"])
       .orderBy(sql`bookedValueCents`, "desc")
       .compile();

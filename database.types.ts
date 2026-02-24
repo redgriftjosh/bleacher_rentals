@@ -414,6 +414,7 @@ export type Database = {
         Row: {
           address_uuid: string | null
           booked: boolean
+          booked_at: string | null
           contract_revenue_cents: number | null
           created_at: string
           created_by_user_uuid: string | null
@@ -437,6 +438,7 @@ export type Database = {
         Insert: {
           address_uuid?: string | null
           booked?: boolean
+          booked_at?: string | null
           contract_revenue_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null
@@ -460,6 +462,7 @@ export type Database = {
         Update: {
           address_uuid?: string | null
           booked?: boolean
+          booked_at?: string | null
           contract_revenue_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null

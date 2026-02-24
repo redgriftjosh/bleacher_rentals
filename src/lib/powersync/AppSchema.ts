@@ -91,6 +91,7 @@ const EventsCols = {
   created_by_user_uuid: column.text,
   event_status: column.text,
   contract_revenue_cents: column.integer,
+  booked_at: column.text,
 } satisfies PowerSyncColsFor<"Events">;
 const Events = new Table(EventsCols, {
   indexes: {

@@ -141,3 +141,33 @@ as permissive
 FOR all
 TO authenticated
 using (true);
+
+ALTER TABLE public."Events"
+  ADD COLUMN IF NOT EXISTS booked_at timestamptz NULL;
+
+CREATE OR REPLACE FUNCTION public.sync_events_booked_at_once()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.event_status = 'booked'::public.event_status
+     AND (
+       TG_OP = 'INSERT'
+       OR OLD.event_status IS DISTINCT FROM 'booked'::public.event_status
+     )
+  THEN
+    NEW.booked_at := now();
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_events_set_booked_at_once ON public."Events";
+
+CREATE TRIGGER trg_events_set_booked_at_once
+BEFORE INSERT OR UPDATE OF event_status
+ON public."Events"
+FOR EACH ROW
+EXECUTE FUNCTION public.sync_events_booked_at_once();
+
