@@ -78,7 +78,7 @@ export async function FetchDashboardEvents(
       )
       `;
 
-  let builder = supabase.from("Events").select(queryString);
+  let builder = supabase.from("Events").select(queryString).neq("event_status", "lost");
   if (opts?.onlyMine) {
     const clerkUserId = opts.clerkUserId ?? null;
     if (clerkUserId) {
