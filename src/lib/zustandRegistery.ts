@@ -34,8 +34,10 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   WorkTrackers: () => useWorkTrackersStore.getState().setStale(true),
   BleacherUsers: () => {},
   AccountManagers: () => {},
+  ScorecardTargets: () => {},
   WorkTrackerInspections: () => {},
   InspectionPhotos: () => {},
   Vehicles: () => {},
   Notifications: () => {},
+  BlueBook: () => {},
 };

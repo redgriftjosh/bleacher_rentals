@@ -3116,100 +3116,54 @@ SELECT pg_catalog.setval('"supabase_functions"."hooks_id_seq"', 1, false);
 
 RESET ALL;
 
-INSERT INTO "BlueBook" (name, link, description, region, sort_order) VALUES
+UPDATE public."Events"
+SET event_status = CASE
+  WHEN booked = true THEN 'booked'::public.event_status
+  ELSE 'quoted'::public.event_status
+END
+WHERE event_status IS NULL;
 
-  (
-    'BR Company Information',
-    'https://drive.google.com/file/d/1xuha_ryFqpPV3Hoaq89O5g8QgpmzYXGi/view?usp=sharing',
-    'General company information and background for BR.',
-    'Both',
-    10
-  ),
+-- Backfill ScorecardTargets for all account managers (with defaults)
+INSERT INTO public."ScorecardTargets" (account_manager_uuid)
+SELECT am.id
+FROM public."AccountManagers" am
+WHERE am.user_uuid IS NOT NULL
+  AND am.is_active = true
+  AND NOT EXISTS (
+    SELECT 1 FROM public."ScorecardTargets" st WHERE st.account_manager_uuid = am.id
+  )
+ON CONFLICT (account_manager_uuid) DO NOTHING;
 
-  (
-    'Truck Requirement',
-    'https://drive.google.com/file/d/1QgOxuO6ia_J6FDNQnZtQX37WDH8ZDvMt/view?usp=sharing',
-    'Vehicle requirements and specifications drivers must meet.',
-    'Both',
-    20
-  ),
+-- Populate contract_revenue_cents based on number of bleachers assigned
+-- $1,200 per bleacher (120,000 cents)
+UPDATE public."Events" e
+SET contract_revenue_cents = (
+  SELECT COUNT(be.id) * 120000
+  FROM public."BleacherEvents" be
+  WHERE be.event_uuid = e.id
+)
+WHERE EXISTS (
+  SELECT 1 FROM public."BleacherEvents" be WHERE be.event_uuid = e.id
+);
 
-  (
-    'Driver Checklist',
-    'https://drive.google.com/file/d/1-3FURU_n1yq8ZOYqMAYjz2aKCvfAI034/view?usp=sharing',
-    'Checklist of tasks and requirements for drivers.',
-    'Both',
-    30
-  ),
+-- Mark every 3rd quoted event as "lost"
+WITH quoted_events AS (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY created_at) as rn
+  FROM public."Events"
+  WHERE event_status = 'quoted'
+)
+UPDATE public."Events" e
+SET event_status = 'lost'::public.event_status
+FROM quoted_events qe
+WHERE e.id = qe.id AND qe.rn % 3 = 0;
 
-  (
-    'Pre/Post Inspections',
-    'https://drive.google.com/file/d/10XQ0upb0zjr_I-p79rORZghzg8tky3gg/view?usp=sharing',
-    'Instructions and forms for pre- and post-trip vehicle inspections.',
-    'Both',
-    40
-  ),
-
-  (
-    'Setup/Teardown Manual',
-    'https://drive.google.com/file/d/1x0G-QRoU0iGCXQ2ebXNaidHoEvvjRV8n/view?usp=sharing',
-    'Step-by-step guide for equipment setup and teardown.',
-    'Both',
-    50
-  ),
-
-  (
-    'Important Legal Documents',
-    'https://drive.google.com/file/d/1RruJfgcIzBUwaoFV1Wpm68u1xbo9PGp0/view?usp=sharing',
-    'Key legal documents required for operations in Canada.',
-    'CAN',
-    60
-  ),
-
-  (
-    'Important Legal Documents',
-    'https://drive.google.com/file/d/1sMbzDGrl51lkeOL7FjY8MVChol4PWAs5/view?usp=sharing',
-    'Key legal documents required for operations in the United States.',
-    'US',
-    70
-  ),
-
-  (
-    'CVOR',
-    'https://drive.google.com/file/d/1u_QjCs_3euOUDJ3SN1CqbYkJeaTUooam/view?usp=sharing',
-    'Commercial Vehicle Operator''s Registration certificate for Canadian operations.',
-    'CAN',
-    80
-  ),
-
-  (
-    'Not a Trailer Letter',
-    'https://drive.google.com/file/d/1hvWmgMFCtpMOb-lmMgANUshKS9_c0YAi/view?usp=sharing',
-    'Official letter confirming the vehicle is not classified as a trailer under Canadian regulations.',
-    'CAN',
-    90
-  ),
-
-  (
-    'MCMIS',
-    'https://drive.google.com/file/d/1keV3CvTvWdm49mY3zQCAyg13gnKMlsfi/view?usp=sharing',
-    'Motor Carrier Management Information System record for US operations.',
-    'US',
-    100
-  ),
-
-  (
-    'UCR',
-    'https://drive.google.com/file/d/1F9GcY0Dk77Lrt23r80hVZG1OGlsGz8KA/view?usp=sharing',
-    'Unified Carrier Registration — annual filing required for US interstate operations.',
-    'US',
-    110
-  ),
-
-  (
-    'SCAC',
-    'https://drive.google.com/file/d/15YhdJ3AZnsSPx6u5AdJg_cf6BWZj1j-7/view?usp=sharing',
-    'Standard Carrier Alpha Code — unique identifier required for US carrier operations.',
-    'US',
-    120
-  );
+-- Assign unassigned events to one of three account managers
+UPDATE public."Events"
+SET created_by_user_uuid = (
+  ARRAY[
+    '90e4c039-7d0b-41f3-b186-9a43fa26ad93'::uuid,
+    '8af93ecd-8ee7-457f-993c-7dd3374bc7d6'::uuid,
+    '35a4c266-1197-46b4-af4d-d4b805f57d9a'::uuid
+  ]
+)[1 + floor(random() * 3)::int]
+WHERE created_by_user_uuid IS NULL;

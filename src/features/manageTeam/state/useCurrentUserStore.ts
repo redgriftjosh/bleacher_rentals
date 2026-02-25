@@ -1,9 +1,6 @@
 "use client";
 
 import { create } from "zustand";
-import { fetchUserById } from "../db/userQueries";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "@/../database.types";
 
 export type CurrentUserState = {
   // Basic user info

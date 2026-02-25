@@ -450,11 +450,14 @@ export type Database = {
         Row: {
           address_uuid: string | null
           booked: boolean
+          booked_at: string | null
+          contract_revenue_cents: number | null
           created_at: string
           created_by_user_uuid: string | null
           event_end: string
           event_name: string
           event_start: string
+          event_status: Database["public"]["Enums"]["event_status"] | null
           fifteen_row: number | null
           goodshuffle_url: string | null
           hsl_hue: number | null
@@ -471,11 +474,14 @@ export type Database = {
         Insert: {
           address_uuid?: string | null
           booked?: boolean
+          booked_at?: string | null
+          contract_revenue_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null
           event_end: string
           event_name: string
           event_start: string
+          event_status?: Database["public"]["Enums"]["event_status"] | null
           fifteen_row?: number | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
@@ -492,11 +498,14 @@ export type Database = {
         Update: {
           address_uuid?: string | null
           booked?: boolean
+          booked_at?: string | null
+          contract_revenue_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null
           event_end?: string
           event_name?: string
           event_start?: string
+          event_status?: Database["public"]["Enums"]["event_status"] | null
           fifteen_row?: number | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
@@ -605,6 +614,71 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ScorecardTargets: {
+        Row: {
+          account_manager_uuid: string
+          created_at: string
+          id: string
+          quotes_annually: number
+          quotes_quarterly: number
+          quotes_weekly: number
+          sales_annually: number
+          sales_quarterly: number
+          sales_weekly: number
+          updated_at: string
+          value_of_revenue_annually_cents: number
+          value_of_revenue_quarterly_cents: number
+          value_of_revenue_weekly_cents: number
+          value_of_sales_annually_cents: number
+          value_of_sales_quarterly_cents: number
+          value_of_sales_weekly_cents: number
+        }
+        Insert: {
+          account_manager_uuid: string
+          created_at?: string
+          id?: string
+          quotes_annually?: number
+          quotes_quarterly?: number
+          quotes_weekly?: number
+          sales_annually?: number
+          sales_quarterly?: number
+          sales_weekly?: number
+          updated_at?: string
+          value_of_revenue_annually_cents?: number
+          value_of_revenue_quarterly_cents?: number
+          value_of_revenue_weekly_cents?: number
+          value_of_sales_annually_cents?: number
+          value_of_sales_quarterly_cents?: number
+          value_of_sales_weekly_cents?: number
+        }
+        Update: {
+          account_manager_uuid?: string
+          created_at?: string
+          id?: string
+          quotes_annually?: number
+          quotes_quarterly?: number
+          quotes_weekly?: number
+          sales_annually?: number
+          sales_quarterly?: number
+          sales_weekly?: number
+          updated_at?: string
+          value_of_revenue_annually_cents?: number
+          value_of_revenue_quarterly_cents?: number
+          value_of_revenue_weekly_cents?: number
+          value_of_sales_annually_cents?: number
+          value_of_sales_quarterly_cents?: number
+          value_of_sales_weekly_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ScorecardTargets_account_manager_uuid_fkey"
+            columns: ["account_manager_uuid"]
+            isOneToOne: true
+            referencedRelation: "AccountManagers"
             referencedColumns: ["id"]
           },
         ]
@@ -960,6 +1034,7 @@ export type Database = {
     }
     Enums: {
       bluebook_region: "CAN" | "US" | "Both"
+      event_status: "quoted" | "booked" | "lost"
       task_status:
         | "in_progress"
         | "backlog"
@@ -1106,6 +1181,7 @@ export const Constants = {
   public: {
     Enums: {
       bluebook_region: ["CAN", "US", "Both"],
+      event_status: ["quoted", "booked", "lost"],
       task_status: [
         "in_progress",
         "backlog",
