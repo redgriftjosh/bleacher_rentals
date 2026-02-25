@@ -257,6 +257,19 @@ const BleacherUsers = new Table(BleacherUsersCols, {
   indexes: { bleacher_uuid: ["bleacher_uuid"], user_uuid: ["user_uuid"] },
 });
 
+// BlueBook
+const BlueBookCols = {
+  name: column.text,
+  link: column.text,
+  description: column.text,
+  is_active: column.integer,
+  region: column.text,
+  sort_order: column.integer,
+  created_at: column.text,
+  updated_at: column.text,
+} satisfies PowerSyncColsFor<"BlueBook">
+const BlueBook = new Table(BlueBookCols, { indexes: { uuid: ["uuid"] } });
+
 export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
@@ -266,6 +279,7 @@ export const AppSchema = new Schema({
   BleacherEvents,
   BleacherUsers,
   Blocks,
+  BlueBook,
   Events,
   HomeBases,
   Drivers,
