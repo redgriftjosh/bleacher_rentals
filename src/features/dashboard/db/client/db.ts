@@ -109,10 +109,10 @@ export function fetchBleachers() {
               sameDayTeardown: !event.teardown_end, // same logic
               lenient: event.lenient,
               token: "", // not needed or included here
-              selectedStatus: event.booked ? "Booked" : "Quoted",
+              selectedStatus: event.event_status ?? (event.booked ? "booked" : "quoted"),
               notes: event.notes ?? "",
               numDays: calculateNumDays(event.event_start, event.event_end),
-              status: event.booked ? "Booked" : "Quoted",
+              status: event.event_status ?? (event.booked ? "booked" : "quoted"),
               hslHue: event.hsl_hue,
               alerts: relatedAlerts,
               mustBeClean: event.must_be_clean,
@@ -201,10 +201,10 @@ export function fetchDashboardEvents() {
         sameDayTeardown: !event.teardown_end,
         lenient: event.lenient,
         token: "", // unused
-        selectedStatus: event.booked ? "Booked" : "Quoted",
+        selectedStatus: event.event_status ?? (event.booked ? "booked" : "quoted"),
         notes: event.notes ?? "",
         numDays: calculateNumDays(event.event_start, event.event_end),
-        status: event.booked ? "Booked" : "Quoted",
+        status: event.event_status ?? (event.booked ? "booked" : "quoted"),
         hslHue: event.hsl_hue,
         alerts: relatedAlerts,
         mustBeClean: event.must_be_clean,
@@ -677,13 +677,14 @@ export async function createEvent(
     ten_row: state.tenRow,
     fifteen_row: state.fifteenRow,
     address_uuid: address_uuid,
-    booked: state.selectedStatus === "Booked",
+    booked: state.selectedStatus === "booked",
+    event_status: state.selectedStatus,
+    contract_revenue_cents: state.contractRevenueCents,
     notes: state.notes,
     hsl_hue: state.hslHue,
     must_be_clean: state.mustBeClean,
     goodshuffle_url: state.goodshuffleUrl ?? null,
     created_by_user_uuid: state.ownerUserUuid ?? null,
-    // NOTE: ownerUserId not persisted yet; add column (e.g., owner_user_id INT FK -> Users.user_id) if needed.
   };
 
   const { data: eventData, error: eventError } = await supabase
