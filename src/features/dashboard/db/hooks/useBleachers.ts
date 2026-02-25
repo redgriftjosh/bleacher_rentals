@@ -26,6 +26,7 @@ type BleacherFlatRow = {
   winter_home_base_name: string | null;
   bleacher_event_uuid: string | null;
   event_uuid: string | null;
+  event_status: string | null;
   address_street: string | null;
 
   block_uuid: string | null;
@@ -90,7 +91,8 @@ function reshapeBleachers(rows: BleacherFlatRow[]): Bleacher[] {
         set.add(r.bleacher_event_uuid);
 
         // Supabase version assumed event is always present; with left joins it can be null.
-        if (r.event_uuid) {
+        // Exclude events marked as lost from dashboard display.
+        if (r.event_uuid && r.event_status !== "lost") {
           b.bleacherEvents.push({
             bleacherEventUuid: r.bleacher_event_uuid,
             eventUuid: r.event_uuid,
@@ -168,6 +170,7 @@ export function useBleachers() {
       "e.event_end",
       "e.hsl_hue",
       "e.booked",
+      "e.event_status",
       "e.goodshuffle_url",
       "a.street as address_street",
 
