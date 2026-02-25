@@ -1033,6 +1033,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      bluebook_region: "CAN" | "US" | "Both"
       event_status: "quoted" | "booked" | "lost"
       task_status:
         | "in_progress"
@@ -1179,6 +1180,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      bluebook_region: ["CAN", "US", "Both"],
       event_status: ["quoted", "booked", "lost"],
       task_status: [
         "in_progress",
