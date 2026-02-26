@@ -17,6 +17,7 @@ import { updateDataBase } from "@/app/actions/db.actions";
 import { useBlocksStore } from "@/state/blocksStore";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { useWorkTrackersStore } from "@/state/workTrackersStore";
+import { Enums } from "../../../../../database.types";
 import {
   DashboardBleacher,
   DashboardBlock,
@@ -26,6 +27,11 @@ import {
 } from "../../types";
 import { Database, Tables, TablesInsert } from "../../../../../database.types";
 import { calculateEventAlerts, calculateNumDays, checkEventFormRules } from "../../functions";
+import {
+  buildTripDeletedNotification,
+  buildTripStatusNotification,
+  insertDriverNotification,
+} from "@/features/workTrackers/db/notifications";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -67,7 +73,7 @@ export function fetchBleachers() {
 
         // ✅ Find all bleacherEvents for this bleacher
         const relatedBleacherEvents = bleacherEvents.filter(
-          (be) => be.bleacher_uuid === bleacher.id
+          (be) => be.bleacher_uuid === bleacher.id,
         );
 
         // ✅ Map event_ids to full DashboardEvent objects
@@ -228,7 +234,7 @@ export function fetchDashboardEvents() {
 async function saveAddress(
   address: AddressData | null,
   addressUuid: string | null,
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
 ): Promise<string | null> {
   if (!address) return null;
 
@@ -283,10 +289,40 @@ export function getAddressFromUuid(addressUuid: string | null): AddressData | nu
   };
 }
 
+async function fetchDriverUserUuidByDriverUuid(
+  driverUuid: string | null,
+  supabase: SupabaseClient<Database>,
+): Promise<string | null> {
+  if (!driverUuid) return null;
+
+  const { data, error } = await supabase
+    .from("Drivers")
+    .select("user_uuid")
+    .eq("id", driverUuid)
+    .single();
+
+  if (error) return null;
+  return data?.user_uuid ?? null;
+}
+
+function toNotificationAddress(address: AddressData | null, fallback: string): string {
+  const formatted = (address?.address ?? "").trim();
+  if (formatted.length > 0) return formatted;
+  return fallback;
+}
+
+function toNotificationCity(address: AddressData | null, fallback?: string): string | undefined {
+  const formatted = (address?.city ?? "").trim();
+  if (formatted.length > 0) return formatted;
+
+  const fallbackFormatted = (fallback ?? "").trim();
+  return fallbackFormatted.length > 0 ? fallbackFormatted : undefined;
+}
+
 export async function fetchAddressFromUuid(
   uuid: string,
   supabase: SupabaseClient<Database>,
-  isServer?: boolean
+  isServer?: boolean,
 ): Promise<Tables<"Addresses"> | null> {
   const { data, error } = await supabase.from("Addresses").select("*").eq("id", uuid).single();
 
@@ -304,7 +340,15 @@ export async function saveWorkTracker(
   workTracker: Tables<"WorkTrackers"> | null,
   pickUpAddress: AddressData | null,
   dropOffAddress: AddressData | null,
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
+  options?: {
+    previousStatus?: Enums<"worktracker_status">;
+    driverUserUuid?: string | null;
+    previousPickupAddress?: string;
+    previousPickupCity?: string;
+    previousDropoffAddress?: string;
+    previousDropoffCity?: string;
+  },
 ): Promise<void> {
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);
@@ -319,7 +363,21 @@ export async function saveWorkTracker(
   pickUpAddressUuid = await saveAddress(pickUpAddress, pickUpAddressUuid, supabase);
   dropOffAddressUuid = await saveAddress(dropOffAddress, dropOffAddressUuid, supabase);
 
-  if (workTracker.id !== "-1") {
+  const wasInsert = workTracker.id === "-1";
+  const previousStatus = options?.previousStatus ?? "draft";
+  const nextStatus = workTracker.status;
+  const pickupAddressText = toNotificationAddress(
+    pickUpAddress,
+    options?.previousPickupAddress ?? "an unknown pickup location",
+  );
+  const pickupCityText = toNotificationCity(pickUpAddress, options?.previousPickupCity);
+  const dropoffAddressText = toNotificationAddress(
+    dropOffAddress,
+    options?.previousDropoffAddress ?? "an unknown dropoff location",
+  );
+  const dropoffCityText = toNotificationCity(dropOffAddress, options?.previousDropoffCity);
+
+  if (!wasInsert) {
     const { error: workTrackerError } = await supabase
       .from("WorkTrackers")
       .update({
@@ -370,13 +428,43 @@ export async function saveWorkTracker(
       createErrorToast(["Inserted a work tracker, but no work_tracker_id returned."]);
     }
   }
+
+  const notification = buildTripStatusNotification({
+    previousStatus: wasInsert ? "draft" : previousStatus,
+    nextStatus,
+    pickupAddress: pickupAddressText,
+    pickupCity: pickupCityText,
+    dropoffAddress: dropoffAddressText,
+    dropoffCity: dropoffCityText,
+    date: workTracker.date,
+  });
+
+  if (notification) {
+    const driverUserUuid =
+      options?.driverUserUuid ??
+      (await fetchDriverUserUuidByDriverUuid(workTracker.driver_uuid, supabase));
+
+    if (driverUserUuid) {
+      await insertDriverNotification(supabase, driverUserUuid, notification);
+    }
+  }
+
   updateDataBase(["WorkTrackers", "Addresses"]);
   createSuccessToast(["Work Tracker saved"]);
 }
 
 export async function deleteWorkTracker(
   workTrackerUuid: string | null,
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
+  options?: {
+    driverUserUuid?: string | null;
+    driverUuid?: string | null;
+    pickupAddress?: string;
+    pickupCity?: string;
+    dropoffAddress?: string;
+    dropoffCity?: string;
+    date?: string | null;
+  },
 ): Promise<void> {
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);
@@ -385,6 +473,24 @@ export async function deleteWorkTracker(
   if (!workTrackerUuid || workTrackerUuid === "-1") {
     createErrorToast(["Invalid work tracker ID"]);
     throw new Error("Invalid work tracker ID");
+  }
+
+  const driverUserUuid =
+    options?.driverUserUuid ??
+    (await fetchDriverUserUuidByDriverUuid(options?.driverUuid ?? null, supabase));
+
+  if (driverUserUuid) {
+    await insertDriverNotification(
+      supabase,
+      driverUserUuid,
+      buildTripDeletedNotification({
+        pickupAddress: options?.pickupAddress ?? "an unknown pickup location",
+        pickupCity: options?.pickupCity,
+        dropoffAddress: options?.dropoffAddress ?? "an unknown dropoff location",
+        dropoffCity: options?.dropoffCity,
+        date: options?.date ?? null,
+      }),
+    );
   }
 
   const { error } = await supabase.from("WorkTrackers").delete().eq("id", workTrackerUuid);
@@ -400,7 +506,7 @@ export async function deleteWorkTracker(
 
 export async function saveSetupTeardownBlock(
   block: SetupTeardownBlock | null,
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
 ): Promise<void> {
   if (!supabase) {
     console.warn("No Supabase Client found");
@@ -410,7 +516,7 @@ export async function saveSetupTeardownBlock(
           id: t,
           lines: ["No Supabase Client found"],
         }),
-      { duration: 10000 }
+      { duration: 10000 },
     );
     throw new Error("No Supabase Client found");
   }
@@ -423,7 +529,7 @@ export async function saveSetupTeardownBlock(
           id: t,
           lines: ["No setup block provided for save"],
         }),
-      { duration: 10000 }
+      { duration: 10000 },
     );
     throw new Error("No setup block selected to save.");
   }
@@ -451,7 +557,7 @@ export async function saveSetupTeardownBlock(
             id: t,
             lines: [`Failed to update ${block.type} block`, error.message],
           }),
-        { duration: 10000 }
+        { duration: 10000 },
       );
       throw new Error(`Failed to update ${block.type} block: ${error.message}`);
     }
@@ -463,7 +569,7 @@ export async function saveSetupTeardownBlock(
           id: t,
           lines: [`Failed to update ${block.type} block: No BleacherEventUuid provided.`],
         }),
-      { duration: 10000 }
+      { duration: 10000 },
     );
     throw new Error(`Failed to update ${block.type} block: No BleacherEventUuid provided.`);
   }
@@ -473,14 +579,14 @@ export async function saveSetupTeardownBlock(
         id: t,
         lines: ["Setup Block saved"],
       }),
-    { duration: 10000 }
+    { duration: 10000 },
   );
   updateDataBase(["BleacherEvents"]);
 }
 
 export async function saveBlock(
   block: EditBlock | null,
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
 ): Promise<void> {
   if (!supabase) {
     console.warn("No Supabase Client found");
@@ -490,7 +596,7 @@ export async function saveBlock(
           id: t,
           lines: ["No Supabase Client found"],
         }),
-      { duration: 10000 }
+      { duration: 10000 },
     );
     throw new Error("No Supabase Client found");
   }
@@ -503,7 +609,7 @@ export async function saveBlock(
           id: t,
           lines: ["No block provided for save"],
         }),
-      { duration: 10000 }
+      { duration: 10000 },
     );
     throw new Error("No block selected to save.");
   }
@@ -521,7 +627,7 @@ export async function saveBlock(
             id: t,
             lines: ["Failed to update block", error.message],
           }),
-        { duration: 10000 }
+        { duration: 10000 },
       );
       throw new Error(`Failed to update block: ${error.message}`);
     }
@@ -539,7 +645,7 @@ export async function saveBlock(
             id: t,
             lines: ["Failed to insert block", error.message],
           }),
-        { duration: 10000 }
+        { duration: 10000 },
       );
       throw new Error(`Failed to insert block: ${error.message}`);
     }
@@ -550,14 +656,14 @@ export async function saveBlock(
         id: t,
         lines: ["Block saved"],
       }),
-    { duration: 10000 }
+    { duration: 10000 },
   );
   updateDataBase(["Blocks"]);
 }
 
 export async function deleteBlock(
   block: EditBlock | null,
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
 ): Promise<void> {
   if (!supabase) {
     console.warn("No Supabase Client found");
@@ -567,7 +673,7 @@ export async function deleteBlock(
           id: t,
           lines: ["No Supabase Client found"],
         }),
-      { duration: 10000 }
+      { duration: 10000 },
     );
     throw new Error("No Supabase Client found");
   }
@@ -580,7 +686,7 @@ export async function deleteBlock(
           id: t,
           lines: ["No block provided for save"],
         }),
-      { duration: 10000 }
+      { duration: 10000 },
     );
     throw new Error("No block selected to save.");
   }
@@ -595,7 +701,7 @@ export async function deleteBlock(
             id: t,
             lines: ["Failed to delete block", error.message],
           }),
-        { duration: 10000 }
+        { duration: 10000 },
       );
       throw new Error(`Failed to delete block: ${error.message}`);
     }
@@ -607,7 +713,7 @@ export async function deleteBlock(
           id: t,
           lines: ["Failed to delete block, no block ID provided."],
         }),
-      { duration: 10000 }
+      { duration: 10000 },
     );
     throw new Error(`No Block ID provided for delete.`);
   }
@@ -617,7 +723,7 @@ export async function deleteBlock(
         id: t,
         lines: ["Block Deleted"],
       }),
-    { duration: 10000 }
+    { duration: 10000 },
   );
   updateDataBase(["Blocks"]);
 }
@@ -625,7 +731,7 @@ export async function deleteBlock(
 export async function createEvent(
   state: CurrentEventStore,
   supabase: SupabaseClient<Database>,
-  user: UserResource | null
+  user: UserResource | null,
 ): Promise<void> {
   if (!supabase) {
     console.warn("No Supabase Client found");
@@ -657,7 +763,7 @@ export async function createEvent(
           id: t,
           lines: ["Failed to insert address.", addressError?.message ?? ""],
         }),
-      { duration: 10000 }
+      { duration: 10000 },
     );
     throw new Error(`Failed to insert address: ${addressError?.message}`);
   }
@@ -714,7 +820,7 @@ export async function createEvent(
               rollbackError?.message ?? "",
             ],
           }),
-        { duration: 10000 }
+        { duration: 10000 },
       );
     }
     throw new Error(`Failed to insert event: ${eventError?.message}`);
@@ -740,7 +846,7 @@ export async function createEvent(
           id: t,
           lines: ["Event created, but failed to link bleachers.", bleacherEventError.message],
         }),
-      { duration: 10000 }
+      { duration: 10000 },
     );
     throw new Error(`Failed to link bleachers: ${bleacherEventError.message}`);
   }
@@ -751,7 +857,7 @@ export async function createEvent(
         id: t,
         lines: ["Event Created"],
       }),
-    { duration: 10000 }
+    { duration: 10000 },
   );
   updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
 }
@@ -760,7 +866,7 @@ export async function deleteEvent(
   eventUuid: string | null,
   stateProv: string,
   supabase: SupabaseClient<Database>,
-  user: UserResource | null
+  user: UserResource | null,
 ): Promise<void> {
   if (!supabase) {
     console.warn("No Supabase Client found");
@@ -803,7 +909,7 @@ export async function deleteEvent(
           id: t,
           lines: ["Failed to remove event from bleachers.", bleacherEventError.message],
         }),
-      { duration: 10000 }
+      { duration: 10000 },
     );
     throw new Error(`Failed to delete bleacher-event links: ${bleacherEventError.message}`);
   }
@@ -819,7 +925,7 @@ export async function deleteEvent(
           id: t,
           lines: ["Failed to delete event.", eventDeleteError.message],
         }),
-      { duration: 10000 }
+      { duration: 10000 },
     );
     throw new Error(`Failed to delete event: ${eventDeleteError.message}`);
   }
@@ -839,7 +945,7 @@ export async function deleteEvent(
             id: t,
             lines: ["Failed to delete address.", addressDeleteError.message],
           }),
-        { duration: 10000 }
+        { duration: 10000 },
       );
       // We won't throw here — event and bleacher links are already deleted
     }
@@ -851,7 +957,7 @@ export async function deleteEvent(
         id: t,
         lines: ["Event Deleted"],
       }),
-    { duration: 10000 }
+    { duration: 10000 },
   );
   updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
 }

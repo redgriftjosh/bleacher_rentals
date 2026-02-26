@@ -1,6 +1,7 @@
 import { Database } from "../../../../database.types";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { fetchWorkTrackersForUserUuidAndStartDate } from "./db";
+import { buildReleaseAllNotification, insertDriverNotification } from "./notifications";
 
 /**
  * Fetches all work trackers for the given user/startDate using the same query
@@ -34,6 +35,12 @@ export async function releaseAllDraftWorkTrackers(
   if (error) {
     throw new Error(error.message);
   }
+
+  await insertDriverNotification(
+    supabase,
+    userUuid,
+    buildReleaseAllNotification(draftIds.length, startDate),
+  );
 
   return draftIds.length;
 }
