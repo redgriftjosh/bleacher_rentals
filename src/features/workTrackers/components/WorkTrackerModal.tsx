@@ -21,6 +21,14 @@ import { EditBlock } from "@/features/dashboard/types";
 import { fetchWorkTrackerByUuid } from "@/features/dashboard/db/client/fetchWorkTracker";
 import { SelectDriver } from "./SelectDriver";
 import { useDrivers } from "../hooks/useDrivers.db";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { buildTripStatusNotification } from "@/features/workTrackers/db/notifications";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -50,6 +58,10 @@ export default function WorkTrackerModal({
   const [payInput, setPayInput] = useState(
     selectedWorkTracker?.pay_cents != null ? (selectedWorkTracker?.pay_cents / 100).toFixed(2) : "",
   );
+  const [initialStatus, setInitialStatus] = useState<Tables<"WorkTrackers">["status"]>(
+    selectedWorkTracker?.status ?? "draft",
+  );
+  const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
 
   // Helper to format address for Distance Matrix API
   const formatAddressString = (addr: AddressData | null): string => {
@@ -111,6 +123,7 @@ export default function WorkTrackerModal({
 
   useEffect(() => {
     setWorkTracker(selectedWorkTracker);
+    setInitialStatus(selectedWorkTracker?.status ?? "draft");
     setPayInput(
       selectedWorkTracker?.pay_cents != null
         ? (selectedWorkTracker?.pay_cents / 100).toFixed(2)
@@ -168,11 +181,13 @@ export default function WorkTrackerModal({
   useEffect(() => {
     if (selectedWorkTracker?.id === "-1") {
       setWorkTracker(selectedWorkTracker);
+      setInitialStatus("draft");
       setPickUpAddress(null);
       setDropOffAddress(null);
     } else if (fetchedWorkTracker) {
       console.log("fetchedWorkTracker", fetchedWorkTracker);
       setWorkTracker(fetchedWorkTracker.workTracker);
+      setInitialStatus(fetchedWorkTracker.workTracker?.status ?? "draft");
       setPayInput(
         fetchedWorkTracker.workTracker && fetchedWorkTracker.workTracker.pay_cents != null
           ? (fetchedWorkTracker.workTracker.pay_cents / 100).toFixed(2)
@@ -197,7 +212,15 @@ export default function WorkTrackerModal({
 
   const handleSaveWorkTracker = async () => {
     try {
-      await saveWorkTracker(workTracker, pickUpAddress, dropOffAddress, supabase);
+      await saveWorkTracker(workTracker, pickUpAddress, dropOffAddress, supabase, {
+        previousStatus: initialStatus,
+        driverUserUuid: selectedDriver?.user_uuid ?? null,
+        previousPickupAddress: pickupAddress?.address ?? "an unknown pickup location",
+        previousPickupCity: pickupAddress?.city ?? "",
+        previousDropoffAddress: dropoffAddress?.address ?? "an unknown dropoff location",
+        previousDropoffCity: dropoffAddress?.city ?? "",
+      });
+      setShowSaveConfirmModal(false);
       // Refresh bleachers directly into the zustand store so Pixi updates without remounting
       try {
         const { FetchDashboardBleachers } =
@@ -224,7 +247,17 @@ export default function WorkTrackerModal({
     }
 
     try {
-      await deleteWorkTracker(workTracker.id, supabase);
+      await deleteWorkTracker(workTracker.id, supabase, {
+        driverUserUuid: selectedDriver?.user_uuid ?? null,
+        driverUuid: workTracker.driver_uuid,
+        pickupAddress:
+          pickUpAddress?.address ?? pickupAddress?.address ?? "an unknown pickup location",
+        pickupCity: pickUpAddress?.city ?? pickupAddress?.city ?? "",
+        dropoffAddress:
+          dropOffAddress?.address ?? dropoffAddress?.address ?? "an unknown dropoff location",
+        dropoffCity: dropOffAddress?.city ?? dropoffAddress?.city ?? "",
+        date: workTracker.date,
+      });
       // Refresh bleachers directly into the zustand store so Pixi updates without remounting
       try {
         const { FetchDashboardBleachers } =
@@ -294,6 +327,17 @@ export default function WorkTrackerModal({
 
   const labelClassName = "block text-sm font-medium text-gray-700 mt-1";
   const inputClassName = "w-full p-2 border rounded bg-white";
+
+  const saveNotificationPreview = buildTripStatusNotification({
+    previousStatus: workTracker?.id === "-1" ? "draft" : initialStatus,
+    nextStatus: workTracker?.status ?? "draft",
+    pickupAddress: pickUpAddress?.address ?? pickupAddress?.address ?? "an unknown pickup location",
+    pickupCity: pickUpAddress?.city ?? pickupAddress?.city ?? "",
+    dropoffAddress:
+      dropOffAddress?.address ?? dropoffAddress?.address ?? "an unknown dropoff location",
+    dropoffCity: dropOffAddress?.city ?? dropoffAddress?.city ?? "",
+    date: workTracker?.date ?? null,
+  });
 
   // Track whether the initial mousedown began on the backdrop so we only close when both down & up occur there
   const mouseDownOnBackdrop = useRef(false);
@@ -560,7 +604,7 @@ export default function WorkTrackerModal({
               <div className="flex-1" />
               <button
                 className="text-sm px-3 py-1 rounded bg-darkBlue text-white cursor-pointer hover:bg-lightBlue transition-all duration-200"
-                onClick={handleSaveWorkTracker}
+                onClick={() => setShowSaveConfirmModal(true)}
               >
                 Save
               </button>
@@ -568,6 +612,47 @@ export default function WorkTrackerModal({
           </div>
         </div>
       )}
+
+      <Dialog open={showSaveConfirmModal} onOpenChange={setShowSaveConfirmModal}>
+        <DialogContent className="max-w-md z-[2101]">
+          <DialogHeader>
+            <DialogTitle>Save Work Tracker</DialogTitle>
+          </DialogHeader>
+
+          <p className="text-sm text-gray-600">
+            Saving this work tracker may notify the driver. This is the notification preview:
+          </p>
+
+          {saveNotificationPreview ? (
+            <div className="rounded border border-blue-200 bg-blue-50 p-3">
+              <p className="text-xs font-semibold text-blue-800">Driver notification preview</p>
+              <p className="mt-1 text-sm font-semibold text-blue-900">
+                {saveNotificationPreview.title}
+              </p>
+              <p className="text-sm text-blue-900">{saveNotificationPreview.body}</p>
+            </div>
+          ) : (
+            <div className="rounded border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+              No driver notification will be sent for this save.
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 mt-4">
+            <button
+              onClick={() => setShowSaveConfirmModal(false)}
+              className="px-4 py-2 text-sm font-medium rounded border border-gray-300 hover:bg-gray-50 transition cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveWorkTracker}
+              className="px-4 py-2 text-sm font-semibold rounded text-white bg-blue-600 hover:bg-blue-700 transition cursor-pointer"
+            >
+              Confirm Save
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -5,7 +5,7 @@ import WorkTrackerModal from "../../../../features/workTrackers/components/WorkT
 import { useParams } from "next/navigation";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
-import { use, useState } from "react";
+import { useState } from "react";
 import { Tables } from "../../../../../database.types";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { Send } from "lucide-react";
@@ -17,8 +17,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { releaseAllDraftWorkTrackers } from "@/features/workTrackers/db/releaseAllDraftWorkTrackers";
+import { fetchWorkTrackersForUserUuidAndStartDate } from "@/features/workTrackers/db/db";
+import { buildReleaseAllNotification } from "@/features/workTrackers/db/notifications";
 
 const getRandomLoadingMessage = () => {
   const messages = [
@@ -49,6 +51,23 @@ export default function WorkTrackersForUserPage() {
   const [showReleaseModal, setShowReleaseModal] = useState(false);
   const [isReleasing, setIsReleasing] = useState(false);
   const queryClient = useQueryClient();
+
+  const { data: draftTripCount = 0 } = useQuery({
+    queryKey: ["draft-work-trackers-count", userUuid, startDate],
+    enabled: showReleaseModal && !!supabase,
+    queryFn: async () => {
+      const result = await fetchWorkTrackersForUserUuidAndStartDate(
+        supabase,
+        userUuid,
+        startDate,
+        false,
+      );
+      return result.workTrackers.filter((row) => row.workTracker.status === "draft").length;
+    },
+    refetchOnWindowFocus: false,
+  });
+
+  const releasePreview = buildReleaseAllNotification(draftTripCount, startDate);
 
   const handleReleaseAll = async () => {
     if (!supabase) return;
@@ -164,6 +183,11 @@ export default function WorkTrackersForUserPage() {
           <p className="text-xs text-gray-400 mt-1">
             Work trackers that are already released or in a later status will not be affected.
           </p>
+          <div className="mt-3 rounded border border-blue-200 bg-blue-50 p-3">
+            <p className="text-xs font-semibold text-blue-800">Driver notification preview</p>
+            <p className="mt-1 text-sm font-semibold text-blue-900">{releasePreview.title}</p>
+            <p className="text-sm text-blue-900">{releasePreview.body}</p>
+          </div>
           <DialogFooter className="gap-2 mt-4">
             <button
               onClick={() => setShowReleaseModal(false)}
