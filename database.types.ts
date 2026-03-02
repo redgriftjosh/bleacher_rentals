@@ -380,6 +380,7 @@ export type Database = {
           tax: number
           user_uuid: string | null
           vehicle_uuid: string | null
+          vendor_uuid: string | null
         }
         Insert: {
           account_manager_uuid?: string | null
@@ -397,6 +398,7 @@ export type Database = {
           tax?: number
           user_uuid?: string | null
           vehicle_uuid?: string | null
+          vendor_uuid?: string | null
         }
         Update: {
           account_manager_uuid?: string | null
@@ -414,6 +416,7 @@ export type Database = {
           tax?: number
           user_uuid?: string | null
           vehicle_uuid?: string | null
+          vendor_uuid?: string | null
         }
         Relationships: [
           {
@@ -442,6 +445,13 @@ export type Database = {
             columns: ["vehicle_uuid"]
             isOneToOne: false
             referencedRelation: "Vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drivers_vendor_uuid_fkey"
+            columns: ["vendor_uuid"]
+            isOneToOne: false
+            referencedRelation: "Vendors"
             referencedColumns: ["id"]
           },
         ]
@@ -617,6 +627,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      QboTokens: {
+        Row: {
+          encrypted_token_value: string
+          id: string
+        }
+        Insert: {
+          encrypted_token_value: string
+          id?: string
+        }
+        Update: {
+          encrypted_token_value?: string
+          id?: string
+        }
+        Relationships: []
       }
       ScorecardTargets: {
         Row: {
@@ -870,6 +895,33 @@ export type Database = {
           model?: string
           vin_number?: string | null
           year?: number
+        }
+        Relationships: []
+      }
+      Vendors: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          qbo_vendor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          qbo_vendor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          qbo_vendor_id?: string | null
         }
         Relationships: []
       }

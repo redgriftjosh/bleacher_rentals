@@ -40,4 +40,6 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   Vehicles: () => {},
   Notifications: () => {},
   BlueBook: () => {},
+  QboTokens: () => {},
+  Vendors: () => {},
 };
