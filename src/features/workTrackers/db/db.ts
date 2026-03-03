@@ -136,6 +136,11 @@ export async function fetchDriversForWeek(
       region: deriveRegion(driver.address?.street),
     })) as DriverWithMeta[];
 
+    drivers.sort((a, b) => {
+      if (b.tripCount !== a.tripCount) return b.tripCount - a.tripCount;
+      return (a.first_name ?? "").localeCompare(b.first_name ?? "");
+    });
+
     console.log("fetchDriversForWeek (all drivers)", drivers);
     return { drivers };
   } else {
