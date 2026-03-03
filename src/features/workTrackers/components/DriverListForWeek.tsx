@@ -25,8 +25,14 @@ function RegionFlag({ region }: { region: "US" | "CAN" | null }) {
   );
 }
 
+function formatPay(cents: number, payCurrency: string): string {
+  const amount = (cents / 100).toFixed(2);
+  const symbol = "$";
+  return `${symbol}${amount} ${payCurrency}`;
+}
+
 export function DriverListForWeek({ startDate }: Props) {
-  const router = useRouter();
+  const router = useRouter();``
   const supabase = useClerkSupabaseClient();
   const { user } = useUser();
   const users = useUsersStore((s) => s.users);
@@ -139,7 +145,12 @@ export function DriverListForWeek({ startDate }: Props) {
                   {row.first_name + " " + row.last_name}
                   <RegionFlag region={row.region} />
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="flex items-center gap-2 text-sm text-gray-500">
+                  {row.totalPayCents > 0 && (
+                    <span className="text-green-600 font-medium">
+                      {formatPay(row.totalPayCents, row.payCurrency)}
+                    </span>
+                  )}
                   {row.tripCount} {row.tripCount === 1 ? "trip" : "trips"}
                 </span>
               </div>

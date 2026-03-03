@@ -78,6 +78,8 @@ function deriveRegion(street: string | null | undefined): "US" | "CAN" | null {
 export type DriverWithMeta = Tables<"Users"> & {
   driver_uuid: string;
   tripCount: number;
+  totalPayCents: number;
+  payCurrency: string;
   region: "US" | "CAN" | null;
 };
 
@@ -101,6 +103,7 @@ export async function fetchDriversForWeek(
       .select(
         `
         id,
+        pay_currency,
         address:Addresses!Drivers_address_uuid_fkey(street),
         user:Users!Drivers_user_uuid_fkey(*)
       `,
@@ -114,7 +117,7 @@ export async function fetchDriversForWeek(
 
     const { data: workTrackers, error: wtError } = await supabase
       .from("WorkTrackers")
-      .select("driver_uuid")
+      .select("driver_uuid, pay_cents")
       .gte("date", startDate)
       .lt("date", endDate);
 
@@ -123,9 +126,11 @@ export async function fetchDriversForWeek(
     }
 
     const tripCounts = new Map<string, number>();
+    const payCents = new Map<string, number>();
     (workTrackers || []).forEach((wt) => {
       if (wt.driver_uuid) {
         tripCounts.set(wt.driver_uuid, (tripCounts.get(wt.driver_uuid) || 0) + 1);
+        payCents.set(wt.driver_uuid, (payCents.get(wt.driver_uuid) || 0) + (wt.pay_cents || 0));
       }
     });
 
@@ -133,6 +138,8 @@ export async function fetchDriversForWeek(
       ...driver.user,
       driver_uuid: driver.id,
       tripCount: tripCounts.get(driver.id) || 0,
+      totalPayCents: payCents.get(driver.id) || 0,
+      payCurrency: driver.pay_currency ?? "USD",
       region: deriveRegion(driver.address?.street),
     })) as DriverWithMeta[];
 
@@ -164,6 +171,7 @@ export async function fetchDriversForWeek(
       .select(
         `
         id,
+        pay_currency,
         address:Addresses!Drivers_address_uuid_fkey(street),
         user:Users!Drivers_user_uuid_fkey(*)
       `,
@@ -179,7 +187,7 @@ export async function fetchDriversForWeek(
     const driverUuids = (driversData as any[]).map((d) => d.id);
     const { data: workTrackers, error: wtError } = await supabase
       .from("WorkTrackers")
-      .select("driver_uuid")
+      .select("driver_uuid, pay_cents")
       .in("driver_uuid", driverUuids)
       .gte("date", startDate)
       .lt("date", endDate);
@@ -189,9 +197,11 @@ export async function fetchDriversForWeek(
     }
 
     const tripCounts = new Map<string, number>();
+    const payCents = new Map<string, number>();
     (workTrackers || []).forEach((wt) => {
       if (wt.driver_uuid) {
         tripCounts.set(wt.driver_uuid, (tripCounts.get(wt.driver_uuid) || 0) + 1);
+        payCents.set(wt.driver_uuid, (payCents.get(wt.driver_uuid) || 0) + (wt.pay_cents || 0));
       }
     });
 
@@ -199,8 +209,15 @@ export async function fetchDriversForWeek(
       ...driver.user,
       driver_uuid: driver.id,
       tripCount: tripCounts.get(driver.id) || 0,
+      totalPayCents: payCents.get(driver.id) || 0,
+      payCurrency: driver.pay_currency ?? "USD",
       region: deriveRegion(driver.address?.street),
     })) as DriverWithMeta[];
+
+    drivers.sort((a, b) => {
+      if (b.tripCount !== a.tripCount) return b.tripCount - a.tripCount;
+      return (a.first_name ?? "").localeCompare(b.first_name ?? "");
+    });
 
     console.log("fetchDriversForWeek (my drivers)", drivers);
     return { drivers };
