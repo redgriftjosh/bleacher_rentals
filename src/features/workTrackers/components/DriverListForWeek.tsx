@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchDriversForWeek, checkUserAccess } from "../db/db";
+import { fetchDriversForWeek, checkUserAccess, DriverWithMeta } from "../db/db";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
@@ -13,20 +13,32 @@ type Props = {
   startDate: string;
 };
 
+function RegionFlag({ region }: { region: "US" | "CAN" | null }) {
+  if (!region) return null;
+  return (
+    <span
+      className="text-base leading-none"
+      title={region === "US" ? "United States" : "Canada"}
+    >
+      {region === "US" ? "🇺🇸" : "🇨🇦"}
+    </span>
+  );
+}
+
+function formatPay(cents: number, payCurrency: string): string {
+  const amount = (cents / 100).toFixed(2);
+  const symbol = "$";
+  return `${symbol}${amount} ${payCurrency}`;
+}
+
 export function DriverListForWeek({ startDate }: Props) {
-  const router = useRouter();
+  const router = useRouter();``
   const supabase = useClerkSupabaseClient();
   const { user } = useUser();
   const users = useUsersStore((s) => s.users);
   const [showAllDrivers, setShowAllDrivers] = useState(false);
 
-  // Get current user's ID from metadata or Clerk ID
   const getCurrentUserUuid = () => {
-    // const metaId = user?.publicMetadata?.user_id as string | number | undefined;
-    // if (metaId !== undefined && metaId !== null) {
-    //   const num = typeof metaId === "string" ? parseInt(metaId, 10) : metaId;
-    //   if (!Number.isNaN(num)) return num as number;
-    // }
     const clerkId = user?.id;
     if (clerkId) {
       const match = users.find((u) => u.clerk_user_id === clerkId);
@@ -37,7 +49,6 @@ export function DriverListForWeek({ startDate }: Props) {
 
   const currentUserUuid = getCurrentUserUuid();
 
-  // Check user access
   const { data: accessData, isLoading: accessLoading } = useQuery({
     queryKey: ["user-access", currentUserUuid],
     queryFn: async () => {
@@ -52,8 +63,10 @@ export function DriverListForWeek({ startDate }: Props) {
     queryFn: async () => {
       return fetchDriversForWeek(supabase, startDate, showAllDrivers, currentUserUuid ?? undefined);
     },
-    enabled: !!supabase && !!accessData && (accessData.isAdmin || accessData.isAccountManager),
+    enabled:
+      !!supabase && !!accessData && (accessData.isAdmin || accessData.isAccountManager),
   });
+
   const drivers = data?.drivers ?? [];
 
   if (accessLoading) {
@@ -68,7 +81,6 @@ export function DriverListForWeek({ startDate }: Props) {
     );
   }
 
-  // Check if user has access
   if (!accessData || (!accessData.isAdmin && !accessData.isAccountManager)) {
     return (
       <tbody className="p-4">
@@ -108,7 +120,6 @@ export function DriverListForWeek({ startDate }: Props) {
 
   return (
     <>
-      {/* Toggle button row */}
       <tbody>
         <tr>
           <td className="p-3">
@@ -121,9 +132,8 @@ export function DriverListForWeek({ startDate }: Props) {
           </td>
         </tr>
       </tbody>
-      {/* Drivers list */}
       <tbody>
-        {drivers?.map((row, index) => (
+        {drivers.map((row, index) => (
           <tr
             key={index}
             className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer"
@@ -131,8 +141,16 @@ export function DriverListForWeek({ startDate }: Props) {
           >
             <td className="py-1 px-3 text-left">
               <div className="flex items-center justify-between">
-                <span>{row.first_name + " " + row.last_name}</span>
-                <span className="text-sm text-gray-500">
+                <span className="flex items-center gap-1.5">
+                  {row.first_name + " " + row.last_name}
+                  <RegionFlag region={row.region} />
+                </span>
+                <span className="flex items-center gap-2 text-sm text-gray-500">
+                  {row.totalPayCents > 0 && (
+                    <span className="text-green-600 font-medium">
+                      {formatPay(row.totalPayCents, row.payCurrency)}
+                    </span>
+                  )}
                   {row.tripCount} {row.tripCount === 1 ? "trip" : "trips"}
                 </span>
               </div>
