@@ -3,8 +3,9 @@ import { Toggle } from "../../../../components/Toggle";
 import React, { useEffect } from "react";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import { useUsersStore } from "@/state/userStore";
-import { Dropdown } from "@/components/DropDown";
 import { useCurrentEventStore } from "../../state/useCurrentEventStore";
+import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
+import { useAccountManagers } from "@/features/scorecard/hooks/accountManager/useAccountManagers";
 
 type Props = {
   showSetupTeardown: boolean;
@@ -13,10 +14,7 @@ type Props = {
 export const CoreTab = ({ showSetupTeardown }: Props) => {
   const currentEventStore = useCurrentEventStore();
   const users = useUsersStore((s) => s.users);
-  const ownerOptions = users.map((u) => ({
-    label: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.email,
-    value: String(u.id),
-  }));
+  const accountManagers = useAccountManagers();
 
   // Ensure ownerUserId defaults when users load and it's still null
   useEffect(() => {
@@ -83,6 +81,12 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
     currentEventStore.teardownEnd,
   ]);
 
+  // Find the accountManagerUuid whose userUuid matches the stored ownerUserUuid,
+  // so SelectAccountManager (which deals in accountManagerUuids) displays correctly.
+  const selectedAccountManagerUuid =
+    accountManagers.find((am) => am.userUuid === currentEventStore.ownerUserUuid)
+      ?.accountManagerUuid ?? null;
+
   return (
     <div
       className={`grid ${
@@ -147,7 +151,7 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
                 disabled={currentEventStore.sameDaySetup}
                 max={
                   currentEventStore.eventStart
-                    ? new Date(new Date(currentEventStore.eventStart).getTime() - 86400000) // 1 day before
+                    ? new Date(new Date(currentEventStore.eventStart).getTime() - 86400000)
                         .toISOString()
                         .split("T")[0]
                     : undefined
@@ -176,7 +180,7 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
                 disabled={currentEventStore.sameDayTeardown}
                 min={
                   currentEventStore.eventEnd
-                    ? new Date(new Date(currentEventStore.eventEnd).getTime() + 86400000) // 1 day after
+                    ? new Date(new Date(currentEventStore.eventEnd).getTime() + 86400000)
                         .toISOString()
                         .split("T")[0]
                     : undefined
@@ -204,19 +208,14 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
           onChange={(e) => currentEventStore.setField("goodshuffleUrl", e.target.value)}
         />
         <label className="block text-sm font-medium text-black/70 mt-1">Owner</label>
-        <Dropdown
-          options={ownerOptions}
-          selected={
-            currentEventStore.ownerUserUuid ? String(currentEventStore.ownerUserUuid) : undefined
-          }
-          onSelect={(val) => {
-            if (!val) {
-              currentEventStore.setField("ownerUserUuid", null);
-            } else {
-              currentEventStore.setField("ownerUserUuid", val as string);
-            }
+        <SelectAccountManager
+          value={selectedAccountManagerUuid}
+          onChange={(accountManagerUuid) => {
+            const userUuid =
+              accountManagers.find((am) => am.accountManagerUuid === accountManagerUuid)
+                ?.userUuid ?? null;
+            currentEventStore.setField("ownerUserUuid", userUuid);
           }}
-          placeholder="Select owner"
         />
       </div>
     </div>

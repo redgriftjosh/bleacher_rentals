@@ -261,6 +261,42 @@ export type Database = {
           },
         ]
       }
+      BlueBook: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          link: string | null
+          name: string
+          region: Database["public"]["Enums"]["bluebook_region"]
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          link?: string | null
+          name: string
+          region?: Database["public"]["Enums"]["bluebook_region"]
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          link?: string | null
+          name?: string
+          region?: Database["public"]["Enums"]["bluebook_region"]
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       DashboardFilterSettings: {
         Row: {
           account_manager_uuid: string | null
@@ -424,11 +460,14 @@ export type Database = {
         Row: {
           address_uuid: string | null
           booked: boolean
+          booked_at: string | null
+          contract_revenue_cents: number | null
           created_at: string
           created_by_user_uuid: string | null
           event_end: string
           event_name: string
           event_start: string
+          event_status: Database["public"]["Enums"]["event_status"] | null
           fifteen_row: number | null
           goodshuffle_url: string | null
           hsl_hue: number | null
@@ -445,11 +484,14 @@ export type Database = {
         Insert: {
           address_uuid?: string | null
           booked?: boolean
+          booked_at?: string | null
+          contract_revenue_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null
           event_end: string
           event_name: string
           event_start: string
+          event_status?: Database["public"]["Enums"]["event_status"] | null
           fifteen_row?: number | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
@@ -466,11 +508,14 @@ export type Database = {
         Update: {
           address_uuid?: string | null
           booked?: boolean
+          booked_at?: string | null
+          contract_revenue_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null
           event_end?: string
           event_name?: string
           event_start?: string
+          event_status?: Database["public"]["Enums"]["event_status"] | null
           fifteen_row?: number | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
@@ -1040,6 +1085,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      bluebook_region: "CAN" | "US" | "Both"
+      event_status: "quoted" | "booked" | "lost"
       task_status:
         | "in_progress"
         | "backlog"
@@ -1185,6 +1232,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      bluebook_region: ["CAN", "US", "Both"],
+      event_status: ["quoted", "booked", "lost"],
       task_status: [
         "in_progress",
         "backlog",
