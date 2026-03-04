@@ -121,6 +121,7 @@ const DriversCols = {
   insurance_photo_path: column.text,
   medical_card_photo_path: column.text,
   vehicle_uuid: column.text,
+  vendor_uuid: column.text,
 } satisfies PowerSyncColsFor<"Drivers">;
 const Drivers = new Table(DriversCols, {
   indexes: {
@@ -247,6 +248,15 @@ const ScorecardTargets = new Table(ScorecardTargetsCols, {
   indexes: { account_manager_uuid: ["account_manager_uuid"] },
 });
 
+const VendorsCols = {
+  created_at: column.text,
+  qbo_vendor_id: column.text,
+  display_name: column.text,
+  is_active: column.integer,
+  logo_url: column.text,
+} satisfies PowerSyncColsFor<"Vendors">;
+const Vendors = new Table(VendorsCols);
+
 const BleacherUsersCols = {
   created_at: column.text,
   season: column.text,
@@ -267,7 +277,7 @@ const BlueBookCols = {
   sort_order: column.integer,
   created_at: column.text,
   updated_at: column.text,
-} satisfies PowerSyncColsFor<"BlueBook">
+} satisfies PowerSyncColsFor<"BlueBook">;
 const BlueBook = new Table(BlueBookCols, { indexes: { uuid: ["uuid"] } });
 
 export const AppSchema = new Schema({
@@ -286,6 +296,7 @@ export const AppSchema = new Schema({
   ScorecardTargets,
   Users,
   UserStatuses,
+  Vendors,
   WorkTrackers,
 });
 
@@ -304,4 +315,5 @@ export type BleacherUsersRecord = PowerSyncDB["BleacherUsers"];
 export type BleacherEventsRecord = PowerSyncDB["BleacherEvents"];
 export type EventsRecord = PowerSyncDB["Events"];
 export type ScorecardTargetsRecord = PowerSyncDB["ScorecardTargets"];
+export type VendorRecord = PowerSyncDB["Vendors"];
 export type WorkTrackerRecord = PowerSyncDB["WorkTrackers"];

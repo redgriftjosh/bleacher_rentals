@@ -1,0 +1,27 @@
+/**
+ * Client-side API functions for QuickBooks integration.
+ * All requests go through authenticated Next.js API routes.
+ */
+
+export type QboVendor = {
+  id: string;
+  displayName: string;
+  companyName?: string;
+  active: boolean;
+};
+
+/**
+ * Fetches active vendors from QuickBooks.
+ * Requires user to be authenticated (handled by API route).
+ */
+export async function fetchQboVendors(): Promise<QboVendor[]> {
+  const response = await fetch("/api/quickbooks/vendors");
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Failed to fetch vendors" }));
+    throw new Error(error.error || "Failed to fetch vendors");
+  }
+
+  const data = await response.json();
+  return data.vendors || [];
+}

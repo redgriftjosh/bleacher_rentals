@@ -344,6 +344,7 @@ export type Database = {
           tax: number
           user_uuid: string | null
           vehicle_uuid: string | null
+          vendor_uuid: string | null
         }
         Insert: {
           account_manager_uuid?: string | null
@@ -361,6 +362,7 @@ export type Database = {
           tax?: number
           user_uuid?: string | null
           vehicle_uuid?: string | null
+          vendor_uuid?: string | null
         }
         Update: {
           account_manager_uuid?: string | null
@@ -378,6 +380,7 @@ export type Database = {
           tax?: number
           user_uuid?: string | null
           vehicle_uuid?: string | null
+          vendor_uuid?: string | null
         }
         Relationships: [
           {
@@ -406,6 +409,13 @@ export type Database = {
             columns: ["vehicle_uuid"]
             isOneToOne: false
             referencedRelation: "Vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drivers_vendor_uuid_fkey"
+            columns: ["vendor_uuid"]
+            isOneToOne: false
+            referencedRelation: "Vendors"
             referencedColumns: ["id"]
           },
         ]
@@ -569,6 +579,86 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      QboTokens: {
+        Row: {
+          encrypted_token_value: string
+          id: string
+        }
+        Insert: {
+          encrypted_token_value: string
+          id?: string
+        }
+        Update: {
+          encrypted_token_value?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      ScorecardTargets: {
+        Row: {
+          account_manager_uuid: string
+          created_at: string
+          id: string
+          quotes_annually: number
+          quotes_quarterly: number
+          quotes_weekly: number
+          sales_annually: number
+          sales_quarterly: number
+          sales_weekly: number
+          updated_at: string
+          value_of_revenue_annually_cents: number
+          value_of_revenue_quarterly_cents: number
+          value_of_revenue_weekly_cents: number
+          value_of_sales_annually_cents: number
+          value_of_sales_quarterly_cents: number
+          value_of_sales_weekly_cents: number
+        }
+        Insert: {
+          account_manager_uuid: string
+          created_at?: string
+          id?: string
+          quotes_annually?: number
+          quotes_quarterly?: number
+          quotes_weekly?: number
+          sales_annually?: number
+          sales_quarterly?: number
+          sales_weekly?: number
+          updated_at?: string
+          value_of_revenue_annually_cents?: number
+          value_of_revenue_quarterly_cents?: number
+          value_of_revenue_weekly_cents?: number
+          value_of_sales_annually_cents?: number
+          value_of_sales_quarterly_cents?: number
+          value_of_sales_weekly_cents?: number
+        }
+        Update: {
+          account_manager_uuid?: string
+          created_at?: string
+          id?: string
+          quotes_annually?: number
+          quotes_quarterly?: number
+          quotes_weekly?: number
+          sales_annually?: number
+          sales_quarterly?: number
+          sales_weekly?: number
+          updated_at?: string
+          value_of_revenue_annually_cents?: number
+          value_of_revenue_quarterly_cents?: number
+          value_of_revenue_weekly_cents?: number
+          value_of_sales_annually_cents?: number
+          value_of_sales_quarterly_cents?: number
+          value_of_sales_weekly_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ScorecardTargets_account_manager_uuid_fkey"
+            columns: ["account_manager_uuid"]
+            isOneToOne: true
+            referencedRelation: "AccountManagers"
             referencedColumns: ["id"]
           },
         ]
@@ -760,6 +850,33 @@ export type Database = {
           model?: string
           vin_number?: string | null
           year?: number
+        }
+        Relationships: []
+      }
+      Vendors: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          qbo_vendor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          qbo_vendor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          qbo_vendor_id?: string | null
         }
         Relationships: []
       }
