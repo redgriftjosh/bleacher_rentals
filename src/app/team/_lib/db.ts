@@ -78,8 +78,8 @@ async function ensureDriverExists(
   userUuid: string,
   tax: number,
   payRateCents: number,
-  payCurrency: string,
-  payPerUnit: string,
+  payCurrency: Database["public"]["Enums"]["pay_currency_type"],
+  payPerUnit: Database["public"]["Enums"]["pay_per_unit_type"],
   supabaseClient: SupabaseClient<Database>
 ) {
   // Use an upsert that *ignores* duplicates so we don't spam 409 conflicts.
