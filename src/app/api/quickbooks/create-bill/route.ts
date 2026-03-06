@@ -78,7 +78,8 @@ export async function POST(req: NextRequest) {
         pickup_address_uuid,
         dropoff_address_uuid,
         pickup_address:Addresses!worktrackers_pickup_address_uuid_fkey(street, city),
-        dropoff_address:Addresses!worktrackers_dropoff_address_uuid_fkey(street, city, state_province)
+        dropoff_address:Addresses!worktrackers_dropoff_address_uuid_fkey(street, city, state_province),
+        work_tracker_type:WorkTrackerTypes(qbo_category_id, display_name)
       `,
       )
       .eq("driver_uuid", driverUuid)
@@ -135,6 +136,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Validate that every work tracker has a type with a QB account category
+    const missingCategories: string[] = [];
+    for (const wt of workTrackers) {
+      const typeData = Array.isArray(wt.work_tracker_type)
+        ? wt.work_tracker_type[0]
+        : wt.work_tracker_type;
+      if (!typeData?.qbo_category_id) {
+        const typeName = typeData?.display_name ?? "Unknown type";
+        if (!missingCategories.includes(typeName)) missingCategories.push(typeName);
+      }
+    }
+
+    if (missingCategories.length > 0) {
+      const typeList = missingCategories.join(", ");
+      return NextResponse.json(
+        {
+          error: `Cannot create bill: the following work tracker ${missingCategories.length === 1 ? "type has" : "types have"} no QuickBooks account assigned: ${typeList}. Please edit work tracker types and assign a QuickBooks account.`,
+        },
+        { status: 400 },
+      );
+    }
+
     // Validate that every work tracker's dropoff state is in a zone with a class
     const missingStates: string[] = [];
     for (const wt of workTrackers) {
@@ -179,13 +202,19 @@ export async function POST(req: NextRequest) {
       const dropoffState = dropoffAddr?.state_province;
       const classId = dropoffState ? stateToClassId[dropoffState] : undefined;
 
+      // Look up QB account category from the work tracker type
+      const typeData = Array.isArray(wt.work_tracker_type)
+        ? wt.work_tracker_type[0]
+        : wt.work_tracker_type;
+      const accountId = String(typeData!.qbo_category_id!);
+
       return {
         DetailType: "AccountBasedExpenseLineDetail",
         Amount: amount,
         Description: description,
         AccountBasedExpenseLineDetail: {
           AccountRef: {
-            value: "1", // Default account ID - will be updated when you find the correct one
+            value: accountId,
           },
           ...(classId ? { ClassRef: { value: classId } } : {}),
         },

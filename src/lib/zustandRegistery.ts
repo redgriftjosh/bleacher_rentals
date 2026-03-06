@@ -45,4 +45,5 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   WorkTrackerGroups: () => {},
   Zones: () => {},
   ZoneStateProvinces: () => {},
+  WorkTrackerTypes: () => {},
 };

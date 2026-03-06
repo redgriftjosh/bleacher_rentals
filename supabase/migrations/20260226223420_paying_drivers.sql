@@ -270,5 +270,40 @@ insert into storage.buckets (id, name, public)
 values ('zone-photos', 'zone-photos', true)
 on conflict (id) do nothing;
 
+-- Create WorkTrackerTypes table (user-configurable types for work trackers)
+create table public."WorkTrackerTypes" (
+  id uuid not null default gen_random_uuid(),
+  created_at timestamp with time zone not null default now(),
+  display_name text not null,
+  qbo_category_id bigint,
+  sort_order int not null default 0,
+  constraint WorkTrackerTypes_pkey primary key (id)
+);
+
+alter table public."WorkTrackerTypes" enable row level security;
+
+create policy "Allow All for Auth"
+  on public."WorkTrackerTypes"
+  as permissive
+  for all
+  to authenticated
+using (true)
+with check (true);
+
+-- Seed default work tracker types
+insert into public."WorkTrackerTypes" (display_name, sort_order) values
+  ('Trip', 1),
+  ('Repair/Maintenance', 2),
+  ('Cleaning', 3);
+
+-- Add work_tracker_type_uuid to WorkTrackers
+alter table public."WorkTrackers"
+  add column work_tracker_type_uuid uuid,
+  add constraint WorkTrackers_work_tracker_type_uuid_fkey
+    foreign key (work_tracker_type_uuid) references public."WorkTrackerTypes" (id) on delete set null;
+
+create index if not exists "WorkTrackers_work_tracker_type_uuid_idx"
+  on public."WorkTrackers" using btree (work_tracker_type_uuid);
+
 
 

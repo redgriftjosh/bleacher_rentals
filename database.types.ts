@@ -1012,6 +1012,7 @@ export type Database = {
           status: Database["public"]["Enums"]["worktracker_status"]
           updated_at: string
           user_uuid: string | null
+          work_tracker_type_uuid: string | null
           worktracker_group_uuid: string | null
         }
         Insert: {
@@ -1038,6 +1039,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["worktracker_status"]
           updated_at?: string
           user_uuid?: string | null
+          work_tracker_type_uuid?: string | null
           worktracker_group_uuid?: string | null
         }
         Update: {
@@ -1064,6 +1066,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["worktracker_status"]
           updated_at?: string
           user_uuid?: string | null
+          work_tracker_type_uuid?: string | null
           worktracker_group_uuid?: string | null
         }
         Relationships: [
@@ -1117,6 +1120,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "worktrackers_work_tracker_type_uuid_fkey"
+            columns: ["work_tracker_type_uuid"]
+            isOneToOne: false
+            referencedRelation: "WorkTrackerTypes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "worktrackers_worktracker_group_uuid_fkey"
             columns: ["worktracker_group_uuid"]
             isOneToOne: false
@@ -1124,6 +1134,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      WorkTrackerTypes: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          qbo_category_id: number | null
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id?: string
+          qbo_category_id?: number | null
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          qbo_category_id?: number | null
+          sort_order?: number
+        }
+        Relationships: []
       }
       Zones: {
         Row: {
