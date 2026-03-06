@@ -164,8 +164,14 @@ export async function fetchDriversForWeek(
       if (wt.driver_uuid) {
         tripCounts.set(wt.driver_uuid, (tripCounts.get(wt.driver_uuid) || 0) + 1);
         payCents.set(wt.driver_uuid, (payCents.get(wt.driver_uuid) || 0) + (wt.pay_cents || 0));
-        distanceMeters.set(wt.driver_uuid, (distanceMeters.get(wt.driver_uuid) || 0) + (wt.distance_meters || 0));
-        driveMinutes.set(wt.driver_uuid, (driveMinutes.get(wt.driver_uuid) || 0) + (wt.drive_minutes || 0));
+        distanceMeters.set(
+          wt.driver_uuid,
+          (distanceMeters.get(wt.driver_uuid) || 0) + (wt.distance_meters || 0),
+        );
+        driveMinutes.set(
+          wt.driver_uuid,
+          (driveMinutes.get(wt.driver_uuid) || 0) + (wt.drive_minutes || 0),
+        );
       }
     });
 
@@ -263,8 +269,14 @@ export async function fetchDriversForWeek(
       if (wt.driver_uuid) {
         tripCounts.set(wt.driver_uuid, (tripCounts.get(wt.driver_uuid) || 0) + 1);
         payCents.set(wt.driver_uuid, (payCents.get(wt.driver_uuid) || 0) + (wt.pay_cents || 0));
-        distanceMeters.set(wt.driver_uuid, (distanceMeters.get(wt.driver_uuid) || 0) + (wt.distance_meters || 0));
-        driveMinutes.set(wt.driver_uuid, (driveMinutes.get(wt.driver_uuid) || 0) + (wt.drive_minutes || 0));
+        distanceMeters.set(
+          wt.driver_uuid,
+          (distanceMeters.get(wt.driver_uuid) || 0) + (wt.distance_meters || 0),
+        );
+        driveMinutes.set(
+          wt.driver_uuid,
+          (driveMinutes.get(wt.driver_uuid) || 0) + (wt.drive_minutes || 0),
+        );
       }
     });
 
