@@ -30,6 +30,27 @@ function formatPay(cents: number, payCurrency: string): string {
   return `${symbol}${amount} ${payCurrency}`;
 }
 
+function formatUnitTotal(
+  payPerUnit: string,
+  totalDistanceMeters: number,
+  totalDriveMinutes: number,
+): string | null {
+  if (payPerUnit === "HR") {
+    if (totalDriveMinutes === 0) return null;
+    const hours = totalDriveMinutes / 60;
+    return `${hours.toFixed(1)} hrs`;
+  }
+  if (payPerUnit === "MI") {
+    if (totalDistanceMeters === 0) return null;
+    const miles = totalDistanceMeters / 1609.344;
+    return `${miles.toFixed(1)} mi`;
+  }
+  // Default: KM
+  if (totalDistanceMeters === 0) return null;
+  const km = totalDistanceMeters / 1000;
+  return `${km.toFixed(1)} km`;
+}
+
 export function DriverListForWeek({ startDate }: Props) {
   const router = useRouter();
   ``;
@@ -155,6 +176,14 @@ export function DriverListForWeek({ startDate }: Props) {
                       </span>
                     )}
                     {row.tripCount} {row.tripCount === 1 ? "trip" : "trips"}
+                    {(() => {
+                      const unitTotal = formatUnitTotal(
+                        row.payPerUnit,
+                        row.totalDistanceMeters,
+                        row.totalDriveMinutes,
+                      );
+                      return unitTotal ? <span>· {unitTotal}</span> : null;
+                    })()}
                   </span>
                 </div>
                 <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>

@@ -310,5 +310,31 @@ alter table public."WorkTrackers"
   add column distance_meters integer,
   add column drive_minutes integer;
 
+-- Create enums for Drivers pay fields
+create type public.pay_currency_type as enum ('CAD', 'USD');
+create type public.pay_per_unit_type as enum ('KM', 'MI', 'HR');
+
+-- Migrate Drivers.pay_currency to enum
+alter table public."Drivers"
+  alter column pay_currency drop default;
+
+alter table public."Drivers"
+  alter column pay_currency type public.pay_currency_type
+  using pay_currency::public.pay_currency_type;
+
+alter table public."Drivers"
+  alter column pay_currency set default 'CAD'::public.pay_currency_type;
+
+-- Migrate Drivers.pay_per_unit to enum
+alter table public."Drivers"
+  alter column pay_per_unit drop default;
+
+alter table public."Drivers"
+  alter column pay_per_unit type public.pay_per_unit_type
+  using pay_per_unit::public.pay_per_unit_type;
+
+alter table public."Drivers"
+  alter column pay_per_unit set default 'KM'::public.pay_per_unit_type;
+
 
 

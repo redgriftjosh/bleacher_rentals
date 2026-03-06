@@ -373,8 +373,8 @@ export type Database = {
           is_active: boolean
           license_photo_path: string | null
           medical_card_photo_path: string | null
-          pay_currency: string
-          pay_per_unit: string
+          pay_currency: Database["public"]["Enums"]["pay_currency_type"]
+          pay_per_unit: Database["public"]["Enums"]["pay_per_unit_type"]
           pay_rate_cents: number
           phone_number: string | null
           tax: number
@@ -391,8 +391,8 @@ export type Database = {
           is_active?: boolean
           license_photo_path?: string | null
           medical_card_photo_path?: string | null
-          pay_currency?: string
-          pay_per_unit?: string
+          pay_currency?: Database["public"]["Enums"]["pay_currency_type"]
+          pay_per_unit?: Database["public"]["Enums"]["pay_per_unit_type"]
           pay_rate_cents?: number
           phone_number?: string | null
           tax?: number
@@ -409,8 +409,8 @@ export type Database = {
           is_active?: boolean
           license_photo_path?: string | null
           medical_card_photo_path?: string | null
-          pay_currency?: string
-          pay_per_unit?: string
+          pay_currency?: Database["public"]["Enums"]["pay_currency_type"]
+          pay_per_unit?: Database["public"]["Enums"]["pay_per_unit_type"]
           pay_rate_cents?: number
           phone_number?: string | null
           tax?: number
@@ -1232,6 +1232,8 @@ export type Database = {
     Enums: {
       bluebook_region: "CAN" | "US" | "Both"
       event_status: "quoted" | "booked" | "lost"
+      pay_currency_type: "CAD" | "USD"
+      pay_per_unit_type: "KM" | "MI" | "HR"
       task_status:
         | "in_progress"
         | "backlog"
@@ -1385,6 +1387,8 @@ export const Constants = {
     Enums: {
       bluebook_region: ["CAN", "US", "Both"],
       event_status: ["quoted", "booked", "lost"],
+      pay_currency_type: ["CAD", "USD"],
+      pay_per_unit_type: ["KM", "MI", "HR"],
       task_status: [
         "in_progress",
         "backlog",

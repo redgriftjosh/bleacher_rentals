@@ -80,6 +80,9 @@ export type DriverWithMeta = Tables<"Users"> & {
   tripCount: number;
   totalPayCents: number;
   payCurrency: string;
+  payPerUnit: string;
+  totalDistanceMeters: number;
+  totalDriveMinutes: number;
   region: "US" | "CAN" | null;
   workTrackerGroup?: {
     id: string;
@@ -113,6 +116,7 @@ export async function fetchDriversForWeek(
         `
         id,
         pay_currency,
+        pay_per_unit,
         address:Addresses!Drivers_address_uuid_fkey(street),
         user:Users!Drivers_user_uuid_fkey(*)
       `,
@@ -126,7 +130,7 @@ export async function fetchDriversForWeek(
 
     const { data: workTrackers, error: wtError } = await supabase
       .from("WorkTrackers")
-      .select("driver_uuid, pay_cents")
+      .select("driver_uuid, pay_cents, distance_meters, drive_minutes")
       .gte("date", startDate)
       .lt("date", endDate);
 
@@ -154,10 +158,14 @@ export async function fetchDriversForWeek(
 
     const tripCounts = new Map<string, number>();
     const payCents = new Map<string, number>();
+    const distanceMeters = new Map<string, number>();
+    const driveMinutes = new Map<string, number>();
     (workTrackers || []).forEach((wt) => {
       if (wt.driver_uuid) {
         tripCounts.set(wt.driver_uuid, (tripCounts.get(wt.driver_uuid) || 0) + 1);
         payCents.set(wt.driver_uuid, (payCents.get(wt.driver_uuid) || 0) + (wt.pay_cents || 0));
+        distanceMeters.set(wt.driver_uuid, (distanceMeters.get(wt.driver_uuid) || 0) + (wt.distance_meters || 0));
+        driveMinutes.set(wt.driver_uuid, (driveMinutes.get(wt.driver_uuid) || 0) + (wt.drive_minutes || 0));
       }
     });
 
@@ -167,6 +175,9 @@ export async function fetchDriversForWeek(
       tripCount: tripCounts.get(driver.id) || 0,
       totalPayCents: payCents.get(driver.id) || 0,
       payCurrency: driver.pay_currency ?? "USD",
+      payPerUnit: driver.pay_per_unit ?? "KM",
+      totalDistanceMeters: distanceMeters.get(driver.id) || 0,
+      totalDriveMinutes: driveMinutes.get(driver.id) || 0,
       region: deriveRegion(driver.address?.street),
       workTrackerGroup: groupsByDriver.get(driver.id) || null,
     })) as DriverWithMeta[];
@@ -200,6 +211,7 @@ export async function fetchDriversForWeek(
         `
         id,
         pay_currency,
+        pay_per_unit,
         address:Addresses!Drivers_address_uuid_fkey(street),
         user:Users!Drivers_user_uuid_fkey(*)
       `,
@@ -215,7 +227,7 @@ export async function fetchDriversForWeek(
     const driverUuids = (driversData as any[]).map((d) => d.id);
     const { data: workTrackers, error: wtError } = await supabase
       .from("WorkTrackers")
-      .select("driver_uuid, pay_cents")
+      .select("driver_uuid, pay_cents, distance_meters, drive_minutes")
       .in("driver_uuid", driverUuids)
       .gte("date", startDate)
       .lt("date", endDate);
@@ -245,10 +257,14 @@ export async function fetchDriversForWeek(
 
     const tripCounts = new Map<string, number>();
     const payCents = new Map<string, number>();
+    const distanceMeters = new Map<string, number>();
+    const driveMinutes = new Map<string, number>();
     (workTrackers || []).forEach((wt) => {
       if (wt.driver_uuid) {
         tripCounts.set(wt.driver_uuid, (tripCounts.get(wt.driver_uuid) || 0) + 1);
         payCents.set(wt.driver_uuid, (payCents.get(wt.driver_uuid) || 0) + (wt.pay_cents || 0));
+        distanceMeters.set(wt.driver_uuid, (distanceMeters.get(wt.driver_uuid) || 0) + (wt.distance_meters || 0));
+        driveMinutes.set(wt.driver_uuid, (driveMinutes.get(wt.driver_uuid) || 0) + (wt.drive_minutes || 0));
       }
     });
 
@@ -258,6 +274,9 @@ export async function fetchDriversForWeek(
       tripCount: tripCounts.get(driver.id) || 0,
       totalPayCents: payCents.get(driver.id) || 0,
       payCurrency: driver.pay_currency ?? "USD",
+      payPerUnit: driver.pay_per_unit ?? "KM",
+      totalDistanceMeters: distanceMeters.get(driver.id) || 0,
+      totalDriveMinutes: driveMinutes.get(driver.id) || 0,
       region: deriveRegion(driver.address?.street),
       workTrackerGroup: groupsByDriver.get(driver.id) || null,
     })) as DriverWithMeta[];
