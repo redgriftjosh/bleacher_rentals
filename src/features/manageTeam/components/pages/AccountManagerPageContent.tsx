@@ -3,11 +3,13 @@
 import { SelectBleacher } from "@/features/manageTeam/components/inputs/SelectBleacher";
 import { useCurrentUserStore } from "@/features/manageTeam/state/useCurrentUserStore";
 import { useUserFormPaths } from "@/features/manageTeam/hooks/useUserFormPaths";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useEffect } from "react";
 
 export function AccountManagerPageContent() {
   const router = useRouter();
+  const params = useParams();
+  const userUuidFromUrl = params.userUuid as string | undefined;
   const { basicUserInfo } = useUserFormPaths();
   const roleTabs = useCurrentUserStore((s) => s.roleTabs);
   const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
@@ -16,10 +18,13 @@ export function AccountManagerPageContent() {
   const setField = useCurrentUserStore((s) => s.setField);
 
   useEffect(() => {
-    if (!roleTabs.includes("account-manager")) {
+    // Don't redirect while loading
+    const isLoading = (userUuidFromUrl || existingUserUuid) && roleTabs.length === 0;
+
+    if (!isLoading && !roleTabs.includes("account-manager")) {
       router.push(basicUserInfo);
     }
-  }, [roleTabs, router, basicUserInfo]);
+  }, [roleTabs, router, basicUserInfo, existingUserUuid, userUuidFromUrl]);
 
   return (
     <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-4">

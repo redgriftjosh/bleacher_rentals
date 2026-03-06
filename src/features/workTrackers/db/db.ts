@@ -81,6 +81,13 @@ export type DriverWithMeta = Tables<"Users"> & {
   totalPayCents: number;
   payCurrency: string;
   region: "US" | "CAN" | null;
+  workTrackerGroup?: {
+    id: string;
+    status: Database["public"]["Enums"]["worktracker_group_status"];
+    qbo_bill_id: string | null;
+    week_start: string;
+    week_end: string;
+  } | null;
 };
 
 export async function fetchDriversForWeek(
@@ -96,6 +103,8 @@ export async function fetchDriversForWeek(
   }
 
   const endDate = DateTime.fromISO(startDate).plus({ days: 7 }).toISODate();
+  const weekStart = startDate;
+  const weekEnd = DateTime.fromISO(startDate).plus({ days: 6 }).toISODate();
 
   if (showAllDrivers) {
     const { data: driversData, error: driversError } = await supabase
@@ -125,6 +134,24 @@ export async function fetchDriversForWeek(
       createErrorToast(["Failed to fetch work tracker counts", wtError.message]);
     }
 
+    // Fetch WorkTrackerGroups for this week
+    const { data: workTrackerGroups, error: wtgError } = await supabase
+      .from("WorkTrackerGroups")
+      .select("id, driver_uuid, status, qbo_bill_id, week_start, week_end")
+      .eq("week_start", weekStart!)
+      .eq("week_end", weekEnd!);
+
+    if (wtgError) {
+      console.error("Failed to fetch work tracker groups", wtgError.message);
+    }
+
+    const groupsByDriver = new Map<string, any>();
+    (workTrackerGroups || []).forEach((wtg) => {
+      if (wtg.driver_uuid) {
+        groupsByDriver.set(wtg.driver_uuid, wtg);
+      }
+    });
+
     const tripCounts = new Map<string, number>();
     const payCents = new Map<string, number>();
     (workTrackers || []).forEach((wt) => {
@@ -141,6 +168,7 @@ export async function fetchDriversForWeek(
       totalPayCents: payCents.get(driver.id) || 0,
       payCurrency: driver.pay_currency ?? "USD",
       region: deriveRegion(driver.address?.street),
+      workTrackerGroup: groupsByDriver.get(driver.id) || null,
     })) as DriverWithMeta[];
 
     drivers.sort((a, b) => {
@@ -196,6 +224,25 @@ export async function fetchDriversForWeek(
       createErrorToast(["Failed to fetch work tracker counts", wtError.message]);
     }
 
+    // Fetch WorkTrackerGroups for this week
+    const { data: workTrackerGroups, error: wtgError } = await supabase
+      .from("WorkTrackerGroups")
+      .select("id, driver_uuid, status, qbo_bill_id, week_start, week_end")
+      .in("driver_uuid", driverUuids)
+      .eq("week_start", weekStart!)
+      .eq("week_end", weekEnd!);
+
+    if (wtgError) {
+      console.error("Failed to fetch work tracker groups", wtgError.message);
+    }
+
+    const groupsByDriver = new Map<string, any>();
+    (workTrackerGroups || []).forEach((wtg) => {
+      if (wtg.driver_uuid) {
+        groupsByDriver.set(wtg.driver_uuid, wtg);
+      }
+    });
+
     const tripCounts = new Map<string, number>();
     const payCents = new Map<string, number>();
     (workTrackers || []).forEach((wt) => {
@@ -212,6 +259,7 @@ export async function fetchDriversForWeek(
       totalPayCents: payCents.get(driver.id) || 0,
       payCurrency: driver.pay_currency ?? "USD",
       region: deriveRegion(driver.address?.street),
+      workTrackerGroup: groupsByDriver.get(driver.id) || null,
     })) as DriverWithMeta[];
 
     drivers.sort((a, b) => {

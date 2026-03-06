@@ -214,6 +214,7 @@ const WorkTrackersCols = {
   updated_at: column.text,
   pre_inspection_uuid: column.text,
   post_inspection_uuid: column.text,
+  worktracker_group_uuid: column.text,
 } satisfies PowerSyncColsFor<"WorkTrackers">;
 const WorkTrackers = new Table(WorkTrackersCols, {
   indexes: {
@@ -224,6 +225,23 @@ const WorkTrackers = new Table(WorkTrackersCols, {
     user_uuid: ["user_uuid"],
     pre_inspection_uuid: ["pre_inspection_uuid"],
     post_inspection_uuid: ["post_inspection_uuid"],
+    worktracker_group_uuid: ["worktracker_group_uuid"],
+  },
+});
+
+const WorkTrackerGroupsCols = {
+  created_at: column.text,
+  week_start: column.text,
+  week_end: column.text,
+  driver_uuid: column.text,
+  qbo_bill_id: column.text,
+  status: column.text,
+} satisfies PowerSyncColsFor<"WorkTrackerGroups">;
+const WorkTrackerGroups = new Table(WorkTrackerGroupsCols, {
+  indexes: {
+    driver_uuid: ["driver_uuid"],
+    week_start: ["week_start"],
+    status: ["status"],
   },
 });
 
@@ -298,6 +316,7 @@ export const AppSchema = new Schema({
   UserStatuses,
   Vendors,
   WorkTrackers,
+  WorkTrackerGroups,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
@@ -317,3 +336,4 @@ export type EventsRecord = PowerSyncDB["Events"];
 export type ScorecardTargetsRecord = PowerSyncDB["ScorecardTargets"];
 export type VendorRecord = PowerSyncDB["Vendors"];
 export type WorkTrackerRecord = PowerSyncDB["WorkTrackers"];
+export type WorkTrackerGroupRecord = PowerSyncDB["WorkTrackerGroups"];

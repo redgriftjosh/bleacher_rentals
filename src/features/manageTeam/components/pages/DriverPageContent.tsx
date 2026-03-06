@@ -10,7 +10,7 @@ import AddressAutocomplete from "@/components/AddressAutoComplete";
 import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
 import { useUserFormPaths } from "@/features/manageTeam/hooks/useUserFormPaths";
 import { CountryIndicator } from "@/features/manageTeam/components/CountryIndicator";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const currencyOptions = [
@@ -31,16 +31,24 @@ const driverTypeOptions = [
 
 export function DriverPageContent() {
   const router = useRouter();
+  const params = useParams();
+  const userUuidFromUrl = params.userUuid as string | undefined;
   const { basicUserInfo } = useUserFormPaths();
   const roleTabs = useCurrentUserStore((s) => s.roleTabs);
   const vendorUuid = useCurrentUserStore((s) => s.vendorUuid);
   const setField = useCurrentUserStore((s) => s.setField);
+  const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
 
   useEffect(() => {
-    if (!roleTabs.includes("driver")) {
+    // Don't redirect while loading:
+    // - If we have a userUuid in the URL but roleTabs is empty, we're still loading
+    // - If existingUserUuid is set but roleTabs is empty, we're still loading
+    const isLoading = (userUuidFromUrl || existingUserUuid) && roleTabs.length === 0;
+
+    if (!isLoading && !roleTabs.includes("driver")) {
       router.push(basicUserInfo);
     }
-  }, [roleTabs, router, basicUserInfo]);
+  }, [roleTabs, router, basicUserInfo, existingUserUuid, userUuidFromUrl]);
 
   // Driver type state (client-side only)
   const [driverType, setDriverType] = useState<"employee" | "contractor">("employee");
@@ -76,7 +84,6 @@ export function DriverPageContent() {
   const licensePhotoPath = useCurrentUserStore((s) => s.licensePhotoPath);
   const insurancePhotoPath = useCurrentUserStore((s) => s.insurancePhotoPath);
   const medicalCardPhotoPath = useCurrentUserStore((s) => s.medicalCardPhotoPath);
-  const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
 
   // Pay rate display state for CentsInput
   const [payRateDisplay, setPayRateDisplay] = useState(

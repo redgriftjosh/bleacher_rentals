@@ -42,4 +42,7 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   BlueBook: () => {},
   QboTokens: () => {},
   Vendors: () => {},
+  WorkTrackerGroups: () => {},
+  Zones: () => {},
+  ZoneStateProvinces: () => {},
 };
