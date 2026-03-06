@@ -994,6 +994,8 @@ export type Database = {
           completed_at: string | null
           created_at: string
           date: string | null
+          distance_meters: number | null
+          drive_minutes: number | null
           driver_uuid: string | null
           dropoff_address_uuid: string | null
           dropoff_poc: string | null
@@ -1021,6 +1023,8 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           date?: string | null
+          distance_meters?: number | null
+          drive_minutes?: number | null
           driver_uuid?: string | null
           dropoff_address_uuid?: string | null
           dropoff_poc?: string | null
@@ -1048,6 +1052,8 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           date?: string | null
+          distance_meters?: number | null
+          drive_minutes?: number | null
           driver_uuid?: string | null
           dropoff_address_uuid?: string | null
           dropoff_poc?: string | null

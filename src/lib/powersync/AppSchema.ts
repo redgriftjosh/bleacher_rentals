@@ -215,6 +215,9 @@ const WorkTrackersCols = {
   pre_inspection_uuid: column.text,
   post_inspection_uuid: column.text,
   worktracker_group_uuid: column.text,
+  work_tracker_type_uuid: column.text,
+  distance_meters: column.integer,
+  drive_minutes: column.integer,
 } satisfies PowerSyncColsFor<"WorkTrackers">;
 const WorkTrackers = new Table(WorkTrackersCols, {
   indexes: {

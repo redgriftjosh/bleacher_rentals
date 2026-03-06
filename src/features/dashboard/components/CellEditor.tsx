@@ -113,6 +113,9 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       post_inspection_uuid: null,
       worktracker_group_uuid: null,
       pre_inspection_uuid: null,
+      work_tracker_type_uuid: null,
+      distance_meters: null,
+      drive_minutes: null,
     };
 
     onWorkTrackerOpen?.(workTracker);

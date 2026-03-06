@@ -245,7 +245,21 @@ export default function WorkTrackerModal({
 
   const handleSaveWorkTracker = async () => {
     try {
-      await saveWorkTracker(workTracker, pickUpAddress, dropOffAddress, supabase, {
+      // Merge distance/duration from the Google Maps leg into the tracker before saving
+      const trackerToSave = workTracker
+        ? {
+            ...workTracker,
+            distance_meters:
+              leg?.distanceMeters != null
+                ? Math.round(leg.distanceMeters)
+                : workTracker.distance_meters,
+            drive_minutes:
+              leg?.durationInTrafficSeconds != null || leg?.durationSeconds != null
+                ? Math.round((leg.durationInTrafficSeconds ?? leg.durationSeconds!) / 60)
+                : workTracker.drive_minutes,
+          }
+        : workTracker;
+      await saveWorkTracker(trackerToSave, pickUpAddress, dropOffAddress, supabase, {
         previousStatus: initialStatus,
         driverUserUuid: selectedDriver?.user_uuid ?? null,
         previousPickupAddress: pickupAddress?.address ?? "an unknown pickup location",

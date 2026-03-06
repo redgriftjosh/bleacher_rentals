@@ -305,5 +305,10 @@ alter table public."WorkTrackers"
 create index if not exists "WorkTrackers_work_tracker_type_uuid_idx"
   on public."WorkTrackers" using btree (work_tracker_type_uuid);
 
+-- Add distance/duration columns to WorkTrackers
+alter table public."WorkTrackers"
+  add column distance_meters integer,
+  add column drive_minutes integer;
+
 
 

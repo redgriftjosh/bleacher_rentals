@@ -395,6 +395,8 @@ export async function saveWorkTracker(
         driver_uuid: workTracker.driver_uuid,
         status: workTracker.status,
         work_tracker_type_uuid: workTracker.work_tracker_type_uuid,
+        distance_meters: workTracker.distance_meters,
+        drive_minutes: workTracker.drive_minutes,
       })
       .eq("id", workTracker.id);
 
@@ -419,6 +421,8 @@ export async function saveWorkTracker(
         driver_uuid: workTracker.driver_uuid,
         status: workTracker.status,
         work_tracker_type_uuid: workTracker.work_tracker_type_uuid,
+        distance_meters: workTracker.distance_meters,
+        drive_minutes: workTracker.drive_minutes,
       })
       .select("id")
       .single();
