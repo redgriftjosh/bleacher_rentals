@@ -8,7 +8,7 @@ import { Database } from "../../../../database.types";
 
 export async function fetchDriverTaxById(
   userUuid: string,
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
 ): Promise<number> {
   if (!supabase) {
     createErrorToast(["No token found"]);
@@ -43,7 +43,7 @@ export type DriverPaymentData = {
 
 export async function fetchDriverPaymentData(
   userUuid: string,
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
 ): Promise<DriverPaymentData> {
   if (!supabase) {
     createErrorToast(["No token found"]);
@@ -80,7 +80,7 @@ async function ensureDriverExists(
   payRateCents: number,
   payCurrency: Database["public"]["Enums"]["pay_currency_type"],
   payPerUnit: Database["public"]["Enums"]["pay_per_unit_type"],
-  supabaseClient: SupabaseClient<Database>
+  supabaseClient: SupabaseClient<Database>,
 ) {
   // Use an upsert that *ignores* duplicates so we don't spam 409 conflicts.
   // This also keeps behavior safe: if a real driver row exists, we don't overwrite it.
@@ -92,7 +92,7 @@ async function ensureDriverExists(
       pay_currency: payCurrency,
       pay_per_unit: payPerUnit,
     },
-    { onConflict: "user_uuid", ignoreDuplicates: true }
+    { onConflict: "user_uuid", ignoreDuplicates: true },
   );
 
   if (error) {
@@ -128,7 +128,7 @@ export async function updateUserStatusToInvited(email: string, supabase: Supabas
 export type SimpleOption = { uuid: string; label: string };
 
 export async function fetchBleachersForOptions(
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
 ): Promise<SimpleOption[]> {
   if (!supabase) {
     createErrorToast(["No supabase client found"]);
@@ -147,7 +147,7 @@ export async function fetchBleachersForOptions(
 
 export async function fetchUserBleacherAssignments(
   userUuid: string,
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
 ): Promise<{ summer: number[]; winter: number[] }> {
   if (!supabase) {
     createErrorToast(["No supabase client found"]);
@@ -174,7 +174,7 @@ export async function upsertUserBleacherAssignments(
   userUuid: string,
   summerUuids: string[],
   winterUuids: string[],
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
 ): Promise<void> {
   if (!supabase) {
     createErrorToast(["No supabase client found"]);
