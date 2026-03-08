@@ -160,9 +160,7 @@ export function DriverListForWeek({ startDate }: Props) {
           <tr
             key={index}
             className={`border-b h-12 border-gray-200 transition-all duration-100 ease-in-out cursor-pointer ${
-              row.hasCrossBorderTrips
-                ? "bg-yellow-100 hover:bg-yellow-200"
-                : "hover:bg-gray-100"
+              row.hasCrossBorderTrips ? "bg-yellow-100 hover:bg-yellow-200" : "hover:bg-gray-100"
             }`}
             onClick={() => router.push(`/work-trackers/${startDate}/${row.id.toString()}`)}
           >

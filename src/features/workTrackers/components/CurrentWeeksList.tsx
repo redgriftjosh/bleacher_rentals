@@ -121,7 +121,8 @@ export function CurrentWeeksList() {
                 ? "bg-yellow-100 hover:bg-yellow-200"
                 : "hover:bg-gray-100"
             }`}
-            onClick={() => router.push(`/work-trackers/${row.week_start}`)}>
+            onClick={() => router.push(`/work-trackers/${row.week_start}`)}
+          >
             <td className="py-2 px-3 text-left">
               <div className="flex flex-col">
                 <span className="font-semibold text-base">{label}</span>

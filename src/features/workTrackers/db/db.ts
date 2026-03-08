@@ -109,9 +109,7 @@ async function computeCrossBorderDriverUuids(
       workTrackers
         .filter(
           (wt) =>
-            wt.driver_uuid &&
-            canadianDriverIds.has(wt.driver_uuid) &&
-            wt.dropoff_address_uuid,
+            wt.driver_uuid && canadianDriverIds.has(wt.driver_uuid) && wt.dropoff_address_uuid,
         )
         .map((wt) => wt.dropoff_address_uuid!),
     ),
@@ -125,9 +123,7 @@ async function computeCrossBorderDriverUuids(
     .in("id", dropoffUuids);
 
   const usaAddressIds = new Set(
-    (addresses || [])
-      .filter((a) => /usa|united states/i.test(a.street ?? ""))
-      .map((a) => a.id),
+    (addresses || []).filter((a) => /usa|united states/i.test(a.street ?? "")).map((a) => a.id),
   );
 
   if (usaAddressIds.size === 0) return new Set();
@@ -391,9 +387,7 @@ export async function fetchCrossBorderWeekStarts(
     ...new Set(trackers.filter((t) => t.driver_uuid).map((t) => t.driver_uuid!)),
   ];
   const dropoffUuids = [
-    ...new Set(
-      trackers.filter((t) => t.dropoff_address_uuid).map((t) => t.dropoff_address_uuid!),
-    ),
+    ...new Set(trackers.filter((t) => t.dropoff_address_uuid).map((t) => t.dropoff_address_uuid!)),
   ];
 
   const [{ data: drivers }, { data: dropoffAddresses }] = await Promise.all([
@@ -405,7 +399,7 @@ export async function fetchCrossBorderWeekStarts(
   ]);
 
   const canadianDriverIds = new Set(
-    (drivers as any[] || [])
+    ((drivers as any[]) || [])
       .filter((d) => deriveRegion(d.address?.street) === "CAN")
       .map((d) => d.id as string),
   );
