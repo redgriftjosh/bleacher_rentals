@@ -1,7 +1,12 @@
 "use client";
 
-import React, { useState, useCallback, memo, forwardRef } from "react";
-import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
+import React, { useState, useCallback, memo, forwardRef, useEffect, useRef } from "react";
+import {
+  ComposableMap,
+  Geographies,
+  Geography,
+  createCoordinates,
+} from "@vnedyalk0v/react19-simple-maps";
 import { FIPS_TO_ABBREV, PROVINCE_NAME_TO_ABBREV, ABBREV_TO_NAME, EXCLUDED_FIPS } from "./mapData";
 
 const US_GEO_URL = "/geo/us-states-10m.json";
@@ -64,6 +69,18 @@ function getStrokeWidth(
   return 0.5;
 }
 
+/**
+ * Read the `data-region` attribute from the SVG element under the cursor.
+ * Checks the target itself first, then walks up to find a parent with the attr.
+ */
+function regionFromTarget(el: Element | null): string | null {
+  if (!el) return null;
+  const direct = el.getAttribute("data-region");
+  if (direct) return direct;
+  const parent = el.closest("[data-region]");
+  return parent?.getAttribute("data-region") ?? null;
+}
+
 export const NorthAmericaMap = memo(
   forwardRef<HTMLDivElement, NorthAmericaMapProps>(function NorthAmericaMap(
     { selectedRegions, onToggleRegion, unavailableRegions = new Set() },
@@ -72,6 +89,21 @@ export const NorthAmericaMap = memo(
     const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
     const [tooltipContent, setTooltipContent] = useState("");
     const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+    /** Ref mirrors hoveredRegion to avoid stale closures in mousemove */
+    const hoveredRef = useRef<string | null>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [usGeoData, setUsGeoData] = useState<any>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [caGeoData, setCaGeoData] = useState<any>(null);
+
+    useEffect(() => {
+      fetch(US_GEO_URL)
+        .then((r) => r.json())
+        .then(setUsGeoData);
+      fetch(CA_GEO_URL)
+        .then((r) => r.json())
+        .then(setCaGeoData);
+    }, []);
 
     const handleClick = useCallback(
       (abbrev: string | null) => {
@@ -81,76 +113,94 @@ export const NorthAmericaMap = memo(
       [onToggleRegion, unavailableRegions],
     );
 
-    const handleMouseEnter = useCallback((abbrev: string | null) => {
-      if (!abbrev) return;
-      setHoveredRegion(abbrev);
-      setTooltipContent(ABBREV_TO_NAME[abbrev] ?? abbrev);
-    }, []);
+    /* ── Event delegation ──────────────────────────────────────────────
+     * Instead of per-Geography onMouseEnter / onMouseLeave (which race
+     * when moving between adjacent <path> elements), we use a SINGLE
+     * onMouseMove on the container and read `data-region` from the
+     * element under the cursor.  One handler → zero race conditions.
+     * ─────────────────────────────────────────────────────────────── */
 
-    const handleMouseLeave = useCallback(() => {
-      setHoveredRegion(null);
-      setTooltipContent("");
-    }, []);
-
-    const handleMouseMove = useCallback((e: React.MouseEvent) => {
-      const container = (e.currentTarget as HTMLElement).closest(".map-container");
-      if (!container) return;
-      const rect = container.getBoundingClientRect();
+    const handleContainerMouseMove = useCallback((e: React.MouseEvent) => {
+      // Tooltip position
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       setTooltipPos({
         x: e.clientX - rect.left,
         y: e.clientY - rect.top - 12,
       });
+
+      // Detect which region the cursor is over
+      const region = regionFromTarget(e.target as Element);
+
+      if (region !== hoveredRef.current) {
+        hoveredRef.current = region;
+        setHoveredRegion(region);
+        setTooltipContent(region ? (ABBREV_TO_NAME[region] ?? region) : "");
+      }
     }, []);
+
+    const handleContainerMouseLeave = useCallback(() => {
+      hoveredRef.current = null;
+      setHoveredRegion(null);
+      setTooltipContent("");
+    }, []);
+
+    /** Container-level click as backup (also fires per-Geography) */
+    const handleContainerClick = useCallback(
+      (e: React.MouseEvent) => {
+        const region = regionFromTarget(e.target as Element);
+        if (region && !unavailableRegions.has(region)) {
+          onToggleRegion(region);
+        }
+      },
+      [onToggleRegion, unavailableRegions],
+    );
 
     const renderGeographies = useCallback(
       (source: "us" | "ca") =>
         ({
           geographies,
         }: {
-          geographies: Array<{
-            rsmKey: string;
-            id?: string;
-            properties?: { name?: string };
-            svgPath?: string;
-          }>;
+          geographies: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
         }) =>
-          geographies.map((geo) => {
+          geographies.map((geo, i) => {
             const abbrev = getAbbrev(geo, source);
             if (source === "us" && !abbrev) return null;
+            const key = geo.rsmKey ?? geo.id ?? geo.properties?.name ?? `${source}-${i}`;
+            const isUnavailable = !!abbrev && unavailableRegions.has(abbrev);
+            const sharedStyle = {
+              outline: "none",
+              transition: "fill 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease",
+              pointerEvents: "all" as const,
+              cursor: abbrev && !isUnavailable ? "pointer" : ("not-allowed" as const),
+            };
             return (
               <Geography
-                key={geo.rsmKey}
+                key={key}
                 geography={geo}
                 data-region={abbrev ?? undefined}
                 fill={getFill(abbrev, hoveredRegion, selectedRegions, unavailableRegions)}
                 stroke={getStroke(abbrev, hoveredRegion, selectedRegions, unavailableRegions)}
                 strokeWidth={getStrokeWidth(abbrev, hoveredRegion, selectedRegions)}
+                tabIndex={-1}
                 style={{
-                  default: { outline: "none", transition: "fill 0.15s ease" },
-                  hover: {
-                    outline: "none",
-                    cursor: abbrev && !unavailableRegions.has(abbrev) ? "pointer" : "not-allowed",
-                  },
-                  pressed: { outline: "none" },
+                  default: sharedStyle,
+                  hover: sharedStyle,
+                  pressed: sharedStyle,
                 }}
-                onMouseEnter={() => handleMouseEnter(abbrev)}
-                onMouseLeave={handleMouseLeave}
-                onClick={() => handleClick(abbrev)}
               />
             );
           }),
-      [
-        hoveredRegion,
-        selectedRegions,
-        unavailableRegions,
-        handleMouseEnter,
-        handleMouseLeave,
-        handleClick,
-      ],
+      [hoveredRegion, selectedRegions, unavailableRegions],
     );
 
     return (
-      <div ref={ref} className="relative w-full map-container" onMouseMove={handleMouseMove}>
+      <div
+        ref={ref}
+        className="relative w-full map-container"
+        onMouseMove={handleContainerMouseMove}
+        onMouseLeave={handleContainerMouseLeave}
+        onClick={handleContainerClick}
+      >
         {/* Tooltip */}
         {tooltipContent && (
           <div
@@ -168,21 +218,23 @@ export const NorthAmericaMap = memo(
         <ComposableMap
           projection="geoAlbers"
           projectionConfig={{
-            rotate: [95, 0, 0],
-            center: [0, 46],
+            rotate: [95, 0, 0] as any,
+            center: createCoordinates(0, 46),
             scale: 700,
           }}
           className="w-full h-auto border border-gray-300 rounded-lg bg-sky-50"
           width={800}
           height={520}
         >
-          <ZoomableGroup>
-            {/* Canada provinces */}
-            <Geographies geography={CA_GEO_URL}>{renderGeographies("ca")}</Geographies>
+          {/* Canada provinces */}
+          {caGeoData && (
+            <Geographies geography={caGeoData as any}>{renderGeographies("ca")}</Geographies>
+          )}
 
-            {/* US states */}
-            <Geographies geography={US_GEO_URL}>{renderGeographies("us")}</Geographies>
-          </ZoomableGroup>
+          {/* US states */}
+          {usGeoData && (
+            <Geographies geography={usGeoData as any}>{renderGeographies("us")}</Geographies>
+          )}
         </ComposableMap>
 
         {/* Legend */}
