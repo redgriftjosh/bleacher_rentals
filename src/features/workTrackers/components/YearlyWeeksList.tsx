@@ -6,6 +6,9 @@ import { DateTime } from "luxon";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { useQuery } from "@tanstack/react-query";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { fetchCrossBorderWeekStarts } from "../db/db";
 
 type WeekGroup = {
   week_start: string | null;
@@ -30,6 +33,7 @@ type Props = {
 
 export function YearlyWeeksList({ year }: Props) {
   const router = useRouter();
+  const supabase = useClerkSupabaseClient();
 
   // Calculate the date range for the year
   const dateRange = useMemo(() => {
@@ -41,6 +45,12 @@ export function YearlyWeeksList({ year }: Props) {
       end: yearEnd.toISODate()!,
     };
   }, [year]);
+
+  const { data: crossBorderWeekStarts } = useQuery({
+    queryKey: ["cross-border-week-starts", dateRange.start, dateRange.end],
+    queryFn: () => fetchCrossBorderWeekStarts(supabase, dateRange.start, dateRange.end),
+    enabled: !!supabase,
+  });
 
   const query = useMemo(() => {
     return db
@@ -89,9 +99,12 @@ export function YearlyWeeksList({ year }: Props) {
         return (
           <tr
             key={index}
-            className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer"
-            onClick={() => router.push(`/work-trackers/${row.week_start}`)}
-          >
+            className={`border-b h-12 border-gray-200 transition-all duration-100 ease-in-out cursor-pointer ${
+              crossBorderWeekStarts?.has(row.week_start)
+                ? "bg-yellow-100 hover:bg-yellow-200"
+                : "hover:bg-gray-100"
+            }`}
+            onClick={() => router.push(`/work-trackers/${row.week_start}`)}>
             <td className="py-2 px-3 text-left">
               <span className="font-medium">{label}</span>
             </td>
