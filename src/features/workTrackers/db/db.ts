@@ -521,7 +521,7 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
 
   const { data: driverData, error: driverError } = await supabase
     .from("Drivers")
-    .select("id, address:Addresses!Drivers_address_uuid_fkey(*)")
+    .select("id, tax, address:Addresses!Drivers_address_uuid_fkey(*)")
     .eq("user_uuid", userUuid)
     .single();
 
@@ -537,6 +537,7 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
   }
 
   const driverUuid = driverData.id;
+  const driverTax: number = driverData.tax ?? 0;
   const driverAddress = (driverData.address as Tables<"Addresses"> | null) ?? null;
 
   type WorkTrackerWithBleacher = Tables<"WorkTrackers"> & {
@@ -582,8 +583,6 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
       };
     }),
   );
-
-  const driverTax = await fetchDriverTaxByUuidServer(driverUuid, supabase);
 
   return { workTrackers: result, driverTax, driverAddress };
 }
