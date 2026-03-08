@@ -80,8 +80,67 @@ export type DriverWithMeta = Tables<"Users"> & {
   tripCount: number;
   totalPayCents: number;
   payCurrency: string;
+  payPerUnit: string;
+  totalDistanceMeters: number;
+  totalDriveMinutes: number;
+  hasCrossBorderTrips: boolean;
   region: "US" | "CAN" | null;
+  workTrackerGroup?: {
+    id: string;
+    status: Database["public"]["Enums"]["worktracker_group_status"];
+    qbo_bill_id: string | null;
+    week_start: string;
+    week_end: string;
+  } | null;
 };
+
+async function computeCrossBorderDriverUuids(
+  supabase: SupabaseClient<Database>,
+  workTrackers: { driver_uuid: string | null; dropoff_address_uuid: string | null }[],
+  driverAddressMap: Map<string, string | null>,
+): Promise<Set<string>> {
+  const canadianDriverIds = new Set<string>();
+  driverAddressMap.forEach((street, driverId) => {
+    if (deriveRegion(street) === "CAN") canadianDriverIds.add(driverId);
+  });
+
+  const dropoffUuids = [
+    ...new Set(
+      workTrackers
+        .filter(
+          (wt) =>
+            wt.driver_uuid && canadianDriverIds.has(wt.driver_uuid) && wt.dropoff_address_uuid,
+        )
+        .map((wt) => wt.dropoff_address_uuid!),
+    ),
+  ];
+
+  if (dropoffUuids.length === 0) return new Set();
+
+  const { data: addresses } = await supabase
+    .from("Addresses")
+    .select("id, street")
+    .in("id", dropoffUuids);
+
+  const usaAddressIds = new Set(
+    (addresses || []).filter((a) => /usa|united states/i.test(a.street ?? "")).map((a) => a.id),
+  );
+
+  if (usaAddressIds.size === 0) return new Set();
+
+  const result = new Set<string>();
+  workTrackers.forEach((wt) => {
+    if (
+      wt.driver_uuid &&
+      canadianDriverIds.has(wt.driver_uuid) &&
+      wt.dropoff_address_uuid &&
+      usaAddressIds.has(wt.dropoff_address_uuid)
+    ) {
+      result.add(wt.driver_uuid);
+    }
+  });
+  return result;
+}
 
 export async function fetchDriversForWeek(
   supabase: SupabaseClient<Database>,
@@ -96,6 +155,8 @@ export async function fetchDriversForWeek(
   }
 
   const endDate = DateTime.fromISO(startDate).plus({ days: 7 }).toISODate();
+  const weekStart = startDate;
+  const weekEnd = DateTime.fromISO(startDate).plus({ days: 6 }).toISODate();
 
   if (showAllDrivers) {
     const { data: driversData, error: driversError } = await supabase
@@ -104,6 +165,7 @@ export async function fetchDriversForWeek(
         `
         id,
         pay_currency,
+        pay_per_unit,
         address:Addresses!Drivers_address_uuid_fkey(street),
         user:Users!Drivers_user_uuid_fkey(*)
       `,
@@ -117,7 +179,7 @@ export async function fetchDriversForWeek(
 
     const { data: workTrackers, error: wtError } = await supabase
       .from("WorkTrackers")
-      .select("driver_uuid, pay_cents")
+      .select("driver_uuid, pay_cents, distance_meters, drive_minutes, dropoff_address_uuid")
       .gte("date", startDate)
       .lt("date", endDate);
 
@@ -125,14 +187,50 @@ export async function fetchDriversForWeek(
       createErrorToast(["Failed to fetch work tracker counts", wtError.message]);
     }
 
+    // Fetch WorkTrackerGroups for this week
+    const { data: workTrackerGroups, error: wtgError } = await supabase
+      .from("WorkTrackerGroups")
+      .select("id, driver_uuid, status, qbo_bill_id, week_start, week_end")
+      .eq("week_start", weekStart!)
+      .eq("week_end", weekEnd!);
+
+    if (wtgError) {
+      console.error("Failed to fetch work tracker groups", wtgError.message);
+    }
+
+    const groupsByDriver = new Map<string, any>();
+    (workTrackerGroups || []).forEach((wtg) => {
+      if (wtg.driver_uuid) {
+        groupsByDriver.set(wtg.driver_uuid, wtg);
+      }
+    });
+
     const tripCounts = new Map<string, number>();
     const payCents = new Map<string, number>();
+    const distanceMeters = new Map<string, number>();
+    const driveMinutes = new Map<string, number>();
     (workTrackers || []).forEach((wt) => {
       if (wt.driver_uuid) {
         tripCounts.set(wt.driver_uuid, (tripCounts.get(wt.driver_uuid) || 0) + 1);
         payCents.set(wt.driver_uuid, (payCents.get(wt.driver_uuid) || 0) + (wt.pay_cents || 0));
+        distanceMeters.set(
+          wt.driver_uuid,
+          (distanceMeters.get(wt.driver_uuid) || 0) + (wt.distance_meters || 0),
+        );
+        driveMinutes.set(
+          wt.driver_uuid,
+          (driveMinutes.get(wt.driver_uuid) || 0) + (wt.drive_minutes || 0),
+        );
       }
     });
+
+    const driverAddressMap = new Map<string, string | null>();
+    (driversData as any[]).forEach((d) => driverAddressMap.set(d.id, d.address?.street ?? null));
+    const crossBorderDriverIds = await computeCrossBorderDriverUuids(
+      supabase,
+      workTrackers || [],
+      driverAddressMap,
+    );
 
     const drivers = (driversData as any[]).map((driver) => ({
       ...driver.user,
@@ -140,7 +238,12 @@ export async function fetchDriversForWeek(
       tripCount: tripCounts.get(driver.id) || 0,
       totalPayCents: payCents.get(driver.id) || 0,
       payCurrency: driver.pay_currency ?? "USD",
+      payPerUnit: driver.pay_per_unit ?? "KM",
+      totalDistanceMeters: distanceMeters.get(driver.id) || 0,
+      totalDriveMinutes: driveMinutes.get(driver.id) || 0,
+      hasCrossBorderTrips: crossBorderDriverIds.has(driver.id),
       region: deriveRegion(driver.address?.street),
+      workTrackerGroup: groupsByDriver.get(driver.id) || null,
     })) as DriverWithMeta[];
 
     drivers.sort((a, b) => {
@@ -172,6 +275,7 @@ export async function fetchDriversForWeek(
         `
         id,
         pay_currency,
+        pay_per_unit,
         address:Addresses!Drivers_address_uuid_fkey(street),
         user:Users!Drivers_user_uuid_fkey(*)
       `,
@@ -187,7 +291,7 @@ export async function fetchDriversForWeek(
     const driverUuids = (driversData as any[]).map((d) => d.id);
     const { data: workTrackers, error: wtError } = await supabase
       .from("WorkTrackers")
-      .select("driver_uuid, pay_cents")
+      .select("driver_uuid, pay_cents, distance_meters, drive_minutes, dropoff_address_uuid")
       .in("driver_uuid", driverUuids)
       .gte("date", startDate)
       .lt("date", endDate);
@@ -196,14 +300,51 @@ export async function fetchDriversForWeek(
       createErrorToast(["Failed to fetch work tracker counts", wtError.message]);
     }
 
+    // Fetch WorkTrackerGroups for this week
+    const { data: workTrackerGroups, error: wtgError } = await supabase
+      .from("WorkTrackerGroups")
+      .select("id, driver_uuid, status, qbo_bill_id, week_start, week_end")
+      .in("driver_uuid", driverUuids)
+      .eq("week_start", weekStart!)
+      .eq("week_end", weekEnd!);
+
+    if (wtgError) {
+      console.error("Failed to fetch work tracker groups", wtgError.message);
+    }
+
+    const groupsByDriver = new Map<string, any>();
+    (workTrackerGroups || []).forEach((wtg) => {
+      if (wtg.driver_uuid) {
+        groupsByDriver.set(wtg.driver_uuid, wtg);
+      }
+    });
+
     const tripCounts = new Map<string, number>();
     const payCents = new Map<string, number>();
+    const distanceMeters = new Map<string, number>();
+    const driveMinutes = new Map<string, number>();
     (workTrackers || []).forEach((wt) => {
       if (wt.driver_uuid) {
         tripCounts.set(wt.driver_uuid, (tripCounts.get(wt.driver_uuid) || 0) + 1);
         payCents.set(wt.driver_uuid, (payCents.get(wt.driver_uuid) || 0) + (wt.pay_cents || 0));
+        distanceMeters.set(
+          wt.driver_uuid,
+          (distanceMeters.get(wt.driver_uuid) || 0) + (wt.distance_meters || 0),
+        );
+        driveMinutes.set(
+          wt.driver_uuid,
+          (driveMinutes.get(wt.driver_uuid) || 0) + (wt.drive_minutes || 0),
+        );
       }
     });
+
+    const driverAddressMap = new Map<string, string | null>();
+    (driversData as any[]).forEach((d) => driverAddressMap.set(d.id, d.address?.street ?? null));
+    const crossBorderDriverIds = await computeCrossBorderDriverUuids(
+      supabase,
+      workTrackers || [],
+      driverAddressMap,
+    );
 
     const drivers = (driversData as any[]).map((driver) => ({
       ...driver.user,
@@ -211,7 +352,12 @@ export async function fetchDriversForWeek(
       tripCount: tripCounts.get(driver.id) || 0,
       totalPayCents: payCents.get(driver.id) || 0,
       payCurrency: driver.pay_currency ?? "USD",
+      payPerUnit: driver.pay_per_unit ?? "KM",
+      totalDistanceMeters: distanceMeters.get(driver.id) || 0,
+      totalDriveMinutes: driveMinutes.get(driver.id) || 0,
+      hasCrossBorderTrips: crossBorderDriverIds.has(driver.id),
       region: deriveRegion(driver.address?.street),
+      workTrackerGroup: groupsByDriver.get(driver.id) || null,
     })) as DriverWithMeta[];
 
     drivers.sort((a, b) => {
@@ -222,6 +368,64 @@ export async function fetchDriversForWeek(
     console.log("fetchDriversForWeek (my drivers)", drivers);
     return { drivers };
   }
+}
+
+export async function fetchCrossBorderWeekStarts(
+  supabase: SupabaseClient<Database>,
+  startDate: string,
+  endDate: string,
+): Promise<Set<string>> {
+  const { data: trackers } = await supabase
+    .from("WorkTrackers")
+    .select("driver_uuid, date, dropoff_address_uuid")
+    .gte("date", startDate)
+    .lt("date", endDate);
+
+  if (!trackers?.length) return new Set();
+
+  const driverUuids = [
+    ...new Set(trackers.filter((t) => t.driver_uuid).map((t) => t.driver_uuid!)),
+  ];
+  const dropoffUuids = [
+    ...new Set(trackers.filter((t) => t.dropoff_address_uuid).map((t) => t.dropoff_address_uuid!)),
+  ];
+
+  const [{ data: drivers }, { data: dropoffAddresses }] = await Promise.all([
+    supabase
+      .from("Drivers")
+      .select("id, address:Addresses!Drivers_address_uuid_fkey(street)")
+      .in("id", driverUuids),
+    supabase.from("Addresses").select("id, street").in("id", dropoffUuids),
+  ]);
+
+  const canadianDriverIds = new Set(
+    ((drivers as any[]) || [])
+      .filter((d) => deriveRegion(d.address?.street) === "CAN")
+      .map((d) => d.id as string),
+  );
+
+  const usaAddressIds = new Set(
+    (dropoffAddresses || [])
+      .filter((a) => /usa|united states/i.test(a.street ?? ""))
+      .map((a) => a.id),
+  );
+
+  const weekStarts = new Set<string>();
+  trackers.forEach((t) => {
+    if (
+      t.driver_uuid &&
+      canadianDriverIds.has(t.driver_uuid) &&
+      t.dropoff_address_uuid &&
+      usaAddressIds.has(t.dropoff_address_uuid) &&
+      t.date
+    ) {
+      const date = DateTime.fromISO(t.date);
+      const monday = date.minus({ days: (date.weekday + 6) % 7 });
+      const isoMonday = monday.toISODate();
+      if (isoMonday) weekStarts.add(isoMonday);
+    }
+  });
+  return weekStarts;
 }
 
 export async function checkUserAccess(
@@ -265,6 +469,7 @@ export type WorkTrackersResult = {
     dropoff_address: Tables<"Addresses"> | null;
   }[];
   driverTax: number;
+  driverAddress: Tables<"Addresses"> | null;
 };
 
 async function fetchDriverTaxByUuidServer(
@@ -316,7 +521,7 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
 
   const { data: driverData, error: driverError } = await supabase
     .from("Drivers")
-    .select("id")
+    .select("id, tax, address:Addresses!Drivers_address_uuid_fkey(*)")
     .eq("user_uuid", userUuid)
     .single();
 
@@ -328,10 +533,12 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
         ["Failed to fetch driver", driverError?.message || "Driver not found"].join("\n"),
       );
     }
-    return { workTrackers: [], driverTax: 0 };
+    return { workTrackers: [], driverTax: 0, driverAddress: null };
   }
 
   const driverUuid = driverData.id;
+  const driverTax: number = driverData.tax ?? 0;
+  const driverAddress = (driverData.address as Tables<"Addresses"> | null) ?? null;
 
   type WorkTrackerWithBleacher = Tables<"WorkTrackers"> & {
     bleacher: { bleacher_number: number } | null;
@@ -377,7 +584,5 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
     }),
   );
 
-  const driverTax = await fetchDriverTaxByUuidServer(driverUuid, supabase);
-
-  return { workTrackers: result, driverTax };
+  return { workTrackers: result, driverTax, driverAddress };
 }

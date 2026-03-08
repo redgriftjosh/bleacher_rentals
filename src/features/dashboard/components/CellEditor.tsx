@@ -47,9 +47,8 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       await saveBlock(editBlock, supabase);
       // Refresh bleachers store directly so Pixi updates without remounting
       try {
-        const { FetchDashboardBleachers } = await import(
-          "@/features/dashboard/db/client/bleachers"
-        );
+        const { FetchDashboardBleachers } =
+          await import("@/features/dashboard/db/client/bleachers");
         await FetchDashboardBleachers(supabase);
       } catch {}
       resetForm();
@@ -73,9 +72,8 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       await deleteBlock(editBlock, supabase);
       // Refresh bleachers store directly so Pixi updates without remounting
       try {
-        const { FetchDashboardBleachers } = await import(
-          "@/features/dashboard/db/client/bleachers"
-        );
+        const { FetchDashboardBleachers } =
+          await import("@/features/dashboard/db/client/bleachers");
         await FetchDashboardBleachers(supabase);
       } catch {}
       resetForm();
@@ -113,7 +111,11 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       started_at: null,
       completed_at: null,
       post_inspection_uuid: null,
+      worktracker_group_uuid: null,
       pre_inspection_uuid: null,
+      work_tracker_type_uuid: null,
+      distance_meters: null,
+      drive_minutes: null,
     };
 
     onWorkTrackerOpen?.(workTracker);

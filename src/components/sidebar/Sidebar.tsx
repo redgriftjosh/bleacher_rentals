@@ -11,6 +11,7 @@ import {
   BarChart3,
   FileText,
   Trophy,
+  MapPinned,
 } from "lucide-react";
 import { SideNavButton } from "./SideNavButton";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
@@ -71,6 +72,12 @@ const SideBar = () => {
           label="Leaderboard"
           href="/leaderboard"
           icon={Trophy}
+          roles={[USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN]}
+        />
+        <SideNavButton
+          label="Zone Manager"
+          href="/zones"
+          icon={MapPinned}
           roles={[USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN]}
         />
       </nav>

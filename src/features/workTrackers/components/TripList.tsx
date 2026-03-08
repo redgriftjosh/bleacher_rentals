@@ -14,6 +14,16 @@ type Props = {
   onSelectWorkTracker?: (workTracker: Tables<"WorkTrackers">) => void;
 };
 
+function isCanada(street: string | null | undefined): boolean {
+  if (!street) return false;
+  return /canada/i.test(street);
+}
+
+function isUSA(street: string | null | undefined): boolean {
+  if (!street) return false;
+  return /usa|united states/i.test(street);
+}
+
 export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
   const supabase = useClerkSupabaseClient();
 
@@ -54,29 +64,35 @@ export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
   const classNameBold = "py-1 text-center text-xs font-bold border-r";
   return (
     <tbody>
-      {data?.workTrackers.map((row, index) => (
-        <tr
-          key={index}
-          onClick={() => onSelectWorkTracker && onSelectWorkTracker(row.workTracker)}
-          className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer"
-        >
-          <th className={`w-0 whitespace-nowrap px-2 ${className}`}>
-            <WorkTrackerStatusBadge status={row.workTracker.status} showText={false} />
-          </th>
-          <th className={`w-[8%] ${className}`}>{row.workTracker.date}</th>
-          <th className={`w-[8%] ${className}`}>{row.bleacherNumber}</th>
-          <th className={`w-[12%] ${className}`}>{row.pickup_address?.street ?? ""}</th>
-          <th className={`w-[8%] ${className}`}>{row.workTracker.pickup_poc}</th>
-          <th className={`w-[7%] ${className}`}>{row.workTracker.pickup_time}</th>
-          <th className={`w-[12%] ${className}`}>{row.dropoff_address?.street ?? ""}</th>
-          <th className={`w-[8%] ${className}`}>{row.workTracker.dropoff_poc}</th>
-          <th className={`w-[7%] ${className}`}>{row.workTracker.dropoff_time}</th>
-          <th className={`w-[8%] ${className}`}>
-            {row.workTracker.pay_cents ? `$${(row.workTracker.pay_cents / 100).toFixed(2)}` : ""}
-          </th>
-          <th className={` ${className}`}>{row.workTracker.notes}</th>
-        </tr>
-      ))}
+      {data?.workTrackers.map((row, index) => {
+        const crossBorder =
+          isCanada(data.driverAddress?.street) && isUSA(row.dropoff_address?.street);
+        return (
+          <tr
+            key={index}
+            onClick={() => onSelectWorkTracker && onSelectWorkTracker(row.workTracker)}
+            className={`border-b h-12 border-gray-200 transition-all duration-100 ease-in-out cursor-pointer ${
+              crossBorder ? "bg-yellow-100 hover:bg-yellow-200" : "hover:bg-gray-100"
+            }`}
+          >
+            <th className={`w-0 whitespace-nowrap px-2 ${className}`}>
+              <WorkTrackerStatusBadge status={row.workTracker.status} showText={false} />
+            </th>
+            <th className={`w-[8%] ${className}`}>{row.workTracker.date}</th>
+            <th className={`w-[8%] ${className}`}>{row.bleacherNumber}</th>
+            <th className={`w-[12%] ${className}`}>{row.pickup_address?.street ?? ""}</th>
+            <th className={`w-[8%] ${className}`}>{row.workTracker.pickup_poc}</th>
+            <th className={`w-[7%] ${className}`}>{row.workTracker.pickup_time}</th>
+            <th className={`w-[12%] ${className}`}>{row.dropoff_address?.street ?? ""}</th>
+            <th className={`w-[8%] ${className}`}>{row.workTracker.dropoff_poc}</th>
+            <th className={`w-[7%] ${className}`}>{row.workTracker.dropoff_time}</th>
+            <th className={`w-[8%] ${className}`}>
+              {row.workTracker.pay_cents ? `$${(row.workTracker.pay_cents / 100).toFixed(2)}` : ""}
+            </th>
+            <th className={` ${className}`}>{row.workTracker.notes}</th>
+          </tr>
+        );
+      })}
       <tr className="border-b h-12 border-gray-200 ">
         <th className={`w-0 ${className}`}></th>
         <th className={`w-[8%] ${classNameBold}`}>SubTotal</th>
