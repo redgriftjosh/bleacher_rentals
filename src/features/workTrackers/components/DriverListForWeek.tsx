@@ -8,6 +8,8 @@ import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient"
 import { useUser } from "@clerk/nextjs";
 import { useUsersStore } from "@/state/userStore";
 import { useState } from "react";
+import { PaymentStatusButton } from "./PaymentStatusButton";
+import { DateTime } from "luxon";
 
 type Props = {
   startDate: string;
@@ -16,10 +18,7 @@ type Props = {
 function RegionFlag({ region }: { region: "US" | "CAN" | null }) {
   if (!region) return null;
   return (
-    <span
-      className="text-base leading-none"
-      title={region === "US" ? "United States" : "Canada"}
-    >
+    <span className="text-base leading-none" title={region === "US" ? "United States" : "Canada"}>
       {region === "US" ? "🇺🇸" : "🇨🇦"}
     </span>
   );
@@ -31,12 +30,37 @@ function formatPay(cents: number, payCurrency: string): string {
   return `${symbol}${amount} ${payCurrency}`;
 }
 
+function formatUnitTotal(
+  payPerUnit: string,
+  totalDistanceMeters: number,
+  totalDriveMinutes: number,
+): string | null {
+  if (payPerUnit === "HR") {
+    if (totalDriveMinutes === 0) return null;
+    const hours = totalDriveMinutes / 60;
+    return `${hours.toFixed(1)} hrs`;
+  }
+  if (payPerUnit === "MI") {
+    if (totalDistanceMeters === 0) return null;
+    const miles = totalDistanceMeters / 1609.344;
+    return `${miles.toFixed(1)} mi`;
+  }
+  // Default: KM
+  if (totalDistanceMeters === 0) return null;
+  const km = totalDistanceMeters / 1000;
+  return `${km.toFixed(1)} km`;
+}
+
 export function DriverListForWeek({ startDate }: Props) {
-  const router = useRouter();``
+  const router = useRouter();
+  ``;
   const supabase = useClerkSupabaseClient();
   const { user } = useUser();
   const users = useUsersStore((s) => s.users);
   const [showAllDrivers, setShowAllDrivers] = useState(false);
+
+  // Calculate week end date (6 days after start)
+  const weekEnd = DateTime.fromISO(startDate).plus({ days: 6 }).toISODate() || startDate;
 
   const getCurrentUserUuid = () => {
     const clerkId = user?.id;
@@ -63,8 +87,7 @@ export function DriverListForWeek({ startDate }: Props) {
     queryFn: async () => {
       return fetchDriversForWeek(supabase, startDate, showAllDrivers, currentUserUuid ?? undefined);
     },
-    enabled:
-      !!supabase && !!accessData && (accessData.isAdmin || accessData.isAccountManager),
+    enabled: !!supabase && !!accessData && (accessData.isAdmin || accessData.isAccountManager),
   });
 
   const drivers = data?.drivers ?? [];
@@ -136,23 +159,38 @@ export function DriverListForWeek({ startDate }: Props) {
         {drivers.map((row, index) => (
           <tr
             key={index}
-            className="border-b h-12 border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer"
+            className={`border-b h-12 border-gray-200 transition-all duration-100 ease-in-out cursor-pointer ${
+              row.hasCrossBorderTrips ? "bg-yellow-100 hover:bg-yellow-200" : "hover:bg-gray-100"
+            }`}
             onClick={() => router.push(`/work-trackers/${startDate}/${row.id.toString()}`)}
           >
             <td className="py-1 px-3 text-left">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  {row.first_name + " " + row.last_name}
-                  <RegionFlag region={row.region} />
-                </span>
-                <span className="flex items-center gap-2 text-sm text-gray-500">
-                  {row.totalPayCents > 0 && (
-                    <span className="text-green-600 font-medium">
-                      {formatPay(row.totalPayCents, row.payCurrency)}
-                    </span>
-                  )}
-                  {row.tripCount} {row.tripCount === 1 ? "trip" : "trips"}
-                </span>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="flex items-center gap-1.5 truncate">
+                    {row.first_name + " " + row.last_name}
+                    <RegionFlag region={row.region} />
+                  </span>
+                  <span className="flex items-center gap-2 text-sm text-gray-500 flex-shrink-0">
+                    {row.totalPayCents > 0 && (
+                      <span className="text-green-600 font-medium">
+                        {formatPay(row.totalPayCents, row.payCurrency)}
+                      </span>
+                    )}
+                    {row.tripCount} {row.tripCount === 1 ? "trip" : "trips"}
+                    {(() => {
+                      const unitTotal = formatUnitTotal(
+                        row.payPerUnit,
+                        row.totalDistanceMeters,
+                        row.totalDriveMinutes,
+                      );
+                      return unitTotal ? <span>· {unitTotal}</span> : null;
+                    })()}
+                  </span>
+                </div>
+                <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <PaymentStatusButton driver={row} weekStart={startDate} weekEnd={weekEnd} />
+                </div>
               </div>
             </td>
           </tr>

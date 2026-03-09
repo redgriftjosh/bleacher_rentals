@@ -1,6 +1,7 @@
-import { Link, X, Trash2, Calculator } from "lucide-react";
+import { Link, X, Trash2, Calculator, Pencil } from "lucide-react";
 import { Dropdown } from "@/components/DropDown";
 import { useEffect, useState, useRef } from "react";
+import { EditWorkTrackerTypesModal } from "./EditWorkTrackerTypesModal";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import {
   getAddressFromUuid,
@@ -62,6 +63,20 @@ export default function WorkTrackerModal({
     selectedWorkTracker?.status ?? "draft",
   );
   const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
+  const [showEditTypes, setShowEditTypes] = useState(false);
+
+  // Fetch available work tracker types
+  const { data: workTrackerTypes = [] } = useQuery({
+    queryKey: ["work-tracker-types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("WorkTrackerTypes")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
 
   // Helper to format address for Distance Matrix API
   const formatAddressString = (addr: AddressData | null): string => {
@@ -178,12 +193,30 @@ export default function WorkTrackerModal({
     refetchOnWindowFocus: false,
   });
 
+  // Once types load, set default type for new work trackers that don't yet have one
+  useEffect(() => {
+    if (
+      workTracker?.id === "-1" &&
+      !workTracker?.work_tracker_type_uuid &&
+      workTrackerTypes.length > 0
+    ) {
+      const tripType =
+        workTrackerTypes.find((t) => t.display_name === "Trip") ?? workTrackerTypes[0];
+      setWorkTracker((prev) => (prev ? { ...prev, work_tracker_type_uuid: tripType.id } : prev));
+    }
+  }, [workTrackerTypes, workTracker?.id, workTracker?.work_tracker_type_uuid]);
+
   useEffect(() => {
     if (selectedWorkTracker?.id === "-1") {
       setWorkTracker(selectedWorkTracker);
       setInitialStatus("draft");
       setPickUpAddress(null);
       setDropOffAddress(null);
+      // Default to "Trip" type for new work trackers
+      const tripType = workTrackerTypes.find((t) => t.display_name === "Trip");
+      if (tripType) {
+        setWorkTracker((prev) => ({ ...prev!, work_tracker_type_uuid: tripType.id }));
+      }
     } else if (fetchedWorkTracker) {
       console.log("fetchedWorkTracker", fetchedWorkTracker);
       setWorkTracker(fetchedWorkTracker.workTracker);
@@ -212,7 +245,21 @@ export default function WorkTrackerModal({
 
   const handleSaveWorkTracker = async () => {
     try {
-      await saveWorkTracker(workTracker, pickUpAddress, dropOffAddress, supabase, {
+      // Merge distance/duration from the Google Maps leg into the tracker before saving
+      const trackerToSave = workTracker
+        ? {
+            ...workTracker,
+            distance_meters:
+              leg?.distanceMeters != null
+                ? Math.round(leg.distanceMeters)
+                : workTracker.distance_meters,
+            drive_minutes:
+              leg?.durationInTrafficSeconds != null || leg?.durationSeconds != null
+                ? Math.round((leg.durationInTrafficSeconds ?? leg.durationSeconds!) / 60)
+                : workTracker.drive_minutes,
+          }
+        : workTracker;
+      await saveWorkTracker(trackerToSave, pickUpAddress, dropOffAddress, supabase, {
         previousStatus: initialStatus,
         driverUserUuid: selectedDriver?.user_uuid ?? null,
         previousPickupAddress: pickupAddress?.address ?? "an unknown pickup location",
@@ -227,6 +274,8 @@ export default function WorkTrackerModal({
           await import("@/features/dashboard/db/client/bleachers");
         await FetchDashboardBleachers(supabase);
       } catch {}
+      // Invalidate this specific work tracker's cache so re-opening shows fresh data
+      await queryClient.invalidateQueries({ queryKey: ["workTracker", workTracker?.id] });
       // Optionally refresh any active work-tracker-specific queries used elsewhere
       await queryClient.invalidateQueries({ queryKey: ["work-trackers"], refetchType: "active" });
       setSelectedWorkTracker(null);
@@ -418,6 +467,36 @@ export default function WorkTrackerModal({
                     />
                   </div>
                 </div>
+
+                {/* Work Tracker Type */}
+                <div className="mt-1">
+                  <div className="flex items-center justify-between">
+                    <label className={labelClassName}>Type</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowEditTypes(true)}
+                      className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 transition-colors mt-1"
+                    >
+                      <Pencil className="h-3 w-3" />
+                      Edit types
+                    </button>
+                  </div>
+                  <Dropdown
+                    options={workTrackerTypes.map((t) => ({
+                      label: t.display_name,
+                      value: t.id,
+                    }))}
+                    selected={workTracker?.work_tracker_type_uuid ?? undefined}
+                    onSelect={(id) =>
+                      setWorkTracker((prev) => ({
+                        ...prev!,
+                        work_tracker_type_uuid: id,
+                      }))
+                    }
+                    placeholder="Select Type"
+                  />
+                </div>
+
                 <label className={labelClassName}>Date</label>
                 <input
                   type="date"
@@ -612,6 +691,8 @@ export default function WorkTrackerModal({
           </div>
         </div>
       )}
+
+      <EditWorkTrackerTypesModal isOpen={showEditTypes} onClose={() => setShowEditTypes(false)} />
 
       <Dialog open={showSaveConfirmModal} onOpenChange={setShowSaveConfirmModal}>
         <DialogContent className="max-w-md z-[2101]">

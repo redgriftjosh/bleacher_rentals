@@ -1,9 +1,9 @@
 "use client";
 import { useAdmins } from "../../hooks/useAdmins";
-import { useCurrentUserStore } from "../../state/useCurrentUserStore";
 import { UserAvatar } from "../util/UserAvatar";
 import { STATUSES } from "@/features/manageTeam/constants";
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 
 function StatusBadge({ statusUuid }: { statusUuid: string | null }) {
   const config = useMemo(() => {
@@ -38,10 +38,10 @@ function formatDate(dateString: string | null) {
 
 export function AdminList({ showInactive = false }: { showInactive?: boolean }) {
   const admins = useAdmins();
-  const loadExistingUser = useCurrentUserStore((s) => s.loadExistingUser);
+  const router = useRouter();
 
   const handleClick = (userUuid: string) => {
-    loadExistingUser(userUuid);
+    router.push(`/team/${userUuid}/edit/basic-user-info`);
   };
 
   const filteredAdmins = showInactive
