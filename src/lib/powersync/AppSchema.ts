@@ -264,6 +264,9 @@ const ScorecardTargetsCols = {
   value_of_revenue_weekly_cents: column.integer,
   value_of_revenue_quarterly_cents: column.integer,
   value_of_revenue_annually_cents: column.integer,
+  gross_margin_percent_weekly: column.integer,
+  gross_margin_percent_quarterly: column.integer,
+  gross_margin_percent_annually: column.integer,
 } satisfies PowerSyncColsFor<"ScorecardTargets">;
 const ScorecardTargets = new Table(ScorecardTargetsCols, {
   indexes: { account_manager_uuid: ["account_manager_uuid"] },

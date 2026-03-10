@@ -647,6 +647,9 @@ export type Database = {
         Row: {
           account_manager_uuid: string
           created_at: string
+          gross_margin_percent_annually: number
+          gross_margin_percent_quarterly: number
+          gross_margin_percent_weekly: number
           id: string
           quotes_annually: number
           quotes_quarterly: number
@@ -665,6 +668,9 @@ export type Database = {
         Insert: {
           account_manager_uuid: string
           created_at?: string
+          gross_margin_percent_annually?: number
+          gross_margin_percent_quarterly?: number
+          gross_margin_percent_weekly?: number
           id?: string
           quotes_annually?: number
           quotes_quarterly?: number
@@ -683,6 +689,9 @@ export type Database = {
         Update: {
           account_manager_uuid?: string
           created_at?: string
+          gross_margin_percent_annually?: number
+          gross_margin_percent_quarterly?: number
+          gross_margin_percent_weekly?: number
           id?: string
           quotes_annually?: number
           quotes_quarterly?: number
