@@ -11,6 +11,8 @@ import { db } from "@/components/providers/SystemProvider";
 import { typedExecute } from "@/lib/powersync/typedQuery";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { SelectQboVendorSimple } from "@/features/manageTeam/components/inputs/SelectQboVendorSimple";
+import { EinInput } from "@/features/manageTeam/components/inputs/EinInput";
+import { HstInput } from "@/features/manageTeam/components/inputs/HstInput";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +34,8 @@ type EditVendorModalProps = {
     displayName: string;
     logoUrl: string | null;
     qboVendorId: string | null;
+    ein: string | null;
+    hst: string | null;
   } | null;
 };
 
@@ -48,6 +52,8 @@ export function EditVendorModal({
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [ein, setEin] = useState("");
+  const [hst, setHst] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -62,12 +68,16 @@ export function EditVendorModal({
       setQboVendorId(existingVendor.qboVendorId);
       setLogoUrl(existingVendor.logoUrl);
       setLogoPreview(existingVendor.logoUrl);
+      setEin(existingVendor.ein || "");
+      setHst(existingVendor.hst || "");
     } else {
       setDisplayName("");
       setQboVendorId(null);
       setLogoUrl(null);
       setLogoPreview(null);
       setLogoFile(null);
+      setEin("");
+      setHst("");
     }
   }, [existingVendor, isOpen]);
 
@@ -111,6 +121,20 @@ export function EditVendorModal({
       return;
     }
 
+    const einDigits = ein.replace(/\D/g, "");
+    if (einDigits && !/^\d{9}$/.test(einDigits)) {
+      createErrorToast(["Invalid EIN", "EIN must be exactly 9 digits (e.g. 12-3456789)"]);
+      return;
+    }
+
+    if (hst && !/^\d{9}[A-Z]{2}\d{4}$/.test(hst)) {
+      createErrorToast([
+        "Invalid HST number",
+        "HST must be 9 digits, 2 letters, then 4 digits (e.g. 123456789RT0001)",
+      ]);
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -143,6 +167,8 @@ export function EditVendorModal({
             display_name: displayName,
             qbo_vendor_id: qboVendorId,
             logo_url: finalLogoUrl,
+            ein: ein.replace(/\D/g, "") || null,
+            hst: hst || null,
           })
           .where("id", "=", existingVendor.id)
           .compile();
@@ -165,6 +191,8 @@ export function EditVendorModal({
             logo_url: finalLogoUrl,
             is_active: 1,
             created_at: new Date().toISOString(),
+            ein: ein.replace(/\D/g, "") || null,
+            hst: hst || null,
           })
           .compile();
 
@@ -236,9 +264,23 @@ export function EditVendorModal({
             {/* QuickBooks Vendor Mapping */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                QuickBooks Vendor (Optional)
+                QuickBooks Vendor{" "}
+                <span className="text-amber-600 font-semibold text-xs">
+                  ⚠ Strongly recommended — required for bill creation
+                </span>
               </label>
               <SelectQboVendorSimple value={qboVendorId} onChange={setQboVendorId} />
+              {!qboVendorId && (
+                <p className="text-xs text-amber-600">
+                  Without a QuickBooks vendor, bills cannot be created for this vendor's drivers.
+                </p>
+              )}
+            </div>
+
+            {/* Tax ID Numbers */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <EinInput value={ein} onChange={setEin} />
+              <HstInput value={hst} onChange={setHst} />
             </div>
 
             {/* Logo Section */}

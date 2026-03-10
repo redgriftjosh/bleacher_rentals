@@ -22,6 +22,71 @@ export async function fetchDriverName(
   return name;
 }
 
+export type DriverHeaderInfo = {
+  driverName: string;
+  driverPhone: string | null;
+  driverEmail: string;
+  address: {
+    street: string;
+    city: string;
+    state_province: string;
+    zip_postal: string | null;
+  } | null;
+  vendor: {
+    display_name: string;
+    ein: string | null;
+    hst: string | null;
+  } | null;
+};
+
+export async function fetchDriverHeaderInfo(
+  supabase: SupabaseClient<Database>,
+  userUuid: string,
+): Promise<DriverHeaderInfo> {
+  const { data, error } = await supabase
+    .from("Drivers")
+    .select(
+      `
+      phone_number,
+      address:Addresses!Drivers_address_uuid_fkey(street, city, state_province, zip_postal),
+      vendor:Vendors(display_name, ein, hst),
+      user:Users!Drivers_user_uuid_fkey(first_name, last_name, email, phone)
+    `,
+    )
+    .eq("user_uuid", userUuid)
+    .single();
+
+  if (error || !data) {
+    return { driverName: "", driverPhone: null, driverEmail: "", address: null, vendor: null };
+  }
+
+  const user = (Array.isArray(data.user) ? data.user[0] : data.user) as {
+    first_name: string | null;
+    last_name: string | null;
+    email: string;
+    phone: string | null;
+  } | null;
+  const vendor = (Array.isArray(data.vendor) ? data.vendor[0] : data.vendor) as {
+    display_name: string;
+    ein: string | null;
+    hst: string | null;
+  } | null;
+  const address = (Array.isArray(data.address) ? data.address[0] : data.address) as {
+    street: string;
+    city: string;
+    state_province: string;
+    zip_postal: string | null;
+  } | null;
+
+  return {
+    driverName: `${user?.first_name ?? ""} ${user?.last_name ?? ""}`.trim(),
+    driverPhone: (data as any).phone_number ?? user?.phone ?? null,
+    driverEmail: user?.email ?? "",
+    address: address ?? null,
+    vendor: vendor ?? null,
+  };
+}
+
 export async function fetchUserByUuid(
   supabase: SupabaseClient<Database>,
   userUuid: string,

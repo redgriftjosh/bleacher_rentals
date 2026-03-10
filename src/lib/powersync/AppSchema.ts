@@ -278,6 +278,8 @@ const VendorsCols = {
   display_name: column.text,
   is_active: column.integer,
   logo_url: column.text,
+  ein: column.text,
+  hst: column.text,
 } satisfies PowerSyncColsFor<"Vendors">;
 const Vendors = new Table(VendorsCols);
 

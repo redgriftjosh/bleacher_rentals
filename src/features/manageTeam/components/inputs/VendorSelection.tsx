@@ -30,6 +30,8 @@ export function VendorSelection({ value, onChange, driverType }: VendorSelection
     displayName: string;
     logoUrl: string | null;
     qboVendorId: string | null;
+    ein: string | null;
+    hst: string | null;
   } | null>(null);
 
   // Get vendors data
@@ -44,6 +46,8 @@ export function VendorSelection({ value, onChange, driverType }: VendorSelection
       displayName: vendor.displayName,
       logoUrl: vendor.logoUrl,
       qboVendorId: vendor.qboVendorId,
+      ein: vendor.ein,
+      hst: vendor.hst,
     });
     setIsEditModalOpen(true);
     setIsVendorDropdownOpen(false);

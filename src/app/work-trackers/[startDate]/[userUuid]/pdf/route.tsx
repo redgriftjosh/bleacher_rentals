@@ -1,5 +1,6 @@
 import {
   fetchDriverName,
+  fetchDriverHeaderInfo,
   fetchWorkTrackersForUserUuidAndStartDate,
 } from "@/features/workTrackers/db/db";
 import { headers } from "next/headers";
@@ -25,18 +26,19 @@ export async function GET(
   const supabase = createServerSupabaseClient();
   const data = await fetchWorkTrackersForUserUuidAndStartDate(supabase, userUuid, startDate, true);
   const financialTotals = calculateFinancialTotals(data);
-  //   console.log("subtotal", subtotal);
-  //   console.log("tax", tax);
-  //   console.log("total", total);
   console.log("financialTotals", financialTotals);
   const dateRange = getDateRange(startDate);
-  const driverName = await fetchDriverName(userUuid, supabase);
+  const [driverName, driverHeaderInfo] = await Promise.all([
+    fetchDriverName(userUuid, supabase),
+    fetchDriverHeaderInfo(supabase, userUuid),
+  ]);
 
   const stream = await renderToStream(
     <MyDocument
       workTrackers={data.workTrackers}
-      header={{ dateRange, driverName: driverName }}
+      header={{ dateRange, driverName }}
       financialTotals={financialTotals}
+      driverHeaderInfo={driverHeaderInfo}
     />,
   );
 

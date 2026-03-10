@@ -19,8 +19,12 @@ import {
 } from "@/components/ui/dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { releaseAllDraftWorkTrackers } from "@/features/workTrackers/db/releaseAllDraftWorkTrackers";
-import { fetchWorkTrackersForUserUuidAndStartDate } from "@/features/workTrackers/db/db";
+import {
+  fetchWorkTrackersForUserUuidAndStartDate,
+  fetchDriverHeaderInfo,
+} from "@/features/workTrackers/db/db";
 import { buildReleaseAllNotification } from "@/features/workTrackers/db/notifications";
+import { getDateRange } from "@/features/workTrackers/util";
 
 const getRandomLoadingMessage = () => {
   const messages = [
@@ -51,6 +55,14 @@ export default function WorkTrackersForUserPage() {
   const [showReleaseModal, setShowReleaseModal] = useState(false);
   const [isReleasing, setIsReleasing] = useState(false);
   const queryClient = useQueryClient();
+
+  const { data: driverHeaderInfo } = useQuery({
+    queryKey: ["driver-header-info", userUuid],
+    enabled: !!supabase && !!userUuid,
+    queryFn: () => fetchDriverHeaderInfo(supabase, userUuid),
+  });
+
+  const dateRange = getDateRange(startDate);
 
   const { data: draftTripCount = 0 } = useQuery({
     queryKey: ["draft-work-trackers-count", userUuid, startDate],
@@ -146,7 +158,61 @@ export default function WorkTrackersForUserPage() {
         </button>
       </div>
 
-      <table className="min-w-full border-collapse border border-gray-200 mt-4">
+      {/* Document-style header — mirrors the PDF layout */}
+      <div className="border border-gray-200 mt-4">
+        <div className="bg-darkBlue px-2 py-1">
+          <span className="text-white font-bold text-xs">
+            {`${dateRange} - ${driverHeaderInfo?.driverName ?? ""}`}
+          </span>
+        </div>
+        <p className="text-xs font-bold italic underline px-2 pt-1">Bleacher Deliveries/Pickups</p>
+        {driverHeaderInfo && (
+          <div className="px-2 pb-2 pt-1 flex flex-wrap gap-x-6 gap-y-1 text-xs">
+            {driverHeaderInfo.vendor && (
+              <span>
+                <span className="font-semibold">Vendor:</span>{" "}
+                {driverHeaderInfo.vendor.display_name}
+              </span>
+            )}
+            {driverHeaderInfo.address && (
+              <span>
+                <span className="font-semibold">Address:</span>{" "}
+                {[
+                  driverHeaderInfo.address.street,
+                  driverHeaderInfo.address.city,
+                  driverHeaderInfo.address.state_province,
+                  driverHeaderInfo.address.zip_postal,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </span>
+            )}
+            {driverHeaderInfo.vendor?.ein && (
+              <span>
+                <span className="font-semibold">EIN:</span>{" "}
+                {`${driverHeaderInfo.vendor.ein.slice(0, 2)}-${driverHeaderInfo.vendor.ein.slice(2)}`}
+              </span>
+            )}
+            {driverHeaderInfo.vendor?.hst && (
+              <span>
+                <span className="font-semibold">HST:</span> {driverHeaderInfo.vendor.hst}
+              </span>
+            )}
+            {driverHeaderInfo.driverPhone && (
+              <span>
+                <span className="font-semibold">Phone:</span> {driverHeaderInfo.driverPhone}
+              </span>
+            )}
+            {driverHeaderInfo.driverEmail && (
+              <span>
+                <span className="font-semibold">Email:</span> {driverHeaderInfo.driverEmail}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <table className="min-w-full border-collapse border-x border-b border-gray-200 mt-0">
         {/* Header */}
         <thead className="bg-gray-100">
           <tr>

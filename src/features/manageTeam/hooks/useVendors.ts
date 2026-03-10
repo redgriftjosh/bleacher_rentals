@@ -11,6 +11,8 @@ type VendorRow = {
   logo_url: string | null;
   qbo_vendor_id: string | null;
   is_active: number | null;
+  ein: string | null;
+  hst: string | null;
 };
 
 type DriverCountRow = {
@@ -25,6 +27,8 @@ export type VendorOption = {
   qboVendorId: string | null;
   isActive: boolean;
   driverCount: number;
+  ein: string | null;
+  hst: string | null;
 };
 
 /**
@@ -35,7 +39,7 @@ export function useVendors(includeInactive: boolean = false) {
   const vendorQuery = useMemo(() => {
     let query = db
       .selectFrom("Vendors")
-      .select(["id", "display_name", "logo_url", "qbo_vendor_id", "is_active"])
+      .select(["id", "display_name", "logo_url", "qbo_vendor_id", "is_active", "ein", "hst"])
       .orderBy("display_name", "asc");
 
     if (!includeInactive) {
@@ -78,6 +82,8 @@ export function useVendors(includeInactive: boolean = false) {
       qboVendorId: v.qbo_vendor_id,
       isActive: v.is_active === 1,
       driverCount: driverCountMap.get(v.id) || 0,
+      ein: v.ein,
+      hst: v.hst,
     }));
   }, [vendors, driverCountMap]);
 

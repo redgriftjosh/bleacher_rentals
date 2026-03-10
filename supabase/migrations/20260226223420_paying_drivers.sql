@@ -5,10 +5,15 @@ create table public."Vendors" (
 	display_name text not null,
 	is_active boolean not null default true,
 	logo_url text,
+	ein text constraint ein_must_be_9_digits check (ein ~ '^\d{9}$'),
+  hst text constraint hst_formatting check (hst ~ '^\d{9}[A-Z]{2}\d{4}$'), -- must be 9 digits, then two letters, then 4 digits
 	constraint Vendors_pkey primary key (id)
 );
 
 alter table public."Vendors" enable row level security;
+
+comment on column public."Vendors".ein is 'Employer Identification Number only for US-based vendors, must be 9 digits if provided';
+comment on column public."Vendors".hst is 'Harmonized Sales Tax number only for Canadian vendors, must be 9 digits, then two uppercase letters, then 4 digits if provided';
 
 create policy "Allow All for Auth"
 	on public."Vendors"
