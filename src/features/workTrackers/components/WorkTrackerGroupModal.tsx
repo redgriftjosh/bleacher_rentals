@@ -53,6 +53,7 @@ export function WorkTrackerGroupModal({
   const [vendorName, setVendorName] = useState<string>("");
   const [hasVendor, setHasVendor] = useState<boolean>(true);
   const [vendorLinkedToQbo, setVendorLinkedToQbo] = useState<boolean>(true);
+  const [driverTaxRate, setDriverTaxRate] = useState<number>(0);
   const [userUuid, setUserUuid] = useState<string | null>(null);
   const [workTrackerGroupId, setWorkTrackerGroupId] = useState<string | null>(
     groupData?.id || null,
@@ -84,6 +85,7 @@ export function WorkTrackerGroupModal({
             id,
             user_uuid,
             vendor_uuid,
+            tax,
             vendor:Vendors(display_name, qbo_vendor_id)
           `,
           )
@@ -96,6 +98,7 @@ export function WorkTrackerGroupModal({
 
         // Store user_uuid for navigation
         setUserUuid(driver.user_uuid);
+        setDriverTaxRate((driver as any).tax ?? 0);
 
         // Check vendor status
         if (!driver.vendor_uuid || !driver.vendor) {
@@ -315,7 +318,12 @@ export function WorkTrackerGroupModal({
           <div className="py-4 space-y-6">
             {/* Show Bill Preview if bill created */}
             {currentStatus === "qbo_bill_created" && groupData?.qbo_bill_id && (
-              <QboBillPreview billId={groupData.qbo_bill_id} connectionId={connectionId} />
+              <QboBillPreview
+                billId={groupData.qbo_bill_id}
+                connectionId={connectionId}
+                taxRate={driverTaxRate}
+                subtotal={totalAmount}
+              />
             )}
 
             {/* Show Error Message if error */}

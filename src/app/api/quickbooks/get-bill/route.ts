@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
             : null,
         })),
       totalAmt: bill.TotalAmt || 0,
-      balance: bill.Balance || 0,
+      taxAmt: bill.TxnTaxDetail?.TotalTax || 0,
     };
 
     return NextResponse.json(formattedBill);
