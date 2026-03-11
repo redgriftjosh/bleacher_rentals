@@ -7,7 +7,7 @@ export async function fetchZones(
 ): Promise<ZoneWithStateProvinces[]> {
   const { data, error } = await supabase
     .from("Zones")
-    .select("*, state_provinces:ZoneStateProvinces(*)")
+    .select("*, state_provinces:ZoneStateProvinces(*), qbo_classes:ZoneQboClasses(*)")
     .order("display_name");
 
   if (error) throw new Error(error.message);
@@ -20,7 +20,7 @@ export async function fetchZoneById(
 ): Promise<ZoneWithStateProvinces> {
   const { data, error } = await supabase
     .from("Zones")
-    .select("*, state_provinces:ZoneStateProvinces(*)")
+    .select("*, state_provinces:ZoneStateProvinces(*), qbo_classes:ZoneQboClasses(*)")
     .eq("id", zoneId)
     .single();
 
@@ -33,11 +33,11 @@ export async function createZone(
   displayName: string,
   description: string | null,
   stateProvinces: string[],
-  qboClassId: string | null,
+  qboClassMappings: { connectionId: string; classId: string }[],
 ): Promise<string> {
   const { data: zone, error: zoneError } = await supabase
     .from("Zones")
-    .insert({ display_name: displayName, description, qbo_class_id: qboClassId })
+    .insert({ display_name: displayName, description })
     .select("id")
     .single();
 
@@ -54,6 +54,18 @@ export async function createZone(
     if (spError) throw new Error(spError.message);
   }
 
+  if (qboClassMappings.length > 0) {
+    const qboRows = qboClassMappings.map((m) => ({
+      zone_uuid: zone.id,
+      qbo_connection_uuid: m.connectionId,
+      qbo_class_id: m.classId,
+    }));
+
+    const { error: qboError } = await supabase.from("ZoneQboClasses").insert(qboRows);
+
+    if (qboError) throw new Error(qboError.message);
+  }
+
   return zone.id;
 }
 
@@ -63,11 +75,11 @@ export async function updateZone(
   displayName: string,
   description: string | null,
   stateProvinces: string[],
-  qboClassId: string | null,
+  qboClassMappings: { connectionId: string; classId: string }[],
 ): Promise<void> {
   const { error: zoneError } = await supabase
     .from("Zones")
-    .update({ display_name: displayName, description, qbo_class_id: qboClassId })
+    .update({ display_name: displayName, description })
     .eq("id", zoneId);
 
   if (zoneError) throw new Error(zoneError.message);
@@ -89,6 +101,26 @@ export async function updateZone(
     const { error: spError } = await supabase.from("ZoneStateProvinces").insert(rows);
 
     if (spError) throw new Error(spError.message);
+  }
+
+  // Delete existing QBO class mappings and re-insert
+  const { error: deleteQboError } = await supabase
+    .from("ZoneQboClasses")
+    .delete()
+    .eq("zone_uuid", zoneId);
+
+  if (deleteQboError) throw new Error(deleteQboError.message);
+
+  if (qboClassMappings.length > 0) {
+    const qboRows = qboClassMappings.map((m) => ({
+      zone_uuid: zoneId,
+      qbo_connection_uuid: m.connectionId,
+      qbo_class_id: m.classId,
+    }));
+
+    const { error: qboError } = await supabase.from("ZoneQboClasses").insert(qboRows);
+
+    if (qboError) throw new Error(qboError.message);
   }
 }
 

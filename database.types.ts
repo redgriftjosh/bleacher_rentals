@@ -628,18 +628,24 @@ export type Database = {
           },
         ]
       }
-      QboTokens: {
+      QboConnections: {
         Row: {
+          display_name: string
           encrypted_token_value: string
           id: string
+          realm_id: string | null
         }
         Insert: {
+          display_name: string
           encrypted_token_value: string
           id?: string
+          realm_id?: string | null
         }
         Update: {
+          display_name?: string
           encrypted_token_value?: string
           id?: string
+          realm_id?: string | null
         }
         Relationships: []
       }
@@ -916,6 +922,7 @@ export type Database = {
           id: string
           is_active: boolean
           logo_url: string | null
+          qbo_connection_uuid: string | null
           qbo_vendor_id: string | null
         }
         Insert: {
@@ -926,6 +933,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           logo_url?: string | null
+          qbo_connection_uuid?: string | null
           qbo_vendor_id?: string | null
         }
         Update: {
@@ -936,9 +944,18 @@ export type Database = {
           id?: string
           is_active?: boolean
           logo_url?: string | null
+          qbo_connection_uuid?: string | null
           qbo_vendor_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vendors_qbo_connection_uuid_fkey"
+            columns: ["qbo_connection_uuid"]
+            isOneToOne: false
+            referencedRelation: "QboConnections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       WorkTrackerGroups: {
         Row: {
@@ -1156,29 +1173,104 @@ export type Database = {
           },
         ]
       }
+      WorkTrackerTypeQboAccounts: {
+        Row: {
+          created_at: string
+          id: string
+          qbo_account_id: string
+          qbo_connection_uuid: string
+          work_tracker_type_uuid: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          qbo_account_id: string
+          qbo_connection_uuid: string
+          work_tracker_type_uuid: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          qbo_account_id?: string
+          qbo_connection_uuid?: string
+          work_tracker_type_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worktrackertypeqboaccounts_conn_fkey"
+            columns: ["qbo_connection_uuid"]
+            isOneToOne: false
+            referencedRelation: "QboConnections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "worktrackertypeqboaccounts_type_fkey"
+            columns: ["work_tracker_type_uuid"]
+            isOneToOne: false
+            referencedRelation: "WorkTrackerTypes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       WorkTrackerTypes: {
         Row: {
           created_at: string
           display_name: string
           id: string
-          qbo_category_id: number | null
           sort_order: number
         }
         Insert: {
           created_at?: string
           display_name: string
           id?: string
-          qbo_category_id?: number | null
           sort_order?: number
         }
         Update: {
           created_at?: string
           display_name?: string
           id?: string
-          qbo_category_id?: number | null
           sort_order?: number
         }
         Relationships: []
+      }
+      ZoneQboClasses: {
+        Row: {
+          created_at: string
+          id: string
+          qbo_class_id: string
+          qbo_connection_uuid: string
+          zone_uuid: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          qbo_class_id: string
+          qbo_connection_uuid: string
+          zone_uuid: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          qbo_class_id?: string
+          qbo_connection_uuid?: string
+          zone_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zoneqboclasses_qbo_connection_uuid_fkey"
+            columns: ["qbo_connection_uuid"]
+            isOneToOne: false
+            referencedRelation: "QboConnections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zoneqboclasses_zone_uuid_fkey"
+            columns: ["zone_uuid"]
+            isOneToOne: false
+            referencedRelation: "Zones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       Zones: {
         Row: {
@@ -1187,7 +1279,6 @@ export type Database = {
           display_name: string
           id: string
           photo_path: string | null
-          qbo_class_id: string | null
         }
         Insert: {
           created_at?: string
@@ -1195,7 +1286,6 @@ export type Database = {
           display_name: string
           id?: string
           photo_path?: string | null
-          qbo_class_id?: string | null
         }
         Update: {
           created_at?: string
@@ -1203,7 +1293,6 @@ export type Database = {
           display_name?: string
           id?: string
           photo_path?: string | null
-          qbo_class_id?: string | null
         }
         Relationships: []
       }

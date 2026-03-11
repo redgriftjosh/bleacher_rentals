@@ -1,13 +1,34 @@
+create table public."QboConnections" (
+  id uuid not null default gen_random_uuid (),
+  display_name text not null,
+  encrypted_token_value text not null,
+  realm_id text,
+  constraint QboConnections_pkey primary key (id),
+  constraint QboConnections_realm_id_unique unique (realm_id)
+);
+
+alter table public."QboConnections" enable row level security;
+
+create policy "Allow All for Auth"
+	on public."QboConnections"
+	as permissive
+	for all
+	to authenticated
+using (true)
+with check (true);
+
 create table public."Vendors" (
 	id uuid not null default gen_random_uuid (),
 	created_at timestamp with time zone not null default now(),
 	qbo_vendor_id text,
+	qbo_connection_uuid uuid,
 	display_name text not null,
 	is_active boolean not null default true,
 	logo_url text,
 	ein text constraint ein_must_be_9_digits check (ein ~ '^\d{9}$'),
   hst text constraint hst_formatting check (hst ~ '^\d{9}[A-Z]{2}\d{4}$'), -- must be 9 digits, then two letters, then 4 digits
-	constraint Vendors_pkey primary key (id)
+	constraint Vendors_pkey primary key (id),
+	constraint Vendors_qbo_connection_uuid_fkey foreign key (qbo_connection_uuid) references public."QboConnections" (id) on delete restrict
 );
 
 alter table public."Vendors" enable row level security;
@@ -30,22 +51,6 @@ alter table public."Drivers"
 
 create index if not exists "Drivers_vendor_uuid_idx"
 on public."Drivers" using btree (vendor_uuid);
-
-create table public."QboTokens" (
-  id uuid not null default gen_random_uuid (),
-  encrypted_token_value text not null,
-  constraint QboTokens_pkey primary key (id)
-);
-
-alter table public."QboTokens" enable row level security;
-
-create policy "Allow All for Auth"
-	on public."QboTokens"
-	as permissive
-	for all
-	to authenticated
-using (true)
-with check (true);
 
 -- Create vendor-logos storage bucket
 insert into storage.buckets (id, name, public)
@@ -233,7 +238,6 @@ create table public."Zones" (
   created_at timestamp with time zone not null default now(),
   display_name text not null,
   description text,
-  qbo_class_id text,
   photo_path text,
   constraint Zones_pkey primary key (id)
 );
@@ -270,6 +274,32 @@ create policy "Allow All for Auth"
 using (true)
 with check (true);
 
+-- Create ZoneQboClasses junction table (zone ↔ QBO class per connection)
+create table public."ZoneQboClasses" (
+  id uuid not null default gen_random_uuid(),
+  created_at timestamp with time zone not null default now(),
+  zone_uuid uuid not null,
+  qbo_connection_uuid uuid not null,
+  qbo_class_id text not null,
+  constraint ZoneQboClasses_pkey primary key (id),
+  constraint ZoneQboClasses_zone_uuid_fkey foreign key (zone_uuid) references public."Zones" (id) on delete cascade,
+  constraint ZoneQboClasses_qbo_connection_uuid_fkey foreign key (qbo_connection_uuid) references public."QboConnections" (id) on delete cascade,
+  constraint ZoneQboClasses_unique_zone_connection unique (zone_uuid, qbo_connection_uuid)
+);
+
+create index if not exists "ZoneQboClasses_zone_uuid_idx" on public."ZoneQboClasses" using btree (zone_uuid);
+create index if not exists "ZoneQboClasses_qbo_connection_uuid_idx" on public."ZoneQboClasses" using btree (qbo_connection_uuid);
+
+alter table public."ZoneQboClasses" enable row level security;
+
+create policy "Allow All for Auth"
+  on public."ZoneQboClasses"
+  as permissive
+  for all
+  to authenticated
+using (true)
+with check (true);
+
 -- Create zone-photos storage bucket
 insert into storage.buckets (id, name, public)
 values ('zone-photos', 'zone-photos', true)
@@ -280,7 +310,6 @@ create table public."WorkTrackerTypes" (
   id uuid not null default gen_random_uuid(),
   created_at timestamp with time zone not null default now(),
   display_name text not null,
-  qbo_category_id bigint,
   sort_order int not null default 0,
   constraint WorkTrackerTypes_pkey primary key (id)
 );
@@ -300,6 +329,32 @@ insert into public."WorkTrackerTypes" (display_name, sort_order) values
   ('Trip', 1),
   ('Repair/Maintenance', 2),
   ('Cleaning', 3);
+
+-- Create WorkTrackerTypeQboAccounts junction table (type ↔ QBO account per connection)
+create table public."WorkTrackerTypeQboAccounts" (
+  id uuid not null default gen_random_uuid(),
+  created_at timestamp with time zone not null default now(),
+  work_tracker_type_uuid uuid not null,
+  qbo_connection_uuid uuid not null,
+  qbo_account_id text not null,
+  constraint WorkTrackerTypeQboAccounts_pkey primary key (id),
+  constraint WorkTrackerTypeQboAccounts_type_fkey foreign key (work_tracker_type_uuid) references public."WorkTrackerTypes" (id) on delete cascade,
+  constraint WorkTrackerTypeQboAccounts_conn_fkey foreign key (qbo_connection_uuid) references public."QboConnections" (id) on delete cascade,
+  constraint WorkTrackerTypeQboAccounts_unique unique (work_tracker_type_uuid, qbo_connection_uuid)
+);
+
+create index if not exists "WorkTrackerTypeQboAccounts_type_idx" on public."WorkTrackerTypeQboAccounts" using btree (work_tracker_type_uuid);
+create index if not exists "WorkTrackerTypeQboAccounts_conn_idx" on public."WorkTrackerTypeQboAccounts" using btree (qbo_connection_uuid);
+
+alter table public."WorkTrackerTypeQboAccounts" enable row level security;
+
+create policy "Allow All for Auth"
+  on public."WorkTrackerTypeQboAccounts"
+  as permissive
+  for all
+  to authenticated
+using (true)
+with check (true);
 
 -- Add work_tracker_type_uuid to WorkTrackers
 alter table public."WorkTrackers"

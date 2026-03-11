@@ -26,7 +26,7 @@ export function ZoneCard({ zone, onEdit }: ZoneCardProps) {
         <div>
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold text-gray-900">{zone.display_name}</h3>
-            {!zone.qbo_class_id && (
+            {(!zone.qbo_classes || zone.qbo_classes.length === 0) && (
               <span
                 title="No QuickBooks class assigned"
                 className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-600 text-xs font-bold flex-shrink-0"

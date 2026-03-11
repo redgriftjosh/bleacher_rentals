@@ -8,8 +8,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const connectionId = req.nextUrl.searchParams.get("connectionId");
+  if (!connectionId) {
+    return NextResponse.json({ error: "connectionId is required" }, { status: 400 });
+  }
+
   try {
-    const { accessToken, realmId } = await getQboAccessTokenAndRealmId();
+    const { accessToken, realmId } = await getQboAccessTokenAndRealmId(connectionId);
     const baseUrl = getBaseUrl();
 
     // Fetch all active expense-type accounts

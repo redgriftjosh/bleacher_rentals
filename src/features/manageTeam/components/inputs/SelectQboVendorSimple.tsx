@@ -21,12 +21,14 @@ import { cn } from "@/lib/utils";
 type SelectQboVendorSimpleProps = {
   value: string | null;
   onChange: (vendorId: string | null) => void;
+  connectionId: string | null;
   placeholder?: string;
 };
 
 export function SelectQboVendorSimple({
   value,
   onChange,
+  connectionId,
   placeholder = "Select QuickBooks Vendor...",
 }: SelectQboVendorSimpleProps) {
   const [open, setOpen] = useState(false);
@@ -37,8 +39,9 @@ export function SelectQboVendorSimple({
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["qbo-vendors"],
-    queryFn: fetchQboVendors,
+    queryKey: ["qbo-vendors", connectionId],
+    queryFn: () => fetchQboVendors(connectionId!),
+    enabled: !!connectionId,
     staleTime: 0,
     gcTime: Infinity,
     refetchOnMount: true,
@@ -59,6 +62,14 @@ export function SelectQboVendorSimple({
 
   if (error) {
     return <QboConnectionError />;
+  }
+
+  if (!connectionId) {
+    return (
+      <Button variant="outline" className="w-full justify-between text-left font-normal" disabled>
+        <span className="text-gray-400">Select a QBO connection first</span>
+      </Button>
+    );
   }
 
   return (

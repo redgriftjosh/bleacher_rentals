@@ -13,6 +13,8 @@ import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient"
 import { SelectQboVendorSimple } from "@/features/manageTeam/components/inputs/SelectQboVendorSimple";
 import { EinInput } from "@/features/manageTeam/components/inputs/EinInput";
 import { HstInput } from "@/features/manageTeam/components/inputs/HstInput";
+import { fetchQboConnections, QboConnection } from "@/features/quickbooks-integration/api";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +36,7 @@ type EditVendorModalProps = {
     displayName: string;
     logoUrl: string | null;
     qboVendorId: string | null;
+    qboConnectionUuid: string | null;
     ein: string | null;
     hst: string | null;
   } | null;
@@ -49,6 +52,7 @@ export function EditVendorModal({
   const supabase = useClerkSupabaseClient();
   const [displayName, setDisplayName] = useState("");
   const [qboVendorId, setQboVendorId] = useState<string | null>(null);
+  const [qboConnectionUuid, setQboConnectionUuid] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -61,11 +65,17 @@ export function EditVendorModal({
 
   const isEditMode = !!existingVendor;
 
+  const { data: qboConnections = [] } = useQuery({
+    queryKey: ["qbo-connections"],
+    queryFn: fetchQboConnections,
+  });
+
   // Initialize form with existing vendor data
   useEffect(() => {
     if (existingVendor) {
       setDisplayName(existingVendor.displayName);
       setQboVendorId(existingVendor.qboVendorId);
+      setQboConnectionUuid(existingVendor.qboConnectionUuid);
       setLogoUrl(existingVendor.logoUrl);
       setLogoPreview(existingVendor.logoUrl);
       setEin(existingVendor.ein || "");
@@ -73,6 +83,7 @@ export function EditVendorModal({
     } else {
       setDisplayName("");
       setQboVendorId(null);
+      setQboConnectionUuid(null);
       setLogoUrl(null);
       setLogoPreview(null);
       setLogoFile(null);
@@ -166,6 +177,7 @@ export function EditVendorModal({
           .set({
             display_name: displayName,
             qbo_vendor_id: qboVendorId,
+            qbo_connection_uuid: qboConnectionUuid,
             logo_url: finalLogoUrl,
             ein: ein.replace(/\D/g, "") || null,
             hst: hst || null,
@@ -188,6 +200,7 @@ export function EditVendorModal({
             id: newId,
             display_name: displayName,
             qbo_vendor_id: qboVendorId,
+            qbo_connection_uuid: qboConnectionUuid,
             logo_url: finalLogoUrl,
             is_active: 1,
             created_at: new Date().toISOString(),
@@ -261,16 +274,45 @@ export function EditVendorModal({
               />
             </div>
 
-            {/* QuickBooks Vendor Mapping */}
+            {/* QuickBooks Connection + Vendor Mapping */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                QuickBooks Vendor{" "}
+                QuickBooks Connection{" "}
                 <span className="text-amber-600 font-semibold text-xs">
                   ⚠ Strongly recommended — required for bill creation
                 </span>
               </label>
-              <SelectQboVendorSimple value={qboVendorId} onChange={setQboVendorId} />
-              {!qboVendorId && (
+              <select
+                value={qboConnectionUuid || ""}
+                onChange={(e) => {
+                  setQboConnectionUuid(e.target.value || null);
+                  setQboVendorId(null); // reset vendor when connection changes
+                }}
+                className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-greenAccent"
+              >
+                <option value="">Select a connection...</option>
+                {qboConnections.map((conn) => (
+                  <option key={conn.id} value={conn.id}>
+                    {conn.display_name}
+                  </option>
+                ))}
+              </select>
+              {!qboConnectionUuid && (
+                <p className="text-xs text-amber-600">
+                  Without a QuickBooks connection, bills cannot be created for this vendor's
+                  drivers.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">QuickBooks Vendor</label>
+              <SelectQboVendorSimple
+                value={qboVendorId}
+                onChange={setQboVendorId}
+                connectionId={qboConnectionUuid}
+              />
+              {qboConnectionUuid && !qboVendorId && (
                 <p className="text-xs text-amber-600">
                   Without a QuickBooks vendor, bills cannot be created for this vendor's drivers.
                 </p>

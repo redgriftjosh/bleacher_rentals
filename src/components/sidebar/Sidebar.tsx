@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { SideNavButton } from "./SideNavButton";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
+import { QuickBooksIcon } from "@/components/Icons";
 
 const SideBar = () => {
   const { user } = useUser();
@@ -78,6 +79,12 @@ const SideBar = () => {
           label="Zone Manager"
           href="/zones"
           icon={MapPinned}
+          roles={[USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN]}
+        />
+        <SideNavButton
+          label="QuickBooks"
+          href="/quickbooks"
+          icon={QuickBooksIcon}
           roles={[USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN]}
         />
       </nav>

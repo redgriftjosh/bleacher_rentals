@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { getQboTokens, setQboTokens } from "./db";
-import { oauthClient } from "./oauthClient";
+import OAuthClient from "intuit-oauth-ts";
 
 const ENCRYPTION_KEY = process.env.QBO_TOKEN_ENCRYPTION_KEY!; // Generate random 32-byte key and set as env variable, e.g. in terminal run node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 const IV_LENGTH = 16; // AES block size
@@ -27,44 +27,63 @@ function decrypt(data: string): string {
   return decrypted;
 }
 
-export async function saveTokens(token: any) {
+export async function saveTokens(connectionId: string, token: any) {
   const json = JSON.stringify(token);
   const encrypted = encrypt(json);
-  await setQboTokens(encrypted);
+  await setQboTokens(connectionId, encrypted);
 }
 
-export async function loadTokens() {
-  const encrypted = await getQboTokens();
+export async function loadTokens(connectionId: string) {
+  const encrypted = await getQboTokens(connectionId);
   console.log("encrypted: ", encrypted);
-  const json = decrypt(encrypted ?? "");
+  if (!encrypted || encrypted === "__pending__") return null;
+  const json = decrypt(encrypted);
   console.log("json: ", json);
   return JSON.parse(json);
 }
 
-export async function getQboAccessTokenAndRealmId(): Promise<{
+/**
+ * Creates a fresh OAuthClient instance (not a singleton—each connection may have different tokens).
+ */
+export function createOAuthClient(): OAuthClient {
+  return new OAuthClient({
+    clientId: process.env.QBO_CLIENT_ID!,
+    clientSecret: process.env.QBO_CLIENT_SECRET!,
+    environment: process.env.QBO_ENVIRONMENT as "sandbox" | "production",
+    redirectUri: process.env.QBO_REDIRECT_URI!,
+  });
+}
+
+export async function getQboAccessTokenAndRealmId(connectionId: string): Promise<{
   accessToken: string;
   realmId: string;
 }> {
+  const client = createOAuthClient();
+
+  const prevTokens = await loadTokens(connectionId);
+  if (!prevTokens) throw new Error("No tokens found for this QBO connection");
+
+  client.setToken(prevTokens);
+
   // Refresh if needed
-  if (!oauthClient.isAccessTokenValid()) {
+  if (!client.isAccessTokenValid()) {
     try {
-      console.log("Refreshing tokens...");
-      const prevTokens = await loadTokens();
-      console.log("prevTokens: ", prevTokens);
-      oauthClient.setToken(prevTokens);
-      const refreshResponse = await oauthClient.refresh();
+      console.log("Refreshing tokens for connection:", connectionId);
+      const refreshResponse = await client.refresh();
       console.log("refreshResponse.getJson(): ", refreshResponse.getJson());
       const tokens = {
         ...refreshResponse.getJson(),
         realmId: prevTokens?.realmId, // preserve existing
       };
-      await saveTokens(tokens);
+      await saveTokens(connectionId, tokens);
+      client.setToken(tokens as any);
     } catch (e: any) {
       console.error("Failed to refresh tokens:", e.originalMessage || e.message);
       throw e;
     }
   }
-  const token = oauthClient.getToken();
+
+  const token = client.getToken();
   const accessToken = token.access_token;
   const realmId = token.realmId;
   if (!accessToken || !realmId) throw new Error("Missing accessToken or realmId");

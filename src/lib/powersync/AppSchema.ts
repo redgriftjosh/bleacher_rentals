@@ -275,6 +275,7 @@ const ScorecardTargets = new Table(ScorecardTargetsCols, {
 const VendorsCols = {
   created_at: column.text,
   qbo_vendor_id: column.text,
+  qbo_connection_uuid: column.text,
   display_name: column.text,
   is_active: column.integer,
   logo_url: column.text,

@@ -12,13 +12,21 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const billId = searchParams.get("billId");
+    const connectionId = searchParams.get("connectionId");
 
     if (!billId) {
       return NextResponse.json({ error: "Missing required parameter: billId" }, { status: 400 });
     }
 
+    if (!connectionId) {
+      return NextResponse.json(
+        { error: "Missing required parameter: connectionId" },
+        { status: 400 },
+      );
+    }
+
     // Get QuickBooks credentials
-    const { accessToken, realmId } = await getQboAccessTokenAndRealmId();
+    const { accessToken, realmId } = await getQboAccessTokenAndRealmId(connectionId);
     const baseUrl = getBaseUrl();
 
     // Fetch the bill from QuickBooks

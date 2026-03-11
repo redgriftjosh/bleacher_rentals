@@ -30,6 +30,7 @@ export function VendorSelection({ value, onChange, driverType }: VendorSelection
     displayName: string;
     logoUrl: string | null;
     qboVendorId: string | null;
+    qboConnectionUuid: string | null;
     ein: string | null;
     hst: string | null;
   } | null>(null);
@@ -46,6 +47,7 @@ export function VendorSelection({ value, onChange, driverType }: VendorSelection
       displayName: vendor.displayName,
       logoUrl: vendor.logoUrl,
       qboVendorId: vendor.qboVendorId,
+      qboConnectionUuid: vendor.qboConnectionUuid ?? null,
       ein: vendor.ein,
       hst: vendor.hst,
     });

@@ -6,6 +6,13 @@ import { ABBREV_TO_NAME, NAME_TO_ABBREV } from "./mapData";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { ZoneWithStateProvinces } from "../_lib/types";
 import { SelectQboClassSimple } from "@/features/quickbooks-integration/components/SelectQboClassSimple";
+import { fetchQboConnections, QboConnection } from "@/features/quickbooks-integration/api";
+import { useQuery } from "@tanstack/react-query";
+
+export type ZoneQboClassMapping = {
+  connectionId: string;
+  classId: string;
+};
 
 /** Generate a cropped PNG blob of the selected map regions */
 function generateMapBlob(
@@ -111,7 +118,7 @@ interface ZoneFormProps {
     description: string | null,
     stateProvinces: string[],
     mapImageBlob: Blob | null,
-    qboClassId: string | null,
+    qboClassMappings: ZoneQboClassMapping[],
   ) => Promise<void>;
   onCancel: () => void;
   saving: boolean;
@@ -128,7 +135,22 @@ export function ZoneForm({ zone, unavailableRegions, onSave, onCancel, saving }:
           [],
       ),
   );
-  const [qboClassId, setQboClassId] = useState<string | null>(zone?.qbo_class_id ?? null);
+
+  // Per-connection QBO class mappings: { [connectionId]: classId | null }
+  const [qboClassMap, setQboClassMap] = useState<Record<string, string | null>>(() => {
+    const map: Record<string, string | null> = {};
+    if (zone?.qbo_classes) {
+      for (const qc of zone.qbo_classes) {
+        map[qc.qbo_connection_uuid] = qc.qbo_class_id;
+      }
+    }
+    return map;
+  });
+
+  const { data: qboConnections = [] } = useQuery<QboConnection[]>({
+    queryKey: ["qbo-connections"],
+    queryFn: fetchQboConnections,
+  });
 
   const handleToggleRegion = useCallback((regionId: string) => {
     setSelectedRegions((prev) => {
@@ -160,7 +182,9 @@ export function ZoneForm({ zone, unavailableRegions, onSave, onCancel, saving }:
       description.trim() || null,
       Array.from(selectedRegions).map((abbrev) => ABBREV_TO_NAME[abbrev] ?? abbrev),
       blob,
-      qboClassId,
+      Object.entries(qboClassMap)
+        .filter((entry): entry is [string, string] => entry[1] != null && entry[1] !== "")
+        .map(([connectionId, classId]) => ({ connectionId, classId })),
     );
   };
 
@@ -202,13 +226,23 @@ export function ZoneForm({ zone, unavailableRegions, onSave, onCancel, saving }:
             />
           </div>
 
-          {/* QuickBooks Class */}
-          <div>
-            <label htmlFor="qboClass" className="block text-sm font-medium text-gray-700 mb-1">
-              QuickBooks Class
-            </label>
-            <SelectQboClassSimple value={qboClassId} onChange={setQboClassId} warnWhenEmpty />
-          </div>
+          {/* QuickBooks Classes (per connection) */}
+          {qboConnections.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-gray-700">QuickBooks Classes</p>
+              {qboConnections.map((conn) => (
+                <div key={conn.id}>
+                  <label className="block text-xs text-gray-500 mb-1">{conn.display_name}</label>
+                  <SelectQboClassSimple
+                    connectionId={conn.id}
+                    value={qboClassMap[conn.id] ?? null}
+                    onChange={(val) => setQboClassMap((prev) => ({ ...prev, [conn.id]: val }))}
+                    warnWhenEmpty
+                  />
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Selected regions list */}
           <div>

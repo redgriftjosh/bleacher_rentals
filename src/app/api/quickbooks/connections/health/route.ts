@@ -2,6 +2,9 @@ import { getBaseUrl, getQboAccessTokenAndRealmId } from "@/features/quickbooks-i
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Checks whether a QBO connection is healthy by making a lightweight API call.
+ */
 export async function GET(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) {
@@ -17,7 +20,8 @@ export async function GET(req: NextRequest) {
     const { accessToken, realmId } = await getQboAccessTokenAndRealmId(connectionId);
     const baseUrl = getBaseUrl();
 
-    const query = encodeURIComponent("select * from Class where Active = true");
+    // Lightweight query to verify the connection works
+    const query = encodeURIComponent("select count(*) from CompanyInfo");
     const url = `${baseUrl}/${realmId}/query?query=${query}&minorversion=40`;
 
     const response = await fetch(url, {
@@ -28,24 +32,14 @@ export async function GET(req: NextRequest) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
-      console.error("QuickBooks API error:", errorData);
-      return NextResponse.json({ error: errorData }, { status: response.status });
+      return NextResponse.json(
+        { healthy: false, error: "QBO API returned error" },
+        { status: 200 },
+      );
     }
 
-    const data = await response.json();
-
-    const classes = data.QueryResponse?.Class || [];
-    const formattedClasses = classes.map((cls: any) => ({
-      id: cls.Id,
-      name: cls.Name,
-      fullyQualifiedName: cls.FullyQualifiedName,
-      active: cls.Active,
-    }));
-
-    return NextResponse.json({ classes: formattedClasses });
+    return NextResponse.json({ healthy: true });
   } catch (error: any) {
-    console.error("QuickBooks classes error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ healthy: false, error: error.message }, { status: 200 });
   }
 }

@@ -20,12 +20,14 @@ import { cn } from "@/lib/utils";
 type SelectQboAccountSimpleProps = {
   value: string | null;
   onChange: (accountId: string | null) => void;
+  connectionId: string;
   placeholder?: string;
 };
 
 export function SelectQboAccountSimple({
   value,
   onChange,
+  connectionId,
   placeholder = "Select QuickBooks Account...",
 }: SelectQboAccountSimpleProps) {
   const [open, setOpen] = useState(false);
@@ -36,8 +38,8 @@ export function SelectQboAccountSimple({
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["qbo-accounts"],
-    queryFn: fetchQboAccounts,
+    queryKey: ["qbo-accounts", connectionId],
+    queryFn: () => fetchQboAccounts(connectionId),
     staleTime: 0,
     gcTime: Infinity,
     refetchOnMount: true,
