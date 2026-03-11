@@ -2,6 +2,7 @@ import {
   getAllQboConnections,
   createQboConnectionPlaceholder,
   deleteQboConnection,
+  updateQboConnectionDisplayName,
 } from "@/features/quickbooks-integration/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -59,6 +60,31 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Failed to delete QBO connection:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json();
+    const { connectionId, displayName } = body;
+
+    if (!connectionId) {
+      return NextResponse.json({ error: "connectionId is required" }, { status: 400 });
+    }
+    if (!displayName?.trim()) {
+      return NextResponse.json({ error: "displayName is required" }, { status: 400 });
+    }
+
+    await updateQboConnectionDisplayName(connectionId, displayName.trim());
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("Failed to update QBO connection:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

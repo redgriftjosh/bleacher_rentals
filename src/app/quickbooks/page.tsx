@@ -7,6 +7,7 @@ import {
   createQboConnectionApi,
   deleteQboConnectionApi,
   checkQboConnectionHealth,
+  renameQboConnectionApi,
 } from "@/features/quickbooks-integration/api";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +38,9 @@ import {
   Trash2,
   LogIn,
   AlertTriangle,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 
@@ -53,6 +57,8 @@ export default function QuickBooksPage() {
   const [healthMap, setHealthMap] = useState<Record<string, ConnectionHealth>>({});
   const [deleteConnectionId, setDeleteConnectionId] = useState<string | null>(null);
   const [callbackError, setCallbackError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
 
   // Show error from callback redirect (e.g. duplicate company)
   useEffect(() => {
@@ -118,6 +124,22 @@ export default function QuickBooksPage() {
     window.location.href = `/api/quickbooks/auth?connectionId=${encodeURIComponent(connectionId)}`;
   };
 
+  const handleStartEdit = (conn: { id: string; display_name: string }) => {
+    setEditingId(conn.id);
+    setEditingName(conn.display_name);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editingName.trim()) return;
+    try {
+      await renameQboConnectionApi(editingId, editingName.trim());
+      await queryClient.invalidateQueries({ queryKey: ["qbo-connections"] });
+      setEditingId(null);
+    } catch (error) {
+      createErrorToast(["Failed to rename connection", String(error)]);
+    }
+  };
+
   const getHealthIndicator = (connectionId: string) => {
     const health = healthMap[connectionId];
     if (!health || health.status === "idle") return null;
@@ -180,7 +202,42 @@ export default function QuickBooksPage() {
               className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
             >
               <div className="flex items-center gap-3">
-                <span className="font-medium text-sm">{conn.display_name}</span>
+                {editingId === conn.id ? (
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSaveEdit();
+                        if (e.key === "Escape") setEditingId(null);
+                      }}
+                      className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-greenAccent"
+                      autoFocus
+                    />
+                    <button
+                      onClick={handleSaveEdit}
+                      disabled={!editingName.trim()}
+                      className="p-1 rounded hover:bg-green-50 text-green-600 disabled:opacity-30"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="p-1 rounded hover:bg-gray-100 text-gray-400"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <span
+                    className="font-medium text-sm cursor-pointer hover:underline inline-flex items-center gap-1.5 group"
+                    onClick={() => handleStartEdit(conn)}
+                  >
+                    {conn.display_name}
+                    <Pencil className="h-3 w-3 text-gray-300 group-hover:text-gray-500" />
+                  </span>
+                )}
                 {conn.realm_id && (
                   <span className="text-xs text-gray-400">Company ID: {conn.realm_id}</span>
                 )}

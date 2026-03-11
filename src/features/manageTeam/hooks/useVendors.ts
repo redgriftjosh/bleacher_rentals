@@ -41,7 +41,16 @@ export function useVendors(includeInactive: boolean = false) {
   const vendorQuery = useMemo(() => {
     let query = db
       .selectFrom("Vendors")
-      .select(["id", "display_name", "logo_url", "qbo_vendor_id", "qbo_connection_uuid", "is_active", "ein", "hst"])
+      .select([
+        "id",
+        "display_name",
+        "logo_url",
+        "qbo_vendor_id",
+        "qbo_connection_uuid",
+        "is_active",
+        "ein",
+        "hst",
+      ])
       .orderBy("display_name", "asc");
 
     if (!includeInactive) {

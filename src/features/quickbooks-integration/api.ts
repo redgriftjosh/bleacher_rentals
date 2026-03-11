@@ -135,6 +135,25 @@ export async function deleteQboConnectionApi(connectionId: string): Promise<void
 }
 
 /**
+ * Renames a QBO connection's display name.
+ */
+export async function renameQboConnectionApi(
+  connectionId: string,
+  displayName: string,
+): Promise<void> {
+  const response = await fetch("/api/quickbooks/connections", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ connectionId, displayName }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Failed to rename connection" }));
+    throw new Error(error.error || "Failed to rename connection");
+  }
+}
+
+/**
  * Checks health of a QBO connection.
  */
 export async function checkQboConnectionHealth(

@@ -97,6 +97,26 @@ export async function deleteQboConnection(connectionId: string): Promise<void> {
 }
 
 /**
+ * Updates the display_name of a QBO connection.
+ */
+export async function updateQboConnectionDisplayName(
+  connectionId: string,
+  displayName: string,
+): Promise<void> {
+  const supabase = await createServiceRoleClient();
+
+  const { error } = await supabase
+    .from("QboConnections")
+    .update({ display_name: displayName })
+    .eq("id", connectionId);
+
+  if (error) {
+    console.error("Failed to update QBO connection display name:", error);
+    throw new Error(`Failed to update display name: ${error.message}`);
+  }
+}
+
+/**
  * Fetches all QBO connections (id, display_name, realm_id — no tokens).
  */
 export async function getAllQboConnections(): Promise<
