@@ -20,6 +20,7 @@ type WorkTrackerGroupModalProps = {
   driverUuid: string;
   driverName: string;
   startDate: string;
+  connectionId?: string;
   groupData?: {
     id: string;
     status: Database["public"]["Enums"]["worktracker_group_status"];
@@ -39,6 +40,7 @@ export function WorkTrackerGroupModal({
   driverUuid,
   driverName,
   startDate,
+  connectionId,
   groupData,
 }: WorkTrackerGroupModalProps) {
   const supabase = useClerkSupabaseClient();
@@ -313,7 +315,7 @@ export function WorkTrackerGroupModal({
           <div className="py-4 space-y-6">
             {/* Show Bill Preview if bill created */}
             {currentStatus === "qbo_bill_created" && groupData?.qbo_bill_id && (
-              <QboBillPreview billId={groupData.qbo_bill_id} />
+              <QboBillPreview billId={groupData.qbo_bill_id} connectionId={connectionId} />
             )}
 
             {/* Show Error Message if error */}

@@ -3,6 +3,7 @@ import {
   createQboConnectionPlaceholder,
   deleteQboConnection,
   updateQboConnectionDisplayName,
+  updateQboConnectionTaxCode,
 } from "@/features/quickbooks-integration/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -77,6 +78,13 @@ export async function PATCH(req: NextRequest) {
     if (!connectionId) {
       return NextResponse.json({ error: "connectionId is required" }, { status: 400 });
     }
+
+    // Handle tax code update
+    if ("taxCodeId" in body) {
+      await updateQboConnectionTaxCode(connectionId, body.taxCodeId ?? null);
+      return NextResponse.json({ success: true });
+    }
+
     if (!displayName?.trim()) {
       return NextResponse.json({ error: "displayName is required" }, { status: 400 });
     }

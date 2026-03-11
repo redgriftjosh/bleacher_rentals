@@ -3,6 +3,7 @@ create table public."QboConnections" (
   display_name text not null,
   encrypted_token_value text not null,
   realm_id text,
+  qbo_tax_code_id text,
   constraint QboConnections_pkey primary key (id),
   constraint QboConnections_realm_id_unique unique (realm_id)
 );

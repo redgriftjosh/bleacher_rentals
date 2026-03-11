@@ -117,16 +117,16 @@ export async function updateQboConnectionDisplayName(
 }
 
 /**
- * Fetches all QBO connections (id, display_name, realm_id — no tokens).
+ * Fetches all QBO connections (id, display_name, realm_id, qbo_tax_code_id — no tokens).
  */
 export async function getAllQboConnections(): Promise<
-  { id: string; display_name: string; realm_id: string | null }[]
+  { id: string; display_name: string; realm_id: string | null; qbo_tax_code_id: string | null }[]
 > {
   const supabase = await createServiceRoleClient();
 
   const { data, error } = await supabase
     .from("QboConnections")
-    .select("id, display_name, realm_id")
+    .select("id, display_name, realm_id, qbo_tax_code_id")
     .order("display_name");
 
   if (error) {
@@ -135,6 +135,26 @@ export async function getAllQboConnections(): Promise<
   }
 
   return data ?? [];
+}
+
+/**
+ * Sets the default tax code for a QBO connection.
+ */
+export async function updateQboConnectionTaxCode(
+  connectionId: string,
+  taxCodeId: string | null,
+): Promise<void> {
+  const supabase = await createServiceRoleClient();
+
+  const { error } = await supabase
+    .from("QboConnections")
+    .update({ qbo_tax_code_id: taxCodeId })
+    .eq("id", connectionId);
+
+  if (error) {
+    console.error("Failed to update QBO connection tax code:", error);
+    throw new Error(`Failed to update tax code: ${error.message}`);
+  }
 }
 
 /**

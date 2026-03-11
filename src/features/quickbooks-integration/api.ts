@@ -81,6 +81,14 @@ export type QboConnection = {
   id: string;
   display_name: string;
   realm_id: string | null;
+  qbo_tax_code_id: string | null;
+};
+
+export type QboTaxCode = {
+  id: string;
+  name: string;
+  description: string | null;
+  taxable: boolean;
 };
 
 /**
@@ -168,4 +176,40 @@ export async function checkQboConnectionHealth(
   }
 
   return response.json();
+}
+
+/**
+ * Fetches active tax codes from QuickBooks for a specific connection.
+ */
+export async function fetchQboTaxCodes(connectionId: string): Promise<QboTaxCode[]> {
+  const response = await fetch(
+    `/api/quickbooks/tax-codes?connectionId=${encodeURIComponent(connectionId)}`,
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Failed to fetch tax codes" }));
+    throw new Error(error.error || "Failed to fetch tax codes");
+  }
+
+  const data = await response.json();
+  return data.taxCodes || [];
+}
+
+/**
+ * Sets the default tax code for a QBO connection.
+ */
+export async function setQboConnectionTaxCodeApi(
+  connectionId: string,
+  taxCodeId: string | null,
+): Promise<void> {
+  const response = await fetch("/api/quickbooks/connections", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ connectionId, taxCodeId }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Failed to set tax code" }));
+    throw new Error(error.error || "Failed to set tax code");
+  }
 }

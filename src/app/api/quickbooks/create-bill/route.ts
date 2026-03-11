@@ -75,6 +75,14 @@ export async function POST(req: NextRequest) {
 
     const connectionId = vendor.qbo_connection_uuid;
 
+    // Fetch connection's default tax code
+    const { data: connectionRow } = await supabase
+      .from("QboConnections")
+      .select("qbo_tax_code_id")
+      .eq("id", connectionId)
+      .single();
+    const defaultTaxCodeId = connectionRow?.qbo_tax_code_id ?? "NON";
+
     // Fetch work trackers for this driver and week with address info
     const { data: workTrackers, error: wtError } = await supabase
       .from("WorkTrackers")
@@ -243,6 +251,7 @@ export async function POST(req: NextRequest) {
           AccountRef: {
             value: accountId!,
           },
+          TaxCodeRef: { value: defaultTaxCodeId },
           ...(classId ? { ClassRef: { value: classId } } : {}),
         },
       };
@@ -260,6 +269,7 @@ export async function POST(req: NextRequest) {
       Line: lineItems,
       TxnDate: billDate,
       DocNumber: billNumber,
+      GlobalTaxCalculation: "TaxExcluded",
     };
 
     console.log("Creating bill with payload:", JSON.stringify(billPayload, null, 2));
@@ -276,7 +286,7 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
-      console.error("QuickBooks API error:", errorData);
+      console.error("QuickBooks API error:", JSON.stringify(errorData, null, 2));
 
       // Update WorkTrackerGroup status to error
       if (workTrackerGroupId) {

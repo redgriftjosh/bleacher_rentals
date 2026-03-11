@@ -9,6 +9,7 @@ import { DateTime } from "luxon";
 
 type QboBillPreviewProps = {
   billId: string;
+  connectionId?: string;
 };
 
 type BillData = {
@@ -36,7 +37,7 @@ type BillData = {
   balance: number;
 };
 
-export function QboBillPreview({ billId }: QboBillPreviewProps) {
+export function QboBillPreview({ billId, connectionId }: QboBillPreviewProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [billData, setBillData] = useState<BillData | null>(null);
 
@@ -46,7 +47,8 @@ export function QboBillPreview({ billId }: QboBillPreviewProps) {
     async function fetchBillData() {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/quickbooks/get-bill?billId=${billId}`);
+        const url = `/api/quickbooks/get-bill?billId=${billId}${connectionId ? `&connectionId=${encodeURIComponent(connectionId)}` : ""}`;
+        const response = await fetch(url);
 
         if (!response.ok) {
           const errorData = await response.json();

@@ -633,18 +633,21 @@ export type Database = {
           display_name: string
           encrypted_token_value: string
           id: string
+          qbo_tax_code_id: string | null
           realm_id: string | null
         }
         Insert: {
           display_name: string
           encrypted_token_value: string
           id?: string
+          qbo_tax_code_id?: string | null
           realm_id?: string | null
         }
         Update: {
           display_name?: string
           encrypted_token_value?: string
           id?: string
+          qbo_tax_code_id?: string | null
           realm_id?: string | null
         }
         Relationships: []

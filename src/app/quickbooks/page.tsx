@@ -8,6 +8,9 @@ import {
   deleteQboConnectionApi,
   checkQboConnectionHealth,
   renameQboConnectionApi,
+  fetchQboTaxCodes,
+  setQboConnectionTaxCodeApi,
+  type QboTaxCode,
 } from "@/features/quickbooks-integration/api";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,6 +58,7 @@ export default function QuickBooksPage() {
   const [newDisplayName, setNewDisplayName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [healthMap, setHealthMap] = useState<Record<string, ConnectionHealth>>({});
+  const [taxCodesMap, setTaxCodesMap] = useState<Record<string, QboTaxCode[]>>({});
   const [deleteConnectionId, setDeleteConnectionId] = useState<string | null>(null);
   const [callbackError, setCallbackError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -93,6 +97,12 @@ export default function QuickBooksPage() {
           ? { status: "healthy" }
           : { status: "error", error: result.error },
       }));
+      // Load tax codes once we confirm the connection is healthy
+      if (result.healthy && !taxCodesMap[connectionId]) {
+        fetchQboTaxCodes(connectionId)
+          .then((codes) => setTaxCodesMap((prev) => ({ ...prev, [connectionId]: codes })))
+          .catch(() => {});
+      }
     } catch {
       setHealthMap((prev) => ({
         ...prev,
@@ -145,6 +155,15 @@ export default function QuickBooksPage() {
       setEditingId(null);
     } catch (error) {
       createErrorToast(["Failed to rename connection", String(error)]);
+    }
+  };
+
+  const handleTaxCodeChange = async (connectionId: string, taxCodeId: string) => {
+    try {
+      await setQboConnectionTaxCodeApi(connectionId, taxCodeId || null);
+      await queryClient.invalidateQueries({ queryKey: ["qbo-connections"] });
+    } catch (error) {
+      createErrorToast(["Failed to update tax code", String(error)]);
     }
   };
 
@@ -207,72 +226,100 @@ export default function QuickBooksPage() {
           {connections.map((conn) => (
             <div
               key={conn.id}
-              className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+              className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
             >
-              <div className="flex items-center gap-3">
-                {editingId === conn.id ? (
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="text"
-                      value={editingName}
-                      onChange={(e) => setEditingName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleSaveEdit();
-                        if (e.key === "Escape") setEditingId(null);
-                      }}
-                      className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-greenAccent"
-                      autoFocus
-                    />
-                    <button
-                      onClick={handleSaveEdit}
-                      disabled={!editingName.trim()}
-                      className="p-1 rounded hover:bg-green-50 text-green-600 disabled:opacity-30"
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {editingId === conn.id ? (
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSaveEdit();
+                          if (e.key === "Escape") setEditingId(null);
+                        }}
+                        className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-greenAccent"
+                        autoFocus
+                      />
+                      <button
+                        onClick={handleSaveEdit}
+                        disabled={!editingName.trim()}
+                        className="p-1 rounded hover:bg-green-50 text-green-600 disabled:opacity-30"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        className="p-1 rounded hover:bg-gray-100 text-gray-400"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <span
+                      className="font-medium text-sm cursor-pointer hover:underline inline-flex items-center gap-1.5 group"
+                      onClick={() => handleStartEdit(conn)}
                     >
-                      <Check className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setEditingId(null)}
-                      className="p-1 rounded hover:bg-gray-100 text-gray-400"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ) : (
-                  <span
-                    className="font-medium text-sm cursor-pointer hover:underline inline-flex items-center gap-1.5 group"
-                    onClick={() => handleStartEdit(conn)}
+                      {conn.display_name}
+                      <Pencil className="h-3 w-3 text-gray-300 group-hover:text-gray-500" />
+                    </span>
+                  )}
+                  {conn.realm_id && (
+                    <span className="text-xs text-gray-400">Company ID: {conn.realm_id}</span>
+                  )}
+                  {getHealthIndicator(conn.id)}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCheckHealth(conn.id)}
+                    disabled={healthMap[conn.id]?.status === "loading"}
                   >
-                    {conn.display_name}
-                    <Pencil className="h-3 w-3 text-gray-300 group-hover:text-gray-500" />
+                    <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                    Check
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => handleReauthenticate(conn.id)}>
+                    <LogIn className="h-3.5 w-3.5 mr-1" />
+                    Re-authenticate
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => setDeleteConnectionId(conn.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+              {/* Tax Code Row */}
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-xs text-gray-400 w-28 shrink-0">Default Tax Code</span>
+                {taxCodesMap[conn.id] ? (
+                  <select
+                    value={conn.qbo_tax_code_id ?? ""}
+                    onChange={(e) => handleTaxCodeChange(conn.id, e.target.value)}
+                    className="rounded border border-gray-300 px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-greenAccent"
+                  >
+                    <option value="">— none —</option>
+                    {taxCodesMap[conn.id].map((tc) => (
+                      <option key={tc.id} value={tc.id}>
+                        {tc.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="text-xs text-gray-400 italic">
+                    {conn.qbo_tax_code_id
+                      ? conn.qbo_tax_code_id
+                      : healthMap[conn.id]?.status === "healthy"
+                        ? "Loading…"
+                        : "Check connection to load tax codes"}
                   </span>
                 )}
-                {conn.realm_id && (
-                  <span className="text-xs text-gray-400">Company ID: {conn.realm_id}</span>
-                )}
-                {getHealthIndicator(conn.id)}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleCheckHealth(conn.id)}
-                  disabled={healthMap[conn.id]?.status === "loading"}
-                >
-                  <RefreshCw className="h-3.5 w-3.5 mr-1" />
-                  Check
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleReauthenticate(conn.id)}>
-                  <LogIn className="h-3.5 w-3.5 mr-1" />
-                  Re-authenticate
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => setDeleteConnectionId(conn.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
               </div>
             </div>
           ))}

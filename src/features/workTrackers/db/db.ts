@@ -150,6 +150,7 @@ export type DriverWithMeta = Tables<"Users"> & {
   totalDriveMinutes: number;
   hasCrossBorderTrips: boolean;
   region: "US" | "CAN" | null;
+  qbo_connection_uuid: string | null;
   workTrackerGroup?: {
     id: string;
     status: Database["public"]["Enums"]["worktracker_group_status"];
@@ -232,6 +233,7 @@ export async function fetchDriversForWeek(
         pay_currency,
         pay_per_unit,
         address:Addresses!Drivers_address_uuid_fkey(street),
+        vendor:Vendors(qbo_connection_uuid),
         user:Users!Drivers_user_uuid_fkey(*)
       `,
       )
@@ -308,6 +310,9 @@ export async function fetchDriversForWeek(
       totalDriveMinutes: driveMinutes.get(driver.id) || 0,
       hasCrossBorderTrips: crossBorderDriverIds.has(driver.id),
       region: deriveRegion(driver.address?.street),
+      qbo_connection_uuid:
+        (Array.isArray(driver.vendor) ? driver.vendor[0] : driver.vendor)?.qbo_connection_uuid ??
+        null,
       workTrackerGroup: groupsByDriver.get(driver.id) || null,
     })) as DriverWithMeta[];
 
@@ -342,6 +347,7 @@ export async function fetchDriversForWeek(
         pay_currency,
         pay_per_unit,
         address:Addresses!Drivers_address_uuid_fkey(street),
+        vendor:Vendors(qbo_connection_uuid),
         user:Users!Drivers_user_uuid_fkey(*)
       `,
       )
@@ -422,6 +428,9 @@ export async function fetchDriversForWeek(
       totalDriveMinutes: driveMinutes.get(driver.id) || 0,
       hasCrossBorderTrips: crossBorderDriverIds.has(driver.id),
       region: deriveRegion(driver.address?.street),
+      qbo_connection_uuid:
+        (Array.isArray(driver.vendor) ? driver.vendor[0] : driver.vendor)?.qbo_connection_uuid ??
+        null,
       workTrackerGroup: groupsByDriver.get(driver.id) || null,
     })) as DriverWithMeta[];
 
