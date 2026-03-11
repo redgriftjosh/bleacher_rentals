@@ -75,6 +75,14 @@ export default function QuickBooksPage() {
     queryFn: fetchQboConnections,
   });
 
+  // Check health of all connections on load
+  useEffect(() => {
+    if (connections.length > 0) {
+      connections.forEach((conn) => handleCheckHealth(conn.id));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connections.length]);
+
   const handleCheckHealth = async (connectionId: string) => {
     setHealthMap((prev) => ({ ...prev, [connectionId]: { status: "loading" } }));
     try {
