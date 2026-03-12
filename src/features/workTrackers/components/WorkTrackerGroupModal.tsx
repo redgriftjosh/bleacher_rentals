@@ -279,6 +279,10 @@ export function WorkTrackerGroupModal({
         queryKey: ["drivers-for-week"],
         refetchType: "active",
       });
+      await queryClient.invalidateQueries({
+        queryKey: ["driver-with-meta"],
+        refetchType: "active",
+      });
 
       setCurrentStatus("qbo_bill_created");
       createSuccessToast([
@@ -325,6 +329,10 @@ export function WorkTrackerGroupModal({
       setSyncToken(null); // will be refreshed when QboBillPreview reloads
       await queryClient.invalidateQueries({
         queryKey: ["drivers-for-week"],
+        refetchType: "active",
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["driver-with-meta"],
         refetchType: "active",
       });
       createSuccessToast([

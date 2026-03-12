@@ -22,7 +22,10 @@ import { releaseAllDraftWorkTrackers } from "@/features/workTrackers/db/releaseA
 import {
   fetchWorkTrackersForUserUuidAndStartDate,
   fetchDriverHeaderInfo,
+  fetchDriverWithMetaForWeek,
 } from "@/features/workTrackers/db/db";
+import { PaymentStatusButton } from "@/features/workTrackers/components/PaymentStatusButton";
+import { DateTime } from "luxon";
 import { buildReleaseAllNotification } from "@/features/workTrackers/db/notifications";
 import { getDateRange } from "@/features/workTrackers/util";
 
@@ -60,6 +63,14 @@ export default function WorkTrackersForUserPage() {
     queryKey: ["driver-header-info", userUuid],
     enabled: !!supabase && !!userUuid,
     queryFn: () => fetchDriverHeaderInfo(supabase, userUuid),
+  });
+
+  const weekEnd = DateTime.fromISO(startDate).plus({ days: 6 }).toISODate() ?? startDate;
+
+  const { data: driverMeta } = useQuery({
+    queryKey: ["driver-with-meta", userUuid, startDate],
+    enabled: !!supabase && !!userUuid && !!startDate,
+    queryFn: () => fetchDriverWithMetaForWeek(supabase, userUuid, startDate),
   });
 
   const dateRange = getDateRange(startDate);
@@ -156,6 +167,9 @@ export default function WorkTrackersForUserPage() {
           <span className={`text-sm ${WORKTRACKER_STATUS_COLORS.released.text}`}>Release All</span>
           <Send className={`h-4 w-4 ${WORKTRACKER_STATUS_COLORS.released.text}`} />
         </button>
+        {driverMeta && (
+          <PaymentStatusButton driver={driverMeta} weekStart={startDate} weekEnd={weekEnd} />
+        )}
       </div>
 
       {/* Document-style header — mirrors the PDF layout */}

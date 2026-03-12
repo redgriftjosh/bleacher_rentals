@@ -449,6 +449,79 @@ export async function fetchDriversForWeek(
   }
 }
 
+export async function fetchDriverWithMetaForWeek(
+  supabase: SupabaseClient<Database>,
+  userUuid: string,
+  startDate: string,
+): Promise<DriverWithMeta | null> {
+  const endDate = DateTime.fromISO(startDate).plus({ days: 7 }).toISODate();
+  const weekStart = startDate;
+  const weekEnd = DateTime.fromISO(startDate).plus({ days: 6 }).toISODate();
+
+  const { data: driverData, error: driverError } = await supabase
+    .from("Drivers")
+    .select(
+      `
+      id,
+      pay_currency,
+      pay_per_unit,
+      tax,
+      address:Addresses!Drivers_address_uuid_fkey(street),
+      vendor:Vendors(qbo_connection_uuid),
+      user:Users!Drivers_user_uuid_fkey(*)
+    `,
+    )
+    .eq("user_uuid", userUuid)
+    .single();
+
+  if (driverError || !driverData) return null;
+
+  const driver = driverData as any;
+
+  const { data: workTrackers } = await supabase
+    .from("WorkTrackers")
+    .select("driver_uuid, pay_cents, distance_meters, drive_minutes, dropoff_address_uuid")
+    .eq("driver_uuid", driver.id)
+    .gte("date", startDate)
+    .lt("date", endDate!);
+
+  const { data: workTrackerGroup } = await supabase
+    .from("WorkTrackerGroups")
+    .select("id, driver_uuid, status, qbo_bill_id, week_start, week_end")
+    .eq("driver_uuid", driver.id)
+    .eq("week_start", weekStart)
+    .eq("week_end", weekEnd!)
+    .maybeSingle();
+
+  const totalPayCents = (workTrackers || []).reduce((acc, wt) => acc + (wt.pay_cents || 0), 0);
+  const totalDistanceMeters = (workTrackers || []).reduce(
+    (acc, wt) => acc + (wt.distance_meters || 0),
+    0,
+  );
+  const totalDriveMinutes = (workTrackers || []).reduce(
+    (acc, wt) => acc + (wt.drive_minutes || 0),
+    0,
+  );
+
+  return {
+    ...driver.user,
+    driver_uuid: driver.id,
+    tripCount: (workTrackers || []).length,
+    totalPayCents,
+    payCurrency: driver.pay_currency ?? "USD",
+    payPerUnit: driver.pay_per_unit ?? "KM",
+    totalDistanceMeters,
+    totalDriveMinutes,
+    hasCrossBorderTrips: false,
+    region: deriveRegion(driver.address?.street),
+    tax: driver.tax ?? 0,
+    qbo_connection_uuid:
+      (Array.isArray(driver.vendor) ? driver.vendor[0] : driver.vendor)?.qbo_connection_uuid ??
+      null,
+    workTrackerGroup: workTrackerGroup ?? null,
+  } as DriverWithMeta;
+}
+
 export async function fetchCrossBorderWeekStarts(
   supabase: SupabaseClient<Database>,
   startDate: string,
