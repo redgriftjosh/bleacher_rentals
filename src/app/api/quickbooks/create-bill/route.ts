@@ -3,6 +3,41 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/utils/supabase/getClerkSupabaseServerClient";
 import { DateTime } from "luxon";
+import { generateDriverPdfBuffer } from "@/features/workTrackers/generatePdf";
+
+async function uploadPdfToQbo(
+  accessToken: string,
+  realmId: string,
+  baseUrl: string,
+  billId: string,
+  fileName: string,
+  pdfBuffer: Buffer,
+): Promise<void> {
+  const metadata = JSON.stringify({
+    AttachableRef: [{ EntityRef: { type: "Bill", value: billId } }],
+    ContentType: "application/pdf",
+    FileName: fileName,
+  });
+
+  const formData = new FormData();
+  formData.append(
+    "file_metadata_01",
+    new Blob([metadata], { type: "application/json" }),
+    "attachment.json",
+  );
+  formData.append("file_content_01", new Blob([new Uint8Array(pdfBuffer)], { type: "application/pdf" }), fileName);
+
+  const res = await fetch(`${baseUrl}/${realmId}/upload?minorversion=40`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    console.error("Failed to upload PDF attachment to QBO:", err);
+  }
+}
 
 export async function POST(req: NextRequest) {
   // Require authentication
@@ -295,12 +330,25 @@ export async function POST(req: NextRequest) {
     const billData = await response.json();
     console.log("Bill created successfully:", billData);
 
+    const savedBillId = billData.Bill?.Id;
+
+    // Attach PDF to the bill in QBO (fire-and-forget, don't fail if attachment fails)
+    if (savedBillId && driver.user_uuid) {
+      try {
+        const pdfBuffer = await generateDriverPdfBuffer(supabase, driver.user_uuid, startDate);
+        const fileName = `work-trackers-${billNumber.replace(/\//g, "-")}.pdf`;
+        await uploadPdfToQbo(accessToken, realmId, baseUrl, savedBillId, fileName, pdfBuffer);
+      } catch (pdfErr) {
+        console.error("Failed to generate or attach PDF to QBO bill:", pdfErr);
+      }
+    }
+
     // Update WorkTrackerGroup with bill ID and status
     if (workTrackerGroupId) {
       const { error: updateError } = await supabase
         .from("WorkTrackerGroups")
         .update({
-          qbo_bill_id: billData.Bill?.Id,
+          qbo_bill_id: savedBillId,
           status: "qbo_bill_created",
         })
         .eq("id", workTrackerGroupId);
@@ -314,7 +362,7 @@ export async function POST(req: NextRequest) {
     // Return success with bill details
     return NextResponse.json({
       success: true,
-      billId: billData.Bill?.Id,
+      billId: savedBillId,
       billNumber,
       totalAmount,
       message: `Bill created successfully for ${totalAmount.toFixed(2)}`,
