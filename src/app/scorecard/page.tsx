@@ -6,7 +6,8 @@ import { ScorecardHeader } from "@/features/scorecard/components/ScorecardHeader
 import { PAGE_NAME } from "@/features/scorecard/constants/nav";
 import { useAccountManagers } from "@/features/scorecard/hooks/accountManager/useAccountManagers";
 import { useEventData } from "@/features/scorecard/hooks/overview/useEventData";
-
+import { useGrossMarginData } from "@/features/scorecard/hooks/overview/useGrossMarginData";
+import { CompactDetailedStatWithSpeedometer } from "@/features/scorecard/components/CompactDetailedStatWithSpeedometer";
 export default function ScorecardPage() {
   const quotesSentData = useEventData({
     onlyBooked: false,
@@ -39,6 +40,10 @@ export default function ScorecardPage() {
     accountManagerUuid: null,
     dateField: "event_start",
     targetType: "value_of_revenue",
+  });
+  const grossMarginData = useGrossMarginData({
+    createdByUserUuid: null,
+    accountManagerUuid: null,
   });
   // const revenueData = useRevenue();
   const accountManagers = useAccountManagers();
@@ -83,7 +88,27 @@ export default function ScorecardPage() {
           lastPeriod={revenueData.lastPeriod}
           chartData={revenueData.chartData}
         />
+        {/* <CompactDetailedStatWithGraph
+          label="Gross Margin"
+          statType="gross-margin"
+          historyHref={`/${PAGE_NAME}/history/gross-margin`}
+          unit="percentage"
+          thisPeriod={grossMarginData.thisPeriod}
+          lastPeriod={grossMarginData.lastPeriod}
+          chartData={grossMarginData.chartData}
+        /> */}
+        <CompactDetailedStatWithSpeedometer
+          label="Gross Margin"
+          statType="gross-margin"
+          historyHref={`/${PAGE_NAME}/history/gross-margin`}
+          unit="percentage"
+          thisPeriod={grossMarginData.thisPeriod}
+          lastPeriod={grossMarginData.lastPeriod}
+        />
       </div>
+      {/* <div className="mb-6">
+        <TestingSpeedometer />
+      </div> */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {accountManagers.map((am) => (
           <AccountManagerCard key={am.accountManagerUuid} accountManager={am} />

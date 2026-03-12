@@ -264,6 +264,9 @@ const ScorecardTargetsCols = {
   value_of_revenue_weekly_cents: column.integer,
   value_of_revenue_quarterly_cents: column.integer,
   value_of_revenue_annually_cents: column.integer,
+  gross_margin_percent_weekly: column.integer,
+  gross_margin_percent_quarterly: column.integer,
+  gross_margin_percent_annually: column.integer,
 } satisfies PowerSyncColsFor<"ScorecardTargets">;
 const ScorecardTargets = new Table(ScorecardTargetsCols, {
   indexes: { account_manager_uuid: ["account_manager_uuid"] },
@@ -272,9 +275,12 @@ const ScorecardTargets = new Table(ScorecardTargetsCols, {
 const VendorsCols = {
   created_at: column.text,
   qbo_vendor_id: column.text,
+  qbo_connection_uuid: column.text,
   display_name: column.text,
   is_active: column.integer,
   logo_url: column.text,
+  ein: column.text,
+  hst: column.text,
 } satisfies PowerSyncColsFor<"Vendors">;
 const Vendors = new Table(VendorsCols);
 

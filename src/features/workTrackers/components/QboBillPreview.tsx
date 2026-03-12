@@ -9,6 +9,10 @@ import { DateTime } from "luxon";
 
 type QboBillPreviewProps = {
   billId: string;
+  connectionId?: string;
+  taxRate?: number;
+  subtotal?: number;
+  onSyncToken?: (token: string) => void;
 };
 
 type BillData = {
@@ -33,10 +37,17 @@ type BillData = {
     } | null;
   }>;
   totalAmt: number;
-  balance: number;
+  taxAmt: number;
+  syncToken: string;
 };
 
-export function QboBillPreview({ billId }: QboBillPreviewProps) {
+export function QboBillPreview({
+  billId,
+  connectionId,
+  taxRate,
+  subtotal,
+  onSyncToken,
+}: QboBillPreviewProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [billData, setBillData] = useState<BillData | null>(null);
 
@@ -46,7 +57,8 @@ export function QboBillPreview({ billId }: QboBillPreviewProps) {
     async function fetchBillData() {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/quickbooks/get-bill?billId=${billId}`);
+        const url = `/api/quickbooks/get-bill?billId=${billId}${connectionId ? `&connectionId=${encodeURIComponent(connectionId)}` : ""}`;
+        const response = await fetch(url);
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -55,6 +67,7 @@ export function QboBillPreview({ billId }: QboBillPreviewProps) {
 
         const data = await response.json();
         setBillData(data);
+        onSyncToken?.(data.syncToken);
       } catch (error: any) {
         console.error("Error fetching bill:", error);
         createErrorToastNoThrow(["Failed to load bill data", error.message]);
@@ -64,7 +77,7 @@ export function QboBillPreview({ billId }: QboBillPreviewProps) {
     }
 
     fetchBillData();
-  }, [billId]);
+  }, [billId, connectionId]);
 
   const handleViewInQuickBooks = () => {
     const qboUrl = process.env.NEXT_PUBLIC_QBO_URL || "https://qbo.intuit.com";
@@ -131,20 +144,47 @@ export function QboBillPreview({ billId }: QboBillPreviewProps) {
         </div>
       </div>
 
-      {/* Total */}
-      <div className="pt-4 border-t">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-gray-600">Subtotal</span>
-          <span className="font-semibold">${billData.totalAmt.toFixed(2)}</span>
+      {/* Totals */}
+      <div className="pt-4 border-t space-y-4">
+        {/* QBO Breakdown */}
+        <div>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+            QuickBooks
+          </p>
+          <div className="flex justify-between items-center mb-1 text-sm">
+            <span className="text-gray-600">Subtotal</span>
+            <span className="font-medium">${(billData.totalAmt - billData.taxAmt).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center mb-1 text-sm">
+            <span className="text-gray-600">Tax</span>
+            <span className="font-medium">${billData.taxAmt.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="font-semibold text-gray-900">Total</span>
+            <span className="font-bold text-greenAccent">${billData.totalAmt.toFixed(2)}</span>
+          </div>
         </div>
-        <div className="flex justify-between items-center text-lg">
-          <span className="font-semibold text-gray-900">Total</span>
-          <span className="font-bold text-greenAccent">${billData.totalAmt.toFixed(2)}</span>
-        </div>
-        {billData.balance > 0 && (
-          <div className="flex justify-between items-center mt-2 text-sm">
-            <span className="text-gray-600">Balance Due</span>
-            <span className="font-semibold text-red-600">${billData.balance.toFixed(2)}</span>
+
+        {/* Our Calculation */}
+        {subtotal !== undefined && (
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              Our Calculation
+            </p>
+            <div className="flex justify-between items-center mb-1 text-sm">
+              <span className="text-gray-600">Subtotal</span>
+              <span className="font-medium">${subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center mb-1 text-sm">
+              <span className="text-gray-600">Tax{taxRate ? ` (${taxRate}%)` : ""}</span>
+              <span className="font-medium">${((subtotal * (taxRate ?? 0)) / 100).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-semibold text-gray-900">Total</span>
+              <span className="font-bold text-green-700">
+                ${(subtotal * (1 + (taxRate ?? 0) / 100)).toFixed(2)}
+              </span>
+            </div>
           </div>
         )}
       </div>

@@ -109,6 +109,7 @@ export function PaymentStatusButton({ driver, weekStart, weekEnd }: PaymentStatu
               }
             : null
         }
+        connectionId={driver.qbo_connection_uuid ?? undefined}
       />
     </>
   );

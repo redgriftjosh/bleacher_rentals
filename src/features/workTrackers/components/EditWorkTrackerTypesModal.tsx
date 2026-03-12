@@ -14,14 +14,26 @@ import { Tables } from "@/../database.types";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SelectQboAccountSimple } from "@/features/quickbooks-integration/components/SelectQboAccountSimple";
+import { fetchQboConnections, QboConnection } from "@/features/quickbooks-integration/api";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 
-type LocalType = Tables<"WorkTrackerTypes"> & { _deleted?: boolean; _new?: boolean };
+type LocalType = Tables<"WorkTrackerTypes"> & {
+  _deleted?: boolean;
+  _new?: boolean;
+  /** Per-connection QBO account mappings: { [connectionId]: accountId | null } */
+  _qboAccountMap: Record<string, string | null>;
+};
 
 type EditWorkTrackerTypesModalProps = {
   isOpen: boolean;
   onClose: () => void;
+};
+
+type QboAccountMapping = {
+  work_tracker_type_uuid: string;
+  qbo_connection_uuid: string;
+  qbo_account_id: string;
 };
 
 export function EditWorkTrackerTypesModal({ isOpen, onClose }: EditWorkTrackerTypesModalProps) {
@@ -29,6 +41,11 @@ export function EditWorkTrackerTypesModal({ isOpen, onClose }: EditWorkTrackerTy
   const queryClient = useQueryClient();
   const [localTypes, setLocalTypes] = useState<LocalType[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  const { data: qboConnections = [] } = useQuery<QboConnection[]>({
+    queryKey: ["qbo-connections"],
+    queryFn: fetchQboConnections,
+  });
 
   const { data: fetchedTypes = [], isLoading } = useQuery({
     queryKey: ["work-tracker-types"],
@@ -42,12 +59,33 @@ export function EditWorkTrackerTypesModal({ isOpen, onClose }: EditWorkTrackerTy
     },
   });
 
-  // Sync fetched types into local state when modal opens
+  const { data: fetchedAccountMappings = [] } = useQuery({
+    queryKey: ["work-tracker-type-qbo-accounts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("WorkTrackerTypeQboAccounts")
+        .select("work_tracker_type_uuid, qbo_connection_uuid, qbo_account_id");
+      if (error) throw error;
+      return data as QboAccountMapping[];
+    },
+  });
+
+  // Sync fetched types + mappings into local state when modal opens
   useEffect(() => {
     if (isOpen && fetchedTypes.length > 0) {
-      setLocalTypes(fetchedTypes.map((t) => ({ ...t })));
+      setLocalTypes(
+        fetchedTypes.map((t) => {
+          const map: Record<string, string | null> = {};
+          for (const m of fetchedAccountMappings) {
+            if (m.work_tracker_type_uuid === t.id) {
+              map[m.qbo_connection_uuid] = m.qbo_account_id;
+            }
+          }
+          return { ...t, _qboAccountMap: map };
+        }),
+      );
     }
-  }, [isOpen, fetchedTypes]);
+  }, [isOpen, fetchedTypes, fetchedAccountMappings]);
 
   const moveUp = (index: number) => {
     if (index === 0) return;
@@ -71,19 +109,14 @@ export function EditWorkTrackerTypesModal({ isOpen, onClose }: EditWorkTrackerTy
     setLocalTypes((prev) => prev.map((t) => (t.id === id ? { ...t, display_name } : t)));
   };
 
-  const updateQboCategory = (id: string, qboAccountId: string | null) => {
+  const updateQboAccount = (typeId: string, connectionId: string, accountId: string | null) => {
     setLocalTypes((prev) =>
       prev.map((t) =>
-        t.id === id
-          ? { ...t, qbo_category_id: qboAccountId ? parseInt(qboAccountId, 10) : null }
+        t.id === typeId
+          ? { ...t, _qboAccountMap: { ...t._qboAccountMap, [connectionId]: accountId } }
           : t,
       ),
     );
-  };
-
-  const getQboCategoryString = (type: LocalType): string | null => {
-    if (type.qbo_category_id == null) return null;
-    return String(type.qbo_category_id);
   };
 
   const addType = () => {
@@ -91,9 +124,9 @@ export function EditWorkTrackerTypesModal({ isOpen, onClose }: EditWorkTrackerTy
       id: crypto.randomUUID(),
       created_at: new Date().toISOString(),
       display_name: "New Type",
-      qbo_category_id: null,
       sort_order: localTypes.length + 1,
       _new: true,
+      _qboAccountMap: {},
     };
     setLocalTypes((prev) => [...prev, newType]);
   };
@@ -118,10 +151,9 @@ export function EditWorkTrackerTypesModal({ isOpen, onClose }: EditWorkTrackerTy
       // Insert new types
       if (toInsert.length > 0) {
         const { error } = await supabase.from("WorkTrackerTypes").insert(
-          toInsert.map(({ _new, _deleted, ...t }) => ({
+          toInsert.map(({ _new, _deleted, _qboAccountMap, ...t }) => ({
             id: t.id,
             display_name: t.display_name,
-            qbo_category_id: t.qbo_category_id,
             sort_order: t.sort_order,
           })),
         );
@@ -134,14 +166,49 @@ export function EditWorkTrackerTypesModal({ isOpen, onClose }: EditWorkTrackerTy
           .from("WorkTrackerTypes")
           .update({
             display_name: t.display_name,
-            qbo_category_id: t.qbo_category_id,
             sort_order: t.sort_order,
           })
           .eq("id", t.id);
         if (error) throw error;
       }
 
+      // Save QBO account mappings via junction table
+      // Delete all existing mappings for the types we're managing, then re-insert
+      const allTypeIds = localTypes.filter((t) => !t._deleted).map((t) => t.id);
+      if (allTypeIds.length > 0) {
+        const { error: delError } = await supabase
+          .from("WorkTrackerTypeQboAccounts")
+          .delete()
+          .in("work_tracker_type_uuid", allTypeIds);
+        if (delError) throw delError;
+      }
+
+      const qboRows: {
+        work_tracker_type_uuid: string;
+        qbo_connection_uuid: string;
+        qbo_account_id: string;
+      }[] = [];
+      for (const t of localTypes) {
+        if (t._deleted) continue;
+        for (const [connId, accountId] of Object.entries(t._qboAccountMap)) {
+          if (accountId) {
+            qboRows.push({
+              work_tracker_type_uuid: t.id,
+              qbo_connection_uuid: connId,
+              qbo_account_id: accountId,
+            });
+          }
+        }
+      }
+      if (qboRows.length > 0) {
+        const { error: qboError } = await supabase
+          .from("WorkTrackerTypeQboAccounts")
+          .insert(qboRows);
+        if (qboError) throw qboError;
+      }
+
       await queryClient.invalidateQueries({ queryKey: ["work-tracker-types"] });
+      await queryClient.invalidateQueries({ queryKey: ["work-tracker-type-qbo-accounts"] });
       createSuccessToast(["Work tracker types saved"]);
       onClose();
     } catch (error) {
@@ -201,13 +268,23 @@ export function EditWorkTrackerTypesModal({ isOpen, onClose }: EditWorkTrackerTy
                   placeholder="Type name"
                 />
 
-                {/* QB Account dropdown */}
-                <div className="flex-[3]">
-                  <SelectQboAccountSimple
-                    value={getQboCategoryString(type)}
-                    onChange={(id) => updateQboCategory(type.id, id)}
-                    placeholder="QB Account (optional)"
-                  />
+                {/* QB Account dropdowns (per connection) */}
+                <div className="flex-[3] space-y-1">
+                  {qboConnections.length > 0 ? (
+                    qboConnections.map((conn) => (
+                      <div key={conn.id}>
+                        <span className="text-[10px] text-gray-400">{conn.display_name}</span>
+                        <SelectQboAccountSimple
+                          connectionId={conn.id}
+                          value={type._qboAccountMap[conn.id] ?? null}
+                          onChange={(id) => updateQboAccount(type.id, conn.id, id)}
+                          placeholder="QB Account"
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-xs text-gray-400 italic">No QBO connections</span>
+                  )}
                 </div>
 
                 {/* Delete button */}

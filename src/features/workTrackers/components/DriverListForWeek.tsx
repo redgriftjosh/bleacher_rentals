@@ -9,6 +9,7 @@ import { useUser } from "@clerk/nextjs";
 import { useUsersStore } from "@/state/userStore";
 import { useState } from "react";
 import { PaymentStatusButton } from "./PaymentStatusButton";
+import { TotalsMatch } from "./TotalsMatch";
 import { DateTime } from "luxon";
 
 type Props = {
@@ -188,7 +189,11 @@ export function DriverListForWeek({ startDate }: Props) {
                     })()}
                   </span>
                 </div>
-                <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="flex-shrink-0 flex items-center gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <TotalsMatch driver={row} />
                   <PaymentStatusButton driver={row} weekStart={startDate} weekEnd={weekEnd} />
                 </div>
               </div>

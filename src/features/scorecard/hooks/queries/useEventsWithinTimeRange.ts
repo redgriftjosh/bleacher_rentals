@@ -2,14 +2,23 @@
 
 import { db } from "@/components/providers/SystemProvider";
 import {
+  lastQuarterStartDate,
   lastQuarterStartTimeStampTZ,
+  lastWeekStartDate,
   lastWeekStartTimeStampTZ,
+  lastYearStartDate,
   lastYearStartTimeStampTZ,
+  thisQuarterEndDate,
   thisQuarterEndTimeStampTZ,
+  thisQuarterStartDate,
   thisQuarterStartTimeStampTZ,
+  thisWeekEndDate,
   thisWeekEndTimeStampTZ,
+  thisWeekStartDate,
   thisWeekStartTimeStampTZ,
+  thisYearEndDate,
   thisYearEndTimeStampTZ,
+  thisYearStartDate,
   thisYearStartTimeStampTZ,
 } from "../../constants/time";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
@@ -46,33 +55,81 @@ export function useEventsWithinTimeRange(
     if (activeRange === "annually") {
       if (period === "this") {
         eventsBuilder = eventsBuilder
-          .where(`e.${dateField}`, ">=", thisYearStartTimeStampTZ)
-          .where(`e.${dateField}`, "<", thisYearEndTimeStampTZ);
+          .where(
+            `e.${dateField}`,
+            ">=",
+            dateField === "created_at" ? thisYearStartTimeStampTZ : thisYearStartDate,
+          )
+          .where(
+            `e.${dateField}`,
+            "<",
+            dateField === "created_at" ? thisYearEndTimeStampTZ : thisYearEndDate,
+          );
       } else {
         eventsBuilder = eventsBuilder
-          .where(`e.${dateField}`, ">=", lastYearStartTimeStampTZ)
-          .where(`e.${dateField}`, "<", thisYearStartTimeStampTZ);
+          .where(
+            `e.${dateField}`,
+            ">=",
+            dateField === "created_at" ? lastYearStartTimeStampTZ : lastYearStartDate,
+          )
+          .where(
+            `e.${dateField}`,
+            "<",
+            dateField === "created_at" ? thisYearStartTimeStampTZ : thisYearStartDate,
+          );
       }
     } else if (activeRange === "quarterly") {
       if (period === "this") {
         eventsBuilder = eventsBuilder
-          .where(`e.${dateField}`, ">=", thisQuarterStartTimeStampTZ)
-          .where(`e.${dateField}`, "<", thisQuarterEndTimeStampTZ);
+          .where(
+            `e.${dateField}`,
+            ">=",
+            dateField === "created_at" ? thisQuarterStartTimeStampTZ : thisQuarterStartDate,
+          )
+          .where(
+            `e.${dateField}`,
+            "<",
+            dateField === "created_at" ? thisQuarterEndTimeStampTZ : thisQuarterEndDate,
+          );
       } else {
         eventsBuilder = eventsBuilder
-          .where(`e.${dateField}`, ">=", lastQuarterStartTimeStampTZ)
-          .where(`e.${dateField}`, "<", thisQuarterStartTimeStampTZ);
+          .where(
+            `e.${dateField}`,
+            ">=",
+            dateField === "created_at" ? lastQuarterStartTimeStampTZ : lastQuarterStartDate,
+          )
+          .where(
+            `e.${dateField}`,
+            "<",
+            dateField === "created_at" ? thisQuarterStartTimeStampTZ : thisQuarterStartDate,
+          );
       }
       // default to weekly if somehow an invalid range is passed
     } else {
       if (period === "this") {
         eventsBuilder = eventsBuilder
-          .where(`e.${dateField}`, ">=", thisWeekStartTimeStampTZ)
-          .where(`e.${dateField}`, "<", thisWeekEndTimeStampTZ);
+          .where(
+            `e.${dateField}`,
+            ">=",
+            dateField === "created_at" ? thisWeekStartTimeStampTZ : thisWeekStartDate,
+          )
+          .where(
+            `e.${dateField}`,
+            "<",
+            dateField === "created_at" ? thisWeekEndTimeStampTZ : thisWeekEndDate,
+          );
       } else {
         eventsBuilder = eventsBuilder
-          .where(`e.${dateField}`, ">=", lastWeekStartTimeStampTZ)
-          .where(`e.${dateField}`, "<", thisWeekStartTimeStampTZ);
+          .where(
+            `e.${dateField}`,
+            ">=",
+            dateField === "created_at" ? lastWeekStartTimeStampTZ : lastWeekStartDate,
+          )
+          .where(
+            `e.${dateField}`,
+            "<",
+            dateField === "created_at" ? thisWeekStartTimeStampTZ : thisWeekStartDate,
+          );
       }
     }
 

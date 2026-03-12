@@ -19,8 +19,16 @@ import {
 } from "@/components/ui/dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { releaseAllDraftWorkTrackers } from "@/features/workTrackers/db/releaseAllDraftWorkTrackers";
-import { fetchWorkTrackersForUserUuidAndStartDate } from "@/features/workTrackers/db/db";
+import {
+  fetchWorkTrackersForUserUuidAndStartDate,
+  fetchDriverHeaderInfo,
+  fetchDriverWithMetaForWeek,
+} from "@/features/workTrackers/db/db";
+import { PaymentStatusButton } from "@/features/workTrackers/components/PaymentStatusButton";
+import { TotalsMatch } from "@/features/workTrackers/components/TotalsMatch";
+import { DateTime } from "luxon";
 import { buildReleaseAllNotification } from "@/features/workTrackers/db/notifications";
+import { getDateRange } from "@/features/workTrackers/util";
 
 const getRandomLoadingMessage = () => {
   const messages = [
@@ -51,6 +59,22 @@ export default function WorkTrackersForUserPage() {
   const [showReleaseModal, setShowReleaseModal] = useState(false);
   const [isReleasing, setIsReleasing] = useState(false);
   const queryClient = useQueryClient();
+
+  const { data: driverHeaderInfo } = useQuery({
+    queryKey: ["driver-header-info", userUuid],
+    enabled: !!supabase && !!userUuid,
+    queryFn: () => fetchDriverHeaderInfo(supabase, userUuid),
+  });
+
+  const weekEnd = DateTime.fromISO(startDate).plus({ days: 6 }).toISODate() ?? startDate;
+
+  const { data: driverMeta } = useQuery({
+    queryKey: ["driver-with-meta", userUuid, startDate],
+    enabled: !!supabase && !!userUuid && !!startDate,
+    queryFn: () => fetchDriverWithMetaForWeek(supabase, userUuid, startDate),
+  });
+
+  const dateRange = getDateRange(startDate);
 
   const { data: draftTripCount = 0 } = useQuery({
     queryKey: ["draft-work-trackers-count", userUuid, startDate],
@@ -144,15 +168,76 @@ export default function WorkTrackersForUserPage() {
           <span className={`text-sm ${WORKTRACKER_STATUS_COLORS.released.text}`}>Release All</span>
           <Send className={`h-4 w-4 ${WORKTRACKER_STATUS_COLORS.released.text}`} />
         </button>
+        {driverMeta && (
+          <div className="flex items-center gap-2">
+            <PaymentStatusButton driver={driverMeta} weekStart={startDate} weekEnd={weekEnd} />
+            <TotalsMatch driver={driverMeta} />
+          </div>
+        )}
       </div>
 
-      <table className="min-w-full border-collapse border border-gray-200 mt-4">
+      {/* Document-style header — mirrors the PDF layout */}
+      <div className="border border-gray-200 mt-4">
+        <div className="bg-darkBlue px-2 py-1">
+          <span className="text-white font-bold text-xs">
+            {`${dateRange} - ${driverHeaderInfo?.driverName ?? ""}`}
+          </span>
+        </div>
+        <p className="text-xs font-bold italic underline px-2 pt-1">Bleacher Deliveries/Pickups</p>
+        {driverHeaderInfo && (
+          <div className="px-2 pb-2 pt-1 flex flex-wrap gap-x-6 gap-y-1 text-xs">
+            {driverHeaderInfo.vendor && (
+              <span>
+                <span className="font-semibold">Vendor:</span>{" "}
+                {driverHeaderInfo.vendor.display_name}
+              </span>
+            )}
+            {driverHeaderInfo.address && (
+              <span>
+                <span className="font-semibold">Address:</span>{" "}
+                {[
+                  driverHeaderInfo.address.street,
+                  driverHeaderInfo.address.city,
+                  driverHeaderInfo.address.state_province,
+                  driverHeaderInfo.address.zip_postal,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </span>
+            )}
+            {driverHeaderInfo.vendor?.ein && (
+              <span>
+                <span className="font-semibold">EIN:</span>{" "}
+                {`${driverHeaderInfo.vendor.ein.slice(0, 2)}-${driverHeaderInfo.vendor.ein.slice(2)}`}
+              </span>
+            )}
+            {driverHeaderInfo.vendor?.hst && (
+              <span>
+                <span className="font-semibold">HST:</span> {driverHeaderInfo.vendor.hst}
+              </span>
+            )}
+            {driverHeaderInfo.driverPhone && (
+              <span>
+                <span className="font-semibold">Phone:</span> {driverHeaderInfo.driverPhone}
+              </span>
+            )}
+            {driverHeaderInfo.driverEmail && (
+              <span>
+                <span className="font-semibold">Email:</span> {driverHeaderInfo.driverEmail}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <table className="min-w-full border-collapse border-x border-b border-gray-200 mt-0">
         {/* Header */}
         <thead className="bg-gray-100">
           <tr>
             <th className={`w-0 whitespace-nowrap ${className}`}>Status</th>
             <th className={`w-[8%] ${className}`}>Date</th>
             <th className={`w-[8%] ${className}`}>Bleacher</th>
+            <th className={`w-[8%] ${className}`}>Activity Type</th>
             <th className={`w-[12%] ${className}`}>Pickup Location</th>
             <th className={`w-[8%] ${className}`}>POC at P/U</th>
             <th className={`w-[7%] ${className}`}>Time</th>

@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import { ZoneForm } from "./_components/ZoneForm";
+import { ZoneForm, ZoneQboClassMapping } from "./_components/ZoneForm";
 import { ZoneCard } from "./_components/ZoneCard";
 import { ZoneWithStateProvinces } from "./_lib/types";
 import { fetchZones, createZone, updateZone, uploadZonePhoto } from "./_lib/db";
@@ -58,7 +58,7 @@ export default function ZonesPage() {
       description: string | null,
       stateProvinces: string[],
       mapImageBlob: Blob | null,
-      qboClassId: string | null,
+      qboClassMappings: ZoneQboClassMapping[],
     ) => {
       try {
         setSaving(true);
@@ -67,7 +67,7 @@ export default function ZonesPage() {
           displayName,
           description,
           stateProvinces,
-          qboClassId,
+          qboClassMappings,
         );
         if (mapImageBlob) {
           await uploadZonePhoto(supabase, zoneId, mapImageBlob);
@@ -90,7 +90,7 @@ export default function ZonesPage() {
       description: string | null,
       stateProvinces: string[],
       mapImageBlob: Blob | null,
-      qboClassId: string | null,
+      qboClassMappings: ZoneQboClassMapping[],
     ) => {
       if (!editingZone) return;
       try {
@@ -101,7 +101,7 @@ export default function ZonesPage() {
           displayName,
           description,
           stateProvinces,
-          qboClassId,
+          qboClassMappings,
         );
         if (mapImageBlob) {
           await uploadZonePhoto(supabase, editingZone.id, mapImageBlob, editingZone.photo_path);

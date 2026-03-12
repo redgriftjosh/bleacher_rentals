@@ -2,8 +2,13 @@ import { getBaseUrl, getQboAccessTokenAndRealmId } from "@/features/quickbooks-i
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
+  const connectionId = req.nextUrl.searchParams.get("connectionId");
+  if (!connectionId) {
+    return NextResponse.json({ error: "connectionId is required" }, { status: 400 });
+  }
+
   try {
-    const { accessToken, realmId } = await getQboAccessTokenAndRealmId();
+    const { accessToken, realmId } = await getQboAccessTokenAndRealmId(connectionId);
     const baseUrl = getBaseUrl();
 
     const url = `${baseUrl}/${realmId}/query?query=select * from Payment&minorversion=40`;

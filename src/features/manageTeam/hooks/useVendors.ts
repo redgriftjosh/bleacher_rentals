@@ -10,7 +10,10 @@ type VendorRow = {
   display_name: string | null;
   logo_url: string | null;
   qbo_vendor_id: string | null;
+  qbo_connection_uuid: string | null;
   is_active: number | null;
+  ein: string | null;
+  hst: string | null;
 };
 
 type DriverCountRow = {
@@ -23,8 +26,11 @@ export type VendorOption = {
   displayName: string;
   logoUrl: string | null;
   qboVendorId: string | null;
+  qboConnectionUuid: string | null;
   isActive: boolean;
   driverCount: number;
+  ein: string | null;
+  hst: string | null;
 };
 
 /**
@@ -35,7 +41,16 @@ export function useVendors(includeInactive: boolean = false) {
   const vendorQuery = useMemo(() => {
     let query = db
       .selectFrom("Vendors")
-      .select(["id", "display_name", "logo_url", "qbo_vendor_id", "is_active"])
+      .select([
+        "id",
+        "display_name",
+        "logo_url",
+        "qbo_vendor_id",
+        "qbo_connection_uuid",
+        "is_active",
+        "ein",
+        "hst",
+      ])
       .orderBy("display_name", "asc");
 
     if (!includeInactive) {
@@ -76,8 +91,11 @@ export function useVendors(includeInactive: boolean = false) {
       displayName: v.display_name || "Unknown Vendor",
       logoUrl: v.logo_url,
       qboVendorId: v.qbo_vendor_id,
+      qboConnectionUuid: v.qbo_connection_uuid,
       isActive: v.is_active === 1,
       driverCount: driverCountMap.get(v.id) || 0,
+      ein: v.ein,
+      hst: v.hst,
     }));
   }, [vendors, driverCountMap]);
 

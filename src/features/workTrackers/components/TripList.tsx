@@ -80,6 +80,7 @@ export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
             </th>
             <th className={`w-[8%] ${className}`}>{row.workTracker.date}</th>
             <th className={`w-[8%] ${className}`}>{row.bleacherNumber}</th>
+            <th className={`w-[8%] whitespace-normal ${className}`}>{row.activityType ?? ""}</th>
             <th className={`w-[12%] ${className}`}>{row.pickup_address?.street ?? ""}</th>
             <th className={`w-[8%] ${className}`}>{row.workTracker.pickup_poc}</th>
             <th className={`w-[7%] ${className}`}>{row.workTracker.pickup_time}</th>
@@ -97,6 +98,7 @@ export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
         <th className={`w-0 ${className}`}></th>
         <th className={`w-[8%] ${classNameBold}`}>SubTotal</th>
         <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[8%] ${className}`}></th>
         <th className={`w-[12%] ${className}`}></th>
         <th className={`w-[8%] ${className}`}></th>
         <th className={`w-[7%] ${className}`}></th>
@@ -112,6 +114,7 @@ export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
         <th className={`w-0 ${className}`}></th>
         <th className={`w-[8%] ${classNameBold}`}>{`HST (${data?.driverTax}%)`}</th>
         <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[8%] ${className}`}></th>
         <th className={`w-[12%] ${className}`}></th>
         <th className={`w-[8%] ${className}`}></th>
         <th className={`w-[7%] ${className}`}></th>
@@ -126,6 +129,7 @@ export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
       <tr className="border-b h-12 border-gray-200 ">
         <th className={`w-0 ${className}`}></th>
         <th className={`w-[8%] ${classNameBold}`}>Total Amount To Be Paid</th>
+        <th className={`w-[8%] ${className}`}></th>
         <th className={`w-[8%] ${className}`}></th>
         <th className={`w-[12%] ${className}`}></th>
         <th className={`w-[8%] ${className}`}></th>

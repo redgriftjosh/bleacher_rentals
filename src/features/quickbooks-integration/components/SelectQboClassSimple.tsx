@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 type SelectQboClassSimpleProps = {
   value: string | null;
   onChange: (classId: string | null) => void;
+  connectionId: string;
   placeholder?: string;
   /** Show an amber warning hint when no class is selected */
   warnWhenEmpty?: boolean;
@@ -28,6 +29,7 @@ type SelectQboClassSimpleProps = {
 export function SelectQboClassSimple({
   value,
   onChange,
+  connectionId,
   placeholder = "Select QuickBooks Class...",
   warnWhenEmpty = false,
 }: SelectQboClassSimpleProps) {
@@ -39,8 +41,8 @@ export function SelectQboClassSimple({
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["qbo-classes"],
-    queryFn: fetchQboClasses,
+    queryKey: ["qbo-classes", connectionId],
+    queryFn: () => fetchQboClasses(connectionId),
     staleTime: 0,
     gcTime: Infinity,
     refetchOnMount: true,

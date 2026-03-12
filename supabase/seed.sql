@@ -3206,7 +3206,7 @@ BEGIN
 END $$;
 
 
-insert into public."WorkTrackerTypes" (display_name, sort_order) values
-  ('Trip', 1),
-  ('Repair/Maintenance', 2),
-  ('Cleaning', 3);
+-- insert into public."WorkTrackerTypes" (display_name, sort_order) values
+--   ('Trip', 1),
+--   ('Repair/Maintenance', 2),
+--   ('Cleaning', 3);

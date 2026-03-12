@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const { accessToken, realmId } = await getQboAccessTokenAndRealmId(connectionId);
     const baseUrl = getBaseUrl();
 
-    const query = encodeURIComponent("select * from Class where Active = true");
+    const query = encodeURIComponent("select * from TaxCode where Active = true");
     const url = `${baseUrl}/${realmId}/query?query=${query}&minorversion=40`;
 
     const response = await fetch(url, {
@@ -29,23 +29,20 @@ export async function GET(req: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
-      console.error("QuickBooks API error:", errorData);
       return NextResponse.json({ error: errorData }, { status: response.status });
     }
 
     const data = await response.json();
-
-    const classes = data.QueryResponse?.Class || [];
-    const formattedClasses = classes.map((cls: any) => ({
-      id: cls.Id,
-      name: cls.Name,
-      fullyQualifiedName: cls.FullyQualifiedName,
-      active: cls.Active,
+    const taxCodes = (data.QueryResponse?.TaxCode || []).map((tc: any) => ({
+      id: tc.Id,
+      name: tc.Name,
+      description: tc.Description ?? null,
+      taxable: tc.Taxable ?? false,
     }));
 
-    return NextResponse.json({ classes: formattedClasses });
+    return NextResponse.json({ taxCodes });
   } catch (error: any) {
-    console.error("QuickBooks classes error:", error);
+    console.error("QuickBooks tax-codes error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
