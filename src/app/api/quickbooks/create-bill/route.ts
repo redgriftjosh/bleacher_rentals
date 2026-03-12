@@ -25,7 +25,11 @@ async function uploadPdfToQbo(
     new Blob([metadata], { type: "application/json" }),
     "attachment.json",
   );
-  formData.append("file_content_01", new Blob([new Uint8Array(pdfBuffer)], { type: "application/pdf" }), fileName);
+  formData.append(
+    "file_content_01",
+    new Blob([new Uint8Array(pdfBuffer)], { type: "application/pdf" }),
+    fileName,
+  );
 
   const res = await fetch(`${baseUrl}/${realmId}/upload?minorversion=40`, {
     method: "POST",
