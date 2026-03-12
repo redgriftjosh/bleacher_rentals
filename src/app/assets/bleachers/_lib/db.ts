@@ -17,6 +17,12 @@ type Query = {
   bleacher_number: number | null;
   bleacher_rows: number | null;
   bleacher_seats: number | null;
+  hitch_type: string | null;
+  vin_number: string | null;
+  tag_number: string | null;
+  manufacturer: string | null;
+  height_folded_ft: number | null;
+  gvwr: number | null;
   summer_home_base_uuid: string | null;
   summer_home_base_name: string | null;
   winter_home_base_uuid: string | null;
@@ -32,6 +38,12 @@ export function useBleachersQuery() {
       "b.bleacher_number",
       "b.bleacher_rows",
       "b.bleacher_seats",
+      "b.hitch_type",
+      "b.vin_number",
+      "b.tag_number",
+      "b.manufacturer",
+      "b.height_folded_ft",
+      "b.gvwr",
 
       // home_base fields
       "shb.id as summer_home_base_uuid",
@@ -50,6 +62,12 @@ export function useBleachersQuery() {
       bleacherNumber: bleacher.bleacher_number || 0,
       bleacherRows: bleacher.bleacher_rows || 0,
       bleacherSeats: bleacher.bleacher_seats || 0,
+      hitchType: bleacher.hitch_type ?? null,
+      vinNumber: bleacher.vin_number ?? null,
+      tagNumber: bleacher.tag_number ?? null,
+      manufacturer: bleacher.manufacturer ?? null,
+      heightFoldedFt: bleacher.height_folded_ft ?? null,
+      gvwr: bleacher.gvwr ?? null,
       summerHomeBase: {
         homeBaseUuid: bleacher.summer_home_base_uuid ?? "",
         homeBaseName: bleacher.summer_home_base_name ?? "",
@@ -71,6 +89,8 @@ export function useBleacherQuery(bleacherNumber: number | null) {
   return useQuery({
     queryKey: ["bleacher", bleacherNumber],
     queryFn: async () => {
+      console.log("queryFn firing with bleacherNumber:", bleacherNumber);
+  console.log("supabase exists:", !!supabase);
       if (!bleacherNumber) return null;
 
       const { data, error } = await supabase
@@ -81,6 +101,12 @@ export function useBleacherQuery(bleacherNumber: number | null) {
           bleacher_number,
           bleacher_rows,
           bleacher_seats,
+          hitch_type,
+          vin_number,
+          tag_number,
+          manufacturer,
+          height_folded_ft,
+          gvwr,
           summer_home_base_uuid,
           winter_home_base_uuid,
           linxup_device_id,

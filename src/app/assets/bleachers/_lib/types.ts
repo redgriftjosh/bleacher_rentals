@@ -2,6 +2,12 @@ export type FormattedBleacher = {
   bleacherNumber: number;
   bleacherRows: number;
   bleacherSeats: number;
+  hitchType: string | null;
+  vinNumber: string | null;
+  tagNumber: string | null;
+  manufacturer: string | null;
+  heightFoldedFt: number | null;
+  gvwr: number | null;
   summerHomeBase: {
     homeBaseUuid: string;
     homeBaseName: string;
