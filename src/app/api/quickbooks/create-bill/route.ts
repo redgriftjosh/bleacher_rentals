@@ -195,28 +195,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate that every work tracker's dropoff state is in a zone with a class for this connection
-    const missingStates: string[] = [];
-    for (const wt of workTrackers) {
-      const dropoffAddr = Array.isArray(wt.dropoff_address)
-        ? wt.dropoff_address[0]
-        : wt.dropoff_address;
-      const dropoffState = (dropoffAddr as any)?.state_province;
-      if (dropoffState && !stateToClassId[dropoffState] && !missingStates.includes(dropoffState)) {
-        missingStates.push(dropoffState);
-      }
-    }
-
-    if (missingStates.length > 0) {
-      const stateList = missingStates.join(", ");
-      return NextResponse.json(
-        {
-          error: `Cannot create bill: ${stateList} ${missingStates.length === 1 ? "is" : "are"} not assigned to a zone with a QuickBooks class for this connection. Please update your zones and assign a QuickBooks class.`,
-        },
-        { status: 400 },
-      );
-    }
-
     const lineItems = workTrackers.map((wt: any) => {
       const pickupAddr = Array.isArray(wt.pickup_address)
         ? wt.pickup_address[0]
