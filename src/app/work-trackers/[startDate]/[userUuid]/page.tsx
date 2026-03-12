@@ -25,6 +25,7 @@ import {
   fetchDriverWithMetaForWeek,
 } from "@/features/workTrackers/db/db";
 import { PaymentStatusButton } from "@/features/workTrackers/components/PaymentStatusButton";
+import { TotalsMatch } from "@/features/workTrackers/components/TotalsMatch";
 import { DateTime } from "luxon";
 import { buildReleaseAllNotification } from "@/features/workTrackers/db/notifications";
 import { getDateRange } from "@/features/workTrackers/util";
@@ -168,7 +169,10 @@ export default function WorkTrackersForUserPage() {
           <Send className={`h-4 w-4 ${WORKTRACKER_STATUS_COLORS.released.text}`} />
         </button>
         {driverMeta && (
-          <PaymentStatusButton driver={driverMeta} weekStart={startDate} weekEnd={weekEnd} />
+          <div className="flex items-center gap-2">
+            <PaymentStatusButton driver={driverMeta} weekStart={startDate} weekEnd={weekEnd} />
+            <TotalsMatch driver={driverMeta} />
+          </div>
         )}
       </div>
 
