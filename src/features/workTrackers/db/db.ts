@@ -617,6 +617,7 @@ export type WorkTrackersResult = {
   workTrackers: {
     workTracker: Tables<"WorkTrackers">;
     bleacherNumber: number | null;
+    activityType: string | null;
     pickup_address: Tables<"Addresses"> | null;
     dropoff_address: Tables<"Addresses"> | null;
   }[];
@@ -694,6 +695,7 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
 
   type WorkTrackerWithBleacher = Tables<"WorkTrackers"> & {
     bleacher: { bleacher_number: number } | null;
+    work_tracker_type: { display_name: string } | null;
   };
 
   const { data, error } = await supabase
@@ -701,7 +703,8 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
     .select(
       `
       *,
-      bleacher:Bleachers(bleacher_number)
+      bleacher:Bleachers(bleacher_number),
+      work_tracker_type:WorkTrackerTypes(display_name)
     `,
     )
     .eq("driver_uuid", driverUuid)
@@ -730,6 +733,7 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
       return {
         workTracker: tracker as Tables<"WorkTrackers">,
         bleacherNumber: tracker.bleacher?.bleacher_number ?? null,
+        activityType: tracker.work_tracker_type?.display_name ?? null,
         pickup_address: pickup,
         dropoff_address: dropoff,
       };

@@ -237,6 +237,7 @@ export default function WorkTrackersForUserPage() {
             <th className={`w-0 whitespace-nowrap ${className}`}>Status</th>
             <th className={`w-[8%] ${className}`}>Date</th>
             <th className={`w-[8%] ${className}`}>Bleacher</th>
+            <th className={`w-[8%] ${className}`}>Activity Type</th>
             <th className={`w-[12%] ${className}`}>Pickup Location</th>
             <th className={`w-[8%] ${className}`}>POC at P/U</th>
             <th className={`w-[7%] ${className}`}>Time</th>
