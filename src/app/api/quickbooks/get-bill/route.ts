@@ -85,6 +85,7 @@ export async function GET(req: NextRequest) {
         })),
       totalAmt: bill.TotalAmt || 0,
       taxAmt: bill.TxnTaxDetail?.TotalTax || 0,
+      syncToken: bill.SyncToken,
     };
 
     return NextResponse.json(formattedBill);

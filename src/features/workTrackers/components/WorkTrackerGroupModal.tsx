@@ -54,6 +54,7 @@ export function WorkTrackerGroupModal({
   const [hasVendor, setHasVendor] = useState<boolean>(true);
   const [vendorLinkedToQbo, setVendorLinkedToQbo] = useState<boolean>(true);
   const [driverTaxRate, setDriverTaxRate] = useState<number>(0);
+  const [syncToken, setSyncToken] = useState<string | null>(null);
   const [userUuid, setUserUuid] = useState<string | null>(null);
   const [workTrackerGroupId, setWorkTrackerGroupId] = useState<string | null>(
     groupData?.id || null,
@@ -302,6 +303,41 @@ export function WorkTrackerGroupModal({
     }
   };
 
+  const handleUpdateBill = async () => {
+    if (!groupData?.qbo_bill_id || !syncToken) return;
+    setIsProcessing(true);
+    try {
+      const response = await fetch("/api/quickbooks/create-bill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          driverUuid,
+          startDate,
+          workTrackerGroupId,
+          billId: groupData.qbo_bill_id,
+          syncToken,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to update bill");
+
+      setSyncToken(null); // will be refreshed when QboBillPreview reloads
+      await queryClient.invalidateQueries({
+        queryKey: ["drivers-for-week"],
+        refetchType: "active",
+      });
+      createSuccessToast([
+        `Bill updated successfully!`,
+        `${driverName} - $${totalAmount.toFixed(2)}`,
+      ]);
+    } catch (error: any) {
+      createErrorToastNoThrow(["Failed to update bill in QuickBooks", error.message]);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -323,6 +359,7 @@ export function WorkTrackerGroupModal({
                 connectionId={connectionId}
                 taxRate={driverTaxRate}
                 subtotal={totalAmount}
+                onSyncToken={setSyncToken}
               />
             )}
 
@@ -468,6 +505,25 @@ export function WorkTrackerGroupModal({
                     )}
                   </Button>
                 )}
+                {hasVendor &&
+                  vendorLinkedToQbo &&
+                  currentStatus === "qbo_bill_created" &&
+                  groupData?.qbo_bill_id && (
+                    <Button
+                      onClick={handleUpdateBill}
+                      disabled={isProcessing || !syncToken}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Updating Bill...
+                        </>
+                      ) : (
+                        "Update Bill"
+                      )}
+                    </Button>
+                  )}
                 <Button variant="outline" onClick={onClose}>
                   Close
                 </Button>

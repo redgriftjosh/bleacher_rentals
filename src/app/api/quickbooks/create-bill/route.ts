@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     workTrackerGroupId = body.workTrackerGroupId;
-    const { driverUuid, startDate } = body;
+    const { driverUuid, startDate, billId, syncToken } = body;
 
     if (!driverUuid || !startDate) {
       return NextResponse.json(
@@ -239,8 +239,10 @@ export async function POST(req: NextRequest) {
     const { accessToken, realmId } = await getQboAccessTokenAndRealmId(connectionId);
     const baseUrl = getBaseUrl();
 
-    // Create the bill in QuickBooks
+    // Create or update the bill in QuickBooks
+    const isUpdate = !!(billId && syncToken);
     const billPayload = {
+      ...(isUpdate ? { Id: billId, SyncToken: syncToken } : {}),
       VendorRef: {
         value: vendor.qbo_vendor_id,
       },
@@ -250,7 +252,10 @@ export async function POST(req: NextRequest) {
       GlobalTaxCalculation: "TaxExcluded",
     };
 
-    console.log("Creating bill with payload:", JSON.stringify(billPayload, null, 2));
+    console.log(
+      `${isUpdate ? "Updating" : "Creating"} bill with payload:`,
+      JSON.stringify(billPayload, null, 2),
+    );
 
     const response = await fetch(`${baseUrl}/${realmId}/bill?minorversion=40`, {
       method: "POST",

@@ -12,6 +12,7 @@ type QboBillPreviewProps = {
   connectionId?: string;
   taxRate?: number;
   subtotal?: number;
+  onSyncToken?: (token: string) => void;
 };
 
 type BillData = {
@@ -37,9 +38,16 @@ type BillData = {
   }>;
   totalAmt: number;
   taxAmt: number;
+  syncToken: string;
 };
 
-export function QboBillPreview({ billId, connectionId, taxRate, subtotal }: QboBillPreviewProps) {
+export function QboBillPreview({
+  billId,
+  connectionId,
+  taxRate,
+  subtotal,
+  onSyncToken,
+}: QboBillPreviewProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [billData, setBillData] = useState<BillData | null>(null);
 
@@ -59,6 +67,7 @@ export function QboBillPreview({ billId, connectionId, taxRate, subtotal }: QboB
 
         const data = await response.json();
         setBillData(data);
+        onSyncToken?.(data.syncToken);
       } catch (error: any) {
         console.error("Error fetching bill:", error);
         createErrorToastNoThrow(["Failed to load bill data", error.message]);
