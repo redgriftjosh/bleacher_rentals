@@ -42,7 +42,9 @@ export function TotalsMatch({ driver }: Props) {
     }
 
     fetchBill();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [billId, qbo_connection_uuid, totalPayCents, tax]);
 
   if (!billId || !qbo_connection_uuid) return null;
@@ -62,7 +64,9 @@ export function TotalsMatch({ driver }: Props) {
   }
 
   return (
-    <span title={`Mismatch — QBO: $${qboTotal?.toFixed(2)} | Expected: $${expectedTotal.toFixed(2)}`}>
+    <span
+      title={`Mismatch — QBO: $${qboTotal?.toFixed(2)} | Expected: $${expectedTotal.toFixed(2)}`}
+    >
       <AlertTriangle className="w-4 h-4 text-amber-500" />
     </span>
   );
