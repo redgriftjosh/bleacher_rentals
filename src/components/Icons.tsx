@@ -2,6 +2,19 @@ import { IconProps } from "@/types/Interfaces";
 
 // It looks like these icons were grabbed from Feather icons
 
+export const QuickBooksIcon: React.FC<{ className?: string }> = ({ className }) => {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 44.46 40.34"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M 11.97,8.2 C 5.36,8.2 0,13.56 0,20.17 0,26.78 5.35,32.13 11.97,32.13 h 1.71 v -4.44 h -1.71 c -4.15,0 -7.52,-3.37 -7.52,-7.52 0,-4.15 3.37,-7.52 7.52,-7.52 h 4.11 V 35.9 c 0,2.45 1.99,4.44 4.44,4.44 V 8.2 Z m 20.52,23.93 c 6.61,0 11.97,-5.36 11.97,-11.96 0,-6.6 -5.35,-11.96 -11.97,-11.96 h -1.71 v 4.44 h 1.71 c 4.15,0 7.52,3.37 7.52,7.52 0,4.15 -3.37,7.52 -7.52,7.52 H 28.38 V 4.44 C 28.38,1.99 26.39,0 23.94,0 v 32.13 z" />
+    </svg>
+  );
+};
+
 export const PencilIcon: React.FC<IconProps> = ({ color = "#344054" }) => {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

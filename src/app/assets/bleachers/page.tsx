@@ -14,6 +14,12 @@ export default function BleachersPage() {
             <th className="p-3 text-left font-semibold">#</th>
             <th className="p-3 text-left font-semibold">Rows</th>
             <th className="p-3 text-left font-semibold">Seats</th>
+            <th className="p-3 text-left font-semibold">Manufacturer</th>
+            <th className="p-3 text-left font-semibold">VIN</th>
+            <th className="p-3 text-left font-semibold">Tag #</th>
+            <th className="p-3 text-left font-semibold">Hitch Type</th>
+            <th className="p-3 text-left font-semibold">Height Folded</th>
+            <th className="p-3 text-left font-semibold">GVWR</th>
             <th className="p-3 text-left font-semibold">Home Base</th>
             <th className="p-3 text-left font-semibold">Winter Home Base</th>
           </tr>

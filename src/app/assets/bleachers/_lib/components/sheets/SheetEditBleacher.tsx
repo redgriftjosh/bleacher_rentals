@@ -39,6 +39,12 @@ export function SheetEditBleacher() {
   const [selectedLinxupDeviceId, setSelectedLinxupDeviceId] = useState<string | null>(null);
   const [summerAccountManagerUuid, setSummerAccountManagerUuid] = useState<string | null>(null);
   const [winterAccountManagerUuid, setWinterAccountManagerUuid] = useState<string | null>(null);
+  const [hitchType, setHitchType] = useState<string | null>(null);
+  const [vinNumber, setVinNumber] = useState<string | null>(null);
+  const [tagNumber, setTagNumber] = useState<string | null>(null);
+  const [manufacturer, setManufacturer] = useState<string | null>(null);
+  const [heightFoldedFt, setHeightFoldedFt] = useState<number | null>(null);
+  const [gvwr, setGvwr] = useState<number | null>(null);
 
   const [isTakenNumber, setIsTakenNumber] = useState(true);
 
@@ -48,6 +54,10 @@ export function SheetEditBleacher() {
     isLoading: bleacherLoading,
     error: bleacherError,
   } = useBleacherQuery(editBleacherNumber);
+  console.log("editBleacherNumber:", editBleacherNumber);
+console.log("bleacher:", bleacher);
+console.log("bleacherLoading:", bleacherLoading);
+console.log("bleacherError:", bleacherError);
 
   // Fetch home bases for the dropdowns
   const { data: homeBases = [], isLoading: homeBasesLoading } = useQuery({
@@ -76,6 +86,12 @@ export function SheetEditBleacher() {
       setSelectedLinxupDeviceId(bleacher.linxup_device_id ?? null);
       setSummerAccountManagerUuid(bleacher.summer_account_manager_uuid ?? null);
       setWinterAccountManagerUuid(bleacher.winter_account_manager_uuid ?? null);
+      setHitchType(bleacher.hitch_type ?? null);
+      setVinNumber(bleacher.vin_number ?? null);
+      setTagNumber(bleacher.tag_number ?? null);
+      setManufacturer(bleacher.manufacturer ?? null);
+      setHeightFoldedFt(bleacher.height_folded_ft ?? null);
+      setGvwr(bleacher.gvwr ?? null);
     } else if (bleacherError) {
       toast.error("Bleacher not found");
     }
@@ -93,6 +109,12 @@ export function SheetEditBleacher() {
       setSelectedLinxupDeviceId(null);
       setSummerAccountManagerUuid(null);
       setWinterAccountManagerUuid(null);
+      setHitchType(null);
+      setVinNumber(null);
+      setTagNumber(null);
+      setManufacturer(null);
+      setHeightFoldedFt(null);
+      setGvwr(null);
     }
   }, [editBleacherNumber]);
 
@@ -140,6 +162,12 @@ export function SheetEditBleacher() {
           linxup_device_id: selectedLinxupDeviceId,
           summer_account_manager_uuid: summerAccountManagerUuid,
           winter_account_manager_uuid: winterAccountManagerUuid,
+          hitch_type: hitchType,
+          vin_number: vinNumber,
+          tag_number: tagNumber,
+          manufacturer: manufacturer,
+          height_folded_ft: heightFoldedFt,
+          gvwr: gvwr,
         },
         supabase,
         queryClient
@@ -172,7 +200,7 @@ export function SheetEditBleacher() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 p-6">
+            <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-4">
                 <div className="grid grid-cols-5 items-center gap-4">
                   <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
@@ -279,6 +307,60 @@ export function SheetEditBleacher() {
                       placeholder="Select Account Manager..."
                     />
                   </div>
+                </div>
+                                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Manufacturer</label>
+                  <input
+                    type="text"
+                    value={manufacturer ?? ""}
+                    onChange={(e) => setManufacturer(e.target.value || null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">VIN Number</label>
+                  <input
+                    type="text"
+                    value={vinNumber ?? ""}
+                    onChange={(e) => setVinNumber(e.target.value || null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Tag Number</label>
+                  <input
+                    type="text"
+                    value={tagNumber ?? ""}
+                    onChange={(e) => setTagNumber(e.target.value || null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Hitch Type</label>
+                  <input
+                    type="text"
+                    value={hitchType ?? ""}
+                    onChange={(e) => setHitchType(e.target.value || null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Height Folded (ft)</label>
+                  <input
+                    type="number"
+                    value={heightFoldedFt ?? ""}
+                    onChange={(e) => setHeightFoldedFt(e.target.value ? Number(e.target.value) : null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">GVWR (lbs)</label>
+                  <input
+                    type="number"
+                    value={gvwr ?? ""}
+                    onChange={(e) => setGvwr(e.target.value ? Number(e.target.value) : null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
                 </div>
               </div>
             </div>

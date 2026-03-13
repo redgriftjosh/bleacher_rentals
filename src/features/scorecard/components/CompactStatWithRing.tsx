@@ -6,6 +6,7 @@ type CompactStatWithRingProps = {
   paceDelta: number;
   progress: number;
   isMoney?: boolean;
+  isPercentage?: boolean;
 };
 
 function getTone(paceDelta: number) {
@@ -30,8 +31,9 @@ function getTone(paceDelta: number) {
   };
 }
 
-function formatValue(value: number | string, isMoney?: boolean) {
+function formatValue(value: number | string, isMoney?: boolean, isPercentage?: boolean) {
   if (typeof value === "string") return value;
+  if (isPercentage) return `${Math.round(value)}%`;
   if (!isMoney) return value.toLocaleString();
   const absValue = Math.abs(value);
   if (absValue >= 1_000_000) {
@@ -55,6 +57,7 @@ export function CompactStatWithRing({
   paceDelta,
   progress,
   isMoney,
+  isPercentage,
 }: CompactStatWithRingProps) {
   const tone = getTone(paceDelta);
   const clampedProgress = Math.min(1, Math.max(0, progress));
@@ -69,7 +72,9 @@ export function CompactStatWithRing({
         <div className="absolute inset-0 rounded-full" style={ringStyle} />
         <div className="absolute inset-2 rounded-full bg-white" />
         <div className="relative flex flex-col items-center">
-          <div className={`text-lg font-bold ${tone.text}`}>{formatValue(value, isMoney)}</div>
+          <div className={`text-lg font-bold ${tone.text}`}>
+            {formatValue(value, isMoney, isPercentage)}
+          </div>
           <div className={`text-[10px] font-semibold ${tone.text}`}>PACE {paceDelta}</div>
         </div>
       </div>

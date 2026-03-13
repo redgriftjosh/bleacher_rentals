@@ -74,7 +74,7 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
 
   const formatValue = (value: number) => {
     if (unit === "percentage") {
-      return value;
+      return `${Math.round(value)}%`;
     }
 
     const compactValue = formatCompactRounded(value);
