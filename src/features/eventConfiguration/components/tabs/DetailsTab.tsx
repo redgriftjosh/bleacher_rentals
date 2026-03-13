@@ -14,12 +14,12 @@ export const DetailsTab = () => {
   const mustBeClean = useCurrentEventStore((s) => s.mustBeClean);
   const notes = useCurrentEventStore((s) => s.notes);
   const eventId = useCurrentEventStore((s) => s.eventUuid);
+  const bookedAt = useCurrentEventStore((s) => s.bookedAt);
 
   const [revenueDisplay, setRevenueDisplay] = React.useState(
     contractRevenueCents !== null ? (contractRevenueCents / 100).toFixed(2) : "",
   );
 
-  // Only sync when eventId changes (loading a different event)
   React.useEffect(() => {
     const displayValue =
       contractRevenueCents !== null ? (contractRevenueCents / 100).toFixed(2) : "";
@@ -27,11 +27,23 @@ export const DetailsTab = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
 
+  React.useEffect(() => {
+    if (selectedStatus === "booked") {
+      const currentBookedAt = useCurrentEventStore.getState().bookedAt;
+      if (!currentBookedAt) {
+        setField("bookedAt", new Date().toISOString().split("T")[0]);
+      }
+    } else {
+      setField("bookedAt", null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStatus]);
+
   return (
     <div className="grid grid-cols-2 gap-4">
       <div>
         <LenientSelections />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-black/70">Status</label>
             <Dropdown
@@ -45,6 +57,17 @@ export const DetailsTab = () => {
               placeholder="Pick status"
             />
           </div>
+          {selectedStatus === "booked" && (
+            <div>
+              <label className="block text-sm font-medium text-black/70">Booked At</label>
+              <input
+                type="date"
+                className="w-full h-[40px] px-3 py-2 border bg-white rounded text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                value={bookedAt ?? ""}
+                onChange={(e) => setField("bookedAt", e.target.value || null)}
+              />
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-black/70">Contract Revenue</label>
             <CentsInput
@@ -71,7 +94,7 @@ export const DetailsTab = () => {
       <div>
         <label className="block text-sm font-medium text-black/70 mb-1">Notes</label>
         <Textarea
-          className="bg-white "
+          className="bg-white"
           placeholder="Type your message here."
           value={notes}
           onChange={(e) => setField("notes", e.target.value)}

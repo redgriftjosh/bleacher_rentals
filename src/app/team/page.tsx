@@ -1,6 +1,5 @@
 "use client";
 // import { UserList } from "../../features/manageTeam/components/lists/UserList";
-import { UserConfigurationModal } from "@/features/manageTeam/components/UserConfigurationModal";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useCurrentUserStore } from "@/features/manageTeam/state/useCurrentUserStore";
 import { DriverList } from "@/features/manageTeam/components/lists/DriverList";
@@ -14,6 +13,7 @@ import { useState, useEffect } from "react";
 import { useSearchQueryStore } from "@/features/manageTeam/state/useSearchQueryStore";
 import { useRealtimeHydrateCurrentUserStore } from "@/features/manageTeam/hooks/useUserById";
 import { PageHeader } from "@/components/PageHeader";
+import { useRouter } from "next/navigation";
 
 export type ExistingUser = {
   user_id: number;
@@ -28,7 +28,7 @@ export type ExistingUser = {
 
 export default function TeamPage() {
   useRealtimeHydrateCurrentUserStore();
-  const openForNewUser = useCurrentUserStore((s) => s.openForNewUser);
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TeamTab>("admins");
   const [showInactive, setShowInactive] = useState(false);
   const setField = useSearchQueryStore((s) => s.setField);
@@ -45,10 +45,10 @@ export default function TeamPage() {
       <PageHeader
         title="Manage Team"
         subtitle="Manage your team here."
-        action={<PrimaryButton onClick={openForNewUser}>+ Add Team Member</PrimaryButton>}
+        action={
+          <PrimaryButton onClick={() => router.push("/team/new")}>+ Add Team Member</PrimaryButton>
+        }
       />
-
-      <UserConfigurationModal />
 
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">

@@ -36,6 +36,12 @@ const BleachersCols = {
   winter_account_manager_uuid: column.text,
   summer_home_base_uuid: column.text,
   winter_home_base_uuid: column.text,
+  hitch_type: column.text,
+  vin_number: column.text,
+  tag_number: column.text,
+  manufacturer: column.text,
+  height_folded_ft: column.integer,
+  gvwr: column.integer,
 } satisfies PowerSyncColsFor<"Bleachers">;
 const Bleachers = new Table(BleachersCols, {
   indexes: {
@@ -121,6 +127,7 @@ const DriversCols = {
   insurance_photo_path: column.text,
   medical_card_photo_path: column.text,
   vehicle_uuid: column.text,
+  vendor_uuid: column.text,
 } satisfies PowerSyncColsFor<"Drivers">;
 const Drivers = new Table(DriversCols, {
   indexes: {
@@ -213,6 +220,16 @@ const WorkTrackersCols = {
   updated_at: column.text,
   pre_inspection_uuid: column.text,
   post_inspection_uuid: column.text,
+  worktracker_group_uuid: column.text,
+  work_tracker_type_uuid: column.text,
+  distance_meters: column.integer,
+  drive_minutes: column.integer,
+  teardown_required: column.integer,
+  pickup_instructions: column.text,
+  setup_required: column.integer,
+  dropoff_instructions: column.text,
+  project_number: column.text,
+  bol_number: column.text,
 } satisfies PowerSyncColsFor<"WorkTrackers">;
 const WorkTrackers = new Table(WorkTrackersCols, {
   indexes: {
@@ -223,6 +240,23 @@ const WorkTrackers = new Table(WorkTrackersCols, {
     user_uuid: ["user_uuid"],
     pre_inspection_uuid: ["pre_inspection_uuid"],
     post_inspection_uuid: ["post_inspection_uuid"],
+    worktracker_group_uuid: ["worktracker_group_uuid"],
+  },
+});
+
+const WorkTrackerGroupsCols = {
+  created_at: column.text,
+  week_start: column.text,
+  week_end: column.text,
+  driver_uuid: column.text,
+  qbo_bill_id: column.text,
+  status: column.text,
+} satisfies PowerSyncColsFor<"WorkTrackerGroups">;
+const WorkTrackerGroups = new Table(WorkTrackerGroupsCols, {
+  indexes: {
+    driver_uuid: ["driver_uuid"],
+    week_start: ["week_start"],
+    status: ["status"],
   },
 });
 
@@ -242,10 +276,25 @@ const ScorecardTargetsCols = {
   value_of_revenue_weekly_cents: column.integer,
   value_of_revenue_quarterly_cents: column.integer,
   value_of_revenue_annually_cents: column.integer,
+  gross_margin_percent_weekly: column.integer,
+  gross_margin_percent_quarterly: column.integer,
+  gross_margin_percent_annually: column.integer,
 } satisfies PowerSyncColsFor<"ScorecardTargets">;
 const ScorecardTargets = new Table(ScorecardTargetsCols, {
   indexes: { account_manager_uuid: ["account_manager_uuid"] },
 });
+
+const VendorsCols = {
+  created_at: column.text,
+  qbo_vendor_id: column.text,
+  qbo_connection_uuid: column.text,
+  display_name: column.text,
+  is_active: column.integer,
+  logo_url: column.text,
+  ein: column.text,
+  hst: column.text,
+} satisfies PowerSyncColsFor<"Vendors">;
+const Vendors = new Table(VendorsCols);
 
 const BleacherUsersCols = {
   created_at: column.text,
@@ -267,7 +316,7 @@ const BlueBookCols = {
   sort_order: column.integer,
   created_at: column.text,
   updated_at: column.text,
-} satisfies PowerSyncColsFor<"BlueBook">
+} satisfies PowerSyncColsFor<"BlueBook">;
 const BlueBook = new Table(BlueBookCols, { indexes: { uuid: ["uuid"] } });
 
 export const AppSchema = new Schema({
@@ -286,7 +335,9 @@ export const AppSchema = new Schema({
   ScorecardTargets,
   Users,
   UserStatuses,
+  Vendors,
   WorkTrackers,
+  WorkTrackerGroups,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
@@ -304,4 +355,6 @@ export type BleacherUsersRecord = PowerSyncDB["BleacherUsers"];
 export type BleacherEventsRecord = PowerSyncDB["BleacherEvents"];
 export type EventsRecord = PowerSyncDB["Events"];
 export type ScorecardTargetsRecord = PowerSyncDB["ScorecardTargets"];
+export type VendorRecord = PowerSyncDB["Vendors"];
 export type WorkTrackerRecord = PowerSyncDB["WorkTrackers"];
+export type WorkTrackerGroupRecord = PowerSyncDB["WorkTrackerGroups"];

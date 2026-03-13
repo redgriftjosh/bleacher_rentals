@@ -21,6 +21,7 @@ export type StatType =
   | "number-of-quotes-signed"
   | "value-of-quotes-signed"
   | "revenue"
+  | "gross-margin"
   | "bleacher-utilization";
 
 /** Maps StatType to the corresponding ScorecardTargets column prefix */
@@ -48,6 +49,11 @@ const STAT_TARGET_COLUMNS: Record<
     quarterly: "value_of_revenue_quarterly_cents",
     annually: "value_of_revenue_annually_cents",
   },
+  "gross-margin": {
+    weekly: "gross_margin_percent_weekly",
+    quarterly: "gross_margin_percent_quarterly",
+    annually: "gross_margin_percent_annually",
+  },
   "bleacher-utilization": {
     weekly: "quotes_weekly", // placeholder - no specific target column yet
     quarterly: "quotes_quarterly",
@@ -60,6 +66,7 @@ const STAT_LABELS: Record<StatType, string> = {
   "number-of-quotes-signed": "Quotes Signed",
   "value-of-quotes-signed": "Value of Quotes Signed",
   revenue: "Revenue",
+  "gross-margin": "Gross Margin",
   "bleacher-utilization": "Bleacher Utilization",
 };
 
@@ -78,6 +85,9 @@ type TargetRow = {
   value_of_revenue_weekly_cents: number | null;
   value_of_revenue_quarterly_cents: number | null;
   value_of_revenue_annually_cents: number | null;
+  gross_margin_percent_weekly: number | null;
+  gross_margin_percent_quarterly: number | null;
+  gross_margin_percent_annually: number | null;
 };
 
 type ManagerInfo = {
@@ -122,6 +132,9 @@ export function SetTargetsModal({
           "st.value_of_revenue_weekly_cents as value_of_revenue_weekly_cents",
           "st.value_of_revenue_quarterly_cents as value_of_revenue_quarterly_cents",
           "st.value_of_revenue_annually_cents as value_of_revenue_annually_cents",
+          "st.gross_margin_percent_weekly as gross_margin_percent_weekly",
+          "st.gross_margin_percent_quarterly as gross_margin_percent_quarterly",
+          "st.gross_margin_percent_annually as gross_margin_percent_annually",
         ])
         .where("st.account_manager_uuid", "=", accountManagerUuid)
         .compile(),
@@ -157,6 +170,7 @@ export function SetTargetsModal({
   const [initialized, setInitialized] = useState(false);
 
   const isCents = statType === "value-of-quotes-signed" || statType === "revenue";
+  const isPercent = statType === "gross-margin";
 
   // Populate form state once when target data first loads (or when modal re-opens)
   useEffect(() => {
@@ -181,7 +195,7 @@ export function SetTargetsModal({
       setAnnuallyValue(String(a));
     }
     setInitialized(true);
-  }, [open, initialized, target, columns, isCents]);
+  }, [open, initialized, target, columns, isCents, isPercent]);
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
@@ -194,6 +208,12 @@ export function SetTargetsModal({
 
       if (isNaN(w) || isNaN(q) || isNaN(a)) {
         createErrorToastNoThrow(["Please enter valid numbers for all fields"]);
+        setIsSaving(false);
+        return;
+      }
+
+      if (isPercent && (w < 0 || w > 100 || q < 0 || q > 100 || a < 0 || a > 100)) {
+        createErrorToastNoThrow(["Percentage targets must be between 0 and 100"]);
         setIsSaving(false);
         return;
       }
@@ -243,10 +263,12 @@ export function SetTargetsModal({
           <div>
             <label className="text-sm font-medium text-gray-700 mb-1 block">
               Weekly Target {isCents && "(dollars)"}
+              {isPercent && "(%)"}
             </label>
             <input
               type="number"
               min={0}
+              max={isPercent ? 100 : undefined}
               step={isCents ? "0.01" : "1"}
               value={weeklyValue}
               onChange={(e) => setWeeklyValue(e.target.value)}
@@ -257,10 +279,12 @@ export function SetTargetsModal({
           <div>
             <label className="text-sm font-medium text-gray-700 mb-1 block">
               Quarterly Target {isCents && "(dollars)"}
+              {isPercent && "(%)"}
             </label>
             <input
               type="number"
               min={0}
+              max={isPercent ? 100 : undefined}
               step={isCents ? "0.01" : "1"}
               value={quarterlyValue}
               onChange={(e) => setQuarterlyValue(e.target.value)}
@@ -271,10 +295,12 @@ export function SetTargetsModal({
           <div>
             <label className="text-sm font-medium text-gray-700 mb-1 block">
               Annual Target {isCents && "(dollars)"}
+              {isPercent && "(%)"}
             </label>
             <input
               type="number"
               min={0}
+              max={isPercent ? 100 : undefined}
               step={isCents ? "0.01" : "1"}
               value={annuallyValue}
               onChange={(e) => setAnnuallyValue(e.target.value)}

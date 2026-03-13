@@ -21,6 +21,12 @@ export function BleacherItemRow({
   bleacherNumber,
   bleacherRows,
   bleacherSeats,
+  hitchType,
+  vinNumber,
+  tagNumber,
+  manufacturer,
+  heightFoldedFt,
+  gvwr,
   summerHomeBase,
   winterHomeBase,
 }: FormattedBleacher) {
@@ -38,6 +44,12 @@ export function BleacherItemRow({
       <td className="p-3 text-left">{bleacherNumber}</td>
       <td className="p-3 text-left">{bleacherRows}</td>
       <td className="p-3 text-left">{bleacherSeats}</td>
+      <td className="p-3 text-left">{manufacturer ?? "—"}</td>
+      <td className="p-3 text-left font-mono text-xs">{vinNumber ?? "—"}</td>
+      <td className="p-3 text-left">{tagNumber ?? "—"}</td>
+      <td className="p-3 text-left">{hitchType ?? "—"}</td>
+      <td className="p-3 text-left">{heightFoldedFt != null ? `${heightFoldedFt} ft` : "—"}</td>
+      <td className="p-3 text-left">{gvwr != null ? `${gvwr.toLocaleString()} lbs` : "—"}</td>
       <td className="p-3 text-left">{summerHomeBase.homeBaseName}</td>
       <td className="p-3 text-left">{winterHomeBase.homeBaseName}</td>
     </tr>

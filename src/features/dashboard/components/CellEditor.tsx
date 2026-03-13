@@ -47,9 +47,8 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       await saveBlock(editBlock, supabase);
       // Refresh bleachers store directly so Pixi updates without remounting
       try {
-        const { FetchDashboardBleachers } = await import(
-          "@/features/dashboard/db/client/bleachers"
-        );
+        const { FetchDashboardBleachers } =
+          await import("@/features/dashboard/db/client/bleachers");
         await FetchDashboardBleachers(supabase);
       } catch {}
       resetForm();
@@ -73,9 +72,8 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       await deleteBlock(editBlock, supabase);
       // Refresh bleachers store directly so Pixi updates without remounting
       try {
-        const { FetchDashboardBleachers } = await import(
-          "@/features/dashboard/db/client/bleachers"
-        );
+        const { FetchDashboardBleachers } =
+          await import("@/features/dashboard/db/client/bleachers");
         await FetchDashboardBleachers(supabase);
       } catch {}
       resetForm();
@@ -100,11 +98,13 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       dropoff_address_uuid: null,
       dropoff_poc: null,
       dropoff_time: null,
+      dropoff_instructions: null,
       notes: null,
       pay_cents: null,
       pickup_address_uuid: null,
       pickup_poc: null,
       pickup_time: null,
+      pickup_instructions: null,
       user_uuid: null,
       internal_notes: null,
       driver_uuid: null,
@@ -113,7 +113,15 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       started_at: null,
       completed_at: null,
       post_inspection_uuid: null,
+      worktracker_group_uuid: null,
       pre_inspection_uuid: null,
+      work_tracker_type_uuid: null,
+      distance_meters: null,
+      drive_minutes: null,
+      bol_number: null,
+      project_number: null,
+      setup_required: false,
+      teardown_required: false,
     };
 
     onWorkTrackerOpen?.(workTracker);
