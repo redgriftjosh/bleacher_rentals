@@ -229,6 +229,7 @@ const WorkTrackersCols = {
   setup_required: column.integer,
   dropoff_instructions: column.text,
   project_number: column.text,
+  bol_number: column.text,
 } satisfies PowerSyncColsFor<"WorkTrackers">;
 const WorkTrackers = new Table(WorkTrackersCols, {
   indexes: {
