@@ -120,12 +120,18 @@ export type Database = {
           bleacher_seats: number
           created_at: string
           created_by: string | null
+          gvwr: number | null
+          height_folded_ft: number | null
+          hitch_type: string | null
           id: string
           linxup_device_id: string | null
+          manufacturer: string | null
           summer_account_manager_uuid: string | null
           summer_home_base_uuid: string | null
+          tag_number: string | null
           updated_at: string | null
           updated_by: string | null
+          vin_number: string | null
           winter_account_manager_uuid: string | null
           winter_home_base_uuid: string | null
         }
@@ -135,12 +141,18 @@ export type Database = {
           bleacher_seats: number
           created_at?: string
           created_by?: string | null
+          gvwr?: number | null
+          height_folded_ft?: number | null
+          hitch_type?: string | null
           id?: string
           linxup_device_id?: string | null
+          manufacturer?: string | null
           summer_account_manager_uuid?: string | null
           summer_home_base_uuid?: string | null
+          tag_number?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          vin_number?: string | null
           winter_account_manager_uuid?: string | null
           winter_home_base_uuid?: string | null
         }
@@ -150,12 +162,18 @@ export type Database = {
           bleacher_seats?: number
           created_at?: string
           created_by?: string | null
+          gvwr?: number | null
+          height_folded_ft?: number | null
+          hitch_type?: string | null
           id?: string
           linxup_device_id?: string | null
+          manufacturer?: string | null
           summer_account_manager_uuid?: string | null
           summer_home_base_uuid?: string | null
+          tag_number?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          vin_number?: string | null
           winter_account_manager_uuid?: string | null
           winter_home_base_uuid?: string | null
         }
@@ -1026,6 +1044,7 @@ export type Database = {
         Row: {
           accepted_at: string | null
           bleacher_uuid: string | null
+          bol_number: string | null
           completed_at: string | null
           created_at: string
           date: string | null
@@ -1033,6 +1052,7 @@ export type Database = {
           drive_minutes: number | null
           driver_uuid: string | null
           dropoff_address_uuid: string | null
+          dropoff_instructions: string | null
           dropoff_poc: string | null
           dropoff_time: string | null
           id: string
@@ -1040,13 +1060,17 @@ export type Database = {
           notes: string | null
           pay_cents: number | null
           pickup_address_uuid: string | null
+          pickup_instructions: string | null
           pickup_poc: string | null
           pickup_time: string | null
           post_inspection_uuid: string | null
           pre_inspection_uuid: string | null
+          project_number: string | null
           released_at: string | null
+          setup_required: boolean
           started_at: string | null
           status: Database["public"]["Enums"]["worktracker_status"]
+          teardown_required: boolean
           updated_at: string
           user_uuid: string | null
           work_tracker_type_uuid: string | null
@@ -1055,6 +1079,7 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           bleacher_uuid?: string | null
+          bol_number?: string | null
           completed_at?: string | null
           created_at?: string
           date?: string | null
@@ -1062,6 +1087,7 @@ export type Database = {
           drive_minutes?: number | null
           driver_uuid?: string | null
           dropoff_address_uuid?: string | null
+          dropoff_instructions?: string | null
           dropoff_poc?: string | null
           dropoff_time?: string | null
           id?: string
@@ -1069,13 +1095,17 @@ export type Database = {
           notes?: string | null
           pay_cents?: number | null
           pickup_address_uuid?: string | null
+          pickup_instructions?: string | null
           pickup_poc?: string | null
           pickup_time?: string | null
           post_inspection_uuid?: string | null
           pre_inspection_uuid?: string | null
+          project_number?: string | null
           released_at?: string | null
+          setup_required?: boolean
           started_at?: string | null
           status?: Database["public"]["Enums"]["worktracker_status"]
+          teardown_required?: boolean
           updated_at?: string
           user_uuid?: string | null
           work_tracker_type_uuid?: string | null
@@ -1084,6 +1114,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           bleacher_uuid?: string | null
+          bol_number?: string | null
           completed_at?: string | null
           created_at?: string
           date?: string | null
@@ -1091,6 +1122,7 @@ export type Database = {
           drive_minutes?: number | null
           driver_uuid?: string | null
           dropoff_address_uuid?: string | null
+          dropoff_instructions?: string | null
           dropoff_poc?: string | null
           dropoff_time?: string | null
           id?: string
@@ -1098,13 +1130,17 @@ export type Database = {
           notes?: string | null
           pay_cents?: number | null
           pickup_address_uuid?: string | null
+          pickup_instructions?: string | null
           pickup_poc?: string | null
           pickup_time?: string | null
           post_inspection_uuid?: string | null
           pre_inspection_uuid?: string | null
+          project_number?: string | null
           released_at?: string | null
+          setup_required?: boolean
           started_at?: string | null
           status?: Database["public"]["Enums"]["worktracker_status"]
+          teardown_required?: boolean
           updated_at?: string
           user_uuid?: string | null
           work_tracker_type_uuid?: string | null

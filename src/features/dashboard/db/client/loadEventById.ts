@@ -76,6 +76,7 @@ export async function loadEventById(
     setField("hslHue", eventData.hsl_hue);
     setField("goodshuffleUrl", eventData.goodshuffle_url);
     setField("ownerUserUuid", eventData.created_by_user_uuid ?? null);
+    setField("bookedAt", eventData.booked_at ? eventData.booked_at.split("T")[0] : null);
   } catch (error) {
     console.error("Failed to load event:", error);
   }

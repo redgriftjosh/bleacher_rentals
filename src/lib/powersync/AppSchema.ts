@@ -36,6 +36,12 @@ const BleachersCols = {
   winter_account_manager_uuid: column.text,
   summer_home_base_uuid: column.text,
   winter_home_base_uuid: column.text,
+  hitch_type: column.text,
+  vin_number: column.text,
+  tag_number: column.text,
+  manufacturer: column.text,
+  height_folded_ft: column.integer,
+  gvwr: column.integer,
 } satisfies PowerSyncColsFor<"Bleachers">;
 const Bleachers = new Table(BleachersCols, {
   indexes: {
@@ -218,6 +224,12 @@ const WorkTrackersCols = {
   work_tracker_type_uuid: column.text,
   distance_meters: column.integer,
   drive_minutes: column.integer,
+  teardown_required: column.integer,
+  pickup_instructions: column.text,
+  setup_required: column.integer,
+  dropoff_instructions: column.text,
+  project_number: column.text,
+  bol_number: column.text,
 } satisfies PowerSyncColsFor<"WorkTrackers">;
 const WorkTrackers = new Table(WorkTrackersCols, {
   indexes: {

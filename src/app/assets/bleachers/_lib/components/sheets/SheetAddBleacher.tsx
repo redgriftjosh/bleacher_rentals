@@ -23,6 +23,12 @@ export function SheetAddBleacher() {
   const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);
   const [rows, setRows] = useState<number | null>(null);
   const [seats, setSeats] = useState<number | null>(null);
+  const [hitchType, setHitchType] = useState<string | null>(null);
+  const [vinNumber, setVinNumber] = useState<string | null>(null);
+  const [tagNumber, setTagNumber] = useState<string | null>(null);
+  const [manufacturer, setManufacturer] = useState<string | null>(null);
+  const [heightFoldedFt, setHeightFoldedFt] = useState<number | null>(null);
+  const [gvwr, setGvwr] = useState<number | null>(null);
   // const [homeBases, setHomeBases] = useState<HomeBase[] | null>(null);
   const [selectedSummerHomeBaseUuid, setSelectedSummerHomeBaseUuid] = useState<string | null>(null);
   const [selectedWinterHomeBaseUuid, setSelectedWinterHomeBaseUuid] = useState<string | null>(null);
@@ -38,6 +44,12 @@ export function SheetAddBleacher() {
       setBleacherNumber(null);
       setRows(null);
       setSeats(null);
+      setHitchType(null);
+      setVinNumber(null);
+      setTagNumber(null);
+      setManufacturer(null);
+      setHeightFoldedFt(null);
+      setGvwr(null);
       setSelectedSummerHomeBaseUuid(null);
       setSelectedWinterHomeBaseUuid(null);
       setSelectedLinxupDeviceId(null);
@@ -91,6 +103,12 @@ export function SheetAddBleacher() {
           bleacher_number: bleacherNumber!,
           bleacher_rows: rows!,
           bleacher_seats: seats!,
+          hitch_type: hitchType,
+          vin_number: vinNumber,
+          tag_number: tagNumber,
+          manufacturer: manufacturer,
+          height_folded_ft: heightFoldedFt,
+          gvwr: gvwr,
           summer_home_base_uuid: selectedSummerHomeBaseUuid!,
           winter_home_base_uuid: selectedWinterHomeBaseUuid!,
           linxup_device_id: selectedLinxupDeviceId,
@@ -132,7 +150,7 @@ export function SheetAddBleacher() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 p-6">
+            <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-4">
                 <div className="grid grid-cols-5 items-center gap-4">
                   <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
@@ -239,6 +257,60 @@ export function SheetAddBleacher() {
                       placeholder="Select Account Manager (Optional)"
                     />
                   </div>
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Manufacturer</label>
+                  <input
+                    type="text"
+                    value={manufacturer ?? ""}
+                    onChange={(e) => setManufacturer(e.target.value || null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">VIN Number</label>
+                  <input
+                    type="text"
+                    value={vinNumber ?? ""}
+                    onChange={(e) => setVinNumber(e.target.value || null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Tag Number</label>
+                  <input
+                    type="text"
+                    value={tagNumber ?? ""}
+                    onChange={(e) => setTagNumber(e.target.value || null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Hitch Type</label>
+                  <input
+                    type="text"
+                    value={hitchType ?? ""}
+                    onChange={(e) => setHitchType(e.target.value || null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Height Folded (ft)</label>
+                  <input
+                    type="number"
+                    value={heightFoldedFt ?? ""}
+                    onChange={(e) => setHeightFoldedFt(e.target.value ? Number(e.target.value) : null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">GVWR (lbs)</label>
+                  <input
+                    type="number"
+                    value={gvwr ?? ""}
+                    onChange={(e) => setGvwr(e.target.value ? Number(e.target.value) : null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
                 </div>
               </div>
             </div>
