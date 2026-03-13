@@ -9,6 +9,12 @@ export type SelectBleacher = {
   linxup_device_id: string | null;
   summer_account_manager_uuid: string | null;
   winter_account_manager_uuid: string | null;
+  hitch_type: string | null;
+  vin_number: string | null;
+  tag_number: string | null;
+  manufacturer: string | null;
+  height_folded_ft: number | null;
+  gvwr: number | null;
 };
 
 export type InsertBleacher = {
@@ -20,6 +26,12 @@ export type InsertBleacher = {
   linxup_device_id?: string | null;
   summer_account_manager_uuid?: string | null;
   winter_account_manager_uuid?: string | null;
+  hitch_type?: string | null;
+  vin_number?: string | null;
+  tag_number?: string | null;
+  manufacturer?: string | null;
+  height_folded_ft?: number | null;
+  gvwr?: number | null;
 };
 
 export type UpdateBleacher = {
@@ -32,4 +44,10 @@ export type UpdateBleacher = {
   linxup_device_id?: string | null;
   summer_account_manager_uuid?: string | null;
   winter_account_manager_uuid?: string | null;
+  hitch_type?: string | null;
+  vin_number?: string | null;
+  tag_number?: string | null;
+  manufacturer?: string | null;
+  height_folded_ft?: number | null;
+  gvwr?: number | null;
 };

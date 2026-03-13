@@ -394,6 +394,9 @@ export async function saveWorkTracker(
         internal_notes: workTracker.internal_notes,
         driver_uuid: workTracker.driver_uuid,
         status: workTracker.status,
+        work_tracker_type_uuid: workTracker.work_tracker_type_uuid,
+        distance_meters: workTracker.distance_meters,
+        drive_minutes: workTracker.drive_minutes,
       })
       .eq("id", workTracker.id);
 
@@ -417,6 +420,9 @@ export async function saveWorkTracker(
         internal_notes: workTracker.internal_notes,
         driver_uuid: workTracker.driver_uuid,
         status: workTracker.status,
+        work_tracker_type_uuid: workTracker.work_tracker_type_uuid,
+        distance_meters: workTracker.distance_meters,
+        drive_minutes: workTracker.drive_minutes,
       })
       .select("id")
       .single();
@@ -791,6 +797,7 @@ export async function createEvent(
     must_be_clean: state.mustBeClean,
     goodshuffle_url: state.goodshuffleUrl ?? null,
     created_by_user_uuid: state.ownerUserUuid ?? null,
+    booked_at: state.bookedAt ? new Date(state.bookedAt).toISOString() : null,
   };
 
   const { data: eventData, error: eventError } = await supabase

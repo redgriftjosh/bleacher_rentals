@@ -21,6 +21,7 @@ type EventWithAddress = {
   must_be_clean: number | null;
   hsl_hue: number | null;
   goodshuffle_url: string | null;
+  booked_at: string | null;
   created_by_user_uuid: string | null;
   address_id: string | null;
   address_street: string | null;
@@ -63,6 +64,7 @@ export async function loadEventForModal(eventId: string): Promise<void> {
         "e.hsl_hue",
         "e.goodshuffle_url",
         "e.created_by_user_uuid",
+        "e.booked_at",
         "a.id as address_id",
         "a.street as address_street",
         "a.city as address_city",
@@ -136,7 +138,12 @@ export async function loadEventForModal(eventId: string): Promise<void> {
     setField("hslHue", eventData.hsl_hue);
     setField("goodshuffleUrl", eventData.goodshuffle_url ?? null);
     setField("ownerUserUuid", eventData.created_by_user_uuid ?? null);
-
+    setField(
+      "bookedAt",
+      eventData.booked_at
+        ? new Date(eventData.booked_at).toLocaleDateString("en-CA")
+        : null,
+    );
     // Open the modal (not the dashboard form)
     setField("isModalOpen", true);
     setField("isFormExpanded", false);

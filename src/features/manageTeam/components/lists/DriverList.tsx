@@ -1,9 +1,9 @@
 "use client";
 import { useDrivers } from "../../hooks/useDrivers";
-import { useCurrentUserStore } from "../../state/useCurrentUserStore";
 import { UserAvatar } from "../util/UserAvatar";
 import { STATUSES } from "@/features/manageTeam/constants";
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 
 function StatusBadge({ statusUuid }: { statusUuid: string | null }) {
   const config = useMemo(() => {
@@ -47,10 +47,10 @@ function formatDate(dateString: string | null) {
 
 export function DriverList({ showInactive = false }: { showInactive?: boolean }) {
   const drivers = useDrivers();
-  const loadExistingUser = useCurrentUserStore((s) => s.loadExistingUser);
+  const router = useRouter();
 
   const handleClick = (userUuid: string) => {
-    loadExistingUser(userUuid);
+    router.push(`/team/${userUuid}/edit`);
   };
 
   const filteredDrivers = showInactive

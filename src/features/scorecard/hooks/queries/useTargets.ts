@@ -18,9 +18,17 @@ export type ScorecardTarget = {
   value_of_revenue_weekly_cents: number | null;
   value_of_revenue_quarterly_cents: number | null;
   value_of_revenue_annually_cents: number | null;
+  gross_margin_percent_weekly: number | null;
+  gross_margin_percent_quarterly: number | null;
+  gross_margin_percent_annually: number | null;
 };
 
-export type TargetType = "quotes" | "sales" | "value_of_sales" | "value_of_revenue";
+export type TargetType =
+  | "quotes"
+  | "sales"
+  | "value_of_sales"
+  | "value_of_revenue"
+  | "gross_margin_percent";
 
 export function useTargets(
   timeRange: TimeRange,
@@ -48,6 +56,9 @@ export function useTargets(
         "st.value_of_revenue_weekly_cents as value_of_revenue_weekly_cents",
         "st.value_of_revenue_quarterly_cents as value_of_revenue_quarterly_cents",
         "st.value_of_revenue_annually_cents as value_of_revenue_annually_cents",
+        "st.gross_margin_percent_weekly as gross_margin_percent_weekly",
+        "st.gross_margin_percent_quarterly as gross_margin_percent_quarterly",
+        "st.gross_margin_percent_annually as gross_margin_percent_annually",
       ]);
 
     if (accountManagerUuid) {
@@ -64,7 +75,13 @@ export function useTargets(
   const { data: targets = [] } = useTypedQuery(targetQuery, expect<ScorecardTarget>());
 
   const goal = useMemo(() => {
-    return targets.reduce((sum, target) => {
+    const total = targets.reduce((sum, target) => {
+      if (targetType === "gross_margin_percent") {
+        if (timeRange === "weekly") return sum + (target.gross_margin_percent_weekly ?? 0);
+        if (timeRange === "quarterly") return sum + (target.gross_margin_percent_quarterly ?? 0);
+        return sum + (target.gross_margin_percent_annually ?? 0);
+      }
+
       if (targetType === "quotes") {
         if (timeRange === "weekly") return sum + (target.quotes_weekly ?? 0);
         if (timeRange === "quarterly") return sum + (target.quotes_quarterly ?? 0);
@@ -89,6 +106,12 @@ export function useTargets(
         return sum + (target.value_of_revenue_quarterly_cents ?? 0) / 100;
       return sum + (target.value_of_revenue_annually_cents ?? 0) / 100;
     }, 0);
+
+    // Percentage targets should be averaged, not summed
+    if (targetType === "gross_margin_percent" && targets.length > 0) {
+      return Math.round(total / targets.length);
+    }
+    return total;
   }, [targets, timeRange, targetType]);
 
   return { targets, goal };

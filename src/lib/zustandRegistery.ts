@@ -40,4 +40,12 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   Vehicles: () => {},
   Notifications: () => {},
   BlueBook: () => {},
+  QboConnections: () => {},
+  Vendors: () => {},
+  WorkTrackerGroups: () => {},
+  Zones: () => {},
+  ZoneQboClasses: () => {},
+  ZoneStateProvinces: () => {},
+  WorkTrackerTypes: () => {},
+  WorkTrackerTypeQboAccounts: () => {},
 };
