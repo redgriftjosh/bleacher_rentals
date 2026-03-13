@@ -98,11 +98,13 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       dropoff_address_uuid: null,
       dropoff_poc: null,
       dropoff_time: null,
+      dropoff_instructions: null,
       notes: null,
       pay_cents: null,
       pickup_address_uuid: null,
       pickup_poc: null,
       pickup_time: null,
+      pickup_instructions: null,
       user_uuid: null,
       internal_notes: null,
       driver_uuid: null,
@@ -116,6 +118,10 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       work_tracker_type_uuid: null,
       distance_meters: null,
       drive_minutes: null,
+      bol_number: null,
+      project_number: null,
+      setup_required: false,
+      teardown_required: false,
     };
 
     onWorkTrackerOpen?.(workTracker);
