@@ -126,9 +126,14 @@ export type Database = {
           id: string
           linxup_device_id: string | null
           manufacturer: string | null
+          opening_direction:
+            | Database["public"]["Enums"]["bleacher_opening_dir"]
+            | null
+          seat_length: number | null
           summer_account_manager_uuid: string | null
           summer_home_base_uuid: string | null
           tag_number: string | null
+          towing_length: number | null
           updated_at: string | null
           updated_by: string | null
           vin_number: string | null
@@ -147,9 +152,14 @@ export type Database = {
           id?: string
           linxup_device_id?: string | null
           manufacturer?: string | null
+          opening_direction?:
+            | Database["public"]["Enums"]["bleacher_opening_dir"]
+            | null
+          seat_length?: number | null
           summer_account_manager_uuid?: string | null
           summer_home_base_uuid?: string | null
           tag_number?: string | null
+          towing_length?: number | null
           updated_at?: string | null
           updated_by?: string | null
           vin_number?: string | null
@@ -168,9 +178,14 @@ export type Database = {
           id?: string
           linxup_device_id?: string | null
           manufacturer?: string | null
+          opening_direction?:
+            | Database["public"]["Enums"]["bleacher_opening_dir"]
+            | null
+          seat_length?: number | null
           summer_account_manager_uuid?: string | null
           summer_home_base_uuid?: string | null
           tag_number?: string | null
+          towing_length?: number | null
           updated_at?: string | null
           updated_by?: string | null
           vin_number?: string | null
@@ -1373,6 +1388,7 @@ export type Database = {
       get_week_start: { Args: { input_date: string }; Returns: string }
     }
     Enums: {
+      bleacher_opening_dir: "driver" | "passenger"
       bluebook_region: "CAN" | "US" | "Both"
       event_status: "quoted" | "booked" | "lost"
       pay_currency_type: "CAD" | "USD"
@@ -1528,6 +1544,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      bleacher_opening_dir: ["driver", "passenger"],
       bluebook_region: ["CAN", "US", "Both"],
       event_status: ["quoted", "booked", "lost"],
       pay_currency_type: ["CAD", "USD"],
