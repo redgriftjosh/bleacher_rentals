@@ -23,6 +23,9 @@ type Query = {
   manufacturer: string | null;
   height_folded_ft: number | null;
   gvwr: number | null;
+  towing_length: number | null;
+  seat_length: number | null;
+  opening_direction: string | null;
   summer_home_base_uuid: string | null;
   summer_home_base_name: string | null;
   winter_home_base_uuid: string | null;
@@ -44,6 +47,9 @@ export function useBleachersQuery() {
       "b.manufacturer",
       "b.height_folded_ft",
       "b.gvwr",
+      "b.towing_length",
+      "b.seat_length",
+      "b.opening_direction",
 
       // home_base fields
       "shb.id as summer_home_base_uuid",
@@ -68,6 +74,9 @@ export function useBleachersQuery() {
       manufacturer: bleacher.manufacturer ?? null,
       heightFoldedFt: bleacher.height_folded_ft ?? null,
       gvwr: bleacher.gvwr ?? null,
+      towingLength: bleacher.towing_length ?? null,
+      seatLength: bleacher.seat_length ?? null,
+      openingDirection: bleacher.opening_direction ?? null,
       summerHomeBase: {
         homeBaseUuid: bleacher.summer_home_base_uuid ?? "",
         homeBaseName: bleacher.summer_home_base_name ?? "",
@@ -107,6 +116,9 @@ export function useBleacherQuery(bleacherNumber: number | null) {
           manufacturer,
           height_folded_ft,
           gvwr,
+          towing_length,
+          seat_length,
+          opening_direction,
           summer_home_base_uuid,
           winter_home_base_uuid,
           linxup_device_id,

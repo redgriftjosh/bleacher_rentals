@@ -45,6 +45,9 @@ export function SheetEditBleacher() {
   const [manufacturer, setManufacturer] = useState<string | null>(null);
   const [heightFoldedFt, setHeightFoldedFt] = useState<number | null>(null);
   const [gvwr, setGvwr] = useState<number | null>(null);
+  const [towingLength, setTowingLength] = useState<number | null>(null);
+  const [seatLength, setSeatLength] = useState<number | null>(null);
+  const [openingDirection, setOpeningDirection] = useState<"driver" | "passenger" | null>(null);
 
   const [isTakenNumber, setIsTakenNumber] = useState(true);
 
@@ -55,9 +58,9 @@ export function SheetEditBleacher() {
     error: bleacherError,
   } = useBleacherQuery(editBleacherNumber);
   console.log("editBleacherNumber:", editBleacherNumber);
-console.log("bleacher:", bleacher);
-console.log("bleacherLoading:", bleacherLoading);
-console.log("bleacherError:", bleacherError);
+  console.log("bleacher:", bleacher);
+  console.log("bleacherLoading:", bleacherLoading);
+  console.log("bleacherError:", bleacherError);
 
   // Fetch home bases for the dropdowns
   const { data: homeBases = [], isLoading: homeBasesLoading } = useQuery({
@@ -92,6 +95,9 @@ console.log("bleacherError:", bleacherError);
       setManufacturer(bleacher.manufacturer ?? null);
       setHeightFoldedFt(bleacher.height_folded_ft ?? null);
       setGvwr(bleacher.gvwr ?? null);
+      setTowingLength(bleacher.towing_length ?? null);
+      setSeatLength(bleacher.seat_length ?? null);
+      setOpeningDirection(bleacher.opening_direction ?? null);
     } else if (bleacherError) {
       toast.error("Bleacher not found");
     }
@@ -115,6 +121,9 @@ console.log("bleacherError:", bleacherError);
       setManufacturer(null);
       setHeightFoldedFt(null);
       setGvwr(null);
+      setTowingLength(null);
+      setSeatLength(null);
+      setOpeningDirection(null);
     }
   }, [editBleacherNumber]);
 
@@ -168,6 +177,9 @@ console.log("bleacherError:", bleacherError);
           manufacturer: manufacturer,
           height_folded_ft: heightFoldedFt,
           gvwr: gvwr,
+          towing_length: towingLength,
+          seat_length: seatLength,
+          opening_direction: openingDirection,
         },
         supabase,
         queryClient
@@ -352,6 +364,36 @@ console.log("bleacherError:", bleacherError);
                     onChange={(e) => setHeightFoldedFt(e.target.value ? Number(e.target.value) : null)}
                     className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                   />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Towing Length (ft)</label>
+                  <input
+                    type="number"
+                    value={towingLength ?? ""}
+                    onChange={(e) => setTowingLength(e.target.value ? Number(e.target.value) : null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Seat Length (ft)</label>
+                  <input
+                    type="number"
+                    value={seatLength ?? ""}
+                    onChange={(e) => setSeatLength(e.target.value ? Number(e.target.value) : null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Opening Direction</label>
+                  <select
+                    value={openingDirection ?? ""}
+                    onChange={(e) => setOpeningDirection((e.target.value || null) as "driver" | "passenger" | null)}
+                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                  >
+                    <option value="">Select direction</option>
+                    <option value="driver">Driver</option>
+                    <option value="passenger">Passenger</option>
+                  </select>
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
                   <label className="text-right text-sm font-medium col-span-2">GVWR (lbs)</label>

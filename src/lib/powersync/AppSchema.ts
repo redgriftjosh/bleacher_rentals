@@ -42,6 +42,9 @@ const BleachersCols = {
   manufacturer: column.text,
   height_folded_ft: column.integer,
   gvwr: column.integer,
+  towing_length: column.integer,
+  seat_length: column.integer,
+  opening_direction: column.text,
 } satisfies PowerSyncColsFor<"Bleachers">;
 const Bleachers = new Table(BleachersCols, {
   indexes: {

@@ -19,6 +19,9 @@ export default function BleachersPage() {
             <th className="p-3 text-left font-semibold">Tag #</th>
             <th className="p-3 text-left font-semibold">Hitch Type</th>
             <th className="p-3 text-left font-semibold">Height Folded</th>
+            <th className="p-3 text-left font-semibold">Towing Length</th>
+            <th className="p-3 text-left font-semibold">Seat Length</th>
+            <th className="p-3 text-left font-semibold">Opening Direction</th>
             <th className="p-3 text-left font-semibold">GVWR</th>
             <th className="p-3 text-left font-semibold">Home Base</th>
             <th className="p-3 text-left font-semibold">Winter Home Base</th>
