@@ -16,7 +16,7 @@ export class PinnableSection extends Container {
   private labelText: LabelText;
   private eventInfo: EventSpanType;
 
-  constructor(eventInfo: EventSpanType, app: Application, baker: Baker) {
+  constructor(eventInfo: EventSpanType, app: Application, baker: Baker, availableWidth?: number) {
     super();
     this.position.set(4, 4);
 
@@ -28,13 +28,13 @@ export class PinnableSection extends Container {
     this.on("pointerdown", this.handleClick.bind(this));
 
     // Always create the static label
-    this.labelText = new LabelText(eventInfo);
+    this.labelText = new LabelText(eventInfo, availableWidth);
     if (eventInfo.ev.goodshuffleUrl) {
       const labelDimensions = this.labelText.getNameLabelDimensions();
       const gsLogo = new GoodShuffleIcon(baker, eventInfo.ev.goodshuffleUrl);
       gsLogo.position.set(
         labelDimensions.width + 4, // 8px padding + 6px for pivot offset
-        0 // Centered vertically + 6px for pivot offset
+        0, // Centered vertically + 6px for pivot offset
       );
       this.addChild(gsLogo);
     }
