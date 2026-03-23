@@ -93,6 +93,7 @@ export class Grid extends Container {
 
     // Create container for grid cells
     this.gridContainer = new Container();
+    this.gridContainer.sortableChildren = true;
     this.addChild(this.gridContainer);
 
     // Create content mask to prevent overlap with scrollbars
@@ -196,7 +197,7 @@ export class Grid extends Container {
           this.cellWidth,
           this.cellHeight,
           poolContainer,
-          firstVisibleCol
+          firstVisibleCol,
         );
 
         poolContainer.position.set(actualCol * this.cellWidth, actualRow * this.cellHeight);
@@ -275,7 +276,7 @@ export class Grid extends Container {
         gridWorldPos.y,
         this.gridWidth,
         this.gridHeight,
-        this.showScrollbar
+        this.showScrollbar,
       );
     }
 
@@ -291,7 +292,7 @@ export class Grid extends Container {
         gridWorldPos.y,
         this.gridWidth,
         this.gridHeight,
-        this.showScrollbar
+        this.showScrollbar,
       );
     }
   }

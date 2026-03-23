@@ -38,7 +38,9 @@ export class FirstCellNotPinned extends HoverableBakedSprite {
         container.addChild(eventCellLabel);
 
         // Mask to clip label text that overflows the span area vertically
-        const mask = new Graphics().rect(0, 0, spanPixelWidth, dimensions.height).fill(0xffffff);
+        const mask = new Graphics()
+          .rect(0, 0, spanPixelWidth, dimensions.height + 1)
+          .fill(0xffffff);
         container.addChild(mask);
         container.mask = mask;
       },
