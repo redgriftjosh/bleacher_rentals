@@ -18,13 +18,23 @@ export class EventBody extends Sprite {
       isMiddle: boolean;
     },
     baker: Baker,
-    dimensions: { width: number; height: number }
+    dimensions: { width: number; height: number },
   ) {
     super();
 
     this.currentSpan = eventInfo.span;
     this.eventMode = "static";
     this.cursor = "pointer";
+
+    const borderWidth = 1;
+    const alignment = 1;
+    const L = 0;
+
+    const R = CELL_WIDTH + 2;
+    const B = CELL_HEIGHT + 1;
+
+    const W = CELL_WIDTH + 1;
+    const H = CELL_HEIGHT + 1;
 
     this.on("pointerdown", this.handleClick.bind(this));
 
@@ -38,6 +48,7 @@ export class EventBody extends Sprite {
       `EventBody:${eventInfo.span?.ev.eventUuid}:${isBooked ? "booked" : "quoted"}:${
         eventInfo.isStart ? "start" : eventInfo.isEnd ? "end" : "middle"
       }`,
+      // { width: CELL_WIDTH + 1, height: CELL_HEIGHT + 1 },
       null,
       (c) => {
         const g = new Graphics();
@@ -54,22 +65,14 @@ export class EventBody extends Sprite {
         //   },
         // });
 
-        const borderWidth = 1;
-        const alignment = 1;
-        const L = 0;
-        const T = 1;
-        const R = CELL_WIDTH;
-        const B = CELL_HEIGHT;
-
-        const W = CELL_WIDTH;
-        const H = CELL_HEIGHT;
-
         if (isBooked) {
           // Booked events: solid fill
+          const T = 0;
           fill.rect(L, T, W, H).fill(eventColor);
         } else {
           // Quoted events: white background with selective borders
-          fill.rect(L, T, W, H).fill(0xffffff); // White background
+          const T = 1;
+          fill.rect(L, T - 1, W, H).fill(0xffffff); // White background
 
           // Draw borders based on position in span
           if (eventInfo.isStart) {
@@ -90,9 +93,9 @@ export class EventBody extends Sprite {
             // Draw tile background (light gray)
           } else if (eventInfo.isEnd) {
             // End cell: top, right, and bottom borders
-            const r = R - 1;
+            const r = R - 2;
             g.moveTo(L, T)
-              .lineTo(r, T)
+              .lineTo(r + 1, T)
               .stroke({ width: borderWidth, color: eventColor, alignment }); // Top
             g.moveTo(r, T)
               .lineTo(r, B)
@@ -119,7 +122,7 @@ export class EventBody extends Sprite {
         //   isBooked ? "booked" : "quoted",
         //   eventInfo.isStart ? "start" : eventInfo.isEnd ? "end" : "middle"
         // );
-      }
+      },
     );
 
     this.texture = texture;

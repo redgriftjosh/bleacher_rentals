@@ -12,7 +12,7 @@ export class LabelText extends Container {
   private addressLabel?: Text;
   private eventInfo: EventSpanType;
 
-  constructor(eventInfo: EventSpanType) {
+  constructor(eventInfo: EventSpanType, availableWidth?: number) {
     super();
 
     this.eventInfo = eventInfo;
@@ -33,32 +33,15 @@ export class LabelText extends Container {
       text: `${eventInfo.ev.eventName}`,
       style: {
         fontFamily: "Helvetica",
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: "500",
         align: "left",
         fill: textColor,
+        ...(availableWidth != null && { wordWrap: true, wordWrapWidth: availableWidth }),
       },
     });
-    this.nameLabel.position.set(0, 2);
+    this.nameLabel.position.set(-2, -3);
     this.addChild(this.nameLabel);
-
-    // Address (secondary label)
-    if (eventInfo.ev.address) {
-      this.addressLabel = new Text({
-        text: eventInfo.ev.address,
-        style: {
-          fontFamily: "Helvetica",
-          fontSize: 12,
-          fontWeight: "300",
-          align: "left",
-          fill: textColor,
-        },
-      });
-      this.addressLabel.position.set(0, 18);
-      this.addChild(this.addressLabel);
-    }
-
-    // console.log("LabelText");
   }
 
   private async handleClick(e: any) {
