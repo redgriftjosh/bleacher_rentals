@@ -1,9 +1,10 @@
-import { Application } from "pixi.js";
+import { Application, Graphics } from "pixi.js";
 import { EventInfo } from "../../util/Events";
 import { EventBody } from "./EventBody";
 import { Baker } from "../../util/Baker";
 import { PinnableSection } from "./PinnableSection";
 import { HoverableBakedSprite } from "../../util/HoverableBakedSprite";
+import { CELL_WIDTH } from "../../values/constants";
 
 /**
  * Event cell using HoverableBakedSprite for performance + interactivity
@@ -16,9 +17,12 @@ export class FirstCellNotPinned extends HoverableBakedSprite {
     currentColIndex: number,
     app: Application,
     baker: Baker,
-    dimensions: { width: number; height: number }
+    dimensions: { width: number; height: number },
   ) {
     // Use the reusable HoverableBakedSprite with our content builder
+    const spanCols = eventInfo.span ? eventInfo.span.end - eventInfo.span.start + 1 : 1;
+    const spanPixelWidth = spanCols * CELL_WIDTH;
+
     super(
       baker,
       `FirstCellNotPinned:${eventInfo.span?.ev.eventUuid}`,
@@ -27,11 +31,19 @@ export class FirstCellNotPinned extends HoverableBakedSprite {
         const eventCell = new EventBody(eventInfo, baker, dimensions);
         container.addChild(eventCell);
 
-        const eventCellLabel = new PinnableSection(eventInfo.span!, app, baker);
+        const spanWidth = eventInfo.span
+          ? (eventInfo.span.end - eventInfo.span.start + 1) * CELL_WIDTH - 8
+          : undefined;
+        const eventCellLabel = new PinnableSection(eventInfo.span!, app, baker, spanWidth);
         container.addChild(eventCellLabel);
 
-        // console.log("FirstEventCell content built");
-      }
+        // Mask to clip label text that overflows the span area vertically
+        const mask = new Graphics()
+          .rect(0, 0, spanPixelWidth, dimensions.height + 1)
+          .fill(0xffffff);
+        container.addChild(mask);
+        container.mask = mask;
+      },
       // dimensions
     );
   }

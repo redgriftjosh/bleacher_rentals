@@ -51,7 +51,7 @@ export class MainGridCellRenderer implements ICellRenderer {
     events: DashboardEvent[],
     dates: string[],
     yAxis: "Bleachers" | "Events",
-    opts?: undefined
+    opts?: undefined,
   ) {
     this.app = app;
     this.baker = new Baker(app);
@@ -107,10 +107,10 @@ export class MainGridCellRenderer implements ICellRenderer {
           if (rowIndex === undefined) continue;
           const prevBleacher = prevByUuid.get(nextBleacher.bleacherUuid);
           const prevBlocksByDate = new Map(
-            (prevBleacher?.blocks ?? []).map((bl) => [bl.date, bl.text] as const)
+            (prevBleacher?.blocks ?? []).map((bl) => [bl.date, bl.text] as const),
           );
           const nextBlocksByDate = new Map(
-            (nextBleacher.blocks ?? []).map((bl) => [bl.date, bl.text] as const)
+            (nextBleacher.blocks ?? []).map((bl) => [bl.date, bl.text] as const),
           );
           const allDates = new Set<string>([
             ...Array.from(prevBlocksByDate.keys()),
@@ -127,7 +127,7 @@ export class MainGridCellRenderer implements ICellRenderer {
                 const vis = this.visibleCells.get(key);
                 // Update latest snapshot map so rebuild uses current data
                 this.latestBleachersByUuid = new Map(
-                  nextData.map((b) => [b.bleacherUuid, b] as const)
+                  nextData.map((b) => [b.bleacherUuid, b] as const),
                 );
                 if (vis) {
                   // Rebuild just this visible cell to refresh its baked text
@@ -137,7 +137,7 @@ export class MainGridCellRenderer implements ICellRenderer {
                     vis.w,
                     vis.h,
                     vis.parent,
-                    vis.firstVisibleColumn
+                    vis.firstVisibleColumn,
                   );
                 }
               }
@@ -249,7 +249,7 @@ export class MainGridCellRenderer implements ICellRenderer {
     cellWidth: number,
     cellHeight: number,
     parent: Container,
-    firstVisibleColumn?: number
+    firstVisibleColumn?: number,
   ): Container {
     // PERFORMANCE CRITICAL: Reuse existing container instead of creating new one
     // Clear existing children efficiently
@@ -271,6 +271,7 @@ export class MainGridCellRenderer implements ICellRenderer {
 
     // --- Normal event rendering ---
     if (eventInfo.hasEvent && eventInfo.span) {
+      parent.zIndex = 1;
       // Use passed firstVisibleColumn or calculate from current scroll position
       const currentFirstVisibleColumn =
         firstVisibleColumn ?? Math.floor(this.currentScrollX / (this.cellWidth || 1));
@@ -278,7 +279,7 @@ export class MainGridCellRenderer implements ICellRenderer {
       // Check if THIS specific event should be pinned
       const thisEventShouldBePinned = EventsUtil.shouldEventBePinned(
         eventInfo.span,
-        currentFirstVisibleColumn
+        currentFirstVisibleColumn,
       );
 
       if (!thisEventShouldBePinned && eventInfo.isStart) {
@@ -291,11 +292,13 @@ export class MainGridCellRenderer implements ICellRenderer {
           col,
           this.app,
           this.baker,
-          dimensions
+          dimensions,
         );
+        firstCell.position.set(-1, -1);
         parent.addChild(firstCell);
       } else {
         const eventSprite = new EventBody(eventInfo, this.baker, dimensions);
+        eventSprite.position.set(-1, -1);
         parent.addChild(eventSprite);
       }
     } else {
@@ -321,7 +324,7 @@ export class MainGridCellRenderer implements ICellRenderer {
               txt.anchor.set(0.5);
               txt.position.set(cellWidth / 2, cellHeight / 2);
               c.addChild(txt);
-            }
+            },
           );
           // IMPORTANT: add text inside the tile so pointer events bubble to tile
           textSprite.eventMode = "none"; // ensure it does not capture events itself

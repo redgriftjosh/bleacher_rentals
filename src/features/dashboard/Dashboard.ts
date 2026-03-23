@@ -66,7 +66,7 @@ export class Dashboard {
       initialScrollX?: number | null;
       initialScrollY?: number | null;
       filters?: DashboardFilterState;
-    }
+    },
   ) {
     this.app = app;
     // Get dates for event calculations
@@ -221,14 +221,14 @@ export class Dashboard {
       this.events,
       dates,
       this.yAxis,
-      undefined
+      undefined,
     );
     this.mainGridPinYCellRenderer = new PinnedYCellRenderer(app, this.bleachers, dates);
     this.leftColumnCellRenderer = new StickyLeftColumnCellRenderer(
       app,
       this.bleachers,
       this.yAxis,
-      this.events
+      this.events,
     );
     this.topRowCellRenderer = new StickyTopRowCellRenderer(app);
     this.topLeftCellRenderer = new TopLeftCellRenderer(app);
@@ -488,6 +488,11 @@ export class Dashboard {
       // Update both renderers with current scroll position
       this.mainGridPinYCellRenderer.updateScrollPosition(scrollX, CELL_WIDTH);
       this.mainGridCellRenderer.updateScrollPosition(scrollX, CELL_WIDTH);
+
+      // Force update pinned Y axis on every scroll for smooth text wrapping
+      if (this.yAxis === "Bleachers") {
+        this.mainGridPinnedYAxis.forceUpdate();
+      }
     });
 
     // Horizontal centering moved to constructor after potential initialScrollX check
