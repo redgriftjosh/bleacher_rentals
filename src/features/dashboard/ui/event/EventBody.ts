@@ -73,9 +73,15 @@ export class EventBody extends Sprite {
 
           if (eventInfo.isStart) {
             // Start cell: top, left, and bottom borders
-            g.moveTo(L, T).lineTo(R, T).stroke({ width: borderWidth, color: 0x000000, alignment }); // Top
-            g.moveTo(L, T).lineTo(L, B).stroke({ width: borderWidth, color: 0x000000, alignment }); // Left
-            g.moveTo(L, B).lineTo(R, B).stroke({ width: borderWidth, color: 0x000000, alignment }); // Bottom
+            g.moveTo(L, T)
+              .lineTo(R, T)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Top
+            g.moveTo(L, T)
+              .lineTo(L, B)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Left
+            g.moveTo(L, B)
+              .lineTo(R, B)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Bottom
 
             // test.text = "Start";
             // const tileGraphics = new Graphics();
@@ -86,16 +92,26 @@ export class EventBody extends Sprite {
             const r = R - 2;
             g.moveTo(L, T)
               .lineTo(r + 1, T)
-              .stroke({ width: borderWidth, color: 0x000000, alignment }); // Top
-            g.moveTo(r, T).lineTo(r, B).stroke({ width: borderWidth, color: 0x000000, alignment }); // Right
-            g.moveTo(L, B).lineTo(r, B).stroke({ width: borderWidth, color: 0x000000, alignment }); // Bottom
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Top
+            g.moveTo(r, T)
+              .lineTo(r, B)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Right
+            g.moveTo(L, B)
+              .lineTo(r, B)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Bottom
             // test.text = "End";
           } else {
             // Middle cell: only top and bottom borders
-            g.moveTo(L, T).lineTo(R, T).stroke({ width: borderWidth, color: 0x000000, alignment }); // Top
-            g.moveTo(L, B).lineTo(R, B).stroke({ width: borderWidth, color: 0x000000, alignment }); // Bottom
+            g.moveTo(L, T)
+              .lineTo(R, T)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Top
+            g.moveTo(L, B)
+              .lineTo(R, B)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Bottom
             // test.text = "Middle";
           }
+
+          g.stroke({ alpha: 0.2 });
         } else {
           // Quoted events: white background with selective borders
           const T = 1;
