@@ -29,15 +29,15 @@ export class PinnableSection extends Container {
 
     // Always create the static label
     this.labelText = new LabelText(eventInfo, availableWidth);
-    // if (eventInfo.ev.goodshuffleUrl) {
-    //   const labelDimensions = this.labelText.getNameLabelDimensions();
-    //   const gsLogo = new GoodShuffleIcon(baker, eventInfo.ev.goodshuffleUrl);
-    //   gsLogo.position.set(
-    //     labelDimensions.width + 4, // 8px padding + 6px for pivot offset
-    //     0, // Centered vertically + 6px for pivot offset
-    //   );
-    //   this.addChild(gsLogo);
-    // }
+    if (eventInfo.ev.goodshuffleUrl) {
+      const labelDimensions = this.labelText.getNameLabelDimensions();
+      const gsLogo = new GoodShuffleIcon(baker, eventInfo.ev.goodshuffleUrl);
+      gsLogo.position.set(
+        labelDimensions.width + 4, // 8px padding + 6px for pivot offset
+        0, // Centered vertically + 6px for pivot offset
+      );
+      this.addChild(gsLogo);
+    }
     this.addChild(this.labelText);
 
     // console.log("PinnableSection");

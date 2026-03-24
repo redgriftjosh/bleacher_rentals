@@ -68,6 +68,51 @@ export class EventBody extends Sprite {
 
         if (isBooked) {
           // Booked events: solid fill
+          const T = 1;
+          // fill.rect(L, T, W, H).fill(eventColor);
+          fill.rect(L, T - 1, W, H).fill(eventColor);
+
+          if (eventInfo.isStart) {
+            // Start cell: top, left, and bottom borders
+            g.moveTo(L, T)
+              .lineTo(R, T)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Top
+            g.moveTo(L, T)
+              .lineTo(L, B)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Left
+            g.moveTo(L, B)
+              .lineTo(R, B)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Bottom
+
+            // test.text = "Start";
+            // const tileGraphics = new Graphics();
+
+            // Draw tile background (light gray)
+          } else if (eventInfo.isEnd) {
+            // End cell: top, right, and bottom borders
+            const r = R - 2;
+            g.moveTo(L, T)
+              .lineTo(r + 1, T)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Top
+            g.moveTo(r, T)
+              .lineTo(r, B)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Right
+            g.moveTo(L, B)
+              .lineTo(r, B)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Bottom
+            // test.text = "End";
+          } else {
+            // Middle cell: only top and bottom borders
+            g.moveTo(L, T)
+              .lineTo(R, T)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Top
+            g.moveTo(L, B)
+              .lineTo(R, B)
+              .stroke({ width: borderWidth, color: 0x000000, alpha: 0.2, alignment }); // Bottom
+            // test.text = "Middle";
+          }
+
+          g.stroke({ alpha: 0.2 });
           const T = topOffset;
           fill.rect(L, T, W, H).fill(eventColor);
         } else {
