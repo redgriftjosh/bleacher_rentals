@@ -271,7 +271,7 @@ export class MainGridCellRenderer implements ICellRenderer {
 
     // --- Normal event rendering ---
     if (eventInfo.hasEvent && eventInfo.span) {
-      parent.zIndex = 1;
+      parent.zIndex = (row + 1) * 2;
       // Use passed firstVisibleColumn or calculate from current scroll position
       const currentFirstVisibleColumn =
         firstVisibleColumn ?? Math.floor(this.currentScrollX / (this.cellWidth || 1));
@@ -284,7 +284,7 @@ export class MainGridCellRenderer implements ICellRenderer {
 
       if (!thisEventShouldBePinned && eventInfo.isStart) {
         // UNPINNED EVENT: Cache the entire container for maximum performance
-        parent.zIndex = 3;
+        parent.zIndex = (row + 1) * 2 + 1;
 
         const firstCell = new FirstCellNotPinned(
           eventInfo,
