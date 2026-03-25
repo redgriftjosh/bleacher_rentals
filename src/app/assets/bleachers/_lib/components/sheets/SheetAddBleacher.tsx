@@ -29,8 +29,7 @@ export function SheetAddBleacher() {
   const [manufacturer, setManufacturer] = useState<string | null>(null);
   const [heightFoldedFt, setHeightFoldedFt] = useState<number | null>(null);
   const [gvwr, setGvwr] = useState<number | null>(null);
-  const [towingLength, setTowingLength] = useState<number | null>(null);
-  const [seatLength, setSeatLength] = useState<number | null>(null);
+  const [trailerLength, setTrailerLength] = useState<number | null>(null);
   const [openingDirection, setOpeningDirection] = useState<"driver" | "passenger" | null>(null);
   // const [homeBases, setHomeBases] = useState<HomeBase[] | null>(null);
   const [selectedSummerHomeBaseUuid, setSelectedSummerHomeBaseUuid] = useState<string | null>(null);
@@ -53,8 +52,7 @@ export function SheetAddBleacher() {
       setManufacturer(null);
       setHeightFoldedFt(null);
       setGvwr(null);
-      setTowingLength(null);
-      setSeatLength(null);
+      setTrailerLength(null);
       setOpeningDirection(null);
       setSelectedSummerHomeBaseUuid(null);
       setSelectedWinterHomeBaseUuid(null);
@@ -115,8 +113,7 @@ export function SheetAddBleacher() {
           manufacturer: manufacturer,
           height_folded_ft: heightFoldedFt,
           gvwr: gvwr,
-          towing_length: towingLength,
-          seat_length: seatLength,
+          trailer_length: trailerLength,
           opening_direction: openingDirection,
           summer_home_base_uuid: selectedSummerHomeBaseUuid!,
           winter_home_base_uuid: selectedWinterHomeBaseUuid!,
@@ -304,7 +301,7 @@ export function SheetAddBleacher() {
                   />
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Height Folded (ft)</label>
+                  <label className="text-right text-sm font-medium col-span-2">Trailer Height (ft)</label>
                   <input
                     type="number"
                     value={heightFoldedFt ?? ""}
@@ -313,20 +310,11 @@ export function SheetAddBleacher() {
                   />
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Towing Length (ft)</label>
+                  <label className="text-right text-sm font-medium col-span-2">Trailer Length (ft)</label>
                   <input
                     type="number"
-                    value={towingLength ?? ""}
-                    onChange={(e) => setTowingLength(e.target.value ? Number(e.target.value) : null)}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Seat Length (ft)</label>
-                  <input
-                    type="number"
-                    value={seatLength ?? ""}
-                    onChange={(e) => setSeatLength(e.target.value ? Number(e.target.value) : null)}
+                    value={trailerLength ?? ""}
+                    onChange={(e) => setTrailerLength(e.target.value ? Number(e.target.value) : null)}
                     className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                   />
                 </div>

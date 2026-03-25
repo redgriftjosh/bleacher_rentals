@@ -18,9 +18,8 @@ export default function BleachersPage() {
             <th className="p-3 text-left font-semibold">VIN</th>
             <th className="p-3 text-left font-semibold">Tag #</th>
             <th className="p-3 text-left font-semibold">Hitch Type</th>
-            <th className="p-3 text-left font-semibold">Height Folded</th>
-            <th className="p-3 text-left font-semibold">Towing Length</th>
-            <th className="p-3 text-left font-semibold">Seat Length</th>
+            <th className="p-3 text-left font-semibold">Trailer Height</th>
+            <th className="p-3 text-left font-semibold">Trailer Length</th>
             <th className="p-3 text-left font-semibold">Opening Direction</th>
             <th className="p-3 text-left font-semibold">GVWR</th>
             <th className="p-3 text-left font-semibold">Home Base</th>

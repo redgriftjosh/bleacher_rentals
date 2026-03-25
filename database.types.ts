@@ -129,11 +129,10 @@ export type Database = {
           opening_direction:
             | Database["public"]["Enums"]["bleacher_opening_dir"]
             | null
-          seat_length: number | null
           summer_account_manager_uuid: string | null
           summer_home_base_uuid: string | null
           tag_number: string | null
-          towing_length: number | null
+          trailer_length: number | null
           updated_at: string | null
           updated_by: string | null
           vin_number: string | null
@@ -155,11 +154,10 @@ export type Database = {
           opening_direction?:
             | Database["public"]["Enums"]["bleacher_opening_dir"]
             | null
-          seat_length?: number | null
           summer_account_manager_uuid?: string | null
           summer_home_base_uuid?: string | null
           tag_number?: string | null
-          towing_length?: number | null
+          trailer_length?: number | null
           updated_at?: string | null
           updated_by?: string | null
           vin_number?: string | null
@@ -181,11 +179,10 @@ export type Database = {
           opening_direction?:
             | Database["public"]["Enums"]["bleacher_opening_dir"]
             | null
-          seat_length?: number | null
           summer_account_manager_uuid?: string | null
           summer_home_base_uuid?: string | null
           tag_number?: string | null
-          towing_length?: number | null
+          trailer_length?: number | null
           updated_at?: string | null
           updated_by?: string | null
           vin_number?: string | null

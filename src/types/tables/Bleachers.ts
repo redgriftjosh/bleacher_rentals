@@ -15,8 +15,7 @@ export type SelectBleacher = {
   manufacturer: string | null;
   height_folded_ft: number | null;
   gvwr: number | null;
-  towing_length: number | null;
-  seat_length: number | null;
+  bleacher_length: number | null;
   opening_direction: "driver" | "passenger" | null;
 };
 
@@ -35,8 +34,7 @@ export type InsertBleacher = {
   manufacturer?: string | null;
   height_folded_ft?: number | null;
   gvwr?: number | null;
-  towing_length?: number | null;
-  seat_length?: number | null;
+  trailer_length?: number | null;
   opening_direction?: "driver" | "passenger" | null;
 };
 
@@ -56,7 +54,6 @@ export type UpdateBleacher = {
   manufacturer?: string | null;
   height_folded_ft?: number | null;
   gvwr?: number | null;
-  towing_length?: number | null;
-  seat_length?: number | null;
+  trailer_length?: number | null;
   opening_direction?: "driver" | "passenger" | null;
 };

@@ -27,8 +27,7 @@ export function BleacherItemRow({
   manufacturer,
   heightFoldedFt,
   gvwr,
-  towingLength,
-  seatLength,
+  trailerLength,
   openingDirection,
   summerHomeBase,
   winterHomeBase,
@@ -60,8 +59,7 @@ export function BleacherItemRow({
       <td className="p-3 text-left">{tagNumber ?? "—"}</td>
       <td className="p-3 text-left">{hitchType ?? "—"}</td>
       <td className="p-3 text-left">{heightFoldedFt != null ? `${heightFoldedFt} ft` : "—"}</td>
-      <td className="p-3 text-left">{towingLength != null ? `${towingLength} ft` : "—"}</td>
-      <td className="p-3 text-left">{seatLength != null ? `${seatLength} ft` : "—"}</td>
+      <td className="p-3 text-left">{trailerLength != null ? `${trailerLength} ft` : "—"}</td>
       <td className="p-3 text-left">{openingDirection ?? "—"}</td>
       <td className="p-3 text-left">{gvwr != null ? `${gvwr.toLocaleString()} lbs` : "—"}</td>
       <td className="p-3 text-left">{summerHomeBase.homeBaseName}</td>

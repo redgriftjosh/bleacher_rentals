@@ -4,6 +4,5 @@ create type bleacher_opening_dir as enum (
 );
 
 ALTER TABLE public."Bleachers"
-    ADD COLUMN towing_length NUMERIC,
-    ADD COLUMN seat_length NUMERIC,
+    ADD COLUMN trailer_length NUMERIC,
     ADD COLUMN opening_direction bleacher_opening_dir;
