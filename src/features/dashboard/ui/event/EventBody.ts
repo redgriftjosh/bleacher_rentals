@@ -68,7 +68,7 @@ export class EventBody extends Sprite {
 
         if (isBooked) {
           // Booked events: solid fill
-          const T = 1;
+          const T = Math.max(1, topOffset);
           // fill.rect(L, T, W, H).fill(eventColor);
           fill.rect(L, T - 1, W, H).fill(eventColor);
 
@@ -113,7 +113,6 @@ export class EventBody extends Sprite {
           }
 
           g.stroke({ alpha: 0.2 });
-          const T = topOffset;
           fill.rect(L, T, W, H).fill(eventColor);
         } else {
           // Quoted events: white background with selective borders
