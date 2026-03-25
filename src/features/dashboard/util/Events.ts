@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import { Bleacher, BleacherEvent } from "../types";
+import { CELL_HEIGHT } from "../values/constants";
 
 export type EventSpanType = {
   start: number;
@@ -14,6 +15,16 @@ export type EventInfo = {
   isStart: boolean;
   isEnd: boolean;
   isMiddle: boolean;
+};
+
+export type OverlapInfo = {
+  topOffset: number;
+  height: number;
+  zIndex: number;
+};
+
+export type CellEventInfoWithOverlap = EventInfo & {
+  overlapInfo: OverlapInfo;
 };
 
 export class EventsUtil {
@@ -54,7 +65,7 @@ export class EventsUtil {
   public static findPinnedEventSpan(
     row: number,
     firstVisibleColumn: number,
-    spansByRow: EventSpanType[][]
+    spansByRow: EventSpanType[][],
   ): EventSpanType | null {
     const spans = spansByRow[row] ?? [];
 
@@ -87,7 +98,7 @@ export class EventsUtil {
         selectedStatus?: string;
         goodshuffleUrl?: string | null;
       } | null;
-    }
+    },
   ): { spansByRow: EventSpanType[][]; dateToIndex: Map<string, number> } {
     const dateToIndex = new Map(dates.map((d, i) => [d, i]));
     const selected = opts?.selected;
@@ -182,7 +193,7 @@ export class EventsUtil {
   public static getCellEventInfo(
     row: number,
     col: number,
-    spansByRow: EventSpanType[][]
+    spansByRow: EventSpanType[][],
   ): EventInfo {
     const spans = spansByRow[row] ?? [];
     let log = false;
@@ -259,6 +270,123 @@ export class EventsUtil {
       isEnd: false,
       isMiddle: false,
     };
+  }
+
+  /**
+   * Get all events at a cell with overlap rendering info.
+   * Returns an array of event infos with computed topOffset and zIndex.
+   * Events are ordered by depth (earliest start = lowest depth = tallest).
+   */
+  public static getAllCellEventInfos(
+    row: number,
+    col: number,
+    spansByRow: EventSpanType[][],
+  ): CellEventInfoWithOverlap[] {
+    const spans = spansByRow[row] ?? [];
+    if (spans.length === 0) return [];
+
+    const matchingSpans = spans.filter((s) => col >= s.start && col <= s.end);
+    if (matchingSpans.length === 0) return [];
+
+    // Fast path: single span in entire row = no overlaps possible
+    if (spans.length === 1) {
+      const span = matchingSpans[0];
+      return [
+        {
+          hasEvent: true,
+          span,
+          isStart: col === span.start,
+          isEnd: col === span.end,
+          isMiddle: col > span.start && col < span.end,
+          overlapInfo: { topOffset: 0, height: CELL_HEIGHT, zIndex: 1 },
+        },
+      ];
+    }
+
+    const depthInfo = this.computeSpanDepths(spans);
+
+    return matchingSpans.map((span) => {
+      const info = depthInfo.get(span)!;
+      const eventHeight = CELL_HEIGHT / info.totalLevels;
+      const topOffset = info.totalLevels > 1 ? info.depth * eventHeight : 0;
+      return {
+        hasEvent: true,
+        span,
+        isStart: col === span.start,
+        isEnd: col === span.end,
+        isMiddle: col > span.start && col < span.end,
+        overlapInfo: {
+          topOffset,
+          height: info.totalLevels > 1 ? eventHeight : CELL_HEIGHT,
+          zIndex: info.depth + 1,
+        },
+      };
+    });
+  }
+
+  /**
+   * Compute overlap depth for each span in a row.
+   * Depth = max(depth of overlapping earlier spans) + 1.
+   * Connected components get independent totalLevels.
+   */
+  private static computeSpanDepths(
+    spans: EventSpanType[],
+  ): Map<EventSpanType, { depth: number; totalLevels: number }> {
+    if (spans.length === 0) return new Map();
+
+    // Sort: earliest start first, longest span first at same start
+    const sorted = [...spans].sort((a, b) => a.start - b.start || b.end - a.end);
+
+    // 1. Compute depth for each span
+    const depths: number[] = [];
+    for (let i = 0; i < sorted.length; i++) {
+      let maxPriorDepth = -1;
+      for (let j = 0; j < i; j++) {
+        if (sorted[j].end >= sorted[i].start) {
+          if (depths[j] > maxPriorDepth) maxPriorDepth = depths[j];
+        }
+      }
+      depths[i] = maxPriorDepth + 1;
+    }
+
+    // 2. Union-Find for connected components
+    const parent = sorted.map((_, i) => i);
+    const find = (x: number): number => {
+      while (parent[x] !== x) {
+        parent[x] = parent[parent[x]];
+        x = parent[x];
+      }
+      return x;
+    };
+
+    for (let i = 0; i < sorted.length; i++) {
+      for (let j = i + 1; j < sorted.length; j++) {
+        if (sorted[i].end >= sorted[j].start) {
+          const ri = find(i),
+            rj = find(j);
+          if (ri !== rj) parent[ri] = rj;
+        }
+      }
+    }
+
+    // 3. Max depth per component
+    const componentMaxDepth = new Map<number, number>();
+    for (let i = 0; i < sorted.length; i++) {
+      const root = find(i);
+      componentMaxDepth.set(root, Math.max(componentMaxDepth.get(root) ?? 0, depths[i]));
+    }
+
+    // 4. Build result
+    const result = new Map<EventSpanType, { depth: number; totalLevels: number }>();
+    for (let i = 0; i < sorted.length; i++) {
+      const root = find(i);
+      result.set(sorted[i], {
+        depth: depths[i],
+        totalLevels: (componentMaxDepth.get(root) ?? 0) + 1,
+      });
+    }
+
+    return result;
   }
 
   /**

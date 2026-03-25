@@ -19,6 +19,7 @@ export class EventBody extends Sprite {
     },
     baker: Baker,
     dimensions: { width: number; height: number },
+    topOffset: number = CELL_HEIGHT / 3,
   ) {
     super();
 
@@ -34,7 +35,7 @@ export class EventBody extends Sprite {
     const B = CELL_HEIGHT + 1;
 
     const W = CELL_WIDTH + 1;
-    const H = CELL_HEIGHT + 1;
+    const H = CELL_HEIGHT + 1 - topOffset;
 
     this.on("pointerdown", this.handleClick.bind(this));
 
@@ -47,9 +48,9 @@ export class EventBody extends Sprite {
     const texture = baker.getTexture(
       `EventBody:${eventInfo.span?.ev.eventUuid}:${isBooked ? "booked" : "quoted"}:${
         eventInfo.isStart ? "start" : eventInfo.isEnd ? "end" : "middle"
-      }`,
-      // { width: CELL_WIDTH + 1, height: CELL_HEIGHT + 1 },
-      null,
+      }:top${topOffset}`,
+      { width: CELL_WIDTH + 2, height: CELL_HEIGHT + 2 },
+      // null,
       (c) => {
         const g = new Graphics();
         const fill = new Graphics();
@@ -67,7 +68,7 @@ export class EventBody extends Sprite {
 
         if (isBooked) {
           // Booked events: solid fill
-          const T = 1;
+          const T = Math.max(1, topOffset);
           // fill.rect(L, T, W, H).fill(eventColor);
           fill.rect(L, T - 1, W, H).fill(eventColor);
 
@@ -112,9 +113,10 @@ export class EventBody extends Sprite {
           }
 
           g.stroke({ alpha: 0.2 });
+          fill.rect(L, T, W, H).fill(eventColor);
         } else {
           // Quoted events: white background with selective borders
-          const T = 1;
+          const T = Math.max(1, topOffset);
           fill.rect(L, T - 1, W, H).fill(0xffffff); // White background
 
           // Draw borders based on position in span
