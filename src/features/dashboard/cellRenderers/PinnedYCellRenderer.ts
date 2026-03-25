@@ -1,7 +1,7 @@
 import { Application, Container, Graphics, Sprite } from "pixi.js";
 import { ICellRenderer } from "../interfaces/ICellRenderer";
 import { Baker } from "../util/Baker";
-import { EventSpanType, EventsUtil } from "../util/Events";
+import { EventSpanType, EventsUtil, CellEventInfoWithOverlap } from "../util/Events";
 import { LabelText } from "../ui/event/LabelText";
 import { PinnableSection } from "../ui/event/PinnableSection";
 import { Bleacher } from "../types";
@@ -68,70 +68,68 @@ export class PinnedYCellRenderer implements ICellRenderer {
     // PERFORMANCE CRITICAL: Reuse existing container
     parent.mask = null;
     parent.removeChildren();
+    parent.sortableChildren = false;
 
     // Use the main grid's first visible column for pinning calculations
     const currentFirstVisibleColumn = this.mainGridFirstVisibleColumn;
 
-    // Find the event that should be pinned for this row (if any)
-    const pinnedEventSpan = EventsUtil.findPinnedEventSpan(
+    // Get all events at this column with overlap info
+    const allEventInfos = EventsUtil.getAllCellEventInfos(
       row,
       currentFirstVisibleColumn,
       this.spansByRow,
     );
 
-    if (pinnedEventSpan) {
-      // Use exact scrollX for smooth sub-cell-accurate width
-      const subCellOffset = this.currentScrollX - currentFirstVisibleColumn * CELL_WIDTH;
-      const spanRightEdge =
-        (pinnedEventSpan.end - currentFirstVisibleColumn + 1) * CELL_WIDTH - subCellOffset;
-      const availableWidth = spanRightEdge - 8; // 8px total padding
+    // Filter to only pinned events
+    const pinnedEvents = allEventInfos.filter(
+      (ei) => ei.span && EventsUtil.shouldEventBePinned(ei.span, currentFirstVisibleColumn),
+    );
 
-      // Calculate minimum width: max(one cell width, longest word)
-      const minWrapWidth = Math.max(
-        CELL_WIDTH - 8,
-        this.getLongestWordWidth(pinnedEventSpan.ev.eventName),
-      );
+    if (pinnedEvents.length > 0) {
+      if (pinnedEvents.length > 1) parent.sortableChildren = true;
 
-      if (availableWidth >= minWrapWidth) {
-        // Pinned mode: label at left edge, wrapping to available width
+      for (const ei of pinnedEvents) {
+        const span = ei.span!;
+        const ov = ei.overlapInfo;
+
+        // Use exact scrollX for smooth sub-cell-accurate width
+        const subCellOffset = this.currentScrollX - currentFirstVisibleColumn * CELL_WIDTH;
+        const spanRightEdge =
+          (span.end - currentFirstVisibleColumn + 1) * CELL_WIDTH - subCellOffset;
+        const availableWidth = spanRightEdge - 8;
+
+        // Calculate minimum width: max(one cell width, longest word)
+        const minWrapWidth = Math.max(CELL_WIDTH - 8, this.getLongestWordWidth(span.ev.eventName));
+
         const pinnableSection = new PinnableSection(
-          pinnedEventSpan,
+          span,
           this.app,
           this.baker,
-          availableWidth,
+          Math.max(availableWidth, minWrapWidth),
         );
-        parent.addChild(pinnableSection);
-      } else {
-        // End-unpinned mode: right-justify label against span end, slides off left
-        const pinnableSection = new PinnableSection(
-          pinnedEventSpan,
-          this.app,
-          this.baker,
-          minWrapWidth,
-        );
-        // Position so right edge aligns with span's right edge in viewport
-        // PinnableSection default x is 4, override to right-justify
-        pinnableSection.position.x = spanRightEdge - minWrapWidth - 8;
+
+        if (availableWidth >= minWrapWidth) {
+          // Pinned mode: label at left edge, wrapping to available width
+          pinnableSection.position.set(4, ov.topOffset + 4);
+        } else {
+          // End-unpinned mode: right-justify label against span end, slides off left
+          pinnableSection.position.set(spanRightEdge - minWrapWidth - 8, ov.topOffset + 4);
+        }
+
+        // Mask each label to its vertical stripe so it doesn't cover shorter events.
+        // Shorter event bodies in the main grid (below the pinned grid) show through
+        // the transparent areas of the pinned grid naturally.
+        const stripeMask = new Graphics()
+          .rect(0, ov.topOffset - 2, cellWidth, ov.height)
+          .fill(0xffffff);
+        parent.addChild(stripeMask);
+        pinnableSection.mask = stripeMask;
+
+        pinnableSection.zIndex = ov.zIndex;
         parent.addChild(pinnableSection);
       }
-
-      // Mask to clip labels that wrap beyond cell height
-      const mask = new Graphics().rect(0, 0, cellWidth, cellHeight).fill(0xffffff);
-      parent.addChild(mask);
-      parent.mask = mask;
-
-      // const pinnedTexture = this.baker.getTexture(
-      //   labelCacheKey,
-      //   { width: cellWidth, height: cellHeight },
-      //   (container) => {
-      //     const pinnableSection = new PinnableSection(pinnedEventSpan, this.app, this.baker);
-      //     container.addChild(pinnableSection);
-      //   }
-      // );
-
-      // const labelSprite = new Sprite(pinnedTexture);
     }
-    // If no pinned event, return empty container (transparent)
+    // If no pinned events, return empty container (transparent)
 
     return parent;
   }
