@@ -5,6 +5,8 @@ import { EventBody } from "../ui/event/EventBody";
 import { EventSpanType, EventsUtil } from "../util/Events";
 import { Tile } from "../ui/Tile";
 import { FirstCellNotPinned } from "../ui/event/FirstCellNotPinned";
+import { PinnableSection } from "../ui/event/PinnableSection";
+import { CELL_WIDTH } from "../values/constants";
 import { CellEditor } from "../util/CellEditor";
 import { Graphics, Sprite } from "pixi.js";
 import { TruckIcon } from "../ui/event/TruckIcon";
@@ -265,26 +267,73 @@ export class MainGridCellRenderer implements ICellRenderer {
     (parent as any).__cellKey = key;
     this.visibleCells.set(key, { parent, w: cellWidth, h: cellHeight, firstVisibleColumn });
     parent.zIndex = 0;
+    parent.sortableChildren = false;
 
-    // Check if this cell has an event (bleachers or events mode)
-    const eventInfo = EventsUtil.getCellEventInfo(row, col, this.spansByRow);
+    // zIndex: row-primary (lower rows behind higher rows for bleed),
+    // column-secondary descending (earlier cols on top so labels aren't covered),
+    // start-cell boost (+1) so start cells render above middle/end cells.
+    const Z_ROW = 10000;
 
-    // --- Normal event rendering ---
-    if (eventInfo.hasEvent && eventInfo.span) {
-      parent.zIndex = 1;
+    // Get all events at this cell (handles overlapping spans)
+    const allEventInfos = EventsUtil.getAllCellEventInfos(row, col, this.spansByRow);
+
+    if (allEventInfos.length > 1) {
+      // --- OVERLAPPING EVENTS ---
+      parent.sortableChildren = true;
+      const currentFirstVisibleColumn =
+        firstVisibleColumn ?? Math.floor(this.currentScrollX / (this.cellWidth || 1));
+      const hasStartCell = allEventInfos.some((e) => e.isStart);
+      parent.zIndex = (row + 1) * Z_ROW - col * 2 + (hasStartCell ? 1 : 0);
+
+      for (const eventInfo of allEventInfos) {
+        const ov = eventInfo.overlapInfo;
+        const eventSprite = new EventBody(eventInfo, this.baker, dimensions, ov.topOffset);
+        eventSprite.position.set(-1, -1);
+        eventSprite.zIndex = ov.zIndex * 2;
+        parent.addChild(eventSprite);
+
+        // If start cell and not pinned, add label
+        if (eventInfo.isStart && eventInfo.span) {
+          const isPinned = EventsUtil.shouldEventBePinned(
+            eventInfo.span,
+            currentFirstVisibleColumn,
+          );
+          if (!isPinned) {
+            const spanWidth = (eventInfo.span.end - eventInfo.span.start + 1) * CELL_WIDTH - 8;
+            // Wrap label in a container masked to its event stripe
+            // so it doesn't overflow on top of shorter overlapping events
+            const labelWrapper = new Container();
+            const label = new PinnableSection(eventInfo.span, this.app, this.baker, spanWidth);
+            label.position.set(4, ov.topOffset + 4);
+            labelWrapper.addChild(label);
+            const stripeMask = new Graphics()
+              .rect(0, ov.topOffset, spanWidth + 8, ov.height)
+              .fill(0xffffff);
+            labelWrapper.addChild(stripeMask);
+            labelWrapper.mask = stripeMask;
+            labelWrapper.zIndex = ov.zIndex * 2 + 1;
+            parent.addChild(labelWrapper);
+          }
+        }
+      }
+    } else if (allEventInfos.length === 1) {
+      // --- SINGLE EVENT (optimized path) ---
+      const eventInfo = allEventInfos[0];
+      const topOffset = eventInfo.overlapInfo.topOffset;
+
       // Use passed firstVisibleColumn or calculate from current scroll position
       const currentFirstVisibleColumn =
         firstVisibleColumn ?? Math.floor(this.currentScrollX / (this.cellWidth || 1));
 
       // Check if THIS specific event should be pinned
       const thisEventShouldBePinned = EventsUtil.shouldEventBePinned(
-        eventInfo.span,
+        eventInfo.span!,
         currentFirstVisibleColumn,
       );
 
       if (!thisEventShouldBePinned && eventInfo.isStart) {
         // UNPINNED EVENT: Cache the entire container for maximum performance
-        parent.zIndex = 3;
+        parent.zIndex = (row + 1) * Z_ROW - col * 2 + 1;
 
         const firstCell = new FirstCellNotPinned(
           eventInfo,
@@ -293,11 +342,14 @@ export class MainGridCellRenderer implements ICellRenderer {
           this.app,
           this.baker,
           dimensions,
+          topOffset,
+          eventInfo.overlapInfo.height,
         );
         firstCell.position.set(-1, -1);
         parent.addChild(firstCell);
       } else {
-        const eventSprite = new EventBody(eventInfo, this.baker, dimensions);
+        parent.zIndex = (row + 1) * Z_ROW - col * 2;
+        const eventSprite = new EventBody(eventInfo, this.baker, dimensions, topOffset);
         eventSprite.position.set(-1, -1);
         parent.addChild(eventSprite);
       }
