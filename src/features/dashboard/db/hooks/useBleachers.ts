@@ -129,7 +129,12 @@ function reshapeBleachers(rows: BleacherFlatRow[]): Bleacher[] {
         b.workTrackers.push({
           workTrackerUuid: r.work_tracker_uuid,
           date: r.work_tracker_date ?? "",
-          status: (r.work_tracker_status ?? "draft") as Database["public"]["Enums"]["worktracker_status"],
+          status: (r.work_tracker_status ??
+            "draft") as Database["public"]["Enums"]["worktracker_status"],
+          pickupTime: null,
+          dropoffTime: null,
+          driverFirstName: null,
+          driverLastName: null,
         });
       }
     }

@@ -19,7 +19,7 @@ export class EventBody extends Sprite {
     },
     baker: Baker,
     dimensions: { width: number; height: number },
-    topOffset: number = CELL_HEIGHT / 3,
+    topOffset: number = CELL_HEIGHT,
   ) {
     super();
 
@@ -35,7 +35,7 @@ export class EventBody extends Sprite {
     const B = CELL_HEIGHT + 1;
 
     const W = CELL_WIDTH + 1;
-    const H = CELL_HEIGHT + 1 - topOffset;
+    const H = CELL_HEIGHT - topOffset;
 
     this.on("pointerdown", this.handleClick.bind(this));
 
