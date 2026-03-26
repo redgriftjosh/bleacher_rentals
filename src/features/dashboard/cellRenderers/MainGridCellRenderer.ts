@@ -407,6 +407,8 @@ export class MainGridCellRenderer implements ICellRenderer {
             this.baker,
             dateWorkTrackers,
             hasEventOverlap,
+            bleacher.bleacherUuid,
+            date,
             (tracker) => {
               useWorkTrackerSelectionStore.getState().setSelected({
                 id: tracker.workTrackerUuid ?? "-1",
