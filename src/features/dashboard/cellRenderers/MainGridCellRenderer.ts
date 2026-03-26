@@ -9,7 +9,7 @@ import { PinnableSection } from "../ui/event/PinnableSection";
 import { CELL_WIDTH } from "../values/constants";
 import { CellEditor } from "../util/CellEditor";
 import { Graphics, Sprite } from "pixi.js";
-import { TruckIcon } from "../ui/event/TruckIcon";
+import { WorkTrackerGroup } from "../ui/event/worktracker/WorkTrackerGroup";
 import { DateTime } from "luxon";
 import { Bleacher, DashboardEvent } from "../types";
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
@@ -394,36 +394,31 @@ export class MainGridCellRenderer implements ICellRenderer {
       }
     }
 
-    // Render truck icon AFTER event/tile rendering so it appears on top (both event and non-event cells)
+    // Render work tracker group AFTER event/tile rendering so it appears on top
     if (this.yAxis === "Bleachers") {
       const bleacherUuid = this.rowBleacherUuids[row];
       const bleacher = this.latestBleachersByUuid.get(bleacherUuid) ?? this.bleachers[row];
       const date = this.dates[col];
       if (bleacher && date) {
-        const workTracker = bleacher.workTrackers?.find((wt) => wt.date === date);
-        if (workTracker) {
-          const icon = new TruckIcon(this.baker, () => {
-            // Stop block editor from opening when clicking truck icon
-            // Instead open WorkTracker modal via callback if provided
-            // Write selection to store to open modal without causing React rerender of dashboard
-            useWorkTrackerSelectionStore.getState().setSelected({
-              id: workTracker.workTrackerUuid ?? "-1",
-              bleacher_uuid: bleacher.bleacherUuid,
-              date,
-            });
-          });
-          // Prevent click/tap propagation from icon to tile so CellEditor doesn't open
-          icon.eventMode = "static";
-          icon.cursor = "pointer";
-          icon.on("pointerdown", (e: any) => e.stopPropagation());
-          icon.on("pointerup", (e: any) => e.stopPropagation());
-          icon.on("pointertap", (e: any) => e.stopPropagation());
-          icon.on("click", (e: any) => e.stopPropagation());
-          if (workTracker.status) icon.setStatus(workTracker.status);
-          const size = Math.min(cellWidth, cellHeight) * 0.55; // bigger for clarity
-          icon.scale.set(size / 144); // base baked size 48x48
-          icon.position.set(cellWidth - size + 16, 9); // top-right padding
-          parent.addChild(icon); // Add to parent, not tile
+        const dateWorkTrackers = bleacher.workTrackers?.filter((wt) => wt.date === date) ?? [];
+        if (dateWorkTrackers.length > 0) {
+          const hasEventOverlap = allEventInfos.length > 0;
+          const group = new WorkTrackerGroup(
+            this.baker,
+            dateWorkTrackers,
+            hasEventOverlap,
+            (tracker) => {
+              useWorkTrackerSelectionStore.getState().setSelected({
+                id: tracker.workTrackerUuid ?? "-1",
+                bleacher_uuid: bleacher.bleacherUuid,
+                date,
+              });
+            },
+          );
+          // Ensure work trackers render in front of everything else in the cell
+          group.zIndex = 99999;
+          parent.sortableChildren = true;
+          parent.addChild(group);
         }
       }
     }

@@ -60,6 +60,10 @@ export type BleacherWorkTracker = {
   workTrackerUuid: string;
   date: string;
   status: Database["public"]["Enums"]["worktracker_status"];
+  pickupTime: string | null;
+  dropoffTime: string | null;
+  driverFirstName: string | null;
+  driverLastName: string | null;
 };
 
 export type DashboardBleacher = {
