@@ -215,9 +215,7 @@ class _WorkTrackerDragManager {
         return {
           ...b,
           workTrackers: [
-            ...b.workTrackers.filter(
-              (wt) => wt.workTrackerUuid !== tracker.workTrackerUuid,
-            ),
+            ...b.workTrackers.filter((wt) => wt.workTrackerUuid !== tracker.workTrackerUuid),
             { ...tracker, date: toDate },
           ],
         };
