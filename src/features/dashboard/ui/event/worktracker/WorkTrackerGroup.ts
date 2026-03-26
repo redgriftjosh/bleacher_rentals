@@ -5,8 +5,10 @@ import type { BleacherWorkTracker } from "../../../types";
 import { WorkTrackerFull } from "./WorkTrackerFull";
 import { WorkTrackerHalf } from "./WorkTrackerHalf";
 import { WorkTrackerSmall } from "./WorkTrackerSmall";
+import { WorkTrackerDragManager } from "../../../util/WorkTrackerDragManager";
 
 const MAX_SMALL_THUMBNAILS = 4;
+const DRAG_THRESHOLD = 6; // px movement before drag starts
 
 /**
  * Controller container that decides how to render work trackers for a cell.
@@ -18,12 +20,15 @@ const MAX_SMALL_THUMBNAILS = 4;
  *
  * Always renders in front of events (caller sets zIndex on this container).
  * Uses bleed pattern: sprites positioned at (-1,-1) to overlap tile borders.
+ * Supports drag-and-drop to move trackers between cells.
  */
 export class WorkTrackerGroup extends Container {
   constructor(
     baker: Baker,
     trackers: BleacherWorkTracker[],
     hasEventOverlap: boolean,
+    bleacherUuid: string,
+    date: string,
     onTrackerClick: (tracker: BleacherWorkTracker) => void,
   ) {
     super();
@@ -44,19 +49,19 @@ export class WorkTrackerGroup extends Container {
       // Full-cell mode
       const sprite = new WorkTrackerFull(baker, sorted[0]);
       sprite.position.set(-1, -1);
-      this.addClickHandler(sprite, sorted[0], onTrackerClick);
+      this.addInteractionHandler(sprite, sorted[0], bleacherUuid, date, onTrackerClick);
       this.addChild(sprite);
     } else if (!useSmall && sorted.length === 2) {
       // Two halves side by side
       const halfW = Math.floor(CELL_WIDTH / 2);
       const left = new WorkTrackerHalf(baker, sorted[0], true);
       left.position.set(-1, -1);
-      this.addClickHandler(left, sorted[0], onTrackerClick);
+      this.addInteractionHandler(left, sorted[0], bleacherUuid, date, onTrackerClick);
       this.addChild(left);
 
       const right = new WorkTrackerHalf(baker, sorted[1], false);
       right.position.set(halfW - 1, -1);
-      this.addClickHandler(right, sorted[1], onTrackerClick);
+      this.addInteractionHandler(right, sorted[1], bleacherUuid, date, onTrackerClick);
       this.addChild(right);
     } else {
       // Small thumbnails — bottom-left row
@@ -68,7 +73,7 @@ export class WorkTrackerGroup extends Container {
       for (let i = 0; i < count; i++) {
         const small = new WorkTrackerSmall(baker, sorted[i]);
         small.position.set(i * (size + gap), startY);
-        this.addClickHandler(small, sorted[i], onTrackerClick);
+        this.addInteractionHandler(small, sorted[i], bleacherUuid, date, onTrackerClick);
         this.addChild(small);
       }
     }
@@ -79,17 +84,71 @@ export class WorkTrackerGroup extends Container {
     this.on("pointerdown", (e: FederatedPointerEvent) => e.stopPropagation());
   }
 
-  private addClickHandler(
+  /**
+   * Adds pointer handlers that differentiate between click and drag.
+   * - Small movement → click (opens modal)
+   * - Movement > DRAG_THRESHOLD → initiates drag-and-drop
+   */
+  private addInteractionHandler(
     target: Container,
     tracker: BleacherWorkTracker,
+    bleacherUuid: string,
+    date: string,
     onClick: (tracker: BleacherWorkTracker) => void,
   ) {
     target.eventMode = "static";
-    target.cursor = "pointer";
+    target.cursor = "grab";
+
+    let downX = 0;
+    let downY = 0;
+    let isDown = false;
+    let dragStarted = false;
+
+    const onMove = (e: FederatedPointerEvent) => {
+      if (!isDown) return;
+      const dx = e.global.x - downX;
+      const dy = e.global.y - downY;
+      if (!dragStarted && dx * dx + dy * dy > DRAG_THRESHOLD * DRAG_THRESHOLD) {
+        dragStarted = true;
+        // Initiate drag via the manager
+        WorkTrackerDragManager.startDrag(
+          { tracker, sourceBleacherUuid: bleacherUuid, sourceDate: date },
+          e.global.x,
+          e.global.y,
+        );
+        // Remove move listener from this target — manager takes over on stage
+        target.off("pointermove", onMove);
+      }
+    };
+
+    target.on("pointerdown", (e: FederatedPointerEvent) => {
+      e.stopPropagation();
+      downX = e.global.x;
+      downY = e.global.y;
+      isDown = true;
+      dragStarted = false;
+      target.cursor = "grabbing";
+      target.on("pointermove", onMove);
+    });
+
     target.on("pointerup", (e: FederatedPointerEvent) => {
       e.stopPropagation();
-      onClick(tracker);
+      target.off("pointermove", onMove);
+      target.cursor = "grab";
+      if (isDown && !dragStarted) {
+        onClick(tracker);
+      }
+      isDown = false;
+      dragStarted = false;
     });
+
+    target.on("pointerupoutside", () => {
+      target.off("pointermove", onMove);
+      target.cursor = "grab";
+      isDown = false;
+      dragStarted = false;
+    });
+
     target.on("pointertap", (e: FederatedPointerEvent) => e.stopPropagation());
     target.on("click", (e: FederatedPointerEvent) => e.stopPropagation());
   }
