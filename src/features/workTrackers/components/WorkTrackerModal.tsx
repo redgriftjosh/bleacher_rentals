@@ -30,6 +30,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { buildTripStatusNotification } from "@/features/workTrackers/db/notifications";
+import BillOfLadingButton from "./billOfLading/BillOfLadingButton";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -738,6 +739,11 @@ export default function WorkTrackerModal({
                 </button>
               )}
               <div className="flex-1" />
+              <BillOfLadingButton
+                workTracker={workTracker}
+                pickUpAddress={pickUpAddress}
+                dropOffAddress={dropOffAddress}
+              />
               <button
                 className="text-sm px-3 py-1 rounded bg-darkBlue text-white cursor-pointer hover:bg-lightBlue transition-all duration-200"
                 onClick={() => setShowSaveConfirmModal(true)}
