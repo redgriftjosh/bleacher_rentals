@@ -20,6 +20,7 @@ import { useDashboardEventsStore } from "./state/useDashboardEventsStore";
 import type { DashboardFilterState } from "../dashboardOptions/types";
 import { filterEvents, filterSortPixiBleachers } from "../dashboardOptions/util";
 import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEventStore";
+import { WorkTrackerDragManager } from "./util/WorkTrackerDragManager";
 
 export class Dashboard {
   // Grids
@@ -344,6 +345,16 @@ export class Dashboard {
     });
     this.mainGridCellRenderer.setCellEditor(this.cellEditor);
 
+    // Initialize drag manager for work tracker drag-and-drop
+    if (this.yAxis === "Bleachers") {
+      WorkTrackerDragManager.init(
+        app,
+        this.mainGrid,
+        this.dates,
+        this.bleachers.map((b) => b.bleacherUuid),
+      );
+    }
+
     // Set up scroll synchronization
     this.setupScrollSynchronization();
 
@@ -522,6 +533,7 @@ export class Dashboard {
       this.unsubEvents?.();
     } catch {}
     this.cellEditor.destroy();
+    WorkTrackerDragManager.destroy();
     this.stickyTopLeftCell.destroy();
     this.stickyTopRow.destroy();
     this.stickyLeftColumn.destroy();
