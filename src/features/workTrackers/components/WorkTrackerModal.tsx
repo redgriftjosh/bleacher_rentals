@@ -497,6 +497,20 @@ export default function WorkTrackerModal({
                   />
                 </div>
 
+                <label className={labelClassName}>Project Number</label>
+                <input
+                  type="text"
+                  className={inputClassName}
+                  placeholder="Project Number"
+                  value={workTracker?.project_number ?? ""}
+                  onChange={(e) =>
+                    setWorkTracker((prev) => ({
+                      ...prev!,
+                      project_number: e.target.value || null,
+                    }))
+                  }
+                />
+
                 <label className={labelClassName}>Date</label>
                 <input
                   type="date"
@@ -567,9 +581,10 @@ export default function WorkTrackerModal({
                 </div>
               </div>
 
-              {/* Columns 2 & 3: Pickup and Dropoff with Map below */}
+              {/* Columns 2 & 3: Pickup, Dropoff, and Map */}
               <div className="flex-[2] flex flex-col gap-4">
                 <div className="flex flex-row gap-4">
+ 
                   {/* Column 2: Pickup */}
                   <div className="flex-1">
                     <label className={labelClassName}>Pickup Time</label>
@@ -579,10 +594,7 @@ export default function WorkTrackerModal({
                       placeholder="Pickup Time"
                       value={workTracker?.pickup_time ?? ""}
                       onChange={(e) =>
-                        setWorkTracker((prev) => ({
-                          ...prev!,
-                          pickup_time: e.target.value,
-                        }))
+                        setWorkTracker((prev) => ({ ...prev!, pickup_time: e.target.value }))
                       }
                     />
                     <label className={labelClassName}>Pickup POC</label>
@@ -592,10 +604,7 @@ export default function WorkTrackerModal({
                       placeholder="Pickup POC"
                       value={workTracker?.pickup_poc ?? ""}
                       onChange={(e) =>
-                        setWorkTracker((prev) => ({
-                          ...prev!,
-                          pickup_poc: e.target.value,
-                        }))
+                        setWorkTracker((prev) => ({ ...prev!, pickup_poc: e.target.value }))
                       }
                     />
                     <label className={labelClassName}>Pickup Address</label>
@@ -612,7 +621,34 @@ export default function WorkTrackerModal({
                       />
                       <Link className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer" />
                     </div>
+                    <label className={labelClassName}>Pickup Instructions</label>
+                    <textarea
+                      className="w-full text-sm border p-1 rounded bg-white"
+                      placeholder="Pickup Instructions"
+                      value={workTracker?.pickup_instructions ?? ""}
+                      onChange={(e) =>
+                        setWorkTracker((prev) => ({
+                          ...prev!,
+                          pickup_instructions: e.target.value || null,
+                        }))
+                      }
+                      rows={3}
+                    />
+                    <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={!!workTracker?.teardown_required}
+                        onChange={(e) =>
+                          setWorkTracker((prev) => ({
+                            ...prev!,
+                            teardown_required: e.target.checked,
+                          }))
+                        }
+                      />
+                      <span className="text-sm font-medium text-gray-700">Teardown Required</span>
+                    </label>
                   </div>
+ 
                   {/* Column 3: Dropoff */}
                   <div className="flex-1">
                     <label className={labelClassName}>Dropoff Time</label>
@@ -622,10 +658,7 @@ export default function WorkTrackerModal({
                       placeholder="Dropoff Time"
                       value={workTracker?.dropoff_time ?? ""}
                       onChange={(e) =>
-                        setWorkTracker((prev) => ({
-                          ...prev!,
-                          dropoff_time: e.target.value,
-                        }))
+                        setWorkTracker((prev) => ({ ...prev!, dropoff_time: e.target.value }))
                       }
                     />
                     <label className={labelClassName}>Dropoff POC</label>
@@ -635,10 +668,7 @@ export default function WorkTrackerModal({
                       placeholder="Dropoff POC"
                       value={workTracker?.dropoff_poc ?? ""}
                       onChange={(e) =>
-                        setWorkTracker((prev) => ({
-                          ...prev!,
-                          dropoff_poc: e.target.value,
-                        }))
+                        setWorkTracker((prev) => ({ ...prev!, dropoff_poc: e.target.value }))
                       }
                     />
                     <label className={labelClassName}>Dropoff Address</label>
@@ -652,10 +682,37 @@ export default function WorkTrackerModal({
                       }
                       initialValue={dropOffAddress?.address || ""}
                     />
+                    <label className={labelClassName}>Dropoff Instructions</label>
+                    <textarea
+                      className="w-full text-sm border p-1 rounded bg-white"
+                      placeholder="Dropoff Instructions"
+                      value={workTracker?.dropoff_instructions ?? ""}
+                      onChange={(e) =>
+                        setWorkTracker((prev) => ({
+                          ...prev!,
+                          dropoff_instructions: e.target.value || null,
+                        }))
+                      }
+                      rows={3}
+                    />
+                    <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={!!workTracker?.setup_required}
+                        onChange={(e) =>
+                          setWorkTracker((prev) => ({
+                            ...prev!,
+                            setup_required: e.target.checked,
+                          }))
+                        }
+                      />
+                      <span className="text-sm font-medium text-gray-700">Setup Required</span>
+                    </label>
                   </div>
+ 
                 </div>
-
-                {/* Distance & ETA Info - Below both Pickup and Dropoff columns */}
+ 
+                {/* Map - below both pickup and dropoff columns */}
                 <div className="mt-2">
                   <RouteMapPreview
                     origin={origin}
