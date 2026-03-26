@@ -44,11 +44,19 @@ type Row = {
     id: string; // WorkTrackers.id (uuid)
     date: string | null;
     status: string;
+    pickup_time: string | null;
+    dropoff_time: string | null;
+    driver: {
+      user: {
+        first_name: string | null;
+        last_name: string | null;
+      } | null;
+    } | null;
   }[];
 };
 
 export async function FetchDashboardBleachers(
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
 ): Promise<{ bleachers: Bleacher[] }> {
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);
@@ -100,9 +108,17 @@ export async function FetchDashboardBleachers(
     work_trackers:WorkTrackers!WorkTrackers_bleacher_uuid_fkey(
       id,
       date,
-      status
+      status,
+      pickup_time,
+      dropoff_time,
+      driver:Drivers!WorkTrackers_driver_uuid_fkey(
+        user:Users!Drivers_user_uuid_fkey(
+          first_name,
+          last_name
+        )
+      )
     )
-      `
+      `,
     )
     .order("bleacher_number", { ascending: true })
     .overrideTypes<Row[], { merge: false }>();
@@ -152,6 +168,10 @@ export async function FetchDashboardBleachers(
       workTrackerUuid: wt.id,
       date: wt.date ?? "",
       status: wt.status as Database["public"]["Enums"]["worktracker_status"],
+      pickupTime: wt.pickup_time ?? null,
+      dropoffTime: wt.dropoff_time ?? null,
+      driverFirstName: wt.driver?.user?.first_name ?? null,
+      driverLastName: wt.driver?.user?.last_name ?? null,
     })),
   }));
 
