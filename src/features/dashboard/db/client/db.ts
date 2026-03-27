@@ -385,9 +385,13 @@ export async function saveWorkTracker(
         pickup_address_uuid: pickUpAddressUuid,
         pickup_poc: workTracker.pickup_poc,
         pickup_time: workTracker.pickup_time,
+        pickup_instructions: workTracker.pickup_instructions,
+        teardown_required: workTracker.teardown_required,
         dropoff_address_uuid: dropOffAddressUuid,
         dropoff_poc: workTracker.dropoff_poc,
         dropoff_time: workTracker.dropoff_time,
+        dropoff_instructions: workTracker.dropoff_instructions,
+        setup_required: workTracker.setup_required,
         notes: workTracker.notes,
         pay_cents: workTracker.pay_cents,
         bleacher_uuid: workTracker.bleacher_uuid,
@@ -397,6 +401,7 @@ export async function saveWorkTracker(
         work_tracker_type_uuid: workTracker.work_tracker_type_uuid,
         distance_meters: workTracker.distance_meters,
         drive_minutes: workTracker.drive_minutes,
+        project_number: workTracker.project_number,
       })
       .eq("id", workTracker.id);
 
@@ -411,9 +416,13 @@ export async function saveWorkTracker(
         pickup_address_uuid: pickUpAddressUuid,
         pickup_poc: workTracker.pickup_poc,
         pickup_time: workTracker.pickup_time,
+        pickup_instructions: workTracker.pickup_instructions,
+        teardown_required: workTracker.teardown_required,
         dropoff_address_uuid: dropOffAddressUuid,
         dropoff_poc: workTracker.dropoff_poc,
         dropoff_time: workTracker.dropoff_time,
+        dropoff_instructions: workTracker.dropoff_instructions,
+        setup_required: workTracker.setup_required,
         notes: workTracker.notes,
         pay_cents: workTracker.pay_cents,
         bleacher_uuid: workTracker.bleacher_uuid,
@@ -423,6 +432,7 @@ export async function saveWorkTracker(
         work_tracker_type_uuid: workTracker.work_tracker_type_uuid,
         distance_meters: workTracker.distance_meters,
         drive_minutes: workTracker.drive_minutes,
+        project_number: workTracker.project_number
       })
       .select("id")
       .single();

@@ -15,6 +15,8 @@ export type SelectBleacher = {
   manufacturer: string | null;
   height_folded_ft: number | null;
   gvwr: number | null;
+  bleacher_length: number | null;
+  opening_direction: "driver" | "passenger" | null;
 };
 
 export type InsertBleacher = {
@@ -32,6 +34,8 @@ export type InsertBleacher = {
   manufacturer?: string | null;
   height_folded_ft?: number | null;
   gvwr?: number | null;
+  trailer_length?: number | null;
+  opening_direction?: "driver" | "passenger" | null;
 };
 
 export type UpdateBleacher = {
@@ -50,4 +54,6 @@ export type UpdateBleacher = {
   manufacturer?: string | null;
   height_folded_ft?: number | null;
   gvwr?: number | null;
+  trailer_length?: number | null;
+  opening_direction?: "driver" | "passenger" | null;
 };

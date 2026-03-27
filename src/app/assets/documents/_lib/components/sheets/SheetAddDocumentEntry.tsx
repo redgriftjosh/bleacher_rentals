@@ -11,7 +11,7 @@ function generateId(): string {
   });
 }
 
-export function SheetAddBlueBookEntry() {
+export function SheetAddDocumentEntry() {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
@@ -74,7 +74,7 @@ export function SheetAddBlueBookEntry() {
         onClick={() => setIsOpen(true)}
         className="px-4 py-2 bg-darkBlue text-white text-sm font-semibold rounded-lg shadow-md hover:bg-lightBlue transition cursor-pointer"
       >
-        + Add Blue Book Entry
+        + Add Document
       </button>
 
       {isOpen && (
@@ -89,7 +89,7 @@ export function SheetAddBlueBookEntry() {
           <div className="fixed inset-y-0 right-0 w-full sm:max-w-sm bg-white shadow-xl flex flex-col animate-in slide-in-from-right">
             {/* Header */}
             <div className="p-6 border-b">
-              <h2 className="text-lg font-semibold">Add Blue Book Entry</h2>
+              <h2 className="text-lg font-semibold">Add Document</h2>
               <p className="text-sm text-gray-500">
                 Fill out the form and click 'Save' to create a new entry.
               </p>
