@@ -8,6 +8,8 @@ export type FormattedBleacher = {
   manufacturer: string | null;
   heightFoldedFt: number | null;
   gvwr: number | null;
+  trailerLength: number | null;
+  openingDirection: string | null;
   summerHomeBase: {
     homeBaseUuid: string;
     homeBaseName: string;
