@@ -27,6 +27,8 @@ export function BleacherItemRow({
   manufacturer,
   heightFoldedFt,
   gvwr,
+  trailerLength,
+  openingDirection,
   summerHomeBase,
   winterHomeBase,
 }: FormattedBleacher) {
@@ -44,11 +46,21 @@ export function BleacherItemRow({
       <td className="p-3 text-left">{bleacherNumber}</td>
       <td className="p-3 text-left">{bleacherRows}</td>
       <td className="p-3 text-left">{bleacherSeats}</td>
-      <td className="p-3 text-left">{manufacturer ?? "—"}</td>
-      <td className="p-3 text-left font-mono text-xs">{vinNumber ?? "—"}</td>
+      <td className="p-3 text-left whitespace-nowrap">
+        <div className="max-w-[150px] truncate" title={manufacturer ?? "—"}>
+          {manufacturer ?? "—"}
+        </div>
+      </td>
+      <td className="p-3 text-left whitespace-nowrap">
+        <div className="max-w-[120px] truncate font-mono text-xs" title={vinNumber ?? "—"}>
+          {vinNumber ?? "—"}
+        </div>
+      </td>
       <td className="p-3 text-left">{tagNumber ?? "—"}</td>
       <td className="p-3 text-left">{hitchType ?? "—"}</td>
       <td className="p-3 text-left">{heightFoldedFt != null ? `${heightFoldedFt} ft` : "—"}</td>
+      <td className="p-3 text-left">{trailerLength != null ? `${trailerLength} ft` : "—"}</td>
+      <td className="p-3 text-left">{openingDirection ?? "—"}</td>
       <td className="p-3 text-left">{gvwr != null ? `${gvwr.toLocaleString()} lbs` : "—"}</td>
       <td className="p-3 text-left">{summerHomeBase.homeBaseName}</td>
       <td className="p-3 text-left">{winterHomeBase.homeBaseName}</td>

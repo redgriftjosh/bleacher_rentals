@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 const tabs = [
   { id: "bleachers", label: "Bleachers", path: "/assets/bleachers" },
-  { id: "blue-book", label: "Blue Book", path: "/assets/blue-book" },
+  { id: "documents", label: "Documents", path: "/assets/documents" },
   { id: "other-assets", label: "Other Assets", path: "/assets/other-assets" },
 ];
 

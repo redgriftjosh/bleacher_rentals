@@ -3,7 +3,7 @@
 import { Color } from "@/types/Color";
 import TabNavigation from "./bleachers/_lib/components/TabNavigation";
 import { SheetAddBleacher } from "./bleachers/_lib/components/sheets/SheetAddBleacher";
-import { SheetAddBlueBookEntry } from "./blue-book/_lib/components/sheets/SheetAddBlueBookEntry";
+import { SheetAddDocumentEntry } from "./documents/_lib/components/sheets/SheetAddDocumentEntry";
 import { SheetAddOtherAsset } from "./other-assets/_lib/components/sheets/SheetAddOtherAsset";
 import { usePathname } from "next/navigation";
 
@@ -11,7 +11,7 @@ export default function AssetsLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
 
   const getSheetButton = () => {
-    if (pathname.includes("/assets/blue-book")) return <SheetAddBlueBookEntry />;
+    if (pathname.includes("/assets/documents")) return <SheetAddDocumentEntry />;
     if (pathname.includes("/assets/other-assets")) return <SheetAddOtherAsset />;
     return <SheetAddBleacher />;
   };
