@@ -44,6 +44,7 @@ const BleachersCols = {
   gvwr: column.integer,
   trailer_length: column.integer,
   opening_direction: column.text,
+  nvis_pdf_path: column.text,
 } satisfies PowerSyncColsFor<"Bleachers">;
 const Bleachers = new Table(BleachersCols, {
   indexes: {

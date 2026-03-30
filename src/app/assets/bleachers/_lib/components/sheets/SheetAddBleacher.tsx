@@ -11,12 +11,12 @@ import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { Database } from "../../../../../../../database.types";
 import { useHomeBases } from "../../hooks/useHomeBases";
+import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
 
 export function SheetAddBleacher() {
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
 
-  // Fetch home bases for the dropdowns
   const homeBases = useHomeBases();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -31,16 +31,14 @@ export function SheetAddBleacher() {
   const [gvwr, setGvwr] = useState<number | null>(null);
   const [trailerLength, setTrailerLength] = useState<number | null>(null);
   const [openingDirection, setOpeningDirection] = useState<"driver" | "passenger" | null>(null);
-  // const [homeBases, setHomeBases] = useState<HomeBase[] | null>(null);
   const [selectedSummerHomeBaseUuid, setSelectedSummerHomeBaseUuid] = useState<string | null>(null);
   const [selectedWinterHomeBaseUuid, setSelectedWinterHomeBaseUuid] = useState<string | null>(null);
   const [selectedLinxupDeviceId, setSelectedLinxupDeviceId] = useState<string | null>(null);
   const [summerAccountManagerUuid, setSummerAccountManagerUuid] = useState<string | null>(null);
   const [winterAccountManagerUuid, setWinterAccountManagerUuid] = useState<string | null>(null);
+  const [nvisPdfPath, setNvisPdfPath] = useState<string | null>(null);
   const [isTakenNumber, setIsTakenNumber] = useState(true);
-  // const [isLoading, setIsLoading] = useState(true);
 
-  // useEffect to set all back to default
   useEffect(() => {
     if (!isOpen) {
       setBleacherNumber(null);
@@ -59,6 +57,7 @@ export function SheetAddBleacher() {
       setSelectedLinxupDeviceId(null);
       setSummerAccountManagerUuid(null);
       setWinterAccountManagerUuid(null);
+      setNvisPdfPath(null);
     }
   }, [isOpen]);
 
@@ -68,7 +67,6 @@ export function SheetAddBleacher() {
     enabled: !!supabase,
   });
 
-  // Calculate the next available bleacher number
   useEffect(() => {
     if (!isLoading && takenNumbers.length > 0 && !bleacherNumber) {
       const highestNumber = Math.max(...takenNumbers);
@@ -120,6 +118,7 @@ export function SheetAddBleacher() {
           linxup_device_id: selectedLinxupDeviceId,
           summer_account_manager_uuid: summerAccountManagerUuid,
           winter_account_manager_uuid: winterAccountManagerUuid,
+          nvis_pdf_path: nvisPdfPath,
         },
         supabase,
         queryClient
@@ -213,7 +212,7 @@ export function SheetAddBleacher() {
                     Home Base
                   </label>
                   <SelectHomeBaseDropDown
-                    options={homeBases ?? []} // Add your home base options here
+                    options={homeBases ?? []}
                     onSelect={(e) => setSelectedSummerHomeBaseUuid(e.id)}
                     placeholder="Select Home Base"
                     value={selectedSummerHomeBaseUuid ?? undefined}
@@ -224,7 +223,7 @@ export function SheetAddBleacher() {
                     Winter Home Base
                   </label>
                   <SelectHomeBaseDropDown
-                    options={homeBases ?? []} // Add your home base options here
+                    options={homeBases ?? []}
                     onSelect={(e) => setSelectedWinterHomeBaseUuid(e.id)}
                     placeholder="Select Home Base"
                     value={selectedWinterHomeBaseUuid ?? undefined}
@@ -338,6 +337,22 @@ export function SheetAddBleacher() {
                     onChange={(e) => setGvwr(e.target.value ? Number(e.target.value) : null)}
                     className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                   />
+                </div>
+
+                {/* NVIS PDF Upload */}
+                <div className="grid grid-cols-5 items-start gap-4">
+                  <label className="text-right text-sm font-medium col-span-2 pt-2">NVIS PDF</label>
+                  <div className="col-span-3">
+                    <FileUploadInput
+                      label=""
+                      bucket="bleacher-nvis"
+                      storagePath={`bleacher-${bleacherNumber ?? "new"}/nvis`}
+                      value={nvisPdfPath}
+                      onChange={setNvisPdfPath}
+                      acceptedTypes={["application/pdf"]}
+                      maxSizeMB={10}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
