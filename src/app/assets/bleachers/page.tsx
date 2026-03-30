@@ -24,6 +24,7 @@ export default function BleachersPage() {
             <th className="p-3 text-left font-semibold">GVWR</th>
             <th className="p-3 text-left font-semibold">Home Base</th>
             <th className="p-3 text-left font-semibold">Winter Home Base</th>
+            <th className="p-3 text-left font-semibold">NVIS</th>
           </tr>
         </thead>
 
