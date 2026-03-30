@@ -126,6 +126,7 @@ export type Database = {
           id: string
           linxup_device_id: string | null
           manufacturer: string | null
+          nvis_pdf_path: string | null
           opening_direction:
             | Database["public"]["Enums"]["bleacher_opening_dir"]
             | null
@@ -151,6 +152,7 @@ export type Database = {
           id?: string
           linxup_device_id?: string | null
           manufacturer?: string | null
+          nvis_pdf_path?: string | null
           opening_direction?:
             | Database["public"]["Enums"]["bleacher_opening_dir"]
             | null
@@ -176,6 +178,7 @@ export type Database = {
           id?: string
           linxup_device_id?: string | null
           manufacturer?: string | null
+          nvis_pdf_path?: string | null
           opening_direction?:
             | Database["public"]["Enums"]["bleacher_opening_dir"]
             | null

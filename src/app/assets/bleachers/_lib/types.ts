@@ -10,6 +10,7 @@ export type FormattedBleacher = {
   gvwr: number | null;
   trailerLength: number | null;
   openingDirection: string | null;
+  nvisPdfPath: string | null;
   summerHomeBase: {
     homeBaseUuid: string;
     homeBaseName: string;
