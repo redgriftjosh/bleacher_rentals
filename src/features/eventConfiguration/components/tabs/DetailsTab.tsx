@@ -31,7 +31,7 @@ export const DetailsTab = () => {
     if (selectedStatus === "booked") {
       const currentBookedAt = useCurrentEventStore.getState().bookedAt;
       if (!currentBookedAt) {
-        setField("bookedAt", new Date().toISOString().split("T")[0]);
+        setField("bookedAt", new Date().toISOString().split("T")[0] + "T12:00:00Z");
       }
     } else {
       setField("bookedAt", null);
@@ -63,8 +63,8 @@ export const DetailsTab = () => {
               <input
                 type="date"
                 className="w-full h-[40px] px-3 py-2 border bg-white rounded text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                value={bookedAt ?? ""}
-                onChange={(e) => setField("bookedAt", e.target.value || null)}
+                value={bookedAt?.split("T")[0] ?? ""}
+                onChange={(e) => setField("bookedAt", e.target.value ? e.target.value + "T12:00:00Z" : null)}
               />
             </div>
           )}
