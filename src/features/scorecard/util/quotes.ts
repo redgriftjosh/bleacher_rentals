@@ -54,14 +54,13 @@ export function getNumberForEachDay(
     });
 
     events.forEach((event) => {
-      if (!event.created_at) return;
-      if (!event.event_start) return;
       const dateValue =
         dateField === "created_at"
           ? event.created_at
           : dateField === "booked_at"
             ? event.booked_at
             : event.event_start;
+      if (!dateValue) return;
       const eventDateKey = toLocalDateKey(dateValue);
       if (!daySet.has(eventDateKey)) return;
 
