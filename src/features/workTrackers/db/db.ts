@@ -709,7 +709,8 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
     )
     .eq("driver_uuid", driverUuid)
     .gte("date", startDate)
-    .lt("date", DateTime.fromISO(startDate).plus({ days: 7 }).toISODate());
+    .lt("date", DateTime.fromISO(startDate).plus({ days: 7 }).toISODate())
+    .order("date", { ascending: true });
 
   if (error) {
     if (!isServer) {
