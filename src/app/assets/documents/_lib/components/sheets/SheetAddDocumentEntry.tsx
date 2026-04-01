@@ -1,6 +1,7 @@
 "use client";
 
 import { db } from "@/components/providers/SystemProvider";
+import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
 import { typedExecute } from "@/lib/powersync/typedQuery";
 import { useEffect, useState } from "react";
 
@@ -15,6 +16,7 @@ export function SheetAddDocumentEntry() {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
+  const [documentPdfPath, setDocumentPdfPath] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [region, setRegion] = useState<"Both" | "CAN" | "US">("Both");
   const [sortOrder, setSortOrder] = useState<number>(0);
@@ -27,6 +29,7 @@ export function SheetAddDocumentEntry() {
     if (!isOpen) {
       setName("");
       setLink("");
+      setDocumentPdfPath(null);
       setDescription("");
       setRegion("Both");
       setSortOrder(0);
@@ -50,6 +53,7 @@ export function SheetAddDocumentEntry() {
         .values({
           id: generateId(),
           name: name.trim(),
+          document_path: documentPdfPath,
           link: link.trim() || null,
           description: description.trim() || null,
           region,
@@ -113,18 +117,45 @@ export function SheetAddDocumentEntry() {
                   />
                 </div>
 
+                {/* Document PDF Upload */}
+                <div className="grid grid-cols-5 items-start gap-4">
+                  <label className="text-right text-sm font-medium col-span-2 pt-2">NVIS PDF</label>
+                  <div className="col-span-3">
+                    <FileUploadInput
+                      label=""
+                      bucket="documents"
+                      storagePath={`${name ?? "unknown"}/documents`}
+                      value={documentPdfPath}
+                      onChange={setDocumentPdfPath}
+                      acceptedTypes={["application/pdf"]}
+                      maxSizeMB={10}
+                    />
+                  </div>
+                </div>
+
                 {/* Link */}
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
+                <div className="grid grid-cols-5 items-start gap-4">
+                  <label className="text-right text-sm font-medium col-span-2 pt-2">
                     Link
                   </label>
-                  <input
-                    type="text"
-                    value={link}
-                    onChange={(e) => setLink(e.target.value)}
-                    placeholder="https://drive.google.com/..."
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
+
+                  <div className="col-span-3 space-y-2">
+                    {/* Deprecation warning */}
+                    <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md px-3 py-2 text-xs">
+                      <span className="font-bold">⚠️</span>
+                      <span>
+                        This feature is deprecated and will be removed in a future release.
+                      </span>
+                    </div>
+
+                    <input
+                      type="text"
+                      value={link}
+                      onChange={(e) => setLink(e.target.value)}
+                      placeholder="https://drive.google.com/..."
+                      className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                    />
+                  </div>
                 </div>
 
                 {/* Description */}

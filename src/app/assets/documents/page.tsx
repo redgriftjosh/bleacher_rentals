@@ -1,10 +1,13 @@
 "use client";
 
+import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
 import { useBlueBook, BlueBookData } from "./_lib/hooks/useBlueBook";
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute } from "@/lib/powersync/typedQuery";
 import { Color } from "@/types/Color";
 import { useState } from "react";
+import { FileText } from "lucide-react";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 // ─── Region badge ─────────────────────────────────────────────────────────────
 
@@ -28,6 +31,7 @@ function RegionBadge({ region }: { region: string | null }) {
 type FormState = {
   name: string;
   link: string;
+  document_path: string | null;
   description: string;
   region: "CAN" | "US" | "Both";
   sort_order: number;
@@ -38,6 +42,7 @@ function EditSheet({ initial, onClose }: { initial: BlueBookData; onClose: () =>
   const [form, setForm] = useState<FormState>({
     name: initial.name ?? "",
     link: initial.link ?? "",
+    document_path: initial.document_path ?? null,
     description: initial.description ?? "",
     region: (initial.region as any) ?? "Both",
     sort_order: initial.sort_order ?? 0,
@@ -59,6 +64,7 @@ function EditSheet({ initial, onClose }: { initial: BlueBookData; onClose: () =>
         .set({
           name: form.name.trim(),
           link: form.link.trim() || null,
+          document_path: form.document_path,
           description: form.description.trim() || null,
           region: form.region,
           sort_order: Number(form.sort_order),
@@ -94,11 +100,44 @@ function EditSheet({ initial, onClose }: { initial: BlueBookData; onClose: () =>
                 className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0" />
             </div>
 
-            <div className="grid grid-cols-5 items-center gap-4">
-              <label className="text-right text-sm font-medium col-span-2">Link</label>
-              <input type="text" value={form.link} onChange={(e) => set("link", e.target.value)}
-                placeholder="https://drive.google.com/..."
-                className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0" />
+            {/* Document PDF Upload */}
+            <div className="grid grid-cols-5 items-start gap-4">
+              <label className="text-right text-sm font-medium col-span-2 pt-2">NVIS PDF</label>
+              <div className="col-span-3">
+                <FileUploadInput
+                  label=""
+                  bucket="documents"
+                  storagePath={`${form.name ?? "unknown"}/documents`}
+                  value={form.document_path}
+                  onChange={(value) => set("document_path", value)}
+                  acceptedTypes={["application/pdf"]}
+                  maxSizeMB={10}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-5 items-start gap-4">
+              <label className="text-right text-sm font-medium col-span-2 pt-2">
+                Link
+              </label>
+
+              <div className="col-span-3 space-y-2">
+                {/* Deprecation warning */}
+                <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md px-3 py-2 text-xs">
+                  <span className="font-bold">⚠️</span>
+                  <span>
+                    This feature is deprecated and will be removed in a future release.
+                  </span>
+                </div>
+
+                <input
+                  type="text"
+                  value={form.link}
+                  onChange={(e) => set("link", e.target.value)}
+                  placeholder="https://drive.google.com/..."
+                  className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-5 items-start gap-4">
@@ -208,6 +247,7 @@ export default function BlueBookPage() {
   const { blueBookEntries } = useBlueBook();
   const [editTarget, setEditTarget] = useState<BlueBookData | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BlueBookData | null>(null);
+  const supabase = useClerkSupabaseClient();
 
   return (
     <div>
@@ -229,6 +269,7 @@ export default function BlueBookPage() {
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide w-8">#</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Name</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Document</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Link</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Region</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Status</th>
@@ -236,51 +277,74 @@ export default function BlueBookPage() {
               </tr>
             </thead>
             <tbody>
-              {blueBookEntries.map((entry) => (
-                <tr key={entry.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors">
-                  <td className="px-5 py-3.5 text-gray-300 font-mono text-xs">{entry.sort_order}</td>
-                  <td className="px-5 py-3.5">
-                    <p className="font-semibold text-gray-900">{entry.name}</p>
-                    {entry.description && (
-                      <p className="text-xs text-gray-400 mt-0.5 max-w-xs truncate">{entry.description}</p>
-                    )}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    {entry.link ? (
-                      <a href={entry.link} target="_blank" rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline text-xs font-medium">
-                        Open ↗
-                      </a>
-                    ) : (
-                      <span className="text-xs text-gray-300 italic">No link</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3.5"><RegionBadge region={entry.region} /></td>
-                  <td className="px-5 py-3.5">
-                    {entry.is_active !== 0 ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" /> Active
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-300 inline-block" /> Inactive
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-2 justify-end">
-                      <button onClick={() => setEditTarget(entry)}
-                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors px-2 py-1 rounded hover:bg-blue-50">
-                        Edit
-                      </button>
-                      <button onClick={() => setDeleteTarget(entry)}
-                        className="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded hover:bg-red-50">
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {blueBookEntries.map((entry) => {
+                const handlePdfClick = (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  if (!entry.document_path) return;
+                  const { data } = supabase.storage.from("documents").getPublicUrl(entry.document_path);
+                  window.open(data.publicUrl, "_blank");
+                };
+
+                return (
+                  <tr key={entry.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors">
+                    <td className="px-5 py-3.5 text-gray-300 font-mono text-xs">{entry.sort_order}</td>
+                    <td className="px-5 py-3.5">
+                      <p className="font-semibold text-gray-900">{entry.name}</p>
+                      {entry.description && (
+                        <p className="text-xs text-gray-400 mt-0.5 max-w-xs truncate">{entry.description}</p>
+                      )}
+                    </td>
+                    <td className="p-3 text-left">
+                      {entry.document_path ? (
+                        <button
+                          onClick={handlePdfClick}
+                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                          title="View NVIS PDF"
+                        >
+                          <FileText className="h-4 w-4" />
+                          View
+                        </button>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      {entry.link ? (
+                        <a href={entry.link} target="_blank" rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-xs font-medium">
+                          Open ↗
+                        </a>
+                      ) : (
+                        <span className="text-xs text-gray-300 italic">No link</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5"><RegionBadge region={entry.region} /></td>
+                    <td className="px-5 py-3.5">
+                      {entry.is_active !== 0 ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" /> Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300 inline-block" /> Inactive
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-2 justify-end">
+                        <button onClick={() => setEditTarget(entry)}
+                          className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors px-2 py-1 rounded hover:bg-blue-50">
+                          Edit
+                        </button>
+                        <button onClick={() => setDeleteTarget(entry)}
+                          className="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded hover:bg-red-50">
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

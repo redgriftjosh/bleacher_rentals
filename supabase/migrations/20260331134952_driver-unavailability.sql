@@ -52,3 +52,40 @@ create trigger set_driver_unavailability_timestamps
 before insert or update on public."DriverUnavailability"
 for each row
 execute function public.set_driver_unavailability_timestamps();
+
+alter table public."BlueBook"
+add column if not exists document_path text;
+
+
+-- Create storage bucket for driver document PDFs
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'documents',
+  'documents',
+  true,
+  10485760,  -- 10MB file size limit
+  ARRAY['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/heic', 'image/heif', 'image/webp']
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Explicit storage policies scoped to documents bucket
+CREATE POLICY "documents: select"
+ON storage.objects FOR SELECT
+TO authenticated
+USING (bucket_id = 'documents');
+
+CREATE POLICY "documents: insert"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'documents');
+
+CREATE POLICY "documents: update"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (bucket_id = 'documents');
+
+CREATE POLICY "documents: delete"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (bucket_id = 'documents');
+
