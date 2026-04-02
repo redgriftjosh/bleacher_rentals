@@ -20,6 +20,7 @@ type SettingsRow = {
   stateProvinces: string | null;
   onlyShowMyEvents: number | null;
   optimizationMode: number | null;
+  showAddressTooltip: number | null;
   season: string | null;
   accountManagerUuid: string | null;
   rowsQuickFilter: number | null;
@@ -98,6 +99,7 @@ export function useDashboardFilterSettings(): {
         "s.state_provinces as stateProvinces",
         "s.only_show_my_events as onlyShowMyEvents",
         "s.optimization_mode as optimizationMode",
+        "s.show_address_tooltip as showAddressTooltip",
         "s.season as season",
         "s.account_manager_uuid as accountManagerUuid",
         "s.rows_quick_filter as rowsQuickFilter",
@@ -145,6 +147,7 @@ export function useDashboardFilterSettings(): {
         state_provinces: "[]",
         only_show_my_events: 1,
         optimization_mode: 0,
+        show_address_tooltip: 0,
         season: defaultSeason,
         account_manager_uuid: userContext.accountManagerUuid,
         rows_quick_filter: null,
@@ -178,6 +181,7 @@ export function useDashboardFilterSettings(): {
       stateProvinces: parseJsonArray<number>(settingsRow.stateProvinces, []),
       onlyShowMyEvents: toBool(settingsRow.onlyShowMyEvents),
       optimizationMode: toBool(settingsRow.optimizationMode),
+      showAddressTooltip: toBool(settingsRow.showAddressTooltip),
       season: toSeason(settingsRow.season),
       accountManagerUuid: settingsRow.accountManagerUuid,
       rowsQuickFilter:
@@ -229,6 +233,9 @@ export function useDashboardFilterSettings(): {
 
         case "optimizationMode":
           return updateDb({ optimization_mode: value ? 1 : 0 });
+
+        case "showAddressTooltip":
+          return updateDb({ show_address_tooltip: value ? 1 : 0 });
 
         case "season":
           return updateDb({ season: value });
