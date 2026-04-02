@@ -29,7 +29,7 @@ export default function AccountManagerDetailPage() {
     useValue: false,
     createdByUserUuid: accountManager?.userUuid || null,
     accountManagerUuid: params.accountManagerUuid,
-    dateField: "created_at",
+    dateField: "booked_at",
     targetType: "sales",
   });
   const valueOfQuotesSignedData = useEventData({
@@ -37,7 +37,7 @@ export default function AccountManagerDetailPage() {
     useValue: true,
     createdByUserUuid: accountManager?.userUuid || null,
     accountManagerUuid: params.accountManagerUuid,
-    dateField: "created_at",
+    dateField: "booked_at",
     targetType: "value_of_sales",
   });
   const revenueData = useEventData({

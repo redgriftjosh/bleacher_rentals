@@ -22,7 +22,7 @@ export default function ScorecardPage() {
     useValue: false,
     createdByUserUuid: null,
     accountManagerUuid: null,
-    dateField: "created_at",
+    dateField: "booked_at",
     targetType: "sales",
   });
   const valueOfQuotesSignedData = useEventData({
@@ -30,7 +30,7 @@ export default function ScorecardPage() {
     useValue: true,
     createdByUserUuid: null,
     accountManagerUuid: null,
-    dateField: "created_at",
+    dateField: "booked_at",
     targetType: "value_of_sales",
   });
   const revenueData = useEventData({

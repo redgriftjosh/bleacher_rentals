@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
     const tokens = {
       ...authResponse.getJson(),
       realmId: authResponse.token.realmId,
+      createdAt: Date.now(),
     };
 
     // The connectionId was passed as the OAuth state parameter
