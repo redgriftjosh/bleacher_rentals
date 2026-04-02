@@ -371,7 +371,14 @@ export class MainGridCellRenderer implements ICellRenderer {
             (c) => {
               const txt = new Text({
                 text: block.text,
-                style: { fill: 0x1f2937, fontSize: 12, fontWeight: "500", align: "center" },
+                style: {
+                  fill: 0x1f2937,
+                  fontSize: 10,
+                  fontWeight: "500",
+                  align: "center",
+                  wordWrap: true,
+                  wordWrapWidth: cellWidth - 8,
+                },
               });
               txt.anchor.set(0.5);
               txt.position.set(cellWidth / 2, cellHeight / 2);
