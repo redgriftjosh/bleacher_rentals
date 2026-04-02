@@ -5,6 +5,8 @@ import AddressAutocomplete from "@/components/AddressAutoComplete";
 import { useUsersStore } from "@/state/userStore";
 import { Dropdown } from "@/components/DropDown";
 import { useCurrentEventStore } from "../../state/useCurrentEventStore";
+import { useScrollToDateStore } from "@/features/dashboard/state/useScrollToDateStore";
+import { LocateFixed } from "lucide-react";
 
 type Props = {
   showSetupTeardown: boolean;
@@ -112,21 +114,27 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
       </div>
       <div>
         <label className="block text-sm font-medium text-black/70 mb-1">Event Start</label>
-        <input
-          type="date"
-          className="bg-white w-full p-2 border rounded"
-          value={currentEventStore.eventStart}
-          onChange={(e) => currentEventStore.setField("eventStart", e.target.value)}
-          max={currentEventStore.eventEnd || undefined}
-        />
+        <div className="flex gap-1">
+          <input
+            type="date"
+            className="bg-white w-full p-2 border rounded min-w-0"
+            value={currentEventStore.eventStart}
+            onChange={(e) => currentEventStore.setField("eventStart", e.target.value)}
+            max={currentEventStore.eventEnd || undefined}
+          />
+          <ScrollToDateButton date={currentEventStore.eventStart} />
+        </div>
         <label className="block text-sm font-medium text-black/70 mt-1">Event End</label>
-        <input
-          type="date"
-          className="bg-white w-full p-2 border rounded"
-          value={currentEventStore.eventEnd}
-          onChange={(e) => currentEventStore.setField("eventEnd", e.target.value)}
-          min={currentEventStore.eventStart || undefined}
-        />
+        <div className="flex gap-1">
+          <input
+            type="date"
+            className="bg-white w-full p-2 border rounded min-w-0"
+            value={currentEventStore.eventEnd}
+            onChange={(e) => currentEventStore.setField("eventEnd", e.target.value)}
+            min={currentEventStore.eventStart || undefined}
+          />
+          <ScrollToDateButton date={currentEventStore.eventEnd} />
+        </div>
       </div>
       {showSetupTeardown && (
         <div>
@@ -222,3 +230,18 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
     </div>
   );
 };
+
+function ScrollToDateButton({ date }: { date: string }) {
+  const scrollToDate = useScrollToDateStore((s) => s.scrollToDate);
+  return (
+    <button
+      type="button"
+      className="shrink-0 p-2  text-black/50 hover:text-black disabled:opacity-30 disabled:cursor-not-allowed"
+      disabled={!date || !scrollToDate}
+      onClick={() => scrollToDate?.(date)}
+      title="Scroll dashboard to this date"
+    >
+      <LocateFixed size={16} />
+    </button>
+  );
+}
