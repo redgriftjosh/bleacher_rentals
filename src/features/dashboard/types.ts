@@ -64,6 +64,7 @@ export type BleacherWorkTracker = {
   dropoffTime: string | null;
   driverFirstName: string | null;
   driverLastName: string | null;
+  dropoffAddress: string | null;
 };
 
 export type DashboardBleacher = {

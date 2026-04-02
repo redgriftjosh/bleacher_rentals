@@ -135,6 +135,7 @@ function reshapeBleachers(rows: BleacherFlatRow[]): Bleacher[] {
           dropoffTime: null,
           driverFirstName: null,
           driverLastName: null,
+          dropoffAddress: null,
         });
       }
     }
