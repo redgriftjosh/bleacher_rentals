@@ -23,6 +23,7 @@ import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEven
 import { WorkTrackerDragManager } from "./util/WorkTrackerDragManager";
 import { useAddressTooltipStore } from "./state/useAddressTooltipStore";
 import { resolveAddress } from "./util/resolveAddress";
+import { useScrollToDateStore } from "./state/useScrollToDateStore";
 
 export class Dashboard {
   // Grids
@@ -186,6 +187,11 @@ export class Dashboard {
       useAddressTooltipStore.getState().hide();
       this.lastTooltipRow = -1;
       this.lastTooltipCol = -1;
+    });
+
+    // Register scrollToDate so React components can scroll the dashboard
+    useScrollToDateStore.getState().setScrollToDate((date: string) => {
+      this.scrollToDate(date);
     });
   }
 
@@ -617,6 +623,22 @@ export class Dashboard {
   }
 
   /**
+   * Scroll the dashboard so the given date column is centered horizontally
+   */
+  public scrollToDate(date: string) {
+    const colIndex = this.dates.indexOf(date);
+    if (colIndex === -1) return;
+
+    const viewportWidth = this.app.screen.width - BLEACHER_COLUMN_WIDTH;
+    const targetX = Math.max(0, colIndex * CELL_WIDTH - viewportWidth / 2 + CELL_WIDTH / 2);
+
+    this.mainGrid.setHorizontalScroll(targetX);
+    this.stickyTopRow.setHorizontalScroll(targetX);
+    this.mainGrid.updateHorizontalScrollbarPosition(targetX);
+    this.cellEditor.setScrollPosition(targetX, this.mainGrid.getCurrentScrollY());
+  }
+
+  /**
    * Clean up resources
    */
   destroy() {
@@ -637,6 +659,9 @@ export class Dashboard {
         this.app.canvas.removeEventListener("mousemove", this.onCanvasMouseMove);
       }
       useAddressTooltipStore.getState().hide();
+    } catch {}
+    try {
+      useScrollToDateStore.getState().setScrollToDate(null);
     } catch {}
     this.cellEditor.destroy();
     WorkTrackerDragManager.destroy();
