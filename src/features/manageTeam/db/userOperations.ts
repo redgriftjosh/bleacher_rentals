@@ -433,8 +433,12 @@ export async function fetchUserById(
 
     // Only process if driver exists (ignore PGRST116 "no rows" error)
     if (driver && !driverError) {
-      roleTabs.push("driver");
-      result.isDriver = true;
+      // Only show driver tab/flag if actively enabled
+      if (driver.is_active) {
+        roleTabs.push("driver");
+        result.isDriver = true;
+      }
+      // Always load driver data so re-enabling restores saved values
       result.tax = driver.tax;
       result.payRateCents = driver.pay_rate_cents;
       result.payCurrency = driver.pay_currency as "CAD" | "USD";
@@ -474,8 +478,11 @@ export async function fetchUserById(
 
     // Only process if account manager exists (ignore PGRST116 "no rows" error)
     if (accountManager && !accountManagerError) {
-      roleTabs.push("account-manager");
-      result.isAccountManager = true;
+      // Only show AM tab/flag if actively enabled
+      if (accountManager.is_active) {
+        roleTabs.push("account-manager");
+        result.isAccountManager = true;
+      }
 
       const accountManagerId = accountManager.id;
 

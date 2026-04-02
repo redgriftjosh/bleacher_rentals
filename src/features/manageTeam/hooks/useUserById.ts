@@ -3,7 +3,7 @@ import { db } from "@/components/providers/SystemProvider";
 import { sql } from "@powersync/kysely-driver";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { useEffect, useMemo } from "react";
-import { useCurrentUserStore } from "../state/useCurrentUserStore";
+import { useCurrentUserStore, TeamRoleTab } from "../state/useCurrentUserStore";
 
 type UserRealtimeRow = {
   firstName: string | null;
@@ -14,6 +14,8 @@ type UserRealtimeRow = {
 
   isDriver: number;
   isAccountManager: number;
+  driverIsActive: number | null;
+  amIsActive: number | null;
 
   tax: number | null;
   payRateCents: number | null;
@@ -38,12 +40,8 @@ export function useRealtimeHydrateCurrentUserStore() {
 
     return db
       .selectFrom("Users as u")
-      .leftJoin("Drivers as d", (join) =>
-        join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1),
-      )
-      .leftJoin("AccountManagers as am", (join) =>
-        join.onRef("am.user_uuid", "=", "u.id").on("am.is_active", "=", 1),
-      )
+      .leftJoin("Drivers as d", "d.user_uuid", "u.id")
+      .leftJoin("AccountManagers as am", "am.user_uuid", "u.id")
       .select((eb) => {
         const summerDistinct = eb
           .selectFrom("Bleachers as b")
@@ -68,11 +66,15 @@ export function useRealtimeHydrateCurrentUserStore() {
           "u.is_admin as isAdmin",
           "u.status_uuid as statusUuid",
 
-          // type-safe flags via join presence
-          sql<number>`case when ${sql.ref("d.id")} is null then 0 else 1 end`.as("isDriver"),
-          sql<number>`case when ${sql.ref("am.id")} is null then 0 else 1 end`.as(
+          // type-safe flags: must exist AND be active
+          sql<number>`case when ${sql.ref("d.id")} is not null and ${sql.ref("d.is_active")} = 1 then 1 else 0 end`.as(
+            "isDriver",
+          ),
+          sql<number>`case when ${sql.ref("am.id")} is not null and ${sql.ref("am.is_active")} = 1 then 1 else 0 end`.as(
             "isAccountManager",
           ),
+          sql<number | null>`${sql.ref("d.is_active")}`.as("driverIsActive"),
+          sql<number | null>`${sql.ref("am.is_active")}`.as("amIsActive"),
 
           "d.tax as tax",
           "d.pay_rate_cents as payRateCents",
