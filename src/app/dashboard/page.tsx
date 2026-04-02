@@ -22,10 +22,11 @@ import SwapConfirmationModal from "@/features/dashboard/components/SwapConfirmat
 import { useBleacherLocationModalStore } from "@/features/dashboard/state/useBleacherLocationModalStore";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { supabaseClientRegistry } from "@/features/dashboard/util/supabaseClientRegistry";
+import { AddressTooltip } from "@/features/dashboard/components/AddressTooltip";
 
 export default function Page() {
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
-    null
+    null,
   );
   const { state: dashboardFilters } = useDashboardFilterSettings();
   const onlyShowMyEvents = dashboardFilters?.onlyShowMyEvents ?? true;
@@ -138,6 +139,7 @@ export default function Page() {
       <div className="min-h-0 min-w-0 overflow-hidden">
         <DashboardApp />
       </div>
+      <AddressTooltip />
     </div>
   );
 }
