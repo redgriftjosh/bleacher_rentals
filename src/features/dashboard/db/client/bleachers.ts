@@ -120,6 +120,7 @@ export async function FetchDashboardBleachers(
     )
       `,
     )
+    .eq("deleted", false)
     .order("bleacher_number", { ascending: true })
     .overrideTypes<Row[], { merge: false }>();
 

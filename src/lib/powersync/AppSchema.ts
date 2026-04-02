@@ -44,6 +44,7 @@ const BleachersCols = {
   gvwr: column.integer,
   trailer_length: column.integer,
   opening_direction: column.text,
+  deleted: column.integer,
 } satisfies PowerSyncColsFor<"Bleachers">;
 const Bleachers = new Table(BleachersCols, {
   indexes: {
