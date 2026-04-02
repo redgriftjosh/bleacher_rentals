@@ -152,24 +152,24 @@ export function SeasonToggle() {
       </motion.div>
 
       {(season === "SUMMER" || season === "WINTER") && (
-        <div className="flex items-center gap-3">
-          <div className="w-[260px]">
-            <SelectAccountManager
-              value={accountManagerUuid}
-              onChange={(val) => void setField("accountManagerUuid", val)}
-              placeholder="Select Account Manager..."
-            />
-          </div>
+        <div className="w-[260px]">
+          <SelectAccountManager
+            value={accountManagerUuid}
+            onChange={(val) => void setField("accountManagerUuid", val)}
+            placeholder="Select Account Manager..."
+          />
+        </div>
+      )}
 
-          <motion.div
-            key={rowsQuickFilter ?? "all"}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-          >
-            <Button
-              onClick={handleRowsQuickToggle}
-              className={`
+      <motion.div
+        key={`rows-${rowsQuickFilter ?? "all"}`}
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+      >
+        <Button
+          onClick={handleRowsQuickToggle}
+          className={`
                 ${rowsConfig.bgColor}
                 ${rowsConfig.hoverColor}
                 text-white
@@ -180,13 +180,11 @@ export function SeasonToggle() {
                 transition-all duration-300
                 flex items-center gap-2
               `}
-            >
-              <Rows3 className="w-4 h-4" />
-              <span>{rowsConfig.label}</span>
-            </Button>
-          </motion.div>
-        </div>
-      )}
+        >
+          <Rows3 className="w-4 h-4" />
+          <span>{rowsConfig.label}</span>
+        </Button>
+      </motion.div>
     </div>
   );
 }
