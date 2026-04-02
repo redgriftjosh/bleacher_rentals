@@ -3,8 +3,8 @@ import { useBleachersQuery } from "../db";
 import { BleacherItemRow } from "./BleacherItemRow";
 import { BleacherListSkeleton } from "./BleacherListSkeleton";
 
-export function BleacherList() {
-  const bleachers = useBleachersQuery();
+export function BleacherList({ showDeleted = false }: { showDeleted?: boolean }) {
+  const bleachers = useBleachersQuery(showDeleted);
 
   // if (isLoading) return <BleacherListSkeleton />;
   if (!bleachers) return null;

@@ -13,11 +13,21 @@ import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown"
 import { toast } from "sonner";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
+import { CheckCheck, CircleAlert, LoaderCircle, Trash2 } from "lucide-react";
 import { checkInsertBleacherFormRules } from "../../functions";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
 import { HomeBase } from "../../hooks/useHomeBases";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // https://www.loom.com/share/377b110fd24f4eebbc6e90394ac3a407?sid=c32cff10-c666-4386-9a09-85ed203e4cb5
 // Did a little explainer on how this works.
@@ -49,6 +59,8 @@ export function SheetEditBleacher() {
   const [openingDirection, setOpeningDirection] = useState<"driver" | "passenger" | null>(null);
 
   const [isTakenNumber, setIsTakenNumber] = useState(true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
 
   // Fetch the bleacher data using React Query
   const {
@@ -83,6 +95,7 @@ export function SheetEditBleacher() {
       setId(bleacher.id);
       setRows(bleacher.bleacher_rows);
       setSeats(bleacher.bleacher_seats);
+      setIsDeleted(bleacher.deleted);
       setSelectedSummerHomeBaseUuid(bleacher.summer_home_base_uuid);
       setSelectedWinterHomeBaseUuid(bleacher.winter_home_base_uuid);
       setSelectedLinxupDeviceId(bleacher.linxup_device_id ?? null);
@@ -130,7 +143,7 @@ export function SheetEditBleacher() {
       // console.log("Running query with editBleacherNumber:", editBleacherNumber);
       return fetchTakenBleacherNumbers(
         supabase,
-        editBleacherNumber ? Number(editBleacherNumber) : undefined
+        editBleacherNumber ? Number(editBleacherNumber) : undefined,
       );
     },
     enabled: !!supabase && !!editBleacherNumber,
@@ -152,7 +165,7 @@ export function SheetEditBleacher() {
           summer_home_base_uuid: selectedSummerHomeBaseUuid,
           winter_home_base_uuid: selectedWinterHomeBaseUuid,
         },
-        takenNumbers
+        takenNumbers,
       )
     ) {
       throw new Error("Event form validation failed");
@@ -178,11 +191,43 @@ export function SheetEditBleacher() {
           opening_direction: openingDirection,
         },
         supabase,
-        queryClient
+        queryClient,
       );
       //   setIsOpen(false);
       router.push("/assets/bleachers");
     }
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    const { error } = await supabase.from("Bleachers").update({ deleted: true }).eq("id", id);
+    if (error) {
+      toast.error("Failed to delete bleacher: " + error.message);
+      return;
+    }
+    toast.success("Bleacher deleted");
+    if (queryClient) {
+      await queryClient.invalidateQueries({ queryKey: ["bleachers"] });
+      await queryClient.invalidateQueries({ queryKey: ["bleachers-with-assignments"] });
+      await queryClient.invalidateQueries({ queryKey: ["bleacher"] });
+    }
+    router.push("/assets/bleachers");
+  };
+
+  const handleRestore = async () => {
+    if (!id) return;
+    const { error } = await supabase.from("Bleachers").update({ deleted: false }).eq("id", id);
+    if (error) {
+      toast.error("Failed to restore bleacher: " + error.message);
+      return;
+    }
+    toast.success("Bleacher restored");
+    if (queryClient) {
+      await queryClient.invalidateQueries({ queryKey: ["bleachers"] });
+      await queryClient.invalidateQueries({ queryKey: ["bleachers-with-assignments"] });
+      await queryClient.invalidateQueries({ queryKey: ["bleacher"] });
+    }
+    router.push("/assets/bleachers");
   };
 
   //   if (!bleachersLoaded) return <LoadingSpinner />;
@@ -206,6 +251,12 @@ export function SheetEditBleacher() {
                 Fill out the form and click 'Save Changes' to lock in your changes bleacher.
               </p>
             </div>
+
+            {isDeleted && (
+              <div className="mx-6 mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 font-medium">
+                This bleacher has been deleted. Click &quot;Restore&quot; to recover it.
+              </div>
+            )}
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
@@ -316,7 +367,7 @@ export function SheetEditBleacher() {
                     />
                   </div>
                 </div>
-                                <div className="grid grid-cols-5 items-center gap-4">
+                <div className="grid grid-cols-5 items-center gap-4">
                   <label className="text-right text-sm font-medium col-span-2">Manufacturer</label>
                   <input
                     type="text"
@@ -353,28 +404,40 @@ export function SheetEditBleacher() {
                   />
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Trailer Height (ft)</label>
+                  <label className="text-right text-sm font-medium col-span-2">
+                    Trailer Height (ft)
+                  </label>
                   <input
                     type="number"
                     value={heightFoldedFt ?? ""}
-                    onChange={(e) => setHeightFoldedFt(e.target.value ? Number(e.target.value) : null)}
+                    onChange={(e) =>
+                      setHeightFoldedFt(e.target.value ? Number(e.target.value) : null)
+                    }
                     className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                   />
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Trailer Length (ft)</label>
+                  <label className="text-right text-sm font-medium col-span-2">
+                    Trailer Length (ft)
+                  </label>
                   <input
                     type="number"
                     value={trailerLength ?? ""}
-                    onChange={(e) => setTrailerLength(e.target.value ? Number(e.target.value) : null)}
+                    onChange={(e) =>
+                      setTrailerLength(e.target.value ? Number(e.target.value) : null)
+                    }
                     className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                   />
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Opening Direction</label>
+                  <label className="text-right text-sm font-medium col-span-2">
+                    Opening Direction
+                  </label>
                   <select
                     value={openingDirection ?? ""}
-                    onChange={(e) => setOpeningDirection((e.target.value || null) as "driver" | "passenger" | null)}
+                    onChange={(e) =>
+                      setOpeningDirection((e.target.value || null) as "driver" | "passenger" | null)
+                    }
                     className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                   >
                     <option value="">Select direction</option>
@@ -395,7 +458,25 @@ export function SheetEditBleacher() {
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t flex justify-end">
+            <div className="p-6 border-t flex justify-between">
+              {isDeleted ? (
+                <button
+                  type="button"
+                  onClick={handleRestore}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors cursor-pointer flex items-center gap-2"
+                >
+                  Restore
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors cursor-pointer flex items-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </button>
+              )}
               <button
                 type="submit"
                 onClick={handleSave}
@@ -407,6 +488,24 @@ export function SheetEditBleacher() {
           </div>
         </div>
       )}
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Bleacher #{bleacherNumber}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the bleacher from all lists and the dashboard. This action can be
+              undone by a database administrator.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
