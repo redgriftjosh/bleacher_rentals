@@ -55,8 +55,9 @@ export function useBleachers() {
             id,
             user:Users(id, clerk_user_id, first_name, last_name)
           )
-        `
+        `,
         )
+        .eq("deleted", false)
         .order("bleacher_number", { ascending: true });
 
       if (error) throw error;
