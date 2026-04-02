@@ -21,6 +21,7 @@ export function BleacherItemRow({
   bleacherNumber,
   bleacherRows,
   bleacherSeats,
+  deleted,
   hitchType,
   vinNumber,
   tagNumber,
@@ -40,7 +41,7 @@ export function BleacherItemRow({
 
   return (
     <tr
-      className="border-b border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer"
+      className={`border-b border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer ${deleted ? "opacity-50 bg-red-50" : ""}`}
       onClick={handleClick}
     >
       <td className="p-3 text-left">{bleacherNumber}</td>

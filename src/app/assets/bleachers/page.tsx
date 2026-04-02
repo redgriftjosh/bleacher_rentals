@@ -1,12 +1,27 @@
-import { Suspense } from "react";
+"use client";
+
+import { useState } from "react";
 import { BleacherList } from "./_lib/components/BleacherList";
-import { BleacherListSkeleton } from "./_lib/components/BleacherListSkeleton";
 import { SheetEditBleacher } from "./_lib/components/sheets/SheetEditBleacher";
 
 export default function BleachersPage() {
+  const [showDeleted, setShowDeleted] = useState(false);
+
   return (
     <main className="">
       <SheetEditBleacher />
+      <div className="flex items-center justify-end gap-2 px-3 py-2">
+        <label htmlFor="show-deleted" className="text-sm text-gray-600 cursor-pointer select-none">
+          Show deleted
+        </label>
+        <input
+          type="checkbox"
+          id="show-deleted"
+          checked={showDeleted}
+          onChange={(e) => setShowDeleted(e.target.checked)}
+          className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
+        />
+      </div>
       <table className="min-w-full border-collapse border border-gray-200">
         {/* Header */}
         <thead className="bg-gray-100">
@@ -28,9 +43,7 @@ export default function BleachersPage() {
         </thead>
 
         {/* Body */}
-        <Suspense fallback={<BleacherListSkeleton />}>
-          <BleacherList />
-        </Suspense>
+        <BleacherList showDeleted={showDeleted} />
       </table>
     </main>
   );
