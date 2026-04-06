@@ -43,6 +43,8 @@ const BleachersCols = {
   height_folded_ft: column.integer,
   gvwr: column.integer,
   trailer_length: column.integer,
+  trailer_height_in: column.integer,
+  trailer_length_in: column.integer,
   opening_direction: column.text,
   deleted: column.integer,
 } satisfies PowerSyncColsFor<"Bleachers">;

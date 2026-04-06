@@ -7,9 +7,11 @@ export type FormattedBleacher = {
   vinNumber: string | null;
   tagNumber: string | null;
   manufacturer: string | null;
-  heightFoldedFt: number | null;
   gvwr: number | null;
+  heightFoldedFt: number | null;
   trailerLength: number | null;
+  trailerLengthIn: number | null;
+  trailerHeightIn: number | null;
   openingDirection: string | null;
   summerHomeBase: {
     homeBaseUuid: string;

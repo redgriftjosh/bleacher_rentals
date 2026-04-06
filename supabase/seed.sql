@@ -3210,3 +3210,80 @@ END $$;
 --   ('Trip', 1),
 --   ('Repair/Maintenance', 2),
 --   ('Cleaning', 3);
+
+INSERT INTO "public"."Bleachers" (
+    "created_at",
+    "bleacher_number",
+    "bleacher_rows",
+    "bleacher_seats",
+    "created_by",
+    "updated_at",
+    "updated_by",
+    "linxup_device_id",
+    "summer_account_manager_uuid",
+    "winter_account_manager_uuid",
+    "id",
+    "summer_home_base_uuid",
+    "winter_home_base_uuid",
+    "height_folded_ft",
+    "trailer_length"
+) VALUES
+(
+    NOW(),
+    1000,
+    4,
+    20,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    gen_random_uuid(),
+    '677a8179-297a-48e9-b368-a4d57b2fd348',
+    '677a8179-297a-48e9-b368-a4d57b2fd348',
+    1,
+    NULL
+),
+(
+    NOW(),
+    1001,
+    4,
+    20,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    gen_random_uuid(),
+    '677a8179-297a-48e9-b368-a4d57b2fd348',
+    '677a8179-297a-48e9-b368-a4d57b2fd348',
+    NULL,
+    2
+),
+(
+    NOW(),
+    1002,
+    4,
+    20,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    gen_random_uuid(),
+    '677a8179-297a-48e9-b368-a4d57b2fd348',
+    '677a8179-297a-48e9-b368-a4d57b2fd348',
+    2,
+    1
+);
+
+UPDATE public."Bleachers"
+SET trailer_length_in = trailer_length * 12
+WHERE trailer_length IS NOT NULL;
+
+UPDATE public."Bleachers"
+SET trailer_height_in = height_folded_ft * 12
+WHERE height_folded_ft IS NOT NULL;
