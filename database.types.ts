@@ -120,6 +120,7 @@ export type Database = {
           bleacher_seats: number
           created_at: string
           created_by: string | null
+          deleted: boolean
           gvwr: number | null
           height_folded_ft: number | null
           hitch_type: string | null
@@ -145,6 +146,7 @@ export type Database = {
           bleacher_seats: number
           created_at?: string
           created_by?: string | null
+          deleted?: boolean
           gvwr?: number | null
           height_folded_ft?: number | null
           hitch_type?: string | null
@@ -170,6 +172,7 @@ export type Database = {
           bleacher_seats?: number
           created_at?: string
           created_by?: string | null
+          deleted?: boolean
           gvwr?: number | null
           height_folded_ft?: number | null
           hitch_type?: string | null
@@ -340,6 +343,7 @@ export type Database = {
           rows: string
           rows_quick_filter: number | null
           season: string | null
+          show_address_tooltip: boolean
           state_provinces: string
           summer_home_base_uuids: string
           updated_at: string
@@ -356,6 +360,7 @@ export type Database = {
           rows?: string
           rows_quick_filter?: number | null
           season?: string | null
+          show_address_tooltip?: boolean
           state_provinces?: string
           summer_home_base_uuids?: string
           updated_at?: string
@@ -372,6 +377,7 @@ export type Database = {
           rows?: string
           rows_quick_filter?: number | null
           season?: string | null
+          show_address_tooltip?: boolean
           state_provinces?: string
           summer_home_base_uuids?: string
           updated_at?: string

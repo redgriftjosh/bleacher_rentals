@@ -21,6 +21,9 @@ import type { DashboardFilterState } from "../dashboardOptions/types";
 import { filterEvents, filterSortPixiBleachers } from "../dashboardOptions/util";
 import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEventStore";
 import { WorkTrackerDragManager } from "./util/WorkTrackerDragManager";
+import { useAddressTooltipStore } from "./state/useAddressTooltipStore";
+import { resolveAddress } from "./util/resolveAddress";
+import { useScrollToDateStore } from "./state/useScrollToDateStore";
 
 export class Dashboard {
   // Grids
@@ -61,6 +64,13 @@ export class Dashboard {
   // Resize handling via utility
   private resizeManager?: ResizeManager;
 
+  // Address tooltip tracking
+  private lastTooltipRow = -1;
+  private lastTooltipCol = -1;
+  private lastMousePageX = 0;
+  private lastMousePageY = 0;
+  private onCanvasMouseMove: ((e: MouseEvent) => void) | null = null;
+
   constructor(
     app: Application,
     opts?: {
@@ -85,6 +95,7 @@ export class Dashboard {
         stateProvinces: [],
         onlyShowMyEvents: true,
         optimizationMode: false,
+        showAddressTooltip: false,
         season: null,
         accountManagerUuid: null,
         rowsQuickFilter: null,
@@ -163,12 +174,103 @@ export class Dashboard {
     this.unsubBleachers = useDashboardBleachersStore.subscribe(() => scheduleRecompute());
 
     // Note: initial scroll handling is performed in initGrids using opts
+
+    // Address tooltip: use native DOM mousemove for correct page coordinates
+    this.onCanvasMouseMove = (e: MouseEvent) => {
+      this.lastMousePageX = e.clientX;
+      this.lastMousePageY = e.clientY;
+      this.updateAddressTooltip();
+    };
+
+    app.canvas.addEventListener("mousemove", this.onCanvasMouseMove);
+    app.canvas.addEventListener("mouseleave", () => {
+      useAddressTooltipStore.getState().hide();
+      this.lastTooltipRow = -1;
+      this.lastTooltipCol = -1;
+    });
+
+    // Register scrollToDate so React components can scroll the dashboard
+    useScrollToDateStore.getState().setScrollToDate((date: string) => {
+      this.scrollToDate(date);
+    });
   }
 
   /**
    * Handle window resize: log new dimensions and relevant grid metrics
    */
   // resize is managed by ResizeManager
+
+  /**
+   * Resolve and update the address tooltip based on current mouse position and scroll
+   */
+  private updateAddressTooltip() {
+    if (!this.filters.showAddressTooltip || this.yAxis !== "Bleachers") {
+      if (useAddressTooltipStore.getState().text !== null) {
+        useAddressTooltipStore.getState().hide();
+      }
+      return;
+    }
+
+    const canvas = this.app.canvas;
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    // Convert page coordinates to PixiJS logical coordinates
+    const pixiX = ((this.lastMousePageX - rect.left) / rect.width) * (canvas.width / dpr);
+    const pixiY = ((this.lastMousePageY - rect.top) / rect.height) * (canvas.height / dpr);
+
+    // Check if mouse is within the main grid area
+    const gridX = pixiX - BLEACHER_COLUMN_WIDTH;
+    const gridY = pixiY - HEADER_ROW_HEIGHT;
+    if (gridX < 0 || gridY < 0) {
+      if (useAddressTooltipStore.getState().text !== null) {
+        useAddressTooltipStore.getState().hide();
+      }
+      this.lastTooltipRow = -1;
+      this.lastTooltipCol = -1;
+      return;
+    }
+
+    // Calculate cell row/col from grid-local coordinates + scroll offset
+    const scrollX = this.mainGrid?.getCurrentScrollX?.() ?? 0;
+    const scrollY = this.mainGrid?.getCurrentScrollY?.() ?? 0;
+    const col = Math.floor((gridX + scrollX) / CELL_WIDTH);
+    const row = Math.floor((gridY + scrollY) / CELL_HEIGHT);
+
+    if (row < 0 || row >= this.bleachers.length || col < 0 || col >= this.dates.length) {
+      if (useAddressTooltipStore.getState().text !== null) {
+        useAddressTooltipStore.getState().hide();
+      }
+      this.lastTooltipRow = -1;
+      this.lastTooltipCol = -1;
+      return;
+    }
+
+    // Only re-resolve address when cell changes
+    if (row !== this.lastTooltipRow || col !== this.lastTooltipCol) {
+      this.lastTooltipRow = row;
+      this.lastTooltipCol = col;
+
+      const bleacher = this.bleachers[row];
+      const targetDate = this.dates[col];
+      const address = resolveAddress(bleacher, targetDate);
+
+      if (!address) {
+        useAddressTooltipStore.getState().hide();
+        return;
+      }
+
+      useAddressTooltipStore.getState().show(address, this.lastMousePageX, this.lastMousePageY);
+    } else {
+      // Same cell — just update position
+      const current = useAddressTooltipStore.getState();
+      if (current.text) {
+        useAddressTooltipStore
+          .getState()
+          .show(current.text, this.lastMousePageX, this.lastMousePageY);
+      }
+    }
+  }
 
   /**
    * Unified recompute: reads all stores, computes filtered data, and applies minimal updates
@@ -490,6 +592,7 @@ export class Dashboard {
     this.mainGrid.on("grid:scroll-vertical", (scrollY: number) => {
       this.stickyLeftColumn.setVerticalScroll(scrollY);
       this.mainGridPinnedYAxis.setVerticalScroll(scrollY);
+      this.updateAddressTooltip();
     });
 
     // When main grid scrolls horizontally, sync the top row and update both renderers
@@ -504,6 +607,9 @@ export class Dashboard {
       if (this.yAxis === "Bleachers") {
         this.mainGridPinnedYAxis.forceUpdate();
       }
+
+      // Update address tooltip on scroll so it resolves the new cell under cursor
+      this.updateAddressTooltip();
     });
 
     // Horizontal centering moved to constructor after potential initialScrollX check
@@ -514,6 +620,22 @@ export class Dashboard {
     const x = (this.mainGrid as any)?.getCurrentScrollX?.() ?? 0;
     const y = (this.mainGrid as any)?.getCurrentScrollY?.() ?? 0;
     return { x, y };
+  }
+
+  /**
+   * Scroll the dashboard so the given date column is centered horizontally
+   */
+  public scrollToDate(date: string) {
+    const colIndex = this.dates.indexOf(date);
+    if (colIndex === -1) return;
+
+    const viewportWidth = this.app.screen.width - BLEACHER_COLUMN_WIDTH;
+    const targetX = Math.max(0, colIndex * CELL_WIDTH - viewportWidth / 2 + CELL_WIDTH / 2);
+
+    this.mainGrid.setHorizontalScroll(targetX);
+    this.stickyTopRow.setHorizontalScroll(targetX);
+    this.mainGrid.updateHorizontalScrollbarPosition(targetX);
+    this.cellEditor.setScrollPosition(targetX, this.mainGrid.getCurrentScrollY());
   }
 
   /**
@@ -531,6 +653,15 @@ export class Dashboard {
     } catch {}
     try {
       this.unsubEvents?.();
+    } catch {}
+    try {
+      if (this.onCanvasMouseMove) {
+        this.app.canvas.removeEventListener("mousemove", this.onCanvasMouseMove);
+      }
+      useAddressTooltipStore.getState().hide();
+    } catch {}
+    try {
+      useScrollToDateStore.getState().setScrollToDate(null);
     } catch {}
     this.cellEditor.destroy();
     WorkTrackerDragManager.destroy();

@@ -9,6 +9,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { deleteBlock, saveBlock } from "../db/client/db";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
+import { useUser } from "@clerk/nextjs";
+import { useUsersStore } from "@/state/userStore";
 
 type CellEditorProps = {
   onWorkTrackerOpen?: (workTracker: Tables<"WorkTrackers">) => void;
@@ -17,6 +19,8 @@ type CellEditorProps = {
 export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
   const qc = useQueryClient();
   const supabase = useClerkSupabaseClient();
+  const { user } = useUser();
+  const users = useUsersStore((s) => s.users);
   const { isOpen, key, blockUuid, bleacherUuid, date, text, workTrackerUuid, setField, resetForm } =
     useSelectedBlockStore();
 
@@ -149,6 +153,15 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     eventStore.setField("eventStart", formatDate(startDate));
     eventStore.setField("eventEnd", formatDate(endDate));
     eventStore.setField("bleacherUuids", [bleacherUuid]);
+
+    // Set current user as owner
+    if (!eventStore.ownerUserUuid) {
+      const clerkId = user?.id;
+      if (clerkId) {
+        const match = users.find((u) => u.clerk_user_id === clerkId);
+        if (match) eventStore.setField("ownerUserUuid", match.id);
+      }
+    }
 
     // Close the cell editor
     handleClose();

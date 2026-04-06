@@ -29,6 +29,7 @@ export type EventWithDate = {
   id: string;
   created_at: string | null;
   event_start: string | null;
+  booked_at: string | null;
   contract_revenue_cents: number | null;
 };
 
@@ -49,6 +50,7 @@ export function useEventsWithinTimeRange(
         "e.id as id",
         "e.created_at as created_at",
         "e.event_start as event_start",
+        "e.booked_at as booked_at",
         "e.contract_revenue_cents as contract_revenue_cents",
       ]);
 
@@ -58,24 +60,24 @@ export function useEventsWithinTimeRange(
           .where(
             `e.${dateField}`,
             ">=",
-            dateField === "created_at" ? thisYearStartTimeStampTZ : thisYearStartDate,
+            dateField === "event_start" ? thisYearStartDate : thisYearStartTimeStampTZ,
           )
           .where(
             `e.${dateField}`,
             "<",
-            dateField === "created_at" ? thisYearEndTimeStampTZ : thisYearEndDate,
+            dateField === "event_start" ? thisYearEndDate : thisYearEndTimeStampTZ,
           );
       } else {
         eventsBuilder = eventsBuilder
           .where(
             `e.${dateField}`,
             ">=",
-            dateField === "created_at" ? lastYearStartTimeStampTZ : lastYearStartDate,
+            dateField === "event_start" ? lastYearStartDate : lastYearStartTimeStampTZ,
           )
           .where(
             `e.${dateField}`,
             "<",
-            dateField === "created_at" ? thisYearStartTimeStampTZ : thisYearStartDate,
+            dateField === "event_start" ? thisYearStartDate : thisYearStartTimeStampTZ,
           );
       }
     } else if (activeRange === "quarterly") {
@@ -84,24 +86,24 @@ export function useEventsWithinTimeRange(
           .where(
             `e.${dateField}`,
             ">=",
-            dateField === "created_at" ? thisQuarterStartTimeStampTZ : thisQuarterStartDate,
+            dateField === "event_start" ? thisQuarterStartDate : thisQuarterStartTimeStampTZ,
           )
           .where(
             `e.${dateField}`,
             "<",
-            dateField === "created_at" ? thisQuarterEndTimeStampTZ : thisQuarterEndDate,
+            dateField === "event_start" ? thisQuarterEndDate : thisQuarterEndTimeStampTZ,
           );
       } else {
         eventsBuilder = eventsBuilder
           .where(
             `e.${dateField}`,
             ">=",
-            dateField === "created_at" ? lastQuarterStartTimeStampTZ : lastQuarterStartDate,
+            dateField === "event_start" ? lastQuarterStartDate : lastQuarterStartTimeStampTZ,
           )
           .where(
             `e.${dateField}`,
             "<",
-            dateField === "created_at" ? thisQuarterStartTimeStampTZ : thisQuarterStartDate,
+            dateField === "event_start" ? thisQuarterStartDate : thisQuarterStartTimeStampTZ,
           );
       }
       // default to weekly if somehow an invalid range is passed
@@ -111,24 +113,24 @@ export function useEventsWithinTimeRange(
           .where(
             `e.${dateField}`,
             ">=",
-            dateField === "created_at" ? thisWeekStartTimeStampTZ : thisWeekStartDate,
+            dateField === "event_start" ? thisWeekStartDate : thisWeekStartTimeStampTZ,
           )
           .where(
             `e.${dateField}`,
             "<",
-            dateField === "created_at" ? thisWeekEndTimeStampTZ : thisWeekEndDate,
+            dateField === "event_start" ? thisWeekEndDate : thisWeekEndTimeStampTZ,
           );
       } else {
         eventsBuilder = eventsBuilder
           .where(
             `e.${dateField}`,
             ">=",
-            dateField === "created_at" ? lastWeekStartTimeStampTZ : lastWeekStartDate,
+            dateField === "event_start" ? lastWeekStartDate : lastWeekStartTimeStampTZ,
           )
           .where(
             `e.${dateField}`,
             "<",
-            dateField === "created_at" ? thisWeekStartTimeStampTZ : thisWeekStartDate,
+            dateField === "event_start" ? thisWeekStartDate : thisWeekStartTimeStampTZ,
           );
       }
     }
