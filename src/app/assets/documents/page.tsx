@@ -102,7 +102,7 @@ function EditSheet({ initial, onClose }: { initial: BlueBookData; onClose: () =>
 
             {/* Document PDF Upload */}
             <div className="grid grid-cols-5 items-start gap-4">
-              <label className="text-right text-sm font-medium col-span-2 pt-2">NVIS PDF</label>
+              <label className="text-right text-sm font-medium col-span-2 pt-2">Attachment</label>
               <div className="col-span-3">
                 <FileUploadInput
                   label=""
@@ -269,7 +269,7 @@ export default function BlueBookPage() {
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide w-8">#</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Name</th>
-                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Document</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Attachment</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Link</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Region</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Status</th>
@@ -299,7 +299,7 @@ export default function BlueBookPage() {
                         <button
                           onClick={handlePdfClick}
                           className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
-                          title="View NVIS PDF"
+                          title="View Attachment"
                         >
                           <FileText className="h-4 w-4" />
                           View

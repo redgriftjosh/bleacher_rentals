@@ -119,7 +119,7 @@ export function SheetAddDocumentEntry() {
 
                 {/* Document PDF Upload */}
                 <div className="grid grid-cols-5 items-start gap-4">
-                  <label className="text-right text-sm font-medium col-span-2 pt-2">NVIS PDF</label>
+                  <label className="text-right text-sm font-medium col-span-2 pt-2">Attachment</label>
                   <div className="col-span-3">
                     <FileUploadInput
                       label=""
