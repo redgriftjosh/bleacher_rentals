@@ -7,6 +7,7 @@ export type BlueBookData = {
     id: string;
     name: string | null;
     link: string | null;
+    document_path: string | null;
     description: string | null;
     is_active: number | null;
     region: string | null;
@@ -21,6 +22,7 @@ export function useBlueBook(): { blueBookEntries: BlueBookData[] | null } {
                 "id",
                 "name",
                 "link",
+                "document_path",
                 "description",
                 "is_active",
                 "region",

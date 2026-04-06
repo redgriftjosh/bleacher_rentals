@@ -64,9 +64,7 @@ export function useBleachersQuery(showDeleted: boolean = false) {
     query = query.where("b.deleted", "=", 0);
   }
 
-  const compiled = query
-    .orderBy("b.bleacher_number", "desc")
-    .compile();
+  const compiled = query.orderBy("b.bleacher_number", "desc").compile();
 
   const { data } = useTypedQuery(compiled, expect<Query>());
   const formattedBleachers: FormattedBleacher[] = (data || []).map((bleacher) => {

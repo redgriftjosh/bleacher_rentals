@@ -48,4 +48,5 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   ZoneStateProvinces: () => {},
   WorkTrackerTypes: () => {},
   WorkTrackerTypeQboAccounts: () => {},
+  DriverUnavailability: () => {},
 };

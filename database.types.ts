@@ -298,6 +298,7 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          document_path: string | null
           id: string
           is_active: boolean
           link: string | null
@@ -309,6 +310,7 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          document_path?: string | null
           id?: string
           is_active?: boolean
           link?: string | null
@@ -320,6 +322,7 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          document_path?: string | null
           id?: string
           is_active?: boolean
           link?: string | null
@@ -488,6 +491,35 @@ export type Database = {
             columns: ["vendor_uuid"]
             isOneToOne: false
             referencedRelation: "Vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      DriverUnavailability: {
+        Row: {
+          date_unavailable: string
+          driver_uuid: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          date_unavailable: string
+          driver_uuid?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          date_unavailable?: string
+          driver_uuid?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "DriverUnavailability_driver_uuid_fkey"
+            columns: ["driver_uuid"]
+            isOneToOne: false
+            referencedRelation: "Drivers"
             referencedColumns: ["id"]
           },
         ]

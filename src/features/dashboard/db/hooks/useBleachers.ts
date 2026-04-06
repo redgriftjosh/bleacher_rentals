@@ -36,6 +36,7 @@ type BleacherFlatRow = {
   work_tracker_uuid: string | null;
   work_tracker_date: string | null;
   work_tracker_status: string | null;
+  work_tracker_driver_uuid: string | null;
 };
 
 function toBool(v: BleacherFlatRow["booked"]): boolean {
@@ -133,6 +134,7 @@ function reshapeBleachers(rows: BleacherFlatRow[]): Bleacher[] {
             "draft") as Database["public"]["Enums"]["worktracker_status"],
           pickupTime: null,
           dropoffTime: null,
+          driverUuid: r.work_tracker_driver_uuid,
           driverFirstName: null,
           driverLastName: null,
           dropoffAddress: null,
@@ -187,6 +189,7 @@ export function useBleachers() {
       "wt.id as work_tracker_uuid",
       "wt.date as work_tracker_date",
       "wt.status as work_tracker_status",
+      "wt.driver_uuid as work_tracker_driver_uuid",
     ])
     .orderBy("b.bleacher_number", "asc")
     .compile();
