@@ -34,6 +34,8 @@ type SelectUserDropDownProps<T extends UserOption> = {
   isLoading?: boolean;
   getOptionId: (option: T) => string;
   getSearchValue?: (option: T) => string;
+  getOptionTitle?: (option: T) => string;
+  renderOptionExtra?: (option: T) => ReactNode;
   children?: ReactNode;
 };
 
@@ -47,6 +49,8 @@ export function SelectUserDropDown<T extends UserOption>({
   isLoading = false,
   getOptionId,
   getSearchValue,
+  getOptionTitle,
+  renderOptionExtra,
   children,
 }: SelectUserDropDownProps<T>) {
   const [open, setOpen] = useState(false);
@@ -108,7 +112,12 @@ export function SelectUserDropDown<T extends UserOption>({
                   ? getSearchValue(option)
                   : `${option.firstName} ${option.lastName} ${option.email ?? ""}`;
                 return (
-                  <CommandItem key={id} value={searchValue} onSelect={() => handleSelect(id)}>
+                  <CommandItem
+                    key={id}
+                    value={searchValue}
+                    onSelect={() => handleSelect(id)}
+                    title={getOptionTitle?.(option)}
+                  >
                     <Check
                       className={cn("mr-2 h-4 w-4", value === id ? "opacity-100" : "opacity-0")}
                     />
@@ -117,6 +126,7 @@ export function SelectUserDropDown<T extends UserOption>({
                       firstName={option.firstName}
                       lastName={option.lastName}
                     />
+                    {renderOptionExtra?.(option)}
                   </CommandItem>
                 );
               })}

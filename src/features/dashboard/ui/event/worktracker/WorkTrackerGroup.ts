@@ -6,6 +6,7 @@ import { WorkTrackerFull } from "./WorkTrackerFull";
 import { WorkTrackerHalf } from "./WorkTrackerHalf";
 import { WorkTrackerSmall } from "./WorkTrackerSmall";
 import { WorkTrackerDragManager } from "../../../util/WorkTrackerDragManager";
+import { isDriverUnavailable } from "../../../state/useDriverUnavailabilityStore";
 
 const MAX_SMALL_THUMBNAILS = 4;
 const DRAG_THRESHOLD = 6; // px movement before drag starts
@@ -47,19 +48,22 @@ export class WorkTrackerGroup extends Container {
 
     if (!useSmall && sorted.length === 1) {
       // Full-cell mode
-      const sprite = new WorkTrackerFull(baker, sorted[0]);
+      const unavail = isDriverUnavailable(sorted[0].driverUuid, date);
+      const sprite = new WorkTrackerFull(baker, sorted[0], unavail);
       sprite.position.set(-1, -1);
       this.addInteractionHandler(sprite, sorted[0], bleacherUuid, date, onTrackerClick);
       this.addChild(sprite);
     } else if (!useSmall && sorted.length === 2) {
       // Two halves side by side
       const halfW = Math.floor(CELL_WIDTH / 2);
-      const left = new WorkTrackerHalf(baker, sorted[0], true);
+      const unavailL = isDriverUnavailable(sorted[0].driverUuid, date);
+      const left = new WorkTrackerHalf(baker, sorted[0], true, unavailL);
       left.position.set(-1, -1);
       this.addInteractionHandler(left, sorted[0], bleacherUuid, date, onTrackerClick);
       this.addChild(left);
 
-      const right = new WorkTrackerHalf(baker, sorted[1], false);
+      const unavailR = isDriverUnavailable(sorted[1].driverUuid, date);
+      const right = new WorkTrackerHalf(baker, sorted[1], false, unavailR);
       right.position.set(halfW - 1, -1);
       this.addInteractionHandler(right, sorted[1], bleacherUuid, date, onTrackerClick);
       this.addChild(right);
@@ -71,7 +75,8 @@ export class WorkTrackerGroup extends Container {
       const startY = CELL_HEIGHT - size - 1;
 
       for (let i = 0; i < count; i++) {
-        const small = new WorkTrackerSmall(baker, sorted[i]);
+        const unavail = isDriverUnavailable(sorted[i].driverUuid, date);
+        const small = new WorkTrackerSmall(baker, sorted[i], unavail);
         small.position.set(i * (size + gap), startY);
         this.addInteractionHandler(small, sorted[i], bleacherUuid, date, onTrackerClick);
         this.addChild(small);

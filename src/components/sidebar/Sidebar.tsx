@@ -12,6 +12,7 @@ import {
   FileText,
   Trophy,
   MapPinned,
+  CalendarDays,
 } from "lucide-react";
 import { SideNavButton } from "./SideNavButton";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
@@ -80,6 +81,12 @@ const SideBar = () => {
           href="/zones"
           icon={MapPinned}
           roles={[USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.ADMIN]}
+        />
+        <SideNavButton
+          label="Driver Calendar"
+          href="/driver-calendar"
+          icon={CalendarDays}
+          roles={[USER_ROLES.ADMIN]}
         />
         <SideNavButton
           label="QuickBooks"
