@@ -324,10 +324,20 @@ const BlueBookCols = {
 } satisfies PowerSyncColsFor<"BlueBook">;
 const BlueBook = new Table(BlueBookCols, { indexes: { uuid: ["uuid"] } });
 
+const DriverUnavailabilityCols = {
+  driver_uuid: column.text,
+  date_unavailable: column.text,
+  updated_at: column.text,
+} satisfies PowerSyncColsFor<"DriverUnavailability">;
+const DriverUnavailability = new Table(DriverUnavailabilityCols, {
+  indexes: { driver_uuid: ["driver_uuid"] },
+});
+
 export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
   DashboardFilterSettings,
+  DriverUnavailability,
   Tasks,
   Bleachers,
   BleacherEvents,
@@ -363,3 +373,4 @@ export type ScorecardTargetsRecord = PowerSyncDB["ScorecardTargets"];
 export type VendorRecord = PowerSyncDB["Vendors"];
 export type WorkTrackerRecord = PowerSyncDB["WorkTrackers"];
 export type WorkTrackerGroupRecord = PowerSyncDB["WorkTrackerGroups"];
+export type DriverUnavailabilityRecord = PowerSyncDB["DriverUnavailability"];
