@@ -62,6 +62,7 @@ export type BleacherWorkTracker = {
   status: Database["public"]["Enums"]["worktracker_status"];
   pickupTime: string | null;
   dropoffTime: string | null;
+  driverUuid: string | null;
   driverFirstName: string | null;
   driverLastName: string | null;
   dropoffAddress: string | null;

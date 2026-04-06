@@ -448,6 +448,7 @@ export default function WorkTrackerModal({
                         }))
                       }
                       placeholder="Select Driver"
+                      date={workTracker?.date ?? null}
                     />
                   </div>
                   <div className="flex-1">
@@ -585,7 +586,6 @@ export default function WorkTrackerModal({
               {/* Columns 2 & 3: Pickup, Dropoff, and Map */}
               <div className="flex-[2] flex flex-col gap-4">
                 <div className="flex flex-row gap-4">
- 
                   {/* Column 2: Pickup */}
                   <div className="flex-1">
                     <label className={labelClassName}>Pickup Time</label>
@@ -649,7 +649,7 @@ export default function WorkTrackerModal({
                       <span className="text-sm font-medium text-gray-700">Teardown Required</span>
                     </label>
                   </div>
- 
+
                   {/* Column 3: Dropoff */}
                   <div className="flex-1">
                     <label className={labelClassName}>Dropoff Time</label>
@@ -710,9 +710,8 @@ export default function WorkTrackerModal({
                       <span className="text-sm font-medium text-gray-700">Setup Required</span>
                     </label>
                   </div>
- 
                 </div>
- 
+
                 {/* Map - below both pickup and dropoff columns */}
                 <div className="mt-2">
                   <RouteMapPreview
