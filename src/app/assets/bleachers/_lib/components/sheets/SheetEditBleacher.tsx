@@ -136,8 +136,7 @@ export function SheetEditBleacher() {
       fetchTakenBleacherNumbers(
         supabase,
         editBleacherNumber ? Number(editBleacherNumber) : undefined,
-      );
-    },
+      ),
     enabled: !!supabase && !!editBleacherNumber,
   });
 
