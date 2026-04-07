@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   fetchTakenBleacherNumbers,
-  insertBleacher,
   updateBleacher,
   useBleacherQuery,
 } from "../../db";
@@ -11,7 +10,6 @@ import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
 import { toast } from "sonner";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle, Trash2 } from "lucide-react";
 import { checkInsertBleacherFormRules } from "../../functions";
@@ -31,6 +29,7 @@ import {
 
 // https://www.loom.com/share/377b110fd24f4eebbc6e90394ac3a407?sid=c32cff10-c666-4386-9a09-85ed203e4cb5
 // Did a little explainer on how this works.
+import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
 
 export function SheetEditBleacher() {
   const router = useRouter();
@@ -57,23 +56,18 @@ export function SheetEditBleacher() {
   const [gvwr, setGvwr] = useState<number | null>(null);
   const [trailerLength, setTrailerLength] = useState<number | null>(null);
   const [openingDirection, setOpeningDirection] = useState<"driver" | "passenger" | null>(null);
+  const [nvisPdfPath, setNvisPdfPath] = useState<string | null>(null);
 
   const [isTakenNumber, setIsTakenNumber] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
 
-  // Fetch the bleacher data using React Query
   const {
     data: bleacher,
     isLoading: bleacherLoading,
     error: bleacherError,
   } = useBleacherQuery(editBleacherNumber);
-  console.log("editBleacherNumber:", editBleacherNumber);
-  console.log("bleacher:", bleacher);
-  console.log("bleacherLoading:", bleacherLoading);
-  console.log("bleacherError:", bleacherError);
 
-  // Fetch home bases for the dropdowns
   const { data: homeBases = [], isLoading: homeBasesLoading } = useQuery({
     queryKey: ["home-bases"],
     queryFn: async () => {
@@ -81,14 +75,12 @@ export function SheetEditBleacher() {
         .from("HomeBases")
         .select("id, home_base_name")
         .order("home_base_name");
-
       if (error) throw error;
       return data as HomeBase[];
     },
     enabled: !!supabase,
   });
 
-  // Populate form fields when bleacher data loads
   useEffect(() => {
     if (bleacher) {
       setBleacherNumber(bleacher.bleacher_number);
@@ -109,12 +101,12 @@ export function SheetEditBleacher() {
       setGvwr(bleacher.gvwr ?? null);
       setTrailerLength(bleacher.trailer_length ?? null);
       setOpeningDirection(bleacher.opening_direction ?? null);
+      setNvisPdfPath(bleacher.nvis_pdf_path ?? null);
     } else if (bleacherError) {
       toast.error("Bleacher not found");
     }
   }, [bleacher, bleacherError]);
 
-  // Reset form when sheet closes
   useEffect(() => {
     if (!editBleacherNumber) {
       setBleacherNumber(null);
@@ -134,14 +126,14 @@ export function SheetEditBleacher() {
       setGvwr(null);
       setTrailerLength(null);
       setOpeningDirection(null);
+      setNvisPdfPath(null);
     }
   }, [editBleacherNumber]);
 
   const { data: takenNumbers = [], isLoading } = useQuery({
     queryKey: ["taken-bleacher-numbers", editBleacherNumber],
-    queryFn: () => {
-      // console.log("Running query with editBleacherNumber:", editBleacherNumber);
-      return fetchTakenBleacherNumbers(
+    queryFn: () =>
+      fetchTakenBleacherNumbers(
         supabase,
         editBleacherNumber ? Number(editBleacherNumber) : undefined,
       );
@@ -156,6 +148,8 @@ export function SheetEditBleacher() {
   }, [bleacherNumber, takenNumbers]);
 
   const handleSave = async () => {
+    console.log("nvisPdfPath at save time:", nvisPdfPath); // 👈 add this
+    console.log("id:", id);
     if (
       !checkInsertBleacherFormRules(
         {
@@ -189,11 +183,11 @@ export function SheetEditBleacher() {
           gvwr: gvwr,
           trailer_length: trailerLength,
           opening_direction: openingDirection,
+          nvis_pdf_path: nvisPdfPath,
         },
         supabase,
         queryClient,
       );
-      //   setIsOpen(false);
       router.push("/assets/bleachers");
     }
   };
@@ -316,7 +310,7 @@ export function SheetEditBleacher() {
                     Home Base
                   </label>
                   <SelectHomeBaseDropDown
-                    options={homeBases ?? []} // Add your home base options here
+                    options={homeBases ?? []}
                     onSelect={(e) => setSelectedSummerHomeBaseUuid(e.id)}
                     placeholder="Select Home Base"
                     value={selectedSummerHomeBaseUuid ?? undefined}
@@ -327,7 +321,7 @@ export function SheetEditBleacher() {
                     Winter Home Base
                   </label>
                   <SelectHomeBaseDropDown
-                    options={homeBases ?? []} // Add your home base options here
+                    options={homeBases ?? []}
                     onSelect={(e) => setSelectedWinterHomeBaseUuid(e.id)}
                     placeholder="Select Home Base"
                     value={selectedWinterHomeBaseUuid ?? undefined}
@@ -453,6 +447,22 @@ export function SheetEditBleacher() {
                     onChange={(e) => setGvwr(e.target.value ? Number(e.target.value) : null)}
                     className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                   />
+                </div>
+
+                {/* NVIS PDF Upload */}
+                <div className="grid grid-cols-5 items-start gap-4">
+                  <label className="text-right text-sm font-medium col-span-2 pt-2">NVIS PDF</label>
+                  <div className="col-span-3">
+                    <FileUploadInput
+                      label=""
+                      bucket="bleacher-nvis"
+                      storagePath={`bleacher-${bleacherNumber ?? "unknown"}/nvis`}
+                      value={nvisPdfPath}
+                      onChange={setNvisPdfPath}
+                      acceptedTypes={["application/pdf"]}
+                      maxSizeMB={10}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

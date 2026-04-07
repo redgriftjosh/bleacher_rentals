@@ -17,6 +17,7 @@ export type SelectBleacher = {
   gvwr: number | null;
   bleacher_length: number | null;
   opening_direction: "driver" | "passenger" | null;
+  nvis_pdf_path: string | null;
 };
 
 export type InsertBleacher = {
@@ -36,6 +37,7 @@ export type InsertBleacher = {
   gvwr?: number | null;
   trailer_length?: number | null;
   opening_direction?: "driver" | "passenger" | null;
+  nvis_pdf_path: string | null;
 };
 
 export type UpdateBleacher = {
@@ -56,4 +58,5 @@ export type UpdateBleacher = {
   gvwr?: number | null;
   trailer_length?: number | null;
   opening_direction?: "driver" | "passenger" | null;
+  nvis_pdf_path: string | null;
 };

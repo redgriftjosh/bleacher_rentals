@@ -2,20 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { FormattedBleacher } from "../types";
-
-// interface BleacherItemProps {
-//   bleacherNumber: number;
-//   bleacherRows: number;
-//   bleacherSeats: number;
-//   summerHomeBase: {
-//     homeBaseId: number;
-//     homeBaseName: string;
-//   };
-//   winterHomeBase: {
-//     homeBaseId: number;
-//     homeBaseName: string;
-//   };
-// }
+import { FileText } from "lucide-react";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export function BleacherItemRow({
   bleacherNumber,
@@ -30,13 +18,22 @@ export function BleacherItemRow({
   gvwr,
   trailerLength,
   openingDirection,
+  nvisPdfPath,
   summerHomeBase,
   winterHomeBase,
 }: FormattedBleacher) {
   const router = useRouter();
+  const supabase = useClerkSupabaseClient();
 
   const handleClick = () => {
     router.push(`/assets/bleachers?edit=${bleacherNumber}`);
+  };
+
+  const handlePdfClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // prevent row click / edit sheet opening
+    if (!nvisPdfPath) return;
+    const { data } = supabase.storage.from("bleacher-nvis").getPublicUrl(nvisPdfPath);
+    window.open(data.publicUrl, "_blank");
   };
 
   return (
@@ -65,6 +62,20 @@ export function BleacherItemRow({
       <td className="p-3 text-left">{gvwr != null ? `${gvwr.toLocaleString()} lbs` : "—"}</td>
       <td className="p-3 text-left">{summerHomeBase.homeBaseName}</td>
       <td className="p-3 text-left">{winterHomeBase.homeBaseName}</td>
+      <td className="p-3 text-left">
+        {nvisPdfPath ? (
+          <button
+            onClick={handlePdfClick}
+            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+            title="View NVIS PDF"
+          >
+            <FileText className="h-4 w-4" />
+            View
+          </button>
+        ) : (
+          <span className="text-gray-400">—</span>
+        )}
+      </td>
     </tr>
   );
 }
