@@ -20,6 +20,7 @@ export type DashboardFilterState = {
 
   onlyShowMyEvents: boolean;
   optimizationMode: boolean;
+  showAddressTooltip: boolean;
 
   // nullable: null => don't filter (both)
   season: Season;

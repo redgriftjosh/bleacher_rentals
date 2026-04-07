@@ -46,7 +46,9 @@ type Row = {
     status: string;
     pickup_time: string | null;
     dropoff_time: string | null;
+    dropoff_address: { street: string } | null;
     driver: {
+      id: string;
       user: {
         first_name: string | null;
         last_name: string | null;
@@ -111,7 +113,11 @@ export async function FetchDashboardBleachers(
       status,
       pickup_time,
       dropoff_time,
+      dropoff_address:Addresses!worktrackers_dropoff_address_uuid_fkey(
+        street
+      ),
       driver:Drivers!WorkTrackers_driver_uuid_fkey(
+        id,
         user:Users!Drivers_user_uuid_fkey(
           first_name,
           last_name
@@ -120,6 +126,7 @@ export async function FetchDashboardBleachers(
     )
       `,
     )
+    .eq("deleted", false)
     .order("bleacher_number", { ascending: true })
     .overrideTypes<Row[], { merge: false }>();
 
@@ -170,8 +177,10 @@ export async function FetchDashboardBleachers(
       status: wt.status as Database["public"]["Enums"]["worktracker_status"],
       pickupTime: wt.pickup_time ?? null,
       dropoffTime: wt.dropoff_time ?? null,
+      driverUuid: wt.driver?.id ?? null,
       driverFirstName: wt.driver?.user?.first_name ?? null,
       driverLastName: wt.driver?.user?.last_name ?? null,
+      dropoffAddress: wt.dropoff_address?.street ?? null,
     })),
   }));
 

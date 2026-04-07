@@ -3,6 +3,7 @@ import { Baker } from "../../../util/Baker";
 import { CELL_HEIGHT, CELL_WIDTH } from "../../../values/constants";
 import type { BleacherWorkTracker } from "../../../types";
 import { STATUS_TINT } from "./statusTint";
+import { drawUnavailableOverlay } from "./unavailableOverlay";
 
 /**
  * Half-width work tracker display (2 trackers side by side, no event overlap).
@@ -10,7 +11,12 @@ import { STATUS_TINT } from "./statusTint";
  * Uses bleed pattern: texture is halfW+2 × CELL_HEIGHT+2.
  */
 export class WorkTrackerHalf extends Sprite {
-  constructor(baker: Baker, tracker: BleacherWorkTracker, isLeft: boolean) {
+  constructor(
+    baker: Baker,
+    tracker: BleacherWorkTracker,
+    isLeft: boolean,
+    isUnavailable: boolean = false,
+  ) {
     super();
 
     const halfW = Math.floor(CELL_WIDTH / 2);
@@ -22,7 +28,7 @@ export class WorkTrackerHalf extends Sprite {
     const pickup = tracker.pickupTime ?? "";
     const dropoff = tracker.dropoffTime ?? "";
 
-    const cacheKey = `WTHalf:${tracker.status}:${driverName}:${pickup}:${dropoff}:${isLeft ? "L" : "R"}`;
+    const cacheKey = `WTHalf:${tracker.status}:${driverName}:${pickup}:${dropoff}:${isLeft ? "L" : "R"}:${isUnavailable ? "U" : ""}`;
 
     this.texture = baker.getTexture(cacheKey, { width: W, height: H }, (c) => {
       // Background fill
@@ -92,6 +98,11 @@ export class WorkTrackerHalf extends Sprite {
         dTxt.anchor.set(0.5, 0);
         dTxt.position.set(W / 2, CELL_HEIGHT * 0.75);
         c.addChild(dTxt);
+      }
+
+      // Unavailable driver overlay
+      if (isUnavailable) {
+        drawUnavailableOverlay(c, W, H);
       }
     });
   }

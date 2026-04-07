@@ -2,6 +2,7 @@ export type FormattedBleacher = {
   bleacherNumber: number;
   bleacherRows: number;
   bleacherSeats: number;
+  deleted: boolean;
   hitchType: string | null;
   vinNumber: string | null;
   tagNumber: string | null;

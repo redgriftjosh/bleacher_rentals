@@ -30,6 +30,7 @@ export function useDrivers(): Driver[] {
     .innerJoin("Users as u", "u.id", "d.user_uuid")
     .leftJoin("AccountManagers as am", "d.account_manager_uuid", "am.id")
     .leftJoin("Users as amu", "amu.id", "am.user_uuid")
+    .where("d.is_active", "=", 1)
     .select([
       "d.id as driverUuid",
       "d.tax as tax",

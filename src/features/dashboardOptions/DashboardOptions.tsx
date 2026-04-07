@@ -35,6 +35,7 @@ export function DashboardOptions() {
   const stateProvinces = state?.stateProvinces ?? [];
   const onlyShowMyEvents = state?.onlyShowMyEvents ?? true;
   const optimizationMode = state?.optimizationMode ?? false;
+  const showAddressTooltip = state?.showAddressTooltip ?? false;
   const season = state?.season ?? null;
 
   // Options
@@ -64,7 +65,18 @@ export function DashboardOptions() {
     if (winterHomeBaseUuids.length === 0) void setField("winterHomeBaseUuids", allHomeUuids);
     if (rows.length === 0) void setField("rows", allRowVals);
     if (stateProvinces.length === 0) void setField("stateProvinces", allStates);
-  }, [initialized, homeBaseOptions, rowOptions, stateProvOptions, setField, state, rows.length, stateProvinces.length, summerHomeBaseUuids.length, winterHomeBaseUuids.length]);
+  }, [
+    initialized,
+    homeBaseOptions,
+    rowOptions,
+    stateProvOptions,
+    setField,
+    state,
+    rows.length,
+    stateProvinces.length,
+    summerHomeBaseUuids.length,
+    winterHomeBaseUuids.length,
+  ]);
 
   return (
     <>
@@ -95,13 +107,22 @@ export function DashboardOptions() {
               </MenubarSubTrigger>
               <MenubarSubContent>
                 <MenubarRadioGroup value={season ?? "Don't Filter"}>
-                  <MenubarRadioItem value="SUMMER" onClick={() => void setField("season", "SUMMER")}>
+                  <MenubarRadioItem
+                    value="SUMMER"
+                    onClick={() => void setField("season", "SUMMER")}
+                  >
                     Summer
                   </MenubarRadioItem>
-                  <MenubarRadioItem value="WINTER" onClick={() => void setField("season", "WINTER")}>
+                  <MenubarRadioItem
+                    value="WINTER"
+                    onClick={() => void setField("season", "WINTER")}
+                  >
                     Winter
                   </MenubarRadioItem>
-                  <MenubarRadioItem value="Don't Filter" onClick={() => void setField("season", null)}>
+                  <MenubarRadioItem
+                    value="Don't Filter"
+                    onClick={() => void setField("season", null)}
+                  >
                     Don't Filter
                   </MenubarRadioItem>
                 </MenubarRadioGroup>
@@ -136,6 +157,13 @@ export function DashboardOptions() {
               onCheckedChange={(checked) => void setField("onlyShowMyEvents", Boolean(checked))}
             >
               Only Show My Events
+            </MenubarCheckboxItem>
+            <MenubarCheckboxItem
+              checked={showAddressTooltip}
+              onCheckedChange={(checked) => void setField("showAddressTooltip", Boolean(checked))}
+              title="This will display the last address for each bleacher based on the cell you're hovering over."
+            >
+              Show Address Tooltip
             </MenubarCheckboxItem>
             {/* <MenubarSeparator />
             <MenubarItem
@@ -200,11 +228,14 @@ export function DashboardOptions() {
               label: o.label,
             }))}
             onValueChange={(value) => {
-                const nextRows = value.map(Number);
-                void setField("rows", nextRows);
-                const quick = nextRows.length === 1 && (nextRows[0] === 10 || nextRows[0] === 15) ? nextRows[0] : null;
-                void setField("rowsQuickFilter", quick as any);
-              }}
+              const nextRows = value.map(Number);
+              void setField("rows", nextRows);
+              const quick =
+                nextRows.length === 1 && (nextRows[0] === 10 || nextRows[0] === 15)
+                  ? nextRows[0]
+                  : null;
+              void setField("rowsQuickFilter", quick as any);
+            }}
             forceSelectedValues={rows.map(String)}
             placeholder="Rows"
             variant="inverted"

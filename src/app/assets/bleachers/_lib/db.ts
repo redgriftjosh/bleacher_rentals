@@ -17,6 +17,7 @@ type Query = {
   bleacher_number: number | null;
   bleacher_rows: number | null;
   bleacher_seats: number | null;
+  deleted: number | null;
   hitch_type: string | null;
   vin_number: string | null;
   tag_number: string | null;
@@ -32,8 +33,8 @@ type Query = {
   winter_home_base_name: string | null;
 };
 // Fetching the list of bleachers with home bases using React Query
-export function useBleachersQuery() {
-  const compiled = db
+export function useBleachersQuery(showDeleted: boolean = false) {
+  let query = db
     .selectFrom("Bleachers as b")
     .leftJoin("HomeBases as shb", "shb.id", "b.summer_home_base_uuid")
     .leftJoin("HomeBases as whb", "whb.id", "b.winter_home_base_uuid")
@@ -41,6 +42,7 @@ export function useBleachersQuery() {
       "b.bleacher_number",
       "b.bleacher_rows",
       "b.bleacher_seats",
+      "b.deleted",
       "b.hitch_type",
       "b.vin_number",
       "b.tag_number",
@@ -58,9 +60,13 @@ export function useBleachersQuery() {
       // winter_home_base fields
       "whb.id as winter_home_base_uuid",
       "whb.home_base_name as winter_home_base_name",
-    ])
-    .orderBy("b.bleacher_number", "desc")
-    .compile();
+    ]);
+
+  if (!showDeleted) {
+    query = query.where("b.deleted", "=", 0);
+  }
+
+  const compiled = query.orderBy("b.bleacher_number", "desc").compile();
 
   const { data } = useTypedQuery(compiled, expect<Query>());
   const formattedBleachers: FormattedBleacher[] = (data || []).map((bleacher) => {
@@ -68,6 +74,7 @@ export function useBleachersQuery() {
       bleacherNumber: bleacher.bleacher_number || 0,
       bleacherRows: bleacher.bleacher_rows || 0,
       bleacherSeats: bleacher.bleacher_seats || 0,
+      deleted: Boolean(bleacher.deleted),
       hitchType: bleacher.hitch_type ?? null,
       vinNumber: bleacher.vin_number ?? null,
       tagNumber: bleacher.tag_number ?? null,
@@ -99,7 +106,7 @@ export function useBleacherQuery(bleacherNumber: number | null) {
     queryKey: ["bleacher", bleacherNumber],
     queryFn: async () => {
       console.log("queryFn firing with bleacherNumber:", bleacherNumber);
-  console.log("supabase exists:", !!supabase);
+      console.log("supabase exists:", !!supabase);
       if (!bleacherNumber) return null;
 
       const { data, error } = await supabase
@@ -110,6 +117,7 @@ export function useBleacherQuery(bleacherNumber: number | null) {
           bleacher_number,
           bleacher_rows,
           bleacher_seats,
+          deleted,
           hitch_type,
           vin_number,
           tag_number,
@@ -124,7 +132,7 @@ export function useBleacherQuery(bleacherNumber: number | null) {
           linxup_device_id,
           summer_account_manager_uuid,
           winter_account_manager_uuid
-        `
+        `,
         )
         .eq("bleacher_number", bleacherNumber)
         .single();
@@ -139,7 +147,7 @@ export function useBleacherQuery(bleacherNumber: number | null) {
 export async function insertBleacher(
   bleacher: InsertBleacher,
   supabase: SupabaseClient<Database>,
-  queryClient?: any
+  queryClient?: any,
 ) {
   // console.log("inserting bleacher", token);
   const { error } = await supabase.from("Bleachers").insert(bleacher);
@@ -165,7 +173,7 @@ export async function insertBleacher(
         }),
       {
         duration: 10000, // 20 seconds
-      }
+      },
     );
     throw new Error(`Failed to insert bleacher: ${error.message}`);
   }
@@ -175,7 +183,7 @@ export async function insertBleacher(
         id: t,
         lines: ["Bleacher was Created"],
       }),
-    { duration: 10000 }
+    { duration: 10000 },
   );
 
   // Invalidate React Query caches if queryClient is provided
@@ -189,7 +197,7 @@ export async function insertBleacher(
 export async function updateBleacher(
   bleacher: UpdateBleacher,
   supabase: SupabaseClient<Database>,
-  queryClient?: any
+  queryClient?: any,
 ) {
   // console.log("Updating bleacher", token);
   // const supabase = createClient(token);
@@ -209,7 +217,7 @@ export async function updateBleacher(
         }),
       {
         duration: 10000, // 20 seconds
-      }
+      },
     );
     throw new Error(`Failed to update bleacher: ${error.message}`);
   }
@@ -219,7 +227,7 @@ export async function updateBleacher(
         id: t,
         lines: ["Bleacher was Updated"],
       }),
-    { duration: 10000 }
+    { duration: 10000 },
   );
 
   // Invalidate React Query caches if queryClient is provided
@@ -238,7 +246,7 @@ export async function updateBleacher(
  */
 export async function fetchTakenBleacherNumbers(
   supabase: SupabaseClient<Database>,
-  editBleacherNumber?: number
+  editBleacherNumber?: number,
 ): Promise<number[]> {
   const { data, error } = await supabase.from("Bleachers").select("bleacher_number");
 

@@ -3,20 +3,21 @@ import { Baker } from "../../../util/Baker";
 import { CELL_HEIGHT } from "../../../values/constants";
 import type { BleacherWorkTracker } from "../../../types";
 import { STATUS_TINT } from "./statusTint";
+import { drawUnavailableOverlay } from "./unavailableOverlay";
 
 /**
  * Small work tracker thumbnail (CELL_HEIGHT/2 square).
  * Shows driver initials only (12pt). Used when events overlap or >2 trackers.
  */
 export class WorkTrackerSmall extends Sprite {
-  constructor(baker: Baker, tracker: BleacherWorkTracker) {
+  constructor(baker: Baker, tracker: BleacherWorkTracker, isUnavailable: boolean = false) {
     super();
 
     const size = Math.floor(CELL_HEIGHT / 2);
     const bg = STATUS_TINT[tracker.status] ?? 0x808080;
     const initials = getInitials(tracker.driverFirstName, tracker.driverLastName);
 
-    const cacheKey = `WTSmall:${tracker.status}:${initials}`;
+    const cacheKey = `WTSmall:${tracker.status}:${initials}:${isUnavailable ? "U" : ""}`;
 
     this.texture = baker.getTexture(cacheKey, { width: size, height: size }, (c) => {
       // Background
@@ -44,6 +45,11 @@ export class WorkTrackerSmall extends Sprite {
         txt.anchor.set(0.5, 0.5);
         txt.position.set(size / 2, size / 2);
         c.addChild(txt);
+      }
+
+      // Unavailable driver overlay
+      if (isUnavailable) {
+        drawUnavailableOverlay(c, size, size);
       }
     });
   }
