@@ -346,7 +346,7 @@ export function SheetAddBleacher() {
                     <FileUploadInput
                       label=""
                       bucket="bleacher-nvis"
-                      storagePath={`bleacher-${bleacherNumber ?? "new"}/nvis`}
+                      storagePath={`bleacher-${bleacherNumber ?? "unknown"}/nvis-${Date.now()}`}
                       value={nvisPdfPath}
                       onChange={setNvisPdfPath}
                       acceptedTypes={["application/pdf"]}
