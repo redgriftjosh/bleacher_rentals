@@ -25,7 +25,10 @@ type Query = {
   height_folded_ft: number | null;
   gvwr: number | null;
   trailer_length: number | null;
+  trailer_length_in: number | null;
+  trailer_height_in: number | null;
   opening_direction: string | null;
+  nvis_pdf_path: string | null;
   summer_home_base_uuid: string | null;
   summer_home_base_name: string | null;
   winter_home_base_uuid: string | null;
@@ -50,6 +53,9 @@ export function useBleachersQuery(showDeleted: boolean = false) {
       "b.gvwr",
       "b.trailer_length",
       "b.opening_direction",
+      "b.nvis_pdf_path",
+      "b.trailer_length_in",
+      "b.trailer_height_in",
 
       // home_base fields
       "shb.id as summer_home_base_uuid",
@@ -80,7 +86,10 @@ export function useBleachersQuery(showDeleted: boolean = false) {
       heightFoldedFt: bleacher.height_folded_ft ?? null,
       gvwr: bleacher.gvwr ?? null,
       trailerLength: bleacher.trailer_length ?? null,
+      trailerLengthIn: bleacher.trailer_length_in ?? null,
+      trailerHeightIn: bleacher.trailer_height_in ?? null,
       openingDirection: bleacher.opening_direction ?? null,
+      nvisPdfPath: bleacher.nvis_pdf_path ?? null,
       summerHomeBase: {
         homeBaseUuid: bleacher.summer_home_base_uuid ?? "",
         homeBaseName: bleacher.summer_home_base_name ?? "",
@@ -123,6 +132,9 @@ export function useBleacherQuery(bleacherNumber: number | null) {
           gvwr,
           trailer_length,
           opening_direction,
+          nvis_pdf_path,
+          trailer_length_in,
+          trailer_height_in,
           summer_home_base_uuid,
           winter_home_base_uuid,
           linxup_device_id,
