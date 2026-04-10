@@ -52,3 +52,27 @@ export function checkInsertBleacherFormRules(
     return true;
   }
 }
+
+// Convert total inches to { feet, inches }
+export function inchesToFeetAndInches(totalInches: number | null): { feet: number; inches: number } {
+  if (totalInches == null) return { feet: 0, inches: 0 };
+  return { feet: Math.floor(totalInches / 12), inches: totalInches % 12 };
+}
+
+// Convert feet + inches to total inches
+export function feetAndInchesToInches(feet: number | null, inches: number | null): number | null {
+  const f = feet ?? 0;
+  const i = inches ?? 0;
+  if (feet == null && inches == null) return null;
+  return f * 12 + i;
+}
+
+// Format total inches for display: "2ft 1in", "6ft", "9in", or "—"
+export function formatInches(totalInches: number | null): string {
+  if (totalInches == null) return "—";
+  const feet = Math.floor(totalInches / 12);
+  const inches = totalInches % 12;
+  if (feet > 0 && inches > 0) return `${feet}ft ${inches}in`;
+  if (feet > 0) return `${feet}ft`;
+  return `${inches}in`;
+}
