@@ -72,6 +72,7 @@ export function FileUploadInput({
       if (error) throw error;
 
       onChange(fileName);
+      console.log("onChange called with:", fileName);
     } catch (error: any) {
       createErrorToast(["Upload failed", error.message || "Could not upload file"]);
     } finally {

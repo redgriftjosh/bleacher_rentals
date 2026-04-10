@@ -13,6 +13,7 @@ export type FormattedBleacher = {
   trailerLengthIn: number | null;
   trailerHeightIn: number | null;
   openingDirection: string | null;
+  nvisPdfPath: string | null;
   summerHomeBase: {
     homeBaseUuid: string;
     homeBaseName: string;

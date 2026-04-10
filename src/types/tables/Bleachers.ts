@@ -17,6 +17,7 @@ export type SelectBleacher = {
   trailer_height_in: number | null;
   trailer_length_in: number | null;
   opening_direction: "driver" | "passenger" | null;
+  nvis_pdf_path: string | null;
 };
 
 export type InsertBleacher = {
@@ -36,6 +37,7 @@ export type InsertBleacher = {
   trailer_height_in?: number | null;
   trailer_length_in?: number | null;
   opening_direction?: "driver" | "passenger" | null;
+  nvis_pdf_path: string | null;
 };
 
 export type UpdateBleacher = {
@@ -56,4 +58,5 @@ export type UpdateBleacher = {
   trailer_height_in?: number | null;
   trailer_length_in?: number | null;
   opening_direction?: "driver" | "passenger" | null;
+  nvis_pdf_path: string | null;
 };
