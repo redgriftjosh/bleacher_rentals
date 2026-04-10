@@ -70,7 +70,7 @@ export default function BillOfLadingButton({
         const { data, error } = await supabase
           .from("Bleachers")
           .select(
-            "bleacher_number, bleacher_rows, bleacher_seats, vin_number, hitch_type, manufacturer, gvwr, height_folded_ft, tag_number",
+            "bleacher_number, bleacher_rows, bleacher_seats, vin_number, hitch_type, manufacturer, gvwr, trailer_height_in, tag_number",
           )
           .eq("id", workTracker.bleacher_uuid)
           .single();

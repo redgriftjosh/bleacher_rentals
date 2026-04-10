@@ -4,6 +4,21 @@ import { useRouter } from "next/navigation";
 import { FormattedBleacher } from "../types";
 import { FileText } from "lucide-react";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { formatInches } from "../functions";
+
+// interface BleacherItemProps {
+//   bleacherNumber: number;
+//   bleacherRows: number;
+//   bleacherSeats: number;
+//   summerHomeBase: {
+//     homeBaseId: number;
+//     homeBaseName: string;
+//   };
+//   winterHomeBase: {
+//     homeBaseId: number;
+//     homeBaseName: string;
+//   };
+// }
 
 export function BleacherItemRow({
   bleacherNumber,
@@ -17,6 +32,8 @@ export function BleacherItemRow({
   heightFoldedFt,
   gvwr,
   trailerLength,
+  trailerHeightIn,
+  trailerLengthIn,
   openingDirection,
   nvisPdfPath,
   summerHomeBase,
@@ -56,8 +73,8 @@ export function BleacherItemRow({
       </td>
       <td className="p-3 text-left">{tagNumber ?? "—"}</td>
       <td className="p-3 text-left">{hitchType ?? "—"}</td>
-      <td className="p-3 text-left">{heightFoldedFt != null ? `${heightFoldedFt} ft` : "—"}</td>
-      <td className="p-3 text-left">{trailerLength != null ? `${trailerLength} ft` : "—"}</td>
+      <td className="p-3 text-left">{formatInches(trailerHeightIn)}</td>
+      <td className="p-3 text-left">{formatInches(trailerLengthIn)}</td>
       <td className="p-3 text-left">{openingDirection ?? "—"}</td>
       <td className="p-3 text-left">{gvwr != null ? `${gvwr.toLocaleString()} lbs` : "—"}</td>
       <td className="p-3 text-left">{summerHomeBase.homeBaseName}</td>

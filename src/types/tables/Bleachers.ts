@@ -13,9 +13,9 @@ export type SelectBleacher = {
   vin_number: string | null;
   tag_number: string | null;
   manufacturer: string | null;
-  height_folded_ft: number | null;
   gvwr: number | null;
-  bleacher_length: number | null;
+  trailer_height_in: number | null;
+  trailer_length_in: number | null;
   opening_direction: "driver" | "passenger" | null;
   nvis_pdf_path: string | null;
 };
@@ -33,9 +33,9 @@ export type InsertBleacher = {
   vin_number?: string | null;
   tag_number?: string | null;
   manufacturer?: string | null;
-  height_folded_ft?: number | null;
   gvwr?: number | null;
-  trailer_length?: number | null;
+  trailer_height_in?: number | null;
+  trailer_length_in?: number | null;
   opening_direction?: "driver" | "passenger" | null;
   nvis_pdf_path: string | null;
 };
@@ -54,9 +54,9 @@ export type UpdateBleacher = {
   vin_number?: string | null;
   tag_number?: string | null;
   manufacturer?: string | null;
-  height_folded_ft?: number | null;
   gvwr?: number | null;
-  trailer_length?: number | null;
+  trailer_height_in?: number | null;
+  trailer_length_in?: number | null;
   opening_direction?: "driver" | "passenger" | null;
   nvis_pdf_path: string | null;
 };
