@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormattedBleacher } from "../types";
+import { formatInches } from "../functions";
 
 // interface BleacherItemProps {
 //   bleacherNumber: number;
@@ -29,6 +30,8 @@ export function BleacherItemRow({
   heightFoldedFt,
   gvwr,
   trailerLength,
+  trailerHeightIn,
+  trailerLengthIn,
   openingDirection,
   summerHomeBase,
   winterHomeBase,
@@ -59,8 +62,8 @@ export function BleacherItemRow({
       </td>
       <td className="p-3 text-left">{tagNumber ?? "—"}</td>
       <td className="p-3 text-left">{hitchType ?? "—"}</td>
-      <td className="p-3 text-left">{heightFoldedFt != null ? `${heightFoldedFt} ft` : "—"}</td>
-      <td className="p-3 text-left">{trailerLength != null ? `${trailerLength} ft` : "—"}</td>
+      <td className="p-3 text-left">{formatInches(trailerHeightIn)}</td>
+      <td className="p-3 text-left">{formatInches(trailerLengthIn)}</td>
       <td className="p-3 text-left">{openingDirection ?? "—"}</td>
       <td className="p-3 text-left">{gvwr != null ? `${gvwr.toLocaleString()} lbs` : "—"}</td>
       <td className="p-3 text-left">{summerHomeBase.homeBaseName}</td>

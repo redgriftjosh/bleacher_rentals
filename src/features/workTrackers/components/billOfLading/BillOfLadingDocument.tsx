@@ -7,6 +7,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import { Tables } from "../../../../../database.types";
+import { formatInches } from "@/app/assets/bleachers/_lib/functions";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type BOLBleacherData = {
@@ -17,7 +18,7 @@ export type BOLBleacherData = {
   hitch_type: string | null;
   manufacturer: string | null;
   gvwr: number | null;
-  height_folded_ft: number | null;
+  trailer_height_in: number | null;
   tag_number: string | null;
 };
 
@@ -288,7 +289,7 @@ export const BillOfLadingDocument: React.FC<BillOfLadingDocumentProps> = ({
               <View style={s.detailLine}>
                 <Text style={s.detailLabel}>Height of Folded Unit:  </Text>
                 <Text style={s.detailVal}>
-                  {bleacher?.height_folded_ft != null ? `${bleacher.height_folded_ft} ft` : ""}
+                  {bleacher?.trailer_height_in != null ? `${formatInches(bleacher.trailer_height_in)}` : ""}
                 </Text>
               </View>
             </View>
