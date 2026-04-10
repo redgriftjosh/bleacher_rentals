@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   fetchTakenBleacherNumbers,
-  insertBleacher,
   updateBleacher,
   useBleacherQuery,
 } from "../../db";
@@ -11,13 +10,13 @@ import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
 import { toast } from "sonner";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle, Trash2 } from "lucide-react";
-import { checkInsertBleacherFormRules } from "../../functions";
+import { checkInsertBleacherFormRules, feetAndInchesToInches } from "../../functions";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
 import { HomeBase } from "../../hooks/useHomeBases";
+import { inchesToFeetAndInches } from "../../functions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +30,7 @@ import {
 
 // https://www.loom.com/share/377b110fd24f4eebbc6e90394ac3a407?sid=c32cff10-c666-4386-9a09-85ed203e4cb5
 // Did a little explainer on how this works.
+import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
 
 export function SheetEditBleacher() {
   const router = useRouter();
@@ -53,27 +53,26 @@ export function SheetEditBleacher() {
   const [vinNumber, setVinNumber] = useState<string | null>(null);
   const [tagNumber, setTagNumber] = useState<string | null>(null);
   const [manufacturer, setManufacturer] = useState<string | null>(null);
-  const [heightFoldedFt, setHeightFoldedFt] = useState<number | null>(null);
   const [gvwr, setGvwr] = useState<number | null>(null);
-  const [trailerLength, setTrailerLength] = useState<number | null>(null);
+  // Trailer length in feet, but we also want to store it in inches for more precise sorting and filtering
+  const [trailerHeightFt, setTrailerHeightFt] = useState<number | null>(null);
+  const [trailerLengthFt, setTrailerLengthFt] = useState<number | null>(null);
+  const [trailerHeightIn, setTrailerHeightIn] = useState<number | null>(null);
+  const [trailerLengthIn, setTrailerLengthIn] = useState<number | null>(null);
+
   const [openingDirection, setOpeningDirection] = useState<"driver" | "passenger" | null>(null);
+  const [nvisPdfPath, setNvisPdfPath] = useState<string | null>(null);
 
   const [isTakenNumber, setIsTakenNumber] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
 
-  // Fetch the bleacher data using React Query
   const {
     data: bleacher,
     isLoading: bleacherLoading,
     error: bleacherError,
   } = useBleacherQuery(editBleacherNumber);
-  console.log("editBleacherNumber:", editBleacherNumber);
-  console.log("bleacher:", bleacher);
-  console.log("bleacherLoading:", bleacherLoading);
-  console.log("bleacherError:", bleacherError);
 
-  // Fetch home bases for the dropdowns
   const { data: homeBases = [], isLoading: homeBasesLoading } = useQuery({
     queryKey: ["home-bases"],
     queryFn: async () => {
@@ -81,14 +80,12 @@ export function SheetEditBleacher() {
         .from("HomeBases")
         .select("id, home_base_name")
         .order("home_base_name");
-
       if (error) throw error;
       return data as HomeBase[];
     },
     enabled: !!supabase,
   });
 
-  // Populate form fields when bleacher data loads
   useEffect(() => {
     if (bleacher) {
       setBleacherNumber(bleacher.bleacher_number);
@@ -105,16 +102,21 @@ export function SheetEditBleacher() {
       setVinNumber(bleacher.vin_number ?? null);
       setTagNumber(bleacher.tag_number ?? null);
       setManufacturer(bleacher.manufacturer ?? null);
-      setHeightFoldedFt(bleacher.height_folded_ft ?? null);
       setGvwr(bleacher.gvwr ?? null);
-      setTrailerLength(bleacher.trailer_length ?? null);
+      const h = inchesToFeetAndInches(bleacher.trailer_height_in ?? null);
+      setTrailerHeightFt(h.feet || null);
+      setTrailerHeightIn(h.inches || null);
+
+      const l = inchesToFeetAndInches(bleacher.trailer_length_in ?? null);
+      setTrailerLengthFt(l.feet || null);
+      setTrailerLengthIn(l.inches || null);
       setOpeningDirection(bleacher.opening_direction ?? null);
+      setNvisPdfPath(bleacher.nvis_pdf_path ?? null);
     } else if (bleacherError) {
       toast.error("Bleacher not found");
     }
   }, [bleacher, bleacherError]);
 
-  // Reset form when sheet closes
   useEffect(() => {
     if (!editBleacherNumber) {
       setBleacherNumber(null);
@@ -130,22 +132,23 @@ export function SheetEditBleacher() {
       setVinNumber(null);
       setTagNumber(null);
       setManufacturer(null);
-      setHeightFoldedFt(null);
       setGvwr(null);
-      setTrailerLength(null);
+      setTrailerHeightFt(null);
+      setTrailerHeightIn(null);
+      setTrailerLengthFt(null);
+      setTrailerLengthIn(null);
       setOpeningDirection(null);
+      setNvisPdfPath(null);
     }
   }, [editBleacherNumber]);
 
   const { data: takenNumbers = [], isLoading } = useQuery({
     queryKey: ["taken-bleacher-numbers", editBleacherNumber],
-    queryFn: () => {
-      // console.log("Running query with editBleacherNumber:", editBleacherNumber);
-      return fetchTakenBleacherNumbers(
+    queryFn: () =>
+      fetchTakenBleacherNumbers(
         supabase,
         editBleacherNumber ? Number(editBleacherNumber) : undefined,
-      );
-    },
+      ),
     enabled: !!supabase && !!editBleacherNumber,
   });
 
@@ -156,6 +159,8 @@ export function SheetEditBleacher() {
   }, [bleacherNumber, takenNumbers]);
 
   const handleSave = async () => {
+    console.log("nvisPdfPath at save time:", nvisPdfPath); // 👈 add this
+    console.log("id:", id);
     if (
       !checkInsertBleacherFormRules(
         {
@@ -185,15 +190,15 @@ export function SheetEditBleacher() {
           vin_number: vinNumber,
           tag_number: tagNumber,
           manufacturer: manufacturer,
-          height_folded_ft: heightFoldedFt,
           gvwr: gvwr,
-          trailer_length: trailerLength,
+          trailer_height_in: feetAndInchesToInches(trailerHeightFt, trailerHeightIn),
+          trailer_length_in: feetAndInchesToInches(trailerLengthFt, trailerLengthIn),
           opening_direction: openingDirection,
+          nvis_pdf_path: nvisPdfPath,
         },
         supabase,
         queryClient,
       );
-      //   setIsOpen(false);
       router.push("/assets/bleachers");
     }
   };
@@ -316,7 +321,7 @@ export function SheetEditBleacher() {
                     Home Base
                   </label>
                   <SelectHomeBaseDropDown
-                    options={homeBases ?? []} // Add your home base options here
+                    options={homeBases ?? []}
                     onSelect={(e) => setSelectedSummerHomeBaseUuid(e.id)}
                     placeholder="Select Home Base"
                     value={selectedSummerHomeBaseUuid ?? undefined}
@@ -327,7 +332,7 @@ export function SheetEditBleacher() {
                     Winter Home Base
                   </label>
                   <SelectHomeBaseDropDown
-                    options={homeBases ?? []} // Add your home base options here
+                    options={homeBases ?? []}
                     onSelect={(e) => setSelectedWinterHomeBaseUuid(e.id)}
                     placeholder="Select Home Base"
                     value={selectedWinterHomeBaseUuid ?? undefined}
@@ -403,32 +408,65 @@ export function SheetEditBleacher() {
                     className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                   />
                 </div>
+                {/* Trailer Height */}
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Trailer Height (ft)
-                  </label>
-                  <input
-                    type="number"
-                    value={heightFoldedFt ?? ""}
-                    onChange={(e) =>
-                      setHeightFoldedFt(e.target.value ? Number(e.target.value) : null)
-                    }
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
+                <label className="text-right text-sm font-medium col-span-2">Trailer Height</label>
+                <div className="col-span-3 flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="ft"
+                      value={trailerHeightFt ?? ""}
+                      onChange={(e) => setTrailerHeightFt(e.target.value ? Number(e.target.value) : null)}
+                      className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                    />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">ft</span>
+                  </div>
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      min={0}
+                      max={11}
+                      placeholder="in"
+                      value={trailerHeightIn ?? ""}
+                      onChange={(e) => setTrailerHeightIn(e.target.value ? Number(e.target.value) : null)}
+                      className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                    />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">in</span>
+                  </div>
                 </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Trailer Length (ft)
-                  </label>
-                  <input
-                    type="number"
-                    value={trailerLength ?? ""}
-                    onChange={(e) =>
-                      setTrailerLength(e.target.value ? Number(e.target.value) : null)
-                    }
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
+              </div>
+
+              {/* Trailer Length */}
+              <div className="grid grid-cols-5 items-center gap-4">
+                <label className="text-right text-sm font-medium col-span-2">Trailer Length</label>
+                <div className="col-span-3 flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="ft"
+                      value={trailerLengthFt ?? ""}
+                      onChange={(e) => setTrailerLengthFt(e.target.value ? Number(e.target.value) : null)}
+                      className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                    />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">ft</span>
+                  </div>
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      min={0}
+                      max={11}
+                      placeholder="in"
+                      value={trailerLengthIn ?? ""}
+                      onChange={(e) => setTrailerLengthIn(e.target.value ? Number(e.target.value) : null)}
+                      className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                    />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">in</span>
+                  </div>
                 </div>
+              </div>
                 <div className="grid grid-cols-5 items-center gap-4">
                   <label className="text-right text-sm font-medium col-span-2">
                     Opening Direction
@@ -453,6 +491,22 @@ export function SheetEditBleacher() {
                     onChange={(e) => setGvwr(e.target.value ? Number(e.target.value) : null)}
                     className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                   />
+                </div>
+
+                {/* NVIS PDF Upload */}
+                <div className="grid grid-cols-5 items-start gap-4">
+                  <label className="text-right text-sm font-medium col-span-2 pt-2">NVIS PDF</label>
+                  <div className="col-span-3">
+                    <FileUploadInput
+                      label=""
+                      bucket="bleacher-nvis"
+                      storagePath={`bleacher-${bleacherNumber ?? "unknown"}/nvis-${Date.now()}`}
+                      value={nvisPdfPath}
+                      onChange={setNvisPdfPath}
+                      acceptedTypes={["application/pdf"]}
+                      maxSizeMB={10}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
