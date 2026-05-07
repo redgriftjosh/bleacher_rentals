@@ -16,6 +16,7 @@ export type AddressData = {
 };
 
 import { EventStatus } from "@/features/dashboard/types";
+import { AlertPayload } from "@/features/alerts/types";
 
 export type CurrentEventState = {
   eventUuid: string | null;
@@ -41,7 +42,7 @@ export type CurrentEventState = {
   isFormExpanded: boolean;
   isFormMinimized: boolean;
   hslHue: number | null;
-  alerts: string[];
+  alerts: AlertPayload[];
   goodshuffleUrl: string | null;
   hueOpen: boolean;
   contractRevenueCents: number | null;

@@ -12,7 +12,9 @@ export const AlertsTab = () => {
           return (
             <div key={index} className="flex gap-2">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-red-800 mb-1">{alert}</label>
+                <label className="block text-sm font-medium text-red-800 mb-1">
+                  {alert.message}
+                </label>
               </div>
             </div>
           );
