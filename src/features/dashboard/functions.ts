@@ -9,14 +9,17 @@ import {
 } from "../eventConfiguration/state/useCurrentEventStore";
 import { useEventsStore } from "@/state/eventsStore";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
+import { useBleachersStore } from "@/state/bleachersStore";
 import { UserResource } from "@clerk/types";
 import { PROVINCES, ROW_OPTIONS, STATES } from "@/types/Constants";
 import { Tables } from "../../../database.types";
 import { DashboardBleacher } from "../dashboard/types";
+import { eventRequirements } from "@/features/alerts/definitions/eventRequirements";
+import { schedulingConflicts } from "@/features/alerts/definitions/schedulingConflicts";
 
 export function checkEventFormRules(
   createEventPayload: CurrentEventStore,
-  user: UserResource | null
+  user: UserResource | null,
 ): boolean {
   // check if all required fields are filled in
   let missingFields = [];
@@ -74,7 +77,7 @@ export function checkEventFormRules(
         }),
       {
         duration: 10000, // 20 seconds
-      }
+      },
     );
     return false;
   } else {
@@ -92,7 +95,7 @@ export const calculateNumDays = (start: string, end: string): number => {
 
 export function calculateBestHue(
   currentEvent: CurrentEventStore,
-  events: Tables<"Events">[]
+  events: Tables<"Events">[],
 ): number | null {
   if (!currentEvent.eventStart || !currentEvent.eventEnd) return null;
 
@@ -132,7 +135,7 @@ export function calculateBestHue(
 
   // Normalize and sort hues
   const sorted = [...new Set(existingHues.map((h) => ((h % 360) + 360) % 360))].sort(
-    (a, b) => a - b
+    (a, b) => a - b,
   );
   // console.log("sorted", sorted);
 
@@ -158,7 +161,7 @@ export function calculateBestHue(
 
 export function calculateEventAlerts(
   events: Tables<"Events">[],
-  bleacherEvents: Tables<"BleacherEvents">[]
+  bleacherEvents: Tables<"BleacherEvents">[],
 ): Record<string, string[]> {
   const alerts: Record<string, string[]> = {};
 
@@ -177,7 +180,7 @@ export function calculateEventAlerts(
 
     // Find all bleacher events where the bleacher is shared
     const overlappingBleacherEvents = bleacherEvents.filter(
-      (be) => bleachersInThisEvent.includes(be.bleacher_uuid) && be.event_uuid !== event.id
+      (be) => bleachersInThisEvent.includes(be.bleacher_uuid) && be.event_uuid !== event.id,
     );
 
     const overlappingEventUuids = [
@@ -218,75 +221,31 @@ export function updateCurrentEventAlerts() {
   const state = useCurrentEventStore.getState();
   const events = useEventsStore.getState().events;
   const bleacherEvents = useBleacherEventsStore.getState().bleacherEvents;
+  const bleachers = useBleachersStore.getState().bleachers;
   // console.log("updateCurrentEventAlerts");
 
   // Only calculate if necessary
   if (!state.eventStart || !state.eventEnd) return;
 
   const oldAlerts = state.alerts;
-  const newAlerts = calculateConflictsForSingleEvent(state, events, bleacherEvents);
+  const conflictAlerts = schedulingConflicts.evaluate({
+    event: state,
+    allEvents: events,
+    allBleacherEvents: bleacherEvents,
+  });
+  const requirementAlerts = eventRequirements.evaluate({ event: state, bleachers });
+  const newAlerts = [...conflictAlerts, ...requirementAlerts];
 
+  const oldMessages = oldAlerts.map((a) => a.message);
+  const newMessages = newAlerts.map((a) => a.message);
   const isDifferent =
-    oldAlerts.length !== newAlerts.length || oldAlerts.some((a, i) => a !== newAlerts[i]);
+    oldMessages.length !== newMessages.length ||
+    oldMessages.some((m, i) => m !== newMessages[i]) ||
+    oldAlerts.some((a, i) => a.entity_description !== newAlerts[i]?.entity_description);
 
   if (isDifferent) {
     useCurrentEventStore.getState().setField("alerts", newAlerts);
   }
-}
-
-export function calculateConflictsForSingleEvent(
-  currentEvent: CurrentEventState,
-  allEvents: Tables<"Events">[],
-  allBleacherEvents: Tables<"BleacherEvents">[]
-): string[] {
-  const alerts: string[] = [];
-
-  const currentSetupStart = currentEvent.setupStart
-    ? new Date(currentEvent.setupStart)
-    : new Date(currentEvent.eventStart);
-
-  const currentTeardownEnd = currentEvent.teardownEnd
-    ? new Date(currentEvent.teardownEnd)
-    : new Date(currentEvent.eventEnd);
-
-  // Build a lookup: event_id => bleacher_ids[]
-  const eventUuidToBleachers: Record<string, string[]> = {};
-  for (const be of allBleacherEvents) {
-    if (!be.event_uuid || !be.bleacher_uuid) continue;
-    if (!eventUuidToBleachers[be.event_uuid]) {
-      eventUuidToBleachers[be.event_uuid] = [];
-    }
-    eventUuidToBleachers[be.event_uuid].push(be.bleacher_uuid);
-  }
-
-  for (const event of allEvents) {
-    if (event.id === currentEvent.eventUuid) continue; // Don't compare with self
-
-    const eventSetupStart = event.setup_start
-      ? new Date(event.setup_start)
-      : new Date(event.event_start);
-
-    const eventTeardownEnd = event.teardown_end
-      ? new Date(event.teardown_end)
-      : new Date(event.event_end);
-
-    const bleachersInOtherEvent = eventUuidToBleachers[event.id] || [];
-
-    // Check if bleachers overlap
-    const bleacherOverlap = bleachersInOtherEvent.some((id) =>
-      currentEvent.bleacherUuids.includes(id)
-    );
-
-    if (!bleacherOverlap) continue;
-
-    // Check if times overlap
-    if (currentSetupStart <= eventTeardownEnd && eventSetupStart <= currentTeardownEnd) {
-      alerts.push("This event is overlapping with other events!");
-      break; // Only need one conflict to show the alert
-    }
-  }
-
-  return alerts;
 }
 
 // export function isUserPermitted(stateProv: string, user: UserResource | null): string | null {
@@ -352,7 +311,7 @@ export function filterSortBleachers(
   rows: number[],
   bleachers: DashboardBleacher[],
   bleacherUuids: string[],
-  isFormExpanded: boolean
+  isFormExpanded: boolean,
 ): DashboardBleacher[] {
   const matchesFilter = (b: DashboardBleacher) =>
     summerHomeBaseUuids.includes(b.summerHomeBase.homeBaseUuid) &&

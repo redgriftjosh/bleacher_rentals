@@ -432,7 +432,7 @@ export async function saveWorkTracker(
         work_tracker_type_uuid: workTracker.work_tracker_type_uuid,
         distance_meters: workTracker.distance_meters,
         drive_minutes: workTracker.drive_minutes,
-        project_number: workTracker.project_number
+        project_number: workTracker.project_number,
       })
       .select("id")
       .single();
@@ -748,7 +748,7 @@ export async function createEvent(
   state: CurrentEventStore,
   supabase: SupabaseClient<Database>,
   user: UserResource | null,
-): Promise<void> {
+): Promise<string> {
   if (!supabase) {
     console.warn("No Supabase Client found");
     throw new Error("No Supabase Client found");
@@ -877,6 +877,7 @@ export async function createEvent(
     { duration: 10000 },
   );
   updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
+  return event_uuid;
 }
 
 export async function deleteEvent(

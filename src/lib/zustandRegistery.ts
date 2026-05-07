@@ -68,4 +68,6 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   RoadmapTaskMessages: () => {},
   RoadmapTaskMessageReadReceipts: () => {},
   RoadmapTaskTypingIndicators: () => {},
+  Alerts: () => {},
+  UserAlerts: () => {},
 };
