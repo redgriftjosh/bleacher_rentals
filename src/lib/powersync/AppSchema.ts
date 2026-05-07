@@ -321,6 +321,29 @@ const BleacherUsers = new Table(BleacherUsersCols, {
   indexes: { bleacher_uuid: ["bleacher_uuid"], user_uuid: ["user_uuid"] },
 });
 
+const AlertsCols = {
+  created_at: column.text,
+  entity_uuid: column.text,
+  entity_type: column.text,
+  title: column.text,
+  message: column.text,
+  entity_description: column.text,
+} satisfies PowerSyncColsFor<"Alerts">;
+const Alerts = new Table(AlertsCols, {
+  indexes: { entity_uuid: ["entity_uuid"] },
+});
+
+const UserAlertsCols = {
+  created_at: column.text,
+  user_uuid: column.text,
+  alert_uuid: column.text,
+  dismissed: column.integer,
+  dismissed_until: column.text,
+} satisfies PowerSyncColsFor<"UserAlerts">;
+const UserAlerts = new Table(UserAlertsCols, {
+  indexes: { user_uuid: ["user_uuid"], alert_uuid: ["alert_uuid"] },
+});
+
 // BlueBook
 const BlueBookCols = {
   name: column.text,
@@ -604,6 +627,8 @@ export const AppSchema = new Schema({
   RoadmapTaskMessages,
   RoadmapTaskMessageReadReceipts,
   RoadmapTaskTypingIndicators,
+  Alerts,
+  UserAlerts,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];

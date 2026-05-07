@@ -1,11 +1,9 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-// import { useAuth } from "@/contexts/authContext";
 import { UserButton } from "@clerk/nextjs";
-import { BellIcon } from "./Icons";
 import { Code, Laptop, Lightbulb, List } from "lucide-react";
+import { AlertsDropDown } from "@/features/alerts/components/AlertsDropDown";
 
 const Header = () => {
   const router = useRouter();
@@ -29,22 +27,6 @@ const Header = () => {
   };
 
   const envConfig = getEnvironmentConfig();
-
-  //   const { isAuthenticated, setIsAuthenticated } = useAuth();
-
-  const handleSignOut = async () => {
-    // try {
-    //   // setErrorMessage("Incorrect username or password.asdaa");
-    //   const response = await signOut();
-    //   // console.log("Logged in user:", response);
-    //   setIsAuthenticated(false);
-    //   router.push("/login");
-    // } catch (err: any) {
-    //   console.error("Login error:", err);
-    // }
-  };
-
-  //   if (!isAuthenticated) return null;
 
   return (
     <>
@@ -75,6 +57,9 @@ const Header = () => {
                 <Lightbulb size={20} />
                 Request a Feature
               </button>
+            </div>
+            <div className="mr-3">
+              <AlertsDropDown />
             </div>
             <UserButton />
           </div>
