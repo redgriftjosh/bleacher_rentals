@@ -16,6 +16,9 @@ import { Tables } from "../../../database.types";
 import { DashboardBleacher } from "../dashboard/types";
 import { eventRequirements } from "@/features/alerts/definitions/eventRequirements";
 import { schedulingConflicts } from "@/features/alerts/definitions/schedulingConflicts";
+import { eventBleacherDelivery } from "@/features/alerts/definitions/eventBleacherDelivery";
+import { useWorkTrackersStore } from "@/state/workTrackersStore";
+import { useAddressesStore } from "@/state/addressesStore";
 
 export function checkEventFormRules(
   createEventPayload: CurrentEventStore,
@@ -222,6 +225,8 @@ export function updateCurrentEventAlerts() {
   const events = useEventsStore.getState().events;
   const bleacherEvents = useBleacherEventsStore.getState().bleacherEvents;
   const bleachers = useBleachersStore.getState().bleachers;
+  const workTrackers = useWorkTrackersStore.getState().workTrackers;
+  const addresses = useAddressesStore.getState().addresses;
   // console.log("updateCurrentEventAlerts");
 
   // Only calculate if necessary
@@ -234,7 +239,27 @@ export function updateCurrentEventAlerts() {
     allBleacherEvents: bleacherEvents,
   });
   const requirementAlerts = eventRequirements.evaluate({ event: state, bleachers });
-  const newAlerts = [...conflictAlerts, ...requirementAlerts];
+
+  // Evaluate delivery alerts for each bleacher assigned to this event
+  const thisEventBleacherEvents = bleacherEvents.filter((be) => be.event_uuid === state.eventUuid);
+  const eventAsRow = {
+    booked: state.selectedStatus === "booked",
+    address_uuid: state.addressData?.addressUuid ?? null,
+    event_start: state.eventStart,
+    event_name: state.eventName,
+  };
+  const deliveryAlerts = thisEventBleacherEvents.flatMap((be) => {
+    const bleacher = bleachers.find((b) => b.id === be.bleacher_uuid) ?? null;
+    return eventBleacherDelivery.evaluate({
+      bleacherEvent: be,
+      bleacher,
+      event: eventAsRow as Parameters<typeof eventBleacherDelivery.evaluate>[0]["event"],
+      workTrackers,
+      addresses,
+    });
+  });
+
+  const newAlerts = [...conflictAlerts, ...requirementAlerts, ...deliveryAlerts];
 
   const oldMessages = oldAlerts.map((a) => a.message);
   const newMessages = newAlerts.map((a) => a.message);

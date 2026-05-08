@@ -60,6 +60,8 @@ export async function syncAlertsForEntity(
     }
   }
 
+  const userUuids = [...new Set([saverUserUuid, ownerUserUuid].filter(Boolean) as string[])];
+
   if (toInsert.length > 0) {
     const { data: insertedAlerts, error: insertError } = await supabase
       .from("Alerts")
@@ -79,8 +81,6 @@ export async function syncAlertsForEntity(
       return;
     }
 
-    const userUuids = [...new Set([saverUserUuid, ownerUserUuid].filter(Boolean) as string[])];
-
     const userAlertRows = insertedAlerts.flatMap((alert) =>
       userUuids.map((user_uuid) => ({ alert_uuid: alert.id, user_uuid })),
     );
@@ -89,6 +89,38 @@ export async function syncAlertsForEntity(
       const { error: userAlertError } = await supabase.from("UserAlerts").insert(userAlertRows);
       if (userAlertError) {
         console.error(`[${title}] failed to insert UserAlerts`, userAlertError);
+      }
+    }
+  }
+
+  // For alerts that already existed, ensure every relevant user has a UserAlerts row.
+  // This handles cron re-runs and cases where UserAlerts were never created.
+  if (userUuids.length > 0 && existing.length > 0) {
+    const keptAlertIds = existing
+      .filter((a) => currentMessages.has(a.message ?? ""))
+      .map((a) => a.id);
+
+    if (keptAlertIds.length > 0) {
+      const { data: existingUserAlerts } = await supabase
+        .from("UserAlerts")
+        .select("alert_uuid, user_uuid")
+        .in("alert_uuid", keptAlertIds);
+
+      const existingPairs = new Set(
+        (existingUserAlerts ?? []).map((r) => `${r.alert_uuid}:${r.user_uuid}`),
+      );
+
+      const missingRows = keptAlertIds.flatMap((alertId) =>
+        userUuids
+          .filter((user_uuid) => !existingPairs.has(`${alertId}:${user_uuid}`))
+          .map((user_uuid) => ({ alert_uuid: alertId, user_uuid })),
+      );
+
+      if (missingRows.length > 0) {
+        const { error: backfillError } = await supabase.from("UserAlerts").insert(missingRows);
+        if (backfillError) {
+          console.error(`[${title}] failed to backfill UserAlerts`, backfillError);
+        }
       }
     }
   }

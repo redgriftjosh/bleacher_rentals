@@ -2252,7 +2252,7 @@ export type Database = {
       }
     }
     Enums: {
-      alert_entity_type: "event"
+      alert_entity_type: "event" | "bleacher_event"
       bleacher_opening_dir: "driver" | "passenger"
       bluebook_region: "CAN" | "US" | "Both"
       event_status: "quoted" | "booked" | "lost"
@@ -2417,7 +2417,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      alert_entity_type: ["event"],
+      alert_entity_type: ["event", "bleacher_event"],
       bleacher_opening_dir: ["driver", "passenger"],
       bluebook_region: ["CAN", "US", "Both"],
       event_status: ["quoted", "booked", "lost"],

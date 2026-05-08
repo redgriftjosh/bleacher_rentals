@@ -28,6 +28,7 @@ import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient"
 import { useUsersStore } from "@/state/userStore";
 import { eventRequirements } from "@/features/alerts/definitions/eventRequirements";
 import { schedulingConflicts } from "@/features/alerts/definitions/schedulingConflicts";
+import { eventBleacherDelivery } from "@/features/alerts/definitions/eventBleacherDelivery";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
@@ -97,6 +98,18 @@ export const EventConfigurationForm = ({
         state.ownerUserUuid,
         supabase,
       );
+      await eventBleacherDelivery.syncForEvent(
+        newEventUuid,
+        {
+          booked: state.selectedStatus === "booked",
+          address_uuid: state.addressData?.addressUuid ?? null,
+          event_start: state.eventStart,
+          event_name: state.eventName,
+        },
+        resolveSaverUuid(),
+        state.ownerUserUuid,
+        supabase,
+      );
       await refreshDashboardStores();
       currentEventStore.resetForm();
       if (currentEventStore.isModalOpen) {
@@ -130,6 +143,18 @@ export const EventConfigurationForm = ({
           state.ownerUserUuid,
           supabase,
         );
+        await eventBleacherDelivery.syncForEvent(
+          state.eventUuid,
+          {
+            booked: state.selectedStatus === "booked",
+            address_uuid: state.addressData?.addressUuid ?? null,
+            event_start: state.eventStart,
+            event_name: state.eventName,
+          },
+          resolveSaverUuid(),
+          state.ownerUserUuid,
+          supabase,
+        );
       }
       await refreshDashboardStores();
       currentEventStore.resetForm();
@@ -147,6 +172,7 @@ export const EventConfigurationForm = ({
       if (state.eventUuid) {
         await eventRequirements.delete(state.eventUuid, supabase);
         await schedulingConflicts.delete(state.eventUuid, supabase);
+        await eventBleacherDelivery.deleteForEvent(state.eventUuid, supabase);
       }
       await deleteEvent(state.eventUuid, state.addressData?.state ?? "", supabase, user ?? null);
       await refreshDashboardStores();

@@ -4,6 +4,7 @@ import { Trash2, Undo2, BellRing } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AlertRemindMeModal } from "./AlertRemindMeModal";
 import { loadEventForModal } from "@/features/eventConfiguration/functions/loadEventForModal";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import type { UserAlertRow } from "../hooks/useUserAlerts";
 
 type Props = {
@@ -16,15 +17,28 @@ type Props = {
 export function AlertDropDownListItem({ alert, onDismiss, onUndismiss, onRemindLater }: Props) {
   const [remindModalOpen, setRemindModalOpen] = useState(false);
   const router = useRouter();
+  const supabase = useClerkSupabaseClient();
 
   const today = new Date().toISOString().slice(0, 10);
   const isDismissed =
     !!alert.dismissed && (alert.dismissedUntil === null || alert.dismissedUntil > today);
 
-  const isEventLink = alert.entityType === "event";
+  const isEventLink = alert.entityType === "event" || alert.entityType === "bleacher_event";
 
-  const handleBodyClick = () => {
-    if (isEventLink && alert.entityUuid) {
+  const handleBodyClick = async () => {
+    if (!isEventLink || !alert.entityUuid) return;
+
+    if (alert.entityType === "bleacher_event") {
+      const { data } = await supabase
+        .from("BleacherEvents")
+        .select("event_uuid")
+        .eq("id", alert.entityUuid)
+        .single();
+      if (data?.event_uuid) {
+        loadEventForModal(data.event_uuid);
+        router.push("/dashboard");
+      }
+    } else {
       loadEventForModal(alert.entityUuid);
       router.push("/dashboard");
     }

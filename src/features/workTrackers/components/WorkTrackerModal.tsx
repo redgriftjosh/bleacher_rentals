@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { buildTripStatusNotification } from "@/features/workTrackers/db/notifications";
 import BillOfLadingButton from "./billOfLading/BillOfLadingButton";
+import { eventBleacherDelivery } from "@/features/alerts/definitions/eventBleacherDelivery";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -268,6 +269,12 @@ export default function WorkTrackerModal({
         previousDropoffAddress: dropoffAddress?.address ?? "an unknown dropoff location",
         previousDropoffCity: dropoffAddress?.city ?? "",
       });
+      // Re-evaluate bleacher delivery alerts for this bleacher's events
+      await eventBleacherDelivery.syncForBleacher(
+        trackerToSave?.bleacher_uuid ?? null,
+        null,
+        supabase,
+      );
       setShowSaveConfirmModal(false);
       // Refresh bleachers directly into the zustand store so Pixi updates without remounting
       try {
@@ -308,6 +315,8 @@ export default function WorkTrackerModal({
         dropoffCity: dropOffAddress?.city ?? dropoffAddress?.city ?? "",
         date: workTracker.date,
       });
+      // Re-evaluate bleacher delivery alerts for this bleacher's events
+      await eventBleacherDelivery.syncForBleacher(workTracker.bleacher_uuid, null, supabase);
       // Refresh bleachers directly into the zustand store so Pixi updates without remounting
       try {
         const { FetchDashboardBleachers } =
