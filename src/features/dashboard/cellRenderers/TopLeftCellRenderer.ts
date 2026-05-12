@@ -27,7 +27,7 @@ export class TopLeftCellRenderer implements ICellRenderer {
     cellWidth: number,
     cellHeight: number,
     parent: Container,
-    firstVisibleColumn?: number
+    firstVisibleColumn?: number,
   ): Container {
     parent.removeChildren();
     const dimensions = { width: cellWidth, height: cellHeight };

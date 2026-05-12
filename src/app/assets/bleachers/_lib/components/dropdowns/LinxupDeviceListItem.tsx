@@ -48,7 +48,7 @@ const LinxupDeviceListItem: React.FC<LinxupDeviceListItemProps> = ({ device, onC
         {device.status && (
           <div
             className={`px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap ${getStatusStyles(
-              device.status
+              device.status,
             )}`}
           >
             {device.status}

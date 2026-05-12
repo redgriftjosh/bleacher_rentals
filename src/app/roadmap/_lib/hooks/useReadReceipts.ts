@@ -29,7 +29,7 @@ export function useReadReceiptsForTask(taskId: string | null) {
         ])
         .where("m.task_id", "=", safeId)
         .compile(),
-    [safeId]
+    [safeId],
   );
 
   const { data } = useTypedQuery(compiled, expect<Row>());

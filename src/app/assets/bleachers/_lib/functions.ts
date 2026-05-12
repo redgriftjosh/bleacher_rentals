@@ -12,7 +12,7 @@ type CheckInsertBleacher = {
 
 export function checkInsertBleacherFormRules(
   bleacher: CheckInsertBleacher,
-  bleacherNumbers: number[]
+  bleacherNumbers: number[],
 ): boolean {
   // check if all required fields are filled in
   let errors = [];
@@ -45,7 +45,7 @@ export function checkInsertBleacherFormRules(
         }),
       {
         duration: 10000, // 20 seconds
-      }
+      },
     );
     return false;
   } else {
@@ -54,7 +54,10 @@ export function checkInsertBleacherFormRules(
 }
 
 // Convert total inches to { feet, inches }
-export function inchesToFeetAndInches(totalInches: number | null): { feet: number; inches: number } {
+export function inchesToFeetAndInches(totalInches: number | null): {
+  feet: number;
+  inches: number;
+} {
   if (totalInches == null) return { feet: 0, inches: 0 };
   return { feet: Math.floor(totalInches / 12), inches: totalInches % 12 };
 }

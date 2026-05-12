@@ -129,7 +129,7 @@ export class BleacherCell extends Container {
     const rt = this.baker.getTexture(
       key,
       { width: BLEACHER_COLUMN_WIDTH, height: CELL_HEIGHT },
-      (c) => this.buildBleacherContainer(c, b)
+      (c) => this.buildBleacherContainer(c, b),
     );
 
     this.sprite.texture = rt;

@@ -140,9 +140,7 @@ export async function loadEventForModal(eventId: string): Promise<void> {
     setField("ownerUserUuid", eventData.created_by_user_uuid ?? null);
     setField(
       "bookedAt",
-      eventData.booked_at
-        ? new Date(eventData.booked_at).toLocaleDateString("en-CA")
-        : null,
+      eventData.booked_at ? new Date(eventData.booked_at).toLocaleDateString("en-CA") : null,
     );
     // Open the modal (not the dashboard form)
     setField("isModalOpen", true);

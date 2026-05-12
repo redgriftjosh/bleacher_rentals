@@ -24,7 +24,7 @@ export async function sendInviteUserEmail(email: string): Promise<boolean> {
         }),
       {
         duration: 10000, // 20 seconds
-      }
+      },
     );
     return false;
   }

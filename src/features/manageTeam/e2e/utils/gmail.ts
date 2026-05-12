@@ -129,7 +129,7 @@ export async function waitForGmailMessage(params: {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-      }
+      },
     );
 
     if (!listRes.ok) {
@@ -149,7 +149,7 @@ export async function waitForGmailMessage(params: {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
-        }
+        },
       );
 
       if (!msgRes.ok) {

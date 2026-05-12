@@ -7,7 +7,7 @@ type TypedSupabaseClient = SupabaseClient<Database>;
 
 export async function deactivateUser(
   supabase: TypedSupabaseClient,
-  userUuid: string
+  userUuid: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
@@ -27,7 +27,7 @@ export async function deactivateUser(
 
 export async function reactivateUser(
   supabase: TypedSupabaseClient,
-  userUuid: string
+  userUuid: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
@@ -47,7 +47,7 @@ export async function reactivateUser(
 
 export async function updateUserStatusToInvited(
   supabase: TypedSupabaseClient,
-  email: string
+  email: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
@@ -67,7 +67,7 @@ export async function updateUserStatusToInvited(
 
 export async function deleteUser(
   supabase: TypedSupabaseClient,
-  userUuid: string
+  userUuid: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Mark user as inactive instead of deleting

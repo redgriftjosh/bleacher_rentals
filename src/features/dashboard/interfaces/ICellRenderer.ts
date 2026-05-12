@@ -28,6 +28,6 @@ export interface ICellRenderer {
     cellWidth: number,
     cellHeight: number,
     parent: Container,
-    firstVisibleColumn?: number
+    firstVisibleColumn?: number,
   ): Container;
 }

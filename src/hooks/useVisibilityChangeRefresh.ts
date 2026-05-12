@@ -8,7 +8,7 @@ This is useful for when the user is on a different tab or window and the data is
 
 export function useVisibilityChangeRefresh(
   fetchFn: () => void | Promise<void>,
-  delayMs: number = 30000
+  delayMs: number = 30000,
 ) {
   const lastHiddenTime = useRef<number | null>(null);
 

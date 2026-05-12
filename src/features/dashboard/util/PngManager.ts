@@ -13,7 +13,7 @@ export class PngManager {
     await PngManager.loadAndCachePng(
       app,
       "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9Imx1Y2lkZSBsdWNpZGUtdHJ1Y2staWNvbiBsdWNpZGUtdHJ1Y2siPjxwYXRoIGQ9Ik0xNCAxOFY2YTIgMiAwIDAgMC0yLTJINGEyIDIgMCAwIDAtMiAydjExYTEgMSAwIDAgMCAxIDFoMiIvPjxwYXRoIGQ9Ik0xNSAxOEg5Ii8+PHBhdGggZD0iTTE5IDE4aDJhMSAxIDAgMCAwIDEtMXYtMy42NWExIDEgMCAwIDAtLjIyLS42MjRsLTMuNDgtNC4zNUExIDEgMCAwIDAgMTcuNTIgOEgxNCIvPjxjaXJjbGUgY3g9IjE3IiBjeT0iMTgiIHI9IjIiLz48Y2lyY2xlIGN4PSI3IiBjeT0iMTgiIHI9IjIiLz48L3N2Zz4=",
-      "truck"
+      "truck",
     );
     await PngManager.loadAndCachePng(app, "/map-pin.png", "map-pin");
   }
@@ -94,7 +94,7 @@ export class PngManager {
   // Optional: Method to preload multiple images
   public static async preloadImages(imagePaths: { path: string; key: string }[]) {
     const promises = imagePaths.map(({ path, key }) =>
-      PngManager.loadAndCachePng(null as any, path, key)
+      PngManager.loadAndCachePng(null as any, path, key),
     );
     await Promise.all(promises);
   }

@@ -77,15 +77,15 @@ export default function AddressAutocomplete({
       const components = results[0].address_components;
 
       const state = components.find((comp: AddressComponent) =>
-        comp.types.includes("administrative_area_level_1")
+        comp.types.includes("administrative_area_level_1"),
       )?.long_name;
 
       const city = components.find((comp: AddressComponent) =>
-        comp.types.includes("locality")
+        comp.types.includes("locality"),
       )?.long_name;
 
       const postalCode = components.find((comp: AddressComponent) =>
-        comp.types.includes("postal_code")
+        comp.types.includes("postal_code"),
       )?.long_name;
 
       onAddressSelect({ address, city, state, postalCode });
@@ -130,7 +130,7 @@ export default function AddressAutocomplete({
               ))}
             </ul>
           ) : null,
-          document.body
+          document.body,
         )}
     </>
   );

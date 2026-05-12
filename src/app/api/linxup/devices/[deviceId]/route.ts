@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ devi
       console.error("[linxup] Missing env vars");
       return NextResponse.json(
         { error: "LINXUP_API_HOST or LINXUP_API_TOKEN missing" },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ devi
         d.imei === deviceId ||
         d.deviceUUID === deviceId ||
         d.deviceSerialNumber === deviceId ||
-        String(d.imei) === deviceId
+        String(d.imei) === deviceId,
     );
 
     if (!device) {

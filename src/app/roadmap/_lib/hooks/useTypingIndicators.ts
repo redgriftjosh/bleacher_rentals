@@ -25,7 +25,7 @@ export function useTypingIndicators(taskId: string | null, currentUserUuid: stri
         .select(["id", "task_id", "user_uuid", "is_typing", "updated_at"])
         .where("task_id", "=", safeId)
         .compile(),
-    [safeId]
+    [safeId],
   );
 
   const { data } = useTypedQuery(compiled, expect<Row>());

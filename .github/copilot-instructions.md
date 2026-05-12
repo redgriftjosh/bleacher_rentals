@@ -53,7 +53,7 @@ const { data: eventData } = await supabase
     *,
     address:Addresses(*),
     bleacher_events:BleacherEvents(bleacher_id)
-  `
+  `,
   )
   .eq("event_id", eventId)
   .single();
