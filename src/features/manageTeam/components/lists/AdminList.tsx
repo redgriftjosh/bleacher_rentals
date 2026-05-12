@@ -20,7 +20,9 @@ function StatusBadge({ statusUuid }: { statusUuid: string | null }) {
   }, [statusUuid]);
 
   return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+    <span
+      className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}
+    >
       {config.label}
     </span>
   );
@@ -36,7 +38,11 @@ function formatDate(dateString: string | null) {
   }).format(date);
 }
 
-export function AdminList({ showInactive = false }: { showInactive?: boolean }) {
+export function AdminList({
+  showInactive = false,
+}: {
+  showInactive?: boolean;
+}) {
   const admins = useAdmins();
   const router = useRouter();
 
@@ -102,7 +108,9 @@ export function AdminList({ showInactive = false }: { showInactive?: boolean }) 
                   </div>
                 </td>
                 <td className="px-4 py-4">
-                  <div className="text-sm text-gray-900 break-words">{admin.email}</div>
+                  <div className="text-sm text-gray-900 break-words">
+                    {admin.email}
+                  </div>
                 </td>
                 <td className="px-4 py-4">
                   <StatusBadge statusUuid={admin.statusUuid} />
@@ -119,7 +127,14 @@ export function AdminList({ showInactive = false }: { showInactive?: boolean }) 
                         Driver
                       </span>
                     ) : null}
-                    {!admin.isAccountManager && !admin.isDriver ? (
+                    {admin.isDeveloper ? (
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        Developer
+                      </span>
+                    ) : null}
+                    {!admin.isAccountManager &&
+                    !admin.isDriver &&
+                    !admin.isDeveloper ? (
                       <span className="text-sm text-gray-400">—</span>
                     ) : null}
                   </div>
