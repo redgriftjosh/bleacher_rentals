@@ -28,6 +28,9 @@ export function useIncomplete(): IncompleteUser[] {
     .leftJoin("Drivers as d", (join) =>
       join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1)
     )
+    .leftJoin("Developers as dev", (join) =>
+      join.onRef("dev.user_uuid", "=", "u.id").on("dev.is_active", "=", 1)
+    )
     .select([
       "u.id as userUuid",
       "u.first_name as firstName",
@@ -42,6 +45,7 @@ export function useIncomplete(): IncompleteUser[] {
         eb("u.is_admin", "=", 0),
         eb("am.id", "is", null),
         eb("d.id", "is", null),
+        eb("dev.id", "is", null),
       ])
     )
     .orderBy("u.first_name", "asc")

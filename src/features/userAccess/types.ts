@@ -4,4 +4,5 @@ export type UserAccessData = {
   is_admin: number | null;
   account_manager_id: string | null;
   driver_id: string | null;
+  developer_id: string | null;
 };

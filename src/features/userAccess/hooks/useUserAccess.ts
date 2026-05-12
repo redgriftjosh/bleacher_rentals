@@ -33,12 +33,16 @@ export function useUserAccess(): {
       .leftJoin("Drivers as d", (join) =>
         join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1),
       )
+      .leftJoin("Developers as dev", (join) =>
+        join.onRef("dev.user_uuid", "=", "u.id").on("dev.is_active", "=", 1),
+      )
       .select([
         "u.id as id",
         "u.status_uuid",
         "u.is_admin as is_admin",
         "am.id as account_manager_id",
         "d.id as driver_id",
+        "dev.id as developer_id",
       ])
       .where("u.clerk_user_id", "=", clerkUserIdForQuery)
       .limit(1)

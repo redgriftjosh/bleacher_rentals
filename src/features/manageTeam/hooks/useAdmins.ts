@@ -16,6 +16,7 @@ type Admin = {
   statusUuid: string | null;
   isAccountManager: number;
   isDriver: number;
+  isDeveloper: number;
 };
 
 /**
@@ -30,6 +31,9 @@ export function useAdmins(): Admin[] {
     .leftJoin("Drivers as d", (join) =>
       join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1)
     )
+    .leftJoin("Developers as dev", (join) =>
+      join.onRef("dev.user_uuid", "=", "u.id").on("dev.is_active", "=", 1)
+    )
     .select([
       "u.id as userUuid",
       "u.first_name as firstName",
@@ -42,6 +46,7 @@ export function useAdmins(): Admin[] {
       // booleans derived from whether the left-joined row exists
       sql<number>`case when am.id is null then 0 else 1 end`.as("isAccountManager"),
       sql<number>`case when d.id is null then 0 else 1 end`.as("isDriver"),
+      sql<number>`case when dev.id is null then 0 else 1 end`.as("isDeveloper"),
     ])
     .where("u.is_admin", "=", 1)
     .groupBy(["u.id", "u.first_name", "u.last_name", "u.email", "u.clerk_user_id"])

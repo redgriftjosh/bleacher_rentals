@@ -17,6 +17,7 @@ describe("determineUserAccess", () => {
       is_admin: 1,
       account_manager_id: "am-1",
       driver_id: "d-1",
+      developer_id: null,
     };
 
     const result = determineUserAccess(userData);
@@ -30,6 +31,7 @@ describe("determineUserAccess", () => {
       is_admin: 1,
       account_manager_id: null,
       driver_id: null,
+      developer_id: null,
     };
 
     const result = determineUserAccess(userData);
@@ -43,6 +45,21 @@ describe("determineUserAccess", () => {
       is_admin: 0,
       account_manager_id: "am-1",
       driver_id: null,
+      developer_id: null,
+    };
+
+    const result = determineUserAccess(userData);
+    expect(result.accessLevel).toBe("full");
+  });
+
+  it("grants full access to developers", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: null,
+      is_admin: 0,
+      account_manager_id: null,
+      driver_id: null,
+      developer_id: "dev-1",
     };
 
     const result = determineUserAccess(userData);
@@ -56,6 +73,7 @@ describe("determineUserAccess", () => {
       is_admin: 0,
       account_manager_id: null,
       driver_id: "d-1",
+      developer_id: null,
     };
 
     const result = determineUserAccess(userData);
@@ -69,6 +87,7 @@ describe("determineUserAccess", () => {
       is_admin: 0,
       account_manager_id: null,
       driver_id: null,
+      developer_id: null,
     };
 
     const result = determineUserAccess(userData);

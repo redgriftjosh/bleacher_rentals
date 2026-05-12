@@ -27,8 +27,9 @@ export type AccessResult = {
  * 1. Deactivated users are blocked
  * 2. Admins get full access
  * 3. Users with active AccountManager role get full access
- * 4. Users with only active Driver role get driver-only access
- * 5. Users with no roles get no-roles-assigned
+ * 4. Users with active Developer role get full access
+ * 5. Users with only active Driver role get driver-only access
+ * 6. Users with no roles get no-roles-assigned
  */
 export function determineUserAccess(userData: UserAccessData | null): AccessResult {
   // No user data found
@@ -57,6 +58,13 @@ export function determineUserAccess(userData: UserAccessData | null): AccessResu
 
   // Account managers get full access
   if (userData.account_manager_id) {
+    return {
+      accessLevel: "full",
+    };
+  }
+
+  // Developers get full access
+  if (userData.developer_id) {
     return {
       accessLevel: "full",
     };
