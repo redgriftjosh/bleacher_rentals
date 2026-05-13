@@ -33,6 +33,6 @@ export function createSuccessToast(lines: string[]) {
         id: t,
         lines,
       }),
-    { duration: 10000 }
+    { duration: 10000 },
   );
 }

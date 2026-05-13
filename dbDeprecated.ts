@@ -1,7 +1,7 @@
 /**
  * Configuration for deprecated database tables and columns.
  * Add deprecated items here to automatically generate linting patterns.
- * 
+ *
  * NOTE: This file provides TypeScript types. The actual runtime configuration
  * is in dbDeprecated.mjs (to avoid transpilation issues in Vercel).
  * Keep both files in sync!

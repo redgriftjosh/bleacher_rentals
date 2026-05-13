@@ -40,7 +40,7 @@ type Row = {
 // Includes address, basic fields, and bleacherIds via BleacherEvents. Setup/Teardown-specific text/flags use defaults.
 export async function FetchDashboardEvents(
   supabase: SupabaseClient<Database>,
-  opts?: { onlyMine?: boolean; clerkUserId?: string | null }
+  opts?: { onlyMine?: boolean; clerkUserId?: string | null },
 ): Promise<{ events: DashboardEvent[] }> {
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);

@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
         details: json.error?.details,
         raw: json,
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 

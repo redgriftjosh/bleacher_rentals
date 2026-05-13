@@ -115,7 +115,7 @@ export function Dropdown<T>({
               </motion.ul>
             )}
           </AnimatePresence>,
-          document.body // 👈 Renders the dropdown directly into the body
+          document.body, // 👈 Renders the dropdown directly into the body
         )}
     </>
   );

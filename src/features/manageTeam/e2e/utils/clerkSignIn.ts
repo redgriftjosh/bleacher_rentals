@@ -9,24 +9,20 @@ export async function signInViaClerkUI(page: Page, params: { email: string; pass
   // Be conservative: if we can see a password input, proceed with sign-in.
 
   const emailInput = page.locator(
-    'input[name="identifier"], input[autocomplete="email"], input[type="email"]'
+    'input[name="identifier"], input[autocomplete="email"], input[type="email"]',
   );
 
   await expect(emailInput.first()).toBeVisible({ timeout: 30_000 });
   await emailInput.first().fill(email);
 
-  const continueButton = page
-    .getByRole("button", { name: /continue|sign in|next/i })
-    .first();
+  const continueButton = page.getByRole("button", { name: /continue|sign in|next/i }).first();
   await continueButton.click();
 
   const passwordInput = page.locator('input[name="password"], input[type="password"]');
   await expect(passwordInput.first()).toBeVisible({ timeout: 30_000 });
   await passwordInput.first().fill(password);
 
-  const signInButton = page
-    .getByRole("button", { name: /sign in|continue|next/i })
-    .first();
+  const signInButton = page.getByRole("button", { name: /sign in|continue|next/i }).first();
   await signInButton.click();
 
   // App redirects to /dashboard after sign-in.

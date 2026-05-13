@@ -32,7 +32,7 @@ export function AccountManagerSection() {
             first_name,
             last_name
           )
-        `
+        `,
         )
         .eq("is_active", true);
 

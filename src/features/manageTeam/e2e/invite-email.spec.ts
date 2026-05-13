@@ -10,7 +10,7 @@ test.describe("Manage Team invites", () => {
 
     test.skip(
       !gmailClientId || !gmailClientSecret || !gmailRefreshToken || !gmailBaseInbox,
-      "Missing E2E env vars: E2E_GMAIL_CLIENT_ID, E2E_GMAIL_CLIENT_SECRET, E2E_GMAIL_REFRESH_TOKEN, E2E_GMAIL_INBOX"
+      "Missing E2E env vars: E2E_GMAIL_CLIENT_ID, E2E_GMAIL_CLIENT_SECRET, E2E_GMAIL_REFRESH_TOKEN, E2E_GMAIL_INBOX",
     );
 
     const sentAt = new Date();

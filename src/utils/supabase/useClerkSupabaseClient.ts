@@ -19,9 +19,9 @@ export function useClerkSupabaseClient() {
             // this can just be the Clerk session token.
             return (await session?.getToken()) ?? null;
           },
-        }
+        },
       ),
-    [session]
+    [session],
   );
 
   return client;

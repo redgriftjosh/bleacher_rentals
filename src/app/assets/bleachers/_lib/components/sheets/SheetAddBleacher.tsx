@@ -101,7 +101,7 @@ export function SheetAddBleacher() {
           summer_home_base_uuid: selectedSummerHomeBaseUuid,
           winter_home_base_uuid: selectedWinterHomeBaseUuid,
         },
-        takenNumbers
+        takenNumbers,
       )
     ) {
       throw new Error("Event form validation failed");
@@ -127,7 +127,7 @@ export function SheetAddBleacher() {
           nvis_pdf_path: nvisPdfPath,
         },
         supabase,
-        queryClient
+        queryClient,
       );
       setIsOpen(false);
     }
@@ -307,7 +307,9 @@ export function SheetAddBleacher() {
                 </div>
                 {/* Trailer Height */}
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Trailer Height</label>
+                  <label className="text-right text-sm font-medium col-span-2">
+                    Trailer Height
+                  </label>
                   <div className="col-span-3 flex gap-2">
                     <div className="relative flex-1">
                       <input
@@ -315,10 +317,14 @@ export function SheetAddBleacher() {
                         min={0}
                         placeholder="ft"
                         value={trailerHeightFt ?? ""}
-                        onChange={(e) => setTrailerHeightFt(e.target.value ? Number(e.target.value) : null)}
+                        onChange={(e) =>
+                          setTrailerHeightFt(e.target.value ? Number(e.target.value) : null)
+                        }
                         className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">ft</span>
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                        ft
+                      </span>
                     </div>
                     <div className="relative flex-1">
                       <input
@@ -327,17 +333,23 @@ export function SheetAddBleacher() {
                         max={11}
                         placeholder="in"
                         value={trailerHeightIn ?? ""}
-                        onChange={(e) => setTrailerHeightIn(e.target.value ? Number(e.target.value) : null)}
+                        onChange={(e) =>
+                          setTrailerHeightIn(e.target.value ? Number(e.target.value) : null)
+                        }
                         className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">in</span>
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                        in
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Trailer Length */}
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Trailer Length</label>
+                  <label className="text-right text-sm font-medium col-span-2">
+                    Trailer Length
+                  </label>
                   <div className="col-span-3 flex gap-2">
                     <div className="relative flex-1">
                       <input
@@ -345,10 +357,14 @@ export function SheetAddBleacher() {
                         min={0}
                         placeholder="ft"
                         value={trailerLengthFt ?? ""}
-                        onChange={(e) => setTrailerLengthFt(e.target.value ? Number(e.target.value) : null)}
+                        onChange={(e) =>
+                          setTrailerLengthFt(e.target.value ? Number(e.target.value) : null)
+                        }
                         className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">ft</span>
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                        ft
+                      </span>
                     </div>
                     <div className="relative flex-1">
                       <input
@@ -357,18 +373,26 @@ export function SheetAddBleacher() {
                         max={11}
                         placeholder="in"
                         value={trailerLengthIn ?? ""}
-                        onChange={(e) => setTrailerLengthIn(e.target.value ? Number(e.target.value) : null)}
+                        onChange={(e) =>
+                          setTrailerLengthIn(e.target.value ? Number(e.target.value) : null)
+                        }
                         className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">in</span>
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                        in
+                      </span>
                     </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Opening Direction</label>
+                  <label className="text-right text-sm font-medium col-span-2">
+                    Opening Direction
+                  </label>
                   <select
                     value={openingDirection ?? ""}
-                    onChange={(e) => setOpeningDirection((e.target.value || null) as "driver" | "passenger" | null)}
+                    onChange={(e) =>
+                      setOpeningDirection((e.target.value || null) as "driver" | "passenger" | null)
+                    }
                     className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                   >
                     <option value="">Select direction</option>
