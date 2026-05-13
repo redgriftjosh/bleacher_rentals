@@ -52,7 +52,7 @@ describe("determineUserAccess", () => {
     expect(result.accessLevel).toBe("full");
   });
 
-  it("grants full access to developers", () => {
+  it("grants developer-only access to developers without admin/AM", () => {
     const userData: UserAccessData = {
       id: "1",
       status_uuid: null,
@@ -63,7 +63,49 @@ describe("determineUserAccess", () => {
     };
 
     const result = determineUserAccess(userData);
+    expect(result.accessLevel).toBe("developer-only");
+  });
+
+  it("grants full access to admin who is also a developer", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: null,
+      is_admin: 1,
+      account_manager_id: null,
+      driver_id: null,
+      developer_id: "dev-1",
+    };
+
+    const result = determineUserAccess(userData);
     expect(result.accessLevel).toBe("full");
+  });
+
+  it("grants full access to account manager who is also a developer", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: null,
+      is_admin: 0,
+      account_manager_id: "am-1",
+      driver_id: null,
+      developer_id: "dev-1",
+    };
+
+    const result = determineUserAccess(userData);
+    expect(result.accessLevel).toBe("full");
+  });
+
+  it("blocks deactivated developer", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: STATUSES.inactive,
+      is_admin: 0,
+      account_manager_id: null,
+      driver_id: null,
+      developer_id: "dev-1",
+    };
+
+    const result = determineUserAccess(userData);
+    expect(result.accessLevel).toBe("account-deactivated");
   });
 
   it("grants driver-only access to users with only driver role", () => {

@@ -1714,6 +1714,7 @@ export type Database = {
           first_name: string | null
           id: string
           is_admin: boolean
+          is_developer_only: number
           last_name: string | null
           phone: string | null
           role: number | null
@@ -1728,6 +1729,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           is_admin?: boolean
+          is_developer_only?: number
           last_name?: string | null
           phone?: string | null
           role?: number | null
@@ -1742,6 +1744,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           is_admin?: boolean
+          is_developer_only?: number
           last_name?: string | null
           phone?: string | null
           role?: number | null

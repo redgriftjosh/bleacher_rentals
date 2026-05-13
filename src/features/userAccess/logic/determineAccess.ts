@@ -9,6 +9,7 @@ import type { UserAccessData } from "../types";
 
 export type AccessLevel =
   | "full"
+  | "developer-only"
   | "driver-only"
   | "account-deactivated"
   | "no-roles-assigned"
@@ -27,11 +28,13 @@ export type AccessResult = {
  * 1. Deactivated users are blocked
  * 2. Admins get full access
  * 3. Users with active AccountManager role get full access
- * 4. Users with active Developer role get full access
+ * 4. Users with active Developer role (without admin/AM) get developer-only access (roadmap only)
  * 5. Users with only active Driver role get driver-only access
  * 6. Users with no roles get no-roles-assigned
  */
-export function determineUserAccess(userData: UserAccessData | null): AccessResult {
+export function determineUserAccess(
+  userData: UserAccessData | null,
+): AccessResult {
   // No user data found
   if (!userData) {
     return {
@@ -63,10 +66,11 @@ export function determineUserAccess(userData: UserAccessData | null): AccessResu
     };
   }
 
-  // Developers get full access
+  // Developers (without admin/AM) get roadmap-only access
   if (userData.developer_id) {
     return {
       accessLevel: "full",
+      // accessLevel: "developer-only",
     };
   }
 
