@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { useCurrentUser } from "@/hooks/db/useCurrentUser";
+import { STATUSES } from "@/features/manageTeam/constants";
 
 type Compiled = {
   driver_uuid: string;
@@ -37,7 +38,8 @@ export function useDrivers(): {
   isLoading: boolean;
   error: Error | undefined;
 } {
-  const { data: currentUserData, isLoading: isCurrentUserLoading } = useCurrentUser();
+  const { data: currentUserData, isLoading: isCurrentUserLoading } =
+    useCurrentUser();
   const currentUser = currentUserData?.[0];
 
   // Get account manager ID if user is an account manager
@@ -56,7 +58,11 @@ export function useDrivers(): {
 
   const { data: accountManagerData } = useTypedQuery(
     accountManagerQuery ??
-      db.selectFrom("AccountManagers").select("id").where("id", "=", "__no_match__").compile(),
+      db
+        .selectFrom("AccountManagers")
+        .select("id")
+        .where("id", "=", "__no_match__")
+        .compile(),
     expect<{ id: string }>(),
   );
 
@@ -99,8 +105,8 @@ export function useDrivers(): {
         "u.last_name as last_name",
         "u.email as email",
       ])
-      .where("d.is_active", "=", 1);
-
+      .where("d.is_active", "=", 1)
+      .where("u.status_uuid", "=", STATUSES.active);
     // If not admin, filter by account manager
     if (currentUser.is_admin !== 1) {
       const accountManagerId = accountManagerData?.[0]?.id;
@@ -115,7 +121,10 @@ export function useDrivers(): {
     return query.orderBy("d.user_uuid", "asc").compile();
   }, [currentUser, accountManagerData]);
 
-  const { data, isLoading, error } = useTypedQuery(compiled, expect<Compiled>());
+  const { data, isLoading, error } = useTypedQuery(
+    compiled,
+    expect<Compiled>(),
+  );
 
   return {
     data: data as unknown as DriverWithUser[] | null,
