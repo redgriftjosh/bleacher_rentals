@@ -1,14 +1,22 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { AlertDefinition } from "../AlertDefinition";
-import { AlertEntityType, AlertPayload } from "../types";
+import { AlertDefinition } from "../../AlertDefinition";
+import { AlertEntityType, AlertPayload } from "../../types";
 import { CurrentEventState } from "@/features/eventConfiguration/state/useCurrentEventStore";
-import { Database, Tables } from "../../../../database.types";
-import { eventEntityDescription } from "../util/eventEntityDescription";
-import { syncAlertsForEntity, deleteAlertsForEntity } from "../util/syncAlerts";
+import { Database, Tables } from "../../../../../database.types";
+import { eventEntityDescription } from "../../util/eventEntityDescription";
+import {
+  syncAlertsForEntity,
+  deleteAlertsForEntity,
+} from "../../util/syncAlerts";
+import {
+  parseDateLocal,
+  getAlertWindowStart,
+} from "../../util/alertDateWindow";
 
 type EventRequirementsContext = {
   event: CurrentEventState;
   bleachers: Tables<"Bleachers">[];
+  useDateWindow?: boolean;
 };
 
 /**
@@ -29,9 +37,17 @@ type EventRequirementsContext = {
 class EventRequirementsDefinition extends AlertDefinition<EventRequirementsContext> {
   readonly title = "Event Requirements Not Met";
 
-  evaluate({ event, bleachers }: EventRequirementsContext): AlertPayload[] {
+  evaluate({ event, bleachers, useDateWindow }: EventRequirementsContext): AlertPayload[] {
     const alerts: AlertPayload[] = [];
-    const assignedBleachers = bleachers.filter((b) => event.bleacherUuids.includes(b.id));
+
+    if (useDateWindow && event.eventStart) {
+      const eventDate = parseDateLocal(event.eventStart);
+      if (eventDate < getAlertWindowStart()) return alerts;
+    }
+
+    const assignedBleachers = bleachers.filter((b) =>
+      event.bleacherUuids.includes(b.id),
+    );
 
     const entityDescription = eventEntityDescription(event);
 
@@ -45,10 +61,15 @@ class EventRequirementsDefinition extends AlertDefinition<EventRequirementsConte
 
     if (event.lenient) {
       if (!event.seats) return alerts;
-      const totalAssignedSeats = assignedBleachers.reduce((sum, b) => sum + b.bleacher_seats, 0);
+      const totalAssignedSeats = assignedBleachers.reduce(
+        (sum, b) => sum + b.bleacher_seats,
+        0,
+      );
       if (totalAssignedSeats !== event.seats) {
         alerts.push(
-          makeAlert(`Seat mismatch: ${event.seats} required, ${totalAssignedSeats} assigned.`),
+          makeAlert(
+            `Seat mismatch: ${event.seats} required, ${totalAssignedSeats} assigned.`,
+          ),
         );
       }
     } else {
@@ -56,17 +77,29 @@ class EventRequirementsDefinition extends AlertDefinition<EventRequirementsConte
       const tenRowRequired = event.tenRow ?? 0;
       const fifteenRowRequired = event.fifteenRow ?? 0;
 
-      const sevenRowAssigned = assignedBleachers.filter((b) => b.bleacher_rows === 7).length;
-      const tenRowAssigned = assignedBleachers.filter((b) => b.bleacher_rows === 10).length;
-      const fifteenRowAssigned = assignedBleachers.filter((b) => b.bleacher_rows === 15).length;
+      const sevenRowAssigned = assignedBleachers.filter(
+        (b) => b.bleacher_rows === 7,
+      ).length;
+      const tenRowAssigned = assignedBleachers.filter(
+        (b) => b.bleacher_rows === 10,
+      ).length;
+      const fifteenRowAssigned = assignedBleachers.filter(
+        (b) => b.bleacher_rows === 15,
+      ).length;
 
       const mismatches: string[] = [];
       if (sevenRowAssigned !== sevenRowRequired)
-        mismatches.push(`7-row: ${sevenRowRequired} needed, ${sevenRowAssigned} assigned`);
+        mismatches.push(
+          `7-row: ${sevenRowRequired} needed, ${sevenRowAssigned} assigned`,
+        );
       if (tenRowAssigned !== tenRowRequired)
-        mismatches.push(`10-row: ${tenRowRequired} needed, ${tenRowAssigned} assigned`);
+        mismatches.push(
+          `10-row: ${tenRowRequired} needed, ${tenRowAssigned} assigned`,
+        );
       if (fifteenRowAssigned !== fifteenRowRequired)
-        mismatches.push(`15-row: ${fifteenRowRequired} needed, ${fifteenRowAssigned} assigned`);
+        mismatches.push(
+          `15-row: ${fifteenRowRequired} needed, ${fifteenRowAssigned} assigned`,
+        );
 
       if (mismatches.length > 0) {
         alerts.push(makeAlert(`Bleacher mismatch — ${mismatches.join(", ")}.`));
@@ -95,7 +128,10 @@ class EventRequirementsDefinition extends AlertDefinition<EventRequirementsConte
     );
   }
 
-  async delete(entityUuid: string, supabase: SupabaseClient<Database>): Promise<void> {
+  async delete(
+    entityUuid: string,
+    supabase: SupabaseClient<Database>,
+  ): Promise<void> {
     await deleteAlertsForEntity(this.title, entityUuid, supabase);
   }
 }

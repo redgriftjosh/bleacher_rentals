@@ -26,9 +26,10 @@ import { FetchDashboardEvents } from "@/features/dashboard/db/client/events";
 import { useDashboardFilterSettings } from "@/features/dashboardOptions/useDashboardFilterSettings";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useUsersStore } from "@/state/userStore";
-import { eventRequirements } from "@/features/alerts/definitions/eventRequirements";
+import { eventRequirements } from "@/features/alerts/definitions/eventRequirements/eventRequirements.definition";
 import { schedulingConflicts } from "@/features/alerts/definitions/schedulingConflicts";
 import { eventBleacherDelivery } from "@/features/alerts/definitions/eventBleacherDelivery";
+import { useBleachersStore } from "@/state/bleachersStore";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
@@ -74,7 +75,10 @@ export const EventConfigurationForm = ({
     useBleacherEventsStore.getState().setStale(true);
     await Promise.all([
       FetchDashboardBleachers(supabase),
-      FetchDashboardEvents(supabase, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
+      FetchDashboardEvents(supabase, {
+        onlyMine: onlyShowMyEvents,
+        clerkUserId: userId,
+      }),
     ]);
   };
 
@@ -83,10 +87,15 @@ export const EventConfigurationForm = ({
     const state = useCurrentEventStore.getState();
     try {
       const newEventUuid = await createEvent(state, supabase, user ?? null);
+      const dbAlerts = eventRequirements.evaluate({
+        event: state,
+        bleachers: useBleachersStore.getState().bleachers,
+        useDateWindow: true,
+      });
       await eventRequirements.sync(
         newEventUuid,
         "event",
-        state.alerts,
+        dbAlerts,
         resolveSaverUuid(),
         state.ownerUserUuid,
         supabase,
@@ -128,10 +137,15 @@ export const EventConfigurationForm = ({
     try {
       await updateEvent(state, supabase, user ?? null, bleacherEvents);
       if (state.eventUuid) {
+        const dbAlerts = eventRequirements.evaluate({
+          event: state,
+          bleachers: useBleachersStore.getState().bleachers,
+          useDateWindow: true,
+        });
         await eventRequirements.sync(
           state.eventUuid,
           "event",
-          state.alerts,
+          dbAlerts,
           resolveSaverUuid(),
           state.ownerUserUuid,
           supabase,
@@ -174,7 +188,12 @@ export const EventConfigurationForm = ({
         await schedulingConflicts.delete(state.eventUuid, supabase);
         await eventBleacherDelivery.deleteForEvent(state.eventUuid, supabase);
       }
-      await deleteEvent(state.eventUuid, state.addressData?.state ?? "", supabase, user ?? null);
+      await deleteEvent(
+        state.eventUuid,
+        state.addressData?.state ?? "",
+        supabase,
+        user ?? null,
+      );
       await refreshDashboardStores();
       currentEventStore.resetForm();
     } catch (error) {
@@ -201,7 +220,9 @@ export const EventConfigurationForm = ({
             <button
               key={tab}
               className={`px-2.5 mb-2 rounded-t border-b-2 cursor-pointer ${
-                activeTab === tab ? "border-darkBlue font-semibold" : "border-transparent"
+                activeTab === tab
+                  ? "border-darkBlue font-semibold"
+                  : "border-transparent"
               } ${
                 tab === "Alerts" && currentEventStore.alerts.length > 0
                   ? "text-red-700"
@@ -231,7 +252,10 @@ export const EventConfigurationForm = ({
                 step={1}
                 value={currentEventStore.hslHue ?? 0}
                 onChange={(e) =>
-                  currentEventStore.setField("hslHue", parseInt(e.target.value, 10) || 0)
+                  currentEventStore.setField(
+                    "hslHue",
+                    parseInt(e.target.value, 10) || 0,
+                  )
                 }
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
               />
@@ -246,10 +270,15 @@ export const EventConfigurationForm = ({
           {/* Palette toggle button */}
           <button
             type="button"
-            title={currentEventStore.hueOpen ? "Close hue slider" : "Open hue slider"}
+            title={
+              currentEventStore.hueOpen ? "Close hue slider" : "Open hue slider"
+            }
             className="px-2 py-2 bg-white text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
             onClick={() => {
-              if (!currentEventStore.hueOpen && currentEventStore.hslHue === null) {
+              if (
+                !currentEventStore.hueOpen &&
+                currentEventStore.hslHue === null
+              ) {
                 currentEventStore.setField("hslHue", 0);
               }
               currentEventStore.setField("hueOpen", !currentEventStore.hueOpen);
@@ -357,7 +386,9 @@ export const EventConfigurationForm = ({
       </div>
 
       {/* Tab content */}
-      {activeTab === "Core" && <CoreTab showSetupTeardown={showSetupTeardown} />}
+      {activeTab === "Core" && (
+        <CoreTab showSetupTeardown={showSetupTeardown} />
+      )}
       {activeTab === "Details" && <DetailsTab />}
       {activeTab === "Alerts" && <AlertsTab />}
 
