@@ -1715,6 +1715,7 @@ export type Database = {
           id: string
           is_admin: boolean
           is_developer_only: number
+          is_viewer: boolean
           last_name: string | null
           phone: string | null
           role: number | null
@@ -1730,6 +1731,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           is_developer_only?: number
+          is_viewer?: boolean
           last_name?: string | null
           phone?: string | null
           role?: number | null
@@ -1745,6 +1747,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           is_developer_only?: number
+          is_viewer?: boolean
           last_name?: string | null
           phone?: string | null
           role?: number | null

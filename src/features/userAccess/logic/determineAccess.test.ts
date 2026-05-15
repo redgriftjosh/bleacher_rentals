@@ -4,135 +4,199 @@ import type { UserAccessData } from "../types";
 import { STATUSES } from "@/features/manageTeam/constants";
 
 describe("determineUserAccess", () => {
-  it("cannot-find-account when user data is null", () => {
+  // --- Blocked states ---
+
+  it("blocked: cannot-find-account when user data is null", () => {
     const result = determineUserAccess(null);
-    expect(result.accessLevel).toBe("cannot-find-account");
-    expect(result.reason).toBe("User not found");
+    expect(result).toEqual({ status: "blocked", reason: "cannot-find-account" });
   });
 
-  it("account-deactivated regardless of roles", () => {
+  it("blocked: account-deactivated regardless of roles", () => {
     const userData: UserAccessData = {
       id: "1",
       status_uuid: STATUSES.inactive,
       is_admin: 1,
+      is_viewer: 1,
       account_manager_id: "am-1",
       driver_id: "d-1",
-      developer_id: null,
-    };
-
-    const result = determineUserAccess(userData);
-    expect(result.accessLevel).toBe("account-deactivated");
-  });
-
-  it("grants full access to admins", () => {
-    const userData: UserAccessData = {
-      id: "1",
-      status_uuid: null,
-      is_admin: 1,
-      account_manager_id: null,
-      driver_id: null,
-      developer_id: null,
-    };
-
-    const result = determineUserAccess(userData);
-    expect(result.accessLevel).toBe("full");
-  });
-
-  it("grants full access to account managers", () => {
-    const userData: UserAccessData = {
-      id: "1",
-      status_uuid: null,
-      is_admin: 0,
-      account_manager_id: "am-1",
-      driver_id: null,
-      developer_id: null,
-    };
-
-    const result = determineUserAccess(userData);
-    expect(result.accessLevel).toBe("full");
-  });
-
-  it("grants developer-only access to developers without admin/AM", () => {
-    const userData: UserAccessData = {
-      id: "1",
-      status_uuid: null,
-      is_admin: 0,
-      account_manager_id: null,
-      driver_id: null,
       developer_id: "dev-1",
     };
-
     const result = determineUserAccess(userData);
-    expect(result.accessLevel).toBe("developer-only");
+    expect(result).toEqual({ status: "blocked", reason: "account-deactivated" });
   });
 
-  it("grants full access to admin who is also a developer", () => {
-    const userData: UserAccessData = {
-      id: "1",
-      status_uuid: null,
-      is_admin: 1,
-      account_manager_id: null,
-      driver_id: null,
-      developer_id: "dev-1",
-    };
-
-    const result = determineUserAccess(userData);
-    expect(result.accessLevel).toBe("full");
-  });
-
-  it("grants full access to account manager who is also a developer", () => {
+  it("blocked: driver-only when only driver role", () => {
     const userData: UserAccessData = {
       id: "1",
       status_uuid: null,
       is_admin: 0,
-      account_manager_id: "am-1",
-      driver_id: null,
-      developer_id: "dev-1",
-    };
-
-    const result = determineUserAccess(userData);
-    expect(result.accessLevel).toBe("full");
-  });
-
-  it("blocks deactivated developer", () => {
-    const userData: UserAccessData = {
-      id: "1",
-      status_uuid: STATUSES.inactive,
-      is_admin: 0,
-      account_manager_id: null,
-      driver_id: null,
-      developer_id: "dev-1",
-    };
-
-    const result = determineUserAccess(userData);
-    expect(result.accessLevel).toBe("account-deactivated");
-  });
-
-  it("grants driver-only access to users with only driver role", () => {
-    const userData: UserAccessData = {
-      id: "1",
-      status_uuid: null,
-      is_admin: 0,
+      is_viewer: 0,
       account_manager_id: null,
       driver_id: "d-1",
       developer_id: null,
     };
-
     const result = determineUserAccess(userData);
-    expect(result.accessLevel).toBe("driver-only");
+    expect(result).toEqual({ status: "blocked", reason: "driver-only" });
   });
 
-  it("no-roles-assigned when no roles", () => {
+  it("blocked: no-roles-assigned when no roles at all", () => {
     const userData: UserAccessData = {
       id: "1",
       status_uuid: null,
       is_admin: 0,
+      is_viewer: 0,
       account_manager_id: null,
       driver_id: null,
       developer_id: null,
     };
-
     const result = determineUserAccess(userData);
-    expect(result.accessLevel).toBe("no-roles-assigned");
+    expect(result).toEqual({ status: "blocked", reason: "no-roles-assigned" });
+  });
+
+  // --- Single roles ---
+
+  it("active: admin only", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: null,
+      is_admin: 1,
+      is_viewer: 0,
+      account_manager_id: null,
+      driver_id: null,
+      developer_id: null,
+    };
+    const result = determineUserAccess(userData);
+    expect(result).toEqual({ status: "active", roles: ["admin"] });
+  });
+
+  it("active: manager only", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: null,
+      is_admin: 0,
+      is_viewer: 0,
+      account_manager_id: "am-1",
+      driver_id: null,
+      developer_id: null,
+    };
+    const result = determineUserAccess(userData);
+    expect(result).toEqual({ status: "active", roles: ["manager"] });
+  });
+
+  it("active: developer only", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: null,
+      is_admin: 0,
+      is_viewer: 0,
+      account_manager_id: null,
+      driver_id: null,
+      developer_id: "dev-1",
+    };
+    const result = determineUserAccess(userData);
+    expect(result).toEqual({ status: "active", roles: ["developer"] });
+  });
+
+  it("active: viewer only", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: null,
+      is_admin: 0,
+      is_viewer: 1,
+      account_manager_id: null,
+      driver_id: null,
+      developer_id: null,
+    };
+    const result = determineUserAccess(userData);
+    expect(result).toEqual({ status: "active", roles: ["viewer"] });
+  });
+
+  // --- Combined roles ---
+
+  it("active: admin + developer → both roles", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: null,
+      is_admin: 1,
+      is_viewer: 0,
+      account_manager_id: null,
+      driver_id: null,
+      developer_id: "dev-1",
+    };
+    const result = determineUserAccess(userData);
+    expect(result).toEqual({ status: "active", roles: ["admin", "developer"] });
+  });
+
+  it("active: manager + developer → both roles", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: null,
+      is_admin: 0,
+      is_viewer: 0,
+      account_manager_id: "am-1",
+      driver_id: null,
+      developer_id: "dev-1",
+    };
+    const result = determineUserAccess(userData);
+    expect(result).toEqual({ status: "active", roles: ["manager", "developer"] });
+  });
+
+  it("active: developer + viewer → both roles", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: null,
+      is_admin: 0,
+      is_viewer: 1,
+      account_manager_id: null,
+      driver_id: null,
+      developer_id: "dev-1",
+    };
+    const result = determineUserAccess(userData);
+    expect(result).toEqual({ status: "active", roles: ["developer", "viewer"] });
+  });
+
+  it("active: driver + viewer → viewer (driver ignored on web)", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: null,
+      is_admin: 0,
+      is_viewer: 1,
+      account_manager_id: null,
+      driver_id: "d-1",
+      developer_id: null,
+    };
+    const result = determineUserAccess(userData);
+    expect(result).toEqual({ status: "active", roles: ["viewer"] });
+  });
+
+  it("active: driver + developer → developer (driver ignored on web)", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: null,
+      is_admin: 0,
+      is_viewer: 0,
+      account_manager_id: null,
+      driver_id: "d-1",
+      developer_id: "dev-1",
+    };
+    const result = determineUserAccess(userData);
+    expect(result).toEqual({ status: "active", roles: ["developer"] });
+  });
+
+  it("active: all roles → all web roles", () => {
+    const userData: UserAccessData = {
+      id: "1",
+      status_uuid: null,
+      is_admin: 1,
+      is_viewer: 1,
+      account_manager_id: "am-1",
+      driver_id: "d-1",
+      developer_id: "dev-1",
+    };
+    const result = determineUserAccess(userData);
+    expect(result).toEqual({
+      status: "active",
+      roles: ["admin", "manager", "developer", "viewer"],
+    });
   });
 });

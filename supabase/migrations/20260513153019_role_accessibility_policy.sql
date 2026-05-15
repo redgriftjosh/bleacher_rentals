@@ -98,9 +98,6 @@ declare
     'WorkTrackers',
     'WorkTrackerTypeQboAccounts',
     'WorkTrackerTypes',
-    'ZoneQboClasses',
-    'ZoneStateProvinces',
-    'Zones',
     'AccountManagers'
   ];
 

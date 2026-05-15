@@ -201,6 +201,8 @@ const UsersCols = {
   role: column.integer,
   avatar_image_url: column.text,
   is_admin: column.integer,
+  is_viewer: column.integer,
+  is_developer_only: column.integer,
   created_at: column.text,
   expo_push_token: column.text,
 } satisfies PowerSyncColsFor<"Users">;
