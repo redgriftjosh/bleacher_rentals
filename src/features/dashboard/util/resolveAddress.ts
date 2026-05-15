@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import { Bleacher } from "../types";
+import { resolveLastKnownAddress } from "@/features/alerts/util/resolveLastKnownAddress";
 
 /**
  * Resolve the most recent address for a bleacher at a given date.
@@ -11,36 +12,23 @@ import { Bleacher } from "../types";
  * - Events use `address` (street); work trackers use `dropoffAddress` (street).
  */
 export function resolveAddress(bleacher: Bleacher, targetDate: string): string | null {
-  let bestEventDate: string | null = null;
-  let bestEventAddress: string | null = null;
+  const entries = [
+    ...bleacher.bleacherEvents
+      .map((ev) => {
+        const startDate = DateTime.fromISO(ev.eventStart).toISODate();
+        return startDate && ev.address
+          ? { date: startDate, street: ev.address, source: "event" as const }
+          : null;
+      })
+      .filter(Boolean) as { date: string; street: string; source: "event" }[],
+    ...bleacher.workTrackers
+      .filter((wt) => wt.date && wt.dropoffAddress)
+      .map((wt) => ({
+        date: wt.date,
+        street: wt.dropoffAddress!,
+        source: "work_tracker" as const,
+      })),
+  ];
 
-  for (const ev of bleacher.bleacherEvents) {
-    const startDate = DateTime.fromISO(ev.eventStart).toISODate();
-    if (!startDate || startDate > targetDate) continue;
-    if (!ev.address) continue;
-    if (!bestEventDate || startDate > bestEventDate) {
-      bestEventDate = startDate;
-      bestEventAddress = ev.address;
-    }
-  }
-
-  let bestWtDate: string | null = null;
-  let bestWtAddress: string | null = null;
-
-  for (const wt of bleacher.workTrackers) {
-    if (!wt.date || wt.date > targetDate) continue;
-    if (!wt.dropoffAddress) continue;
-    if (!bestWtDate || wt.date > bestWtDate) {
-      bestWtDate = wt.date;
-      bestWtAddress = wt.dropoffAddress;
-    }
-  }
-
-  // Both found: prefer the one with the later date, or event if same date
-  if (bestEventDate && bestWtDate) {
-    if (bestEventDate >= bestWtDate) return bestEventAddress;
-    return bestWtAddress;
-  }
-
-  return bestEventAddress ?? bestWtAddress;
+  return resolveLastKnownAddress(entries, targetDate);
 }

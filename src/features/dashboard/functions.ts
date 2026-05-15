@@ -273,6 +273,8 @@ export function updateCurrentEventAlerts() {
       >[0]["event"],
       workTrackers,
       addresses,
+      allBleacherEvents: bleacherEvents,
+      allEvents: events,
     });
   });
 

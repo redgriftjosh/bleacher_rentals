@@ -11,6 +11,7 @@ import {
   getAlertWindowEnd,
   parseDateLocal,
 } from "../../util/alertDateWindow";
+import { resolveLastKnownAddress } from "../../util/resolveLastKnownAddress";
 
 type EventBleacherDeliveryContext = {
   /** The specific BleacherEvent being checked. */
@@ -19,10 +20,14 @@ type EventBleacherDeliveryContext = {
   bleacher: Pick<Tables<"Bleachers">, "bleacher_number"> | null;
   /** The event this bleacher is assigned to (for address + start date). */
   event: Tables<"Events">;
-  /** All work trackers to search through. */
+  /** All work trackers for this bleacher. */
   workTrackers: Tables<"WorkTrackers">[];
-  /** All addresses, used to resolve dropoff_address_uuid → street. */
+  /** All addresses, used to resolve address UUIDs → street. */
   addresses: Tables<"Addresses">[];
+  /** All bleacher-event assignments for this bleacher (to check prior events). */
+  allBleacherEvents: Tables<"BleacherEvents">[];
+  /** All events (to resolve event addresses and dates). */
+  allEvents: Tables<"Events">[];
   useDateWindow?: boolean;
 };
 
@@ -46,9 +51,10 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
     event,
     workTrackers,
     addresses,
+    allBleacherEvents,
+    allEvents,
     useDateWindow,
   }: EventBleacherDeliveryContext): AlertPayload[] {
-    // Only flag booked events — quoted events don't need confirmed deliveries yet.
     if (!event.booked) return [];
 
     if (useDateWindow) {
@@ -57,31 +63,48 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
         return [];
     }
 
-    // No event address → can't check delivery location.
     if (!event.address_uuid) return [];
 
     const eventAddress = addresses.find((a) => a.id === event.address_uuid);
     if (!eventAddress?.street) return [];
 
     const eventStreet = eventAddress.street.trim().toLowerCase();
+    const targetDate = event.event_start.slice(0, 10);
 
-    // The delivery must arrive on or before event_start.
-    const deadline = parseDateLocal(event.event_start);
-
-    // Build a fast lookup: address_id → street
     const addressStreet = new Map(
       addresses.map((a) => [a.id, a.street.trim().toLowerCase()]),
     );
 
-    const hasDelivery = workTrackers.some((wt) => {
-      if (wt.bleacher_uuid !== bleacherEvent.bleacher_uuid) return false;
-      if (!wt.date) return false;
-      if (parseDateLocal(wt.date) > deadline) return false;
-      if (!wt.dropoff_address_uuid) return false;
-      return addressStreet.get(wt.dropoff_address_uuid) === eventStreet;
-    });
+    const bleacherUuid = bleacherEvent.bleacher_uuid;
 
-    if (hasDelivery) return [];
+    const wtEntries = workTrackers
+      .filter((wt) => wt.bleacher_uuid === bleacherUuid && wt.date && wt.dropoff_address_uuid)
+      .map((wt) => ({
+        date: wt.date!,
+        street: addressStreet.get(wt.dropoff_address_uuid!) ?? "",
+        source: "work_tracker" as const,
+      }))
+      .filter((e) => e.street);
+
+    const otherBleacherEventUuids = allBleacherEvents
+      .filter((be) => be.bleacher_uuid === bleacherUuid && be.id !== bleacherEvent.id)
+      .map((be) => be.event_uuid);
+
+    const eventEntries = allEvents
+      .filter((ev) => otherBleacherEventUuids.includes(ev.id) && ev.address_uuid)
+      .map((ev) => ({
+        date: ev.event_start.slice(0, 10),
+        street: addressStreet.get(ev.address_uuid!) ?? "",
+        source: "event" as const,
+      }))
+      .filter((e) => e.street);
+
+    const lastKnown = resolveLastKnownAddress(
+      [...wtEntries, ...eventEntries],
+      targetDate,
+    );
+
+    if (lastKnown === eventStreet) return [];
 
     const description = [event.event_name, eventAddress.street]
       .filter(Boolean)
@@ -95,7 +118,7 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
         entity_uuid: bleacherEvent.id,
         entity_type: "bleacher_event",
         title: this.title,
-        message: `${bleacherLabel} has no delivery work tracker to ${eventAddress.street} before ${deadline.toLocaleDateString()}.`,
+        message: `${bleacherLabel} has no delivery work tracker to ${eventAddress.street} before ${event.event_start.slice(0, 10)}.`,
         entity_description: description || null,
       },
     ];
@@ -153,7 +176,7 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
       resolvedOwner = eventMeta?.created_by_user_uuid ?? null;
     }
 
-    const { data: bleacherEvents, error: beError } = await supabase
+    const { data: thisEventBEs, error: beError } = await supabase
       .from("BleacherEvents")
       .select("*")
       .eq("event_uuid", eventUuid);
@@ -164,15 +187,49 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
       );
       return;
     }
-    if (!bleacherEvents?.length) return;
+    if (!thisEventBEs?.length) return;
 
     const bleacherUuids = [
       ...new Set(
-        bleacherEvents
+        thisEventBEs
           .map((be) => be.bleacher_uuid)
           .filter(Boolean) as string[],
       ),
     ];
+
+    // Fetch all bleacher-event assignments for these bleachers (not just this event)
+    const { data: allBleacherEvents, error: allBeError } = await supabase
+      .from("BleacherEvents")
+      .select("*")
+      .in("bleacher_uuid", bleacherUuids);
+    if (allBeError) {
+      console.error(
+        "[eventBleacherDelivery] Failed to fetch all BleacherEvents:",
+        allBeError,
+      );
+      return;
+    }
+
+    const relatedEventUuids = [
+      ...new Set(
+        (allBleacherEvents ?? [])
+          .map((be) => be.event_uuid)
+          .filter(Boolean) as string[],
+      ),
+    ];
+
+    const { data: allEvents, error: evError } = await supabase
+      .from("Events")
+      .select("*")
+      .in("id", relatedEventUuids);
+    if (evError) {
+      console.error(
+        "[eventBleacherDelivery] Failed to fetch Events:",
+        evError,
+      );
+      return;
+    }
+
     const { data: workTrackers, error: wtError } = await supabase
       .from("WorkTrackers")
       .select("*")
@@ -199,6 +256,9 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
 
     const addressUuids = new Set<string>();
     if (eventRow.address_uuid) addressUuids.add(eventRow.address_uuid);
+    (allEvents ?? []).forEach((ev) => {
+      if (ev.address_uuid) addressUuids.add(ev.address_uuid);
+    });
     (workTrackers ?? []).forEach((wt) => {
       if (wt.dropoff_address_uuid) addressUuids.add(wt.dropoff_address_uuid);
     });
@@ -217,7 +277,7 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
       return;
     }
 
-    for (const bleacherEvent of bleacherEvents) {
+    for (const bleacherEvent of thisEventBEs) {
       const bleacher = bleacherEvent.bleacher_uuid
         ? (bleacherMap.get(bleacherEvent.bleacher_uuid) ?? null)
         : null;
@@ -227,6 +287,8 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
         event: eventRow as Tables<"Events">,
         workTrackers: workTrackers ?? [],
         addresses: addresses ?? [],
+        allBleacherEvents: allBleacherEvents ?? [],
+        allEvents: allEvents ?? [],
         useDateWindow: true,
       });
       await this.sync(
@@ -313,10 +375,16 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
     }
     const bleacher = bleacherData ?? null;
 
+    const allBleacherEvents = rawBleacherEvents.map(
+      (row) => row as Tables<"BleacherEvents">,
+    );
+    const allEvents = rawBleacherEvents
+      .map((row) => (row as any).event as Tables<"Events"> | null)
+      .filter(Boolean) as Tables<"Events">[];
+
     const addressUuids = new Set<string>();
-    for (const row of rawBleacherEvents) {
-      const event = (row as any).event as Tables<"Events"> | null;
-      if (event?.address_uuid) addressUuids.add(event.address_uuid);
+    for (const ev of allEvents) {
+      if (ev.address_uuid) addressUuids.add(ev.address_uuid);
     }
     (workTrackers ?? []).forEach((wt) => {
       if (wt.dropoff_address_uuid) addressUuids.add(wt.dropoff_address_uuid);
@@ -340,7 +408,6 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
       const event = (row as any).event as Tables<"Events"> | null;
       if (!event) continue;
       const bleacherEvent = row as Tables<"BleacherEvents">;
-      // Resolve owner from the joined event row.
       const resolvedOwner = event.created_by_user_uuid ?? null;
       const alerts = this.evaluate({
         bleacherEvent,
@@ -348,6 +415,8 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
         event,
         workTrackers: workTrackers ?? [],
         addresses: addresses ?? [],
+        allBleacherEvents,
+        allEvents,
         useDateWindow: true,
       });
       await this.sync(
