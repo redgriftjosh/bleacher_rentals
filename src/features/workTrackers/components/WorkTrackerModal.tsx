@@ -13,7 +13,10 @@ import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";
-import { fetchBleachersForOptions, fetchDriverPaymentData } from "@/app/team/_lib/db";
+import {
+  fetchBleachersForOptions,
+  fetchDriverPaymentData,
+} from "@/app/team/_lib/db";
 import { toLatLngString, calculateDriverPay } from "../util";
 import RouteMapPreview from "./RouteMapPreview";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
@@ -31,7 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { buildTripStatusNotification } from "@/features/workTrackers/db/notifications";
 import BillOfLadingButton from "./billOfLading/BillOfLadingButton";
-import { eventBleacherDelivery } from "@/features/alerts/definitions/eventBleacherDelivery";
+import { eventBleacherDelivery } from "@/features/alerts/definitions/eventBleacherDelivery/eventBleacherDelivery.definition";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -53,17 +56,27 @@ export default function WorkTrackerModal({
   const [workTracker, setWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
     selectedWorkTracker,
   );
-  const pickupAddress = getAddressFromUuid(selectedWorkTracker?.pickup_address_uuid ?? null);
-  const dropoffAddress = getAddressFromUuid(selectedWorkTracker?.dropoff_address_uuid ?? null);
-  const [pickUpAddress, setPickUpAddress] = useState<AddressData | null>(pickupAddress);
-  const [dropOffAddress, setDropOffAddress] = useState<AddressData | null>(dropoffAddress);
+  const pickupAddress = getAddressFromUuid(
+    selectedWorkTracker?.pickup_address_uuid ?? null,
+  );
+  const dropoffAddress = getAddressFromUuid(
+    selectedWorkTracker?.dropoff_address_uuid ?? null,
+  );
+  const [pickUpAddress, setPickUpAddress] = useState<AddressData | null>(
+    pickupAddress,
+  );
+  const [dropOffAddress, setDropOffAddress] = useState<AddressData | null>(
+    dropoffAddress,
+  );
 
   const [payInput, setPayInput] = useState(
-    selectedWorkTracker?.pay_cents != null ? (selectedWorkTracker?.pay_cents / 100).toFixed(2) : "",
+    selectedWorkTracker?.pay_cents != null
+      ? (selectedWorkTracker?.pay_cents / 100).toFixed(2)
+      : "",
   );
-  const [initialStatus, setInitialStatus] = useState<Tables<"WorkTrackers">["status"]>(
-    selectedWorkTracker?.status ?? "draft",
-  );
+  const [initialStatus, setInitialStatus] = useState<
+    Tables<"WorkTrackers">["status"]
+  >(selectedWorkTracker?.status ?? "draft");
   const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
   const [showEditTypes, setShowEditTypes] = useState(false);
 
@@ -93,13 +106,19 @@ export default function WorkTrackerModal({
       return addr.address;
     }
     // Otherwise, build the full address
-    const parts = [addr.address, addr.city, addr.state, addr.postalCode].filter(Boolean);
+    const parts = [addr.address, addr.city, addr.state, addr.postalCode].filter(
+      Boolean,
+    );
     return parts.join(", ");
   };
 
   // Try lat/lng first, fallback to address string
-  const origin = toLatLngString(pickUpAddress ?? undefined) || formatAddressString(pickUpAddress);
-  const dest = toLatLngString(dropOffAddress ?? undefined) || formatAddressString(dropOffAddress);
+  const origin =
+    toLatLngString(pickUpAddress ?? undefined) ||
+    formatAddressString(pickUpAddress);
+  const dest =
+    toLatLngString(dropOffAddress ?? undefined) ||
+    formatAddressString(dropOffAddress);
 
   const distanceQueryEnabled = Boolean(origin && dest);
 
@@ -169,7 +188,9 @@ export default function WorkTrackerModal({
   });
 
   // Fetch driver payment data when driver is selected
-  const selectedDriver = drivers?.find((d) => d.driver_uuid === workTracker?.driver_uuid);
+  const selectedDriver = drivers?.find(
+    (d) => d.driver_uuid === workTracker?.driver_uuid,
+  );
   const {
     data: driverPaymentData,
     isLoading: isDriverPaymentLoading,
@@ -203,8 +224,11 @@ export default function WorkTrackerModal({
       workTrackerTypes.length > 0
     ) {
       const tripType =
-        workTrackerTypes.find((t) => t.display_name === "Trip") ?? workTrackerTypes[0];
-      setWorkTracker((prev) => (prev ? { ...prev, work_tracker_type_uuid: tripType.id } : prev));
+        workTrackerTypes.find((t) => t.display_name === "Trip") ??
+        workTrackerTypes[0];
+      setWorkTracker((prev) =>
+        prev ? { ...prev, work_tracker_type_uuid: tripType.id } : prev,
+      );
     }
   }, [workTrackerTypes, workTracker?.id, workTracker?.work_tracker_type_uuid]);
 
@@ -217,14 +241,18 @@ export default function WorkTrackerModal({
       // Default to "Trip" type for new work trackers
       const tripType = workTrackerTypes.find((t) => t.display_name === "Trip");
       if (tripType) {
-        setWorkTracker((prev) => ({ ...prev!, work_tracker_type_uuid: tripType.id }));
+        setWorkTracker((prev) => ({
+          ...prev!,
+          work_tracker_type_uuid: tripType.id,
+        }));
       }
     } else if (fetchedWorkTracker) {
       console.log("fetchedWorkTracker", fetchedWorkTracker);
       setWorkTracker(fetchedWorkTracker.workTracker);
       setInitialStatus(fetchedWorkTracker.workTracker?.status ?? "draft");
       setPayInput(
-        fetchedWorkTracker.workTracker && fetchedWorkTracker.workTracker.pay_cents != null
+        fetchedWorkTracker.workTracker &&
+          fetchedWorkTracker.workTracker.pay_cents != null
           ? (fetchedWorkTracker.workTracker.pay_cents / 100).toFixed(2)
           : "",
       );
@@ -256,19 +284,30 @@ export default function WorkTrackerModal({
                 ? Math.round(leg.distanceMeters)
                 : workTracker.distance_meters,
             drive_minutes:
-              leg?.durationInTrafficSeconds != null || leg?.durationSeconds != null
-                ? Math.round((leg.durationInTrafficSeconds ?? leg.durationSeconds!) / 60)
+              leg?.durationInTrafficSeconds != null ||
+              leg?.durationSeconds != null
+                ? Math.round(
+                    (leg.durationInTrafficSeconds ?? leg.durationSeconds!) / 60,
+                  )
                 : workTracker.drive_minutes,
           }
         : workTracker;
-      await saveWorkTracker(trackerToSave, pickUpAddress, dropOffAddress, supabase, {
-        previousStatus: initialStatus,
-        driverUserUuid: selectedDriver?.user_uuid ?? null,
-        previousPickupAddress: pickupAddress?.address ?? "an unknown pickup location",
-        previousPickupCity: pickupAddress?.city ?? "",
-        previousDropoffAddress: dropoffAddress?.address ?? "an unknown dropoff location",
-        previousDropoffCity: dropoffAddress?.city ?? "",
-      });
+      await saveWorkTracker(
+        trackerToSave,
+        pickUpAddress,
+        dropOffAddress,
+        supabase,
+        {
+          previousStatus: initialStatus,
+          driverUserUuid: selectedDriver?.user_uuid ?? null,
+          previousPickupAddress:
+            pickupAddress?.address ?? "an unknown pickup location",
+          previousPickupCity: pickupAddress?.city ?? "",
+          previousDropoffAddress:
+            dropoffAddress?.address ?? "an unknown dropoff location",
+          previousDropoffCity: dropoffAddress?.city ?? "",
+        },
+      );
       // Re-evaluate bleacher delivery alerts for this bleacher's events
       await eventBleacherDelivery.syncForBleacher(
         trackerToSave?.bleacher_uuid ?? null,
@@ -283,9 +322,14 @@ export default function WorkTrackerModal({
         await FetchDashboardBleachers(supabase);
       } catch {}
       // Invalidate this specific work tracker's cache so re-opening shows fresh data
-      await queryClient.invalidateQueries({ queryKey: ["workTracker", workTracker?.id] });
+      await queryClient.invalidateQueries({
+        queryKey: ["workTracker", workTracker?.id],
+      });
       // Optionally refresh any active work-tracker-specific queries used elsewhere
-      await queryClient.invalidateQueries({ queryKey: ["work-trackers"], refetchType: "active" });
+      await queryClient.invalidateQueries({
+        queryKey: ["work-trackers"],
+        refetchType: "active",
+      });
       setSelectedWorkTracker(null);
       setSelectedBlock(null);
     } catch (error) {
@@ -308,15 +352,23 @@ export default function WorkTrackerModal({
         driverUserUuid: selectedDriver?.user_uuid ?? null,
         driverUuid: workTracker.driver_uuid,
         pickupAddress:
-          pickUpAddress?.address ?? pickupAddress?.address ?? "an unknown pickup location",
+          pickUpAddress?.address ??
+          pickupAddress?.address ??
+          "an unknown pickup location",
         pickupCity: pickUpAddress?.city ?? pickupAddress?.city ?? "",
         dropoffAddress:
-          dropOffAddress?.address ?? dropoffAddress?.address ?? "an unknown dropoff location",
+          dropOffAddress?.address ??
+          dropoffAddress?.address ??
+          "an unknown dropoff location",
         dropoffCity: dropOffAddress?.city ?? dropoffAddress?.city ?? "",
         date: workTracker.date,
       });
       // Re-evaluate bleacher delivery alerts for this bleacher's events
-      await eventBleacherDelivery.syncForBleacher(workTracker.bleacher_uuid, null, supabase);
+      await eventBleacherDelivery.syncForBleacher(
+        workTracker.bleacher_uuid,
+        null,
+        supabase,
+      );
       // Refresh bleachers directly into the zustand store so Pixi updates without remounting
       try {
         const { FetchDashboardBleachers } =
@@ -324,7 +376,10 @@ export default function WorkTrackerModal({
         await FetchDashboardBleachers(supabase);
       } catch {}
       // Optionally refresh any active work-tracker-specific queries used elsewhere
-      await queryClient.invalidateQueries({ queryKey: ["work-trackers"], refetchType: "active" });
+      await queryClient.invalidateQueries({
+        queryKey: ["work-trackers"],
+        refetchType: "active",
+      });
       setSelectedWorkTracker(null);
       setSelectedBlock(null);
     } catch (error) {
@@ -359,19 +414,25 @@ export default function WorkTrackerModal({
 
   const handleCalculatePay = () => {
     if (!driverPaymentData) {
-      createErrorToast(["Cannot calculate pay: Driver payment data not loaded"]);
+      createErrorToast([
+        "Cannot calculate pay: Driver payment data not loaded",
+      ]);
       return;
     }
 
     if (!leg) {
-      createErrorToast(["Cannot calculate pay: Distance/duration data not available"]);
+      createErrorToast([
+        "Cannot calculate pay: Distance/duration data not available",
+      ]);
       return;
     }
 
     const amount = calculateDriverPay(driverPaymentData, leg);
 
     if (amount === null || amount === 0) {
-      createErrorToast(["Cannot calculate pay: Missing distance or duration data"]);
+      createErrorToast([
+        "Cannot calculate pay: Missing distance or duration data",
+      ]);
       return;
     }
 
@@ -390,10 +451,15 @@ export default function WorkTrackerModal({
   const saveNotificationPreview = buildTripStatusNotification({
     previousStatus: workTracker?.id === "-1" ? "draft" : initialStatus,
     nextStatus: workTracker?.status ?? "draft",
-    pickupAddress: pickUpAddress?.address ?? pickupAddress?.address ?? "an unknown pickup location",
+    pickupAddress:
+      pickUpAddress?.address ??
+      pickupAddress?.address ??
+      "an unknown pickup location",
     pickupCity: pickUpAddress?.city ?? pickupAddress?.city ?? "",
     dropoffAddress:
-      dropOffAddress?.address ?? dropoffAddress?.address ?? "an unknown dropoff location",
+      dropOffAddress?.address ??
+      dropoffAddress?.address ??
+      "an unknown dropoff location",
     dropoffCity: dropOffAddress?.city ?? dropoffAddress?.city ?? "",
     date: workTracker?.date ?? null,
   });
@@ -435,7 +501,9 @@ export default function WorkTrackerModal({
           >
             <div className="flex flex-row justify-between items-start">
               <h2 className="text-sm font-semibold mb-2">
-                {selectedWorkTracker.id === "-1" ? "Create Work Tracker" : "Edit Work Tracker"}
+                {selectedWorkTracker.id === "-1"
+                  ? "Create Work Tracker"
+                  : "Edit Work Tracker"}
               </h2>
               <X
                 className="-mt-1 cursor-pointer text-black/30 hover:text-black hover:drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] transition-all duration-200"
@@ -474,7 +542,9 @@ export default function WorkTrackerModal({
                           bleacher_uuid: id,
                         }))
                       }
-                      placeholder={isBleachersLoading ? "Loading..." : "Select Bleacher"}
+                      placeholder={
+                        isBleachersLoading ? "Loading..." : "Select Bleacher"
+                      }
                     />
                   </div>
                 </div>
@@ -546,7 +616,9 @@ export default function WorkTrackerModal({
                       }));
                     }}
                     canEdit={true}
-                    workTrackerId={workTracker?.id !== "-1" ? workTracker?.id : undefined}
+                    workTrackerId={
+                      workTracker?.id !== "-1" ? workTracker?.id : undefined
+                    }
                   />
                 </div>
                 <label className={labelClassName}>Driver Notes</label>
@@ -605,7 +677,10 @@ export default function WorkTrackerModal({
                       placeholder="Pickup Time"
                       value={workTracker?.pickup_time ?? ""}
                       onChange={(e) =>
-                        setWorkTracker((prev) => ({ ...prev!, pickup_time: e.target.value }))
+                        setWorkTracker((prev) => ({
+                          ...prev!,
+                          pickup_time: e.target.value,
+                        }))
                       }
                     />
                     <label className={labelClassName}>Pickup POC</label>
@@ -615,7 +690,10 @@ export default function WorkTrackerModal({
                       placeholder="Pickup POC"
                       value={workTracker?.pickup_poc ?? ""}
                       onChange={(e) =>
-                        setWorkTracker((prev) => ({ ...prev!, pickup_poc: e.target.value }))
+                        setWorkTracker((prev) => ({
+                          ...prev!,
+                          pickup_poc: e.target.value,
+                        }))
                       }
                     />
                     <label className={labelClassName}>Pickup Address</label>
@@ -632,7 +710,9 @@ export default function WorkTrackerModal({
                       />
                       <Link className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer" />
                     </div>
-                    <label className={labelClassName}>Pickup Instructions</label>
+                    <label className={labelClassName}>
+                      Pickup Instructions
+                    </label>
                     <textarea
                       className="w-full text-sm border p-1 rounded bg-white"
                       placeholder="Pickup Instructions"
@@ -656,7 +736,9 @@ export default function WorkTrackerModal({
                           }))
                         }
                       />
-                      <span className="text-sm font-medium text-gray-700">Teardown Required</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Teardown Required
+                      </span>
                     </label>
                   </div>
 
@@ -669,7 +751,10 @@ export default function WorkTrackerModal({
                       placeholder="Dropoff Time"
                       value={workTracker?.dropoff_time ?? ""}
                       onChange={(e) =>
-                        setWorkTracker((prev) => ({ ...prev!, dropoff_time: e.target.value }))
+                        setWorkTracker((prev) => ({
+                          ...prev!,
+                          dropoff_time: e.target.value,
+                        }))
                       }
                     />
                     <label className={labelClassName}>Dropoff POC</label>
@@ -679,7 +764,10 @@ export default function WorkTrackerModal({
                       placeholder="Dropoff POC"
                       value={workTracker?.dropoff_poc ?? ""}
                       onChange={(e) =>
-                        setWorkTracker((prev) => ({ ...prev!, dropoff_poc: e.target.value }))
+                        setWorkTracker((prev) => ({
+                          ...prev!,
+                          dropoff_poc: e.target.value,
+                        }))
                       }
                     />
                     <label className={labelClassName}>Dropoff Address</label>
@@ -693,7 +781,9 @@ export default function WorkTrackerModal({
                       }
                       initialValue={dropOffAddress?.address || ""}
                     />
-                    <label className={labelClassName}>Dropoff Instructions</label>
+                    <label className={labelClassName}>
+                      Dropoff Instructions
+                    </label>
                     <textarea
                       className="w-full text-sm border p-1 rounded bg-white"
                       placeholder="Dropoff Instructions"
@@ -717,7 +807,9 @@ export default function WorkTrackerModal({
                           }))
                         }
                       />
-                      <span className="text-sm font-medium text-gray-700">Setup Required</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Setup Required
+                      </span>
                     </label>
                   </div>
                 </div>
@@ -764,25 +856,36 @@ export default function WorkTrackerModal({
         </div>
       )}
 
-      <EditWorkTrackerTypesModal isOpen={showEditTypes} onClose={() => setShowEditTypes(false)} />
+      <EditWorkTrackerTypesModal
+        isOpen={showEditTypes}
+        onClose={() => setShowEditTypes(false)}
+      />
 
-      <Dialog open={showSaveConfirmModal} onOpenChange={setShowSaveConfirmModal}>
+      <Dialog
+        open={showSaveConfirmModal}
+        onOpenChange={setShowSaveConfirmModal}
+      >
         <DialogContent className="max-w-md z-[2101]">
           <DialogHeader>
             <DialogTitle>Save Work Tracker</DialogTitle>
           </DialogHeader>
 
           <p className="text-sm text-gray-600">
-            Saving this work tracker may notify the driver. This is the notification preview:
+            Saving this work tracker may notify the driver. This is the
+            notification preview:
           </p>
 
           {saveNotificationPreview ? (
             <div className="rounded border border-blue-200 bg-blue-50 p-3">
-              <p className="text-xs font-semibold text-blue-800">Driver notification preview</p>
+              <p className="text-xs font-semibold text-blue-800">
+                Driver notification preview
+              </p>
               <p className="mt-1 text-sm font-semibold text-blue-900">
                 {saveNotificationPreview.title}
               </p>
-              <p className="text-sm text-blue-900">{saveNotificationPreview.body}</p>
+              <p className="text-sm text-blue-900">
+                {saveNotificationPreview.body}
+              </p>
             </div>
           ) : (
             <div className="rounded border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">

@@ -16,7 +16,7 @@ import { Tables } from "../../../database.types";
 import { DashboardBleacher } from "../dashboard/types";
 import { eventRequirements } from "@/features/alerts/definitions/eventRequirements/eventRequirements.definition";
 import { schedulingConflicts } from "@/features/alerts/definitions/schedulingConflicts";
-import { eventBleacherDelivery } from "@/features/alerts/definitions/eventBleacherDelivery";
+import { eventBleacherDelivery } from "@/features/alerts/definitions/eventBleacherDelivery/eventBleacherDelivery.definition";
 import { useWorkTrackersStore } from "@/state/workTrackersStore";
 import { useAddressesStore } from "@/state/addressesStore";
 

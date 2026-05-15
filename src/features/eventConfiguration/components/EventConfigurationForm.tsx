@@ -28,7 +28,7 @@ import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient"
 import { useUsersStore } from "@/state/userStore";
 import { eventRequirements } from "@/features/alerts/definitions/eventRequirements/eventRequirements.definition";
 import { schedulingConflicts } from "@/features/alerts/definitions/schedulingConflicts";
-import { eventBleacherDelivery } from "@/features/alerts/definitions/eventBleacherDelivery";
+import { eventBleacherDelivery } from "@/features/alerts/definitions/eventBleacherDelivery/eventBleacherDelivery.definition";
 import { useBleachersStore } from "@/state/bleachersStore";
 
 const tabs = ["Core", "Details", "Alerts"] as const;

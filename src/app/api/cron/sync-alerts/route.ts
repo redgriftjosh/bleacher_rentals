@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "../../../../../database.types";
-import { eventBleacherDelivery } from "@/features/alerts/definitions/eventBleacherDelivery";
-import { getAlertWindowStart, getAlertWindowEnd } from "@/features/alerts/util/alertDateWindow";
+import { eventBleacherDelivery } from "@/features/alerts/definitions/eventBleacherDelivery/eventBleacherDelivery.definition";
+import {
+  getAlertWindowStart,
+  getAlertWindowEnd,
+} from "@/features/alerts/util/alertDateWindow";
 
 /**
  * Cron: runs daily at 6am ET (10am UTC summer / 11am UTC winter).
@@ -70,5 +73,8 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ synced, errors: errors.length ? errors : undefined });
+  return NextResponse.json({
+    synced,
+    errors: errors.length ? errors : undefined,
+  });
 }

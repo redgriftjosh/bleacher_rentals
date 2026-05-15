@@ -1,9 +1,16 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { AlertDefinition } from "../AlertDefinition";
-import { AlertEntityType, AlertPayload } from "../types";
-import { Database, Tables } from "../../../../database.types";
-import { syncAlertsForEntity, deleteAlertsForEntity } from "../util/syncAlerts";
-import { getAlertWindowStart, getAlertWindowEnd, parseDateLocal } from "../util/alertDateWindow";
+import { AlertDefinition } from "../../AlertDefinition";
+import { AlertEntityType, AlertPayload } from "../../types";
+import { Database, Tables } from "../../../../../database.types";
+import {
+  syncAlertsForEntity,
+  deleteAlertsForEntity,
+} from "../../util/syncAlerts";
+import {
+  getAlertWindowStart,
+  getAlertWindowEnd,
+  parseDateLocal,
+} from "../../util/alertDateWindow";
 
 type EventBleacherDeliveryContext = {
   /** The specific BleacherEvent being checked. */
@@ -16,6 +23,7 @@ type EventBleacherDeliveryContext = {
   workTrackers: Tables<"WorkTrackers">[];
   /** All addresses, used to resolve dropoff_address_uuid → street. */
   addresses: Tables<"Addresses">[];
+  useDateWindow?: boolean;
 };
 
 /**
@@ -38,13 +46,16 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
     event,
     workTrackers,
     addresses,
+    useDateWindow,
   }: EventBleacherDeliveryContext): AlertPayload[] {
     // Only flag booked events — quoted events don't need confirmed deliveries yet.
     if (!event.booked) return [];
 
-    // Only alert for events starting within the current window (today → next Sunday).
-    const eventDate = parseDateLocal(event.event_start);
-    if (eventDate < getAlertWindowStart() || eventDate > getAlertWindowEnd()) return [];
+    if (useDateWindow) {
+      const eventDate = parseDateLocal(event.event_start);
+      if (eventDate < getAlertWindowStart() || eventDate > getAlertWindowEnd())
+        return [];
+    }
 
     // No event address → can't check delivery location.
     if (!event.address_uuid) return [];
@@ -58,7 +69,9 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
     const deadline = parseDateLocal(event.event_start);
 
     // Build a fast lookup: address_id → street
-    const addressStreet = new Map(addresses.map((a) => [a.id, a.street.trim().toLowerCase()]));
+    const addressStreet = new Map(
+      addresses.map((a) => [a.id, a.street.trim().toLowerCase()]),
+    );
 
     const hasDelivery = workTrackers.some((wt) => {
       if (wt.bleacher_uuid !== bleacherEvent.bleacher_uuid) return false;
@@ -70,8 +83,12 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
 
     if (hasDelivery) return [];
 
-    const description = [event.event_name, eventAddress.street].filter(Boolean).join(" — ");
-    const bleacherLabel = bleacher ? `Bleacher #${bleacher.bleacher_number}` : "A bleacher";
+    const description = [event.event_name, eventAddress.street]
+      .filter(Boolean)
+      .join(" — ");
+    const bleacherLabel = bleacher
+      ? `Bleacher #${bleacher.bleacher_number}`
+      : "A bleacher";
 
     return [
       {
@@ -103,7 +120,10 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
     );
   }
 
-  async delete(entityUuid: string, supabase: SupabaseClient<Database>): Promise<void> {
+  async delete(
+    entityUuid: string,
+    supabase: SupabaseClient<Database>,
+  ): Promise<void> {
     await deleteAlertsForEntity(this.title, entityUuid, supabase);
   }
 
@@ -114,7 +134,10 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
    */
   async syncForEvent(
     eventUuid: string,
-    eventRow: Pick<Tables<"Events">, "booked" | "address_uuid" | "event_start" | "event_name">,
+    eventRow: Pick<
+      Tables<"Events">,
+      "booked" | "address_uuid" | "event_start" | "event_name"
+    >,
     saverUserUuid: string | null,
     ownerUserUuid: string | null,
     supabase: SupabaseClient<Database>,
@@ -135,20 +158,30 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
       .select("*")
       .eq("event_uuid", eventUuid);
     if (beError) {
-      console.error("[eventBleacherDelivery] Failed to fetch BleacherEvents:", beError);
+      console.error(
+        "[eventBleacherDelivery] Failed to fetch BleacherEvents:",
+        beError,
+      );
       return;
     }
     if (!bleacherEvents?.length) return;
 
     const bleacherUuids = [
-      ...new Set(bleacherEvents.map((be) => be.bleacher_uuid).filter(Boolean) as string[]),
+      ...new Set(
+        bleacherEvents
+          .map((be) => be.bleacher_uuid)
+          .filter(Boolean) as string[],
+      ),
     ];
     const { data: workTrackers, error: wtError } = await supabase
       .from("WorkTrackers")
       .select("*")
       .in("bleacher_uuid", bleacherUuids);
     if (wtError) {
-      console.error("[eventBleacherDelivery] Failed to fetch WorkTrackers:", wtError);
+      console.error(
+        "[eventBleacherDelivery] Failed to fetch WorkTrackers:",
+        wtError,
+      );
       return;
     }
 
@@ -157,7 +190,10 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
       .select("id, bleacher_number")
       .in("id", bleacherUuids);
     if (blError) {
-      console.error("[eventBleacherDelivery] Failed to fetch Bleachers:", blError);
+      console.error(
+        "[eventBleacherDelivery] Failed to fetch Bleachers:",
+        blError,
+      );
     }
     const bleacherMap = new Map((bleachersData ?? []).map((b) => [b.id, b]));
 
@@ -174,7 +210,10 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
           .in("id", [...addressUuids])
       : { data: [], error: null };
     if (addrError) {
-      console.error("[eventBleacherDelivery] Failed to fetch Addresses:", addrError);
+      console.error(
+        "[eventBleacherDelivery] Failed to fetch Addresses:",
+        addrError,
+      );
       return;
     }
 
@@ -188,6 +227,7 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
         event: eventRow as Tables<"Events">,
         workTrackers: workTrackers ?? [],
         addresses: addresses ?? [],
+        useDateWindow: true,
       });
       await this.sync(
         bleacherEvent.id,
@@ -204,13 +244,19 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
    * Deletes all delivery alerts for every BleacherEvent belonging to an event.
    * Call this before deleting an event.
    */
-  async deleteForEvent(eventUuid: string, supabase: SupabaseClient<Database>): Promise<void> {
+  async deleteForEvent(
+    eventUuid: string,
+    supabase: SupabaseClient<Database>,
+  ): Promise<void> {
     const { data: bleacherEvents, error } = await supabase
       .from("BleacherEvents")
       .select("id")
       .eq("event_uuid", eventUuid);
     if (error) {
-      console.error("[eventBleacherDelivery] Failed to fetch BleacherEvents:", error);
+      console.error(
+        "[eventBleacherDelivery] Failed to fetch BleacherEvents:",
+        error,
+      );
       return;
     }
     for (const be of bleacherEvents ?? []) {
@@ -234,7 +280,10 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
       .select("*, event:Events(*)")
       .eq("bleacher_uuid", bleacherUuid);
     if (beError) {
-      console.error("[eventBleacherDelivery] Failed to fetch BleacherEvents:", beError);
+      console.error(
+        "[eventBleacherDelivery] Failed to fetch BleacherEvents:",
+        beError,
+      );
       return;
     }
     if (!rawBleacherEvents?.length) return;
@@ -244,7 +293,10 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
       .select("*")
       .eq("bleacher_uuid", bleacherUuid);
     if (wtError) {
-      console.error("[eventBleacherDelivery] Failed to fetch WorkTrackers:", wtError);
+      console.error(
+        "[eventBleacherDelivery] Failed to fetch WorkTrackers:",
+        wtError,
+      );
       return;
     }
 
@@ -254,7 +306,10 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
       .eq("id", bleacherUuid)
       .single();
     if (blError) {
-      console.error("[eventBleacherDelivery] Failed to fetch Bleacher:", blError);
+      console.error(
+        "[eventBleacherDelivery] Failed to fetch Bleacher:",
+        blError,
+      );
     }
     const bleacher = bleacherData ?? null;
 
@@ -274,7 +329,10 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
           .in("id", [...addressUuids])
       : { data: [], error: null };
     if (addrError) {
-      console.error("[eventBleacherDelivery] Failed to fetch Addresses:", addrError);
+      console.error(
+        "[eventBleacherDelivery] Failed to fetch Addresses:",
+        addrError,
+      );
       return;
     }
 
@@ -290,6 +348,7 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
         event,
         workTrackers: workTrackers ?? [],
         addresses: addresses ?? [],
+        useDateWindow: true,
       });
       await this.sync(
         bleacherEvent.id,
