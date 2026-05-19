@@ -155,7 +155,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
     "driver-calendar",
     "configuration",
   ],
-  manager: [
+  account_manager: [
     "dashboard",
     "quotes-bookings",
     "assets",

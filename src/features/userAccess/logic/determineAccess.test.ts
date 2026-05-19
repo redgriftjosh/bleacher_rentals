@@ -69,7 +69,7 @@ describe("determineUserAccess", () => {
     expect(result).toEqual({ status: "active", roles: ["admin"] });
   });
 
-  it("active: manager only", () => {
+  it("active: account_manager only", () => {
     const userData: UserAccessData = {
       id: "1",
       status_uuid: null,
@@ -80,7 +80,7 @@ describe("determineUserAccess", () => {
       developer_id: null,
     };
     const result = determineUserAccess(userData);
-    expect(result).toEqual({ status: "active", roles: ["manager"] });
+    expect(result).toEqual({ status: "active", roles: ["account_manager"] });
   });
 
   it("active: developer only", () => {
@@ -127,7 +127,7 @@ describe("determineUserAccess", () => {
     expect(result).toEqual({ status: "active", roles: ["admin", "developer"] });
   });
 
-  it("active: manager + developer → both roles", () => {
+  it("active: account manager + developer → both roles", () => {
     const userData: UserAccessData = {
       id: "1",
       status_uuid: null,
@@ -138,7 +138,7 @@ describe("determineUserAccess", () => {
       developer_id: "dev-1",
     };
     const result = determineUserAccess(userData);
-    expect(result).toEqual({ status: "active", roles: ["manager", "developer"] });
+    expect(result).toEqual({ status: "active", roles: ["account_manager", "developer"] });
   });
 
   it("active: developer + viewer → both roles", () => {
@@ -196,7 +196,7 @@ describe("determineUserAccess", () => {
     const result = determineUserAccess(userData);
     expect(result).toEqual({
       status: "active",
-      roles: ["admin", "manager", "developer", "viewer"],
+      roles: ["admin", "account_manager", "developer", "viewer"],
     });
   });
 });

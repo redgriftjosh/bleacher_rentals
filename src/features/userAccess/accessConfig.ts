@@ -30,6 +30,7 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
       "/inspection-questions",
       "/quickbooks",
       "/event-dashboard",
+      "/roadmap",
     ],
     showSidebar: true,
   },
