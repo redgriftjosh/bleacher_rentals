@@ -110,6 +110,7 @@ export async function createUser(
         last_name: state.lastName,
         email: state.email.toLowerCase(),
         is_admin: state.isAdmin,
+        is_viewer: state.isViewer,
         status_uuid: STATUSES.invited, // Active
       })
       .select("id")
@@ -195,6 +196,7 @@ export async function updateUser(
         last_name: state.lastName,
         email: state.email.toLowerCase(),
         is_admin: state.isAdmin,
+        is_viewer: state.isViewer,
       })
       .eq("id", userUuid);
 
@@ -454,6 +456,7 @@ export async function fetchUserById(
     // Build role tabs array
     const roleTabs: TeamRoleTab[] = [];
     if (user.is_admin) roleTabs.push("administrator");
+    if (user.is_viewer) roleTabs.push("viewer");
 
     // Initialize result object
     const result: Partial<CurrentUserState> = {
@@ -461,6 +464,7 @@ export async function fetchUserById(
       lastName: user.last_name || "",
       email: user.email,
       isAdmin: user.is_admin,
+      isViewer: Boolean(user.is_viewer),
       statusUuid: user.status_uuid,
       phoneNumber: user.phone,
       isDriver: false,

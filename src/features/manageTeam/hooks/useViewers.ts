@@ -6,7 +6,7 @@ import { sql } from "@powersync/kysely-driver";
 import { filterBySearch } from "../util/filterBySearch";
 import { useSearchQueryStore } from "../state/useSearchQueryStore";
 
-type Admin = {
+type Viewer = {
   userUuid: string;
   firstName: string | null;
   lastName: string | null;
@@ -14,16 +14,16 @@ type Admin = {
   clerkUserId: string | null;
   createdAt: string | null;
   statusUuid: string | null;
+  isAdmin: number;
   isAccountManager: number;
   isDriver: number;
   isDeveloper: number;
-  isViewer: number;
 };
 
 /**
- * Hook to fetch all account managers with their account_manager_id from the database
+ * Hook to fetch all viewers from the database
  */
-export function useAdmins(): Admin[] {
+export function useViewers(): Viewer[] {
   const compiled = db
     .selectFrom("Users as u")
     .leftJoin("AccountManagers as am", (join) =>
@@ -44,19 +44,18 @@ export function useAdmins(): Admin[] {
       "u.created_at as createdAt",
       "u.status_uuid as statusUuid",
 
-      // booleans derived from whether the left-joined row exists
+      sql<number>`case when u.is_admin = 1 then 1 else 0 end`.as("isAdmin"),
       sql<number>`case when am.id is null then 0 else 1 end`.as("isAccountManager"),
       sql<number>`case when d.id is null then 0 else 1 end`.as("isDriver"),
       sql<number>`case when dev.id is null then 0 else 1 end`.as("isDeveloper"),
-      sql<number>`case when u.is_viewer = 1 then 1 else 0 end`.as("isViewer"),
     ])
-    .where("u.is_admin", "=", 1)
+    .where("u.is_viewer", "=", 1)
     .groupBy(["u.id", "u.first_name", "u.last_name", "u.email", "u.clerk_user_id"])
     .orderBy("u.first_name", "asc")
     .orderBy("u.last_name", "asc")
     .compile();
 
-  const { data } = useTypedQuery(compiled, expect<Admin>());
+  const { data } = useTypedQuery(compiled, expect<Viewer>());
   const searchQuery = useSearchQueryStore((s) => s.searchQuery);
 
   return filterBySearch(data ?? [], searchQuery);

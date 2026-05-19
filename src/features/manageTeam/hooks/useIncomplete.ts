@@ -43,6 +43,7 @@ export function useIncomplete(): IncompleteUser[] {
     .where((eb) =>
       eb.and([
         eb("u.is_admin", "=", 0),
+        eb("u.is_viewer", "=", 0),
         eb("am.id", "is", null),
         eb("d.id", "is", null),
         eb("dev.id", "is", null),
