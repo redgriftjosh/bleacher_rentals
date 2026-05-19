@@ -1,39 +1,63 @@
 -- =============================================================
--- RBAC Zero-Trust RLS Migration
+-- RBAC Zero-Trust RLS Migration (multi-role)
 --
 -- Principle: everything is denied unless explicitly allowed.
--- Roles: admin > manager > developer > viewer > (none = blocked)
+-- Roles are ADDITIVE — a user can hold multiple roles at once.
+-- get_user_roles() returns text[] of all active roles.
 --
--- Users table gets a special self-read policy to avoid recursion.
+-- Role detection:
+--   admin           → Users.is_admin = true
+--   account_manager → active row in AccountManagers
+--   developer       → active row in Developers
+--   viewer          → Users.is_viewer = true
+--
+-- Viewer is read-only (SELECT only).
+-- Users table gets special self-read policy to avoid recursion.
 -- _powersync_unhandled is excluded (Supabase internal).
 -- =============================================================
 
 -- =====================
--- 1. Helper: get_user_role()
---    SECURITY DEFINER so it can read Users bypassing RLS.
---    Returns: 'admin' | 'manager' | 'developer' | 'viewer' | NULL
+-- 0. Ensure is_viewer column exists (needed by get_user_roles below)
 -- =====================
-create or replace function public.get_user_role()
-returns text
+alter table public."Users"
+  add column if not exists is_viewer boolean not null default false;
+
+-- =====================
+-- 1. Helper: get_user_roles()
+--    SECURITY DEFINER so it can read Users bypassing RLS.
+--    Returns text[] of all active roles for the current user.
+-- =====================
+create or replace function public.get_user_roles()
+returns text[]
 language sql
 stable
 security definer
 set search_path = public
 as $$
-  select
-    case
-      when u.is_admin = true then 'admin'
-      when exists (
-        select 1 from "AccountManagers" am
-        where am.user_uuid = u.id and am.is_active = true
-      ) then 'manager'
-      when exists (
-        select 1 from "Developers" d
-        where d.user_uuid = u.id and d.is_active = true
-      ) then 'developer'
-      when u.clerk_user_id is not null then 'viewer'
-      else null
-    end
+  select coalesce(
+    (
+      select array_agg(role) from (
+        select 'admin' as role
+          where u.is_admin = true
+        union all
+        select 'account_manager'
+          where exists (
+            select 1 from "AccountManagers" am
+            where am.user_uuid = u.id and am.is_active = true
+          )
+        union all
+        select 'developer'
+          where exists (
+            select 1 from "Developers" d
+            where d.user_uuid = u.id and d.is_active = true
+          )
+        union all
+        select 'viewer'
+          where u.is_viewer = true
+      ) roles
+    ),
+    '{}'::text[]
+  )
   from "Users" u
   where u.clerk_user_id = (auth.jwt() ->> 'sub')
   limit 1;
@@ -61,7 +85,7 @@ declare
     'RoadmapAttachments'
   ];
 
-  manager_tables text[] := array[
+  account_manager_tables text[] := array[
     'Addresses',
     'Alerts',
     'BleacherEvents',
@@ -125,9 +149,8 @@ declare
     '_powersync_unhandled'
   ];
 
-  is_dev boolean;
-  is_mgr boolean;
-  is_vwr boolean;
+  select_roles text[];
+  write_roles  text[];
 begin
   for tbl in
     select tablename from pg_tables where schemaname = 'public'
@@ -144,24 +167,33 @@ begin
 
     execute format('alter table public.%I enable row level security', tbl);
 
-    is_dev := tbl = any(developer_tables);
-    is_mgr := tbl = any(manager_tables);
-    is_vwr := tbl = any(viewer_tables);
+    -- Build allowed-role arrays for this table
+    select_roles := ARRAY['admin'];
+    write_roles  := ARRAY['admin'];
+
+    if tbl = any(account_manager_tables) then
+      select_roles := select_roles || ARRAY['account_manager'];
+      write_roles  := write_roles  || ARRAY['account_manager'];
+    end if;
+
+    if tbl = any(developer_tables) then
+      select_roles := select_roles || ARRAY['developer'];
+      write_roles  := write_roles  || ARRAY['developer'];
+    end if;
+
+    if tbl = any(viewer_tables) then
+      select_roles := select_roles || ARRAY['viewer'];
+      -- viewer NOT added to write_roles (read-only)
+    end if;
 
     -- SELECT
     execute format(
       $p$create policy "rbac_select" on public.%I
          as permissive for select to authenticated
          using (
-           case public.get_user_role()
-             when 'admin' then true
-             when 'manager' then %s
-             when 'developer' then %s
-             when 'viewer' then %s
-             else false
-           end
+           public.get_user_roles() && %L::text[]
          )$p$,
-      tbl, is_mgr::text, is_dev::text, is_vwr::text
+      tbl, select_roles
     );
 
     -- INSERT
@@ -169,14 +201,9 @@ begin
       $p$create policy "rbac_insert" on public.%I
          as permissive for insert to authenticated
          with check (
-           case public.get_user_role()
-             when 'admin' then true
-             when 'manager' then %s
-             when 'developer' then %s
-             else false
-           end
+           public.get_user_roles() && %L::text[]
          )$p$,
-      tbl, is_mgr::text, is_dev::text
+      tbl, write_roles
     );
 
     -- UPDATE
@@ -184,14 +211,9 @@ begin
       $p$create policy "rbac_update" on public.%I
          as permissive for update to authenticated
          using (
-           case public.get_user_role()
-             when 'admin' then true
-             when 'manager' then %s
-             when 'developer' then %s
-             else false
-           end
+           public.get_user_roles() && %L::text[]
          )$p$,
-      tbl, is_mgr::text, is_dev::text
+      tbl, write_roles
     );
 
     -- DELETE
@@ -199,14 +221,9 @@ begin
       $p$create policy "rbac_delete" on public.%I
          as permissive for delete to authenticated
          using (
-           case public.get_user_role()
-             when 'admin' then true
-             when 'manager' then %s
-             when 'developer' then %s
-             else false
-           end
+           public.get_user_roles() && %L::text[]
          )$p$,
-      tbl, is_mgr::text, is_dev::text
+      tbl, write_roles
     );
 
   end loop;
