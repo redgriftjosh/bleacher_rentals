@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   MapPinned,
   ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";
@@ -137,6 +138,13 @@ const ALL_ITEMS: SidebarItemConfig[] = [
         label: "QuickBooks",
         href: "/quickbooks",
         icon: QuickBooksIcon,
+      },
+      {
+        type: "button",
+        key: "permissions",
+        label: "Role Permissions",
+        href: "/permissions",
+        icon: ShieldCheck,
       },
     ],
   },
