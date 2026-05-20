@@ -83,9 +83,7 @@ export function useRealtimeHydrateCurrentUserStore() {
           sql<number | null>`${sql.ref("d.is_active")}`.as("driverIsActive"),
           sql<number | null>`${sql.ref("am.is_active")}`.as("amIsActive"),
           sql<number | null>`${sql.ref("dev.is_active")}`.as("devIsActive"),
-          sql<
-            number | null
-          >`${sql.ref("dev.auto_subscribe_to_new_tickets")}`.as(
+          sql<number | null>`${sql.ref("dev.auto_subscribe_to_new_tickets")}`.as(
             "autoSubscribeToNewTickets",
           ),
 

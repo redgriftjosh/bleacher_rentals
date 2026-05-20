@@ -26,9 +26,7 @@ function chooseVfs() {
   const isBrowser = typeof window !== "undefined";
   const isSecureContext = isBrowser && globalThis.isSecureContext === true;
   const hasLocks =
-    isBrowser &&
-    typeof navigator !== "undefined" &&
-    typeof navigator.locks !== "undefined";
+    isBrowser && typeof navigator !== "undefined" && typeof navigator.locks !== "undefined";
 
   // OPFS VFS depends on secure context + Web Locks.
   if (isSecureContext && hasLocks) return WASQLiteVFS.OPFSCoopSyncVFS;
@@ -93,8 +91,7 @@ function createBoundLazyProxy<T extends object>(getInstance: () => T): T {
 }
 
 // Backwards-compatible exports so existing imports keep working.
-export const powerSyncDb: PowerSyncDatabase =
-  createBoundLazyProxy(getPowerSyncDb);
+export const powerSyncDb: PowerSyncDatabase = createBoundLazyProxy(getPowerSyncDb);
 export const db: ReturnType<typeof wrapPowerSyncWithKysely<PowerSyncDB>> =
   createBoundLazyProxy(getDb);
 
@@ -129,9 +126,7 @@ export const SystemProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <Suspense>
-      <PowerSyncContext.Provider value={instance}>
-        {children}
-      </PowerSyncContext.Provider>
+      <PowerSyncContext.Provider value={instance}>{children}</PowerSyncContext.Provider>
     </Suspense>
   );
 };

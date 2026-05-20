@@ -35,14 +35,7 @@ function renderItem(
 ) {
   switch (item.type) {
     case "button":
-      return (
-        <SideNavButton
-          key={item.key}
-          label={item.label}
-          href={item.href}
-          icon={item.icon}
-        />
-      );
+      return <SideNavButton key={item.key} label={item.label} href={item.href} icon={item.icon} />;
     case "dropdown":
       return (
         <SideNavDropdown
@@ -66,9 +59,7 @@ function renderItem(
             />
           </button>
           {configOpen && (
-            <div>
-              {item.children.map((child) => renderItem(child, configOpen, setConfigOpen))}
-            </div>
+            <div>{item.children.map((child) => renderItem(child, configOpen, setConfigOpen))}</div>
           )}
         </div>
       );

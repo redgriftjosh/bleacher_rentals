@@ -30,7 +30,13 @@ const ROLE_LABELS: Record<TeamRoleTab, string> = {
   viewer: "Viewer",
 };
 
-const ALL_ROLES: TeamRoleTab[] = ["administrator", "account-manager", "driver", "developer", "viewer"];
+const ALL_ROLES: TeamRoleTab[] = [
+  "administrator",
+  "account-manager",
+  "driver",
+  "developer",
+  "viewer",
+];
 
 export default function RoleNavigation() {
   const router = useRouter();
