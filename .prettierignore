@@ -2,3 +2,4 @@ node_modules
 .next
 database.types.ts
 public
+supabase/.temp
