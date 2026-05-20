@@ -17,6 +17,9 @@
 \timing off
 
 BEGIN;
+SET search_path TO extensions, public, "$user";
+SELECT plan(1);
+
 
 DO $$
 DECLARE
@@ -280,5 +283,8 @@ BEGIN
   RAISE NOTICE '--- all multi-role RLS tests passed ---';
 END;
 $$;
+
+SELECT ok(true, 'all assertions passed');
+SELECT * FROM finish();
 
 ROLLBACK;
