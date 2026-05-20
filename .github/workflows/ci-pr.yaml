@@ -19,7 +19,13 @@ jobs:
         run: npm ci
 
       - name: Check formatting
-        run: npx prettier --check .
+        run: |
+          if ! npx prettier --check .; then
+            echo "--- Prettier diff ---"
+            npx prettier --write .
+            git diff
+            exit 1
+          fi
 
   test:
     runs-on: ubuntu-latest
