@@ -75,6 +75,10 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
     ],
     showSidebar: true,
   },
+  driver: {
+    allowedPaths: [],
+    showSidebar: false,
+  },
 };
 
 export function mergeRoleConfigs(roles: WebRole[]): MergedAccessConfig {

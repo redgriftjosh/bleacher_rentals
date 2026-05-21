@@ -1,7 +1,7 @@
 import { STATUSES } from "@/features/manageTeam/constants";
 import type { UserAccessData } from "../types";
 
-export type WebRole = "admin" | "account_manager" | "developer" | "viewer";
+export type WebRole = "admin" | "account_manager" | "developer" | "viewer" | "driver";
 
 export type BlockedReason =
   | "cannot-find-account"
@@ -35,6 +35,8 @@ export function determineUserAccess(userData: UserAccessData | null): AccessResu
     }
     return { status: "blocked", reason: "no-roles-assigned" };
   }
+
+  if (userData.driver_id) roles.push("driver");
 
   return { status: "active", roles };
 }

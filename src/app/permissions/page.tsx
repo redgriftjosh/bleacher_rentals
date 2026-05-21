@@ -22,7 +22,7 @@ export default function PermissionsPage() {
         subtitle="Roles are additive — a user can hold multiple roles, and their access is the combination of all assigned roles."
       />
 
-      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {ROLE_ORDER.map((role) => (
           <RoleCard key={role} role={role} />
         ))}

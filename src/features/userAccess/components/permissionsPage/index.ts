@@ -3,4 +3,5 @@ export { PermissionDetailModal, type PermissionDetailData } from "./PermissionDe
 export { RoleCard } from "./RoleCard";
 export { PermissionsTable } from "./PermissionsTable";
 export { PermissionsTableRow } from "./PermissionsTableRow";
+export { LabelInfoButton } from "./LabelInfoButton";
 export { HowRolesWork } from "./HowRolesWork";

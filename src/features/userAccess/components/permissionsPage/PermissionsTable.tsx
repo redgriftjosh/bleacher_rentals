@@ -1,6 +1,6 @@
 "use client";
 
-import { PERMISSIONS, ROLE_LABELS, CATEGORIES } from "../../permissionPageData";
+import { PERMISSIONS, ROLE_LABELS, ROLE_ORDER, CATEGORIES } from "../../permissionPageData";
 import type { WebRole } from "../../logic/determineAccess";
 import type { PermissionDetailData } from "./PermissionDetailModal";
 import { PermissionsTableRow } from "./PermissionsTableRow";
@@ -10,7 +10,7 @@ type PermissionsTableProps = {
 };
 
 export function PermissionsTable({ onBadgeClick }: PermissionsTableProps) {
-  const visibleRoles: WebRole[] = ["admin", "account_manager", "developer", "viewer"];
+  const visibleRoles: WebRole[] = ROLE_ORDER;
 
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">

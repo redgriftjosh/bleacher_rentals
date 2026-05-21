@@ -9,6 +9,7 @@ export type PermissionAccess = {
 
 export type PermissionEntry = {
   label: string;
+  description?: string;
   category: string;
   roles: Record<WebRole, PermissionAccess>;
 };
@@ -16,8 +17,9 @@ export type PermissionEntry = {
 export const ROLE_LABELS: Record<WebRole, string> = {
   admin: "Administrator",
   account_manager: "Account Manager",
-  developer: "Developer",
+  driver: "Driver",
   viewer: "Viewer",
+  developer: "Developer",
 };
 
 export const ROLE_DESCRIPTIONS: Record<WebRole, string> = {
@@ -26,9 +28,11 @@ export const ROLE_DESCRIPTIONS: Record<WebRole, string> = {
     "Manages their own assigned bleachers, drivers, and events. Cannot delete or modify company-wide data, other managers' records, or anything outside their own scope. A low-risk role to add without worrying about unintended changes to shared data.",
   developer: "Access to the product roadmap only.",
   viewer: "Read-only access to operational data. Cannot create, edit, or delete anything.",
+  driver:
+    "Access to the mobile driver app only. Cannot access the web dashboard at all, and has no permissions related to the web dashboard features.",
 };
 
-export const ROLE_ORDER: WebRole[] = ["admin", "account_manager", "developer", "viewer"];
+export const ROLE_ORDER: WebRole[] = ["admin", "account_manager", "driver", "viewer", "developer"];
 
 export const DEFAULT_NOTES: Record<PermissionLevel, string> = {
   full: "This role has full access — they can view, create, edit, and delete records.",
@@ -43,13 +47,14 @@ const custom = (note: string): PermissionAccess => ({ level: "custom", note });
 const none = (note?: string): PermissionAccess => ({ level: "none", note });
 
 export const PERMISSIONS: PermissionEntry[] = [
-  // Features
+  // Day to Day Operations
   {
     label: "Events",
-    category: "Features",
+    description: "This applies to the Dashboard and the Quotes & Bookings page.",
+    category: "Day to Day Operations",
     roles: {
       admin: full(
-        "should be able to create, update, delete, and edit any events, regardless of who event is assigned to",
+        "should be able to create, update, delete, and edit any events, regardless of who event is assigned to. This includes the ability to reassign events between account managers.",
       ),
       account_manager: custom(
         "Account managers can freely create events, but can only edit or delete events that were created by themselves. They are able to view All events regarless of the event owner.",
@@ -60,6 +65,176 @@ export const PERMISSIONS: PermissionEntry[] = [
       viewer: read(
         "This user will be able to see all the event and every detail but not able to create, edit, or delete any events.",
       ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Work Trackers",
+    description: "This applies to the Work Trackers Page and the Dashboard.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: full(
+        "should be able to create, update, delete, and edit any work trackers, regardless of who work tracker is assigned to. This includes the ability to reassign work trackers between drivers.",
+      ),
+      account_manager: custom(
+        "Account managers can create work trackers, but can only assign work trackers to themselves. They can only modify or delete work trackers that are assigned to a driver that is assigned to themselves. They cannot create a work tracker for a driver that is not assigned to them.",
+      ),
+      developer: none(
+        "Unable to even access the pages where they can see work trackers, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read(
+        "This user will be able to see all the work trackers and every detail but not able to create, edit, or delete any work trackers.",
+      ),
+      driver: custom(
+        "(in the mobile app only) Drivers only have access to work trackers that have been released and are assigned to them. They only have the ability to change the status and submit inspection forms to this work tracker. They cannot delete a work tracker or change any other information.",
+      ),
+    },
+  },
+  {
+    label: "Mobile Driver App Access",
+    description:
+      "This only applies to being able to maintain data in the mobile app on the iOS and Android app store.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: none("Must be a driver to have access to the mobile app."),
+      account_manager: none("Must be a driver to have access to the mobile app."),
+      developer: none("Must be a driver to have access to the mobile app."),
+      viewer: none("Must be a driver to have access to the mobile app."),
+      driver: full(
+        "Drivers have full access to their profile in the mobile app. They can update their driver information, vehicle information, and legal information. They can also set their availability and accept and complete work trackers.",
+      ),
+    },
+  },
+
+  // Configuration
+  {
+    label: "Bleachers",
+    description: "This applies to the Assets page.",
+    category: "Configuration",
+    roles: {
+      admin: full("Able to create, update, delete, and edit all bleachers in the assets page."),
+      account_manager: custom(
+        "Account managers should have view only access to the assets page and should not be able to make changes to the bleachers. they should not be able to create, delete or update. only read.",
+      ),
+      developer: none(
+        "Unable to even access the pages where they can see bleachers, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read(
+        "This user will be able to see all the bleachers and every detail but not able to create, edit, or delete any bleachers.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Quickbooks Connections",
+    description: "This applies to the Quickbooks page.",
+    category: "Configuration",
+    roles: {
+      admin: full(
+        "Able to create, update, delete, and edit all Quickbooks connections in the Quickbooks page.",
+      ),
+      account_manager: read(
+        "Account managers can see that the connections are there, but they can't add or remove them.",
+      ),
+      developer: none(
+        "Unable to even access the pages where they can see Quickbooks connections, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read(
+        "Viewers can see the Quickbooks connections, but they can't add or remove them.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Inspection Form",
+    category: "Configuration",
+    roles: {
+      admin: full(
+        "Able to create, update, delete, and edit all inspection form questions in the Inspection Form page.",
+      ),
+      account_manager: read(
+        "Account managers can see that the inspection questions are there, but they can't add or remove them.",
+      ),
+      developer: none(
+        "Unable to even access the pages where they can see inspection questions, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read("Viewers can see the inspection questions, but they can't add or remove them."),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Zone Manager",
+    category: "Configuration",
+    roles: {
+      admin: full("Able to create, update, delete, and edit all zones in the Zone Manager page."),
+      account_manager: read(
+        "Account managers can see that the zones are there, but they can't add or remove them.",
+      ),
+      developer: none(
+        "Unable to even access the pages where they can see zones, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read("Viewers can see the zones, but they can't add or remove them."),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+
+  // Team Management
+  {
+    label: "Invite Team Members",
+    description: "The ability to add new users to the system. This applies to the Team page.",
+    category: "Team Management",
+    roles: {
+      admin: full("Can invite any type of team member, including other admins."),
+      account_manager: custom(
+        "Can invite new team members, but cannot assign them the Admin role. Can only invite drivers and other standard roles.",
+      ),
+      developer: none(
+        "Developers do not have access to the Team page. This role is limited to the product roadmap.",
+      ),
+      viewer: none(
+        "Viewers cannot invite team members. They have read-only access across the platform.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Edit Team Members",
+    description:
+      "The ability to view and modify team member profiles, role assignments, and driver assignments. This applies to the Team page.",
+    category: "Team Management",
+    roles: {
+      admin: full(
+        "Can view and edit all information for every team member, including changing roles and reassigning drivers between managers.",
+      ),
+      account_manager: custom(
+        "Can view every team member's profile, but can only edit driver data for drivers assigned to themselves. Can assign an unassigned driver to themselves, but cannot reassign a driver who is already assigned to another manager.",
+      ),
+      developer: none(
+        "Developers do not have access to the Team page. This role is limited to the product roadmap.",
+      ),
+      viewer: read("Can view all team member profiles and details, but cannot make any changes."),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Deactivate Team Members",
+    description:
+      "The ability to deactivate user accounts, removing their access to the system. This applies to the Team page.",
+    category: "Team Management",
+    roles: {
+      admin: full(
+        "Only admins can deactivate team members. This is an admin-exclusive action to prevent accidental loss of access.",
+      ),
+      account_manager: none(
+        "Account managers cannot deactivate team members. Only admins have this ability.",
+      ),
+      developer: none(
+        "Developers do not have access to the Team page. This role is limited to the product roadmap.",
+      ),
+      viewer: none(
+        "Viewers cannot deactivate team members. They have read-only access across the platform.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },
 ];
