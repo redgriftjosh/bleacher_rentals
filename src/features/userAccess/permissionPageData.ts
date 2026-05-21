@@ -105,6 +105,27 @@ export const PERMISSIONS: PermissionEntry[] = [
       ),
     },
   },
+  {
+    label: "Repairs & Maintenance",
+    description:
+      "Creating and managing maintenance events for taking bleachers in for repair or scheduled maintenance. This applies to the Repairs page and the Dashboard.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: full(
+        "Can create, edit, and delete any repair or maintenance event regardless of who created it. Can reassign maintenance events between account managers.",
+      ),
+      account_manager: custom(
+        "Can create new repair and maintenance events, but can only edit or delete ones they created themselves. Can view all maintenance events regardless of the creator.",
+      ),
+      developer: none(
+        "Developers do not have access to repairs or maintenance data. This role is limited to the product roadmap.",
+      ),
+      viewer: read(
+        "Can view all repair and maintenance events and their details but cannot create, edit, or delete any.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
 
   // Configuration
   {
