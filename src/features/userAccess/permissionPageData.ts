@@ -266,6 +266,71 @@ export const PERMISSIONS: PermissionEntry[] = [
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },
+
+  // Scorecards
+  {
+    label: "Sales Scorecard",
+    description:
+      "View account manager performance numbers such as booked revenue, margins, and other sales metrics. This applies to the Sales Scorecard page.",
+    category: "Scorecards",
+    roles: {
+      admin: full(
+        "Can view all account manager sales numbers and performance metrics.",
+      ),
+      account_manager: read(
+        "Can view all account manager sales numbers, including their own and other managers' performance.",
+      ),
+      developer: none(
+        "Developers do not have access to scorecard data. This role is limited to the product roadmap.",
+      ),
+      viewer: read(
+        "Can view all sales scorecard data but cannot make any changes.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Sales Scorecard Targets",
+    description:
+      "The ability to set and modify the performance targets for each account manager on the Sales Scorecard page.",
+    category: "Scorecards",
+    roles: {
+      admin: full(
+        "Only admins can create, edit, and delete scorecard targets for account managers.",
+      ),
+      account_manager: read(
+        "Can view the targets set for them and other account managers, but cannot modify any targets.",
+      ),
+      developer: none(
+        "Developers do not have access to scorecard data. This role is limited to the product roadmap.",
+      ),
+      viewer: read(
+        "Can view scorecard targets but cannot modify them.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Driver Scorecard",
+    description:
+      "View driver performance metrics such as on-time rates, inspection completion, and other driver stats. This applies to the Driver Scorecard page.",
+    category: "Scorecards",
+    roles: {
+      admin: full(
+        "Can view all driver performance metrics and stats.",
+      ),
+      account_manager: read(
+        "Can view driver scorecard data for all drivers.",
+      ),
+      developer: none(
+        "Developers do not have access to scorecard data. This role is limited to the product roadmap.",
+      ),
+      viewer: read(
+        "Can view all driver scorecard data but cannot make any changes.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
 ];
 
 export const CATEGORIES = [...new Set(PERMISSIONS.map((p) => p.category))];
