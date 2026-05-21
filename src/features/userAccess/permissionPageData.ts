@@ -146,20 +146,49 @@ export const PERMISSIONS: PermissionEntry[] = [
     },
   },
   {
-    label: "Inspection Form",
+    label: "Manage Inspection Form",
+    description:
+      "The ability to create and edit the inspection form template that drivers fill out during pickup and drop-off. This applies to the Inspection Form page under Configuration.",
     category: "Configuration",
     roles: {
       admin: full(
-        "Able to create, update, delete, and edit all inspection form questions in the Inspection Form page.",
+        "Can create, reorder, edit, and delete inspection form questions. Full control over what drivers see when completing an inspection.",
       ),
       account_manager: read(
-        "Account managers can see that the inspection questions are there, but they can't add or remove them.",
+        "Can view the current inspection form questions but cannot add, edit, or remove them.",
       ),
       developer: none(
-        "Unable to even access the pages where they can see inspection questions, and developer is only meant to work on the developer roadmap.",
+        "Developers do not have access to the Inspection Form page. This role is limited to the product roadmap.",
       ),
-      viewer: read("Viewers can see the inspection questions, but they can't add or remove them."),
-      driver: none("Drivers only have access to the Driver Mobile App."),
+      viewer: read(
+        "Can view the current inspection form questions but cannot make any changes.",
+      ),
+      driver: none(
+        "Drivers do not have access to the web configuration pages. They interact with the inspection form only when completing inspections in the mobile app.",
+      ),
+    },
+  },
+  {
+    label: "Complete Inspections",
+    description:
+      "The ability to fill out and submit inspection forms when picking up or dropping off a bleacher. This happens in the Driver Mobile App.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: read(
+        "Admins can view all completed inspections on the web dashboard but do not fill out inspections themselves.",
+      ),
+      account_manager: read(
+        "Account managers can view completed inspections for drivers assigned to them but do not fill out inspections themselves.",
+      ),
+      developer: none(
+        "Developers do not have access to inspection data. This role is limited to the product roadmap.",
+      ),
+      viewer: read(
+        "Viewers can see all completed inspections and their details but cannot submit or modify them.",
+      ),
+      driver: custom(
+        "Drivers submit inspections through the mobile app when picking up or dropping off a bleacher. They can only submit inspections for work trackers assigned to them. Once submitted, an inspection cannot be edited or deleted by the driver.",
+      ),
     },
   },
   {
