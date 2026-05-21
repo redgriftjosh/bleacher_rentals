@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PermissionBadge } from "./PermissionBadge";
 import { ROLE_LABELS, DEFAULT_NOTES, type PermissionLevel } from "../../permissionPageData";
 import type { WebRole } from "../../logic/determineAccess";
@@ -65,9 +60,7 @@ export function PermissionDetailModal({ data, onClose }: PermissionDetailModalPr
 
           <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
             <p className="text-sm text-gray-700 leading-relaxed">
-              {data.kind === "badge"
-                ? (data.note ?? DEFAULT_NOTES[data.level])
-                : data.description}
+              {data.kind === "badge" ? (data.note ?? DEFAULT_NOTES[data.level]) : data.description}
             </p>
           </div>
         </div>

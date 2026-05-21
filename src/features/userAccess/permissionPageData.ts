@@ -204,9 +204,7 @@ export const PERMISSIONS: PermissionEntry[] = [
       developer: none(
         "Developers do not have access to the Inspection Form page. This role is limited to the product roadmap.",
       ),
-      viewer: read(
-        "Can view the current inspection form questions but cannot make any changes.",
-      ),
+      viewer: read("Can view the current inspection form questions but cannot make any changes."),
       driver: none(
         "Drivers do not have access to the web configuration pages. They interact with the inspection form only when completing inspections in the mobile app.",
       ),
@@ -318,18 +316,14 @@ export const PERMISSIONS: PermissionEntry[] = [
       "View account manager performance numbers such as booked revenue, margins, and other sales metrics. This applies to the Sales Scorecard page.",
     category: "Scorecards",
     roles: {
-      admin: full(
-        "Can view all account manager sales numbers and performance metrics.",
-      ),
+      admin: full("Can view all account manager sales numbers and performance metrics."),
       account_manager: read(
         "Can view all account manager sales numbers, including their own and other managers' performance.",
       ),
       developer: none(
         "Developers do not have access to scorecard data. This role is limited to the product roadmap.",
       ),
-      viewer: read(
-        "Can view all sales scorecard data but cannot make any changes.",
-      ),
+      viewer: read("Can view all sales scorecard data but cannot make any changes."),
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },
@@ -348,9 +342,7 @@ export const PERMISSIONS: PermissionEntry[] = [
       developer: none(
         "Developers do not have access to scorecard data. This role is limited to the product roadmap.",
       ),
-      viewer: read(
-        "Can view scorecard targets but cannot modify them.",
-      ),
+      viewer: read("Can view scorecard targets but cannot modify them."),
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },
@@ -360,18 +352,12 @@ export const PERMISSIONS: PermissionEntry[] = [
       "View driver performance metrics such as on-time rates, inspection completion, and other driver stats. This applies to the Driver Scorecard page.",
     category: "Scorecards",
     roles: {
-      admin: full(
-        "Can view all driver performance metrics and stats.",
-      ),
-      account_manager: read(
-        "Can view driver scorecard data for all drivers.",
-      ),
+      admin: full("Can view all driver performance metrics and stats."),
+      account_manager: read("Can view driver scorecard data for all drivers."),
       developer: none(
         "Developers do not have access to scorecard data. This role is limited to the product roadmap.",
       ),
-      viewer: read(
-        "Can view all driver scorecard data but cannot make any changes.",
-      ),
+      viewer: read("Can view all driver scorecard data but cannot make any changes."),
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },
@@ -383,18 +369,12 @@ export const PERMISSIONS: PermissionEntry[] = [
       "Top-level time periods used to organize sprints and plan roadmap work. This applies to the Roadmap page.",
     category: "Development Roadmap",
     roles: {
-      admin: full(
-        "Can create, edit, and delete quarters to structure the roadmap timeline.",
-      ),
-      account_manager: none(
-        "Account managers do not have access to roadmap planning.",
-      ),
+      admin: full("Can create, edit, and delete quarters to structure the roadmap timeline."),
+      account_manager: none("Account managers do not have access to roadmap planning."),
       developer: read(
         "Can view quarters to understand the roadmap timeline, but cannot create or modify them.",
       ),
-      viewer: none(
-        "Viewers do not have access to the development roadmap.",
-      ),
+      viewer: none("Viewers do not have access to the development roadmap."),
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },
@@ -407,15 +387,11 @@ export const PERMISSIONS: PermissionEntry[] = [
       admin: full(
         "Can create, edit, and delete sprints. Full control over sprint planning and organization.",
       ),
-      account_manager: none(
-        "Account managers do not have access to roadmap planning.",
-      ),
+      account_manager: none("Account managers do not have access to roadmap planning."),
       developer: read(
         "Can view sprints and the tickets within them, but cannot create, edit, or delete sprints themselves.",
       ),
-      viewer: none(
-        "Viewers do not have access to the development roadmap.",
-      ),
+      viewer: none("Viewers do not have access to the development roadmap."),
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },
