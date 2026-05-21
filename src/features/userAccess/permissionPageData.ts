@@ -126,6 +126,29 @@ export const PERMISSIONS: PermissionEntry[] = [
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },
+  {
+    label: "Damage Reports",
+    description:
+      "Reporting and tracking damage to bleachers. Damage reports can be created on the web dashboard or through the Driver Mobile App.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: full(
+        "Can create, view, edit, and delete any damage report regardless of who created it.",
+      ),
+      account_manager: custom(
+        "Can create new damage reports and view all existing ones. Can only edit or delete damage reports they created themselves.",
+      ),
+      developer: none(
+        "Developers do not have access to damage report data. This role is limited to the product roadmap.",
+      ),
+      viewer: read(
+        "Can view all damage reports and their details but cannot create, edit, or delete any.",
+      ),
+      driver: custom(
+        "Can create damage reports through the mobile app when they notice damage to a bleacher. Can view their own submitted reports but cannot edit or delete them once submitted.",
+      ),
+    },
+  },
 
   // Configuration
   {
