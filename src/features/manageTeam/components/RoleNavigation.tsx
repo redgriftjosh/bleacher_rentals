@@ -21,6 +21,7 @@ import { useCurrentUserStore, TeamRoleTab } from "../state/useCurrentUserStore";
 import { useUserFormPaths } from "../hooks/useUserFormPaths";
 import { X } from "lucide-react";
 import { useState } from "react";
+import { useTeamPermissions } from "../hooks/useTeamPermissions";
 
 const ROLE_LABELS: Record<TeamRoleTab, string> = {
   administrator: "Administrator",
@@ -46,9 +47,12 @@ export default function RoleNavigation() {
   const addRoleTab = useCurrentUserStore((s) => s.addRoleTab);
   const removeRoleTab = useCurrentUserStore((s) => s.removeRoleTab);
 
+  const { canAssignAdmin } = useTeamPermissions();
   const [roleToRemove, setRoleToRemove] = useState<TeamRoleTab | null>(null);
 
-  const availableRoles = ALL_ROLES.filter((role) => !roleTabs.includes(role));
+  const availableRoles = ALL_ROLES.filter(
+    (role) => !roleTabs.includes(role) && (role !== "administrator" || canAssignAdmin),
+  );
   const shouldHighlightAddRole = roleTabs.length === 0;
 
   const handleRemoveRole = () => {

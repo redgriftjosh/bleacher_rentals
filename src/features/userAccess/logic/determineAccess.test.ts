@@ -66,7 +66,12 @@ describe("determineUserAccess", () => {
       developer_id: null,
     };
     const result = determineUserAccess(userData);
-    expect(result).toEqual({ status: "active", roles: ["admin"] });
+    expect(result).toEqual({
+      status: "active",
+      roles: ["admin"],
+      userId: "1",
+      accountManagerId: null,
+    });
   });
 
   it("active: account_manager only", () => {
@@ -80,7 +85,12 @@ describe("determineUserAccess", () => {
       developer_id: null,
     };
     const result = determineUserAccess(userData);
-    expect(result).toEqual({ status: "active", roles: ["account_manager"] });
+    expect(result).toEqual({
+      status: "active",
+      roles: ["account_manager"],
+      userId: "1",
+      accountManagerId: "am-1",
+    });
   });
 
   it("active: developer only", () => {
@@ -94,7 +104,12 @@ describe("determineUserAccess", () => {
       developer_id: "dev-1",
     };
     const result = determineUserAccess(userData);
-    expect(result).toEqual({ status: "active", roles: ["developer"] });
+    expect(result).toEqual({
+      status: "active",
+      roles: ["developer"],
+      userId: "1",
+      accountManagerId: null,
+    });
   });
 
   it("active: viewer only", () => {
@@ -108,7 +123,12 @@ describe("determineUserAccess", () => {
       developer_id: null,
     };
     const result = determineUserAccess(userData);
-    expect(result).toEqual({ status: "active", roles: ["viewer"] });
+    expect(result).toEqual({
+      status: "active",
+      roles: ["viewer"],
+      userId: "1",
+      accountManagerId: null,
+    });
   });
 
   // --- Combined roles ---
@@ -124,7 +144,12 @@ describe("determineUserAccess", () => {
       developer_id: "dev-1",
     };
     const result = determineUserAccess(userData);
-    expect(result).toEqual({ status: "active", roles: ["admin", "developer"] });
+    expect(result).toEqual({
+      status: "active",
+      roles: ["admin", "developer"],
+      userId: "1",
+      accountManagerId: null,
+    });
   });
 
   it("active: account manager + developer → both roles", () => {
@@ -138,7 +163,12 @@ describe("determineUserAccess", () => {
       developer_id: "dev-1",
     };
     const result = determineUserAccess(userData);
-    expect(result).toEqual({ status: "active", roles: ["account_manager", "developer"] });
+    expect(result).toEqual({
+      status: "active",
+      roles: ["account_manager", "developer"],
+      userId: "1",
+      accountManagerId: "am-1",
+    });
   });
 
   it("active: developer + viewer → both roles", () => {
@@ -152,7 +182,12 @@ describe("determineUserAccess", () => {
       developer_id: "dev-1",
     };
     const result = determineUserAccess(userData);
-    expect(result).toEqual({ status: "active", roles: ["developer", "viewer"] });
+    expect(result).toEqual({
+      status: "active",
+      roles: ["developer", "viewer"],
+      userId: "1",
+      accountManagerId: null,
+    });
   });
 
   it("active: driver + viewer → viewer (driver ignored on web)", () => {
@@ -166,7 +201,12 @@ describe("determineUserAccess", () => {
       developer_id: null,
     };
     const result = determineUserAccess(userData);
-    expect(result).toEqual({ status: "active", roles: ["viewer"] });
+    expect(result).toEqual({
+      status: "active",
+      roles: ["viewer"],
+      userId: "1",
+      accountManagerId: null,
+    });
   });
 
   it("active: driver + developer → developer (driver ignored on web)", () => {
@@ -180,7 +220,12 @@ describe("determineUserAccess", () => {
       developer_id: "dev-1",
     };
     const result = determineUserAccess(userData);
-    expect(result).toEqual({ status: "active", roles: ["developer"] });
+    expect(result).toEqual({
+      status: "active",
+      roles: ["developer"],
+      userId: "1",
+      accountManagerId: null,
+    });
   });
 
   it("active: all roles → all web roles", () => {
@@ -197,6 +242,8 @@ describe("determineUserAccess", () => {
     expect(result).toEqual({
       status: "active",
       roles: ["admin", "account_manager", "developer", "viewer"],
+      userId: "1",
+      accountManagerId: "am-1",
     });
   });
 });

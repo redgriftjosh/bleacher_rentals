@@ -10,7 +10,7 @@ export type BlockedReason =
   | "driver-only";
 
 export type AccessResult =
-  | { status: "active"; roles: WebRole[] }
+  | { status: "active"; roles: WebRole[]; userId: string; accountManagerId: string | null }
   | { status: "blocked"; reason: BlockedReason };
 
 export function determineUserAccess(userData: UserAccessData | null): AccessResult {
@@ -37,6 +37,10 @@ export function determineUserAccess(userData: UserAccessData | null): AccessResu
   }
 
   if (userData.driver_id) roles.push("driver");
-
-  return { status: "active", roles };
+  return {
+    status: "active",
+    roles,
+    userId: userData.id,
+    accountManagerId: userData.account_manager_id,
+  };
 }

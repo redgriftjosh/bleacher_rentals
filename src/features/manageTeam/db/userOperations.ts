@@ -156,11 +156,12 @@ export async function createUser(
 
       if (amError) throw amError;
 
-      // 4. Update bleacher assignments
+      // 4. Update bleacher and driver assignments
       await updateBleacherAssignments(supabase, userUuid, state);
+      await updateDriverAssignments(supabase, userUuid, state);
     }
 
-    // 4. If developer, insert into Developers table
+    // 5. If developer, insert into Developers table
     if (state.isDeveloper) {
       const { error: devError } = await supabase.from("Developers").insert({
         user_uuid: userUuid,
@@ -294,8 +295,9 @@ export async function updateUser(
         if (amUpdateError) throw amUpdateError;
       }
 
-      // Update bleacher assignments
+      // Update bleacher and driver assignments
       await updateBleacherAssignments(supabase, userUuid, state);
+      await updateDriverAssignments(supabase, userUuid, state);
     } else if (existingAM) {
       // Remove account manager role
       // First clear bleacher assignments using the AccountManager's ID
@@ -309,6 +311,13 @@ export async function updateUser(
           `summer_account_manager_uuid.eq.${existingAM.id},winter_account_manager_uuid.eq.${existingAM.id}`,
         );
       if (bleacherClearError) throw bleacherClearError;
+
+      // Clear driver assignments
+      const { error: driverClearError } = await supabase
+        .from("Drivers")
+        .update({ account_manager_uuid: null })
+        .eq("account_manager_uuid", existingAM.id);
+      if (driverClearError) throw driverClearError;
 
       // Mark account manager as inactive instead of deleting
       const { error: amUpdateError } = await supabase
@@ -411,6 +420,40 @@ async function updateBleacherAssignments(
         winter_account_manager_uuid: accountManagerUuid,
       })
       .in("id", state.winterBleacherUuids);
+  }
+}
+
+async function updateDriverAssignments(
+  supabase: TypedSupabaseClient,
+  userUuid: string,
+  state: CurrentUserState,
+): Promise<void> {
+  // Get the account_manager_id for this user
+  const { data: amData, error: amError } = await supabase
+    .from("AccountManagers")
+    .select("id")
+    .eq("user_uuid", userUuid)
+    .single();
+
+  if (amError || !amData) {
+    console.error("Failed to get account manager ID for driver assignments:", amError);
+    return;
+  }
+
+  const accountManagerUuid = amData.id;
+
+  // Clear existing driver assignments for this account manager
+  await supabase
+    .from("Drivers")
+    .update({ account_manager_uuid: null })
+    .eq("account_manager_uuid", accountManagerUuid);
+
+  // Set new assignments
+  if (state.assignedDriverUuids.length > 0) {
+    await supabase
+      .from("Drivers")
+      .update({ account_manager_uuid: accountManagerUuid })
+      .in("id", state.assignedDriverUuids);
   }
 }
 
@@ -549,6 +592,15 @@ export async function fetchUserById(
 
       result.summerBleacherUuids = summerBleachers?.map((b) => b.id) || [];
       result.winterBleacherUuids = winterBleachers?.map((b) => b.id) || [];
+
+      // Fetch drivers assigned to this account manager
+      const { data: assignedDrivers } = await supabase
+        .from("Drivers")
+        .select("id")
+        .eq("account_manager_uuid", accountManagerId)
+        .eq("is_active", true);
+
+      result.assignedDriverUuids = assignedDrivers?.map((d) => d.id) || [];
     }
 
     // 4. Check if user is a developer

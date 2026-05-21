@@ -16,6 +16,7 @@ import { useSearchQueryStore } from "@/features/manageTeam/state/useSearchQueryS
 import { useRealtimeHydrateCurrentUserStore } from "@/features/manageTeam/hooks/useUserById";
 import { PageHeader } from "@/components/PageHeader";
 import { useRouter } from "next/navigation";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 
 export type ExistingUser = {
   user_id: number;
@@ -31,6 +32,7 @@ export type ExistingUser = {
 export default function TeamPage() {
   useRealtimeHydrateCurrentUserStore();
   const router = useRouter();
+  const { canCreateUser } = useTeamPermissions();
   const [activeTab, setActiveTab] = useState<TeamTab>("admins");
   const [showInactive, setShowInactive] = useState(false);
   const setField = useSearchQueryStore((s) => s.setField);
@@ -48,7 +50,11 @@ export default function TeamPage() {
         title="Manage Team"
         subtitle="Manage your team here."
         action={
-          <PrimaryButton onClick={() => router.push("/team/new")}>+ Add Team Member</PrimaryButton>
+          canCreateUser ? (
+            <PrimaryButton onClick={() => router.push("/team/new")}>
+              + Add Team Member
+            </PrimaryButton>
+          ) : undefined
         }
       />
 

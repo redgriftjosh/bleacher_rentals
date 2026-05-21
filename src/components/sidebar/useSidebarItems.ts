@@ -166,6 +166,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
   account_manager: [
     "dashboard",
     "quotes-bookings",
+    "team",
     "assets",
     "quality-assurance",
     "work-trackers",

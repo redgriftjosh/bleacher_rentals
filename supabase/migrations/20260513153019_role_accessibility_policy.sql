@@ -146,6 +146,8 @@ declare
 
   skip_tables text[] := array[
     'Users',
+    'Drivers',
+    'Bleachers',
     '_powersync_unhandled'
   ];
 
@@ -249,6 +251,25 @@ as $$
 $$;
 
 -- =====================
+-- 3b. Helper: is current user an active account manager?
+-- =====================
+create or replace function public.is_current_user_account_manager()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from "AccountManagers" am
+    join "Users" u on u.id = am.user_uuid
+    where u.clerk_user_id = (auth.jwt() ->> 'sub')
+      and am.is_active = true
+  );
+$$;
+
+-- =====================
 -- 4. Special policy for Users (uses SECURITY DEFINER helper — avoids recursion)
 -- =====================
 do $$
@@ -270,12 +291,14 @@ create policy "users_select" on public."Users"
   using (
     clerk_user_id = (auth.jwt() ->> 'sub')
     or public.is_current_user_admin()
+    or public.is_current_user_account_manager()
   );
 
 create policy "users_insert" on public."Users"
   as permissive for insert to authenticated
   with check (
     public.is_current_user_admin()
+    or public.is_current_user_account_manager()
   );
 
 create policy "users_update" on public."Users"
@@ -289,4 +312,126 @@ create policy "users_delete" on public."Users"
   as permissive for delete to authenticated
   using (
     public.is_current_user_admin()
+  );
+
+-- =====================
+-- 5. Helper: get current user's AccountManagers.id
+-- =====================
+create or replace function public.get_current_account_manager_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select am.id
+  from "AccountManagers" am
+  join "Users" u on u.id = am.user_uuid
+  where u.clerk_user_id = (auth.jwt() ->> 'sub')
+    and am.is_active = true
+  limit 1;
+$$;
+
+-- =====================
+-- 6. Custom policies for Drivers
+--    SELECT/INSERT/DELETE: admin + account_manager (same as generic)
+--    UPDATE: AM can only update own or unassigned drivers,
+--            and can only set account_manager_uuid to self or null.
+-- =====================
+do $$
+declare pol record;
+begin
+  for pol in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'Drivers'
+  loop
+    execute format('drop policy if exists %I on public."Drivers"', pol.policyname);
+  end loop;
+end;
+$$;
+
+alter table public."Drivers" enable row level security;
+
+create policy "drivers_select" on public."Drivers"
+  as permissive for select to authenticated
+  using (
+    public.get_user_roles() && '{admin,account_manager}'::text[]
+  );
+
+create policy "drivers_insert" on public."Drivers"
+  as permissive for insert to authenticated
+  with check (
+    public.get_user_roles() && '{admin,account_manager}'::text[]
+  );
+
+create policy "drivers_update" on public."Drivers"
+  as permissive for update to authenticated
+  using (
+    'admin' = any(public.get_user_roles())
+    or (
+      'account_manager' = any(public.get_user_roles())
+      and (
+        account_manager_uuid is null
+        or account_manager_uuid = public.get_current_account_manager_id()
+      )
+    )
+  )
+  with check (
+    'admin' = any(public.get_user_roles())
+    or (
+      'account_manager' = any(public.get_user_roles())
+      and (
+        account_manager_uuid is null
+        or account_manager_uuid = public.get_current_account_manager_id()
+      )
+    )
+  );
+
+create policy "drivers_delete" on public."Drivers"
+  as permissive for delete to authenticated
+  using (
+    public.get_user_roles() && '{admin,account_manager}'::text[]
+  );
+
+-- =====================
+-- 7. Custom policies for Bleachers
+--    SELECT: all roles can view
+--    INSERT/UPDATE/DELETE: admin only
+-- =====================
+do $$
+declare pol record;
+begin
+  for pol in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'Bleachers'
+  loop
+    execute format('drop policy if exists %I on public."Bleachers"', pol.policyname);
+  end loop;
+end;
+$$;
+
+alter table public."Bleachers" enable row level security;
+
+create policy "bleachers_select" on public."Bleachers"
+  as permissive for select to authenticated
+  using (
+    public.get_user_roles() && '{admin,account_manager,viewer}'::text[]
+  );
+
+create policy "bleachers_insert" on public."Bleachers"
+  as permissive for insert to authenticated
+  with check (
+    'admin' = any(public.get_user_roles())
+  );
+
+create policy "bleachers_update" on public."Bleachers"
+  as permissive for update to authenticated
+  using (
+    'admin' = any(public.get_user_roles())
+  );
+
+create policy "bleachers_delete" on public."Bleachers"
+  as permissive for delete to authenticated
+  using (
+    'admin' = any(public.get_user_roles())
   );

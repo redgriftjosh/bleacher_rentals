@@ -62,11 +62,6 @@ export function SelectUserDropDown<T extends UserOption>({
     setOpen(false);
   };
 
-  const handleClear = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onChange(null);
-  };
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -90,10 +85,20 @@ export function SelectUserDropDown<T extends UserOption>({
           )}
           <div className="flex items-center gap-1">
             {value && !isLoading && (
-              <X
-                className="h-4 w-4 shrink-0 opacity-50 hover:opacity-100 transition-opacity"
-                onClick={handleClear}
-              />
+              <span
+                role="button"
+                tabIndex={0}
+                className="opacity-50 hover:opacity-100 transition-opacity"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onChange(null);
+                  setOpen(false);
+                }}
+                aria-label="Clear selection"
+              >
+                <X className="h-4 w-4" />
+              </span>
             )}
             <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
           </div>

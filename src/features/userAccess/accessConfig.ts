@@ -40,6 +40,7 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
       "/dashboard",
       "/quotes-bookings",
       "/assets",
+      "/team",
       "/damage-reports",
       "/inspections",
       "/repairs",

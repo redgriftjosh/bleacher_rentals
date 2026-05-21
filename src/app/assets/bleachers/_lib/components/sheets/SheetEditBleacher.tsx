@@ -28,9 +28,11 @@ import {
 // https://www.loom.com/share/377b110fd24f4eebbc6e90394ac3a407?sid=c32cff10-c666-4386-9a09-85ed203e4cb5
 // Did a little explainer on how this works.
 import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 
 export function SheetEditBleacher() {
   const router = useRouter();
+  const { isAdmin } = useTeamPermissions();
   const searchParams = useSearchParams();
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
@@ -260,9 +262,15 @@ export function SheetEditBleacher() {
               </div>
             )}
 
+            {!isAdmin && (
+              <div className="mx-6 mt-4 rounded border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+                You have read-only access to assets.
+              </div>
+            )}
+
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
-              <div className="space-y-4">
+              <fieldset disabled={!isAdmin} className="space-y-4">
                 <div className="grid grid-cols-5 items-center gap-4">
                   <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
                     Bleacher Number
@@ -525,29 +533,30 @@ export function SheetEditBleacher() {
                     />
                   </div>
                 </div>
-              </div>
+              </fieldset>
             </div>
 
             {/* Footer */}
             <div className="p-6 border-t flex justify-between">
-              {isDeleted ? (
-                <button
-                  type="button"
-                  onClick={handleRestore}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors cursor-pointer flex items-center gap-2"
-                >
-                  Restore
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors cursor-pointer flex items-center gap-2"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete
-                </button>
-              )}
+              {isAdmin &&
+                (isDeleted ? (
+                  <button
+                    type="button"
+                    onClick={handleRestore}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors cursor-pointer flex items-center gap-2"
+                  >
+                    Restore
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors cursor-pointer flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </button>
+                ))}
               <Link
                 href={`/damage-reports?bleacher_uuid=${id}`}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-2 text-sm"
@@ -555,13 +564,15 @@ export function SheetEditBleacher() {
                 <ShieldAlert className="h-4 w-4" />
                 Damage Reports
               </Link>
-              <button
-                type="submit"
-                onClick={handleSave}
-                className="px-4 py-2 bg-darkBlue text-white rounded-md hover:bg-lightBlue transition-colors cursor-pointer"
-              >
-                Save changes
-              </button>
+              {isAdmin && (
+                <button
+                  type="submit"
+                  onClick={handleSave}
+                  className="px-4 py-2 bg-darkBlue text-white rounded-md hover:bg-lightBlue transition-colors cursor-pointer"
+                >
+                  Save changes
+                </button>
+              )}
             </div>
           </div>
         </div>

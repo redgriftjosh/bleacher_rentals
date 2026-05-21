@@ -17,7 +17,7 @@ export type { UserAccessData } from "../types";
 export type UserAccessState =
   | { status: "loading" }
   | { status: "blocked"; reason: BlockedReason }
-  | { status: "active"; roles: WebRole[] };
+  | { status: "active"; roles: WebRole[]; userId: string; accountManagerId: string | null };
 
 export function useUserAccess(): UserAccessState {
   const powerSync = usePowerSync();

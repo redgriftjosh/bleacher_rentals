@@ -44,6 +44,7 @@ DECLARE
   v_roles    TEXT[];
   v_count    INTEGER;
   v_ok       BOOLEAN;
+  v_total_users INTEGER;
 BEGIN
   RAISE NOTICE '--- multi-role RLS tests ---';
 
@@ -100,6 +101,9 @@ BEGIN
 
   INSERT INTO public."AccountManagers" (user_uuid, is_active)
   VALUES (user_admin_all, true);
+
+  -- Count total users (seed + test users) for assertions later
+  SELECT count(*) INTO v_total_users FROM public."Users";
 
   -- Insert test data into tables we'll check access for
   INSERT INTO public."Bleachers" (bleacher_number, bleacher_rows, bleacher_seats)
@@ -271,11 +275,221 @@ BEGIN
   INSERT INTO public."RoadmapQuarters" (quarter, year) VALUES (2, 2999);
   RAISE NOTICE 'TEST C4 (developer → RoadmapQuarters INSERT allowed) ✓';
 
-  -- TEST C5: Account manager CAN insert into Bleachers
+  -- TEST C5: Account manager CANNOT insert into Bleachers (admin only)
   PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
+  BEGIN
+    INSERT INTO public."Bleachers" (bleacher_number, bleacher_rows, bleacher_seats)
+    VALUES (8888, 5, 50);
+    ASSERT false, 'C5 AM insert Bleachers should have failed';
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'TEST C5 (account_manager → Bleachers INSERT blocked) ✓';
+  END;
+
+  -- ==========================================================================
+  -- PART D: Users table — AM can see all users and insert
+  -- ==========================================================================
+
+  -- TEST D1: AM can see themselves
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
+  SELECT count(*) INTO v_count FROM public."Users"
+    WHERE clerk_user_id = clerk_am;
+  ASSERT v_count = 1,
+    format('D1 AM see self: expected 1, got %s', v_count);
+  RAISE NOTICE 'TEST D1 (AM → Users SELECT self) ✓';
+
+  -- TEST D2: AM can see ALL users (seed + test users)
+  SELECT count(*) INTO v_count FROM public."Users";
+  ASSERT v_count = v_total_users,
+    format('D2 AM see all users: expected %s, got %s', v_total_users, v_count);
+  RAISE NOTICE 'TEST D2 (AM → Users SELECT all: % users) ✓', v_count;
+
+  -- TEST D3: AM can INSERT into Users (create new team members)
+  INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer)
+  VALUES ('New', 'Driver', 'newdriver@test.com', 'clerk_new_driver', false, false);
+  RAISE NOTICE 'TEST D3 (AM → Users INSERT allowed) ✓';
+
+  -- TEST D4: AM CANNOT update other users (only self)
+  BEGIN
+    UPDATE public."Users" SET first_name = 'Hacked'
+      WHERE id = user_admin;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 0,
+      format('D4 AM update admin: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST D4 (AM → Users UPDATE other blocked) ✓';
+  END;
+
+  -- TEST D5: AM CAN update own record
+  UPDATE public."Users" SET first_name = 'AM Updated'
+    WHERE clerk_user_id = clerk_am;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  ASSERT v_count = 1,
+    format('D5 AM update self: expected 1, got %s', v_count);
+  RAISE NOTICE 'TEST D5 (AM → Users UPDATE self allowed) ✓';
+
+  -- TEST D6: Viewer can only see themselves
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_viewer)::text, true);
+  SELECT count(*) INTO v_count FROM public."Users";
+  ASSERT v_count = 1,
+    format('D6 viewer Users: expected 1 (self), got %s', v_count);
+  RAISE NOTICE 'TEST D6 (viewer → Users SELECT only self) ✓';
+
+  -- TEST D7: No-roles user can only see themselves
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_no_roles)::text, true);
+  SELECT count(*) INTO v_count FROM public."Users";
+  ASSERT v_count = 1,
+    format('D7 no-roles Users: expected 1 (self), got %s', v_count);
+  RAISE NOTICE 'TEST D7 (no-roles → Users SELECT only self) ✓';
+
+  -- ==========================================================================
+  -- PART E: Bleachers — admin-only write, all roles can read
+  -- ==========================================================================
+
+  -- TEST E1: Admin CAN insert into Bleachers
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
   INSERT INTO public."Bleachers" (bleacher_number, bleacher_rows, bleacher_seats)
   VALUES (8888, 5, 50);
-  RAISE NOTICE 'TEST C5 (account_manager → Bleachers INSERT allowed) ✓';
+  RAISE NOTICE 'TEST E1 (admin → Bleachers INSERT allowed) ✓';
+
+  -- TEST E2: Admin CAN update Bleachers
+  UPDATE public."Bleachers" SET bleacher_seats = 55 WHERE bleacher_number = 8888;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  ASSERT v_count = 1,
+    format('E2 admin update Bleachers: expected 1, got %s', v_count);
+  RAISE NOTICE 'TEST E2 (admin → Bleachers UPDATE allowed) ✓';
+
+  -- TEST E3: AM CANNOT update Bleachers
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
+  UPDATE public."Bleachers" SET bleacher_seats = 99 WHERE bleacher_number = 8888;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  ASSERT v_count = 0,
+    format('E3 AM update Bleachers: expected 0, got %s', v_count);
+  RAISE NOTICE 'TEST E3 (AM → Bleachers UPDATE blocked) ✓';
+
+  -- TEST E4: AM CAN select Bleachers
+  SELECT count(*) INTO v_count FROM public."Bleachers";
+  ASSERT v_count > 0,
+    format('E4 AM select Bleachers: expected >0, got %s', v_count);
+  RAISE NOTICE 'TEST E4 (AM → Bleachers SELECT allowed) ✓';
+
+  -- TEST E5: Viewer CAN select Bleachers
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_viewer)::text, true);
+  SELECT count(*) INTO v_count FROM public."Bleachers";
+  ASSERT v_count > 0,
+    format('E5 viewer select Bleachers: expected >0, got %s', v_count);
+  RAISE NOTICE 'TEST E5 (viewer → Bleachers SELECT allowed) ✓';
+
+  -- TEST E6: Viewer CANNOT update Bleachers
+  UPDATE public."Bleachers" SET bleacher_seats = 99 WHERE bleacher_number = 8888;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  ASSERT v_count = 0,
+    format('E6 viewer update Bleachers: expected 0, got %s', v_count);
+  RAISE NOTICE 'TEST E6 (viewer → Bleachers UPDATE blocked) ✓';
+
+  -- ==========================================================================
+  -- PART F: Drivers — AM ownership-based UPDATE
+  -- ==========================================================================
+
+  -- Setup: create drivers with different AM assignments
+  -- Need to switch to postgres to insert without RLS
+  RESET ROLE;
+
+  DECLARE
+    am_id            UUID;
+    driver_own       UUID;
+    driver_unassigned UUID;
+    driver_other_am  UUID;
+    other_am_id      UUID;
+  BEGIN
+    -- Get AM's AccountManagers.id
+    SELECT am.id INTO am_id FROM public."AccountManagers" am
+      WHERE am.user_uuid = user_am AND am.is_active = true;
+
+    -- Create a second AM for "other AM" tests
+    -- (user_admin_all already has an AM record)
+    SELECT am.id INTO other_am_id FROM public."AccountManagers" am
+      WHERE am.user_uuid = user_admin_all AND am.is_active = true;
+
+    -- Driver assigned to our AM
+    INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer)
+    VALUES ('OwnDriver', 'Test', 'owndriver@test.com', 'clerk_own_driver', false, false)
+    RETURNING id INTO driver_own;
+    INSERT INTO public."Drivers" (user_uuid, is_active, account_manager_uuid)
+    VALUES (driver_own, true, am_id)
+    RETURNING id INTO driver_own;
+
+    -- Unassigned driver
+    INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer)
+    VALUES ('Unassigned', 'Driver', 'unassigned@test.com', 'clerk_unassigned_driver', false, false)
+    RETURNING id INTO driver_unassigned;
+    INSERT INTO public."Drivers" (user_uuid, is_active, account_manager_uuid)
+    VALUES (driver_unassigned, true, NULL)
+    RETURNING id INTO driver_unassigned;
+
+    -- Driver assigned to other AM
+    INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer)
+    VALUES ('OtherAM', 'Driver', 'otherdriver@test.com', 'clerk_other_driver', false, false)
+    RETURNING id INTO driver_other_am;
+    INSERT INTO public."Drivers" (user_uuid, is_active, account_manager_uuid)
+    VALUES (driver_other_am, true, other_am_id)
+    RETURNING id INTO driver_other_am;
+
+    -- Switch to authenticated role for RLS tests
+    SET LOCAL ROLE authenticated;
+
+    -- TEST F1: AM CAN update own driver
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
+    UPDATE public."Drivers" SET tax = 10 WHERE id = driver_own;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 1,
+      format('F1 AM update own driver: expected 1, got %s', v_count);
+    RAISE NOTICE 'TEST F1 (AM → own driver UPDATE allowed) ✓';
+
+    -- TEST F2: AM CAN update unassigned driver (assign to self)
+    UPDATE public."Drivers" SET account_manager_uuid = am_id WHERE id = driver_unassigned;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 1,
+      format('F2 AM assign unassigned driver: expected 1, got %s', v_count);
+    RAISE NOTICE 'TEST F2 (AM → unassigned driver assign to self) ✓';
+
+    -- TEST F3: AM CAN unassign own driver (set to null)
+    UPDATE public."Drivers" SET account_manager_uuid = NULL WHERE id = driver_own;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 1,
+      format('F3 AM unassign own driver: expected 1, got %s', v_count);
+    RAISE NOTICE 'TEST F3 (AM → own driver unassign) ✓';
+
+    -- TEST F4: AM CANNOT update other AM's driver
+    UPDATE public."Drivers" SET tax = 99 WHERE id = driver_other_am;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 0,
+      format('F4 AM update other AM driver: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST F4 (AM → other AM driver UPDATE blocked) ✓';
+
+    -- TEST F5: AM CANNOT assign driver to other AM (WITH CHECK blocks it)
+    -- driver_own was unassigned in F3, re-assign to self first
+    UPDATE public."Drivers" SET account_manager_uuid = am_id WHERE id = driver_own;
+    -- Now try to assign own driver to other AM
+    BEGIN
+      UPDATE public."Drivers" SET account_manager_uuid = other_am_id WHERE id = driver_own;
+      ASSERT false, 'F5 AM assign to other AM should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST F5 (AM → assign driver to other AM blocked) ✓';
+    END;
+
+    -- TEST F6: AM CAN select all drivers
+    SELECT count(*) INTO v_count FROM public."Drivers";
+    ASSERT v_count >= 3,
+      format('F6 AM select drivers: expected >=3, got %s', v_count);
+    RAISE NOTICE 'TEST F6 (AM → Drivers SELECT all) ✓';
+
+    -- TEST F7: Admin CAN update any driver
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
+    UPDATE public."Drivers" SET tax = 15 WHERE id = driver_other_am;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 1,
+      format('F7 admin update any driver: expected 1, got %s', v_count);
+    RAISE NOTICE 'TEST F7 (admin → any driver UPDATE allowed) ✓';
+  END;
 
   -- Switch back to postgres role
   RESET ROLE;
