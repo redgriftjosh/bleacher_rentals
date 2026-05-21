@@ -352,6 +352,71 @@ export const PERMISSIONS: PermissionEntry[] = [
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },
+
+  // Development Roadmap
+  {
+    label: "Quarters",
+    description:
+      "Top-level time periods used to organize sprints and plan roadmap work. This applies to the Roadmap page.",
+    category: "Development Roadmap",
+    roles: {
+      admin: full(
+        "Can create, edit, and delete quarters to structure the roadmap timeline.",
+      ),
+      account_manager: none(
+        "Account managers do not have access to roadmap planning.",
+      ),
+      developer: read(
+        "Can view quarters to understand the roadmap timeline, but cannot create or modify them.",
+      ),
+      viewer: none(
+        "Viewers do not have access to the development roadmap.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Sprints",
+    description:
+      "Time-boxed development cycles within a quarter. Sprints contain tickets that developers work on. This applies to the Roadmap page.",
+    category: "Development Roadmap",
+    roles: {
+      admin: full(
+        "Can create, edit, and delete sprints. Full control over sprint planning and organization.",
+      ),
+      account_manager: none(
+        "Account managers do not have access to roadmap planning.",
+      ),
+      developer: read(
+        "Can view sprints and the tickets within them, but cannot create, edit, or delete sprints themselves.",
+      ),
+      viewer: none(
+        "Viewers do not have access to the development roadmap.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Backlog / Tickets",
+    description:
+      "Individual work items that can live in the backlog or be assigned to a sprint. Tickets are visible on the Roadmap page and can be moved between the backlog and sprints.",
+    category: "Development Roadmap",
+    roles: {
+      admin: full(
+        "Can create, edit, and delete any ticket. Can move tickets between the backlog and sprints.",
+      ),
+      account_manager: full(
+        "Can create, edit, and view tickets. Useful for submitting feature requests or bug reports directly into the backlog.",
+      ),
+      developer: full(
+        "Can create, edit, and view tickets. Can move tickets between the backlog and sprints, and update ticket status as work progresses.",
+      ),
+      viewer: read(
+        "Can view all tickets in the backlog and sprints but cannot create, edit, or move them.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
 ];
 
 export const CATEGORIES = [...new Set(PERMISSIONS.map((p) => p.category))];
