@@ -27,7 +27,7 @@ export class FirstCellNotPinned extends HoverableBakedSprite {
 
     super(
       baker,
-      `FirstCellNotPinned:${eventInfo.span?.ev.eventUuid}:top${topOffset}:sh${stripeHeight}`,
+      `FirstCellNotPinned:${eventInfo.span?.ev.bleacherEventUuid}:top${topOffset}:sh${stripeHeight}`,
       (container) => {
         // Build the event content (unmasked — full event body visible)
         const eventCell = new EventBody(eventInfo, baker, dimensions, topOffset);

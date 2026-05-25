@@ -15,7 +15,7 @@ export class PinnedSection extends HoverableBakedSprite {
   ) {
     super(
       baker,
-      `FirstCellNotPinned:${eventInfo.span?.ev.eventUuid}`,
+      `PinnedSection:${eventInfo.span?.ev.bleacherEventUuid}`,
       (container) => {
         // Build the event content
         const eventCell = new EventBody(eventInfo, baker, dimensions);

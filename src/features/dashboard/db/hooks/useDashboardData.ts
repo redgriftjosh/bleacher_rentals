@@ -1,7 +1,9 @@
 import { useDashboardBleachersStore } from "../../state/useDashboardBleachersStore";
 import { useDashboardEventsStore } from "../../state/useDashboardEventsStore";
+import { useDashboardAlertsStore } from "../../state/useDashboardAlertsStore";
 import { useBleachers } from "./useBleachers";
 import { useEvents } from "./useEvents";
+import { useAlertsTable } from "./tables/useAlertsTable";
 
 export function useDashboardData(opts?: {
   onlyMine?: boolean;
@@ -13,6 +15,7 @@ export function useDashboardData(opts?: {
 } {
   const { bleachers, isLoading: bleachersLoading } = useBleachers();
   const { events, isLoading: eventsLoading } = useEvents(opts);
+  const { data: alertRows, isLoading: alertsLoading } = useAlertsTable();
 
   try {
     useDashboardBleachersStore.getState().setData(bleachers);
@@ -24,5 +27,10 @@ export function useDashboardData(opts?: {
     useDashboardEventsStore.getState().setStale(false);
   } catch {}
 
-  return { bleachers, events, isLoading: bleachersLoading || eventsLoading };
+  try {
+    useDashboardAlertsStore.getState().setData(alertRows ?? []);
+    useDashboardAlertsStore.getState().setStale(false);
+  } catch {}
+
+  return { bleachers, events, isLoading: bleachersLoading || eventsLoading || alertsLoading };
 }

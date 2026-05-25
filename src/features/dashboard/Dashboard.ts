@@ -17,6 +17,7 @@ import { getColumnsAndDates } from "./util/scrollbar";
 import { ResizeManager } from "./util/ResizeManager";
 import { useDashboardBleachersStore } from "./state/useDashboardBleachersStore";
 import { useDashboardEventsStore } from "./state/useDashboardEventsStore";
+import { useDashboardAlertsStore } from "./state/useDashboardAlertsStore";
 import type { DashboardFilterState } from "../dashboardOptions/types";
 import { filterEvents, filterSortPixiBleachers } from "../dashboardOptions/util";
 import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEventStore";
@@ -52,6 +53,7 @@ export class Dashboard {
   private scheduleRecompute?: () => void;
   private unsubBleachers?: () => void;
   private unsubEvents?: () => void;
+  private unsubAlerts?: () => void;
   private unsubCurrentEvent?: () => void;
   private unsubMaintenance?: () => void;
   private bleachers: Bleacher[] = [];
@@ -175,6 +177,7 @@ export class Dashboard {
     this.unsubMaintenance = useMaintenanceEventStore.subscribe(() => scheduleRecompute());
     this.unsubEvents = useDashboardEventsStore.subscribe(() => scheduleRecompute());
     this.unsubBleachers = useDashboardBleachersStore.subscribe(() => scheduleRecompute());
+    this.unsubAlerts = useDashboardAlertsStore.subscribe(() => scheduleRecompute());
 
     // Note: initial scroll handling is performed in initGrids using opts
 
@@ -666,6 +669,9 @@ export class Dashboard {
     } catch {}
     try {
       this.unsubEvents?.();
+    } catch {}
+    try {
+      this.unsubAlerts?.();
     } catch {}
     try {
       if (this.onCanvasMouseMove) {
