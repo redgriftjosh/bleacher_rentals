@@ -5,6 +5,7 @@ import { CELL_HEIGHT, CELL_WIDTH } from "../../../values/constants";
 import type { BleacherWorkTracker } from "../../../types";
 import { STATUS_TINT } from "./statusTint";
 import { drawUnavailableOverlay } from "./unavailableOverlay";
+import { countAlertsForEntity, drawAlertBadge } from "../AlertCount";
 
 /**
  * Full-cell work tracker display (1 tracker, no event overlap).
@@ -23,7 +24,8 @@ export class WorkTrackerFull extends Sprite {
     const pickup = tracker.pickupTime ?? "";
     const dropoff = tracker.dropoffTime ?? "";
 
-    const cacheKey = `WTFull:${tracker.status}:${driverName}:${pickup}:${dropoff}:${isUnavailable ? "U" : ""}`;
+    const alertCount = countAlertsForEntity(tracker.workTrackerUuid, "work_tracker");
+    const cacheKey = `WTFull:${tracker.status}:${driverName}:${pickup}:${dropoff}:${isUnavailable ? "U" : ""}:a${alertCount}`;
 
     this.texture = baker.getTexture(cacheKey, { width: W, height: H }, (c) => {
       // Background fill
@@ -93,6 +95,9 @@ export class WorkTrackerFull extends Sprite {
       if (isUnavailable) {
         drawUnavailableOverlay(c, W, H);
       }
+
+      // Alert badge (top-left corner)
+      drawAlertBadge(c, alertCount, 1, 1);
     });
   }
 }

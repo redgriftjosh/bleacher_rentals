@@ -4,6 +4,7 @@ import { CELL_HEIGHT, CELL_WIDTH } from "../../../values/constants";
 import type { BleacherWorkTracker } from "../../../types";
 import { STATUS_TINT } from "./statusTint";
 import { drawUnavailableOverlay } from "./unavailableOverlay";
+import { countAlertsForEntity, drawAlertBadge } from "../AlertCount";
 
 /**
  * Half-width work tracker display (2 trackers side by side, no event overlap).
