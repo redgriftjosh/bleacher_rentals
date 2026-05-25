@@ -139,6 +139,15 @@ const ALL_ITEMS: SidebarItemConfig[] = [
         href: "/quickbooks",
         icon: QuickBooksIcon,
       },
+    ],
+  },
+
+  {
+    type: "section",
+    key: "documentation",
+    label: "Documentation",
+    icon: MapPinned,
+    children: [
       {
         type: "button",
         key: "permissions",
@@ -162,6 +171,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
     "leaderboard",
     "driver-calendar",
     "configuration",
+    "documentation",
   ],
   account_manager: [
     "dashboard",
@@ -173,7 +183,6 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
     "scorecard",
     "leaderboard",
     "driver-calendar",
-    "configuration",
   ],
   developer: ["roadmap"],
   viewer: [
