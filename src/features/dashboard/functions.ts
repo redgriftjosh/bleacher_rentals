@@ -253,10 +253,21 @@ export function updateCurrentEventAlerts() {
     bleachers,
   });
 
-  // Evaluate delivery alerts for each bleacher assigned to this event
-  const thisEventBleacherEvents = bleacherEvents.filter(
-    (be) => be.event_uuid === state.eventUuid,
-  );
+  // Evaluate delivery alerts for each bleacher assigned to this event.
+  // For unsaved events (eventUuid is null), build synthetic BleacherEvent rows
+  // from state.bleacherUuids so delivery alerts can fire before save.
+  const thisEventBleacherEvents: Tables<"BleacherEvents">[] = state.eventUuid
+    ? bleacherEvents.filter((be) => be.event_uuid === state.eventUuid)
+    : (state.bleacherUuids ?? []).map((bUuid) => ({
+        id: `unsaved-${bUuid}`,
+        bleacher_uuid: bUuid,
+        event_uuid: null,
+        created_at: new Date().toISOString(),
+        setup_confirmed: false,
+        setup_text: null,
+        teardown_confirmed: false,
+        teardown_text: null,
+      }));
   const eventAsRow = {
     booked: state.selectedStatus === "booked",
     address_uuid: state.addressData?.addressUuid ?? null,
@@ -275,6 +286,7 @@ export function updateCurrentEventAlerts() {
       addresses,
       allBleacherEvents: bleacherEvents,
       allEvents: events,
+      eventStreetOverride: state.addressData?.address || undefined,
     });
   });
 

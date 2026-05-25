@@ -29,6 +29,8 @@ type EventBleacherDeliveryContext = {
   /** All events (to resolve event addresses and dates). */
   allEvents: Tables<"Events">[];
   useDateWindow?: boolean;
+  /** Optional street string override — used when the address hasn't been saved to DB yet (no address_uuid). */
+  eventStreetOverride?: string;
 };
 
 /**
@@ -54,6 +56,7 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
     allBleacherEvents,
     allEvents,
     useDateWindow,
+    eventStreetOverride,
   }: EventBleacherDeliveryContext): AlertPayload[] {
     if (!event.booked) return [];
 
@@ -63,12 +66,21 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
         return [];
     }
 
-    if (!event.address_uuid) return [];
+    // Resolve the event's street: prefer override (unsaved address), fall back to UUID lookup
+    let eventStreet: string;
+    let eventStreetDisplay: string;
+    if (eventStreetOverride) {
+      eventStreet = eventStreetOverride.trim().toLowerCase();
+      eventStreetDisplay = eventStreetOverride;
+    } else {
+      if (!event.address_uuid) return [];
+      const eventAddress = addresses.find((a) => a.id === event.address_uuid);
+      if (!eventAddress?.street) return [];
+      eventStreet = eventAddress.street.trim().toLowerCase();
+      eventStreetDisplay = eventAddress.street;
+    }
 
-    const eventAddress = addresses.find((a) => a.id === event.address_uuid);
-    if (!eventAddress?.street) return [];
-
-    const eventStreet = eventAddress.street.trim().toLowerCase();
+    if (!eventStreet) return [];
     const targetDate = event.event_start.slice(0, 10);
 
     const addressStreet = new Map(
@@ -106,7 +118,7 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
 
     if (lastKnown === eventStreet) return [];
 
-    const description = [event.event_name, eventAddress.street]
+    const description = [event.event_name, eventStreetDisplay]
       .filter(Boolean)
       .join(" — ");
     const bleacherLabel = bleacher
@@ -118,7 +130,7 @@ class EventBleacherDeliveryDefinition extends AlertDefinition<EventBleacherDeliv
         entity_uuid: bleacherEvent.id,
         entity_type: "bleacher_event",
         title: this.title,
-        message: `${bleacherLabel} has no delivery work tracker to ${eventAddress.street} before ${event.event_start.slice(0, 10)}.`,
+        message: `${bleacherLabel} has no delivery work tracker to ${eventStreetDisplay} before ${event.event_start.slice(0, 10)}.`,
         entity_description: description || null,
       },
     ];

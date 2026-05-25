@@ -2,7 +2,10 @@
 
 import { create } from "zustand";
 import { useEventsStore } from "@/state/eventsStore";
-import { calculateBestHue, updateCurrentEventAlerts } from "@/features/dashboard/functions";
+import {
+  calculateBestHue,
+  updateCurrentEventAlerts,
+} from "@/features/dashboard/functions";
 
 export type AddressData = {
   addressUuid: string | null;
@@ -54,7 +57,10 @@ export type CurrentEventState = {
 // Me take event form stuff, add tools to change it.
 export type CurrentEventStore = CurrentEventState & {
   // Me give key and value. Me change that part in box.
-  setField: <K extends keyof CurrentEventState>(key: K, value: CurrentEventState[K]) => void;
+  setField: <K extends keyof CurrentEventState>(
+    key: K,
+    value: CurrentEventState[K],
+  ) => void;
 
   // Me smash reset. Everything go back to start.
   resetForm: () => void;
@@ -119,8 +125,11 @@ useCurrentEventStore.subscribe((state) => {
   // 💥 Update alerts too!
   // console.log("Update alerts too!");
   updateCurrentEventAlerts();
+  //console log the entire state for debugging include deep opjects
+  // console.log("CurrentEventStore state:", JSON.parse(JSON.stringify(state)));
 
-  if (state.eventStart === "" || state.hslHue !== null || state.eventEnd === "") return;
+  if (state.eventStart === "" || state.hslHue !== null || state.eventEnd === "")
+    return;
 
   const events = useEventsStore.getState().events;
   const newHue = calculateBestHue(state, events);
