@@ -1,5 +1,6 @@
 // app/api/linxup/devices/route.ts
 import { NextResponse, NextRequest } from "next/server";
+import { requireAuth } from "@/features/userAccess/logic/requireAuth";
 
 const HOST = (process.env.LINXUP_API_HOST || "").replace(/\/+$/, ""); // e.g. https://app02.linxup.com
 const TOKEN = process.env.LINXUP_API_TOKEN || ""; // Bearer token from Linxup portal
@@ -7,6 +8,7 @@ const BASE = `${HOST}/ibis/rest/api/v2`; // Linxup REST base path
 
 export async function GET(req: NextRequest) {
   try {
+    await requireAuth();
     if (!HOST || !TOKEN) {
       console.error("[linxup] Missing env vars", { hasHost: !!HOST, hasToken: !!TOKEN });
       return NextResponse.json(
@@ -192,6 +194,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(devices);
   } catch (e: any) {
+    if (e instanceof Response) return e;
     console.error("[linxup] Unhandled error:", e);
     return NextResponse.json({ error: e?.message ?? "Internal server error" }, { status: 500 });
   }

@@ -1,5 +1,5 @@
 import { getBaseUrl, getQboAccessTokenAndRealmId } from "@/features/quickbooks-integration/util";
-import { auth } from "@clerk/nextjs/server";
+import { requireAuth } from "@/features/userAccess/logic/requireAuth";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/utils/supabase/getClerkSupabaseServerClient";
 import { DateTime } from "luxon";
@@ -44,15 +44,10 @@ async function uploadPdfToQbo(
 }
 
 export async function POST(req: NextRequest) {
-  // Require authentication
-  const { userId, getToken } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   let workTrackerGroupId: string | undefined;
 
   try {
+    await requireAuth();
     const body = await req.json();
     workTrackerGroupId = body.workTrackerGroupId;
     const { driverUuid, startDate, billId, syncToken } = body;
@@ -391,6 +386,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (error instanceof Response) return error;
     return NextResponse.json({ error: error.message || "Failed to create bill" }, { status: 500 });
   }
 }

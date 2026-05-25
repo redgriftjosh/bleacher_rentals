@@ -1573,6 +1573,175 @@ BEGIN
 
   RESET ROLE;
 
+  -- ==========================================================================
+  -- PART N: Admin-only configuration pages
+  -- /quickbooks (QboConnections), /inspection-questions (InspectionQuestions),
+  -- /zones (Zones, ZoneStateProvinces, ZoneQboClasses)
+  -- Admin has full CRUD. Everyone else = no access.
+  -- ==========================================================================
+  DECLARE
+    zone_id        UUID;
+    zone_sp_id     UUID;
+    zone_qbo_id    UUID;
+    qbo_conn_id    UUID;
+    iq_id          UUID;
+  BEGIN
+    -- Setup: insert test data as postgres (bypass RLS)
+    INSERT INTO public."QboConnections" (display_name, encrypted_token_value, realm_id)
+    VALUES ('Test QBO', 'tok_test', 'realm_test')
+    RETURNING id INTO qbo_conn_id;
+
+    INSERT INTO public."Zones" (display_name, description)
+    VALUES ('Test Zone', 'Zone for admin-only test')
+    RETURNING id INTO zone_id;
+
+    INSERT INTO public."ZoneStateProvinces" (zone_uuid, state_province)
+    VALUES (zone_id, 'TX')
+    RETURNING id INTO zone_sp_id;
+
+    INSERT INTO public."ZoneQboClasses" (zone_uuid, qbo_class_id, qbo_connection_uuid)
+    VALUES (zone_id, 'cls_test', qbo_conn_id)
+    RETURNING id INTO zone_qbo_id;
+
+    INSERT INTO public."InspectionQuestions" (question_text, question_type, required, sort_order, is_active)
+    VALUES ('Test question?', 'text', true, 999, true)
+    RETURNING id INTO iq_id;
+
+    SET LOCAL ROLE authenticated;
+
+    -- ---- N1-N5: Admin CAN CRUD all 5 tables ----
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
+
+    -- TEST N1: Admin CAN select all config tables
+    SELECT count(*) INTO v_count FROM public."QboConnections";
+    ASSERT v_count > 0, format('N1 admin QboConnections: expected >0, got %s', v_count);
+    SELECT count(*) INTO v_count FROM public."InspectionQuestions";
+    ASSERT v_count > 0, format('N1 admin InspectionQuestions: expected >0, got %s', v_count);
+    SELECT count(*) INTO v_count FROM public."Zones";
+    ASSERT v_count > 0, format('N1 admin Zones: expected >0, got %s', v_count);
+    SELECT count(*) INTO v_count FROM public."ZoneStateProvinces";
+    ASSERT v_count > 0, format('N1 admin ZoneStateProvinces: expected >0, got %s', v_count);
+    SELECT count(*) INTO v_count FROM public."ZoneQboClasses";
+    ASSERT v_count > 0, format('N1 admin ZoneQboClasses: expected >0, got %s', v_count);
+    RAISE NOTICE 'TEST N1 (admin → all config tables SELECT) ✓';
+
+    -- TEST N2: Admin CAN insert into config tables
+    INSERT INTO public."Zones" (display_name) VALUES ('Admin Zone');
+    INSERT INTO public."InspectionQuestions" (question_text, question_type, required, sort_order, is_active)
+    VALUES ('Admin Q?', 'text', false, 998, true);
+    INSERT INTO public."QboConnections" (display_name, encrypted_token_value, realm_id)
+    VALUES ('Admin QBO', 'tok_admin', 'realm_admin');
+    RAISE NOTICE 'TEST N2 (admin → config tables INSERT) ✓';
+
+    -- TEST N3: Admin CAN update config tables
+    UPDATE public."Zones" SET display_name = 'Updated Zone' WHERE id = zone_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 1, format('N3 admin update Zones: expected 1, got %s', v_count);
+    UPDATE public."InspectionQuestions" SET question_text ='Updated?' WHERE id = iq_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 1, format('N3 admin update IQ: expected 1, got %s', v_count);
+    RAISE NOTICE 'TEST N3 (admin → config tables UPDATE) ✓';
+
+    -- TEST N4: Admin CAN delete from config tables
+    DECLARE
+      del_zone UUID;
+    BEGIN
+      RESET ROLE;
+      INSERT INTO public."Zones" (display_name) VALUES ('To Delete') RETURNING id INTO del_zone;
+      SET LOCAL ROLE authenticated;
+      PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
+      DELETE FROM public."Zones" WHERE id = del_zone;
+      GET DIAGNOSTICS v_count = ROW_COUNT;
+      ASSERT v_count = 1, format('N4 admin delete Zones: expected 1, got %s', v_count);
+      RAISE NOTICE 'TEST N4 (admin → config tables DELETE) ✓';
+    END;
+
+    -- ---- N5-N9: AM CANNOT access any config table ----
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
+
+    -- TEST N5: AM CANNOT select config tables
+    SELECT count(*) INTO v_count FROM public."QboConnections";
+    ASSERT v_count = 0, format('N5 AM QboConnections: expected 0, got %s', v_count);
+    SELECT count(*) INTO v_count FROM public."InspectionQuestions";
+    ASSERT v_count = 0, format('N5 AM InspectionQuestions: expected 0, got %s', v_count);
+    SELECT count(*) INTO v_count FROM public."Zones";
+    ASSERT v_count = 0, format('N5 AM Zones: expected 0, got %s', v_count);
+    SELECT count(*) INTO v_count FROM public."ZoneStateProvinces";
+    ASSERT v_count = 0, format('N5 AM ZoneStateProvinces: expected 0, got %s', v_count);
+    SELECT count(*) INTO v_count FROM public."ZoneQboClasses";
+    ASSERT v_count = 0, format('N5 AM ZoneQboClasses: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST N5 (AM → all config tables SELECT blocked) ✓';
+
+    -- TEST N6: AM CANNOT insert into config tables
+    BEGIN
+      INSERT INTO public."Zones" (display_name) VALUES ('AM Zone');
+      ASSERT false, 'N6 AM insert Zones should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST N6a (AM → Zones INSERT blocked) ✓';
+    END;
+    BEGIN
+      INSERT INTO public."InspectionQuestions" (question_text, question_type, required, sort_order, is_active)
+      VALUES ('AM Q?', 'text', false, 997, true);
+      ASSERT false, 'N6 AM insert IQ should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST N6b (AM → InspectionQuestions INSERT blocked) ✓';
+    END;
+    BEGIN
+      INSERT INTO public."QboConnections" (display_name, encrypted_token_value, realm_id)
+      VALUES ('AM QBO', 'tok_am', 'realm_am');
+      ASSERT false, 'N6 AM insert QboConnections should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST N6c (AM → QboConnections INSERT blocked) ✓';
+    END;
+
+    -- TEST N7: AM CANNOT update config tables
+    UPDATE public."Zones" SET display_name = 'Hacked' WHERE id = zone_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 0, format('N7 AM update Zones: expected 0, got %s', v_count);
+    UPDATE public."InspectionQuestions" SET question_text ='Hacked?' WHERE id = iq_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 0, format('N7 AM update IQ: expected 0, got %s', v_count);
+    UPDATE public."QboConnections" SET display_name = 'Hacked' WHERE id = qbo_conn_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 0, format('N7 AM update QboConnections: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST N7 (AM → config tables UPDATE blocked) ✓';
+
+    -- TEST N8: AM CANNOT delete from config tables
+    DELETE FROM public."Zones" WHERE id = zone_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 0, format('N8 AM delete Zones: expected 0, got %s', v_count);
+    DELETE FROM public."QboConnections" WHERE id = qbo_conn_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 0, format('N8 AM delete QboConnections: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST N8 (AM → config tables DELETE blocked) ✓';
+
+    -- ---- N9-N10: Viewer and Developer also blocked ----
+
+    -- TEST N9: Viewer CANNOT select config tables
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_viewer)::text, true);
+    SELECT count(*) INTO v_count FROM public."QboConnections";
+    ASSERT v_count = 0, format('N9 viewer QboConnections: expected 0, got %s', v_count);
+    SELECT count(*) INTO v_count FROM public."InspectionQuestions";
+    ASSERT v_count = 0, format('N9 viewer InspectionQuestions: expected 0, got %s', v_count);
+    SELECT count(*) INTO v_count FROM public."Zones";
+    ASSERT v_count = 0, format('N9 viewer Zones: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST N9 (viewer → config tables SELECT blocked) ✓';
+
+    -- TEST N10: Developer CANNOT select config tables
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_dev)::text, true);
+    SELECT count(*) INTO v_count FROM public."QboConnections";
+    ASSERT v_count = 0, format('N10 dev QboConnections: expected 0, got %s', v_count);
+    SELECT count(*) INTO v_count FROM public."InspectionQuestions";
+    ASSERT v_count = 0, format('N10 dev InspectionQuestions: expected 0, got %s', v_count);
+    SELECT count(*) INTO v_count FROM public."Zones";
+    ASSERT v_count = 0, format('N10 dev Zones: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST N10 (developer → config tables SELECT blocked) ✓';
+
+    RAISE NOTICE '--- all admin-only config page tests (N1-N10) passed ---';
+  END;
+
+  RESET ROLE;
+
   RAISE NOTICE '--- all multi-role RLS tests passed ---';
 END;
 $$;

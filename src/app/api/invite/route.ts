@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClerkClient } from "@clerk/nextjs/server";
+import { requireAdmin } from "@/features/userAccess/logic/requireAdmin";
 
 export async function POST(req: NextRequest) {
+  try {
+    await requireAdmin();
+  } catch (error) {
+    if (error instanceof Response) return error;
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { email } = await req.json();
   const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
@@ -91,6 +99,13 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  try {
+    await requireAdmin();
+  } catch (error) {
+    if (error instanceof Response) return error;
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { email } = await req.json();
   const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 

@@ -1,5 +1,6 @@
 // app/api/linxup/devices/[deviceId]/route.ts
 import { NextResponse, NextRequest } from "next/server";
+import { requireAuth } from "@/features/userAccess/logic/requireAuth";
 
 const HOST = (process.env.LINXUP_API_HOST || "").replace(/\/+$/, "");
 const TOKEN = process.env.LINXUP_API_TOKEN || "";
@@ -7,6 +8,7 @@ const BASE = `${HOST}/ibis/rest/api/v2`;
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ deviceId: string }> }) {
   try {
+    await requireAuth();
     const { deviceId } = await params;
 
     if (!HOST || !TOKEN) {
@@ -67,6 +69,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ devi
 
     return NextResponse.json(normalized);
   } catch (e: any) {
+    if (e instanceof Response) return e;
     console.error("[linxup] Error fetching device:", e);
     return NextResponse.json({ error: e?.message ?? "Internal server error" }, { status: 500 });
   }

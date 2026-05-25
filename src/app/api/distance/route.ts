@@ -1,7 +1,15 @@
 // app/api/distance/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/features/userAccess/logic/requireAuth";
 
 export async function GET(req: NextRequest) {
+  try {
+    await requireAuth();
+  } catch (error) {
+    if (error instanceof Response) return error;
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   if (!key) return NextResponse.json({ error: "Missing API key" }, { status: 500 });
 
