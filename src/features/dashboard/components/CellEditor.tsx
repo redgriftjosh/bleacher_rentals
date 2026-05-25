@@ -5,26 +5,39 @@ import { useEffect, useRef, useState } from "react";
 import { useSelectedBlockStore } from "../state/useSelectedBlock";
 import { Tables } from "../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { useQueryClient } from "@tanstack/react-query";
-import { deleteBlock, saveBlock } from "../db/client/db";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import {
+  saveBlockPowerSync,
+  deleteBlockPowerSync,
+} from "../db/powersync/blocks";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
 import { useUser } from "@clerk/nextjs";
 import { useUsersStore } from "@/state/userStore";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type CellEditorProps = {
   onWorkTrackerOpen?: (workTracker: Tables<"WorkTrackers">) => void;
 };
 
 export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
-  const qc = useQueryClient();
-  const supabase = useClerkSupabaseClient();
   const { user } = useUser();
   const users = useUsersStore((s) => s.users);
-  const { isOpen, key, blockUuid, bleacherUuid, date, text, workTrackerUuid, setField, resetForm } =
-    useSelectedBlockStore();
+  const {
+    isOpen,
+    key,
+    blockUuid,
+    bleacherUuid,
+    date,
+    text,
+    workTrackerUuid,
+    setField,
+    resetForm,
+  } = useSelectedBlockStore();
 
   const [currentText, setCurrentText] = useState(text);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -50,13 +63,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         text: currentText,
         workTrackerUuid,
       };
-      await saveBlock(editBlock, supabase);
-      // Refresh bleachers store directly so Pixi updates without remounting
-      try {
-        const { FetchDashboardBleachers } =
-          await import("@/features/dashboard/db/client/bleachers");
-        await FetchDashboardBleachers(supabase);
-      } catch {}
+      await saveBlockPowerSync(editBlock);
       resetForm();
     } catch (error) {
       console.error("Failed to Save Block:", error);
@@ -75,13 +82,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         text: currentText,
         workTrackerUuid,
       };
-      await deleteBlock(editBlock, supabase);
-      // Refresh bleachers store directly so Pixi updates without remounting
-      try {
-        const { FetchDashboardBleachers } =
-          await import("@/features/dashboard/db/client/bleachers");
-        await FetchDashboardBleachers(supabase);
-      } catch {}
+      await deleteBlockPowerSync(editBlock);
       resetForm();
     } catch (error) {
       console.error("Failed to Delete Block:", error);
@@ -90,7 +91,9 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
 
   const handleOpenWorkTracker = () => {
     if (!date || !bleacherUuid) {
-      createErrorToast(["Failed to open work tracker. Missing date or bleacher id."]);
+      createErrorToast([
+        "Failed to open work tracker. Missing date or bleacher id.",
+      ]);
       return;
     }
 
@@ -135,7 +138,9 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
 
   const handleCreateEvent = () => {
     if (!date || !bleacherUuid) {
-      createErrorToast(["Failed to create event. Missing date or bleacher id."]);
+      createErrorToast([
+        "Failed to create event. Missing date or bleacher id.",
+      ]);
       return;
     }
 
@@ -171,7 +176,9 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
 
   const handleCreateMaintenance = () => {
     if (!date || !bleacherUuid) {
-      createErrorToast(["Failed to create maintenance event. Missing date or bleacher id."]);
+      createErrorToast([
+        "Failed to create maintenance event. Missing date or bleacher id.",
+      ]);
       return;
     }
 
