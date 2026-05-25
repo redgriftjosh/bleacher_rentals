@@ -198,9 +198,13 @@ export async function FetchDashboardBleachers(
     summerAccountManagerUuid: r.summer_account_manager_uuid,
     winterAccountManagerUuid: r.winter_account_manager_uuid,
 
-    summerHomeBase: r.summer ? { name: r.summer.home_base_name, homeBaseUuid: r.summer.id } : null,
+    summerHomeBase: r.summer
+      ? { name: r.summer.home_base_name, homeBaseUuid: r.summer.id }
+      : null,
 
-    winterHomeBase: r.winter ? { name: r.winter.home_base_name, homeBaseUuid: r.winter.id } : null,
+    winterHomeBase: r.winter
+      ? { name: r.winter.home_base_name, homeBaseUuid: r.winter.id }
+      : null,
 
     bleacherEvents: (r.bleacher_events ?? [])
       // optional: if you *only* want rows that actually have an event

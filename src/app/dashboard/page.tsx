@@ -1,17 +1,19 @@
 "use client";
 import LoadingSpinner from "@/components/LoadingSpinner";
+// Imports used by the commented-out tanstack query below (uncomment if re-enabling it):
 import { FetchDashboardBleachers } from "@/features/dashboard/db/client/bleachers";
 import { FetchDashboardEvents } from "@/features/dashboard/db/client/events";
 import { useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
+import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
 import DashboardApp from "@/features/dashboard/DashboardApp";
 import CellEditor from "@/features/dashboard/components/CellEditor";
 import { useEffect, useState } from "react";
 import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useWorkTrackerSelectionStore";
 import { Tables } from "../../../database.types";
-import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
 // import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { useDashboardFilterSettings } from "@/features/dashboardOptions/useDashboardFilterSettings";
+import { useDashboardData } from "@/features/dashboard/db/hooks/useDashboardData";
 import WorkTrackerModal from "@/features/workTrackers/components/WorkTrackerModal";
 import { DashboardOptions } from "@/features/dashboardOptions/DashboardOptions";
 import { SeasonToggle } from "@/features/dashboardOptions/SeasonToggle";
@@ -28,14 +30,19 @@ import { useDriverUnavailability } from "@/features/dashboard/db/hooks/useDriver
 import { useDriverUnavailabilityStore } from "@/features/dashboard/state/useDriverUnavailabilityStore";
 
 export default function Page() {
-  const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
-    null,
-  );
-  const { state: dashboardFilters } = useDashboardFilterSettings();
-  const onlyShowMyEvents = dashboardFilters?.onlyShowMyEvents ?? true;
-  const refreshToken = useDataRefreshTokenStore((s) => s.token);
-  const { isLoaded, userId } = useAuth();
+  const [selectedWorkTracker, setSelectedWorkTracker] =
+    useState<Tables<"WorkTrackers"> | null>(null);
+  const { state: dashboardFilters, userContext } = useDashboardFilterSettings();
+  const onlyShowMyEvents = dashboardFilters?.onlyShowMyEvents ?? false;
+  const userUuid = userContext?.userUuid ?? null;
   const supabase = useClerkSupabaseClient();
+  const { isLoaded, userId } = useAuth();
+  const refreshToken = useDataRefreshTokenStore((s) => s.token);
+
+  const { isLoading } = useDashboardData({
+    onlyMine: onlyShowMyEvents,
+    userUuid,
+  });
 
   // Register supabase client for PixiJS components
   useEffect(() => {
@@ -48,24 +55,30 @@ export default function Page() {
   // Bleacher location modal state
   const locationModal = useBleacherLocationModalStore();
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["FetchDashboardBleachersAndEvents", { onlyShowMyEvents, userId, refreshToken }],
-    enabled: isLoaded && !!userId,
-    queryFn: async () => {
-      const [b, e] = await Promise.all([
-        FetchDashboardBleachers(supabase),
-        FetchDashboardEvents(supabase, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
-      ]);
+  // const { data, isLoading, error } = useQuery({
+  //   queryKey: [
+  //     "FetchDashboardBleachersAndEvents",
+  //     { onlyShowMyEvents, userId, refreshToken },
+  //   ],
+  //   enabled: isLoaded && !!userId,
+  //   queryFn: async () => {
+  //     const [b, e] = await Promise.all([
+  //       FetchDashboardBleachers(supabase),
+  //       FetchDashboardEvents(supabase, {
+  //         onlyMine: onlyShowMyEvents,
+  //         clerkUserId: userId,
+  //       }),
+  //     ]);
 
-      // Fetch BleacherUsers assignments for the logged-in user
-      // const supabase = await getSupabaseClient(token!);
+  //     // Fetch BleacherUsers assignments for the logged-in user
+  //     // const supabase = await getSupabaseClient(token!);
 
-      return {
-        bleachers: b.bleachers,
-        events: e.events,
-      };
-    },
-  });
+  //     return {
+  //       bleachers: b.bleachers,
+  //       events: e.events,
+  //     };
+  //   },
+  // });
 
   const handleWorkTrackerOpen = (workTracker: Tables<"WorkTrackers">) => {
     setSelectedWorkTracker(workTracker);
@@ -103,10 +116,6 @@ export default function Page() {
     useDriverUnavailabilityStore.getState().setUnavailableKeys(unavailKeys);
   }, [unavailKeys]);
 
-  if (error) {
-    return <div>Uh Oh, Something went wrong... 😬</div>;
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center">
@@ -114,9 +123,9 @@ export default function Page() {
       </div>
     );
   }
-  if (!data?.bleachers || data.bleachers.length === 0) {
-    return <div>No Bleachers!</div>;
-  }
+  // if (!data?.bleachers || data.bleachers.length === 0) {
+  //   return <div>No Bleachers!</div>;
+  // }
 
   return (
     <div className="h-full grid grid-rows-[auto_1fr] gap-2 overflow-hidden min-w-0">
@@ -126,14 +135,16 @@ export default function Page() {
         setSelectedWorkTracker={setSelectedWorkTracker}
         setSelectedBlock={() => {}} // Not used in PixiJS version
       />
-      {locationModal.isOpen && locationModal.bleacherNumber && locationModal.deviceId && (
-        <BleacherLocationModal
-          isOpen={locationModal.isOpen}
-          onClose={locationModal.closeModal}
-          bleacherNumber={locationModal.bleacherNumber}
-          deviceId={locationModal.deviceId}
-        />
-      )}
+      {locationModal.isOpen &&
+        locationModal.bleacherNumber &&
+        locationModal.deviceId && (
+          <BleacherLocationModal
+            isOpen={locationModal.isOpen}
+            onClose={locationModal.closeModal}
+            bleacherNumber={locationModal.bleacherNumber}
+            deviceId={locationModal.deviceId}
+          />
+        )}
       <SwapConfirmationModal />
       <div className="min-w-0">
         <div className="flex justify-between items-center pt-2 pl-2 pr-2">
