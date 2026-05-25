@@ -4,9 +4,10 @@ import SideBar from "@/components/sidebar/Sidebar";
 import useSupabaseSubscriptions from "@/hooks/useSupabaseSubscriptions";
 import { SignOutButton } from "@clerk/nextjs";
 import { Button } from "./ui/button";
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { LayoutProvider } from "@/contexts/LayoutContexts";
 import { useUserAccess } from "@/features/userAccess/client";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { useAccessRedirect } from "@/features/userAccess/hooks/useAccessRedirect";
 import { mergeRoleConfigs } from "@/features/userAccess/accessConfig";
 import LoadingSpinner from "./LoadingSpinner";
@@ -27,6 +28,18 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
   );
 
   useAccessRedirect(config);
+
+  // Sync permissions to Zustand store so non-React code (Pixi renderers) can read them
+  useEffect(() => {
+    if (access.status === "active") {
+      usePermissionsStore.setState({
+        isAdmin: access.roles.includes("admin"),
+        isAccountManager: access.roles.includes("account_manager"),
+        accountManagerId: access.accountManagerId,
+        userId: access.userId,
+      });
+    }
+  }, [access]);
 
   if (access.status === "loading") {
     return (

@@ -32,6 +32,7 @@ type SelectUserDropDownProps<T extends UserOption> = {
   searchPlaceholder?: string;
   emptyMessage?: string;
   isLoading?: boolean;
+  disabled?: boolean;
   getOptionId: (option: T) => string;
   getSearchValue?: (option: T) => string;
   getOptionTitle?: (option: T) => string;
@@ -47,6 +48,7 @@ export function SelectUserDropDown<T extends UserOption>({
   searchPlaceholder = "Search...",
   emptyMessage = "No results found.",
   isLoading = false,
+  disabled = false,
   getOptionId,
   getSearchValue,
   getOptionTitle,
@@ -63,14 +65,17 @@ export function SelectUserDropDown<T extends UserOption>({
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={disabled ? undefined : setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between text-left font-normal"
-          disabled={isLoading}
+          className={cn(
+            "w-full justify-between text-left font-normal disabled:opacity-100",
+            disabled && "bg-gray-50 text-gray-700 cursor-default",
+          )}
+          disabled={isLoading || disabled}
         >
           {isLoading ? (
             <span className="text-gray-500">Loading...</span>
@@ -83,25 +88,27 @@ export function SelectUserDropDown<T extends UserOption>({
           ) : (
             <span className="text-gray-500">{placeholder}</span>
           )}
-          <div className="flex items-center gap-1">
-            {value && !isLoading && (
-              <span
-                role="button"
-                tabIndex={0}
-                className="opacity-50 hover:opacity-100 transition-opacity"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onChange(null);
-                  setOpen(false);
-                }}
-                aria-label="Clear selection"
-              >
-                <X className="h-4 w-4" />
-              </span>
-            )}
-            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-          </div>
+          {!disabled && (
+            <div className="flex items-center gap-1">
+              {value && !isLoading && (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="opacity-50 hover:opacity-100 transition-opacity"
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onChange(null);
+                    setOpen(false);
+                  }}
+                  aria-label="Clear selection"
+                >
+                  <X className="h-4 w-4" />
+                </span>
+              )}
+              <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+            </div>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">

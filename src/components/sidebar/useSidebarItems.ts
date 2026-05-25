@@ -179,6 +179,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
   viewer: [
     "dashboard",
     "quotes-bookings",
+    "team",
     "assets",
     "quality-assurance",
     "work-trackers",

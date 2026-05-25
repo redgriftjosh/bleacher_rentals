@@ -6,8 +6,11 @@ import { useUsersStore } from "@/state/userStore";
 import { useCurrentEventStore } from "../state/useCurrentEventStore";
 import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
 import { useState, useRef, useEffect } from "react";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 
 export const CreateEventButton = () => {
+  const permissions = useTeamPermissions();
+  const isViewer = !permissions.isAdmin && !permissions.isAccountManager;
   const currentEventStore = useCurrentEventStore();
   const maintenanceStore = useMaintenanceEventStore();
   const { user } = useUser();
@@ -121,6 +124,9 @@ export const CreateEventButton = () => {
       </div>
     );
   }
+
+  // Viewer cannot create events or maintenance
+  if (isViewer) return null;
 
   // Neither form expanded: show split button
   return (
