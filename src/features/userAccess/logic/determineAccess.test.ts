@@ -28,7 +28,7 @@ describe("determineUserAccess", () => {
   it("blocked: driver-only when only driver role", () => {
     const userData: UserAccessData = {
       id: "1",
-      status_uuid: null,
+      status_uuid: STATUSES.active,
       is_admin: 0,
       is_viewer: 0,
       account_manager_id: null,
@@ -42,7 +42,7 @@ describe("determineUserAccess", () => {
   it("blocked: no-roles-assigned when no roles at all", () => {
     const userData: UserAccessData = {
       id: "1",
-      status_uuid: null,
+      status_uuid: STATUSES.active,
       is_admin: 0,
       is_viewer: 0,
       account_manager_id: null,
@@ -58,7 +58,7 @@ describe("determineUserAccess", () => {
   it("active: admin only", () => {
     const userData: UserAccessData = {
       id: "1",
-      status_uuid: null,
+      status_uuid: STATUSES.active,
       is_admin: 1,
       is_viewer: 0,
       account_manager_id: null,
@@ -77,7 +77,7 @@ describe("determineUserAccess", () => {
   it("active: account_manager only", () => {
     const userData: UserAccessData = {
       id: "1",
-      status_uuid: null,
+      status_uuid: STATUSES.active,
       is_admin: 0,
       is_viewer: 0,
       account_manager_id: "am-1",
@@ -96,7 +96,7 @@ describe("determineUserAccess", () => {
   it("active: developer only", () => {
     const userData: UserAccessData = {
       id: "1",
-      status_uuid: null,
+      status_uuid: STATUSES.active,
       is_admin: 0,
       is_viewer: 0,
       account_manager_id: null,
@@ -115,7 +115,7 @@ describe("determineUserAccess", () => {
   it("active: viewer only", () => {
     const userData: UserAccessData = {
       id: "1",
-      status_uuid: null,
+      status_uuid: STATUSES.active,
       is_admin: 0,
       is_viewer: 1,
       account_manager_id: null,
@@ -136,7 +136,7 @@ describe("determineUserAccess", () => {
   it("active: admin + developer → both roles", () => {
     const userData: UserAccessData = {
       id: "1",
-      status_uuid: null,
+      status_uuid: STATUSES.active,
       is_admin: 1,
       is_viewer: 0,
       account_manager_id: null,
@@ -155,7 +155,7 @@ describe("determineUserAccess", () => {
   it("active: account manager + developer → both roles", () => {
     const userData: UserAccessData = {
       id: "1",
-      status_uuid: null,
+      status_uuid: STATUSES.active,
       is_admin: 0,
       is_viewer: 0,
       account_manager_id: "am-1",
@@ -174,7 +174,7 @@ describe("determineUserAccess", () => {
   it("active: developer + viewer → both roles", () => {
     const userData: UserAccessData = {
       id: "1",
-      status_uuid: null,
+      status_uuid: STATUSES.active,
       is_admin: 0,
       is_viewer: 1,
       account_manager_id: null,
@@ -193,7 +193,7 @@ describe("determineUserAccess", () => {
   it("active: driver + viewer → viewer (driver ignored on web)", () => {
     const userData: UserAccessData = {
       id: "1",
-      status_uuid: null,
+      status_uuid: STATUSES.active,
       is_admin: 0,
       is_viewer: 1,
       account_manager_id: null,
@@ -203,16 +203,16 @@ describe("determineUserAccess", () => {
     const result = determineUserAccess(userData);
     expect(result).toEqual({
       status: "active",
-      roles: ["viewer"],
+      roles: ["viewer", "driver"],
       userId: "1",
       accountManagerId: null,
     });
   });
 
-  it("active: driver + developer → developer (driver ignored on web)", () => {
+  it("active: driver + developer → both roles", () => {
     const userData: UserAccessData = {
       id: "1",
-      status_uuid: null,
+      status_uuid: STATUSES.active,
       is_admin: 0,
       is_viewer: 0,
       account_manager_id: null,
@@ -222,16 +222,16 @@ describe("determineUserAccess", () => {
     const result = determineUserAccess(userData);
     expect(result).toEqual({
       status: "active",
-      roles: ["developer"],
+      roles: ["developer", "driver"],
       userId: "1",
       accountManagerId: null,
     });
   });
 
-  it("active: all roles → all web roles", () => {
+  it("active: all roles → all roles", () => {
     const userData: UserAccessData = {
       id: "1",
-      status_uuid: null,
+      status_uuid: STATUSES.active,
       is_admin: 1,
       is_viewer: 1,
       account_manager_id: "am-1",
@@ -241,7 +241,7 @@ describe("determineUserAccess", () => {
     const result = determineUserAccess(userData);
     expect(result).toEqual({
       status: "active",
-      roles: ["admin", "account_manager", "developer", "viewer"],
+      roles: ["admin", "account_manager", "developer", "viewer", "driver"],
       userId: "1",
       accountManagerId: "am-1",
     });
