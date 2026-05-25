@@ -57,13 +57,33 @@ export const PERMISSIONS: PermissionEntry[] = [
         "should be able to create, update, delete, and edit any events, regardless of who event is assigned to. This includes the ability to reassign events between account managers.",
       ),
       account_manager: custom(
-        "Account managers can freely create events, but can only edit or delete events that were created by themselves. They are able to view All events regarless of the event owner.",
+        "Account managers can freely create events, but can only edit or delete events that were created by themselves. They are able to view All events regardless of the event owner.",
       ),
       developer: none(
         "Unable to even access the pages where they can see events, and developer is only meant to work on the developer roadmap.",
       ),
       viewer: read(
         "This user will be able to see all the event and every detail but not able to create, edit, or delete any events.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Dashboard Cells",
+    description: "This applies to the Dashboard page.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: full(
+        "should be able to create, update, delete, and edit any cells, regardless of who is assigned to bleacher. ",
+      ),
+      account_manager: custom(
+        "Account managers can freely create notes and events on cells, but can edit or delete only those cells that were created in the bleacher field assigned to them. They are able to view All cells regardless of the event owner.",
+      ),
+      developer: none(
+        "Unable to even access the pages where they can see cells, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read(
+        "This user will be able to see all the cells and every detail but not able to create, edit, or delete any cells.",
       ),
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
@@ -157,7 +177,7 @@ export const PERMISSIONS: PermissionEntry[] = [
     category: "Configuration",
     roles: {
       admin: full("Able to create, update, delete, and edit all bleachers in the assets page."),
-      account_manager: custom(
+      account_manager: read(
         "Account managers should have view only access to the assets page and should not be able to make changes to the bleachers. they should not be able to create, delete or update. only read.",
       ),
       developer: none(
@@ -177,15 +197,11 @@ export const PERMISSIONS: PermissionEntry[] = [
       admin: full(
         "Able to create, update, delete, and edit all Quickbooks connections in the Quickbooks page.",
       ),
-      account_manager: read(
-        "Account managers can see that the connections are there, but they can't add or remove them.",
-      ),
+      account_manager: none("Account managers can't even see this page even on sidebar"),
       developer: none(
         "Unable to even access the pages where they can see Quickbooks connections, and developer is only meant to work on the developer roadmap.",
       ),
-      viewer: read(
-        "Viewers can see the Quickbooks connections, but they can't add or remove them.",
-      ),
+      viewer: none("Viewers do not have access to the web configuration pages."),
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },
@@ -198,13 +214,11 @@ export const PERMISSIONS: PermissionEntry[] = [
       admin: full(
         "Can create, reorder, edit, and delete inspection form questions. Full control over what drivers see when completing an inspection.",
       ),
-      account_manager: read(
-        "Can view the current inspection form questions but cannot add, edit, or remove them.",
-      ),
+      account_manager: none("Account managers can't even see this page even on sidebar"),
       developer: none(
         "Developers do not have access to the Inspection Form page. This role is limited to the product roadmap.",
       ),
-      viewer: read("Can view the current inspection form questions but cannot make any changes."),
+      viewer: none("Viewers do not have access to the web configuration pages"),
       driver: none(
         "Drivers do not have access to the web configuration pages. They interact with the inspection form only when completing inspections in the mobile app.",
       ),
@@ -238,13 +252,11 @@ export const PERMISSIONS: PermissionEntry[] = [
     category: "Configuration",
     roles: {
       admin: full("Able to create, update, delete, and edit all zones in the Zone Manager page."),
-      account_manager: read(
-        "Account managers can see that the zones are there, but they can't add or remove them.",
-      ),
+      account_manager: none("Account managers can't see zones page."),
       developer: none(
         "Unable to even access the pages where they can see zones, and developer is only meant to work on the developer roadmap.",
       ),
-      viewer: read("Viewers can see the zones, but they can't add or remove them."),
+      viewer: none("Viewers do not have access to the web configuration pages."),
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },
