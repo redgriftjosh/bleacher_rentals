@@ -1201,6 +1201,378 @@ BEGIN
 
   RESET ROLE;
 
+  -- ==========================================================================
+  -- PART L: Inactive User Lockout
+  -- Users with status_uuid = '7b65d5a1-...' (inactive) should have NO access
+  -- regardless of roles. Exception: can still read own Users row.
+  -- ==========================================================================
+  DECLARE
+    inactive_status CONSTANT UUID := '7b65d5a1-8ee0-4b7a-816d-d3ec1ed123c5';
+
+    user_inactive_admin   UUID;
+    user_inactive_am      UUID;
+    user_inactive_dev     UUID;
+    user_inactive_viewer  UUID;
+
+    clerk_inactive_admin  TEXT := 'clerk_inactive_admin';
+    clerk_inactive_am     TEXT := 'clerk_inactive_am';
+    clerk_inactive_dev    TEXT := 'clerk_inactive_dev';
+    clerk_inactive_viewer TEXT := 'clerk_inactive_viewer';
+  BEGIN
+    -- Setup: create inactive users with every role
+    INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer, status_uuid)
+    VALUES ('InactiveAdmin', 'Test', 'inactive_admin@test.com', clerk_inactive_admin, true, false, inactive_status)
+    RETURNING id INTO user_inactive_admin;
+
+    INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer, status_uuid)
+    VALUES ('InactiveAM', 'Test', 'inactive_am@test.com', clerk_inactive_am, false, false, inactive_status)
+    RETURNING id INTO user_inactive_am;
+    INSERT INTO public."AccountManagers" (user_uuid, is_active)
+    VALUES (user_inactive_am, true);
+
+    INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer, status_uuid)
+    VALUES ('InactiveDev', 'Test', 'inactive_dev@test.com', clerk_inactive_dev, false, false, inactive_status)
+    RETURNING id INTO user_inactive_dev;
+    INSERT INTO public."Developers" (user_uuid, is_active, auto_subscribe_to_new_tickets)
+    VALUES (user_inactive_dev, true, true);
+
+    INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer, status_uuid)
+    VALUES ('InactiveViewer', 'Test', 'inactive_viewer@test.com', clerk_inactive_viewer, false, true, inactive_status)
+    RETURNING id INTO user_inactive_viewer;
+
+    -- ---- L1-L10: Helper function tests (run as postgres, no RLS) ----
+
+    -- TEST L1: is_current_user_active() = false for inactive user
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_admin)::text, true);
+    ASSERT public.is_current_user_active() = false,
+      'L1 is_current_user_active should be false for inactive admin';
+    RAISE NOTICE 'TEST L1 (inactive admin → is_current_user_active = false) ✓';
+
+    -- TEST L2: is_current_user_active() = true for active user
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
+    ASSERT public.is_current_user_active() = true,
+      'L2 is_current_user_active should be true for active admin';
+    RAISE NOTICE 'TEST L2 (active admin → is_current_user_active = true) ✓';
+
+    -- TEST L3: get_user_roles() returns {} for inactive admin
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_admin)::text, true);
+    SELECT public.get_user_roles() INTO v_roles;
+    ASSERT v_roles = '{}'::text[],
+      format('L3 inactive admin roles: expected {}, got %s', v_roles);
+    RAISE NOTICE 'TEST L3 (inactive admin → get_user_roles = {}) ✓';
+
+    -- TEST L4: get_user_roles() returns {} for inactive AM
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_am)::text, true);
+    SELECT public.get_user_roles() INTO v_roles;
+    ASSERT v_roles = '{}'::text[],
+      format('L4 inactive AM roles: expected {}, got %s', v_roles);
+    RAISE NOTICE 'TEST L4 (inactive AM → get_user_roles = {}) ✓';
+
+    -- TEST L5: get_user_roles() returns {} for inactive developer
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_dev)::text, true);
+    SELECT public.get_user_roles() INTO v_roles;
+    ASSERT v_roles = '{}'::text[],
+      format('L5 inactive dev roles: expected {}, got %s', v_roles);
+    RAISE NOTICE 'TEST L5 (inactive dev → get_user_roles = {}) ✓';
+
+    -- TEST L6: get_user_roles() returns {} for inactive viewer
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_viewer)::text, true);
+    SELECT public.get_user_roles() INTO v_roles;
+    ASSERT v_roles = '{}'::text[],
+      format('L6 inactive viewer roles: expected {}, got %s', v_roles);
+    RAISE NOTICE 'TEST L6 (inactive viewer → get_user_roles = {}) ✓';
+
+    -- TEST L7: is_current_user_admin() = false for inactive admin
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_admin)::text, true);
+    ASSERT public.is_current_user_admin() = false,
+      'L7 inactive admin: is_current_user_admin should be false';
+    RAISE NOTICE 'TEST L7 (inactive admin → is_current_user_admin = false) ✓';
+
+    -- TEST L8: is_current_user_account_manager() = false for inactive AM
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_am)::text, true);
+    ASSERT public.is_current_user_account_manager() = false,
+      'L8 inactive AM: is_current_user_account_manager should be false';
+    RAISE NOTICE 'TEST L8 (inactive AM → is_current_user_account_manager = false) ✓';
+
+    -- TEST L9: get_current_account_manager_id() = NULL for inactive AM
+    ASSERT public.get_current_account_manager_id() IS NULL,
+      'L9 inactive AM: get_current_account_manager_id should be NULL';
+    RAISE NOTICE 'TEST L9 (inactive AM → get_current_account_manager_id = NULL) ✓';
+
+    -- TEST L10: get_current_user_uuid() = NULL for inactive user
+    ASSERT public.get_current_user_uuid() IS NULL,
+      'L10 inactive user: get_current_user_uuid should be NULL';
+    RAISE NOTICE 'TEST L10 (inactive AM → get_current_user_uuid = NULL) ✓';
+
+    -- ---- L11-L25: RLS access tests ----
+    SET LOCAL ROLE authenticated;
+
+    -- TEST L11: Inactive admin CANNOT select Bleachers
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_admin)::text, true);
+    SELECT count(*) INTO v_count FROM public."Bleachers";
+    ASSERT v_count = 0,
+      format('L11 inactive admin select Bleachers: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST L11 (inactive admin → Bleachers SELECT blocked) ✓';
+
+    -- TEST L12: Inactive admin CANNOT select RoadmapQuarters
+    SELECT count(*) INTO v_count FROM public."RoadmapQuarters";
+    ASSERT v_count = 0,
+      format('L12 inactive admin select RoadmapQuarters: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST L12 (inactive admin → RoadmapQuarters SELECT blocked) ✓';
+
+    -- TEST L13: Inactive AM CANNOT select Bleachers
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_am)::text, true);
+    SELECT count(*) INTO v_count FROM public."Bleachers";
+    ASSERT v_count = 0,
+      format('L13 inactive AM select Bleachers: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST L13 (inactive AM → Bleachers SELECT blocked) ✓';
+
+    -- TEST L14: Inactive viewer CANNOT select Bleachers
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_viewer)::text, true);
+    SELECT count(*) INTO v_count FROM public."Bleachers";
+    ASSERT v_count = 0,
+      format('L14 inactive viewer select Bleachers: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST L14 (inactive viewer → Bleachers SELECT blocked) ✓';
+
+    -- TEST L15: Inactive developer CANNOT select RoadmapQuarters
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_dev)::text, true);
+    SELECT count(*) INTO v_count FROM public."RoadmapQuarters";
+    ASSERT v_count = 0,
+      format('L15 inactive dev select RoadmapQuarters: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST L15 (inactive dev → RoadmapQuarters SELECT blocked) ✓';
+
+    -- TEST L16: Inactive admin CANNOT insert into Bleachers
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_admin)::text, true);
+    BEGIN
+      INSERT INTO public."Bleachers" (bleacher_number, bleacher_rows, bleacher_seats)
+      VALUES (5555, 3, 30);
+      ASSERT false, 'L16 inactive admin insert Bleachers should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST L16 (inactive admin → Bleachers INSERT blocked) ✓';
+    END;
+
+    -- TEST L17: Inactive admin CANNOT update Bleachers
+    UPDATE public."Bleachers" SET bleacher_seats = 999;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 0,
+      format('L17 inactive admin update Bleachers: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST L17 (inactive admin → Bleachers UPDATE blocked) ✓';
+
+    -- TEST L18: Inactive admin CANNOT delete from Bleachers
+    DELETE FROM public."Bleachers";
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 0,
+      format('L18 inactive admin delete Bleachers: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST L18 (inactive admin → Bleachers DELETE blocked) ✓';
+
+    -- TEST L19: Inactive user CAN still read own Users row (self-read exception)
+    SELECT count(*) INTO v_count FROM public."Users";
+    ASSERT v_count = 1,
+      format('L19 inactive admin Users self-read: expected 1 (self), got %s', v_count);
+    RAISE NOTICE 'TEST L19 (inactive admin → Users SELECT self only) ✓';
+
+    -- TEST L20: The one visible Users row is actually their own
+    DECLARE
+      v_clerk_id TEXT;
+    BEGIN
+      SELECT clerk_user_id INTO v_clerk_id FROM public."Users";
+      ASSERT v_clerk_id = clerk_inactive_admin,
+        format('L20 inactive admin Users: expected own clerk_id, got %s', v_clerk_id);
+      RAISE NOTICE 'TEST L20 (inactive admin → Users row is own) ✓';
+    END;
+
+    -- TEST L21: Inactive AM CANNOT select Events
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_am)::text, true);
+    SELECT count(*) INTO v_count FROM public."Events";
+    ASSERT v_count = 0,
+      format('L21 inactive AM select Events: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST L21 (inactive AM → Events SELECT blocked) ✓';
+
+    -- TEST L22: Inactive AM CANNOT insert Events
+    BEGIN
+      INSERT INTO public."Events" (event_name, event_start, event_end, lenient, booked, must_be_clean, created_by_user_uuid)
+      VALUES ('Inactive Event', '2026-12-01', '2026-12-01', false, false, false, user_inactive_am);
+      ASSERT false, 'L22 inactive AM insert Event should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST L22 (inactive AM → Events INSERT blocked) ✓';
+    END;
+
+    -- TEST L23: Inactive AM CANNOT select Drivers
+    SELECT count(*) INTO v_count FROM public."Drivers";
+    ASSERT v_count = 0,
+      format('L23 inactive AM select Drivers: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST L23 (inactive AM → Drivers SELECT blocked) ✓';
+
+    -- TEST L24: Inactive AM CANNOT select WorkTrackers
+    SELECT count(*) INTO v_count FROM public."WorkTrackers";
+    ASSERT v_count = 0,
+      format('L24 inactive AM select WorkTrackers: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST L24 (inactive AM → WorkTrackers SELECT blocked) ✓';
+
+    -- TEST L25: Inactive admin CANNOT select MaintenanceEvents
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_admin)::text, true);
+    SELECT count(*) INTO v_count FROM public."MaintenanceEvents";
+    ASSERT v_count = 0,
+      format('L25 inactive admin select MaintenanceEvents: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST L25 (inactive admin → MaintenanceEvents SELECT blocked) ✓';
+
+    RAISE NOTICE '--- inactive role tests (L1-L25) passed ---';
+  END;
+
+  RESET ROLE;
+
+  -- ==========================================================================
+  -- PART M: Inactive USER (not just role) — full lockout
+  -- M1-M10: user with ALL 4 roles, marked inactive → zero access
+  -- M11-M16: user with NO roles, marked inactive → only self-read
+  -- ==========================================================================
+  DECLARE
+    inactive_status_m CONSTANT UUID := '7b65d5a1-8ee0-4b7a-816d-d3ec1ed123c5';
+
+    user_inactive_super  UUID;
+    user_inactive_plain  UUID;
+
+    clerk_inactive_super TEXT := 'clerk_inactive_super';
+    clerk_inactive_plain TEXT := 'clerk_inactive_plain';
+  BEGIN
+    -- Super-user: admin + AM + developer + viewer, but inactive
+    INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer, status_uuid)
+    VALUES ('InactiveSuper', 'Test', 'inactive_super@test.com', clerk_inactive_super, true, true, inactive_status_m)
+    RETURNING id INTO user_inactive_super;
+
+    INSERT INTO public."AccountManagers" (user_uuid, is_active)
+    VALUES (user_inactive_super, true);
+
+    INSERT INTO public."Developers" (user_uuid, is_active, auto_subscribe_to_new_tickets)
+    VALUES (user_inactive_super, true, true);
+
+    -- Plain user: no roles at all, inactive
+    INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer, status_uuid)
+    VALUES ('InactivePlain', 'Test', 'inactive_plain@test.com', clerk_inactive_plain, false, false, inactive_status_m)
+    RETURNING id INTO user_inactive_plain;
+
+    -- ---- M1-M4: Super-user helper function tests ----
+
+    -- TEST M1: get_user_roles() returns {} even with all 4 roles
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_super)::text, true);
+    SELECT public.get_user_roles() INTO v_roles;
+    ASSERT v_roles = '{}'::text[],
+      format('M1 inactive super roles: expected {}, got %s', v_roles);
+    RAISE NOTICE 'TEST M1 (inactive super-user → get_user_roles = {}) ✓';
+
+    -- TEST M2: is_current_user_admin() = false
+    ASSERT public.is_current_user_admin() = false,
+      'M2 inactive super: is_current_user_admin should be false';
+    RAISE NOTICE 'TEST M2 (inactive super-user → is_current_user_admin = false) ✓';
+
+    -- TEST M3: is_current_user_account_manager() = false
+    ASSERT public.is_current_user_account_manager() = false,
+      'M3 inactive super: is_current_user_account_manager should be false';
+    RAISE NOTICE 'TEST M3 (inactive super-user → is_current_user_account_manager = false) ✓';
+
+    -- TEST M4: is_current_user_active() = false
+    ASSERT public.is_current_user_active() = false,
+      'M4 inactive super: is_current_user_active should be false';
+    RAISE NOTICE 'TEST M4 (inactive super-user → is_current_user_active = false) ✓';
+
+    -- ---- M5-M10: Super-user RLS tests ----
+    SET LOCAL ROLE authenticated;
+
+    -- TEST M5: Inactive super-user CANNOT select Bleachers (even with admin + AM + viewer)
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_super)::text, true);
+    SELECT count(*) INTO v_count FROM public."Bleachers";
+    ASSERT v_count = 0,
+      format('M5 inactive super select Bleachers: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST M5 (inactive super-user → Bleachers SELECT blocked) ✓';
+
+    -- TEST M6: Inactive super-user CANNOT select RoadmapQuarters (even with admin + developer)
+    SELECT count(*) INTO v_count FROM public."RoadmapQuarters";
+    ASSERT v_count = 0,
+      format('M6 inactive super select RoadmapQuarters: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST M6 (inactive super-user → RoadmapQuarters SELECT blocked) ✓';
+
+    -- TEST M7: Inactive super-user CANNOT select Events
+    SELECT count(*) INTO v_count FROM public."Events";
+    ASSERT v_count = 0,
+      format('M7 inactive super select Events: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST M7 (inactive super-user → Events SELECT blocked) ✓';
+
+    -- TEST M8: Inactive super-user CANNOT insert into Bleachers
+    BEGIN
+      INSERT INTO public."Bleachers" (bleacher_number, bleacher_rows, bleacher_seats)
+      VALUES (4444, 2, 20);
+      ASSERT false, 'M8 inactive super insert Bleachers should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST M8 (inactive super-user → Bleachers INSERT blocked) ✓';
+    END;
+
+    -- TEST M9: Inactive super-user sees ONLY own Users row
+    SELECT count(*) INTO v_count FROM public."Users";
+    ASSERT v_count = 1,
+      format('M9 inactive super Users: expected 1 (self), got %s', v_count);
+    RAISE NOTICE 'TEST M9 (inactive super-user → Users SELECT self only) ✓';
+
+    -- TEST M10: Verify it's their own row
+    DECLARE
+      v_clerk_id_m TEXT;
+    BEGIN
+      SELECT clerk_user_id INTO v_clerk_id_m FROM public."Users";
+      ASSERT v_clerk_id_m = clerk_inactive_super,
+        format('M10 inactive super Users: expected own clerk_id, got %s', v_clerk_id_m);
+      RAISE NOTICE 'TEST M10 (inactive super-user → Users row is own) ✓';
+    END;
+
+    -- ---- M11-M16: Plain user (no roles) inactive tests ----
+
+    -- TEST M11: is_current_user_active() = false for inactive plain user
+    RESET ROLE;
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_plain)::text, true);
+    ASSERT public.is_current_user_active() = false,
+      'M11 inactive plain: is_current_user_active should be false';
+    RAISE NOTICE 'TEST M11 (inactive plain user → is_current_user_active = false) ✓';
+
+    -- TEST M12: get_user_roles() returns {} (would be {} anyway, but confirm status check fires)
+    SELECT public.get_user_roles() INTO v_roles;
+    ASSERT v_roles = '{}'::text[],
+      format('M12 inactive plain roles: expected {}, got %s', v_roles);
+    RAISE NOTICE 'TEST M12 (inactive plain user → get_user_roles = {}) ✓';
+
+    SET LOCAL ROLE authenticated;
+
+    -- TEST M13: Inactive plain user sees only own Users row
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_inactive_plain)::text, true);
+    SELECT count(*) INTO v_count FROM public."Users";
+    ASSERT v_count = 1,
+      format('M13 inactive plain Users: expected 1 (self), got %s', v_count);
+    RAISE NOTICE 'TEST M13 (inactive plain user → Users SELECT self only) ✓';
+
+    -- TEST M14: Verify it's their own row
+    DECLARE
+      v_clerk_id_m2 TEXT;
+    BEGIN
+      SELECT clerk_user_id INTO v_clerk_id_m2 FROM public."Users";
+      ASSERT v_clerk_id_m2 = clerk_inactive_plain,
+        format('M14 inactive plain Users: expected own clerk_id, got %s', v_clerk_id_m2);
+      RAISE NOTICE 'TEST M14 (inactive plain user → Users row is own) ✓';
+    END;
+
+    -- TEST M15: Inactive plain user CANNOT select Bleachers
+    SELECT count(*) INTO v_count FROM public."Bleachers";
+    ASSERT v_count = 0,
+      format('M15 inactive plain select Bleachers: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST M15 (inactive plain user → Bleachers SELECT blocked) ✓';
+
+    -- TEST M16: Inactive plain user CANNOT select any table with generic rbac policies
+    SELECT count(*) INTO v_count FROM public."Addresses";
+    ASSERT v_count = 0,
+      format('M16 inactive plain select Addresses: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST M16 (inactive plain user → Addresses SELECT blocked) ✓';
+
+    RAISE NOTICE '--- all inactive user tests (M1-M16) passed ---';
+  END;
+
+  RESET ROLE;
+
   RAISE NOTICE '--- all multi-role RLS tests passed ---';
 END;
 $$;
