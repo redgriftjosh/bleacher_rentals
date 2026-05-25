@@ -86,7 +86,7 @@ export const EventConfigurationForm = ({
     setLoading(true);
     const state = useCurrentEventStore.getState();
     try {
-      const newEventUuid = await createEvent(state, supabase, user ?? null);
+      const { eventUuid: newEventUuid, addressUuid: newAddressUuid } = await createEvent(state, supabase, user ?? null);
       const dbAlerts = eventRequirements.evaluate({
         event: state,
         bleachers: useBleachersStore.getState().bleachers,
@@ -111,7 +111,7 @@ export const EventConfigurationForm = ({
         newEventUuid,
         {
           booked: state.selectedStatus === "booked",
-          address_uuid: state.addressData?.addressUuid ?? null,
+          address_uuid: newAddressUuid,
           event_start: state.eventStart,
           event_name: state.eventName,
         },

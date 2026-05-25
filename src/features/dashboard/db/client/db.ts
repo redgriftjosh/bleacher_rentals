@@ -594,7 +594,7 @@ export async function createEvent(
   state: CurrentEventStore,
   supabase: SupabaseClient<Database>,
   user: UserResource | null,
-): Promise<string> {
+): Promise<{ eventUuid: string; addressUuid: string }> {
   if (!supabase) {
     console.warn("No Supabase Client found");
     throw new Error("No Supabase Client found");
@@ -726,7 +726,7 @@ export async function createEvent(
     { duration: 10000 },
   );
   updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
-  return event_uuid;
+  return { eventUuid: event_uuid, addressUuid: address_uuid };
 }
 
 export async function deleteEvent(
