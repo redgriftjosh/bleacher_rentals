@@ -135,7 +135,7 @@ export default function Page() {
         />
       )}
       <SwapConfirmationModal />
-      <div className="min-w-0">
+      <div className="min-w-0 mb-2.5">
         <div className="flex justify-between items-center pt-2 pl-2 pr-2">
           <div className="flex items-center gap-3">
             <DashboardOptions />
