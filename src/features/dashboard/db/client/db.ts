@@ -385,7 +385,7 @@ export async function saveWorkTracker(
     previousDropoffAddress?: string;
     previousDropoffCity?: string;
   },
-): Promise<void> {
+): Promise<string | null> {
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);
   }
@@ -396,6 +396,7 @@ export async function saveWorkTracker(
   }
   // const payCents = Math.round(payInput * 100);
 
+  let savedId: string | null = workTracker.id !== "-1" ? workTracker.id : null;
   let pickUpAddressUuid: string | null = workTracker.pickup_address_uuid;
   let dropOffAddressUuid: string | null = workTracker.dropoff_address_uuid;
   pickUpAddressUuid = await saveAddress(
@@ -502,6 +503,8 @@ export async function saveWorkTracker(
       createErrorToast([
         "Inserted a work tracker, but no work_tracker_id returned.",
       ]);
+    } else {
+      savedId = workTrackerData.id;
     }
   }
 
@@ -530,6 +533,7 @@ export async function saveWorkTracker(
 
   updateDataBase(["WorkTrackers", "Addresses"]);
   createSuccessToast(["Work Tracker saved"]);
+  return savedId;
 }
 
 export async function deleteWorkTracker(

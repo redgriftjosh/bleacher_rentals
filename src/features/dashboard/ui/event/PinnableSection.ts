@@ -76,14 +76,6 @@ export class PinnableSection extends Container {
     const alerts = useDashboardAlertsStore.getState().alerts;
     const { bleacherEventUuid, eventUuid } = this.eventInfo.ev;
 
-    console.log("[AlertCount]", {
-      eventName: this.eventInfo.ev.eventName,
-      bleacherEventUuid,
-      eventUuid,
-      totalAlertsInStore: alerts.length,
-      alerts: alerts.map(a => ({ entity_type: a.entity_type, entity_uuid: a.entity_uuid })),
-    });
-
     let count = 0;
     for (const a of alerts) {
       if (
@@ -95,8 +87,6 @@ export class PinnableSection extends Container {
         count++;
       }
     }
-
-    console.log("[AlertCount] result:", { eventName: this.eventInfo.ev.eventName, bleacherEventUuid, count });
     return count;
   }
 

@@ -1,6 +1,6 @@
 import { Link, X, Trash2, Calculator, Pencil } from "lucide-react";
 import { Dropdown } from "@/components/DropDown";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { EditWorkTrackerTypesModal } from "./EditWorkTrackerTypesModal";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import {
@@ -35,6 +35,12 @@ import {
 import { buildTripStatusNotification } from "@/features/workTrackers/db/notifications";
 import BillOfLadingButton from "./billOfLading/BillOfLadingButton";
 import { eventBleacherDelivery } from "@/features/alerts/definitions/eventBleacherDelivery/eventBleacherDelivery.definition";
+import { workTrackerPickupMismatch } from "@/features/alerts/definitions/workTrackerPickupMismatch/workTrackerPickupMismatch.definition";
+import { useWorkTrackersStore } from "@/state/workTrackersStore";
+import { useAddressesStore } from "@/state/addressesStore";
+import { useBleacherEventsStore } from "@/state/bleacherEventStore";
+import { useEventsStore } from "@/state/eventsStore";
+import { useBleachersStore } from "@/state/bleachersStore";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -79,6 +85,39 @@ export default function WorkTrackerModal({
   >(selectedWorkTracker?.status ?? "draft");
   const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
   const [showEditTypes, setShowEditTypes] = useState(false);
+
+  // ── Client-side pickup address mismatch check ──
+  const pickupMismatchAlert = useMemo(() => {
+    if (!workTracker?.bleacher_uuid || !workTracker?.date) return null;
+    const allWorkTrackers = useWorkTrackersStore.getState().workTrackers;
+    const addresses = useAddressesStore.getState().addresses;
+    const bleacherEvents = useBleacherEventsStore.getState().bleacherEvents;
+    const events = useEventsStore.getState().events;
+    const bleachers = useBleachersStore.getState().bleachers;
+    const bleacher =
+      bleachers.find((b) => b.id === workTracker.bleacher_uuid) ?? null;
+
+    const alerts = workTrackerPickupMismatch.evaluate({
+      workTracker: {
+        id: workTracker.id,
+        bleacher_uuid: workTracker.bleacher_uuid,
+        date: workTracker.date,
+        pickup_address_uuid: workTracker.pickup_address_uuid,
+      },
+      bleacher,
+      allWorkTrackers,
+      addresses,
+      allBleacherEvents: bleacherEvents,
+      allEvents: events,
+      pickupStreetOverride: pickUpAddress?.address || undefined,
+    });
+    return alerts.length > 0 ? alerts[0] : null;
+  }, [
+    workTracker?.bleacher_uuid,
+    workTracker?.date,
+    workTracker?.pickup_address_uuid,
+    pickUpAddress?.address,
+  ]);
 
   // Fetch available work tracker types
   const { data: workTrackerTypes = [] } = useQuery({
@@ -292,7 +331,7 @@ export default function WorkTrackerModal({
                 : workTracker.drive_minutes,
           }
         : workTracker;
-      await saveWorkTracker(
+      const savedId = await saveWorkTracker(
         trackerToSave,
         pickUpAddress,
         dropOffAddress,
@@ -314,6 +353,15 @@ export default function WorkTrackerModal({
         null,
         supabase,
       );
+      // Evaluate pickup address mismatch alert for this work tracker
+      const wtId = savedId ?? trackerToSave?.id;
+      if (wtId && wtId !== "-1") {
+        await workTrackerPickupMismatch.syncForWorkTracker(
+          wtId,
+          null,
+          supabase,
+        );
+      }
       setShowSaveConfirmModal(false);
       // Refresh bleachers directly into the zustand store so Pixi updates without remounting
       try {
@@ -369,6 +417,8 @@ export default function WorkTrackerModal({
         null,
         supabase,
       );
+      // Clean up pickup mismatch alert for deleted work tracker
+      await workTrackerPickupMismatch.delete(workTracker.id, supabase);
       // Refresh bleachers directly into the zustand store so Pixi updates without remounting
       try {
         const { FetchDashboardBleachers } =
@@ -696,10 +746,22 @@ export default function WorkTrackerModal({
                         }))
                       }
                     />
-                    <label className={labelClassName}>Pickup Address</label>
+                    <label
+                      className={`${labelClassName} ${pickupMismatchAlert ? "text-red-600" : ""}`}
+                    >
+                      Pickup Address
+                      {pickupMismatchAlert && (
+                        <span
+                          className="ml-1 text-xs font-normal text-red-500"
+                          title={pickupMismatchAlert.message}
+                        >
+                          — {pickupMismatchAlert.message}
+                        </span>
+                      )}
+                    </label>
                     <div className="flex flex-row gap-2 items-center">
                       <AddressAutocomplete
-                        className="bg-white"
+                        className={`bg-white ${pickupMismatchAlert ? "border-red-500 ring-1 ring-red-300" : ""}`}
                         onAddressSelect={(data) =>
                           setPickUpAddress({
                             ...data,
