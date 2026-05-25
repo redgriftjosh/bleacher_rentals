@@ -88,8 +88,6 @@ declare
   account_manager_tables text[] := array[
     'Addresses',
     'Alerts',
-    'BleacherEvents',
-    'BleacherMaintEvents',
     'BleacherUsers',
     'Bleachers',
     'Blocks',
@@ -101,11 +99,9 @@ declare
     'DriverScoreCardStats',
     'DriverScorecardStatsPerDriver',
     'DriverUnavailability',
-    'Events',
     'HomeBases',
     'InspectionPhotos',
     'InspectionQuestions',
-    'MaintenanceEvents',
     'MaintenancePhotos',
     'Notifications',
     'QboConnections',
@@ -119,7 +115,6 @@ declare
     'Vendors',
     'WorkTrackerGroups',
     'WorkTrackerInspections',
-    'WorkTrackers',
     'WorkTrackerTypeQboAccounts',
     'WorkTrackerTypes',
     'AccountManagers'
@@ -128,19 +123,16 @@ declare
   viewer_tables text[] := array[
     'Addresses',
     'Alerts',
-    'BleacherEvents',
     'BleacherUsers',
     'Bleachers',
     'Blocks',
     'DashboardFilterSettings',
-    'Events',
     'HomeBases',
     'Notifications',
     'Tasks',
     'UserAlerts',
     'UserRoles',
     'UserStatuses',
-    'WorkTrackers',
     'WorkTrackerGroups'
   ];
 
@@ -148,6 +140,11 @@ declare
     'Users',
     'Drivers',
     'Bleachers',
+    'Events',
+    'BleacherEvents',
+    'WorkTrackers',
+    'MaintenanceEvents',
+    'BleacherMaintEvents',
     '_powersync_unhandled'
   ];
 
@@ -434,4 +431,188 @@ create policy "bleachers_delete" on public."Bleachers"
   as permissive for delete to authenticated
   using (
     'admin' = any(public.get_user_roles())
+  );
+
+-- =====================
+-- 8. Helper: get current user's Users.id (UUID)
+--    SECURITY DEFINER so it can read Users bypassing RLS.
+-- =====================
+create or replace function public.get_current_user_uuid()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select u.id
+  from "Users" u
+  where u.clerk_user_id = (auth.jwt() ->> 'sub')
+  limit 1;
+$$;
+
+-- =====================
+-- 9. Custom policies for Events
+--    SELECT: admin + account_manager + viewer
+--    INSERT: admin (any) + AM (only own — created_by_user_uuid must be self)
+--    UPDATE: admin (any) + AM (only own events)
+--    DELETE: admin (any) + AM (only own events)
+-- =====================
+do $$
+declare pol record;
+begin
+  for pol in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'Events'
+  loop
+    execute format('drop policy if exists %I on public."Events"', pol.policyname);
+  end loop;
+end;
+$$;
+
+alter table public."Events" enable row level security;
+
+create policy "events_select" on public."Events"
+  as permissive for select to authenticated
+  using (
+    public.get_user_roles() && '{admin,account_manager,viewer}'::text[]
+  );
+
+create policy "events_insert" on public."Events"
+  as permissive for insert to authenticated
+  with check (
+    'admin' = any(public.get_user_roles())
+    or (
+      'account_manager' = any(public.get_user_roles())
+      and created_by_user_uuid = public.get_current_user_uuid()
+    )
+  );
+
+create policy "events_update" on public."Events"
+  as permissive for update to authenticated
+  using (
+    'admin' = any(public.get_user_roles())
+    or (
+      'account_manager' = any(public.get_user_roles())
+      and created_by_user_uuid = public.get_current_user_uuid()
+    )
+  )
+  with check (
+    'admin' = any(public.get_user_roles())
+    or (
+      'account_manager' = any(public.get_user_roles())
+      and created_by_user_uuid = public.get_current_user_uuid()
+    )
+  );
+
+create policy "events_delete" on public."Events"
+  as permissive for delete to authenticated
+  using (
+    'admin' = any(public.get_user_roles())
+    or (
+      'account_manager' = any(public.get_user_roles())
+      and created_by_user_uuid = public.get_current_user_uuid()
+    )
+  );
+
+-- =====================
+-- 10. Custom policies for BleacherEvents
+--     SELECT: admin + account_manager + viewer
+--     INSERT/UPDATE: admin (any) + AM (own event + own bleacher)
+--     DELETE: admin (any) + AM (own event only)
+-- =====================
+do $$
+declare pol record;
+begin
+  for pol in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'BleacherEvents'
+  loop
+    execute format('drop policy if exists %I on public."BleacherEvents"', pol.policyname);
+  end loop;
+end;
+$$;
+
+alter table public."BleacherEvents" enable row level security;
+
+create policy "bleacher_events_select" on public."BleacherEvents"
+  as permissive for select to authenticated
+  using (
+    public.get_user_roles() && '{admin,account_manager,viewer}'::text[]
+  );
+
+create policy "bleacher_events_insert" on public."BleacherEvents"
+  as permissive for insert to authenticated
+  with check (
+    'admin' = any(public.get_user_roles())
+    or (
+      'account_manager' = any(public.get_user_roles())
+      and exists (
+        select 1 from "Events" e
+        where e.id = event_uuid
+          and e.created_by_user_uuid = public.get_current_user_uuid()
+      )
+      and exists (
+        select 1 from "Bleachers" b
+        where b.id = bleacher_uuid
+          and (
+            b.summer_account_manager_uuid = public.get_current_account_manager_id()
+            or b.winter_account_manager_uuid = public.get_current_account_manager_id()
+          )
+      )
+    )
+  );
+
+create policy "bleacher_events_update" on public."BleacherEvents"
+  as permissive for update to authenticated
+  using (
+    'admin' = any(public.get_user_roles())
+    or (
+      'account_manager' = any(public.get_user_roles())
+      and exists (
+        select 1 from "Events" e
+        where e.id = event_uuid
+          and e.created_by_user_uuid = public.get_current_user_uuid()
+      )
+      and exists (
+        select 1 from "Bleachers" b
+        where b.id = bleacher_uuid
+          and (
+            b.summer_account_manager_uuid = public.get_current_account_manager_id()
+            or b.winter_account_manager_uuid = public.get_current_account_manager_id()
+          )
+      )
+    )
+  )
+  with check (
+    'admin' = any(public.get_user_roles())
+    or (
+      'account_manager' = any(public.get_user_roles())
+      and exists (
+        select 1 from "Events" e
+        where e.id = event_uuid
+          and e.created_by_user_uuid = public.get_current_user_uuid()
+      )
+      and exists (
+        select 1 from "Bleachers" b
+        where b.id = bleacher_uuid
+          and (
+            b.summer_account_manager_uuid = public.get_current_account_manager_id()
+            or b.winter_account_manager_uuid = public.get_current_account_manager_id()
+          )
+      )
+    )
+  );
+
+create policy "bleacher_events_delete" on public."BleacherEvents"
+  as permissive for delete to authenticated
+  using (
+    'admin' = any(public.get_user_roles())
+    or (
+      'account_manager' = any(public.get_user_roles())
+      and exists (
+        select 1 from "Events" e
+        where e.id = event_uuid
+          and e.created_by_user_uuid = public.get_current_user_uuid()
+      )
+    )
   );
