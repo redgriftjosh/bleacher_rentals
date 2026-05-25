@@ -32,11 +32,12 @@ export type DriverWithUser = {
   email: string;
 };
 
-export function useDrivers(): {
+export function useDrivers(options?: { showAll?: boolean }): {
   data: DriverWithUser[] | null;
   isLoading: boolean;
   error: Error | undefined;
 } {
+  const showAll = options?.showAll ?? false;
   const { data: currentUserData, isLoading: isCurrentUserLoading } = useCurrentUser();
   const currentUser = currentUserData?.[0];
 
@@ -101,8 +102,8 @@ export function useDrivers(): {
       ])
       .where("d.is_active", "=", 1);
 
-    // If not admin, filter by account manager
-    if (currentUser.is_admin !== 1) {
+    // If not admin (and showAll is not set), filter by account manager
+    if (currentUser.is_admin !== 1 && !showAll) {
       const accountManagerId = accountManagerData?.[0]?.id;
       if (accountManagerId) {
         query = query.where("d.account_manager_uuid", "=", accountManagerId);
@@ -113,7 +114,7 @@ export function useDrivers(): {
     }
 
     return query.orderBy("d.user_uuid", "asc").compile();
-  }, [currentUser, accountManagerData]);
+  }, [currentUser, accountManagerData, showAll]);
 
   const { data, isLoading, error } = useTypedQuery(compiled, expect<Compiled>());
 
