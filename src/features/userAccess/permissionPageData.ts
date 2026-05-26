@@ -340,25 +340,6 @@ export const PERMISSIONS: PermissionEntry[] = [
     },
   },
   {
-    label: "Sales Scorecard Targets",
-    description:
-      "The ability to set and modify the performance targets for each account manager on the Sales Scorecard page.",
-    category: "Scorecards",
-    roles: {
-      admin: full(
-        "Only admins can create, edit, and delete scorecard targets for account managers.",
-      ),
-      account_manager: read(
-        "Can view the targets set for them and other account managers, but cannot modify any targets.",
-      ),
-      developer: none(
-        "Developers do not have access to scorecard data. This role is limited to the product roadmap.",
-      ),
-      viewer: read("Can view scorecard targets but cannot modify them."),
-      driver: none("Drivers only have access to the Driver Mobile App."),
-    },
-  },
-  {
     label: "Driver Scorecard",
     description:
       "View driver performance metrics such as on-time rates, inspection completion, and other driver stats. This applies to the Driver Scorecard page.",
