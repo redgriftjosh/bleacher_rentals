@@ -103,7 +103,6 @@ declare
     'InspectionPhotos',
     'MaintenancePhotos',
     'Notifications',
-    'ScorecardTargets',
     'Tasks',
     'UserAlerts',
     'UserHomeBases',
@@ -143,6 +142,7 @@ declare
     'WorkTrackers',
     'MaintenanceEvents',
     'BleacherMaintEvents',
+    'ScorecardTargets',
     '_powersync_unhandled'
   ];
 
@@ -226,6 +226,39 @@ begin
   end loop;
 end;
 $$;
+
+-- =====================
+-- 2b. ScorecardTargets: admin full CRUD, AM + viewer read-only
+-- =====================
+do $$
+declare pol record;
+begin
+  for pol in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'ScorecardTargets'
+  loop
+    execute format('drop policy if exists %I on public."ScorecardTargets"', pol.policyname);
+  end loop;
+end;
+$$;
+
+alter table public."ScorecardTargets" enable row level security;
+
+create policy "rbac_select" on public."ScorecardTargets"
+  as permissive for select to authenticated
+  using (public.get_user_roles() && '{admin,account_manager,viewer}'::text[]);
+
+create policy "rbac_insert" on public."ScorecardTargets"
+  as permissive for insert to authenticated
+  with check (public.get_user_roles() && '{admin}'::text[]);
+
+create policy "rbac_update" on public."ScorecardTargets"
+  as permissive for update to authenticated
+  using (public.get_user_roles() && '{admin}'::text[]);
+
+create policy "rbac_delete" on public."ScorecardTargets"
+  as permissive for delete to authenticated
+  using (public.get_user_roles() && '{admin}'::text[]);
 
 -- =====================
 -- 3. Helper for Users policies: bypasses RLS to check admin status

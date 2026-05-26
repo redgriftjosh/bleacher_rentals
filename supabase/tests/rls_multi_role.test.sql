@@ -1742,6 +1742,112 @@ BEGIN
 
   RESET ROLE;
 
+  -- ==========================================================================
+  -- PART O: ScorecardTargets — admin CRUD, AM + viewer read-only
+  -- ==========================================================================
+  DECLARE
+    st_am_id       UUID;   -- AccountManagers.id for the AM user
+    st_target_id   UUID;   -- ScorecardTargets row id
+  BEGIN
+    -- Setup: find AM's AccountManagers row and insert a target as postgres
+    SELECT am.id INTO st_am_id
+    FROM public."AccountManagers" am
+    JOIN public."Users" u ON u.id = am.user_uuid
+    WHERE u.clerk_user_id = clerk_am;
+
+    INSERT INTO public."ScorecardTargets" (account_manager_uuid)
+    VALUES (st_am_id)
+    RETURNING id INTO st_target_id;
+
+    SET LOCAL ROLE authenticated;
+
+    -- ---- O1-O4: Admin CAN full CRUD ----
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
+
+    -- TEST O1: Admin CAN select
+    SELECT count(*) INTO v_count FROM public."ScorecardTargets";
+    ASSERT v_count > 0, format('O1 admin SELECT: expected >0, got %s', v_count);
+    RAISE NOTICE 'TEST O1 (admin → ScorecardTargets SELECT) ✓';
+
+    -- TEST O2: Admin CAN insert
+    DECLARE st_new UUID;
+    BEGIN
+      -- Need another AM for unique constraint; use admin_all's AM row
+      DECLARE st_admin_am UUID;
+      BEGIN
+        SELECT am.id INTO st_admin_am
+        FROM public."AccountManagers" am
+        JOIN public."Users" u ON u.id = am.user_uuid
+        WHERE u.clerk_user_id = clerk_admin_all;
+
+        INSERT INTO public."ScorecardTargets" (account_manager_uuid)
+        VALUES (st_admin_am)
+        RETURNING id INTO st_new;
+        RAISE NOTICE 'TEST O2 (admin → ScorecardTargets INSERT) ✓';
+
+        -- TEST O3: Admin CAN update
+        UPDATE public."ScorecardTargets" SET quotes_weekly = 99 WHERE id = st_new;
+        GET DIAGNOSTICS v_count = ROW_COUNT;
+        ASSERT v_count = 1, format('O3 admin UPDATE: expected 1, got %s', v_count);
+        RAISE NOTICE 'TEST O3 (admin → ScorecardTargets UPDATE) ✓';
+
+        -- TEST O4: Admin CAN delete
+        DELETE FROM public."ScorecardTargets" WHERE id = st_new;
+        GET DIAGNOSTICS v_count = ROW_COUNT;
+        ASSERT v_count = 1, format('O4 admin DELETE: expected 1, got %s', v_count);
+        RAISE NOTICE 'TEST O4 (admin → ScorecardTargets DELETE) ✓';
+      END;
+    END;
+
+    -- ---- O5-O8: AM CAN read, CANNOT write ----
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
+
+    -- TEST O5: AM CAN select
+    SELECT count(*) INTO v_count FROM public."ScorecardTargets";
+    ASSERT v_count > 0, format('O5 AM SELECT: expected >0, got %s', v_count);
+    RAISE NOTICE 'TEST O5 (AM → ScorecardTargets SELECT) ✓';
+
+    -- TEST O6: AM CANNOT insert
+    BEGIN
+      INSERT INTO public."ScorecardTargets" (account_manager_uuid) VALUES (st_am_id);
+      ASSERT false, 'O6 AM INSERT should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST O6 (AM → ScorecardTargets INSERT blocked) ✓';
+    END;
+
+    -- TEST O7: AM CANNOT update
+    UPDATE public."ScorecardTargets" SET quotes_weekly = 999 WHERE id = st_target_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 0, format('O7 AM UPDATE: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST O7 (AM → ScorecardTargets UPDATE blocked) ✓';
+
+    -- TEST O8: AM CANNOT delete
+    DELETE FROM public."ScorecardTargets" WHERE id = st_target_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 0, format('O8 AM DELETE: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST O8 (AM → ScorecardTargets DELETE blocked) ✓';
+
+    -- ---- O9-O10: Viewer CAN read, CANNOT write ----
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_viewer)::text, true);
+
+    -- TEST O9: Viewer CAN select
+    SELECT count(*) INTO v_count FROM public."ScorecardTargets";
+    ASSERT v_count > 0, format('O9 viewer SELECT: expected >0, got %s', v_count);
+    RAISE NOTICE 'TEST O9 (viewer → ScorecardTargets SELECT) ✓';
+
+    -- TEST O10: Viewer CANNOT insert
+    BEGIN
+      INSERT INTO public."ScorecardTargets" (account_manager_uuid) VALUES (st_am_id);
+      ASSERT false, 'O10 viewer INSERT should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST O10 (viewer → ScorecardTargets INSERT blocked) ✓';
+    END;
+
+    RAISE NOTICE '--- all ScorecardTargets tests (O1-O10) passed ---';
+  END;
+
+  RESET ROLE;
+
   RAISE NOTICE '--- all multi-role RLS tests passed ---';
 END;
 $$;
