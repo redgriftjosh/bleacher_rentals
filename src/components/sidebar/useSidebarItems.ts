@@ -11,6 +11,8 @@ import {
   MapPinned,
   ShieldAlert,
   ShieldCheck,
+  BookText,
+  Settings,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";
@@ -116,7 +118,7 @@ const ALL_ITEMS: SidebarItemConfig[] = [
     type: "section",
     key: "configuration",
     label: "Configuration",
-    icon: MapPinned,
+    icon: Settings,
     children: [
       {
         type: "button",
@@ -146,7 +148,7 @@ const ALL_ITEMS: SidebarItemConfig[] = [
     type: "section",
     key: "documentation",
     label: "Documentation",
-    icon: MapPinned,
+    icon: BookText,
     children: [
       {
         type: "button",
