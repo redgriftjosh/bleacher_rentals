@@ -106,7 +106,12 @@ export function useDrivers(): {
         "u.email as email",
       ])
       .where("d.is_active", "=", 1)
-      .where("u.status_uuid", "=", STATUSES.active);
+      .where((eb) =>
+        eb.or([
+          eb("u.status_uuid", "=", STATUSES.active),
+          eb("u.status_uuid", "=", STATUSES.invited),
+        ]),
+      );
     // If not admin, filter by account manager
     if (currentUser.is_admin !== 1) {
       const accountManagerId = accountManagerData?.[0]?.id;
