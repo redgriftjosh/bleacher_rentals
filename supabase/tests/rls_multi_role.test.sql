@@ -1848,6 +1848,159 @@ BEGIN
 
   RESET ROLE;
 
+  -- ==========================================================================
+  -- PART P: Roadmap table permissions
+  --   RoadmapQuarters/Sprints/Features: admin CRUD, developer SELECT only
+  --   RoadmapTasks: admin+developer CRUD, AM SELECT+INSERT+UPDATE, viewer SELECT
+  -- ==========================================================================
+  DECLARE
+    rq_id          UUID;
+    rs_id          UUID;
+    rf_id          UUID;
+    rt_id          UUID;
+  BEGIN
+    RAISE NOTICE '--- Roadmap permissions tests (P1-P14) ---';
+
+    INSERT INTO public."RoadmapQuarters" (quarter, year) VALUES (2, 2998)
+    RETURNING id INTO rq_id;
+
+    INSERT INTO public."RoadmapSprints" (quarter_id, sprint_number, start_date, end_date)
+    VALUES (rq_id, 1, '2998-04-01', '2998-04-14')
+    RETURNING id INTO rs_id;
+
+    INSERT INTO public."RoadmapFeatures" (quarter_id, title) VALUES (rq_id, 'Test Feature')
+    RETURNING id INTO rf_id;
+
+    INSERT INTO public."RoadmapTasks" (title, is_backlog) VALUES ('Test Task', true)
+    RETURNING id INTO rt_id;
+
+    SET LOCAL ROLE authenticated;
+
+    -- ---- P1: Admin CRUD on RoadmapQuarters ----
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
+
+    SELECT count(*) INTO v_count FROM public."RoadmapQuarters" WHERE id = rq_id;
+    ASSERT v_count = 1, format('P1a admin SELECT RoadmapQuarters: expected 1, got %s', v_count);
+
+    UPDATE public."RoadmapQuarters" SET year = 2997 WHERE id = rq_id;
+    RAISE NOTICE 'TEST P1 (admin → RoadmapQuarters CRUD) ✓';
+
+    -- ---- P2: Developer SELECT on RoadmapQuarters, INSERT blocked ----
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_dev)::text, true);
+
+    SELECT count(*) INTO v_count FROM public."RoadmapQuarters" WHERE id = rq_id;
+    ASSERT v_count = 1, format('P2a dev SELECT RoadmapQuarters: expected 1, got %s', v_count);
+
+    BEGIN
+      INSERT INTO public."RoadmapQuarters" (quarter, year) VALUES (3, 2998);
+      ASSERT false, 'P2b dev INSERT RoadmapQuarters should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST P2 (developer → RoadmapQuarters SELECT ok, INSERT blocked) ✓';
+    END;
+
+    -- ---- P3: Developer SELECT on RoadmapSprints, INSERT blocked ----
+    SELECT count(*) INTO v_count FROM public."RoadmapSprints" WHERE id = rs_id;
+    ASSERT v_count = 1, format('P3a dev SELECT RoadmapSprints: expected 1, got %s', v_count);
+
+    BEGIN
+      INSERT INTO public."RoadmapSprints" (quarter_id, sprint_number, start_date, end_date)
+      VALUES (rq_id, 2, '2998-04-15', '2998-04-28');
+      ASSERT false, 'P3b dev INSERT RoadmapSprints should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST P3 (developer → RoadmapSprints SELECT ok, INSERT blocked) ✓';
+    END;
+
+    -- ---- P4: Developer SELECT on RoadmapFeatures, INSERT blocked ----
+    SELECT count(*) INTO v_count FROM public."RoadmapFeatures" WHERE id = rf_id;
+    ASSERT v_count = 1, format('P4a dev SELECT RoadmapFeatures: expected 1, got %s', v_count);
+
+    BEGIN
+      INSERT INTO public."RoadmapFeatures" (quarter_id, title) VALUES (rq_id, 'Blocked');
+      ASSERT false, 'P4b dev INSERT RoadmapFeatures should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST P4 (developer → RoadmapFeatures SELECT ok, INSERT blocked) ✓';
+    END;
+
+    -- ---- P5: AM CANNOT select RoadmapQuarters/Sprints/Features ----
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
+
+    SELECT count(*) INTO v_count FROM public."RoadmapQuarters" WHERE id = rq_id;
+    ASSERT v_count = 0, format('P5a AM SELECT RoadmapQuarters: expected 0, got %s', v_count);
+
+    SELECT count(*) INTO v_count FROM public."RoadmapSprints" WHERE id = rs_id;
+    ASSERT v_count = 0, format('P5b AM SELECT RoadmapSprints: expected 0, got %s', v_count);
+
+    SELECT count(*) INTO v_count FROM public."RoadmapFeatures" WHERE id = rf_id;
+    ASSERT v_count = 0, format('P5c AM SELECT RoadmapFeatures: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST P5 (AM → Quarters/Sprints/Features blocked) ✓';
+
+    -- ---- P6: AM CAN select RoadmapTasks ----
+    SELECT count(*) INTO v_count FROM public."RoadmapTasks" WHERE id = rt_id;
+    ASSERT v_count = 1, format('P6 AM SELECT RoadmapTasks: expected 1, got %s', v_count);
+    RAISE NOTICE 'TEST P6 (AM → RoadmapTasks SELECT) ✓';
+
+    -- ---- P7: AM CAN insert RoadmapTasks ----
+    INSERT INTO public."RoadmapTasks" (title, is_backlog) VALUES ('AM Ticket', true);
+    RAISE NOTICE 'TEST P7 (AM → RoadmapTasks INSERT) ✓';
+
+    -- ---- P8: AM CAN update RoadmapTasks ----
+    UPDATE public."RoadmapTasks" SET title = 'AM Updated' WHERE id = rt_id;
+    RAISE NOTICE 'TEST P8 (AM → RoadmapTasks UPDATE) ✓';
+
+    -- ---- P9: AM CANNOT delete RoadmapTasks ----
+    BEGIN
+      DELETE FROM public."RoadmapTasks" WHERE id = rt_id;
+      ASSERT false, 'P9 AM DELETE RoadmapTasks should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST P9 (AM → RoadmapTasks DELETE blocked) ✓';
+    END;
+
+    -- ---- P10: Viewer CAN select RoadmapTasks ----
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_viewer)::text, true);
+
+    SELECT count(*) INTO v_count FROM public."RoadmapTasks" WHERE id = rt_id;
+    ASSERT v_count = 1, format('P10 viewer SELECT RoadmapTasks: expected 1, got %s', v_count);
+    RAISE NOTICE 'TEST P10 (viewer → RoadmapTasks SELECT) ✓';
+
+    -- ---- P11: Viewer CANNOT insert RoadmapTasks ----
+    BEGIN
+      INSERT INTO public."RoadmapTasks" (title, is_backlog) VALUES ('Viewer Ticket', true);
+      ASSERT false, 'P11 viewer INSERT RoadmapTasks should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST P11 (viewer → RoadmapTasks INSERT blocked) ✓';
+    END;
+
+    -- ---- P12: Viewer CANNOT select RoadmapQuarters ----
+    SELECT count(*) INTO v_count FROM public."RoadmapQuarters" WHERE id = rq_id;
+    ASSERT v_count = 0, format('P12 viewer SELECT RoadmapQuarters: expected 0, got %s', v_count);
+    RAISE NOTICE 'TEST P12 (viewer → RoadmapQuarters blocked) ✓';
+
+    -- ---- P13: Developer CAN select+insert+update RoadmapTasks ----
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_dev)::text, true);
+
+    INSERT INTO public."RoadmapTasks" (title, is_backlog) VALUES ('Dev Task', true);
+    UPDATE public."RoadmapTasks" SET title = 'Dev Updated' WHERE id = rt_id;
+    RAISE NOTICE 'TEST P13 (developer → RoadmapTasks SELECT+INSERT+UPDATE) ✓';
+
+    -- ---- P14: Developer CANNOT hard-delete RoadmapTasks ----
+    BEGIN
+      DELETE FROM public."RoadmapTasks" WHERE id = rt_id;
+      ASSERT false, 'P14 dev DELETE RoadmapTasks should have failed';
+    EXCEPTION WHEN insufficient_privilege THEN
+      RAISE NOTICE 'TEST P14 (developer → RoadmapTasks DELETE blocked) ✓';
+    END;
+
+    -- ---- P15: Admin CAN delete RoadmapTasks ----
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
+
+    DELETE FROM public."RoadmapTasks" WHERE id = rt_id;
+    RAISE NOTICE 'TEST P15 (admin → RoadmapTasks DELETE) ✓';
+
+    RAISE NOTICE '--- all Roadmap tests (P1-P15) passed ---';
+  END;
+
+  RESET ROLE;
+
   RAISE NOTICE '--- all multi-role RLS tests passed ---';
 END;
 $$;

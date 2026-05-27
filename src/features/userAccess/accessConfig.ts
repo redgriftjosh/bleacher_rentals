@@ -72,6 +72,7 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
       "/driver-scorecard",
       "/leaderboard",
       "/driver-calendar",
+      "/roadmap",
     ],
     showSidebar: true,
   },

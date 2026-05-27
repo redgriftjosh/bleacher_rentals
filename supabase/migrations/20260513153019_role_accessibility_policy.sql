@@ -72,17 +72,7 @@ declare
   pol record;
 
   developer_tables text[] := array[
-    'RoadmapQuarters',
-    'RoadmapSprints',
-    'RoadmapFeatures',
-    'RoadmapFeatureSprintLabels',
-    'RoadmapTasks',
-    'RoadmapBacklogTickets',
-    'RoadmapTaskSubscriptions',
-    'RoadmapTaskMessages',
-    'RoadmapTaskMessageReadReceipts',
-    'RoadmapTaskTypingIndicators',
-    'RoadmapAttachments'
+    'RoadmapBacklogTickets'
   ];
 
   account_manager_tables text[] := array[
@@ -143,6 +133,16 @@ declare
     'MaintenanceEvents',
     'BleacherMaintEvents',
     'ScorecardTargets',
+    'RoadmapQuarters',
+    'RoadmapSprints',
+    'RoadmapFeatures',
+    'RoadmapFeatureSprintLabels',
+    'RoadmapTasks',
+    'RoadmapTaskSubscriptions',
+    'RoadmapTaskMessages',
+    'RoadmapTaskMessageReadReceipts',
+    'RoadmapTaskTypingIndicators',
+    'RoadmapAttachments',
     '_powersync_unhandled'
   ];
 
@@ -259,6 +259,234 @@ create policy "rbac_update" on public."ScorecardTargets"
 create policy "rbac_delete" on public."ScorecardTargets"
   as permissive for delete to authenticated
   using (public.get_user_roles() && '{admin}'::text[]);
+
+-- =====================
+-- 2c. RoadmapQuarters: admin CRUD, developer read-only
+-- =====================
+do $$
+declare pol record;
+begin
+  for pol in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'RoadmapQuarters'
+  loop
+    execute format('drop policy if exists %I on public."RoadmapQuarters"', pol.policyname);
+  end loop;
+end;
+$$;
+
+alter table public."RoadmapQuarters" enable row level security;
+
+create policy "rbac_select" on public."RoadmapQuarters"
+  as permissive for select to authenticated
+  using (public.get_user_roles() && '{admin,developer}'::text[]);
+
+create policy "rbac_insert" on public."RoadmapQuarters"
+  as permissive for insert to authenticated
+  with check (public.get_user_roles() && '{admin}'::text[]);
+
+create policy "rbac_update" on public."RoadmapQuarters"
+  as permissive for update to authenticated
+  using (public.get_user_roles() && '{admin}'::text[]);
+
+create policy "rbac_delete" on public."RoadmapQuarters"
+  as permissive for delete to authenticated
+  using (public.get_user_roles() && '{admin}'::text[]);
+
+-- =====================
+-- 2d. RoadmapSprints: admin CRUD, developer read-only
+-- =====================
+do $$
+declare pol record;
+begin
+  for pol in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'RoadmapSprints'
+  loop
+    execute format('drop policy if exists %I on public."RoadmapSprints"', pol.policyname);
+  end loop;
+end;
+$$;
+
+alter table public."RoadmapSprints" enable row level security;
+
+create policy "rbac_select" on public."RoadmapSprints"
+  as permissive for select to authenticated
+  using (public.get_user_roles() && '{admin,developer}'::text[]);
+
+create policy "rbac_insert" on public."RoadmapSprints"
+  as permissive for insert to authenticated
+  with check (public.get_user_roles() && '{admin}'::text[]);
+
+create policy "rbac_update" on public."RoadmapSprints"
+  as permissive for update to authenticated
+  using (public.get_user_roles() && '{admin}'::text[]);
+
+create policy "rbac_delete" on public."RoadmapSprints"
+  as permissive for delete to authenticated
+  using (public.get_user_roles() && '{admin}'::text[]);
+
+-- =====================
+-- 2e. RoadmapFeatures: admin CRUD, developer read-only
+-- =====================
+do $$
+declare pol record;
+begin
+  for pol in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'RoadmapFeatures'
+  loop
+    execute format('drop policy if exists %I on public."RoadmapFeatures"', pol.policyname);
+  end loop;
+end;
+$$;
+
+alter table public."RoadmapFeatures" enable row level security;
+
+create policy "rbac_select" on public."RoadmapFeatures"
+  as permissive for select to authenticated
+  using (public.get_user_roles() && '{admin,developer}'::text[]);
+
+create policy "rbac_insert" on public."RoadmapFeatures"
+  as permissive for insert to authenticated
+  with check (public.get_user_roles() && '{admin}'::text[]);
+
+create policy "rbac_update" on public."RoadmapFeatures"
+  as permissive for update to authenticated
+  using (public.get_user_roles() && '{admin}'::text[]);
+
+create policy "rbac_delete" on public."RoadmapFeatures"
+  as permissive for delete to authenticated
+  using (public.get_user_roles() && '{admin}'::text[]);
+
+-- =====================
+-- 2f. RoadmapTasks: admin+developer CRUD, AM select+insert+update, viewer select
+-- =====================
+do $$
+declare pol record;
+begin
+  for pol in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'RoadmapTasks'
+  loop
+    execute format('drop policy if exists %I on public."RoadmapTasks"', pol.policyname);
+  end loop;
+end;
+$$;
+
+alter table public."RoadmapTasks" enable row level security;
+
+create policy "rbac_select" on public."RoadmapTasks"
+  as permissive for select to authenticated
+  using (public.get_user_roles() && '{admin,developer,account_manager,viewer}'::text[]);
+
+create policy "rbac_insert" on public."RoadmapTasks"
+  as permissive for insert to authenticated
+  with check (public.get_user_roles() && '{admin,developer,account_manager}'::text[]);
+
+create policy "rbac_update" on public."RoadmapTasks"
+  as permissive for update to authenticated
+  using (public.get_user_roles() && '{admin,developer,account_manager}'::text[]);
+
+create policy "rbac_delete" on public."RoadmapTasks"
+  as permissive for delete to authenticated
+  using (public.get_user_roles() && '{admin}'::text[]);
+
+-- =====================
+-- 2g. RoadmapFeatureSprintLabels: admin CRUD, developer read-only
+-- =====================
+do $$
+declare pol record;
+begin
+  for pol in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'RoadmapFeatureSprintLabels'
+  loop
+    execute format('drop policy if exists %I on public."RoadmapFeatureSprintLabels"', pol.policyname);
+  end loop;
+end;
+$$;
+
+alter table public."RoadmapFeatureSprintLabels" enable row level security;
+
+create policy "rbac_select" on public."RoadmapFeatureSprintLabels"
+  as permissive for select to authenticated
+  using (public.get_user_roles() && '{admin,developer}'::text[]);
+
+create policy "rbac_insert" on public."RoadmapFeatureSprintLabels"
+  as permissive for insert to authenticated
+  with check (public.get_user_roles() && '{admin}'::text[]);
+
+create policy "rbac_update" on public."RoadmapFeatureSprintLabels"
+  as permissive for update to authenticated
+  using (public.get_user_roles() && '{admin}'::text[]);
+
+create policy "rbac_delete" on public."RoadmapFeatureSprintLabels"
+  as permissive for delete to authenticated
+  using (public.get_user_roles() && '{admin}'::text[]);
+
+-- =====================
+-- 2h. Task-scope tables: admin+developer CRUD, AM select+insert+update, viewer select
+--     RoadmapTaskSubscriptions, RoadmapTaskMessages, RoadmapTaskMessageReadReceipts,
+--     RoadmapTaskTypingIndicators, RoadmapAttachments
+-- =====================
+do $$
+declare
+  tbl text;
+  pol record;
+  task_scope_tables text[] := array[
+    'RoadmapTaskSubscriptions',
+    'RoadmapTaskMessages',
+    'RoadmapTaskMessageReadReceipts',
+    'RoadmapTaskTypingIndicators',
+    'RoadmapAttachments'
+  ];
+begin
+  foreach tbl in array task_scope_tables loop
+    -- Drop existing policies
+    for pol in
+      select policyname from pg_policies
+      where schemaname = 'public' and tablename = tbl
+    loop
+      execute format('drop policy if exists %I on public.%I', pol.policyname, tbl);
+    end loop;
+
+    execute format('alter table public.%I enable row level security', tbl);
+
+    -- SELECT: admin, developer, AM, viewer
+    execute format(
+      $p$create policy "rbac_select" on public.%I
+         as permissive for select to authenticated
+         using (public.get_user_roles() && '{admin,developer,account_manager,viewer}'::text[])$p$,
+      tbl
+    );
+
+    -- INSERT: admin, developer, AM
+    execute format(
+      $p$create policy "rbac_insert" on public.%I
+         as permissive for insert to authenticated
+         with check (public.get_user_roles() && '{admin,developer,account_manager}'::text[])$p$,
+      tbl
+    );
+
+    -- UPDATE: admin, developer, AM
+    execute format(
+      $p$create policy "rbac_update" on public.%I
+         as permissive for update to authenticated
+         using (public.get_user_roles() && '{admin,developer,account_manager}'::text[])$p$,
+      tbl
+    );
+
+    -- DELETE: admin, developer only
+    execute format(
+      $p$create policy "rbac_delete" on public.%I
+         as permissive for delete to authenticated
+         using (public.get_user_roles() && '{admin,developer}'::text[])$p$,
+      tbl
+    );
+  end loop;
+end;
+$$;
 
 -- =====================
 -- 3. Helper for Users policies: bypasses RLS to check admin status
