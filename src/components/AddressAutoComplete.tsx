@@ -117,6 +117,7 @@ export default function AddressAutocomplete({
                 left: suggestionPos.left,
                 width: suggestionPos.width,
                 position: "absolute",
+                pointerEvents: "auto",
               }}
             >
               {data.map(({ place_id, description }) => (
