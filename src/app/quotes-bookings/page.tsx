@@ -10,6 +10,7 @@ import { FilterPanel } from "@/features/quotesAndBookings/components/FilterPanel
 import { useQuotesAndBookingsFilters } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsFilters";
 import { useQuotesAndBookingsData } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsData";
 import type { QuotesBookingsEvent } from "@/features/quotesAndBookings/types";
+import { useRouter } from "next/navigation";
 
 function formatCurrency(cents: number | null): string {
   if (cents === null) return "$0.00";
@@ -54,6 +55,8 @@ export default function QuotesBookingsPage() {
   } = useQuotesAndBookingsFilters();
 
   const { data, isLoading, error } = useQuotesAndBookingsData(filters);
+
+  const router = useRouter();
 
   const columns: Column<QuotesBookingsEvent>[] = [
     {
@@ -114,7 +117,9 @@ export default function QuotesBookingsPage() {
         action={
           <div className="flex items-center gap-2">
             <FilterButton isOpen={filters.isOpen} onClick={toggleOpen} />
-            <PrimaryButton onClick={openModal}>+ Create Quote</PrimaryButton>
+            <PrimaryButton onClick={() => router.push("/quotes-bookings/new")}>
+              + Create Quote
+            </PrimaryButton>
           </div>
         }
       />
