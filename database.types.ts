@@ -298,6 +298,41 @@ export type Database = {
           },
         ]
       }
+      BleacherTypes: {
+        Row: {
+          created_at: string
+          created_by_user_uuid: string | null
+          deleted: boolean
+          id: string
+          name: string
+          row_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          id?: string
+          name: string
+          row_count: number
+        }
+        Update: {
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          id?: string
+          name?: string
+          row_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "BleacherTypes_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       BleacherUsers: {
         Row: {
           bleacher_uuid: string | null
@@ -407,6 +442,121 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      Companies: {
+        Row: {
+          billing_address_uuid: string | null
+          company_name: string
+          created_at: string
+          created_by_user_uuid: string | null
+          deleted: boolean
+          email: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          shipping_address_uuid: string | null
+        }
+        Insert: {
+          billing_address_uuid?: string | null
+          company_name: string
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          shipping_address_uuid?: string | null
+        }
+        Update: {
+          billing_address_uuid?: string | null
+          company_name?: string
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          shipping_address_uuid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Companies_billing_address_uuid_fkey"
+            columns: ["billing_address_uuid"]
+            isOneToOne: false
+            referencedRelation: "Addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Companies_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Companies_shipping_address_uuid_fkey"
+            columns: ["shipping_address_uuid"]
+            isOneToOne: false
+            referencedRelation: "Addresses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Contacts: {
+        Row: {
+          company_uuid: string | null
+          created_at: string
+          created_by_user_uuid: string | null
+          deleted: boolean
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string | null
+          notes: string | null
+          phone: string | null
+        }
+        Insert: {
+          company_uuid?: string | null
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name?: string | null
+          notes?: string | null
+          phone?: string | null
+        }
+        Update: {
+          company_uuid?: string | null
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string | null
+          notes?: string | null
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Contacts_company_uuid_fkey"
+            columns: ["company_uuid"]
+            isOneToOne: false
+            referencedRelation: "Companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Contacts_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       DamageReportPhotos: {
         Row: {
@@ -783,11 +933,241 @@ export type Database = {
           },
         ]
       }
+      EventAttachments: {
+        Row: {
+          created_at: string
+          event_uuid: string
+          file_name: string
+          id: string
+          storage_path: string
+          uploaded_by_user_uuid: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_uuid: string
+          file_name: string
+          id?: string
+          storage_path: string
+          uploaded_by_user_uuid?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_uuid?: string
+          file_name?: string
+          id?: string
+          storage_path?: string
+          uploaded_by_user_uuid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventAttachments_event_uuid_fkey"
+            columns: ["event_uuid"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventAttachments_uploaded_by_user_uuid_fkey"
+            columns: ["uploaded_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      EventChangeLog: {
+        Row: {
+          changed_at: string
+          changed_by_user_uuid: string | null
+          event_uuid: string
+          id: string
+          next_value: string | null
+          prev_value: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by_user_uuid?: string | null
+          event_uuid: string
+          id?: string
+          next_value?: string | null
+          prev_value?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by_user_uuid?: string | null
+          event_uuid?: string
+          id?: string
+          next_value?: string | null
+          prev_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventChangeLog_changed_by_user_uuid_fkey"
+            columns: ["changed_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventChangeLog_event_uuid_fkey"
+            columns: ["event_uuid"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      EventLineItems: {
+        Row: {
+          bleacher_type_uuid: string | null
+          created_at: string
+          created_by_user_uuid: string | null
+          currency: Database["public"]["Enums"]["currency"]
+          deleted: boolean
+          description: string | null
+          event_uuid: string | null
+          header: string
+          id: string
+          is_template: boolean
+          quantity: number | null
+          value_cents: number
+        }
+        Insert: {
+          bleacher_type_uuid?: string | null
+          created_at?: string
+          created_by_user_uuid?: string | null
+          currency: Database["public"]["Enums"]["currency"]
+          deleted?: boolean
+          description?: string | null
+          event_uuid?: string | null
+          header: string
+          id?: string
+          is_template?: boolean
+          quantity?: number | null
+          value_cents: number
+        }
+        Update: {
+          bleacher_type_uuid?: string | null
+          created_at?: string
+          created_by_user_uuid?: string | null
+          currency?: Database["public"]["Enums"]["currency"]
+          deleted?: boolean
+          description?: string | null
+          event_uuid?: string | null
+          header?: string
+          id?: string
+          is_template?: boolean
+          quantity?: number | null
+          value_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventLineItems_bleacher_type_uuid_fkey"
+            columns: ["bleacher_type_uuid"]
+            isOneToOne: false
+            referencedRelation: "BleacherTypes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventLineItems_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventLineItems_event_uuid_fkey"
+            columns: ["event_uuid"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      EventMessageReadReceipts: {
+        Row: {
+          id: string
+          message_id: string
+          read_at: string
+          user_uuid: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          read_at?: string
+          user_uuid: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          read_at?: string
+          user_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventMessageReadReceipts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "EventMessages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventMessageReadReceipts_user_uuid_fkey"
+            columns: ["user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      EventMessages: {
+        Row: {
+          body: string
+          created_at: string
+          event_uuid: string
+          id: string
+          is_system: boolean
+          user_uuid: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          event_uuid: string
+          id?: string
+          is_system?: boolean
+          user_uuid: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          event_uuid?: string
+          id?: string
+          is_system?: boolean
+          user_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventMessages_event_uuid_fkey"
+            columns: ["event_uuid"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventMessages_user_uuid_fkey"
+            columns: ["user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Events: {
         Row: {
           address_uuid: string | null
           booked: boolean
           booked_at: string | null
+          contact_uuid: string | null
           contract_revenue_cents: number | null
           created_at: string
           created_by_user_uuid: string | null
@@ -795,10 +1175,13 @@ export type Database = {
           event_name: string
           event_start: string
           event_status: Database["public"]["Enums"]["event_status"] | null
+          event_type_uuid: string | null
+          external_notes: string | null
           fifteen_row: number | null
           goodshuffle_url: string | null
           hsl_hue: number | null
           id: string
+          internal_notes: string | null
           lenient: boolean
           must_be_clean: boolean
           notes: string | null
@@ -812,6 +1195,7 @@ export type Database = {
           address_uuid?: string | null
           booked?: boolean
           booked_at?: string | null
+          contact_uuid?: string | null
           contract_revenue_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null
@@ -819,10 +1203,13 @@ export type Database = {
           event_name: string
           event_start: string
           event_status?: Database["public"]["Enums"]["event_status"] | null
+          event_type_uuid?: string | null
+          external_notes?: string | null
           fifteen_row?: number | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
           id?: string
+          internal_notes?: string | null
           lenient: boolean
           must_be_clean?: boolean
           notes?: string | null
@@ -836,6 +1223,7 @@ export type Database = {
           address_uuid?: string | null
           booked?: boolean
           booked_at?: string | null
+          contact_uuid?: string | null
           contract_revenue_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null
@@ -843,10 +1231,13 @@ export type Database = {
           event_name?: string
           event_start?: string
           event_status?: Database["public"]["Enums"]["event_status"] | null
+          event_type_uuid?: string | null
+          external_notes?: string | null
           fifteen_row?: number | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
           id?: string
+          internal_notes?: string | null
           lenient?: boolean
           must_be_clean?: boolean
           notes?: string | null
@@ -865,8 +1256,129 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "Events_contact_uuid_fkey"
+            columns: ["contact_uuid"]
+            isOneToOne: false
+            referencedRelation: "Contacts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "Events_created_by_user_uuid_fkey"
             columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Events_event_type_uuid_fkey"
+            columns: ["event_type_uuid"]
+            isOneToOne: false
+            referencedRelation: "EventTypes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      EventSubscriptions: {
+        Row: {
+          account_manager_uuid: string
+          created_at: string
+          event_uuid: string
+          id: string
+        }
+        Insert: {
+          account_manager_uuid: string
+          created_at?: string
+          event_uuid: string
+          id?: string
+        }
+        Update: {
+          account_manager_uuid?: string
+          created_at?: string
+          event_uuid?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventSubscriptions_account_manager_uuid_fkey"
+            columns: ["account_manager_uuid"]
+            isOneToOne: false
+            referencedRelation: "AccountManagers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventSubscriptions_event_uuid_fkey"
+            columns: ["event_uuid"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      EventTypes: {
+        Row: {
+          created_at: string
+          created_by_user_uuid: string | null
+          deleted: boolean
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventTypes_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      EventTypingIndicators: {
+        Row: {
+          event_uuid: string
+          id: string
+          is_typing: boolean
+          updated_at: string
+          user_uuid: string
+        }
+        Insert: {
+          event_uuid: string
+          id?: string
+          is_typing?: boolean
+          updated_at?: string
+          user_uuid: string
+        }
+        Update: {
+          event_uuid?: string
+          id?: string
+          is_typing?: boolean
+          updated_at?: string
+          user_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventTypingIndicators_event_uuid_fkey"
+            columns: ["event_uuid"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventTypingIndicators_user_uuid_fkey"
+            columns: ["user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
             referencedColumns: ["id"]
@@ -1058,6 +1570,150 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      PaymentInstallments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: Database["public"]["Enums"]["currency"]
+          due_date: string
+          event_uuid: string
+          id: string
+          paid_at: string | null
+          status: Database["public"]["Enums"]["payment_installment_status"]
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency: Database["public"]["Enums"]["currency"]
+          due_date: string
+          event_uuid: string
+          id?: string
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["payment_installment_status"]
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: Database["public"]["Enums"]["currency"]
+          due_date?: string
+          event_uuid?: string
+          id?: string
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["payment_installment_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "PaymentInstallments_event_uuid_fkey"
+            columns: ["event_uuid"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      PriceDurations: {
+        Row: {
+          created_at: string
+          created_by_user_uuid: string | null
+          deleted: boolean
+          id: string
+          max_days: number
+          min_days: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          id?: string
+          max_days: number
+          min_days: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          id?: string
+          max_days?: number
+          min_days?: number
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "PriceDurations_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Prices: {
+        Row: {
+          bleacher_type_uuid: string
+          created_at: string
+          created_by_user_uuid: string | null
+          currency: Database["public"]["Enums"]["currency"]
+          deleted: boolean
+          event_type_uuid: string
+          id: string
+          price_cents: number
+          price_duration_uuid: string
+        }
+        Insert: {
+          bleacher_type_uuid: string
+          created_at?: string
+          created_by_user_uuid?: string | null
+          currency: Database["public"]["Enums"]["currency"]
+          deleted?: boolean
+          event_type_uuid: string
+          id?: string
+          price_cents: number
+          price_duration_uuid: string
+        }
+        Update: {
+          bleacher_type_uuid?: string
+          created_at?: string
+          created_by_user_uuid?: string | null
+          currency?: Database["public"]["Enums"]["currency"]
+          deleted?: boolean
+          event_type_uuid?: string
+          id?: string
+          price_cents?: number
+          price_duration_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Prices_bleacher_type_uuid_fkey"
+            columns: ["bleacher_type_uuid"]
+            isOneToOne: false
+            referencedRelation: "BleacherTypes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Prices_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Prices_event_type_uuid_fkey"
+            columns: ["event_type_uuid"]
+            isOneToOne: false
+            referencedRelation: "EventTypes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Prices_price_duration_uuid_fkey"
+            columns: ["price_duration_uuid"]
+            isOneToOne: false
+            referencedRelation: "PriceDurations"
             referencedColumns: ["id"]
           },
         ]
@@ -1496,6 +2152,48 @@ export type Database = {
           },
         ]
       }
+      SalesOffices: {
+        Row: {
+          address_uuid: string | null
+          created_at: string
+          created_by_user_uuid: string | null
+          deleted: boolean
+          id: string
+          name: string
+        }
+        Insert: {
+          address_uuid?: string | null
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          id?: string
+          name: string
+        }
+        Update: {
+          address_uuid?: string | null
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "SalesOffices_address_uuid_fkey"
+            columns: ["address_uuid"]
+            isOneToOne: false
+            referencedRelation: "Addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "SalesOffices_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ScorecardTargets: {
         Row: {
           account_manager_uuid: string
@@ -1714,7 +2412,6 @@ export type Database = {
           first_name: string | null
           id: string
           is_admin: boolean
-          is_developer_only: number
           is_viewer: boolean
           last_name: string | null
           phone: string | null
@@ -1730,7 +2427,6 @@ export type Database = {
           first_name?: string | null
           id?: string
           is_admin?: boolean
-          is_developer_only?: number
           is_viewer?: boolean
           last_name?: string | null
           phone?: string | null
@@ -1746,7 +2442,6 @@ export type Database = {
           first_name?: string | null
           id?: string
           is_admin?: boolean
-          is_developer_only?: number
           is_viewer?: boolean
           last_name?: string | null
           phone?: string | null
@@ -1924,6 +2619,7 @@ export type Database = {
           bol_number: string | null
           completed_at: string | null
           created_at: string
+          created_by_user_uuid: string | null
           date: string | null
           distance_meters: number | null
           drive_minutes: number | null
@@ -1959,6 +2655,7 @@ export type Database = {
           bol_number?: string | null
           completed_at?: string | null
           created_at?: string
+          created_by_user_uuid?: string | null
           date?: string | null
           distance_meters?: number | null
           drive_minutes?: number | null
@@ -1994,6 +2691,7 @@ export type Database = {
           bol_number?: string | null
           completed_at?: string | null
           created_at?: string
+          created_by_user_uuid?: string | null
           date?: string | null
           distance_meters?: number | null
           drive_minutes?: number | null
@@ -2029,6 +2727,13 @@ export type Database = {
             columns: ["bleacher_uuid"]
             isOneToOne: false
             referencedRelation: "Bleachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "WorkTrackers_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
             referencedColumns: ["id"]
           },
           {
@@ -2246,8 +2951,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_current_account_manager_id: { Args: never; Returns: string }
+      get_current_user_uuid: { Args: never; Returns: string }
+      get_user_roles: { Args: never; Returns: string[] }
       get_week_end: { Args: { input_date: string }; Returns: string }
       get_week_start: { Args: { input_date: string }; Returns: string }
+      is_current_user_account_manager: { Args: never; Returns: boolean }
+      is_current_user_active: { Args: never; Returns: boolean }
+      is_current_user_admin: { Args: never; Returns: boolean }
       recompute_driver_scorecard_bucket: {
         Args: { p_driver: string; p_year: number }
         Returns: undefined
@@ -2261,9 +2972,11 @@ export type Database = {
       alert_entity_type: "event"
       bleacher_opening_dir: "driver" | "passenger"
       bluebook_region: "CAN" | "US" | "Both"
+      currency: "USD" | "CAD"
       event_status: "quoted" | "booked" | "lost"
       pay_currency_type: "CAD" | "USD"
       pay_per_unit_type: "KM" | "MI" | "HR"
+      payment_installment_status: "unpaid" | "paid"
       question_type: "text" | "checkbox" | "photo"
       roadmap_attachment_parent_type: "task" | "feature"
       roadmap_feature_status:
@@ -2426,9 +3139,11 @@ export const Constants = {
       alert_entity_type: ["event"],
       bleacher_opening_dir: ["driver", "passenger"],
       bluebook_region: ["CAN", "US", "Both"],
+      currency: ["USD", "CAD"],
       event_status: ["quoted", "booked", "lost"],
       pay_currency_type: ["CAD", "USD"],
       pay_per_unit_type: ["KM", "MI", "HR"],
+      payment_installment_status: ["unpaid", "paid"],
       question_type: ["text", "checkbox", "photo"],
       roadmap_attachment_parent_type: ["task", "feature"],
       roadmap_feature_status: [
