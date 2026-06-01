@@ -13,7 +13,6 @@ type BleacherFlatRow = {
   linxup_device_id: string | null;
   summer_account_manager_uuid: string | null;
   winter_account_manager_uuid: string | null;
-  booked: number | null;
   event_end: string | null;
   event_name: string | null;
   event_start: string | null;
@@ -58,7 +57,7 @@ type BleacherFlatRow = {
   dr_wt_post_date: string | null;
 };
 
-function toBool(v: BleacherFlatRow["booked"]): boolean {
+function toBool(v: number | null | boolean): boolean {
   if (typeof v === "boolean") return v;
   if (typeof v === "number") return v !== 0;
   return false;
@@ -126,7 +125,7 @@ function reshapeBleachers(rows: BleacherFlatRow[]): Bleacher[] {
             eventStart: r.event_start ?? "",
             eventEnd: r.event_end ?? "",
             hslHue: r.hsl_hue,
-            booked: toBool(r.booked),
+            booked: r.event_status === "booked",
             goodshuffleUrl: r.goodshuffle_url ?? null,
             address: r.address_street ?? "",
           });
@@ -245,7 +244,6 @@ export function useBleachers() {
       "e.event_start",
       "e.event_end",
       "e.hsl_hue",
-      "e.booked",
       "e.event_status",
       "e.goodshuffle_url",
       "a.street as address_street",

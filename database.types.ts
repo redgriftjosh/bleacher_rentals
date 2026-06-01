@@ -1165,7 +1165,6 @@ export type Database = {
       Events: {
         Row: {
           address_uuid: string | null
-          booked: boolean
           booked_at: string | null
           contact_uuid: string | null
           contract_revenue_cents: number | null
@@ -1185,6 +1184,7 @@ export type Database = {
           lenient: boolean
           must_be_clean: boolean
           notes: string | null
+          sales_office_uuid: string | null
           setup_start: string | null
           seven_row: number | null
           teardown_end: string | null
@@ -1193,7 +1193,6 @@ export type Database = {
         }
         Insert: {
           address_uuid?: string | null
-          booked?: boolean
           booked_at?: string | null
           contact_uuid?: string | null
           contract_revenue_cents?: number | null
@@ -1213,6 +1212,7 @@ export type Database = {
           lenient: boolean
           must_be_clean?: boolean
           notes?: string | null
+          sales_office_uuid?: string | null
           setup_start?: string | null
           seven_row?: number | null
           teardown_end?: string | null
@@ -1221,7 +1221,6 @@ export type Database = {
         }
         Update: {
           address_uuid?: string | null
-          booked?: boolean
           booked_at?: string | null
           contact_uuid?: string | null
           contract_revenue_cents?: number | null
@@ -1241,6 +1240,7 @@ export type Database = {
           lenient?: boolean
           must_be_clean?: boolean
           notes?: string | null
+          sales_office_uuid?: string | null
           setup_start?: string | null
           seven_row?: number | null
           teardown_end?: string | null
@@ -1274,6 +1274,13 @@ export type Database = {
             columns: ["event_type_uuid"]
             isOneToOne: false
             referencedRelation: "EventTypes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Events_sales_office_uuid_fkey"
+            columns: ["sales_office_uuid"]
+            isOneToOne: false
+            referencedRelation: "SalesOffices"
             referencedColumns: ["id"]
           },
         ]
@@ -2973,7 +2980,7 @@ export type Database = {
       bleacher_opening_dir: "driver" | "passenger"
       bluebook_region: "CAN" | "US" | "Both"
       currency: "USD" | "CAD"
-      event_status: "quoted" | "booked" | "lost"
+      event_status: "quoted" | "booked" | "lost" | "draft"
       pay_currency_type: "CAD" | "USD"
       pay_per_unit_type: "KM" | "MI" | "HR"
       payment_installment_status: "unpaid" | "paid"
@@ -3140,7 +3147,7 @@ export const Constants = {
       bleacher_opening_dir: ["driver", "passenger"],
       bluebook_region: ["CAN", "US", "Both"],
       currency: ["USD", "CAD"],
-      event_status: ["quoted", "booked", "lost"],
+      event_status: ["quoted", "booked", "lost", "draft"],
       pay_currency_type: ["CAD", "USD"],
       pay_per_unit_type: ["KM", "MI", "HR"],
       payment_installment_status: ["unpaid", "paid"],

@@ -71,7 +71,7 @@ export async function loadEventById(
     setField("teardownEnd", eventData.teardown_end ?? "");
     setField("sameDayTeardown", !eventData.teardown_end);
     setField("lenient", eventData.lenient);
-    setField("selectedStatus", eventData.event_status ?? (eventData.booked ? "booked" : "quoted"));
+    setField("selectedStatus", eventData.event_status ?? "quoted");
     setField("contractRevenueCents", eventData.contract_revenue_cents ?? null);
     setField("notes", eventData.notes ?? "");
     setField("mustBeClean", eventData.must_be_clean);

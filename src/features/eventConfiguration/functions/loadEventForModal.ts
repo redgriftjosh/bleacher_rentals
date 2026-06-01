@@ -15,7 +15,6 @@ type EventWithAddress = {
   fifteen_row: number | null;
   lenient: number | null;
   event_status: string | null;
-  booked: number | null;
   contract_revenue_cents: number | null;
   notes: string | null;
   must_be_clean: number | null;
@@ -57,7 +56,6 @@ export async function loadEventForModal(eventId: string): Promise<void> {
         "e.fifteen_row",
         "e.lenient",
         "e.event_status",
-        "e.booked",
         "e.contract_revenue_cents",
         "e.notes",
         "e.must_be_clean",
@@ -128,8 +126,7 @@ export async function loadEventForModal(eventId: string): Promise<void> {
     setField("lenient", !!eventData.lenient);
     setField(
       "selectedStatus",
-      (eventData.event_status as "quoted" | "booked" | "lost") ??
-        (eventData.booked ? "booked" : "quoted"),
+      (eventData.event_status as "quoted" | "booked" | "lost" | "draft") ?? "quoted",
     );
     setField("contractRevenueCents", eventData.contract_revenue_cents ?? null);
     setField("notes", eventData.notes ?? "");

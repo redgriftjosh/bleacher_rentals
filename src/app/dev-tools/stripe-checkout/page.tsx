@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/PageHeader";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
-import { getStripe } from "@/lib/stripeClient";
 
 export default function StripeCheckoutPage() {
   const [amount, setAmount] = useState("50.00");
@@ -61,20 +60,11 @@ export default function StripeCheckoutPage() {
         return;
       }
 
-      // Redirect to Stripe Checkout
+      // Redirect to Stripe hosted checkout
       if (data.url) {
         window.location.href = data.url;
       } else {
-        // Fallback: use Stripe.js redirect
-        const stripe = await getStripe();
-        if (stripe) {
-          const { error: stripeError } = await stripe.redirectToCheckout({
-            sessionId: data.sessionId,
-          });
-          if (stripeError) {
-            setError(stripeError.message || "Stripe redirect failed");
-          }
-        }
+        setError("No checkout URL returned from Stripe");
       }
     } catch (err: any) {
       setError(err.message || "Network error");

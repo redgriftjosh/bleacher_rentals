@@ -102,7 +102,6 @@ const EventsCols = {
   ten_row: column.integer,
   fifteen_row: column.integer,
   lenient: column.integer,
-  booked: column.integer,
   notes: column.text,
   must_be_clean: column.integer,
   hsl_hue: column.integer,
@@ -116,6 +115,7 @@ const EventsCols = {
   contact_uuid: column.text,
   internal_notes: column.text,
   external_notes: column.text,
+  sales_office_uuid: column.text,
 } satisfies PowerSyncColsFor<"Events">;
 const Events = new Table(EventsCols, {
   indexes: {
@@ -206,7 +206,6 @@ const UsersCols = {
   avatar_image_url: column.text,
   is_admin: column.integer,
   is_viewer: column.integer,
-  is_developer_only: column.integer,
   created_at: column.text,
   expo_push_token: column.text,
 } satisfies PowerSyncColsFor<"Users">;
@@ -251,6 +250,7 @@ const WorkTrackersCols = {
   dropoff_instructions: column.text,
   project_number: column.text,
   bol_number: column.text,
+  created_by_user_uuid: column.text,
 } satisfies PowerSyncColsFor<"WorkTrackers">;
 const WorkTrackers = new Table(WorkTrackersCols, {
   indexes: {
