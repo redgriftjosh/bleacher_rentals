@@ -6,8 +6,6 @@ export type PaymentMethod = "credit_card" | "physical_check" | "wire_ach" | "cas
 
 export type QuoteStatus = "draft" | "sent" | "accepted" | "declined" | "expired";
 
-export type ContactMethod = "email" | "phone" | "text";
-
 export type LineItemCategory = "bleachers" | "discounts" | "logistics" | "custom_service";
 
 export type DiscountType = "percentage" | "fixed";
@@ -29,30 +27,35 @@ export type LineItem = {
   discountValue: number;
 };
 
-export type QuoteContact = {
-  id: string | null;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  jobTitle: string;
-  role: string;
-  companyId: string | null;
-  companyName: string;
-  preferredContactMethod: ContactMethod;
-  notes: string;
+// Matches public."Addresses" table
+export type AddressFields = {
+  street: string;
+  city: string;
+  stateProvince: string;
+  zipPostal: string;
 };
 
+// Matches public."Companies" table
 export type QuoteCompany = {
   id: string | null;
-  name: string;
-  industry: string;
-  companySize: string;
-  website: string;
-  email: string;
+  companyName: string;
   phone: string;
-  address: string;
-  note: string;
+  email: string;
+  notes: string;
+  billingAddress: AddressFields;
+  shippingAddress: AddressFields;
+  shippingSameAsBilling: boolean;
+};
+
+// Matches public."Contacts" table
+export type QuoteContact = {
+  id: string | null;
+  companyUuid: string | null;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  notes: string;
 };
 
 export type LineItemTemplate = {

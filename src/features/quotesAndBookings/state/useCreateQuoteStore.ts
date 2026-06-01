@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import {
+  AddressFields,
   Currency,
   LineItem,
   PaymentMethod,
@@ -9,6 +10,9 @@ import {
 } from "../types/quoteTypes";
 
 export type CreateQuoteState = {
+  // Edit mode
+  editingEventId: string | null;
+
   // Quote Details
   quoteNumber: string;
   quoteStart: string;
@@ -16,6 +20,7 @@ export type CreateQuoteState = {
   status: QuoteStatus;
   salesOfficeId: string | null;
   accountManagerId: string | null;
+  ownerUserUuid: string | null;
 
   // Client Information
   contactId: string | null;
@@ -27,6 +32,7 @@ export type CreateQuoteState = {
   // Event Details
   eventName: string;
   eventAddress: string;
+  eventAddressData: AddressFields | null;
   dropArrivalDate: string;
   pickUpDate: string;
   eventStart: string;
@@ -67,12 +73,15 @@ const today = new Date().toISOString().split("T")[0];
 const validTill = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
 const initialState: CreateQuoteState = {
+  editingEventId: null,
+
   quoteNumber: "",
   quoteStart: today,
   quoteValidTill: validTill,
   status: "draft",
   salesOfficeId: null,
   accountManagerId: null,
+  ownerUserUuid: null,
 
   contactId: null,
   contactName: "",
@@ -82,6 +91,7 @@ const initialState: CreateQuoteState = {
 
   eventName: "",
   eventAddress: "",
+  eventAddressData: null,
   dropArrivalDate: "",
   pickUpDate: "",
   eventStart: "",

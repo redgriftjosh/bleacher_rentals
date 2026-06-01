@@ -20,7 +20,7 @@ export function PaymentInfoSection() {
       <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">
         Payment Info
       </h2>
-      <div className="mb-4">
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
         <div className="max-w-xs">
           <Dropdown
@@ -29,23 +29,6 @@ export function PaymentInfoSection() {
             onSelect={(val) => store.setField("paymentMethod", val)}
             placeholder="Select method..."
           />
-        </div>
-      </div>
-      <div>
-        <span className="block text-sm font-medium text-gray-700 mb-2">Options:</span>
-        <div className="flex gap-6">
-          {paymentOptions.map((opt) => (
-            <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="radio"
-                name="paymentMethod"
-                checked={store.paymentMethod === opt.value}
-                onChange={() => store.setField("paymentMethod", opt.value)}
-                className="accent-darkBlue"
-              />
-              {opt.label}
-            </label>
-          ))}
         </div>
       </div>
     </section>

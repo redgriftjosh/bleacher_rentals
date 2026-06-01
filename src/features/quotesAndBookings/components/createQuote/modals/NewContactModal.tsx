@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,42 +8,91 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
-import { ContactMethod } from "../../../types/quoteTypes";
+import { Dropdown } from "@/components/DropDown";
+import { createContact } from "../../../db/createContact";
+import { fetchCompanies, CompanyOption } from "../../../db/fetchCompanies";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { createSuccessToast } from "@/components/toasts/SuccessToast";
 
 export function NewContactModal() {
   const isOpen = useCreateQuoteStore((s) => s.isNewContactModalOpen);
   const setField = useCreateQuoteStore((s) => s.setField);
+  const supabase = useClerkSupabaseClient();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [jobTitle, setJobTitle] = useState("");
-  const [role, setRole] = useState("");
-  const [companySearch, setCompanySearch] = useState("");
-  const [preferredMethod, setPreferredMethod] = useState<ContactMethod>("email");
+  const [companyUuid, setCompanyUuid] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const isCompanyModalOpen = useCreateQuoteStore((s) => s.isNewCompanyModalOpen);
+
+  const loadCompanies = useCallback(() => {
+    setLoadingCompanies(true);
+    fetchCompanies(supabase)
+      .then(setCompanies)
+      .finally(() => setLoadingCompanies(false));
+  }, [supabase]);
+
+  // Fetch companies when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+    loadCompanies();
+  }, [isOpen, loadCompanies]);
+
+  // Refetch companies when NewCompanyModal closes (new company was created)
+  useEffect(() => {
+    if (!isOpen || isCompanyModalOpen) return;
+    loadCompanies();
+  }, [isCompanyModalOpen, isOpen, loadCompanies]);
+
+  const companyOptions = companies.map((c) => ({
+    label: c.companyName,
+    value: c.id,
+  }));
+
+  const selectedCompanyName = companies.find((c) => c.id === companyUuid)?.companyName ?? "";
 
   const resetAndClose = () => {
     setFirstName("");
     setLastName("");
     setEmail("");
     setPhone("");
-    setJobTitle("");
-    setRole("");
-    setCompanySearch("");
-    setPreferredMethod("email");
+    setCompanyUuid(null);
     setNotes("");
     setField("isNewContactModalOpen", false);
   };
 
-  const handleSave = () => {
-    setField("contactName", `${firstName} ${lastName}`.trim());
-    setField("companyEmail", email);
-    setField("phone", phone);
-    setField("companyName", companySearch);
-    console.log("Save Contact:", { firstName, lastName, email, phone, jobTitle, role, companySearch, preferredMethod, notes });
-    resetAndClose();
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await createContact(
+        { firstName, lastName, phone, email, notes, companyUuid },
+        supabase,
+      );
+
+      // Update parent form with contact info
+      setField("contactName", `${firstName} ${lastName}`.trim());
+      setField("companyEmail", email);
+      setField("phone", phone);
+      if (selectedCompanyName) {
+        setField("companyName", selectedCompanyName);
+      }
+      createSuccessToast([`Contact "${firstName} ${lastName}" created.`]);
+      resetAndClose();
+    } catch {
+      // Error toast already shown by createContact
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleNewCompany = () => {
+    setField("isNewCompanyModalOpen", true);
   };
 
   return (
@@ -66,7 +115,7 @@ export function NewContactModal() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
               <input
                 type="text"
                 value={lastName}
@@ -79,7 +128,7 @@ export function NewContactModal() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
                 type="email"
                 value={email}
@@ -100,65 +149,24 @@ export function NewContactModal() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
-              <input
-                type="text"
-                value={jobTitle}
-                onChange={(e) => setJobTitle(e.target.value)}
-                placeholder="Event Coordinator"
-                className="w-full h-[40px] px-3 border rounded text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-              <input
-                type="text"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                placeholder="Decision Maker"
-                className="w-full h-[40px] px-3 border rounded text-sm"
-              />
-            </div>
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
             <div className="flex gap-2">
-              <input
-                type="text"
-                value={companySearch}
-                onChange={(e) => setCompanySearch(e.target.value)}
-                placeholder="Search companies..."
-                className="flex-1 h-[40px] px-3 border rounded text-sm"
-              />
+              <div className="flex-1">
+                <Dropdown
+                  options={companyOptions}
+                  selected={companyUuid}
+                  onSelect={setCompanyUuid}
+                  placeholder={loadingCompanies ? "Loading..." : "Select company..."}
+                  disabled={loadingCompanies}
+                />
+              </div>
               <button
-                onClick={() => setField("isNewCompanyModalOpen", true)}
+                onClick={handleNewCompany}
                 className="h-[40px] px-3 text-sm font-medium text-darkBlue border border-darkBlue rounded-sm hover:bg-blue-50 transition cursor-pointer whitespace-nowrap"
               >
                 + New Company
               </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Preferred Contact Method
-            </label>
-            <div className="flex gap-6">
-              {(["email", "phone", "text"] as ContactMethod[]).map((method) => (
-                <label key={method} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="radio"
-                    name="contactMethod"
-                    checked={preferredMethod === method}
-                    onChange={() => setPreferredMethod(method)}
-                    className="accent-darkBlue"
-                  />
-                  {method.charAt(0).toUpperCase() + method.slice(1)}
-                </label>
-              ))}
             </div>
           </div>
 
@@ -183,10 +191,10 @@ export function NewContactModal() {
           </button>
           <button
             onClick={handleSave}
-            disabled={!firstName || !lastName || !email}
+            disabled={!firstName.trim() || saving}
             className="px-4 py-2 text-sm font-semibold text-white bg-darkBlue rounded-sm shadow-md hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save Contact
+            {saving ? "Saving..." : "Save Contact"}
           </button>
         </div>
       </DialogContent>
