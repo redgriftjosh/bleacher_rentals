@@ -75,21 +75,14 @@ export function QuoteDetailsSection() {
       </h2>
       <div className="grid grid-cols-4 gap-4 mb-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Quote # (Auto-generated)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Quote # (Auto-generated)
+          </label>
           <input
             type="text"
             value={store.quoteNumber || "QT-XXXXX"}
             disabled
             className="w-full h-[40px] px-3 border rounded text-sm bg-gray-50 text-gray-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Quote Start</label>
-          <input
-            type="date"
-            value={store.quoteStart}
-            onChange={(e) => store.setField("quoteStart", e.target.value)}
-            className="w-full h-[40px] px-3 border rounded text-sm"
           />
         </div>
         <div>

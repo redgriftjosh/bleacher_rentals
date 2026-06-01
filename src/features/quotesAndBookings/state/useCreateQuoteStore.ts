@@ -16,7 +16,6 @@ export type CreateQuoteState = {
 
   // Quote Details
   quoteNumber: string;
-  quoteStart: string;
   quoteValidTill: string;
   status: QuoteStatus;
   salesOfficeId: string | null;
@@ -80,7 +79,6 @@ const initialState: CreateQuoteState = {
   editingEventId: null,
 
   quoteNumber: "",
-  quoteStart: today,
   quoteValidTill: validTill,
   status: "draft",
   salesOfficeId: null,
@@ -125,8 +123,7 @@ export const useCreateQuoteStore = create<CreateQuoteState & CreateQuoteActions>
 
   setField: (key, value) => set((state) => ({ ...state, [key]: value })),
 
-  addLineItem: (item) =>
-    set((state) => ({ lineItems: [...state.lineItems, item] })),
+  addLineItem: (item) => set((state) => ({ lineItems: [...state.lineItems, item] })),
 
   updateLineItem: (id, updates) =>
     set((state) => ({
