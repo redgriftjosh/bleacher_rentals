@@ -47,7 +47,6 @@ export async function createQuoteEvent(
     teardown_end: state.pickUpDate || null,
     address_uuid: addressUuid,
     event_status: "quoted",
-    booked: false,
     lenient: false,
     must_be_clean: false,
     notes: state.clientFacingNotes || null,

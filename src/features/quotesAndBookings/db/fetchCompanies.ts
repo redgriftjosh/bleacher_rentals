@@ -1,26 +1,24 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "../../../../database.types";
+import { db, powerSyncDb } from "@/components/providers/SystemProvider";
 
 export type CompanyOption = {
   id: string;
   companyName: string;
 };
 
-export async function fetchCompanies(
-  supabase: SupabaseClient<Database>,
-): Promise<CompanyOption[]> {
-  const { data, error } = await supabase
-    .from("Companies")
-    .select("id, company_name")
-    .eq("deleted", false)
-    .order("company_name");
+export async function fetchCompanies(): Promise<CompanyOption[]> {
+  const compiled = db
+    .selectFrom("Companies")
+    .select(["id", "company_name"])
+    .where("deleted", "=", 0)
+    .orderBy("company_name")
+    .compile();
 
-  if (error) {
-    console.error("Failed to fetch companies:", error);
-    return [];
-  }
+  const rows = await powerSyncDb.getAll<{ id: string; company_name: string }>(
+    compiled.sql,
+    compiled.parameters as any[],
+  );
 
-  return (data ?? []).map((c) => ({
+  return rows.map((c) => ({
     id: c.id,
     companyName: c.company_name,
   }));

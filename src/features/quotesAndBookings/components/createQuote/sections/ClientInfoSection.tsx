@@ -4,11 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { Dropdown } from "@/components/DropDown";
 import { fetchContacts, ContactOption } from "../../../db/fetchContacts";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export function ClientInfoSection() {
   const store = useCreateQuoteStore();
-  const supabase = useClerkSupabaseClient();
   const isContactModalOpen = useCreateQuoteStore((s) => s.isNewContactModalOpen);
 
   const [contacts, setContacts] = useState<ContactOption[]>([]);
@@ -16,10 +14,10 @@ export function ClientInfoSection() {
 
   const loadContacts = useCallback(() => {
     setLoading(true);
-    fetchContacts(supabase)
+    fetchContacts()
       .then(setContacts)
       .finally(() => setLoading(false));
-  }, [supabase]);
+  }, []);
 
   // Fetch on mount
   useEffect(() => {

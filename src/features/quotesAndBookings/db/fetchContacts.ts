@@ -1,5 +1,4 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "../../../../database.types";
+import { db, powerSyncDb } from "@/components/providers/SystemProvider";
 
 export type ContactOption = {
   id: string;
@@ -10,21 +9,24 @@ export type ContactOption = {
   companyUuid: string | null;
 };
 
-export async function fetchContacts(
-  supabase: SupabaseClient<Database>,
-): Promise<ContactOption[]> {
-  const { data, error } = await supabase
-    .from("Contacts")
-    .select("id, first_name, last_name, email, phone, company_uuid")
-    .eq("deleted", false)
-    .order("first_name");
+export async function fetchContacts(): Promise<ContactOption[]> {
+  const compiled = db
+    .selectFrom("Contacts")
+    .select(["id", "first_name", "last_name", "email", "phone", "company_uuid"])
+    .where("deleted", "=", 0)
+    .orderBy("first_name")
+    .compile();
 
-  if (error) {
-    console.error("Failed to fetch contacts:", error);
-    return [];
-  }
+  const rows = await powerSyncDb.getAll<{
+    id: string;
+    first_name: string;
+    last_name: string | null;
+    email: string | null;
+    phone: string | null;
+    company_uuid: string | null;
+  }>(compiled.sql, compiled.parameters as any[]);
 
-  return (data ?? []).map((c) => ({
+  return rows.map((c) => ({
     id: c.id,
     firstName: c.first_name,
     lastName: c.last_name,

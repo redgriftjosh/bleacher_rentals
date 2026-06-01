@@ -1,5 +1,4 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "../../../../database.types";
+import { db, powerSyncDb } from "@/components/providers/SystemProvider";
 
 export type QuoteDetail = {
   id: string;
@@ -34,78 +33,108 @@ export type QuoteDetail = {
   } | null;
 };
 
-export async function fetchQuoteDetail(
-  eventId: string,
-  supabase: SupabaseClient<Database>,
-): Promise<QuoteDetail | null> {
-  const { data, error } = await supabase
-    .from("Events")
-    .select(`
-      id,
-      event_name,
-      event_status,
-      event_start,
-      event_end,
-      setup_start,
-      teardown_end,
-      notes,
-      internal_notes,
-      external_notes,
-      contract_revenue_cents,
-      booked_at,
-      created_at,
-      Addresses!Events_address_uuid_fkey (
-        street,
-        city,
-        state_province,
-        zip_postal
-      ),
-      Contacts!Events_contact_uuid_fkey (
-        id,
-        first_name,
-        last_name,
-        email,
-        phone
-      ),
-      Users!Events_created_by_user_uuid_fkey (
-        first_name,
-        last_name
-      )
-    `)
-    .eq("id", eventId)
-    .single();
+type Row = {
+  id: string;
+  event_name: string;
+  event_status: string | null;
+  event_start: string | null;
+  event_end: string | null;
+  setup_start: string | null;
+  teardown_end: string | null;
+  notes: string | null;
+  internal_notes: string | null;
+  external_notes: string | null;
+  contract_revenue_cents: number | null;
+  booked_at: string | null;
+  created_at: string;
+  address_street: string | null;
+  address_city: string | null;
+  address_state_province: string | null;
+  address_zip_postal: string | null;
+  contact_id: string | null;
+  contact_first_name: string | null;
+  contact_last_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  am_first_name: string | null;
+  am_last_name: string | null;
+};
 
-  if (error || !data) {
-    console.error("Failed to fetch quote detail:", error);
-    return null;
-  }
+export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | null> {
+  const compiled = db
+    .selectFrom("Events as e")
+    .leftJoin("Addresses as a", "e.address_uuid", "a.id")
+    .leftJoin("Contacts as ct", "e.contact_uuid", "ct.id")
+    .leftJoin("Users as u", "e.created_by_user_uuid", "u.id")
+    .select([
+      "e.id as id",
+      "e.event_name as event_name",
+      "e.event_status as event_status",
+      "e.event_start as event_start",
+      "e.event_end as event_end",
+      "e.setup_start as setup_start",
+      "e.teardown_end as teardown_end",
+      "e.notes as notes",
+      "e.internal_notes as internal_notes",
+      "e.external_notes as external_notes",
+      "e.contract_revenue_cents as contract_revenue_cents",
+      "e.booked_at as booked_at",
+      "e.created_at as created_at",
+      "a.street as address_street",
+      "a.city as address_city",
+      "a.state_province as address_state_province",
+      "a.zip_postal as address_zip_postal",
+      "ct.id as contact_id",
+      "ct.first_name as contact_first_name",
+      "ct.last_name as contact_last_name",
+      "ct.email as contact_email",
+      "ct.phone as contact_phone",
+      "u.first_name as am_first_name",
+      "u.last_name as am_last_name",
+    ])
+    .where("e.id", "=", eventId)
+    .compile();
 
-  const addr = data.Addresses as { street: string; city: string; state_province: string; zip_postal: string | null } | null;
-  const contact = data.Contacts as { id: string; first_name: string; last_name: string | null; email: string | null; phone: string | null } | null;
-  const user = data.Users as { first_name: string | null; last_name: string | null } | null;
+  const rows = await powerSyncDb.getAll<Row>(compiled.sql, compiled.parameters as any[]);
+
+  if (rows.length === 0) return null;
+
+  const r = rows[0];
 
   return {
-    id: data.id,
-    eventName: data.event_name,
-    eventStatus: data.event_status,
-    eventStart: data.event_start,
-    eventEnd: data.event_end,
-    setupStart: data.setup_start,
-    teardownEnd: data.teardown_end,
-    notes: data.notes,
-    internalNotes: data.internal_notes,
-    externalNotes: data.external_notes,
-    contractRevenueCents: data.contract_revenue_cents,
-    bookedAt: data.booked_at,
-    createdAt: data.created_at,
-    address: addr
-      ? { street: addr.street, city: addr.city, stateProvince: addr.state_province, zipPostal: addr.zip_postal }
+    id: r.id,
+    eventName: r.event_name,
+    eventStatus: r.event_status,
+    eventStart: r.event_start,
+    eventEnd: r.event_end,
+    setupStart: r.setup_start,
+    teardownEnd: r.teardown_end,
+    notes: r.notes,
+    internalNotes: r.internal_notes,
+    externalNotes: r.external_notes,
+    contractRevenueCents: r.contract_revenue_cents,
+    bookedAt: r.booked_at,
+    createdAt: r.created_at,
+    address: r.address_street
+      ? {
+          street: r.address_street,
+          city: r.address_city ?? "",
+          stateProvince: r.address_state_province ?? "",
+          zipPostal: r.address_zip_postal,
+        }
       : null,
-    contact: contact
-      ? { id: contact.id, firstName: contact.first_name, lastName: contact.last_name, email: contact.email, phone: contact.phone }
+    contact: r.contact_id
+      ? {
+          id: r.contact_id,
+          firstName: r.contact_first_name ?? "",
+          lastName: r.contact_last_name,
+          email: r.contact_email,
+          phone: r.contact_phone,
+        }
       : null,
-    accountManager: user
-      ? { firstName: user.first_name, lastName: user.last_name }
-      : null,
+    accountManager:
+      r.am_first_name || r.am_last_name
+        ? { firstName: r.am_first_name, lastName: r.am_last_name }
+        : null,
   };
 }

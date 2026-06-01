@@ -33,10 +33,10 @@ export function NewContactModal() {
 
   const loadCompanies = useCallback(() => {
     setLoadingCompanies(true);
-    fetchCompanies(supabase)
+    fetchCompanies()
       .then(setCompanies)
       .finally(() => setLoadingCompanies(false));
-  }, [supabase]);
+  }, []);
 
   // Fetch companies when modal opens
   useEffect(() => {

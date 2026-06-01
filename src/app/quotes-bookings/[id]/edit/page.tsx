@@ -5,11 +5,9 @@ import { useRouter } from "next/navigation";
 import { CreateQuoteForm } from "@/features/quotesAndBookings/components/createQuote/CreateQuoteForm";
 import { useCreateQuoteStore } from "@/features/quotesAndBookings/state/useCreateQuoteStore";
 import { loadQuoteIntoStore } from "@/features/quotesAndBookings/db/loadQuoteIntoStore";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export default function EditQuotePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const supabase = useClerkSupabaseClient();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const resetForm = useCreateQuoteStore((s) => s.resetForm);
@@ -19,7 +17,7 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
     // Reset form before loading to clear any stale data
     resetForm();
 
-    loadQuoteIntoStore(id, supabase).then((eventId) => {
+    loadQuoteIntoStore(id).then((eventId) => {
       if (!eventId) {
         router.push("/quotes-bookings");
         return;
@@ -27,7 +25,7 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
       setField("editingEventId", eventId);
       setLoading(false);
     });
-  }, [id, supabase]);
+  }, [id]);
 
   if (loading) {
     return (

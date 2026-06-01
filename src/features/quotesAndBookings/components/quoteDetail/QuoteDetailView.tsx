@@ -8,8 +8,6 @@ import { ContractTab } from "./tabs/ContractTab";
 import { BillingTab } from "./tabs/BillingTab";
 import { FilesTab } from "./tabs/FilesTab";
 import { LogTab } from "./tabs/LogTab";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
-import { DateTime } from "luxon";
 
 function formatCurrency(cents: number | null): string {
   if (cents === null) return "$0.00";
@@ -17,17 +15,16 @@ function formatCurrency(cents: number | null): string {
 }
 
 export function QuoteDetailView({ eventId }: { eventId: string }) {
-  const supabase = useClerkSupabaseClient();
   const router = useRouter();
   const [quote, setQuote] = useState<QuoteDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    fetchQuoteDetail(eventId, supabase)
+    fetchQuoteDetail(eventId)
       .then(setQuote)
       .finally(() => setLoading(false));
-  }, [eventId, supabase]);
+  }, [eventId]);
 
   if (loading) {
     return (

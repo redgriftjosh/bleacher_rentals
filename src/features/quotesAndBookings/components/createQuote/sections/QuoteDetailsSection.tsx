@@ -8,11 +8,9 @@ import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissio
 import { useAccountManagers } from "@/features/manageTeam/hooks/useAccountManagers";
 import { Currency } from "../../../types/quoteTypes";
 import { fetchSalesOffices, SalesOfficeOption } from "../../../db/fetchSalesOffices";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 
 export function QuoteDetailsSection() {
   const store = useCreateQuoteStore();
-  const supabase = useClerkSupabaseClient();
   const permissions = useTeamPermissions();
   const accountManagers = useAccountManagers(false);
 
@@ -22,10 +20,10 @@ export function QuoteDetailsSection() {
   // Fetch sales offices from DB
   useEffect(() => {
     setLoadingOffices(true);
-    fetchSalesOffices(supabase)
+    fetchSalesOffices()
       .then(setSalesOffices)
       .finally(() => setLoadingOffices(false));
-  }, [supabase]);
+  }, []);
 
   // Auto-select Account Manager for non-admin users
   useEffect(() => {
