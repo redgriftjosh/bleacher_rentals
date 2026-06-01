@@ -121,6 +121,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       bleacher_uuid: bleacherUuid,
       created_at: "",
       updated_at: "",
+      created_by_user_uuid: null,
       date: date,
       status: "draft",
       dropoff_address_uuid: null,
@@ -228,7 +229,9 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
           currentAccountManagerId: perms.accountManagerId,
         })
       ) {
-        createErrorToast(["You can only create maintenance events with bleachers assigned to you."]);
+        createErrorToast([
+          "You can only create maintenance events with bleachers assigned to you.",
+        ]);
         return;
       }
     }

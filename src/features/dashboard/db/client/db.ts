@@ -115,10 +115,10 @@ export function fetchBleachers() {
               sameDayTeardown: !event.teardown_end, // same logic
               lenient: event.lenient,
               token: "", // not needed or included here
-              selectedStatus: event.event_status ?? (event.booked ? "booked" : "quoted"),
+              selectedStatus: event.event_status,
               notes: event.notes ?? "",
               numDays: calculateNumDays(event.event_start, event.event_end),
-              status: event.event_status ?? (event.booked ? "booked" : "quoted"),
+              status: event.event_status,
               hslHue: event.hsl_hue,
               alerts: relatedAlerts,
               mustBeClean: event.must_be_clean,
@@ -207,10 +207,10 @@ export function fetchDashboardEvents() {
         sameDayTeardown: !event.teardown_end,
         lenient: event.lenient,
         token: "", // unused
-        selectedStatus: event.event_status ?? (event.booked ? "booked" : "quoted"),
+        selectedStatus: (event.event_status ?? "quoted") as Enums<"event_status">,
         notes: event.notes ?? "",
         numDays: calculateNumDays(event.event_start, event.event_end),
-        status: event.event_status ?? (event.booked ? "booked" : "quoted"),
+        status: (event.event_status ?? "quoted") as Enums<"event_status">,
         hslHue: event.hsl_hue,
         alerts: relatedAlerts,
         mustBeClean: event.must_be_clean,
@@ -799,7 +799,6 @@ export async function createEvent(
     ten_row: state.tenRow,
     fifteen_row: state.fifteenRow,
     address_uuid: address_uuid,
-    booked: state.selectedStatus === "booked",
     event_status: state.selectedStatus,
     contract_revenue_cents: state.contractRevenueCents,
     notes: state.notes,

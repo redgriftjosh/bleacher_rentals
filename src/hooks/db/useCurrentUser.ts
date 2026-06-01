@@ -14,7 +14,6 @@ type CurrentUser = {
   first_name: string | null;
   is_admin: number | null;
   is_viewer: number | null;
-  is_developer_only: number | null;
   last_name: string | null;
   phone: string | null;
   role: number | null;
