@@ -41,6 +41,10 @@ export type CreateQuoteState = {
   // Currency
   currency: Currency;
 
+  // Tax (auto-calculated from QBO)
+  taxPercent: number | null;
+  taxLoading: boolean;
+
   // Line Items (bleachers, discounts, logistics, custom services — all in one list)
   lineItems: LineItem[];
 
@@ -100,6 +104,9 @@ const initialState: CreateQuoteState = {
   eventEnd: "",
 
   currency: "USD",
+
+  taxPercent: null,
+  taxLoading: false,
 
   lineItems: [],
 

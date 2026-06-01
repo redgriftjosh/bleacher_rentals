@@ -27,7 +27,6 @@ type Row = {
       event_start: string;
       event_end: string;
       hsl_hue: number | null;
-      booked: boolean;
       event_status: string | null;
       goodshuffle_url: string | null;
       address: { street: string } | null;
@@ -118,7 +117,6 @@ export async function FetchDashboardBleachers(
         event_start,
         event_end,
         hsl_hue,
-        booked,
         event_status,
         goodshuffle_url,
         address:Addresses!Events_address_uuid_fkey(
@@ -214,7 +212,7 @@ export async function FetchDashboardBleachers(
         eventStart: be.event!.event_start,
         eventEnd: be.event!.event_end,
         hslHue: be.event!.hsl_hue,
-        booked: be.event!.booked,
+        booked: be.event!.event_status === "booked",
         goodshuffleUrl: be.event!.goodshuffle_url ?? null,
         address: be.event!.address?.street ?? "",
       })),

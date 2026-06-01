@@ -2167,6 +2167,7 @@ export type Database = {
           deleted: boolean
           id: string
           name: string
+          quickbook_uuid: string
         }
         Insert: {
           address_uuid?: string | null
@@ -2175,6 +2176,7 @@ export type Database = {
           deleted?: boolean
           id?: string
           name: string
+          quickbook_uuid: string
         }
         Update: {
           address_uuid?: string | null
@@ -2183,6 +2185,7 @@ export type Database = {
           deleted?: boolean
           id?: string
           name?: string
+          quickbook_uuid?: string
         }
         Relationships: [
           {
@@ -2197,6 +2200,13 @@ export type Database = {
             columns: ["created_by_user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "SalesOffices_quickbook_uuid_fkey"
+            columns: ["quickbook_uuid"]
+            isOneToOne: false
+            referencedRelation: "QboConnections"
             referencedColumns: ["id"]
           },
         ]

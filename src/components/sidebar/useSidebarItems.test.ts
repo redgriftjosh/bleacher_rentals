@@ -51,10 +51,13 @@ describe("useSidebarItems", () => {
 
   // ═══ Account Manager ═══
 
-  it("account_manager sees same items as admin", () => {
+  it("account_manager sees admin items minus configuration and documentation", () => {
     const adminItems = useSidebarItems(["admin"]);
     const amItems = useSidebarItems(["account_manager"]);
-    expect(amItems.map((i) => i.key)).toEqual(adminItems.map((i) => i.key));
+    const adminOnly = ["configuration", "documentation"];
+    expect(amItems.map((i) => i.key)).toEqual(
+      adminItems.filter((i) => !adminOnly.includes(i.key)).map((i) => i.key),
+    );
   });
 
   // ═══ Driver ═══

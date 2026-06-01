@@ -1,29 +1,25 @@
 "use client";
 
 import { useMemo } from "react";
+import { Loader2 } from "lucide-react";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
-import { DEFAULT_TAX_RATE } from "../../../data/mockData";
 import { formatCurrency } from "../../../utils/formatCurrency";
+import { calculateTotals } from "../../../utils/calculateTotals";
 
 export function TotalsDisplay() {
   const lineItems = useCreateQuoteStore((s) => s.lineItems);
   const currency = useCreateQuoteStore((s) => s.currency);
+  const taxPercent = useCreateQuoteStore((s) => s.taxPercent);
+  const taxLoading = useCreateQuoteStore((s) => s.taxLoading);
 
-  const { subtotal, discountTotal, taxableAmount, taxAmount, total } = useMemo(() => {
-    const subtotal = lineItems
-      .filter((i) => i.category !== "discounts")
-      .reduce((sum, i) => sum + i.lineTotal, 0);
+  const { subtotal, discountTotal, taxAmount, total } = useMemo(
+    () => calculateTotals(lineItems, taxPercent),
+    [lineItems, taxPercent],
+  );
 
-    const discountTotal = lineItems
-      .filter((i) => i.category === "discounts")
-      .reduce((sum, i) => sum + i.lineTotal, 0);
-
-    const taxableAmount = subtotal + discountTotal;
-    const taxAmount = taxableAmount * (DEFAULT_TAX_RATE / 100);
-    const total = taxableAmount + taxAmount;
-
-    return { subtotal, discountTotal, taxableAmount, taxAmount, total };
-  }, [lineItems]);
+  const taxLabel = taxPercent !== null
+    ? `Tax (${taxPercent.toFixed(2)}%)`
+    : "Tax";
 
   return (
     <div className="flex justify-end">
@@ -39,8 +35,16 @@ export function TotalsDisplay() {
           </div>
         )}
         <div className="flex justify-between text-sm">
-          <span className="font-medium">Tax ({DEFAULT_TAX_RATE}%):</span>
-          <span className="font-semibold">{formatCurrency(taxAmount, currency)}</span>
+          <span className="font-medium flex items-center gap-1">
+            {taxLabel}
+            {taxLoading && <Loader2 className="w-3 h-3 animate-spin text-gray-400" />}
+          </span>
+          <span className="font-semibold">
+            {taxPercent !== null
+              ? formatCurrency(taxAmount, currency)
+              : <span className="text-gray-400 text-xs">Select office & address</span>
+            }
+          </span>
         </div>
         <div className="flex justify-between text-base border-t pt-2 mt-1">
           <span className="font-bold">TOTAL</span>

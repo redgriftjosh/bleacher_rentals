@@ -98,6 +98,7 @@ create table public."SalesOffices" (
   id                   uuid        primary key default gen_random_uuid(),
   name                 text        not null,
   address_uuid         uuid        references public."Addresses"(id),
+  quickbook_uuid       uuid        not null references public."QboConnections"(id),
   deleted              boolean     not null default false,
   created_by_user_uuid uuid        references public."Users"(id)
                          default public.get_current_user_uuid(),
@@ -726,5 +727,4 @@ alter table public."Events" drop column if exists booked;
 -- Add 'draft' to event_status enum
 -- =====================
 alter type public.event_status add value if not exists 'draft';
-
 

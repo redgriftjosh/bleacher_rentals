@@ -188,7 +188,7 @@ INSERT INTO "public"."Users" ("created_at", "first_name", "last_name", "email", 
 	('2025-10-10 16:45:42.896319+00', 'Devin', '- Dk Ferrier', 'dkfarrierservice@gmail.com', NULL, NULL, 3, NULL, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', 'ab7a8616-f42d-43a9-ae88-ae61c37e8aa1', NULL),
 	('2026-01-14 15:35:06.935722+00', 'Sarah', 'Joo', 'sarahjoo8888@gmail.com', NULL, 'user_37qEDkzrCMtsUuNPnVUjPiLMitC', 2, NULL, true, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '15597d9e-7a32-44df-a02f-bce4c39dfdee', NULL),
 	('2026-01-14 15:35:06.935722+00', 'Josh', 'Redgrift', 'josh@bleacherrentals.com', NULL, 'user_3COnMJPaCrpWMNet2dnreN6Hdko', 2, NULL, true, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', 'f09fcb39-4bdc-4000-b758-6171ea89b2eb', NULL),
-	('2026-05-12 17:25:47.766862+00', 'Max', 'G', 'max@bleacherrentals.com', NULL, 'user_3DaHLyQDyEFPb0yXDFKGhXYz4oq', 1, NULL, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '42303336-be8a-4298-aa5a-8f39beb808cb', NULL);
+	('2026-05-12 17:25:47.766862+00', 'Max', 'G', 'max@bleacherrentals.com', NULL, 'user_3DaHLyQDyEFPb0yXDFKGhXYz4oq', 1, NULL, true, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '42303336-be8a-4298-aa5a-8f39beb808cb', NULL);
 
 
 --

@@ -773,6 +773,7 @@ const SalesOfficesCols = {
   created_by_user_uuid: column.text,
   deleted: column.integer,
   name: column.text,
+  quickbook_uuid: column.text,
 } satisfies PowerSyncColsFor<"SalesOffices">;
 const SalesOffices = new Table(SalesOfficesCols, {
   indexes: { address_uuid: ["address_uuid"] },

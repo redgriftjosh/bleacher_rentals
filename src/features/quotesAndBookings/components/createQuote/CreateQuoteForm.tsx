@@ -22,6 +22,7 @@ import { createQuoteEvent } from "../../db/createQuoteEvent";
 import { updateQuoteEvent } from "../../db/updateQuoteEvent";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
+import { useAutoTax } from "../../hooks/useAutoTax";
 
 export function CreateQuoteForm() {
   const router = useRouter();
@@ -29,6 +30,9 @@ export function CreateQuoteForm() {
   const editingEventId = useCreateQuoteStore((s) => s.editingEventId);
   const supabase = useClerkSupabaseClient();
   const [saving, setSaving] = useState(false);
+
+  // Auto-fetch tax from QBO when office + address are set
+  useAutoTax();
 
   const isEditing = !!editingEventId;
 
