@@ -2,6 +2,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { Database, TablesUpdate } from "../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { CreateQuoteState } from "../state/useCreateQuoteStore";
+import { syncPaymentInstallments } from "./paymentInstallments";
 
 /**
  * Updates an existing quote/event.
@@ -82,5 +83,12 @@ export async function updateQuoteEvent(
 
   if (error) {
     createErrorToast(["Failed to update quote.", error.message ?? ""]);
+  }
+
+  // 3. Sync payment installments
+  try {
+    await syncPaymentInstallments(eventId, state.paymentInstallments, state.currency);
+  } catch (e) {
+    console.error("Payment installments sync failed (quote still saved):", e);
   }
 }

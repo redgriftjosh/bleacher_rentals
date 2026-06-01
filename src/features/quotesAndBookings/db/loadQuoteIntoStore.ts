@@ -1,6 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "../../../../database.types";
 import { useCreateQuoteStore } from "../state/useCreateQuoteStore";
+import { fetchPaymentInstallments } from "./paymentInstallments";
 
 /**
  * Fetches an event by ID and loads its data into useCreateQuoteStore for editing.
@@ -83,6 +84,14 @@ export async function loadQuoteIntoStore(
     store.setField("contactName", `${contact.first_name} ${contact.last_name ?? ""}`.trim());
     if (contact.email) store.setField("companyEmail", contact.email);
     if (contact.phone) store.setField("phone", contact.phone);
+  }
+
+  // Load payment installments from PowerSync
+  try {
+    const installments = await fetchPaymentInstallments(data.id);
+    store.setField("paymentInstallments", installments);
+  } catch (e) {
+    console.error("Failed to load payment installments:", e);
   }
 
   return data.id;

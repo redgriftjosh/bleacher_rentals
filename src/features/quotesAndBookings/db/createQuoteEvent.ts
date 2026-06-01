@@ -3,6 +3,7 @@ import { Database, TablesInsert } from "../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { CreateQuoteState } from "../state/useCreateQuoteStore";
 import { createQuoteWorkTrackers } from "./createWorkTrackers";
+import { syncPaymentInstallments } from "./paymentInstallments";
 
 /**
  * Creates a full quote:
@@ -86,6 +87,15 @@ export async function createQuoteEvent(
     } catch (e) {
       // WorkTracker creation is non-critical — quote still saved
       console.error("WorkTracker creation failed (quote still saved):", e);
+    }
+  }
+
+  // 4. Sync payment installments
+  if (state.paymentInstallments.length > 0) {
+    try {
+      await syncPaymentInstallments(eventUuid, state.paymentInstallments, state.currency);
+    } catch (e) {
+      console.error("Payment installments sync failed (quote still saved):", e);
     }
   }
 

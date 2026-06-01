@@ -58,6 +58,15 @@ export type QuoteContact = {
   notes: string;
 };
 
+export type PaymentInstallmentStatus = "unpaid" | "paid";
+
+export type PaymentInstallment = {
+  id: string;
+  dueDate: string; // YYYY-MM-DD
+  amountCents: number;
+  status: PaymentInstallmentStatus;
+};
+
 export type LineItemTemplate = {
   bleacherType: BleacherType;
   label: string;

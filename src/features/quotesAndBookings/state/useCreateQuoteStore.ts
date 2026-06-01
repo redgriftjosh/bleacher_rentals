@@ -5,6 +5,7 @@ import {
   AddressFields,
   Currency,
   LineItem,
+  PaymentInstallment,
   PaymentMethod,
   QuoteStatus,
 } from "../types/quoteTypes";
@@ -46,6 +47,7 @@ export type CreateQuoteState = {
 
   // Payment
   paymentMethod: PaymentMethod;
+  paymentInstallments: PaymentInstallment[];
 
   // Notes
   clientFacingNotes: string;
@@ -59,6 +61,7 @@ export type CreateQuoteState = {
   isNewContactModalOpen: boolean;
   isNewCompanyModalOpen: boolean;
   isAddLineItemModalOpen: boolean;
+  isEditPaymentScheduleModalOpen: boolean;
 };
 
 export type CreateQuoteActions = {
@@ -66,6 +69,7 @@ export type CreateQuoteActions = {
   addLineItem: (item: LineItem) => void;
   updateLineItem: (id: string, updates: Partial<LineItem>) => void;
   removeLineItem: (id: string) => void;
+  setPaymentInstallments: (installments: PaymentInstallment[]) => void;
   resetForm: () => void;
 };
 
@@ -102,6 +106,7 @@ const initialState: CreateQuoteState = {
   lineItems: [],
 
   paymentMethod: null,
+  paymentInstallments: [],
 
   clientFacingNotes: "",
   internalNotes: "",
@@ -112,6 +117,7 @@ const initialState: CreateQuoteState = {
   isNewContactModalOpen: false,
   isNewCompanyModalOpen: false,
   isAddLineItemModalOpen: false,
+  isEditPaymentScheduleModalOpen: false,
 };
 
 export const useCreateQuoteStore = create<CreateQuoteState & CreateQuoteActions>((set) => ({
@@ -129,6 +135,8 @@ export const useCreateQuoteStore = create<CreateQuoteState & CreateQuoteActions>
 
   removeLineItem: (id) =>
     set((state) => ({ lineItems: state.lineItems.filter((i) => i.id !== id) })),
+
+  setPaymentInstallments: (installments) => set({ paymentInstallments: installments }),
 
   resetForm: () => set(initialState),
 }));

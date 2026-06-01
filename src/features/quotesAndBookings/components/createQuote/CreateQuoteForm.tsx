@@ -11,11 +11,13 @@ import { LineItemsSection } from "./sections/LineItemsSection";
 import { TotalsDisplay } from "./sections/TotalsDisplay";
 import { PaymentInfoSection } from "./sections/PaymentInfoSection";
 import { NotesSection } from "./sections/NotesSection";
+import { PaymentScheduleSection } from "./sections/PaymentScheduleSection";
 import { TermsSection } from "./sections/TermsSection";
 import { SendOptionsSection } from "./sections/SendOptionsSection";
 import { AddLineItemModal } from "./modals/AddLineItemModal";
 import { NewContactModal } from "./modals/NewContactModal";
 import { NewCompanyModal } from "./modals/NewCompanyModal";
+import { EditPaymentScheduleModal } from "./modals/EditPaymentScheduleModal";
 import { createQuoteEvent } from "../../db/createQuoteEvent";
 import { updateQuoteEvent } from "../../db/updateQuoteEvent";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
@@ -109,6 +111,7 @@ export function CreateQuoteForm() {
         <TotalsDisplay />
 
         <PaymentInfoSection />
+        <PaymentScheduleSection />
         <NotesSection />
         <TermsSection />
         <SendOptionsSection />
@@ -148,6 +151,7 @@ export function CreateQuoteForm() {
       <AddLineItemModal />
       <NewContactModal />
       <NewCompanyModal />
+      <EditPaymentScheduleModal />
     </div>
   );
 }
