@@ -712,4 +712,19 @@ create policy "event_change_log_insert" on public."EventChangeLog"
   as permissive for insert to authenticated
   with check (true);
 
+-- =====================
+-- Drop booked column & its sync triggers
+-- =====================
+drop trigger if exists trg_events_sync_booked_from_status on public."Events";
+drop trigger if exists trg_events_sync_status_from_booked on public."Events";
+drop function if exists public.sync_events_booked_from_status();
+drop function if exists public.sync_events_status_from_booked();
+
+alter table public."Events" drop column if exists booked;
+
+-- =====================
+-- Add 'draft' to event_status enum
+-- =====================
+alter type public.event_status add value if not exists 'draft';
+
 
