@@ -8,6 +8,7 @@ import { getStripe } from "@/lib/stripeClient";
 
 export default function StripeCheckoutPage() {
   const [amount, setAmount] = useState("50.00");
+  const [currency, setCurrency] = useState<"usd" | "cad">("usd");
   const [description, setDescription] = useState("Test Payment");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,6 +48,7 @@ export default function StripeCheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amountCents: cents,
+          currency,
           description: description || undefined,
           customerEmail: email || undefined,
         }),
@@ -110,23 +112,36 @@ export default function StripeCheckoutPage() {
       )}
 
       <div className="space-y-4">
-        {/* Amount */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Amount (USD)</label>
-          <div className="relative w-48">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-              $
-            </span>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              min="0.50"
-              step="0.01"
-              className="w-full rounded border border-gray-300 pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-greenAccent"
-            />
+        {/* Currency + Amount */}
+        <div className="flex gap-3 items-end">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value as "usd" | "cad")}
+              className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-greenAccent"
+            >
+              <option value="usd">🇺🇸 USD</option>
+              <option value="cad">🇨🇦 CAD</option>
+            </select>
           </div>
-          <p className="text-xs text-gray-400 mt-1">Minimum $0.50</p>
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+            <div className="relative w-48">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                $
+              </span>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                min="0.50"
+                step="0.01"
+                className="w-full rounded border border-gray-300 pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-greenAccent"
+              />
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Minimum $0.50</p>
+          </div>
         </div>
 
         {/* Description */}
@@ -164,7 +179,7 @@ export default function StripeCheckoutPage() {
               Creating session...
             </>
           ) : (
-            `Pay $${parseFloat(amount || "0").toFixed(2)}`
+            `Pay $${parseFloat(amount || "0").toFixed(2)} ${currency.toUpperCase()}`
           )}
         </Button>
 

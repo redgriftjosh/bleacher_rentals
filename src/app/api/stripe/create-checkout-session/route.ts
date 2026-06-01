@@ -18,7 +18,12 @@ export async function POST(req: NextRequest) {
     await requireAuth();
 
     const body = await req.json();
-    const { amountCents, description, customerEmail } = body;
+    const { amountCents, currency: rawCurrency, description, customerEmail } = body;
+
+    const VALID_CURRENCIES = ["usd", "cad"] as const;
+    const currency = VALID_CURRENCIES.includes(rawCurrency?.toLowerCase())
+      ? (rawCurrency.toLowerCase() as "usd" | "cad")
+      : "usd";
 
     if (!amountCents || typeof amountCents !== "number" || amountCents < 50) {
       return NextResponse.json(
@@ -35,7 +40,7 @@ export async function POST(req: NextRequest) {
       line_items: [
         {
           price_data: {
-            currency: "usd",
+            currency,
             unit_amount: Math.round(amountCents),
             product_data: {
               name: description || "Payment",
