@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { useCurrentUser } from "@/hooks/db/useCurrentUser";
+import { STATUSES } from "@/features/manageTeam/constants";
 
 type Compiled = {
   driver_uuid: string;
@@ -37,8 +38,8 @@ export function useDrivers(options?: { showAll?: boolean }): {
   isLoading: boolean;
   error: Error | undefined;
 } {
-  const showAll = options?.showAll ?? false;
-  const { data: currentUserData, isLoading: isCurrentUserLoading } = useCurrentUser();
+  const { data: currentUserData, isLoading: isCurrentUserLoading } =
+    useCurrentUser();
   const currentUser = currentUserData?.[0];
 
   // Get account manager ID if user is an account manager
@@ -57,7 +58,11 @@ export function useDrivers(options?: { showAll?: boolean }): {
 
   const { data: accountManagerData } = useTypedQuery(
     accountManagerQuery ??
-      db.selectFrom("AccountManagers").select("id").where("id", "=", "__no_match__").compile(),
+      db
+        .selectFrom("AccountManagers")
+        .select("id")
+        .where("id", "=", "__no_match__")
+        .compile(),
     expect<{ id: string }>(),
   );
 
@@ -100,10 +105,15 @@ export function useDrivers(options?: { showAll?: boolean }): {
         "u.last_name as last_name",
         "u.email as email",
       ])
-      .where("d.is_active", "=", 1);
-
-    // If not admin (and showAll is not set), filter by account manager
-    if (currentUser.is_admin !== 1 && !showAll) {
+      .where("d.is_active", "=", 1)
+      .where((eb) =>
+        eb.or([
+          eb("u.status_uuid", "=", STATUSES.active),
+          eb("u.status_uuid", "=", STATUSES.invited),
+        ]),
+      );
+    // If not admin, filter by account manager
+    if (currentUser.is_admin !== 1) {
       const accountManagerId = accountManagerData?.[0]?.id;
       if (accountManagerId) {
         query = query.where("d.account_manager_uuid", "=", accountManagerId);
@@ -116,7 +126,10 @@ export function useDrivers(options?: { showAll?: boolean }): {
     return query.orderBy("d.user_uuid", "asc").compile();
   }, [currentUser, accountManagerData, showAll]);
 
-  const { data, isLoading, error } = useTypedQuery(compiled, expect<Compiled>());
+  const { data, isLoading, error } = useTypedQuery(
+    compiled,
+    expect<Compiled>(),
+  );
 
   return {
     data: data as unknown as DriverWithUser[] | null,
