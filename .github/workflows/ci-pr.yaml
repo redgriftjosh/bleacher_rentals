@@ -4,12 +4,37 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
+  # prettier:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v5
+
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: "lts/*"
+  #         cache: "npm"
+
+  #     - name: Install dependencies
+  #       run: npm ci
+
+  #     - name: Check formatting
+  #       run: |
+  #         if ! npx prettier --check .; then
+  #           echo "--- Prettier diff ---"
+  #           npx prettier --write .
+  #           git diff
+  #           exit 1
+  #         fi
+
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: supabase/setup-cli@v1
         with:
@@ -21,14 +46,8 @@ jobs:
       - name: Apply migrations
         run: supabase db reset --no-seed
 
-      - name: Run database trigger tests
-        run: |
-          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
-            -v ON_ERROR_STOP=1 \
-            -f supabase/tests/driver-scorecard.test.sql
-          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
-            -v ON_ERROR_STOP=1 \
-            -f supabase/tests/driver-scorecard.fuzz.sql
+      - name: Run database tests
+        run: supabase test db
 
       - name: Verify generated types are checked in
         run: |

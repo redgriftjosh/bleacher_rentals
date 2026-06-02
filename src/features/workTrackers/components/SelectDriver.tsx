@@ -17,6 +17,9 @@ type SelectDriverProps = {
   onChange: (driverUuid: string | null) => void;
   placeholder?: string;
   date?: string | null;
+  disabled?: boolean;
+  /** When true, show all drivers regardless of AM assignment (for read-only mode) */
+  showAllDrivers?: boolean;
 };
 
 export function SelectDriver({
@@ -24,8 +27,10 @@ export function SelectDriver({
   onChange,
   placeholder = "Select Driver...",
   date,
+  disabled = false,
+  showAllDrivers = false,
 }: SelectDriverProps) {
-  const { data: drivers = [], isLoading } = useDrivers();
+  const { data: drivers = [], isLoading } = useDrivers({ showAll: showAllDrivers });
   const { data: currentUserData } = useCurrentUser();
   const currentUser = currentUserData?.[0];
   const isAdmin = currentUser?.is_admin === 1;
@@ -78,6 +83,7 @@ export function SelectDriver({
         searchPlaceholder="Search drivers..."
         emptyMessage="No driver found."
         isLoading={isLoading}
+        disabled={disabled}
         getOptionId={(d) => d.driverUuid}
         getSearchValue={(d) => `${d.firstName} ${d.lastName} ${d.email}`}
         getOptionTitle={

@@ -5,31 +5,25 @@ import {
   updateQboConnectionDisplayName,
   updateQboConnectionTaxCode,
 } from "@/features/quickbooks-integration/db";
-import { auth } from "@clerk/nextjs/server";
+import { requireAdmin } from "@/features/userAccess/logic/requireAdmin";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
+    await requireAdmin();
     const connections = await getAllQboConnections();
     return NextResponse.json({ connections });
   } catch (error: any) {
+    if (error instanceof Response) return error;
     console.error("Failed to fetch QBO connections:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
+    await requireAdmin();
+
     const body = await req.json();
     const { displayName } = body;
 
@@ -40,18 +34,16 @@ export async function POST(req: NextRequest) {
     const connectionId = await createQboConnectionPlaceholder(displayName.trim());
     return NextResponse.json({ connectionId });
   } catch (error: any) {
+    if (error instanceof Response) return error;
     console.error("Failed to create QBO connection:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function DELETE(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
+    await requireAdmin();
+
     const connectionId = req.nextUrl.searchParams.get("connectionId");
     if (!connectionId) {
       return NextResponse.json({ error: "connectionId is required" }, { status: 400 });
@@ -60,18 +52,16 @@ export async function DELETE(req: NextRequest) {
     await deleteQboConnection(connectionId);
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    if (error instanceof Response) return error;
     console.error("Failed to delete QBO connection:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function PATCH(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
+    await requireAdmin();
+
     const body = await req.json();
     const { connectionId, displayName } = body;
 
@@ -92,6 +82,7 @@ export async function PATCH(req: NextRequest) {
     await updateQboConnectionDisplayName(connectionId, displayName.trim());
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    if (error instanceof Response) return error;
     console.error("Failed to update QBO connection:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

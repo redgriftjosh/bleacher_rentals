@@ -32,7 +32,7 @@ export class HorizontalScrollbar {
     gridY: number = 0,
     gridWidth: number = app.screen.width,
     gridHeight: number = app.screen.height,
-    showScrollbar: boolean = true
+    showScrollbar: boolean = true,
   ) {
     this.app = app;
     this.grid = grid;
@@ -57,13 +57,13 @@ export class HorizontalScrollbar {
     gridX: number = 0,
     gridY: number = 0,
     gridWidth: number = this.app.screen.width,
-    gridHeight: number = this.app.screen.height
+    gridHeight: number = this.app.screen.height,
   ) {
     this.scrollbarContainer = new Container();
     // Position scrollbar at the bottom edge of the grid
     this.scrollbarContainer.position.set(
       gridX,
-      gridY + gridHeight - HORIZONTAL_SCROLLBAR_THICKNESS
+      gridY + gridHeight - HORIZONTAL_SCROLLBAR_THICKNESS,
     );
 
     // Calculate track width, leaving space for vertical scrollbar if present
@@ -82,7 +82,7 @@ export class HorizontalScrollbar {
         2,
         HORIZONTAL_THUMB_LENGTH,
         HORIZONTAL_THUMB_THICKNESS,
-        HORIZONTAL_THUMB_THICKNESS / 2
+        HORIZONTAL_THUMB_THICKNESS / 2,
       )
       .fill({ color: 0x666666, alpha: 0.4 });
     this.thumb.eventMode = "static";
@@ -138,7 +138,8 @@ export class HorizontalScrollbar {
       let deltaX = e.shiftKey ? e.deltaY : e.deltaX; // Use deltaY when shift is pressed
 
       // Normalize delta based on mode
-      if (e.deltaMode === 1) deltaX *= 16; // Lines to pixels
+      if (e.deltaMode === 1)
+        deltaX *= 16; // Lines to pixels
       else if (e.deltaMode === 2) deltaX *= 100; // Pages to pixels
 
       const newContentX = this.contentX + deltaX;

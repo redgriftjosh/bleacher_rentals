@@ -18,7 +18,7 @@ export type DriverWithUser = {
 };
 
 export async function getDriversWithUsers(
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
 ): Promise<DriverWithUser[]> {
   const { data, error } = await supabase
     .from("Drivers")
@@ -37,7 +37,7 @@ export async function getDriversWithUsers(
         last_name,
         email
       )
-    `
+    `,
     )
     .eq("is_active", true)
     .order("user_uuid");

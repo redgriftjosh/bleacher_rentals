@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClerkClient } from "@clerk/nextjs/server";
+import { requireAdmin } from "@/features/userAccess/logic/requireAdmin";
 
 export async function POST(req: NextRequest) {
+  try {
+    await requireAdmin();
+  } catch (error) {
+    if (error instanceof Response) return error;
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { email } = await req.json();
   const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
@@ -45,7 +53,7 @@ export async function POST(req: NextRequest) {
         const existingInvites = existingExpiredInvites.data.concat(existingPendingInvites.data);
 
         const existingInvite = existingInvites.find(
-          (invite) => invite.emailAddress.toLowerCase() === email.toLowerCase()
+          (invite) => invite.emailAddress.toLowerCase() === email.toLowerCase(),
         );
         console.log("🔍 Found existing invites:", existingInvites.length);
 
@@ -53,7 +61,7 @@ export async function POST(req: NextRequest) {
           console.error("❌ Existing invitation not found despite duplicate_record error");
           return NextResponse.json(
             { error: "Existing invitation not found, but duplicate_record error was thrown." },
-            { status: 500 }
+            { status: 500 },
           );
         }
 
@@ -76,7 +84,7 @@ export async function POST(req: NextRequest) {
         console.error("❌ Failed to revoke and resend invite:", resendError);
         return NextResponse.json(
           { error: resendError?.message || "Failed to resend invitation" },
-          { status: 500 }
+          { status: 500 },
         );
       }
     }
@@ -91,6 +99,13 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  try {
+    await requireAdmin();
+  } catch (error) {
+    if (error instanceof Response) return error;
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { email } = await req.json();
   const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
@@ -118,7 +133,7 @@ export async function DELETE(req: NextRequest) {
       "📋 Found invitations - Pending:",
       pending.data.length,
       "Expired:",
-      expired.data.length
+      expired.data.length,
     );
 
     const invite = all.find((i) => i.emailAddress.toLowerCase() === email.toLowerCase());
@@ -127,7 +142,7 @@ export async function DELETE(req: NextRequest) {
       console.warn("⚠️ No active invitation found for:", email);
       return NextResponse.json(
         { error: "No active invitation found for this email." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 

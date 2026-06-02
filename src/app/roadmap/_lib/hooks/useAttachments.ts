@@ -41,7 +41,7 @@ export function useAttachments(parentType: AttachmentParentType, parentId: strin
         .where("parent_id", "=", safeId)
         .orderBy("created_at", "asc")
         .compile(),
-    [parentType, safeId]
+    [parentType, safeId],
   );
 
   const { data, isLoading, error } = useTypedQuery(compiled, expect<Row>());
@@ -60,7 +60,7 @@ export function useAttachments(parentType: AttachmentParentType, parentId: strin
         file_size_bytes: r.file_size_bytes,
         uploaded_by_user_uuid: r.uploaded_by_user_uuid,
       })),
-    [data]
+    [data],
   );
 
   return { attachments, isLoading, error };

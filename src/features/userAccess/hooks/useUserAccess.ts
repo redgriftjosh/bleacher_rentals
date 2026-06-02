@@ -1,6 +1,11 @@
 "use client";
 import { useUser } from "@clerk/nextjs";
-import { AccessLevel, determineUserAccess } from "../logic/determineAccess";
+import {
+  determineUserAccess,
+  type AccessResult,
+  type WebRole,
+  type BlockedReason,
+} from "../logic/determineAccess";
 import { useMemo } from "react";
 import { usePowerSync } from "@powersync/react";
 import { db } from "@/components/providers/SystemProvider";
@@ -9,19 +14,16 @@ import type { UserAccessData } from "../types";
 
 export type { UserAccessData } from "../types";
 
-/**
- * React Query hook to fetch and determine user access level.
- * Returns the access result and loading/error states.
- */
-export function useUserAccess(): {
-  accessLevel: AccessLevel;
-  reason?: string;
-} {
+export type UserAccessState =
+  | { status: "loading" }
+  | { status: "blocked"; reason: BlockedReason }
+  | { status: "active"; roles: WebRole[]; userId: string; accountManagerId: string | null };
+
+export function useUserAccess(): UserAccessState {
   const powerSync = usePowerSync();
   const { user } = useUser();
   const clerkUserId = user?.id ?? null;
 
-  // Build the SQL with Kysely (type-safe tables/columns)
   const clerkUserIdForQuery = clerkUserId ?? "__no_clerk_user__";
 
   const compiled = useMemo(() => {
@@ -33,12 +35,17 @@ export function useUserAccess(): {
       .leftJoin("Drivers as d", (join) =>
         join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1),
       )
+      .leftJoin("Developers as dev", (join) =>
+        join.onRef("dev.user_uuid", "=", "u.id").on("dev.is_active", "=", 1),
+      )
       .select([
         "u.id as id",
         "u.status_uuid",
         "u.is_admin as is_admin",
+        "u.is_viewer as is_viewer",
         "am.id as account_manager_id",
         "d.id as driver_id",
+        "dev.id as developer_id",
       ])
       .where("u.clerk_user_id", "=", clerkUserIdForQuery)
       .limit(1)
@@ -62,7 +69,6 @@ export function useUserAccess(): {
       downloadError: downloadError?.message,
     });
 
-    // Your requested checks as a single warning when not satisfied.
     if (!hasSynced || downloading || downloadError) {
       console.warn("[PowerSync] Not fully synced yet", {
         hasSynced,
@@ -72,43 +78,13 @@ export function useUserAccess(): {
     }
   }
 
-  // Premise: user is signed in. If Clerk hasn't hydrated yet, show loading.
-  if (!clerkUserId) {
-    return {
-      accessLevel: "loading",
-      reason: "Loading user data...",
-    };
+  if (!clerkUserId || isLoading) {
+    return { status: "loading" };
   }
 
-  // Per request: loading should only be shown if queries are `isLoading`.
-  if (isLoading) {
-    return {
-      accessLevel: "loading",
-      reason: "Loading user data...",
-    };
+  if (error || !data?.[0]) {
+    return { status: "blocked", reason: "cannot-find-account" };
   }
 
-  if (error) {
-    return {
-      accessLevel: "cannot-find-account",
-      reason: "Failed to load user access. Please contact support.",
-    };
-  }
-
-  const result = data?.[0] ?? null;
-
-  // Query completed but found no user row
-  if (!result) {
-    return {
-      accessLevel: "cannot-find-account",
-      reason: "User not found (no Users row for this Clerk user)",
-    };
-  }
-
-  const accessResult = determineUserAccess(result);
-
-  return {
-    accessLevel: accessResult.accessLevel,
-    reason: accessResult.reason,
-  };
+  return determineUserAccess(data[0]);
 }

@@ -6,6 +6,7 @@ import { DriverList } from "@/features/manageTeam/components/lists/DriverList";
 import { AccountManagerList } from "@/features/manageTeam/components/lists/AccountManagerList";
 import { AdminList } from "@/features/manageTeam/components/lists/AdminList";
 import { DeveloperList } from "@/features/manageTeam/components/lists/DeveloperList";
+import { ViewerList } from "@/features/manageTeam/components/lists/ViewerList";
 import { IncompleteList } from "@/features/manageTeam/components/lists/IncompleteList";
 import TabNavigation, { TeamTab } from "../../features/manageTeam/components/inputs/TabNavigation";
 import SearchBar from "../../features/manageTeam/components/inputs/SearchBar";
@@ -15,6 +16,7 @@ import { useSearchQueryStore } from "@/features/manageTeam/state/useSearchQueryS
 import { useRealtimeHydrateCurrentUserStore } from "@/features/manageTeam/hooks/useUserById";
 import { PageHeader } from "@/components/PageHeader";
 import { useRouter } from "next/navigation";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 
 export type ExistingUser = {
   user_id: number;
@@ -30,6 +32,7 @@ export type ExistingUser = {
 export default function TeamPage() {
   useRealtimeHydrateCurrentUserStore();
   const router = useRouter();
+  const { canCreateUser } = useTeamPermissions();
   const [activeTab, setActiveTab] = useState<TeamTab>("admins");
   const [showInactive, setShowInactive] = useState(false);
   const setField = useSearchQueryStore((s) => s.setField);
@@ -47,7 +50,11 @@ export default function TeamPage() {
         title="Manage Team"
         subtitle="Manage your team here."
         action={
-          <PrimaryButton onClick={() => router.push("/team/new")}>+ Add Team Member</PrimaryButton>
+          canCreateUser ? (
+            <PrimaryButton onClick={() => router.push("/team/new")}>
+              + Add Team Member
+            </PrimaryButton>
+          ) : undefined
         }
       />
 
@@ -100,6 +107,14 @@ export default function TeamPage() {
         </div>
       )}
 
+      {/* Viewers Section */}
+      {activeTab === "viewers" && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Viewers</h2>
+          <ViewerList showInactive={showInactive} />
+        </div>
+      )}
+
       {/* All Users Section */}
       {activeTab === "all" && (
         <div>
@@ -121,6 +136,11 @@ export default function TeamPage() {
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Developers</h2>
             <DeveloperList showInactive={showInactive} />
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Viewers</h2>
+            <ViewerList showInactive={showInactive} />
           </div>
         </div>
       )}

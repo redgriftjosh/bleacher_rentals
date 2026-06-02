@@ -23,7 +23,7 @@ type BleacherFilterSortOptions = {
 
 export function filterSortPixiBleachers(
   bleachers: Bleacher[],
-  opts: BleacherFilterSortOptions
+  opts: BleacherFilterSortOptions,
 ): Bleacher[] {
   const {
     summerHomeBaseUuids,

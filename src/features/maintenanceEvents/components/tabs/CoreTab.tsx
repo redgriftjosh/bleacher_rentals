@@ -6,17 +6,32 @@ import { Dropdown } from "@/components/DropDown";
 import { useMaintenanceEventStore } from "../../state/useMaintenanceEventStore";
 import { useScrollToDateStore } from "@/features/dashboard/state/useScrollToDateStore";
 import { LocateFixed, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
+import { filterOwnerOptions } from "@/features/userAccess/logic/filterOwnerOptions";
 import CentsInput from "@/components/CentsInput";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DamageReportModal, EditDamageReport } from "@/app/damage-reports/DamageReportModal";
 
-export const MaintenanceCoreTab = () => {
+type Props = {
+  disabled?: boolean;
+};
+
+export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
   const store = useMaintenanceEventStore();
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
   const users = useUsersStore((s) => s.users);
-  const ownerOptions = users.map((u) => ({
+  const permissions = useTeamPermissions();
+  // In read-only mode (disabled) show all users so the owner name is visible.
+  // When creating/editing: admin sees all, AM sees only self.
+  const filteredUsers = filterOwnerOptions({
+    users,
+    isAdmin: permissions.isAdmin,
+    currentUserId: permissions.userId,
+    disabled,
+  });
+  const ownerOptions = filteredUsers.map((u) => ({
     label: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.email,
     value: String(u.id),
   }));
@@ -307,6 +322,7 @@ export const MaintenanceCoreTab = () => {
               }
             }}
             placeholder="Select owner"
+            disabled={disabled}
           />
         </div>
       </div>

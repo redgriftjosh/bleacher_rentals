@@ -6,11 +6,14 @@ import { SheetAddBleacher } from "./bleachers/_lib/components/sheets/SheetAddBle
 import { SheetAddDocumentEntry } from "./documents/_lib/components/sheets/SheetAddDocumentEntry";
 import { SheetAddOtherAsset } from "./other-assets/_lib/components/sheets/SheetAddOtherAsset";
 import { usePathname } from "next/navigation";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 
 export default function AssetsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { isAdmin } = useTeamPermissions();
 
   const getSheetButton = () => {
+    if (!isAdmin) return null;
     if (pathname.includes("/assets/documents")) return <SheetAddDocumentEntry />;
     if (pathname.includes("/assets/other-assets")) return <SheetAddOtherAsset />;
     return <SheetAddBleacher />;

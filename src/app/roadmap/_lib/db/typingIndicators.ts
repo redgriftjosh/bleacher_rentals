@@ -21,7 +21,7 @@ export async function setTyping(taskId: string, userUuid: string, isTyping: bool
           updated_at: new Date().toISOString(),
         })
         .where("id", "=", rows[0].id)
-        .compile()
+        .compile(),
     );
   } else {
     await typedExecute(
@@ -34,7 +34,7 @@ export async function setTyping(taskId: string, userUuid: string, isTyping: bool
           is_typing: isTyping ? 1 : 0,
           updated_at: new Date().toISOString(),
         })
-        .compile()
+        .compile(),
     );
   }
 }

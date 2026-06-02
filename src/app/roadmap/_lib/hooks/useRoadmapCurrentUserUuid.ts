@@ -16,7 +16,7 @@ export function useRoadmapCurrentUserUuid() {
   const compiled = useMemo(() => {
     return db
       .selectFrom("Users as u")
-      .select(["u.id as userUuid"]) 
+      .select(["u.id as userUuid"])
       .where("u.clerk_user_id", "=", clerkUserIdForQuery)
       .limit(1)
       .compile();
@@ -25,7 +25,7 @@ export function useRoadmapCurrentUserUuid() {
   const { data, isLoading, error } = useTypedQuery(compiled, expect<Row>());
 
   return {
-    userUuid: clerkUserId ? data?.[0]?.userUuid ?? null : null,
+    userUuid: clerkUserId ? (data?.[0]?.userUuid ?? null) : null,
     isLoading: !clerkUserId || isLoading,
     error,
   };

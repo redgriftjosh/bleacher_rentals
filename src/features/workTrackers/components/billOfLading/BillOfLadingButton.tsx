@@ -85,7 +85,7 @@ export default function BillOfLadingButton({
       let dropoffRow: Tables<"Addresses"> | null = toAddressRow(dropOffAddress);
 
       // If street is blank, try fetching from DB by UUID
-      if ((!pickupRow?.street) && workTracker.pickup_address_uuid) {
+      if (!pickupRow?.street && workTracker.pickup_address_uuid) {
         const { data } = await supabase
           .from("Addresses")
           .select("*")
@@ -93,7 +93,7 @@ export default function BillOfLadingButton({
           .single();
         if (data) pickupRow = data;
       }
-      if ((!dropoffRow?.street) && workTracker.dropoff_address_uuid) {
+      if (!dropoffRow?.street && workTracker.dropoff_address_uuid) {
         const { data } = await supabase
           .from("Addresses")
           .select("*")

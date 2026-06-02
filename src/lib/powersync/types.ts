@@ -14,13 +14,13 @@ type ColFor<V> =
   null extends V
     ? ColFor<Exclude<V, null>>
     : V extends string
-    ? typeof column.text
-    : V extends number
-    ? typeof column.integer
-    : V extends boolean
-    ? typeof column.integer // common: store booleans as 0/1
-    : // fallback (Json, etc)
-      typeof column.text;
+      ? typeof column.text
+      : V extends number
+        ? typeof column.integer
+        : V extends boolean
+          ? typeof column.integer // common: store booleans as 0/1
+          : // fallback (Json, etc)
+            typeof column.text;
 
 // build the expected column map for a given Supabase table
 export type PowerSyncColsFor<T extends SupaTableName> = {
@@ -28,8 +28,9 @@ export type PowerSyncColsFor<T extends SupaTableName> = {
 };
 
 // Exact type equality helper
-export type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
-  ? (<T>() => T extends B ? 1 : 2) extends <T>() => T extends A ? 1 : 2
-    ? true
-    : false
-  : false;
+export type Equal<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
+    ? (<T>() => T extends B ? 1 : 2) extends <T>() => T extends A ? 1 : 2
+      ? true
+      : false
+    : false;

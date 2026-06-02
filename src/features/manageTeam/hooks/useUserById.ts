@@ -14,8 +14,11 @@ type UserRealtimeRow = {
 
   isDriver: number;
   isAccountManager: number;
+  isDeveloper: number;
   driverIsActive: number | null;
   amIsActive: number | null;
+  devIsActive: number | null;
+  autoSubscribeToNewTickets: number | null;
 
   tax: number | null;
   payRateCents: number | null;
@@ -42,6 +45,7 @@ export function useRealtimeHydrateCurrentUserStore() {
       .selectFrom("Users as u")
       .leftJoin("Drivers as d", "d.user_uuid", "u.id")
       .leftJoin("AccountManagers as am", "am.user_uuid", "u.id")
+      .leftJoin("Developers as dev", "dev.user_uuid", "u.id")
       .select((eb) => {
         const summerDistinct = eb
           .selectFrom("Bleachers as b")
@@ -73,8 +77,15 @@ export function useRealtimeHydrateCurrentUserStore() {
           sql<number>`case when ${sql.ref("am.id")} is not null and ${sql.ref("am.is_active")} = 1 then 1 else 0 end`.as(
             "isAccountManager",
           ),
+          sql<number>`case when ${sql.ref("dev.id")} is not null and ${sql.ref("dev.is_active")} = 1 then 1 else 0 end`.as(
+            "isDeveloper",
+          ),
           sql<number | null>`${sql.ref("d.is_active")}`.as("driverIsActive"),
           sql<number | null>`${sql.ref("am.is_active")}`.as("amIsActive"),
+          sql<number | null>`${sql.ref("dev.is_active")}`.as("devIsActive"),
+          sql<number | null>`${sql.ref("dev.auto_subscribe_to_new_tickets")}`.as(
+            "autoSubscribeToNewTickets",
+          ),
 
           "d.tax as tax",
           "d.pay_rate_cents as payRateCents",
@@ -118,6 +129,8 @@ export function useRealtimeHydrateCurrentUserStore() {
       statusUuid: row.statusUuid,
       isDriver: Boolean(row.isDriver),
       isAccountManager: Boolean(row.isAccountManager),
+      isDeveloper: Boolean(row.isDeveloper),
+      autoSubscribeToNewTickets: Boolean(row.autoSubscribeToNewTickets ?? true),
 
       tax: row.tax ?? undefined,
       payRateCents: row.payRateCents,

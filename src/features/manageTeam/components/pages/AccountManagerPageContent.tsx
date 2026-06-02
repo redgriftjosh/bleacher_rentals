@@ -1,6 +1,7 @@
 "use client";
 
 import { SelectBleacher } from "@/features/manageTeam/components/inputs/SelectBleacher";
+import { SelectDriver } from "@/features/manageTeam/components/inputs/SelectDriver";
 import { useCurrentUserStore } from "@/features/manageTeam/state/useCurrentUserStore";
 import { useUserFormPaths } from "@/features/manageTeam/hooks/useUserFormPaths";
 import { useRouter, useParams } from "next/navigation";
@@ -15,6 +16,7 @@ export function AccountManagerPageContent() {
   const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
   const summerBleacherUuids = useCurrentUserStore((s) => s.summerBleacherUuids);
   const winterBleacherUuids = useCurrentUserStore((s) => s.winterBleacherUuids);
+  const assignedDriverUuids = useCurrentUserStore((s) => s.assignedDriverUuids);
   const setField = useCurrentUserStore((s) => s.setField);
 
   useEffect(() => {
@@ -50,6 +52,16 @@ export function AccountManagerPageContent() {
             currentUserUuid={existingUserUuid}
           />
         </div>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-700">Assigned Drivers</label>
+        <SelectDriver
+          selectedDriverUuids={assignedDriverUuids}
+          onChange={(ids) => setField("assignedDriverUuids", ids)}
+          placeholder="Select Drivers..."
+          currentUserUuid={existingUserUuid}
+        />
       </div>
     </section>
   );

@@ -59,7 +59,7 @@ export default function RouteMapPreview({
           src={`https://www.google.com/maps/embed/v1/directions?key=${
             process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
           }&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(
-            destination
+            destination,
           )}&mode=driving`}
           allowFullScreen
         />

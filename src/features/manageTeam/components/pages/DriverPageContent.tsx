@@ -10,6 +10,7 @@ import AddressAutocomplete from "@/components/AddressAutoComplete";
 import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
 import { useUserFormPaths } from "@/features/manageTeam/hooks/useUserFormPaths";
 import { CountryIndicator } from "@/features/manageTeam/components/CountryIndicator";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -38,6 +39,13 @@ export function DriverPageContent() {
   const vendorUuid = useCurrentUserStore((s) => s.vendorUuid);
   const setField = useCurrentUserStore((s) => s.setField);
   const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
+  const permissions = useTeamPermissions();
+
+  // AM can only assign drivers to themselves
+  const amRestrictIds =
+    permissions.isAccountManager && !permissions.isAdmin && permissions.accountManagerId
+      ? [permissions.accountManagerId]
+      : undefined;
 
   useEffect(() => {
     // Don't redirect while loading:
@@ -207,6 +215,7 @@ export function DriverPageContent() {
                 value={accountManagerUuid}
                 onChange={(value) => setField("accountManagerUuid", value)}
                 placeholder="Select Account Manager..."
+                restrictToIds={amRestrictIds}
               />
             </div>
 
