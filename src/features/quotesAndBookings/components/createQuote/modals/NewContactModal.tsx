@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { Dropdown } from "@/components/DropDown";
 import { createContact } from "../../../db/createContact";
-import { fetchCompanies, CompanyOption } from "../../../db/fetchCompanies";
+import { useCompanies } from "../../../hooks/useCompanies";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 
@@ -19,6 +19,9 @@ export function NewContactModal() {
   const setField = useCreateQuoteStore((s) => s.setField);
   const supabase = useClerkSupabaseClient();
 
+  // Reactive — auto-updates when PowerSync syncs new companies
+  const { companies, isLoading: loadingCompanies } = useCompanies();
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -26,29 +29,6 @@ export function NewContactModal() {
   const [companyUuid, setCompanyUuid] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
-
-  const [companies, setCompanies] = useState<CompanyOption[]>([]);
-  const [loadingCompanies, setLoadingCompanies] = useState(false);
-  const isCompanyModalOpen = useCreateQuoteStore((s) => s.isNewCompanyModalOpen);
-
-  const loadCompanies = useCallback(() => {
-    setLoadingCompanies(true);
-    fetchCompanies()
-      .then(setCompanies)
-      .finally(() => setLoadingCompanies(false));
-  }, []);
-
-  // Fetch companies when modal opens
-  useEffect(() => {
-    if (!isOpen) return;
-    loadCompanies();
-  }, [isOpen, loadCompanies]);
-
-  // Refetch companies when NewCompanyModal closes (new company was created)
-  useEffect(() => {
-    if (!isOpen || isCompanyModalOpen) return;
-    loadCompanies();
-  }, [isCompanyModalOpen, isOpen, loadCompanies]);
 
   const companyOptions = companies.map((c) => ({
     label: c.companyName,
@@ -75,7 +55,6 @@ export function NewContactModal() {
         supabase,
       );
 
-      // Update parent form with contact info
       setField("contactName", `${firstName} ${lastName}`.trim());
       setField("companyEmail", email);
       setField("phone", phone);
@@ -85,14 +64,10 @@ export function NewContactModal() {
       createSuccessToast([`Contact "${firstName} ${lastName}" created.`]);
       resetAndClose();
     } catch {
-      // Error toast already shown by createContact
+      // Error toast already shown
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleNewCompany = () => {
-    setField("isNewCompanyModalOpen", true);
   };
 
   return (
@@ -162,7 +137,7 @@ export function NewContactModal() {
                 />
               </div>
               <button
-                onClick={handleNewCompany}
+                onClick={() => setField("isNewCompanyModalOpen", true)}
                 className="h-[40px] px-3 text-sm font-medium text-darkBlue border border-darkBlue rounded-sm hover:bg-blue-50 transition cursor-pointer whitespace-nowrap"
               >
                 + New Company

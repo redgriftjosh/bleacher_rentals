@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useCreateQuoteStore } from "../state/useCreateQuoteStore";
 import { fetchTaxPercent } from "../db/fetchTaxPercent";
-import { fetchSalesOffices, SalesOfficeOption } from "../db/fetchSalesOffices";
+import { useSalesOffices } from "./useSalesOffices";
 
 /**
  * Automatically fetches tax percent from QBO when:
@@ -19,48 +19,35 @@ export function useAutoTax() {
   const lineItems = useCreateQuoteStore((s) => s.lineItems);
   const setField = useCreateQuoteStore((s) => s.setField);
 
-  const officesCacheRef = useRef<SalesOfficeOption[]>([]);
+  const { salesOffices } = useSalesOffices();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Calculate subtotal for non-discount items
   const subtotal = lineItems
     .filter((i) => i.category !== "discounts")
     .reduce((sum, i) => sum + i.lineTotal, 0);
 
   useEffect(() => {
-    // Load offices cache once
-    fetchSalesOffices().then((offices) => {
-      officesCacheRef.current = offices;
-    });
-  }, []);
-
-  useEffect(() => {
-    // Clear previous timer
     if (timerRef.current) clearTimeout(timerRef.current);
 
-    // No office or no address — reset tax
     if (!salesOfficeId || !eventAddressData) {
       setField("taxPercent", null);
       setField("taxLoading", false);
       return;
     }
 
-    // Find quickbook_uuid for selected office
-    const office = officesCacheRef.current.find((o) => o.id === salesOfficeId);
+    const office = salesOffices.find((o) => o.id === salesOfficeId);
     if (!office?.quickbookUuid) {
       setField("taxPercent", null);
       setField("taxLoading", false);
       return;
     }
 
-    // Need at least some address data
     if (!eventAddressData.street && !eventAddressData.city && !eventAddressData.stateProvince) {
       setField("taxPercent", null);
       setField("taxLoading", false);
       return;
     }
 
-    // Debounce 500ms
     setField("taxLoading", true);
     timerRef.current = setTimeout(async () => {
       try {
@@ -86,5 +73,5 @@ export function useAutoTax() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [salesOfficeId, eventAddressData, subtotal, setField]);
+  }, [salesOfficeId, eventAddressData, subtotal, salesOffices, setField]);
 }

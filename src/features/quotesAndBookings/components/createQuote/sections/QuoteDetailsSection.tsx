@@ -1,42 +1,32 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { Dropdown } from "@/components/DropDown";
 import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { useAccountManagers } from "@/features/manageTeam/hooks/useAccountManagers";
 import { Currency } from "../../../types/quoteTypes";
-import { fetchSalesOffices, SalesOfficeOption } from "../../../db/fetchSalesOffices";
+import { useSalesOffices } from "../../../hooks/useSalesOffices";
 
 export function QuoteDetailsSection() {
   const store = useCreateQuoteStore();
   const permissions = useTeamPermissions();
   const accountManagers = useAccountManagers(false);
 
-  const [salesOffices, setSalesOffices] = useState<SalesOfficeOption[]>([]);
-  const [loadingOffices, setLoadingOffices] = useState(false);
-
-  // Fetch sales offices from DB
-  useEffect(() => {
-    setLoadingOffices(true);
-    fetchSalesOffices()
-      .then(setSalesOffices)
-      .finally(() => setLoadingOffices(false));
-  }, []);
+  // Reactive — auto-updates when PowerSync syncs
+  const { salesOffices, isLoading: loadingOffices } = useSalesOffices();
 
   // Auto-select Account Manager for non-admin users
   useEffect(() => {
     if (!permissions.accountManagerId || store.accountManagerId) return;
     if (!permissions.isAdmin) {
       store.setField("accountManagerId", permissions.accountManagerId);
-      // Also set ownerUserUuid
       const am = accountManagers.find((a) => a.accountManagerUuid === permissions.accountManagerId);
       if (am) store.setField("ownerUserUuid", am.userUuid);
     }
   }, [permissions.accountManagerId, permissions.isAdmin, accountManagers]);
 
-  // Map AM selection to ownerUserUuid
   const handleAccountManagerChange = useCallback(
     (amId: string | null) => {
       store.setField("accountManagerId", amId);

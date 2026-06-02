@@ -1,34 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { Dropdown } from "@/components/DropDown";
-import { fetchContacts, ContactOption } from "../../../db/fetchContacts";
+import { useContacts } from "../../../hooks/useContacts";
 
 export function ClientInfoSection() {
   const store = useCreateQuoteStore();
-  const isContactModalOpen = useCreateQuoteStore((s) => s.isNewContactModalOpen);
-
-  const [contacts, setContacts] = useState<ContactOption[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const loadContacts = useCallback(() => {
-    setLoading(true);
-    fetchContacts()
-      .then(setContacts)
-      .finally(() => setLoading(false));
-  }, []);
-
-  // Fetch on mount
-  useEffect(() => {
-    loadContacts();
-  }, [loadContacts]);
-
-  // Refetch when NewContactModal closes (new contact was created)
-  useEffect(() => {
-    if (isContactModalOpen) return;
-    loadContacts();
-  }, [isContactModalOpen, loadContacts]);
+  const { contacts, isLoading } = useContacts();
 
   const contactOptions = contacts.map((c) => ({
     label: `${c.firstName} ${c.lastName ?? ""}`.trim() + (c.email ? ` — ${c.email}` : ""),
@@ -58,8 +36,8 @@ export function ClientInfoSection() {
             options={contactOptions}
             selected={store.contactId}
             onSelect={handleContactSelect}
-            placeholder={loading ? "Loading contacts..." : "Search contacts..."}
-            disabled={loading}
+            placeholder={isLoading ? "Loading contacts..." : "Search contacts..."}
+            disabled={isLoading}
           />
         </div>
         <button
