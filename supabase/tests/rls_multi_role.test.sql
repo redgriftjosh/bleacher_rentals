@@ -1223,6 +1223,11 @@ BEGIN
     clerk_inactive_dev    TEXT := 'clerk_inactive_dev';
     clerk_inactive_viewer TEXT := 'clerk_inactive_viewer';
   BEGIN
+    -- Ensure the "Inactive" status row exists (CI runs with --no-seed)
+    INSERT INTO public."UserStatuses" (id, status)
+    VALUES (inactive_status, 'Inactive')
+    ON CONFLICT (id) DO NOTHING;
+
     -- Setup: create inactive users with every role
     INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer, status_uuid)
     VALUES ('InactiveAdmin', 'Test', 'inactive_admin@test.com', clerk_inactive_admin, true, false, inactive_status)
