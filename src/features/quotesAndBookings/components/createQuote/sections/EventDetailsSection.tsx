@@ -44,25 +44,7 @@ export function EventDetailsSection() {
           </p>
         )}
       </div>
-      <div className="grid grid-cols-4 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Drop Arrival Date</label>
-          <input
-            type="date"
-            value={store.dropArrivalDate}
-            onChange={(e) => store.setField("dropArrivalDate", e.target.value)}
-            className="w-full h-[40px] px-3 border rounded text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Pick Up Date</label>
-          <input
-            type="date"
-            value={store.pickUpDate}
-            onChange={(e) => store.setField("pickUpDate", e.target.value)}
-            className="w-full h-[40px] px-3 border rounded text-sm"
-          />
-        </div>
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Event Start</label>
           <input

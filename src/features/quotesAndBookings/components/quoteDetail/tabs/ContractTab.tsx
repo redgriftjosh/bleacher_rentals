@@ -82,11 +82,7 @@ export function ContractTab({ quote }: { quote: QuoteDetail }) {
       {/* Dates */}
       <div>
         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Dates</h3>
-        <div className="grid grid-cols-4 gap-4 text-sm">
-          <div>
-            <span className="text-gray-500 block">Drop Arrival</span>
-            <span className="font-medium">{formatDate(quote.setupStart)}</span>
-          </div>
+        <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span className="text-gray-500 block">Event Start</span>
             <span className="font-medium">{formatDate(quote.eventStart)}</span>
@@ -94,10 +90,6 @@ export function ContractTab({ quote }: { quote: QuoteDetail }) {
           <div>
             <span className="text-gray-500 block">Event End</span>
             <span className="font-medium">{formatDate(quote.eventEnd)}</span>
-          </div>
-          <div>
-            <span className="text-gray-500 block">Pick Up</span>
-            <span className="font-medium">{formatDate(quote.teardownEnd)}</span>
           </div>
         </div>
       </div>

@@ -33,8 +33,6 @@ export type CreateQuoteState = {
   eventName: string;
   eventAddress: string;
   eventAddressData: AddressFields | null;
-  dropArrivalDate: string;
-  pickUpDate: string;
   eventStart: string;
   eventEnd: string;
 
@@ -98,8 +96,6 @@ const initialState: CreateQuoteState = {
   eventName: "",
   eventAddress: "",
   eventAddressData: null,
-  dropArrivalDate: "",
-  pickUpDate: "",
   eventStart: "",
   eventEnd: "",
 

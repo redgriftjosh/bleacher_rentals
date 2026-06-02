@@ -63,8 +63,6 @@ export async function updateQuoteEvent(
     event_name: state.eventName,
     event_start: state.eventStart || undefined,
     event_end: state.eventEnd || undefined,
-    setup_start: state.dropArrivalDate || null,
-    teardown_end: state.pickUpDate || null,
     notes: state.clientFacingNotes || null,
     internal_notes: state.internalNotes || null,
     external_notes: state.clientFacingNotes || null,

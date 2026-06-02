@@ -67,9 +67,28 @@ export function CreateQuoteForm() {
     }
   };
 
-  const handlePreviewPdf = () => {
-    // TODO: Generate and preview PDF
-    console.log("Preview PDF");
+  const handlePreviewPdf = async () => {
+    setSaving(true);
+    try {
+      const state = useCreateQuoteStore.getState();
+      let eventId: string;
+      if (isEditing) {
+        await updateQuoteEvent(editingEventId, state, supabase);
+        eventId = editingEventId;
+      } else {
+        eventId = await createQuoteEvent(state, supabase);
+      }
+      // Open preview in new tab, keep form open
+      window.open(`/quotes-bookings/${eventId}/preview`, "_blank");
+      if (!isEditing) {
+        // Update store so subsequent saves do UPDATE not INSERT
+        useCreateQuoteStore.getState().setField("editingEventId", eventId);
+      }
+    } catch {
+      // Error toast already shown
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSendQuote = async () => {
@@ -83,8 +102,31 @@ export function CreateQuoteForm() {
       } else {
         eventId = await createQuoteEvent(state, supabase);
       }
-      // TODO: Send quote email with PDF
-      createSuccessToast(["Quote sent."]);
+
+      // Determine recipient email
+      const recipientEmail = state.companyEmail || state.contactName;
+      if (!recipientEmail || !recipientEmail.includes("@")) {
+        createSuccessToast(["Quote saved. Add a contact email to send."]);
+        resetForm();
+        router.push(`/quotes-bookings/${eventId}`);
+        return;
+      }
+
+      // Send email with PDF via API
+      const res = await fetch(`/api/quotes/${eventId}/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientEmail }),
+      });
+
+      if (res.ok) {
+        createSuccessToast([`Quote sent to ${recipientEmail}`]);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        console.error("Send failed:", err);
+        createSuccessToast(["Quote saved but email failed. Try resending from the detail page."]);
+      }
+
       resetForm();
       router.push(`/quotes-bookings/${eventId}`);
     } catch {
