@@ -656,62 +656,6 @@ create policy "drivers_delete" on public."Drivers"
 --    UPDATE: admin (any) + AM (only summer/winter AM uuid fields when null, no other field changes)
 -- =====================
 
--- Helper: read a Bleachers row bypassing RLS so WITH CHECK can compare old vs new values
--- without triggering infinite recursion.
-create or replace function public.get_bleacher_current_values(bleacher_id uuid)
-returns table(
-  bleacher_number smallint,
-  bleacher_rows smallint,
-  bleacher_seats smallint,
-  created_by uuid,
-  linxup_device_id text,
-  summer_account_manager_uuid uuid,
-  winter_account_manager_uuid uuid,
-  summer_home_base_uuid uuid,
-  winter_home_base_uuid uuid,
-  hitch_type text,
-  vin_number text,
-  tag_number text,
-  manufacturer text,
-  height_folded_ft numeric,
-  gvwr numeric,
-  trailer_length numeric,
-  opening_direction public.bleacher_opening_dir,
-  deleted boolean,
-  trailer_length_in numeric,
-  trailer_height_in numeric,
-  nvis_pdf_path text
-)
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select
-    bleacher_number, bleacher_rows, bleacher_seats,
-    created_by, linxup_device_id,
-    summer_account_manager_uuid, winter_account_manager_uuid,
-    summer_home_base_uuid, winter_home_base_uuid,
-    hitch_type, vin_number, tag_number, manufacturer,
-    height_folded_ft, gvwr, trailer_length,
-    opening_direction, deleted,
-    trailer_length_in, trailer_height_in, nvis_pdf_path
-  from "Bleachers"
-  where id = bleacher_id
-  limit 1;
-$$;
-
-do $$
-declare pol record;
-begin
-  for pol in
-    select policyname from pg_policies
-    where schemaname = 'public' and tablename = 'Bleachers'
-  loop
-    execute format('drop policy if exists %I on public."Bleachers"', pol.policyname);
-  end loop;
-end;
-$$;
 
 alter table public."Bleachers" enable row level security;
 
@@ -727,67 +671,10 @@ create policy "bleachers_insert" on public."Bleachers"
     'admin' = any(public.get_user_roles())
   );
 
--- AM can target rows where at least one AM field is still unassigned (null).
--- WITH CHECK enforces:
---   • summer/winter AM uuid: either unchanged OR was null and is now set to self (not to another AM)
---   • every other column must be identical to the current DB value
 create policy "bleachers_update" on public."Bleachers"
   as permissive for update to authenticated
   using (
-    'admin' = any(public.get_user_roles())
-    or (
-      'account_manager' = any(public.get_user_roles())
-      and (
-        summer_account_manager_uuid is null
-        or winter_account_manager_uuid is null
-      )
-    )
-  )
-  with check (
-    'admin' = any(public.get_user_roles())
-    or (
-      'account_manager' = any(public.get_user_roles())
-      and exists (
-        select 1 from public.get_bleacher_current_values("Bleachers".id) old
-        where
-          -- summer: unchanged, or was null and now set to self
-          (
-            "Bleachers".summer_account_manager_uuid is not distinct from old.summer_account_manager_uuid
-            or (
-              old.summer_account_manager_uuid is null
-              and "Bleachers".summer_account_manager_uuid = public.get_current_account_manager_id()
-            )
-          )
-          -- winter: unchanged, or was null and now set to self
-          and (
-            "Bleachers".winter_account_manager_uuid is not distinct from old.winter_account_manager_uuid
-            or (
-              old.winter_account_manager_uuid is null
-              and "Bleachers".winter_account_manager_uuid = public.get_current_account_manager_id()
-            )
-          )
-          -- all other fields must be unchanged
-          and "Bleachers".bleacher_number        =             old.bleacher_number
-          and "Bleachers".bleacher_rows          =             old.bleacher_rows
-          and "Bleachers".bleacher_seats         =             old.bleacher_seats
-          and "Bleachers".created_by             is not distinct from old.created_by
-          and "Bleachers".linxup_device_id       is not distinct from old.linxup_device_id
-          and "Bleachers".summer_home_base_uuid  is not distinct from old.summer_home_base_uuid
-          and "Bleachers".winter_home_base_uuid  is not distinct from old.winter_home_base_uuid
-          and "Bleachers".hitch_type             is not distinct from old.hitch_type
-          and "Bleachers".vin_number             is not distinct from old.vin_number
-          and "Bleachers".tag_number             is not distinct from old.tag_number
-          and "Bleachers".manufacturer           is not distinct from old.manufacturer
-          and "Bleachers".height_folded_ft       is not distinct from old.height_folded_ft
-          and "Bleachers".gvwr                   is not distinct from old.gvwr
-          and "Bleachers".trailer_length         is not distinct from old.trailer_length
-          and "Bleachers".opening_direction      is not distinct from old.opening_direction
-          and "Bleachers".deleted                =             old.deleted
-          and "Bleachers".trailer_length_in      is not distinct from old.trailer_length_in
-          and "Bleachers".trailer_height_in      is not distinct from old.trailer_height_in
-          and "Bleachers".nvis_pdf_path          is not distinct from old.nvis_pdf_path
-      )
-    )
+    public.get_user_roles() && '{admin,account_manager}'::text[]
   );
 
 create policy "bleachers_delete" on public."Bleachers"
