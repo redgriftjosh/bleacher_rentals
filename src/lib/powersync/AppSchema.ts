@@ -202,7 +202,6 @@ const UsersCols = {
   avatar_image_url: column.text,
   is_admin: column.integer,
   is_viewer: column.integer,
-  is_developer_only: column.integer,
   created_at: column.text,
   expo_push_token: column.text,
 } satisfies PowerSyncColsFor<"Users">;
@@ -247,6 +246,7 @@ const WorkTrackersCols = {
   dropoff_instructions: column.text,
   project_number: column.text,
   bol_number: column.text,
+  created_by_user_uuid: column.text,
 } satisfies PowerSyncColsFor<"WorkTrackers">;
 const WorkTrackers = new Table(WorkTrackersCols, {
   indexes: {

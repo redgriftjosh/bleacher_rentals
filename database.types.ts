@@ -1714,7 +1714,6 @@ export type Database = {
           first_name: string | null
           id: string
           is_admin: boolean
-          is_developer_only: number
           is_viewer: boolean
           last_name: string | null
           phone: string | null
@@ -1730,7 +1729,6 @@ export type Database = {
           first_name?: string | null
           id?: string
           is_admin?: boolean
-          is_developer_only?: number
           is_viewer?: boolean
           last_name?: string | null
           phone?: string | null
@@ -1746,7 +1744,6 @@ export type Database = {
           first_name?: string | null
           id?: string
           is_admin?: boolean
-          is_developer_only?: number
           is_viewer?: boolean
           last_name?: string | null
           phone?: string | null
@@ -1924,6 +1921,7 @@ export type Database = {
           bol_number: string | null
           completed_at: string | null
           created_at: string
+          created_by_user_uuid: string | null
           date: string | null
           distance_meters: number | null
           drive_minutes: number | null
@@ -1959,6 +1957,7 @@ export type Database = {
           bol_number?: string | null
           completed_at?: string | null
           created_at?: string
+          created_by_user_uuid?: string | null
           date?: string | null
           distance_meters?: number | null
           drive_minutes?: number | null
@@ -1994,6 +1993,7 @@ export type Database = {
           bol_number?: string | null
           completed_at?: string | null
           created_at?: string
+          created_by_user_uuid?: string | null
           date?: string | null
           distance_meters?: number | null
           drive_minutes?: number | null
@@ -2029,6 +2029,13 @@ export type Database = {
             columns: ["bleacher_uuid"]
             isOneToOne: false
             referencedRelation: "Bleachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "WorkTrackers_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
             referencedColumns: ["id"]
           },
           {
@@ -2246,8 +2253,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_current_account_manager_id: { Args: never; Returns: string }
+      get_current_user_uuid: { Args: never; Returns: string }
+      get_user_roles: { Args: never; Returns: string[] }
       get_week_end: { Args: { input_date: string }; Returns: string }
       get_week_start: { Args: { input_date: string }; Returns: string }
+      is_current_user_account_manager: { Args: never; Returns: boolean }
+      is_current_user_active: { Args: never; Returns: boolean }
+      is_current_user_admin: { Args: never; Returns: boolean }
       recompute_driver_scorecard_bucket: {
         Args: { p_driver: string; p_year: number }
         Returns: undefined
