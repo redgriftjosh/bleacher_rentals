@@ -34,9 +34,11 @@ export function searchEvents(
       // Dates — raw ISO
       e.event_start,
       e.event_end,
+      e.created_at,
       // Dates — formatted (e.g. "Sep 18, 2025")
       formatDate(e.event_start),
       formatDate(e.event_end),
+      formatDate(e.created_at),
       // Address
       e.address_street,
       e.address_city,

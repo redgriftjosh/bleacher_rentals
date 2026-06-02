@@ -30,6 +30,7 @@ const sampleEvents: QuotesBookingsEvent[] = [
     event_name: "Stadium Concert 2025",
     event_start: "2025-09-18",
     event_end: "2025-09-20",
+    created_at: "2025-08-01T14:30:00Z",
     contract_revenue_cents: 720000,
     account_manager_first_name: "Sandy",
     account_manager_last_name: "Johnson",
@@ -47,6 +48,7 @@ const sampleEvents: QuotesBookingsEvent[] = [
     event_name: "County Fair",
     event_start: "2025-06-15",
     event_end: "2025-06-18",
+    created_at: "2025-04-20T09:00:00Z",
     contract_revenue_cents: 350000,
     account_manager_first_name: "Mike",
     account_manager_last_name: "Davis",
@@ -155,6 +157,26 @@ describe("searchEvents", () => {
     const result = searchEvents(sampleEvents, "May");
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("3");
+  });
+
+  // ── Created At ──
+
+  it("finds by created_at ISO date", () => {
+    const result = searchEvents(sampleEvents, "2025-08-01");
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe("1");
+  });
+
+  it("finds by created_at formatted date", () => {
+    const result = searchEvents(sampleEvents, "Aug 1, 2025");
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe("1");
+  });
+
+  it("finds by created_at partial (month)", () => {
+    const result = searchEvents(sampleEvents, "Apr 20");
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe("2");
   });
 
   // ── Amount ──
