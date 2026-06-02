@@ -656,6 +656,18 @@ create policy "drivers_delete" on public."Drivers"
 --    UPDATE: admin (any) + AM (only summer/winter AM uuid fields when null, no other field changes)
 -- =====================
 
+do $$
+declare pol record;
+begin
+  for pol in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'Bleachers'
+  loop
+    execute format('drop policy if exists %I on public."Bleachers"', pol.policyname);
+  end loop;
+end;
+$$;
+
 
 alter table public."Bleachers" enable row level security;
 

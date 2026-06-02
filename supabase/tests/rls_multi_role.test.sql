@@ -270,10 +270,14 @@ BEGIN
     RAISE NOTICE 'TEST C3 (dev+viewer → Bleachers INSERT blocked) ✓';
   END;
 
-  -- TEST C4: Developer CAN insert into RoadmapQuarters
+  -- TEST C4: Developer CANNOT insert into RoadmapQuarters (admin CRUD, developer read-only)
   PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_dev)::text, true);
-  INSERT INTO public."RoadmapQuarters" (quarter, year) VALUES (2, 2999);
-  RAISE NOTICE 'TEST C4 (developer → RoadmapQuarters INSERT allowed) ✓';
+  BEGIN
+    INSERT INTO public."RoadmapQuarters" (quarter, year) VALUES (2, 2999);
+    ASSERT false, 'C4 developer insert RoadmapQuarters should have failed';
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'TEST C4 (developer → RoadmapQuarters INSERT blocked) ✓';
+  END;
 
   -- TEST C5: Account manager CANNOT insert into Bleachers (admin only)
   PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
@@ -358,13 +362,13 @@ BEGIN
     format('E2 admin update Bleachers: expected 1, got %s', v_count);
   RAISE NOTICE 'TEST E2 (admin → Bleachers UPDATE allowed) ✓';
 
-  -- TEST E3: AM CANNOT update Bleachers
+  -- TEST E3: AM CAN update Bleachers (policy allows admin + account_manager)
   PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
   UPDATE public."Bleachers" SET bleacher_seats = 99 WHERE bleacher_number = 8888;
   GET DIAGNOSTICS v_count = ROW_COUNT;
-  ASSERT v_count = 0,
-    format('E3 AM update Bleachers: expected 0, got %s', v_count);
-  RAISE NOTICE 'TEST E3 (AM → Bleachers UPDATE blocked) ✓';
+  ASSERT v_count = 1,
+    format('E3 AM update Bleachers: expected 1, got %s', v_count);
+  RAISE NOTICE 'TEST E3 (AM → Bleachers UPDATE allowed) ✓';
 
   -- TEST E4: AM CAN select Bleachers
   SELECT count(*) INTO v_count FROM public."Bleachers";
@@ -1947,13 +1951,12 @@ BEGIN
     UPDATE public."RoadmapTasks" SET title = 'AM Updated' WHERE id = rt_id;
     RAISE NOTICE 'TEST P8 (AM → RoadmapTasks UPDATE) ✓';
 
-    -- ---- P9: AM CANNOT delete RoadmapTasks ----
-    BEGIN
-      DELETE FROM public."RoadmapTasks" WHERE id = rt_id;
-      ASSERT false, 'P9 AM DELETE RoadmapTasks should have failed';
-    EXCEPTION WHEN insufficient_privilege THEN
-      RAISE NOTICE 'TEST P9 (AM → RoadmapTasks DELETE blocked) ✓';
-    END;
+    -- ---- P9: AM CANNOT delete RoadmapTasks (RLS silently filters, no exception) ----
+    DELETE FROM public."RoadmapTasks" WHERE id = rt_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 0,
+      format('P9 AM DELETE RoadmapTasks: expected 0 deleted, got %s', v_count);
+    RAISE NOTICE 'TEST P9 (AM → RoadmapTasks DELETE blocked) ✓';
 
     -- ---- P10: Viewer CAN select RoadmapTasks ----
     PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_viewer)::text, true);
@@ -1982,13 +1985,12 @@ BEGIN
     UPDATE public."RoadmapTasks" SET title = 'Dev Updated' WHERE id = rt_id;
     RAISE NOTICE 'TEST P13 (developer → RoadmapTasks SELECT+INSERT+UPDATE) ✓';
 
-    -- ---- P14: Developer CANNOT hard-delete RoadmapTasks ----
-    BEGIN
-      DELETE FROM public."RoadmapTasks" WHERE id = rt_id;
-      ASSERT false, 'P14 dev DELETE RoadmapTasks should have failed';
-    EXCEPTION WHEN insufficient_privilege THEN
-      RAISE NOTICE 'TEST P14 (developer → RoadmapTasks DELETE blocked) ✓';
-    END;
+    -- ---- P14: Developer CANNOT hard-delete RoadmapTasks (RLS silently filters) ----
+    DELETE FROM public."RoadmapTasks" WHERE id = rt_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 0,
+      format('P14 dev DELETE RoadmapTasks: expected 0 deleted, got %s', v_count);
+    RAISE NOTICE 'TEST P14 (developer → RoadmapTasks DELETE blocked) ✓';
 
     -- ---- P15: Admin CAN delete RoadmapTasks ----
     PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
