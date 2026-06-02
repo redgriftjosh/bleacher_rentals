@@ -38,8 +38,8 @@ export function useDrivers(options?: { showAll?: boolean }): {
   isLoading: boolean;
   error: Error | undefined;
 } {
-  const { data: currentUserData, isLoading: isCurrentUserLoading } =
-    useCurrentUser();
+  const showAll = options?.showAll ?? false;
+  const { data: currentUserData, isLoading: isCurrentUserLoading } = useCurrentUser();
   const currentUser = currentUserData?.[0];
 
   // Get account manager ID if user is an account manager
@@ -58,11 +58,7 @@ export function useDrivers(options?: { showAll?: boolean }): {
 
   const { data: accountManagerData } = useTypedQuery(
     accountManagerQuery ??
-      db
-        .selectFrom("AccountManagers")
-        .select("id")
-        .where("id", "=", "__no_match__")
-        .compile(),
+      db.selectFrom("AccountManagers").select("id").where("id", "=", "__no_match__").compile(),
     expect<{ id: string }>(),
   );
 
@@ -126,10 +122,7 @@ export function useDrivers(options?: { showAll?: boolean }): {
     return query.orderBy("d.user_uuid", "asc").compile();
   }, [currentUser, accountManagerData, showAll]);
 
-  const { data, isLoading, error } = useTypedQuery(
-    compiled,
-    expect<Compiled>(),
-  );
+  const { data, isLoading, error } = useTypedQuery(compiled, expect<Compiled>());
 
   return {
     data: data as unknown as DriverWithUser[] | null,
