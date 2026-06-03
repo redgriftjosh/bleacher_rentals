@@ -92,7 +92,7 @@ export default function BleacherLocationModal({
               {device.status && (
                 <div
                   className={`px-3 py-1.5 rounded-md text-sm font-medium border ${getStatusStyles(
-                    device.status
+                    device.status,
                   )}`}
                 >
                   {device.status}

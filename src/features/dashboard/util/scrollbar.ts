@@ -7,7 +7,7 @@ export function getColumnsAndDates() {
   const dates: string[] = Array.from({ length: DATE_RANGE * 2 + 1 }, (_, i) =>
     DateTime.now()
       .plus({ days: i - DATE_RANGE })
-      .toISODate()
+      .toISODate(),
   );
   const columns = dates.length;
   return { columns, dates };

@@ -32,7 +32,7 @@ export class HoverableBakedSprite extends Container {
     baker: Baker,
     cacheKey: string,
     contentBuilder: (container: Container) => void,
-    dimensions?: { width: number; height: number }
+    dimensions?: { width: number; height: number },
   ) {
     super();
     this.baker = baker;
@@ -45,7 +45,7 @@ export class HoverableBakedSprite extends Container {
 
     // Create baked texture for performance
     const texture = baker.getTexture(this.cacheKey, this.dimensions || null, (c) =>
-      this.contentBuilder(c)
+      this.contentBuilder(c),
     );
 
     // Create baked sprite
@@ -142,7 +142,7 @@ export class HoverableBakedSprite extends Container {
 
     // Create new texture
     const newTexture = this.baker.getTexture(this.cacheKey, this.dimensions || null, (c) =>
-      this.contentBuilder(c)
+      this.contentBuilder(c),
     );
 
     // Update sprite texture

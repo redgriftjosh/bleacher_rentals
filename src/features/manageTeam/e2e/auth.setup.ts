@@ -16,7 +16,7 @@ setup("clerk setup", async () => {
 
   if (!process.env.CLERK_PUBLISHABLE_KEY) {
     throw new Error(
-      "Missing CLERK_PUBLISHABLE_KEY (or NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) for Clerk Playwright testing"
+      "Missing CLERK_PUBLISHABLE_KEY (or NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) for Clerk Playwright testing",
     );
   }
 

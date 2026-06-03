@@ -5,6 +5,8 @@ import { Target } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { SetTargetsModal, type StatType } from "./SetTargetsModal";
 import ReactSpeedometer from "react-d3-speedometer";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
+import { canEditTargets } from "../util/canEditTargets";
 
 const MIN_VALUE = 0;
 const MAX_VALUE = 100;
@@ -35,7 +37,8 @@ export function CompactDetailedStatWithSpeedometer(props: CompactDetailedStatWit
   const [targetsModalOpen, setTargetsModalOpen] = useState(false);
   const searchParams = useSearchParams();
   const timeRangeParam = searchParams.get("timeRange");
-  const canOpenTargets = Boolean(props.accountManagerUuid && props.statType);
+  const { isAdmin } = useTeamPermissions();
+  const canOpenTargets = canEditTargets(isAdmin, props.accountManagerUuid, props.statType);
   const modalAccountManagerUuid = props.accountManagerUuid ?? undefined;
   const modalStatType = props.statType;
 

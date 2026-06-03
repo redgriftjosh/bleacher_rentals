@@ -14,18 +14,25 @@ type SelectAccountManagerProps = {
   value: string | null;
   onChange: (accountManagerId: string | null) => void;
   placeholder?: string;
+  /** When set, only these account manager IDs are shown in the dropdown. */
+  restrictToIds?: string[];
 };
 
 export function SelectAccountManager({
   value,
   onChange,
   placeholder = "Select Account Manager...",
+  restrictToIds,
 }: SelectAccountManagerProps) {
   const accountManagers = useAccountManagers(false);
 
   const filteredAccountManagers = useMemo(() => {
     return accountManagers
-      .filter((am) => am.statusUuid === STATUSES.active)
+      .filter(
+        (am) =>
+          am.statusUuid === STATUSES.active &&
+          (!restrictToIds || restrictToIds.includes(am.accountManagerUuid)),
+      )
       .map((am) => ({
         id: am.accountManagerUuid,
         accountManagerUuid: am.accountManagerUuid,
@@ -35,7 +42,7 @@ export function SelectAccountManager({
         email: am.email,
         statusUuid: am.statusUuid,
       }));
-  }, [accountManagers]);
+  }, [accountManagers, restrictToIds]);
 
   return (
     <SelectUserDropDown<AccountManagerOption>

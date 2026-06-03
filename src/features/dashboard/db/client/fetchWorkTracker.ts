@@ -5,7 +5,7 @@ import { Tables } from "../../../../../database.types";
 
 export async function fetchWorkTrackerByUuid(
   uuid: string,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
 ): Promise<{
   workTracker: Tables<"WorkTrackers"> | null;
   pickupAddress: Tables<"Addresses"> | null;
@@ -27,7 +27,7 @@ export async function fetchWorkTrackerByUuid(
 
 async function fetchWorkTracker(
   uuid: string,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
 ): Promise<Tables<"WorkTrackers"> | null> {
   const { data, error } = await supabase.from("WorkTrackers").select("*").eq("id", uuid).single();
 

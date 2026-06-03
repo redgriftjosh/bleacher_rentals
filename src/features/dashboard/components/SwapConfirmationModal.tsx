@@ -85,8 +85,9 @@ export default function SwapConfirmationModal() {
           {/* Swap details */}
           <div className="space-y-3">
             <p className="text-sm text-gray-600 font-medium">
-              The following {affectedSwaps.length === 1 ? "event" : `${affectedSwaps.length} events`}{" "}
-              will be reassigned:
+              The following{" "}
+              {affectedSwaps.length === 1 ? "event" : `${affectedSwaps.length} events`} will be
+              reassigned:
             </p>
 
             {[...groupedByDirection.values()].map((group, i) => (
@@ -102,7 +103,11 @@ export default function SwapConfirmationModal() {
                     stroke="currentColor"
                     strokeWidth={2}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
                   </svg>
                   <span className="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-semibold text-green-700 border border-green-200">
                     Bleacher #{group.toNumber}
@@ -110,7 +115,10 @@ export default function SwapConfirmationModal() {
                 </div>
                 <ul className="space-y-1 ml-1">
                   {group.events.map((swap) => (
-                    <li key={swap.eventUuid} className="text-sm text-gray-700 flex items-center gap-1.5">
+                    <li
+                      key={swap.eventUuid}
+                      className="text-sm text-gray-700 flex items-center gap-1.5"
+                    >
                       <span className="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
                       {swap.eventName}
                     </li>

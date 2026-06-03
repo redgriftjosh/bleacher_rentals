@@ -1,76 +1,46 @@
 import { STATUSES } from "@/features/manageTeam/constants";
 import type { UserAccessData } from "../types";
 
-// export const USER_STATUS = {
-//   ACTIVE: 1,
-//   INACTIVE: 2,
-//   DEACTIVATED: 3,
-// } as const;
+export type WebRole = "admin" | "account_manager" | "developer" | "viewer" | "driver";
 
-export type AccessLevel =
-  | "full"
-  | "driver-only"
+export type BlockedReason =
+  | "cannot-find-account"
   | "account-deactivated"
   | "no-roles-assigned"
-  | "cannot-find-account"
-  | "loading";
+  | "driver-only";
 
-export type AccessResult = {
-  accessLevel: Exclude<AccessLevel, "loading">;
-  reason?: string;
-};
+export type AccessResult =
+  | { status: "active"; roles: WebRole[]; userId: string; accountManagerId: string | null }
+  | { status: "blocked"; reason: BlockedReason };
 
-/**
- * Determines the access level for a user based on their status and roles.
- *
- * Rules:
- * 1. Deactivated users are blocked
- * 2. Admins get full access
- * 3. Users with active AccountManager role get full access
- * 4. Users with only active Driver role get driver-only access
- * 5. Users with no roles get no-roles-assigned
- */
 export function determineUserAccess(userData: UserAccessData | null): AccessResult {
-  // No user data found
   if (!userData) {
-    return {
-      accessLevel: "cannot-find-account",
-      reason: "User not found",
-    };
+    return { status: "blocked", reason: "cannot-find-account" };
   }
 
-  // Check if user is deactivated
   if (userData.status_uuid === STATUSES.inactive) {
-    return {
-      accessLevel: "account-deactivated",
-    };
+    return { status: "blocked", reason: "account-deactivated" };
   }
 
-  const isAdmin = Boolean(userData.is_admin);
+  const roles: WebRole[] = [];
 
-  // Admins get full access
-  if (isAdmin) {
-    return {
-      accessLevel: "full",
-    };
+  if (Boolean(userData.is_admin)) roles.push("admin");
+  if (userData.account_manager_id) roles.push("account_manager");
+  if (userData.developer_id) roles.push("developer");
+  if (Boolean(userData.is_viewer)) roles.push("viewer");
+
+  if (roles.length === 0) {
+    if (userData.driver_id) {
+      return { status: "blocked", reason: "driver-only" };
+    }
+    return { status: "blocked", reason: "no-roles-assigned" };
   }
 
-  // Account managers get full access
-  if (userData.account_manager_id) {
-    return {
-      accessLevel: "full",
-    };
-  }
-
-  // Driver-only users get limited access
-  if (userData.driver_id) {
-    return {
-      accessLevel: "driver-only",
-    };
-  }
-
-  // No roles assigned
+  if (userData.driver_id) roles.push("driver");
   return {
-    accessLevel: "no-roles-assigned",
+    status: "active",
+    roles,
+    userId: userData.id,
+    accountManagerId: userData.account_manager_id,
   };
 }

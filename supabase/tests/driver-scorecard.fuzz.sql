@@ -17,6 +17,9 @@
 \set ON_ERROR_STOP on
 
 BEGIN;
+SET search_path TO extensions, public, "$user";
+SELECT plan(1);
+
 
 DO $$
 DECLARE
@@ -244,5 +247,8 @@ BEGIN
   RAISE NOTICE '--- FUZZ TEST PASSED ---';
 END
 $$ LANGUAGE plpgsql;
+
+SELECT ok(true, 'all assertions passed');
+SELECT * FROM finish();
 
 ROLLBACK;

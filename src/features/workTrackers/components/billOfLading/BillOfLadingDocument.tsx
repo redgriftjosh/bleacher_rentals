@@ -1,11 +1,4 @@
-import {
-  Page,
-  Text,
-  View,
-  Document,
-  StyleSheet,
-  Image,
-} from "@react-pdf/renderer";
+import { Page, Text, View, Document, StyleSheet, Image } from "@react-pdf/renderer";
 import { Tables } from "../../../../../database.types";
 import { formatInches } from "@/app/assets/bleachers/_lib/functions";
 
@@ -42,9 +35,7 @@ function boolLabel(val: boolean | number | null | undefined): string {
 
 function formatAddress(addr: Tables<"Addresses"> | null): string {
   if (!addr) return "";
-  return [addr.street, addr.city, addr.state_province, addr.zip_postal]
-    .filter(Boolean)
-    .join(", ");
+  return [addr.street, addr.city, addr.state_province, addr.zip_postal].filter(Boolean).join(", ");
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -135,7 +126,12 @@ const s = StyleSheet.create({
     flexGrow: 1,
   },
   pdCol: { flex: 1, padding: "8pt 10pt", flexDirection: "column" },
-  pdColBorder: { flex: 1, padding: "8pt 10pt", borderLeft: `1pt solid ${BORDER}`, flexDirection: "column" },
+  pdColBorder: {
+    flex: 1,
+    padding: "8pt 10pt",
+    borderLeft: `1pt solid ${BORDER}`,
+    flexDirection: "column",
+  },
   pdTitle: {
     fontFamily: "Helvetica-Bold",
     textDecoration: "underline",
@@ -205,7 +201,6 @@ export const BillOfLadingDocument: React.FC<BillOfLadingDocumentProps> = ({
   return (
     <Document>
       <Page size="A4" style={s.page}>
-
         {/* ── Logo + Title ── */}
         <View style={s.headerRow}>
           {/* Use a public path — Next.js serves /icon.png from /src/app/icon.png via public or app dir */}
@@ -217,13 +212,13 @@ export const BillOfLadingDocument: React.FC<BillOfLadingDocumentProps> = ({
         <View style={s.twoCol}>
           <View style={s.col}>
             <Text>
-              <Text style={s.bold}>Project #  </Text>
+              <Text style={s.bold}>Project # </Text>
               <Text>{v(workTracker.project_number)}</Text>
             </Text>
           </View>
           <View style={s.colBorder}>
             <Text>
-              <Text style={s.bold}>BOL #  </Text>
+              <Text style={s.bold}>BOL # </Text>
               <Text>{bolNumber}</Text>
             </Text>
           </View>
@@ -249,47 +244,49 @@ export const BillOfLadingDocument: React.FC<BillOfLadingDocumentProps> = ({
           <View style={s.shipmentGrid}>
             <View style={s.shipmentCol}>
               <View style={s.detailLine}>
-                <Text style={s.detailLabel}>Item being shipped:  </Text>
+                <Text style={s.detailLabel}>Item being shipped: </Text>
                 <Text style={s.detailVal}>Mobile Bleacher Trailer</Text>
               </View>
               <View style={s.detailLine}>
-                <Text style={s.detailLabel}>Unit Number:  </Text>
+                <Text style={s.detailLabel}>Unit Number: </Text>
                 <Text style={s.detailVal}>{v(bleacher?.bleacher_number)}</Text>
-                <Text style={[s.detailLabel, { marginLeft: 10 }]}>Size / Seats:  </Text>
+                <Text style={[s.detailLabel, { marginLeft: 10 }]}>Size / Seats: </Text>
                 <Text style={s.detailVal}>{seats}</Text>
               </View>
               <View style={s.detailLine}>
-                <Text style={s.detailLabel}>Hitch Type:  </Text>
+                <Text style={s.detailLabel}>Hitch Type: </Text>
                 <Text style={s.detailVal}>{v(bleacher?.hitch_type)}</Text>
               </View>
               <View style={s.detailLine}>
-                <Text style={s.detailLabel}>GVWR:  </Text>
+                <Text style={s.detailLabel}>GVWR: </Text>
                 <Text style={s.detailVal}>
                   {bleacher?.gvwr != null ? `${bleacher.gvwr} lbs` : ""}
                 </Text>
               </View>
               <View style={s.detailLine}>
-                <Text style={s.detailLabel}>Notes:  </Text>
-                <Text style={s.detailVal}>Power Only      Flatbed</Text>
+                <Text style={s.detailLabel}>Notes: </Text>
+                <Text style={s.detailVal}>Power Only Flatbed</Text>
               </View>
             </View>
             <View style={s.shipmentCol}>
               <View style={s.detailLine}>
-                <Text style={s.detailLabel}>Quantity:  </Text>
+                <Text style={s.detailLabel}>Quantity: </Text>
                 <Text style={s.detailVal}>1</Text>
               </View>
               <View style={s.detailLine}>
-                <Text style={s.detailLabel}>VIN:  </Text>
+                <Text style={s.detailLabel}>VIN: </Text>
                 <Text style={s.detailVal}>{v(bleacher?.vin_number)}</Text>
               </View>
               <View style={s.detailLine}>
-                <Text style={s.detailLabel}>Manufacturer:  </Text>
+                <Text style={s.detailLabel}>Manufacturer: </Text>
                 <Text style={s.detailVal}>{v(bleacher?.manufacturer)}</Text>
               </View>
               <View style={s.detailLine}>
-                <Text style={s.detailLabel}>Height of Folded Unit:  </Text>
+                <Text style={s.detailLabel}>Height of Folded Unit: </Text>
                 <Text style={s.detailVal}>
-                  {bleacher?.trailer_height_in != null ? `${formatInches(bleacher.trailer_height_in)}` : ""}
+                  {bleacher?.trailer_height_in != null
+                    ? `${formatInches(bleacher.trailer_height_in)}`
+                    : ""}
                 </Text>
               </View>
             </View>
@@ -377,7 +374,7 @@ export const BillOfLadingDocument: React.FC<BillOfLadingDocumentProps> = ({
         {/* ── Signatures ── */}
         <View style={s.sigBox}>
           <Text style={s.sigNote}>
-            <Text style={s.bold}>Signatures  </Text>
+            <Text style={s.bold}>Signatures </Text>
             (Please sign when the unit is dropped off at the destination.)
           </Text>
           <View style={s.sigRow}>
@@ -402,7 +399,6 @@ export const BillOfLadingDocument: React.FC<BillOfLadingDocumentProps> = ({
           </View>
           <Image style={s.bottomLogo} src="/NEW-Bleacher-Rentals-logo.png" />
         </View>
-
       </Page>
     </Document>
   );

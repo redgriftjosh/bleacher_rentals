@@ -108,7 +108,7 @@ const SelectLinxupDeviceDropDown: React.FC<SelectLinxupDeviceDropDownProps> = ({
               {selected.status && (
                 <span
                   className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${getStatusStyles(
-                    selected.status
+                    selected.status,
                   )}`}
                 >
                   {selected.status}

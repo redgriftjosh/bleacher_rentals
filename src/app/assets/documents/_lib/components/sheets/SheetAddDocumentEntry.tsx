@@ -102,7 +102,6 @@ export function SheetAddDocumentEntry() {
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-4">
-
                 {/* Name */}
                 <div className="grid grid-cols-5 items-center gap-4">
                   <label className="text-right text-sm font-medium col-span-2">
@@ -119,7 +118,9 @@ export function SheetAddDocumentEntry() {
 
                 {/* Document PDF Upload */}
                 <div className="grid grid-cols-5 items-start gap-4">
-                  <label className="text-right text-sm font-medium col-span-2 pt-2">Attachment</label>
+                  <label className="text-right text-sm font-medium col-span-2 pt-2">
+                    Attachment
+                  </label>
                   <div className="col-span-3">
                     <FileUploadInput
                       label=""
@@ -135,9 +136,7 @@ export function SheetAddDocumentEntry() {
 
                 {/* Link */}
                 <div className="grid grid-cols-5 items-start gap-4">
-                  <label className="text-right text-sm font-medium col-span-2 pt-2">
-                    Link
-                  </label>
+                  <label className="text-right text-sm font-medium col-span-2 pt-2">Link</label>
 
                   <div className="col-span-3 space-y-2">
                     {/* Deprecation warning */}
@@ -174,9 +173,7 @@ export function SheetAddDocumentEntry() {
 
                 {/* Region */}
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Region
-                  </label>
+                  <label className="text-right text-sm font-medium col-span-2">Region</label>
                   <div className="col-span-3 flex gap-1">
                     {(["Both", "CAN", "US"] as const).map((r) => (
                       <button
@@ -196,9 +193,7 @@ export function SheetAddDocumentEntry() {
 
                 {/* Sort Order */}
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Sort Order
-                  </label>
+                  <label className="text-right text-sm font-medium col-span-2">Sort Order</label>
                   <div className="col-span-3">
                     <input
                       type="number"
@@ -206,15 +201,15 @@ export function SheetAddDocumentEntry() {
                       onChange={(e) => setSortOrder(parseInt(e.target.value) || 0)}
                       className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                     />
-                    <p className="text-xs text-gray-400 mt-1">Lower = appears first. Use multiples of 10.</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Lower = appears first. Use multiples of 10.
+                    </p>
                   </div>
                 </div>
 
                 {/* Active */}
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Active
-                  </label>
+                  <label className="text-right text-sm font-medium col-span-2">Active</label>
                   <div className="col-span-3 flex items-center gap-3">
                     <button
                       onClick={() => setIsActive((v) => !v)}
@@ -228,7 +223,9 @@ export function SheetAddDocumentEntry() {
                         }`}
                       />
                     </button>
-                    <span className="text-sm text-gray-500">{isActive ? "Visible to drivers" : "Hidden from drivers"}</span>
+                    <span className="text-sm text-gray-500">
+                      {isActive ? "Visible to drivers" : "Hidden from drivers"}
+                    </span>
                   </div>
                 </div>
 
