@@ -2,17 +2,19 @@ import { describe, it, expect } from "vitest";
 import { canEditWorkTracker } from "./canEditWorkTracker";
 
 describe("canEditWorkTracker", () => {
+  const AM_ID = "am-1";
+
   // ═══ Admin ═══
 
   it("admin can edit any work tracker", () => {
     expect(
       canEditWorkTracker({
         isAdmin: true,
+        isAccountManager: false,
         isNew: false,
-        currentUserId: "admin-1",
-        createdByUserId: "other-user",
-        driverUuid: "driver-X",
-        ownDriverUuids: [],
+        currentAccountManagerId: null,
+        bleacherSummerAmUuid: null,
+        bleacherWinterAmUuid: null,
       }),
     ).toBe(true);
   });
@@ -21,187 +23,152 @@ describe("canEditWorkTracker", () => {
     expect(
       canEditWorkTracker({
         isAdmin: true,
+        isAccountManager: false,
         isNew: true,
-        currentUserId: "admin-1",
-        createdByUserId: null,
-        driverUuid: null,
-        ownDriverUuids: [],
+        currentAccountManagerId: null,
+        bleacherSummerAmUuid: null,
+        bleacherWinterAmUuid: null,
       }),
     ).toBe(true);
   });
 
   // ═══ AM: Creating ═══
 
-  it("AM can create new work tracker", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isNew: true,
-        currentUserId: "am-user-1",
-        createdByUserId: null,
-        driverUuid: null,
-        ownDriverUuids: ["driver-A"],
-      }),
-    ).toBe(true);
-  });
-
-  // ═══ AM: own WT (created_by = self) ═══
-
-  it("AM can edit own work tracker (created_by = self)", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: "am-user-1",
-        createdByUserId: "am-user-1",
-        driverUuid: "driver-X",
-        ownDriverUuids: [],
-      }),
-    ).toBe(true);
-  });
-
-  // ═══ AM: WT with assigned driver ═══
-
-  it("AM can edit WT with own driver (even if created by someone else)", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: "am-user-1",
-        createdByUserId: "admin-1", // created by admin
-        driverUuid: "driver-A",
-        ownDriverUuids: ["driver-A", "driver-B"],
-      }),
-    ).toBe(true);
-  });
-
-  // ═══ AM: someone else's WT, someone else's driver ═══
-
-  it("AM cannot edit WT created by other with other's driver", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: "am-user-1",
-        createdByUserId: "am-user-2",
-        driverUuid: "driver-X",
-        ownDriverUuids: ["driver-A", "driver-B"],
-      }),
-    ).toBe(false);
-  });
-
-  // ═══ AM: someone else's WT, without driver ═══
-
-  it("AM cannot edit WT created by other with no driver", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: "am-user-1",
-        createdByUserId: "am-user-2",
-        driverUuid: null,
-        ownDriverUuids: ["driver-A"],
-      }),
-    ).toBe(false);
-  });
-
-  // ═══ AM: own WT + assigned driver (both criteria) ═══
-
-  it("AM can edit when both owner AND has own driver", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: "am-user-1",
-        createdByUserId: "am-user-1",
-        driverUuid: "driver-A",
-        ownDriverUuids: ["driver-A"],
-      }),
-    ).toBe(true);
-  });
-
-  // ═══ Edge cases ═══
-
-  it("AM with null userId cannot edit", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: null,
-        createdByUserId: null,
-        driverUuid: null,
-        ownDriverUuids: [],
-      }),
-    ).toBe(false);
-  });
-
-  it("AM with undefined createdByUserId cannot claim ownership", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: "am-user-1",
-        createdByUserId: undefined,
-        driverUuid: null,
-        ownDriverUuids: [],
-      }),
-    ).toBe(false);
-  });
-
-  it("driver UUID matches but is empty string → not a valid match", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: "am-user-1",
-        createdByUserId: "other",
-        driverUuid: "",
-        ownDriverUuids: [""],
-      }),
-    ).toBe(false);
-  });
-
-  // ═══ Viewer (canCreate = false) ═══
-
-  it("viewer cannot create new work tracker (canCreate=false)", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isNew: true,
-        currentUserId: "viewer-1",
-        createdByUserId: null,
-        driverUuid: null,
-        ownDriverUuids: [],
-        canCreate: false,
-      }),
-    ).toBe(false);
-  });
-
-  it("viewer cannot edit existing work tracker", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: "viewer-1",
-        createdByUserId: "am-user-1",
-        driverUuid: "driver-A",
-        ownDriverUuids: [],
-        canCreate: false,
-      }),
-    ).toBe(false);
-  });
-
   it("AM can create new work tracker (canCreate=true)", () => {
     expect(
       canEditWorkTracker({
         isAdmin: false,
+        isAccountManager: true,
         isNew: true,
-        currentUserId: "am-user-1",
-        createdByUserId: null,
-        driverUuid: null,
-        ownDriverUuids: ["driver-A"],
+        currentAccountManagerId: AM_ID,
+        bleacherSummerAmUuid: null,
+        bleacherWinterAmUuid: null,
         canCreate: true,
       }),
     ).toBe(true);
+  });
+
+  // ═══ AM: Bleacher ownership ═══
+
+  it("AM can edit if summer AM matches", () => {
+    expect(
+      canEditWorkTracker({
+        isAdmin: false,
+        isAccountManager: true,
+        isNew: false,
+        currentAccountManagerId: AM_ID,
+        bleacherSummerAmUuid: AM_ID,
+        bleacherWinterAmUuid: "other-am",
+      }),
+    ).toBe(true);
+  });
+
+  it("AM can edit if winter AM matches", () => {
+    expect(
+      canEditWorkTracker({
+        isAdmin: false,
+        isAccountManager: true,
+        isNew: false,
+        currentAccountManagerId: AM_ID,
+        bleacherSummerAmUuid: "other-am",
+        bleacherWinterAmUuid: AM_ID,
+      }),
+    ).toBe(true);
+  });
+
+  it("AM can edit if both AM fields match", () => {
+    expect(
+      canEditWorkTracker({
+        isAdmin: false,
+        isAccountManager: true,
+        isNew: false,
+        currentAccountManagerId: AM_ID,
+        bleacherSummerAmUuid: AM_ID,
+        bleacherWinterAmUuid: AM_ID,
+      }),
+    ).toBe(true);
+  });
+
+  it("AM blocked if neither AM field matches", () => {
+    expect(
+      canEditWorkTracker({
+        isAdmin: false,
+        isAccountManager: true,
+        isNew: false,
+        currentAccountManagerId: AM_ID,
+        bleacherSummerAmUuid: "other-am-1",
+        bleacherWinterAmUuid: "other-am-2",
+      }),
+    ).toBe(false);
+  });
+
+  it("AM blocked if bleacher has no AM assigned", () => {
+    expect(
+      canEditWorkTracker({
+        isAdmin: false,
+        isAccountManager: true,
+        isNew: false,
+        currentAccountManagerId: AM_ID,
+        bleacherSummerAmUuid: null,
+        bleacherWinterAmUuid: null,
+      }),
+    ).toBe(false);
+  });
+
+  // ═══ Viewer ═══
+
+  it("viewer cannot create new WT (canCreate=false)", () => {
+    expect(
+      canEditWorkTracker({
+        isAdmin: false,
+        isAccountManager: false,
+        isNew: true,
+        currentAccountManagerId: null,
+        bleacherSummerAmUuid: null,
+        bleacherWinterAmUuid: null,
+        canCreate: false,
+      }),
+    ).toBe(false);
+  });
+
+  it("viewer always blocked on existing WT", () => {
+    expect(
+      canEditWorkTracker({
+        isAdmin: false,
+        isAccountManager: false,
+        isNew: false,
+        currentAccountManagerId: null,
+        bleacherSummerAmUuid: null,
+        bleacherWinterAmUuid: null,
+      }),
+    ).toBe(false);
+  });
+
+  // ═══ Edge cases ═══
+
+  it("non-AM non-admin blocked even with matching bleacher", () => {
+    expect(
+      canEditWorkTracker({
+        isAdmin: false,
+        isAccountManager: false,
+        isNew: false,
+        currentAccountManagerId: AM_ID,
+        bleacherSummerAmUuid: AM_ID,
+        bleacherWinterAmUuid: null,
+      }),
+    ).toBe(false);
+  });
+
+  it("AM with null accountManagerId blocked", () => {
+    expect(
+      canEditWorkTracker({
+        isAdmin: false,
+        isAccountManager: true,
+        isNew: false,
+        currentAccountManagerId: null,
+        bleacherSummerAmUuid: null,
+        bleacherWinterAmUuid: null,
+      }),
+    ).toBe(false);
   });
 });

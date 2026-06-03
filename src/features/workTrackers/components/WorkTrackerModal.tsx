@@ -1,6 +1,6 @@
 import { Link, X, Trash2, Calculator, Pencil } from "lucide-react";
 import { Dropdown } from "@/components/DropDown";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { EditWorkTrackerTypesModal } from "./EditWorkTrackerTypesModal";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import {
@@ -33,6 +33,8 @@ import { buildTripStatusNotification } from "@/features/workTrackers/db/notifica
 import BillOfLadingButton from "./billOfLading/BillOfLadingButton";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { canEditWorkTracker } from "@/features/userAccess/logic/canEditWorkTracker";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -172,16 +174,38 @@ export default function WorkTrackerModal({
   });
 
   const isNew = selectedWorkTracker?.id === "-1";
-  const wt = fetchedWorkTracker?.workTracker as Record<string, unknown> | null;
+
+  // Look up bleacher AM UUIDs via PowerSync for the canEdit check
+  const bleacherUuidForQuery = selectedWorkTracker?.bleacher_uuid ?? "__no_bleacher__";
+  type BleacherAmRow = {
+    summerAmUuid: string | null;
+    winterAmUuid: string | null;
+  };
+  const compiledBleacherAm = useMemo(
+    () =>
+      db
+        .selectFrom("Bleachers as b")
+        .select([
+          "b.summer_account_manager_uuid as summerAmUuid",
+          "b.winter_account_manager_uuid as winterAmUuid",
+        ])
+        .where("b.id", "=", bleacherUuidForQuery)
+        .limit(1)
+        .compile(),
+    [bleacherUuidForQuery],
+  );
+  const { data: bleacherAmData } = useTypedQuery(compiledBleacherAm, expect<BleacherAmRow>());
+  const bleacherAm = bleacherAmData?.[0] ?? null;
+
   // Viewer can never edit — regardless of ownership
   const canEdit = permissions.canCreateUser
     ? canEditWorkTracker({
         isAdmin: permissions.isAdmin,
+        isAccountManager: permissions.isAccountManager,
         isNew,
-        currentUserId: permissions.userId,
-        createdByUserId: wt?.created_by_user_uuid as string | null | undefined,
-        driverUuid: selectedWorkTracker?.driver_uuid,
-        ownDriverUuids: (drivers ?? []).map((d) => d.driver_uuid),
+        currentAccountManagerId: permissions.accountManagerId,
+        bleacherSummerAmUuid: bleacherAm?.summerAmUuid,
+        bleacherWinterAmUuid: bleacherAm?.winterAmUuid,
       })
     : false;
 
