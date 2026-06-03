@@ -2,31 +2,42 @@
  * Pure function: determines if the current user can edit a work tracker.
  *
  * Admin — always.
- * AM creating a new WT — allowed (canCreate defaults to true for backwards compat).
- * Viewer creating — blocked when canCreate=false.
- * AM on existing WT — only if they created it OR the WT's driver is assigned to them.
+ * AM — if the WT's bleacher has them as summer or winter account manager.
+ * New WT — allowed for admin + AM (blocked for viewer via canCreate).
+ * Everyone else — blocked.
  */
 export function canEditWorkTracker(params: {
   isAdmin: boolean;
+  isAccountManager: boolean;
   isNew: boolean;
-  /** Users.id of the current user (from permissions store) */
-  currentUserId: string | null;
-  /** created_by_user_uuid from the fetched work tracker row */
-  createdByUserId: string | null | undefined;
-  /** driver_uuid from the work tracker */
-  driverUuid: string | null | undefined;
-  /** driver UUIDs that belong to the current AM (from the filtered useDrivers hook) */
-  ownDriverUuids: string[];
+  /** The current user's AccountManagers.id */
+  currentAccountManagerId: string | null;
+  /** summer_account_manager_uuid from the WT's bleacher */
+  bleacherSummerAmUuid: string | null | undefined;
+  /** winter_account_manager_uuid from the WT's bleacher */
+  bleacherWinterAmUuid: string | null | undefined;
   /** Whether the current user is allowed to create new entities (AM=true, Viewer=false). Defaults to true. */
   canCreate?: boolean;
 }): boolean {
-  const { isAdmin, isNew, currentUserId, createdByUserId, driverUuid, ownDriverUuids, canCreate = true } = params;
+  const {
+    isAdmin,
+    isAccountManager,
+    isNew,
+    currentAccountManagerId,
+    bleacherSummerAmUuid,
+    bleacherWinterAmUuid,
+    canCreate = true,
+  } = params;
 
   if (isAdmin) return true;
   if (isNew) return canCreate;
 
-  const isOwner = !!currentUserId && createdByUserId === currentUserId;
-  const hasOwnDriver = !!driverUuid && ownDriverUuids.includes(driverUuid);
+  if (isAccountManager && currentAccountManagerId) {
+    return (
+      bleacherSummerAmUuid === currentAccountManagerId ||
+      bleacherWinterAmUuid === currentAccountManagerId
+    );
+  }
 
-  return isOwner || hasOwnDriver;
+  return false;
 }
