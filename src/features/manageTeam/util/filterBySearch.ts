@@ -17,6 +17,6 @@ export function filterBySearch<T extends SearchableUser>(users: T[], searchQuery
     (user) =>
       user.firstName?.toLowerCase().includes(query) ||
       user.lastName?.toLowerCase().includes(query) ||
-      user.email?.toLowerCase().includes(query)
+      user.email?.toLowerCase().includes(query),
   );
 }

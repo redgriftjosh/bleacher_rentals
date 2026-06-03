@@ -6,6 +6,7 @@ import { useAuth, useSession } from "@clerk/nextjs";
 import { PowerSyncContext } from "@powersync/react";
 import {
   PowerSyncDatabase,
+  SyncStreamConnectionMethod,
   WASQLiteOpenFactory,
   WASQLiteVFS,
   createBaseLogger,
@@ -113,6 +114,7 @@ export const SystemProvider = ({ children }: { children: React.ReactNode }) => {
 
     instance.connect(connector, {
       params: { app: "web" },
+      connectionMethod: SyncStreamConnectionMethod.HTTP,
     });
 
     return () => {

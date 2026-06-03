@@ -1,16 +1,14 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserRoleValue } from "@/types/Constants";
 
 type SideNavButtonProps = {
   label: string;
   href: string;
   icon: React.ComponentType<any>;
-  roles: UserRoleValue[];
 };
 
-export const SideNavButton = ({ label, href, icon: Icon, roles }: SideNavButtonProps) => {
+export const SideNavButton = ({ label, href, icon: Icon }: SideNavButtonProps) => {
   const pathname = usePathname();
   const isSelected = pathname.startsWith(href);
 

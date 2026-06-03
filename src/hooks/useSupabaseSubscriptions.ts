@@ -109,7 +109,6 @@ export default function useSupabaseSubscriptions() {
     // subscriptionId,
   });
 
-
   const addressesStore = useAddressesStore();
   useSetupTable({
     tableName: "Addresses",

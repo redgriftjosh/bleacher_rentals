@@ -43,10 +43,7 @@ export async function saveFeature(input: SaveFeatureInput): Promise<string> {
   }
 
   await typedExecute(
-    db
-      .deleteFrom("RoadmapFeatureSprintLabels")
-      .where("feature_id", "=", featureId)
-      .compile()
+    db.deleteFrom("RoadmapFeatureSprintLabels").where("feature_id", "=", featureId).compile(),
   );
 
   for (const sprintId of input.sprintIds) {
@@ -59,7 +56,7 @@ export async function saveFeature(input: SaveFeatureInput): Promise<string> {
           sprint_id: sprintId,
           created_at: new Date().toISOString(),
         })
-        .compile()
+        .compile(),
     );
   }
 
@@ -67,17 +64,11 @@ export async function saveFeature(input: SaveFeatureInput): Promise<string> {
 }
 
 export async function deleteFeature(featureId: string) {
-  await typedExecute(
-    db.deleteFrom("RoadmapFeatures").where("id", "=", featureId).compile()
-  );
+  await typedExecute(db.deleteFrom("RoadmapFeatures").where("id", "=", featureId).compile());
 }
 
 export async function setFeatureStatus(featureId: string, status: FeatureStatus) {
   await typedExecute(
-    db
-      .updateTable("RoadmapFeatures")
-      .set({ status })
-      .where("id", "=", featureId)
-      .compile()
+    db.updateTable("RoadmapFeatures").set({ status }).where("id", "=", featureId).compile(),
   );
 }

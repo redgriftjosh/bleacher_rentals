@@ -36,7 +36,7 @@ export function createErrorToast(lines: string[]): never {
         id: t,
         lines,
       }),
-    { duration: 10000 }
+    { duration: 10000 },
   );
   throw new Error(lines.join("\n"));
 }
@@ -49,7 +49,7 @@ export function createErrorToastNoThrow(lines: string[]) {
         id: t,
         lines,
       }),
-    { duration: 10000 }
+    { duration: 10000 },
   );
   // not throwing an error here. hehe xD rofl
   // throw new Error(lines.join("\n"));

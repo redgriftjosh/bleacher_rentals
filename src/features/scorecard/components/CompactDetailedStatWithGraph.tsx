@@ -6,6 +6,8 @@ import Link from "next/link";
 import { LineChart, Line, ResponsiveContainer, XAxis, Tooltip as RechartsTooltip } from "recharts";
 import { useSearchParams } from "next/navigation";
 import { SetTargetsModal, type StatType } from "./SetTargetsModal";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
+import { canEditTargets } from "../util/canEditTargets";
 
 type ChartDataPoint = {
   day: string;
@@ -40,7 +42,8 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
   const [targetsModalOpen, setTargetsModalOpen] = useState(false);
   const searchParams = useSearchParams();
   const timeRangeParam = searchParams.get("timeRange");
-  const canOpenTargets = Boolean(props.accountManagerUuid && props.statType);
+  const { isAdmin } = useTeamPermissions();
+  const canOpenTargets = canEditTargets(isAdmin, props.accountManagerUuid, props.statType);
   const modalAccountManagerUuid = props.accountManagerUuid ?? undefined;
   const modalStatType = props.statType;
 

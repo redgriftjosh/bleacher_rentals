@@ -65,8 +65,8 @@ export class HeaderCell extends Container {
     const bg = isToday
       ? this.theme.bgToday
       : isWeekend
-      ? this.theme.bgWeekend
-      : this.theme.bgWeekday;
+        ? this.theme.bgWeekend
+        : this.theme.bgWeekday;
     this.drawBg(bg);
 
     this.top.text = dt.toFormat("EEE, MMM d");

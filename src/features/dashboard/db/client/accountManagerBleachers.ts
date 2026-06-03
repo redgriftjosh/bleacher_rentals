@@ -8,7 +8,7 @@ type UserBleacherAssignments = {
 
 export async function fetchUserBleacherAssignmentsForSeason(
   supabase: SupabaseClient<Database>,
-  clerkUserId: string
+  clerkUserId: string,
 ): Promise<UserBleacherAssignments> {
   // Lookup app user_id from clerk_user_id
   const { data: userRow, error: userErr } = await supabase

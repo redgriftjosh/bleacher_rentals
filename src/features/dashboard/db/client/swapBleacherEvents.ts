@@ -26,7 +26,7 @@ export function computeAffectedSwaps(
   sourceBleacherUuid: string,
   targetBleacherUuid: string,
   currentEventUuid: string,
-  bleachers: Bleacher[]
+  bleachers: Bleacher[],
 ): SwapDetail[] {
   const sourceBleacher = bleachers.find((b) => b.bleacherUuid === sourceBleacherUuid);
   const targetBleacher = bleachers.find((b) => b.bleacherUuid === targetBleacherUuid);
@@ -125,7 +125,7 @@ export function computeAffectedSwaps(
  */
 export async function executeSwap(
   swaps: SwapDetail[],
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
 ): Promise<void> {
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);

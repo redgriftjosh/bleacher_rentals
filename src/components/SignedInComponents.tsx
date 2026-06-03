@@ -4,9 +4,12 @@ import SideBar from "@/components/sidebar/Sidebar";
 import useSupabaseSubscriptions from "@/hooks/useSupabaseSubscriptions";
 import { SignOutButton } from "@clerk/nextjs";
 import { Button } from "./ui/button";
-import { useRef } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { LayoutProvider } from "@/contexts/LayoutContexts";
 import { useUserAccess } from "@/features/userAccess/client";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { useAccessRedirect } from "@/features/userAccess/hooks/useAccessRedirect";
+import { mergeRoleConfigs } from "@/features/userAccess/accessConfig";
 import LoadingSpinner from "./LoadingSpinner";
 import { CannotFindAccount } from "../features/userAccess/components/CannotFindAccount";
 import { NoRolesAssigned } from "../features/userAccess/components/NoRolesAssigned";
@@ -17,10 +20,28 @@ import { EventConfigModal } from "@/features/eventConfiguration/components/Event
 export function SignedInComponents({ children }: { children: React.ReactNode }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   useSupabaseSubscriptions();
-  const { accessLevel, reason } = useUserAccess();
+  const access = useUserAccess();
 
-  // Wait for both session and user to be loaded
-  if (accessLevel === "loading") {
+  const config = useMemo(
+    () => (access.status === "active" ? mergeRoleConfigs(access.roles) : null),
+    [access],
+  );
+
+  useAccessRedirect(config);
+
+  // Sync permissions to Zustand store so non-React code (Pixi renderers) can read them
+  useEffect(() => {
+    if (access.status === "active") {
+      usePermissionsStore.setState({
+        isAdmin: access.roles.includes("admin"),
+        isAccountManager: access.roles.includes("account_manager"),
+        accountManagerId: access.accountManagerId,
+        userId: access.userId,
+      });
+    }
+  }, [access]);
+
+  if (access.status === "loading") {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-center">
         <LoadingSpinner />
@@ -33,21 +54,17 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
     );
   }
 
-  if (accessLevel === "cannot-find-account") {
-    return <CannotFindAccount />;
-  }
-
-  if (accessLevel === "account-deactivated") {
-    return <AccountDeactivated />;
-  }
-
-  if (accessLevel === "no-roles-assigned") {
-    return <NoRolesAssigned />;
-  }
-
-  // Driver-only access
-  if (accessLevel === "driver-only") {
-    return <DriverWelcome />;
+  if (access.status === "blocked") {
+    switch (access.reason) {
+      case "cannot-find-account":
+        return <CannotFindAccount />;
+      case "account-deactivated":
+        return <AccountDeactivated />;
+      case "no-roles-assigned":
+        return <NoRolesAssigned />;
+      case "driver-only":
+        return <DriverWelcome />;
+    }
   }
 
   return (
@@ -55,7 +72,7 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
       <div className="flex flex-col h-screen">
         <Header />
         <div className="flex flex-1 overflow-hidden">
-          <SideBar />
+          {config?.showSidebar && <SideBar />}
           <main ref={scrollRef} className="flex-1  bg-gray-50 overflow-auto">
             {children}
           </main>

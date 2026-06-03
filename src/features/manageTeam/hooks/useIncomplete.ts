@@ -23,10 +23,13 @@ export function useIncomplete(): IncompleteUser[] {
   const compiled = db
     .selectFrom("Users as u")
     .leftJoin("AccountManagers as am", (join) =>
-      join.onRef("am.user_uuid", "=", "u.id").on("am.is_active", "=", 1)
+      join.onRef("am.user_uuid", "=", "u.id").on("am.is_active", "=", 1),
     )
     .leftJoin("Drivers as d", (join) =>
-      join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1)
+      join.onRef("d.user_uuid", "=", "u.id").on("d.is_active", "=", 1),
+    )
+    .leftJoin("Developers as dev", (join) =>
+      join.onRef("dev.user_uuid", "=", "u.id").on("dev.is_active", "=", 1),
     )
     .select([
       "u.id as userUuid",
@@ -40,9 +43,11 @@ export function useIncomplete(): IncompleteUser[] {
     .where((eb) =>
       eb.and([
         eb("u.is_admin", "=", 0),
+        eb("u.is_viewer", "=", 0),
         eb("am.id", "is", null),
         eb("d.id", "is", null),
-      ])
+        eb("dev.id", "is", null),
+      ]),
     )
     .orderBy("u.first_name", "asc")
     .orderBy("u.last_name", "asc")

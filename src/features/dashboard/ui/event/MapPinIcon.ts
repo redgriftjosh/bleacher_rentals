@@ -81,7 +81,7 @@ export class MapPinIcon extends Container {
         g.roundRect(0, 0, 24, 24, 3);
         g.fill();
         c.addChild(g);
-      }
+      },
     );
     this.iconSprite.texture = fallback;
     this.iconSprite.anchor.set(0.5, 0.5);

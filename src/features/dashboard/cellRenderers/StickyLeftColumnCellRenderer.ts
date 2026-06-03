@@ -11,6 +11,8 @@ import { useBleacherLocationModalStore } from "../state/useBleacherLocationModal
 import { useSwapStore } from "../state/useSwapStore";
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
 import { computeAffectedSwaps } from "../db/client/swapBleacherEvents";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
 
 /**
  * CellRenderer for the sticky left column that displays bleacher information
@@ -178,8 +180,27 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
 
       // Wire toggle handler - routes to event or maintenance store
       cell.setToggleHandler((id) => {
+        const perms = usePermissionsStore.getState();
+
+        // Viewer cannot toggle bleachers at all
+        if (!perms.isAdmin && !perms.isAccountManager) return;
+
         const mt = useMaintenanceEventStore.getState();
         if (mt.isFormExpanded) {
+          // AM can only toggle own bleachers for maintenance too
+          if (perms.isAccountManager && !perms.isAdmin) {
+            const bleacher = this.bleachers.find((b) => b.bleacherUuid === id);
+            if (bleacher) {
+              const amId = perms.accountManagerId;
+              const isOwn =
+                bleacher.summerAccountManagerUuid === amId ||
+                bleacher.winterAccountManagerUuid === amId;
+              if (!isOwn) {
+                createErrorToastNoThrow(["This bleacher is not assigned to you."]);
+                return;
+              }
+            }
+          }
           const selected = mt.bleacherUuids;
           const updated = selected.includes(id)
             ? selected.filter((n) => n !== id)
@@ -189,6 +210,22 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
         }
         const st = useCurrentEventStore.getState();
         if (!st.isFormExpanded) return;
+
+        // AM can only toggle own bleachers (summer OR winter assigned)
+        if (perms.isAccountManager && !perms.isAdmin) {
+          const bleacher = this.bleachers.find((b) => b.bleacherUuid === id);
+          if (bleacher) {
+            const amId = perms.accountManagerId;
+            const isOwn =
+              bleacher.summerAccountManagerUuid === amId ||
+              bleacher.winterAccountManagerUuid === amId;
+            if (!isOwn) {
+              createErrorToastNoThrow(["This bleacher is not assigned to you."]);
+              return;
+            }
+          }
+        }
+
         const selected = st.bleacherUuids;
         const updated = selected.includes(id)
           ? selected.filter((n) => n !== id)

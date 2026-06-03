@@ -15,6 +15,8 @@ import { useRoadmapCurrentUserUuid } from "../_lib/hooks/useRoadmapCurrentUserUu
 import { useMySubscribedTaskIds, useAllTaskSubscriptionsMap } from "../_lib/hooks/useSubscriptions";
 import { useRoadmapUsers } from "../_lib/hooks/useRoadmapUsers";
 import { useRoadmapAccessLevel } from "../_lib/hooks/useRoadmapAccessLevel";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
+import { canEditRoadmapTasks } from "../_lib/util/canEditRoadmapTasks";
 
 type FilterMode = "all" | "mine";
 
@@ -34,6 +36,8 @@ export default function BacklogPage() {
   const { userUuid } = useRoadmapCurrentUserUuid();
   const myTaskIds = useMySubscribedTaskIds(userUuid);
   const { isDeveloper } = useRoadmapAccessLevel();
+  const { isAccountManager } = useTeamPermissions();
+  const canEditTasks = canEditRoadmapTasks(isDeveloper, isAccountManager);
   const subscriptionsMap = useAllTaskSubscriptionsMap();
   const { userMap } = useRoadmapUsers();
 
@@ -67,10 +71,12 @@ export default function BacklogPage() {
         crumbs={[{ label: "Roadmap", href: "/roadmap" }, { label: "Backlog" }]}
         description="Submit ideas, bugs, and feature requests. Assign to a sprint when ready."
         rightSlot={
-          <PrimaryButton onClick={() => router.push(`${baseUrl}?new=ticket`)}>
-            <Plus className="size-4" />
-            Submit Ticket
-          </PrimaryButton>
+          canEditTasks ? (
+            <PrimaryButton onClick={() => router.push(`${baseUrl}?new=ticket`)}>
+              <Plus className="size-4" />
+              Submit Ticket
+            </PrimaryButton>
+          ) : undefined
         }
       />
 
@@ -184,6 +190,7 @@ export default function BacklogPage() {
         sprintId={null}
         quarterId={null}
         taskId={ticketId}
+        readOnly={!canEditTasks}
       />
     </main>
   );

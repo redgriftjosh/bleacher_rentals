@@ -119,7 +119,20 @@ export function AdminList({ showInactive = false }: { showInactive?: boolean }) 
                         Driver
                       </span>
                     ) : null}
-                    {!admin.isAccountManager && !admin.isDriver ? (
+                    {admin.isDeveloper ? (
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        Developer
+                      </span>
+                    ) : null}
+                    {admin.isViewer ? (
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+                        Viewer
+                      </span>
+                    ) : null}
+                    {!admin.isAccountManager &&
+                    !admin.isDriver &&
+                    !admin.isDeveloper &&
+                    !admin.isViewer ? (
                       <span className="text-sm text-gray-400">—</span>
                     ) : null}
                   </div>

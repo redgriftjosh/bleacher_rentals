@@ -41,7 +41,7 @@ export async function uploadAttachment(input: UploadAttachmentInput) {
         file_size_bytes: input.file.size,
         uploaded_by_user_uuid: input.uploadedByUserUuid,
       })
-      .compile()
+      .compile(),
   );
 
   return id;
@@ -55,10 +55,7 @@ export async function deleteAttachment(opts: {
 }) {
   await opts.supabase.storage.from(opts.storageBucket).remove([opts.storagePath]);
   await typedExecute(
-    db
-      .deleteFrom("RoadmapAttachments")
-      .where("id", "=", opts.attachmentId)
-      .compile()
+    db.deleteFrom("RoadmapAttachments").where("id", "=", opts.attachmentId).compile(),
   );
 }
 
@@ -77,7 +74,7 @@ export async function reassignAttachments(opts: {
       })
       .where("parent_type", "=", opts.fromParentType)
       .where("parent_id", "=", opts.fromParentId)
-      .compile()
+      .compile(),
   );
 }
 

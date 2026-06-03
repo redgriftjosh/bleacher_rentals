@@ -8,7 +8,7 @@ export class TileWithCoordinates extends Container {
     col: number,
     app: Application,
     dimensions: { width: number; height: number },
-    baker: Baker
+    baker: Baker,
   ) {
     super();
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Modal } from "./Modal";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { Dropdown } from "@/components/DropDown";
@@ -30,9 +30,10 @@ type Props = {
   sprintId: string | null;
   quarterId: string | null;
   taskId: string | null;
+  readOnly?: boolean;
 };
 
-export function TaskModal({ open, onClose, sprintId, quarterId, taskId }: Props) {
+export function TaskModal({ open, onClose, sprintId, quarterId, taskId, readOnly }: Props) {
   const { task } = useTask(taskId);
   const { userUuid } = useRoadmapCurrentUserUuid();
   const { isDeveloper } = useRoadmapAccessLevel();
@@ -58,15 +59,23 @@ export function TaskModal({ open, onClose, sprintId, quarterId, taskId }: Props)
   const [submitting, setSubmitting] = useState(false);
 
   const isBacklogContext = !sprintId && !task?.sprint_id;
+  const initializedForRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      initializedForRef.current = null;
+      return;
+    }
+    const key = taskId ?? "__new__";
+    if (taskId && !task) return;
+    if (initializedForRef.current === key) return;
+    initializedForRef.current = key;
+
     setTitle(task?.title ?? "");
     setDescription(task?.description ?? "");
     setStatus(task?.status ?? DEFAULT_TASK_STATUS);
     setFeatureId(task?.feature_id ?? "");
     setDeveloperUuid(task?.developer_uuid ?? "");
-    // For existing tasks: derive quarter from the task's sprint; fall back to the prop
     const derivedQuarterId = taskSprint?.quarter_id ?? quarterId ?? "";
     setSelectedQuarterId(derivedQuarterId);
     setSelectedSprintId(task?.sprint_id ?? sprintId ?? "");
@@ -202,30 +211,32 @@ export function TaskModal({ open, onClose, sprintId, quarterId, taskId }: Props)
       size={showChat ? "2xl" : "lg"}
       contentClassName={showChat ? "overflow-hidden flex flex-col" : undefined}
       footer={
-        <>
-          {taskId &&
-            isDeveloper &&
-            (task?.deleted_at ? (
-              <PrimaryButton
-                className="bg-green-700 hover:bg-green-800"
-                loading={submitting}
-                onClick={handleRestore}
-              >
-                Restore
-              </PrimaryButton>
-            ) : (
-              <PrimaryButton
-                className="bg-red-700 hover:bg-red-800"
-                loading={submitting}
-                onClick={handleDelete}
-              >
-                Delete
-              </PrimaryButton>
-            ))}
-          <PrimaryButton loading={submitting} loadingText="Saving..." onClick={handleSave}>
-            Save
-          </PrimaryButton>
-        </>
+        readOnly ? undefined : (
+          <>
+            {taskId &&
+              isDeveloper &&
+              (task?.deleted_at ? (
+                <PrimaryButton
+                  className="bg-green-700 hover:bg-green-800"
+                  loading={submitting}
+                  onClick={handleRestore}
+                >
+                  Restore
+                </PrimaryButton>
+              ) : (
+                <PrimaryButton
+                  className="bg-red-700 hover:bg-red-800"
+                  loading={submitting}
+                  onClick={handleDelete}
+                >
+                  Delete
+                </PrimaryButton>
+              ))}
+            <PrimaryButton loading={submitting} loadingText="Saving..." onClick={handleSave}>
+              Save
+            </PrimaryButton>
+          </>
+        )
       }
     >
       <div className={`flex gap-6 ${showChat ? "flex-1 min-h-0 overflow-hidden" : ""}`}>
@@ -239,10 +250,15 @@ export function TaskModal({ open, onClose, sprintId, quarterId, taskId }: Props)
               onChange={(e) => setTitle(e.target.value)}
               placeholder={isBacklog ? "Short summary of the request" : "What needs doing?"}
               className="mt-1 w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-greenAccent"
+              disabled={readOnly}
             />
           </label>
 
-          {isDeveloper ? (
+          {readOnly ? (
+            <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+              You are viewing this ticket in read-only mode.
+            </div>
+          ) : isDeveloper ? (
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -330,6 +346,7 @@ export function TaskModal({ open, onClose, sprintId, quarterId, taskId }: Props)
                   ? "What's needed? Steps to reproduce, screenshots, etc."
                   : "Notes, links, acceptance criteria..."
               }
+              disabled={readOnly}
             />
           </div>
 

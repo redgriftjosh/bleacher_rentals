@@ -60,7 +60,7 @@ export class Baker {
   getTexture(
     key: string,
     size: { width: number; height: number } | null = null,
-    build: (container: Container) => void
+    build: (container: Container) => void,
   ) {
     const existing = this.checkExisting(key, {
       width: size?.width ?? CELL_WIDTH,
@@ -74,7 +74,7 @@ export class Baker {
   getSprite(
     key: string,
     size: { width: number; height: number },
-    build: (container: Container) => void
+    build: (container: Container) => void,
   ): Sprite {
     const tex = this.getTexture(key, size, build);
     return new Sprite(tex);
@@ -82,7 +82,7 @@ export class Baker {
 
   private checkExisting(
     key: string,
-    size: { width: number; height: number }
+    size: { width: number; height: number },
   ): RenderTexture | undefined {
     const existing = this.cache.get(key);
     if (existing && !existing.destroyed) return existing;
@@ -102,7 +102,7 @@ export class Baker {
   private bakeContainer(
     key: string,
     size: { width: number; height: number } | null = null,
-    build: (container: Container) => void
+    build: (container: Container) => void,
   ): RenderTexture {
     try {
       const container = new Container();

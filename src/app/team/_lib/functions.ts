@@ -10,13 +10,13 @@ export function checkInsertUserFormRules(
   homeBaseIds: number[],
   existingEmails: string[],
   supabase: any | null,
-  isUpdating: boolean
+  isUpdating: boolean,
 ): boolean {
   // check if all required fields are filled in
   let errors = [];
   if (!supabase) {
     errors.push(
-      "Missing: Supabase Client. Please let Josh Redgrift (josh@tpi-3.ca) know you saw this message, refresh your page and try again."
+      "Missing: Supabase Client. Please let Josh Redgrift (josh@tpi-3.ca) know you saw this message, refresh your page and try again.",
     );
   }
   if (!roleId) {
@@ -66,7 +66,7 @@ export function checkInsertUserFormRules(
         }),
       {
         duration: 10000, // 20 seconds
-      }
+      },
     );
     return false;
   } else {
@@ -94,7 +94,7 @@ export function checkEmailRules(email: string | null, existingEmails: string[]):
         }),
       {
         duration: 10000, // 20 seconds
-      }
+      },
     );
     return false;
   } else {
@@ -124,7 +124,7 @@ export async function sendInviteUserEmail(email: string): Promise<boolean> {
         }),
       {
         duration: 10000, // 20 seconds
-      }
+      },
     );
     return false;
   }
@@ -152,7 +152,7 @@ export async function deleteInviteUserEmail(email: string): Promise<boolean> {
         }),
       {
         duration: 10000, // 20 seconds
-      }
+      },
     );
     return false;
   }

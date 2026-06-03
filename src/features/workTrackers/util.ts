@@ -43,7 +43,7 @@ export type DriverPaymentData = {
 
 export function calculateDriverPay(
   driverPaymentData: DriverPaymentData,
-  distanceData: DistanceData
+  distanceData: DistanceData,
 ): number | null {
   if (!driverPaymentData || !distanceData) {
     return null;

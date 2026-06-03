@@ -1,15 +1,10 @@
 import { getBaseUrl, getQboAccessTokenAndRealmId } from "@/features/quickbooks-integration/util";
-import { auth } from "@clerk/nextjs/server";
+import { requireAuth } from "@/features/userAccess/logic/requireAuth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-  // Require authentication
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
+    await requireAuth();
     const { searchParams } = new URL(req.url);
     const billId = searchParams.get("billId");
     const connectionId = searchParams.get("connectionId");
@@ -90,6 +85,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(formattedBill);
   } catch (error: any) {
+    if (error instanceof Response) return error;
     console.error("Get bill error:", error);
     return NextResponse.json({ error: error.message || "Failed to get bill" }, { status: 500 });
   }

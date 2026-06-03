@@ -17,7 +17,7 @@ export function getHomeBaseUuidByName(name: string): string | null {
   const homeBases = useHomeBasesStore.getState().homeBases;
 
   const match = homeBases.find(
-    (hb) => hb.home_base_name.trim().toLowerCase() === name.trim().toLowerCase()
+    (hb) => hb.home_base_name.trim().toLowerCase() === name.trim().toLowerCase(),
   );
 
   return match?.id ?? null;
