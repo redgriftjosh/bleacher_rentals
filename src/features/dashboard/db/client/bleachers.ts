@@ -88,8 +88,8 @@ export async function FetchDashboardBleachers(
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);
   }
-  const { data, error } = await supabase
-    .from("Bleachers")
+  const { data, error } = (await (supabase
+    .from("Bleachers") as any)
     .select(
       `
       id,
@@ -179,8 +179,7 @@ export async function FetchDashboardBleachers(
       `,
     )
     .eq("deleted", false)
-    .order("bleacher_number", { ascending: true })
-    .overrideTypes<Row[], { merge: false }>();
+    .order("bleacher_number", { ascending: true })) as { data: Row[] | null; error: any };
 
   if (error) {
     createErrorToast(["Failed to fetch Dashboard Bleachers.", error.message]);
