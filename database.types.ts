@@ -2254,6 +2254,7 @@ export type Database = {
     }
     Functions: {
       get_current_account_manager_id: { Args: never; Returns: string }
+      get_current_driver_id: { Args: never; Returns: string }
       get_current_user_uuid: { Args: never; Returns: string }
       get_user_roles: { Args: never; Returns: string[] }
       get_week_end: { Args: { input_date: string }; Returns: string }
