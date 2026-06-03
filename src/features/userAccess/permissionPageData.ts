@@ -97,7 +97,7 @@ export const PERMISSIONS: PermissionEntry[] = [
         "should be able to create, update, delete, and edit any work trackers, regardless of who work tracker is assigned to. This includes the ability to reassign work trackers between drivers.",
       ),
       account_manager: custom(
-        "Account managers can create work trackers, but can only assign work trackers to themselves. They can only modify or delete work trackers that are assigned to a driver that is assigned to themselves. They cannot create a work tracker for a driver that is not assigned to them.",
+        "Account managers should be able to create work trackers only on bleachers that they own. They should be able to view all work trackers.",
       ),
       developer: none(
         "Unable to even access the pages where they can see work trackers, and developer is only meant to work on the developer roadmap.",

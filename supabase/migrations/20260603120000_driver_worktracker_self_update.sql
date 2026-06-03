@@ -55,22 +55,11 @@ $$;
 --       )
 --   )
 
--- SELECT: admin + AM (own bleachers) + viewer (all) + driver (own rows)
+-- SELECT: admin + AM + viewer (all rows) + driver (own rows only)
 create policy "worktrackers_select" on public."WorkTrackers"
   as permissive for select to authenticated
   using (
-    public.get_user_roles() && '{admin,viewer}'::text[]
-    or (
-      'account_manager' = any(public.get_user_roles())
-      and exists (
-        select 1 from "Bleachers" b
-        where b.id = bleacher_uuid
-          and (
-            b.summer_account_manager_uuid = public.get_current_account_manager_id()
-            or b.winter_account_manager_uuid = public.get_current_account_manager_id()
-          )
-      )
-    )
+    public.get_user_roles() && '{admin,account_manager,viewer}'::text[]
     or (
       public.get_current_driver_id() is not null
       and driver_uuid = public.get_current_driver_id()
