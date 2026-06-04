@@ -3,13 +3,13 @@
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { useAccountManager } from "@/features/scorecard/hooks/accountManager/useAccountManager";
-import { CompactDetailedStatWithGraph } from "@/features/scorecard/components/CompactDetailedStatWithGraph";
-import { PAGE_NAME } from "@/features/scorecard/constants/nav";
-import { useEventData } from "@/features/scorecard/hooks/overview/useEventData";
-import { useGrossMarginData } from "@/features/scorecard/hooks/overview/useGrossMarginData";
-import TimeRangeToggle from "@/features/scorecard/components/TimeRangeToggle";
-import { CompactDetailedStatWithSpeedometer } from "@/features/scorecard/components/CompactDetailedStatWithSpeedometer";
+import { useAccountManager } from "@/features/salesScorecard/hooks/accountManager/useAccountManager";
+import { CompactDetailedStatWithGraph } from "@/features/salesScorecard/components/CompactDetailedStatWithGraph";
+import { PAGE_NAME } from "@/features/salesScorecard/constants/nav";
+import { useEventData } from "@/features/salesScorecard/hooks/overview/useEventData";
+import { useGrossMarginData } from "@/features/salesScorecard/hooks/overview/useGrossMarginData";
+import TimeRangeToggle from "@/features/salesScorecard/components/TimeRangeToggle";
+import { CompactDetailedStatWithSpeedometer } from "@/features/salesScorecard/components/CompactDetailedStatWithSpeedometer";
 
 export default function AccountManagerDetailPage() {
   const params = useParams<{ accountManagerUuid: string }>();

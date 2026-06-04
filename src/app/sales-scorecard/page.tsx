@@ -1,13 +1,13 @@
 "use client";
 
-import { AccountManagerCard } from "@/features/scorecard/components/AccountManagerCard";
-import { CompactDetailedStatWithGraph } from "@/features/scorecard/components/CompactDetailedStatWithGraph";
-import { ScorecardHeader } from "@/features/scorecard/components/ScorecardHeader";
-import { PAGE_NAME } from "@/features/scorecard/constants/nav";
-import { useAccountManagers } from "@/features/scorecard/hooks/accountManager/useAccountManagers";
-import { useEventData } from "@/features/scorecard/hooks/overview/useEventData";
-import { useGrossMarginData } from "@/features/scorecard/hooks/overview/useGrossMarginData";
-import { CompactDetailedStatWithSpeedometer } from "@/features/scorecard/components/CompactDetailedStatWithSpeedometer";
+import { AccountManagerCard } from "@/features/salesScorecard/components/AccountManagerCard";
+import { CompactDetailedStatWithGraph } from "@/features/salesScorecard/components/CompactDetailedStatWithGraph";
+import { ScorecardHeader } from "@/features/salesScorecard/components/ScorecardHeader";
+import { PAGE_NAME } from "@/features/salesScorecard/constants/nav";
+import { useAccountManagers } from "@/features/salesScorecard/hooks/accountManager/useAccountManagers";
+import { useEventData } from "@/features/salesScorecard/hooks/overview/useEventData";
+import { useGrossMarginData } from "@/features/salesScorecard/hooks/overview/useGrossMarginData";
+import { CompactDetailedStatWithSpeedometer } from "@/features/salesScorecard/components/CompactDetailedStatWithSpeedometer";
 export default function ScorecardPage() {
   const quotesSentData = useEventData({
     onlyBooked: false,
