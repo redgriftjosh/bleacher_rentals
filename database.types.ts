@@ -2217,6 +2217,50 @@ export type Database = {
           },
         ]
       }
+      SalesScorecardStatsPerAccountManager: {
+        Row: {
+          account_manager_uuid: string
+          cogs_cents: number
+          id: string
+          last_updated: string
+          quotes_sent_count: number
+          revenue_cents: number
+          sales_count: number
+          value_of_sales_cents: number
+          year: number
+        }
+        Insert: {
+          account_manager_uuid: string
+          cogs_cents?: number
+          id?: string
+          last_updated?: string
+          quotes_sent_count?: number
+          revenue_cents?: number
+          sales_count?: number
+          value_of_sales_cents?: number
+          year: number
+        }
+        Update: {
+          account_manager_uuid?: string
+          cogs_cents?: number
+          id?: string
+          last_updated?: string
+          quotes_sent_count?: number
+          revenue_cents?: number
+          sales_count?: number
+          value_of_sales_cents?: number
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "SalesScorecardStatsPerAccountManager_account_manager_uuid_fkey"
+            columns: ["account_manager_uuid"]
+            isOneToOne: false
+            referencedRelation: "AccountManagers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ScorecardTargets: {
         Row: {
           account_manager_uuid: string
@@ -2974,6 +3018,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_am_uuid_for_user: { Args: { p_user_uuid: string }; Returns: string }
       get_current_account_manager_id: { Args: never; Returns: string }
       get_current_driver_id: { Args: never; Returns: string }
       get_current_user_uuid: { Args: never; Returns: string }
@@ -2989,6 +3034,10 @@ export type Database = {
       }
       recompute_maintenance_cost_per_year_bucket: {
         Args: { p_year: number }
+        Returns: undefined
+      }
+      recompute_sales_scorecard_bucket: {
+        Args: { p_am: string; p_year: number }
         Returns: undefined
       }
     }
