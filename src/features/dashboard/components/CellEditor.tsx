@@ -151,7 +151,6 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       project_number: null,
       setup_required: false,
       teardown_required: false,
-      created_by_user_uuid: null,
     };
 
     onWorkTrackerOpen?.(workTracker);
