@@ -38,6 +38,42 @@ export type Database = {
           },
         ]
       }
+      AccountManagerZones: {
+        Row: {
+          account_manager_uuid: string
+          created_at: string
+          id: string
+          zone_uuid: string
+        }
+        Insert: {
+          account_manager_uuid: string
+          created_at?: string
+          id?: string
+          zone_uuid: string
+        }
+        Update: {
+          account_manager_uuid?: string
+          created_at?: string
+          id?: string
+          zone_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accountmanagerzones_am_uuid_fkey"
+            columns: ["account_manager_uuid"]
+            isOneToOne: false
+            referencedRelation: "AccountManagers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accountmanagerzones_zone_uuid_fkey"
+            columns: ["zone_uuid"]
+            isOneToOne: false
+            referencedRelation: "Zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Addresses: {
         Row: {
           city: string
@@ -208,6 +244,7 @@ export type Database = {
           vin_number: string | null
           winter_account_manager_uuid: string | null
           winter_home_base_uuid: string | null
+          zone_uuid: string | null
         }
         Insert: {
           bleacher_number: number
@@ -237,6 +274,7 @@ export type Database = {
           vin_number?: string | null
           winter_account_manager_uuid?: string | null
           winter_home_base_uuid?: string | null
+          zone_uuid?: string | null
         }
         Update: {
           bleacher_number?: number
@@ -266,6 +304,7 @@ export type Database = {
           vin_number?: string | null
           winter_account_manager_uuid?: string | null
           winter_home_base_uuid?: string | null
+          zone_uuid?: string | null
         }
         Relationships: [
           {
@@ -294,6 +333,13 @@ export type Database = {
             columns: ["winter_home_base_uuid"]
             isOneToOne: false
             referencedRelation: "HomeBases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Bleachers_zone_uuid_fkey"
+            columns: ["zone_uuid"]
+            isOneToOne: false
+            referencedRelation: "Zones"
             referencedColumns: ["id"]
           },
         ]
@@ -929,6 +975,42 @@ export type Database = {
             columns: ["driver_uuid"]
             isOneToOne: false
             referencedRelation: "Drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      DriverZones: {
+        Row: {
+          created_at: string
+          driver_uuid: string
+          id: string
+          zone_uuid: string
+        }
+        Insert: {
+          created_at?: string
+          driver_uuid: string
+          id?: string
+          zone_uuid: string
+        }
+        Update: {
+          created_at?: string
+          driver_uuid?: string
+          id?: string
+          zone_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driverzones_driver_uuid_fkey"
+            columns: ["driver_uuid"]
+            isOneToOne: false
+            referencedRelation: "Drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driverzones_zone_uuid_fkey"
+            columns: ["zone_uuid"]
+            isOneToOne: false
+            referencedRelation: "Zones"
             referencedColumns: ["id"]
           },
         ]

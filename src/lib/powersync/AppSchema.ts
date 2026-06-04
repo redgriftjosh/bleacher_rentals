@@ -56,6 +56,7 @@ const BleachersCols = {
   opening_direction: column.text,
   deleted: column.integer,
   nvis_pdf_path: column.text,
+  zone_uuid: column.text,
 } satisfies PowerSyncColsFor<"Bleachers">;
 const Bleachers = new Table(BleachersCols, {
   indexes: {
@@ -63,6 +64,31 @@ const Bleachers = new Table(BleachersCols, {
     winter_account_manager_uuid: ["winter_account_manager_uuid"],
     summer_home_base_uuid: ["summer_home_base_uuid"],
     winter_home_base_uuid: ["winter_home_base_uuid"],
+    zone_uuid: ["zone_uuid"],
+  },
+});
+
+const AccountManagerZonesCols = {
+  created_at: column.text,
+  account_manager_uuid: column.text,
+  zone_uuid: column.text,
+} satisfies PowerSyncColsFor<"AccountManagerZones">;
+const AccountManagerZones = new Table(AccountManagerZonesCols, {
+  indexes: {
+    account_manager_uuid: ["account_manager_uuid"],
+    zone_uuid: ["zone_uuid"],
+  },
+});
+
+const DriverZonesCols = {
+  created_at: column.text,
+  driver_uuid: column.text,
+  zone_uuid: column.text,
+} satisfies PowerSyncColsFor<"DriverZones">;
+const DriverZones = new Table(DriverZonesCols, {
+  indexes: {
+    driver_uuid: ["driver_uuid"],
+    zone_uuid: ["zone_uuid"],
   },
 });
 
@@ -784,6 +810,7 @@ const SalesOffices = new Table(SalesOfficesCols, {
 export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
+  AccountManagerZones,
   Developers,
   DashboardFilterSettings,
   DriverUnavailability,
@@ -796,6 +823,7 @@ export const AppSchema = new Schema({
   Events,
   HomeBases,
   Drivers,
+  DriverZones,
   DamageReports,
   InspectionQuestions,
   MaintenanceEvents,
@@ -842,10 +870,12 @@ export type PowerSyncDB = (typeof AppSchema)["types"];
 export type BlocksRecord = PowerSyncDB["Blocks"];
 export type AddressRecord = PowerSyncDB["Addresses"];
 export type AccountManagerRecord = PowerSyncDB["AccountManagers"];
+export type AccountManagerZonesRecord = PowerSyncDB["AccountManagerZones"];
 export type DeveloperRecord = PowerSyncDB["Developers"];
 export type DashboardFilterSettingsRecord = PowerSyncDB["DashboardFilterSettings"];
 export type TaskRecord = PowerSyncDB["Tasks"];
 export type DriverRecord = PowerSyncDB["Drivers"];
+export type DriverZonesRecord = PowerSyncDB["DriverZones"];
 export type UserRecord = PowerSyncDB["Users"];
 export type UserStatusRecord = PowerSyncDB["UserStatuses"];
 export type HomeBasesRecord = PowerSyncDB["HomeBases"];
