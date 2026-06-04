@@ -42,7 +42,8 @@ export async function createQuoteEvent(
     event_start: state.eventStart || null!,
     event_end: state.eventEnd || null!,
     address_uuid: addressUuid,
-    event_status: "quoted",
+    event_status: state.status || "draft",
+    event_type_uuid: state.eventTypeId || null,
     lenient: false,
     must_be_clean: false,
     notes: state.clientFacingNotes || null,
@@ -67,7 +68,27 @@ export async function createQuoteEvent(
 
   const eventUuid = eventData!.id;
 
-  // 3. Sync payment installments
+  // 3. Insert line items
+  if (state.lineItems.length > 0) {
+    const lineItemRows = state.lineItems.map((li) => ({
+      event_uuid: eventUuid,
+      header: li.label,
+      description: null as string | null,
+      bleacher_type_uuid: li.bleacherTypeUuid || null,
+      value_cents: li.category === "discounts" ? li.lineTotalCents : li.unitPriceCents,
+      quantity: li.qty,
+      currency: state.currency,
+      is_template: false,
+    }));
+
+    const { error: lineItemError } = await supabase.from("EventLineItems").insert(lineItemRows);
+
+    if (lineItemError) {
+      console.error("Line items insert failed (quote still saved):", lineItemError.message);
+    }
+  }
+
+  // 4. Sync payment installments
   if (state.paymentInstallments.length > 0) {
     try {
       await syncPaymentInstallments(eventUuid, state.paymentInstallments, state.currency);

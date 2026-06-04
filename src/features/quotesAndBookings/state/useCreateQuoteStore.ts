@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import {
   AddressFields,
   Currency,
@@ -35,6 +36,7 @@ export type CreateQuoteState = {
   eventAddressData: AddressFields | null;
   eventStart: string;
   eventEnd: string;
+  eventTypeId: string | null;
 
   // Currency
   currency: Currency;
@@ -98,6 +100,7 @@ const initialState: CreateQuoteState = {
   eventAddressData: null,
   eventStart: "",
   eventEnd: "",
+  eventTypeId: null,
 
   currency: "USD",
 
@@ -121,22 +124,27 @@ const initialState: CreateQuoteState = {
   isEditPaymentScheduleModalOpen: false,
 };
 
-export const useCreateQuoteStore = create<CreateQuoteState & CreateQuoteActions>((set) => ({
-  ...initialState,
+export const useCreateQuoteStore = create<CreateQuoteState & CreateQuoteActions>()(
+  persist(
+    (set) => ({
+      ...initialState,
 
-  setField: (key, value) => set((state) => ({ ...state, [key]: value })),
+      setField: (key, value) => set((state) => ({ ...state, [key]: value })),
 
-  addLineItem: (item) => set((state) => ({ lineItems: [...state.lineItems, item] })),
+      addLineItem: (item) => set((state) => ({ lineItems: [...state.lineItems, item] })),
 
-  updateLineItem: (id, updates) =>
-    set((state) => ({
-      lineItems: state.lineItems.map((i) => (i.id === id ? { ...i, ...updates } : i)),
-    })),
+      updateLineItem: (id, updates) =>
+        set((state) => ({
+          lineItems: state.lineItems.map((i) => (i.id === id ? { ...i, ...updates } : i)),
+        })),
 
-  removeLineItem: (id) =>
-    set((state) => ({ lineItems: state.lineItems.filter((i) => i.id !== id) })),
+      removeLineItem: (id) =>
+        set((state) => ({ lineItems: state.lineItems.filter((i) => i.id !== id) })),
 
-  setPaymentInstallments: (installments) => set({ paymentInstallments: installments }),
+      setPaymentInstallments: (installments) => set({ paymentInstallments: installments }),
 
-  resetForm: () => set(initialState),
-}));
+      resetForm: () => set(initialState),
+    }),
+    { name: "create-quote-draft" },
+  ),
+);

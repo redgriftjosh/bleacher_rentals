@@ -26,12 +26,12 @@ export function TotalsDisplay() {
       <div className="space-y-2 w-72">
         <div className="flex justify-between text-sm">
           <span className="font-medium">Subtotal:</span>
-          <span className="font-semibold">{formatCurrency(subtotal, currency)}</span>
+          <span className="font-semibold">{formatCurrency(subtotal / 100, currency)}</span>
         </div>
         {discountTotal !== 0 && (
           <div className="flex justify-between text-sm text-red-600">
             <span className="font-medium">Discounts:</span>
-            <span className="font-semibold">{formatCurrency(discountTotal, currency)}</span>
+            <span className="font-semibold">{formatCurrency(discountTotal / 100, currency)}</span>
           </div>
         )}
         <div className="flex justify-between text-sm">
@@ -41,14 +41,14 @@ export function TotalsDisplay() {
           </span>
           <span className="font-semibold">
             {taxPercent !== null
-              ? formatCurrency(taxAmount, currency)
+              ? formatCurrency(taxAmount / 100, currency)
               : <span className="text-gray-400 text-xs">Select office & address</span>
             }
           </span>
         </div>
         <div className="flex justify-between text-base border-t pt-2 mt-1">
           <span className="font-bold">TOTAL</span>
-          <span className="font-bold">{formatCurrency(total, currency)}</span>
+          <span className="font-bold">{formatCurrency(total / 100, currency)}</span>
         </div>
       </div>
     </div>

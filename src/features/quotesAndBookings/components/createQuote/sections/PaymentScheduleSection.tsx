@@ -12,19 +12,17 @@ export function PaymentScheduleSection() {
   const installments = useCreateQuoteStore((s) => s.paymentInstallments);
   const setField = useCreateQuoteStore((s) => s.setField);
 
-  const total = useMemo(() => {
+  const totalCents = useMemo(() => {
     const subtotal = lineItems
       .filter((i) => i.category !== "discounts")
-      .reduce((sum, i) => sum + i.lineTotal, 0);
+      .reduce((sum, i) => sum + i.lineTotalCents, 0);
     const discountTotal = lineItems
       .filter((i) => i.category === "discounts")
-      .reduce((sum, i) => sum + i.lineTotal, 0);
+      .reduce((sum, i) => sum + i.lineTotalCents, 0);
     const taxableAmount = subtotal + discountTotal;
-    const taxAmount = taxableAmount * (DEFAULT_TAX_RATE / 100);
+    const taxAmount = Math.round(taxableAmount * (DEFAULT_TAX_RATE / 100));
     return taxableAmount + taxAmount;
   }, [lineItems]);
-
-  const totalCents = Math.round(total * 100);
   const scheduledCents = installments.reduce((sum, i) => sum + i.amountCents, 0);
   const isBalanced = scheduledCents === totalCents;
 

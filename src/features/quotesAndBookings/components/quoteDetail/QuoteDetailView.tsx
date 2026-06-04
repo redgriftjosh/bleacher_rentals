@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { QuoteDetail, fetchQuoteDetail } from "../../db/fetchQuoteDetail";
+import { softDeleteEvent } from "../../db/softDeleteEvent";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { ContractTab } from "./tabs/ContractTab";
 import { BillingTab } from "./tabs/BillingTab";
 import { FilesTab } from "./tabs/FilesTab";
@@ -16,8 +20,21 @@ function formatCurrency(cents: number | null): string {
 
 export function QuoteDetailView({ eventId }: { eventId: string }) {
   const router = useRouter();
+  const supabase = useClerkSupabaseClient();
   const [quote, setQuote] = useState<QuoteDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this quote? This action can be undone by an admin.")) return;
+    setDeleting(true);
+    const ok = await softDeleteEvent(eventId, supabase);
+    if (ok) {
+      createSuccessToast(["Quote deleted."]);
+      router.push("/quotes-bookings");
+    }
+    setDeleting(false);
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -114,6 +131,13 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
               className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
             >
               Edit
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="px-3 py-1.5 text-sm font-medium text-red-600 border border-red-300 rounded-sm hover:bg-red-50 transition cursor-pointer disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4" />
             </button>
             <button className="text-xs text-gray-500 hover:text-gray-700 transition cursor-pointer underline">
               Add Quote Expiration

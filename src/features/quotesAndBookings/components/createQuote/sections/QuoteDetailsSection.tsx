@@ -6,8 +6,7 @@ import { Dropdown } from "@/components/DropDown";
 import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { useAccountManagers } from "@/features/manageTeam/hooks/useAccountManagers";
-import { Currency } from "../../../types/quoteTypes";
-import { useSalesOffices } from "../../../hooks/useSalesOffices";
+import { useSalesOffices, isCanadianProvince } from "../../../hooks/useSalesOffices";
 
 export function QuoteDetailsSection() {
   const store = useCreateQuoteStore();
@@ -47,16 +46,21 @@ export function QuoteDetailsSection() {
 
   const statusOptions = [
     { label: "Draft", value: "draft" as const },
-    { label: "Sent", value: "sent" as const },
-    { label: "Accepted", value: "accepted" as const },
-    { label: "Declined", value: "declined" as const },
-    { label: "Expired", value: "expired" as const },
+    { label: "Quoted", value: "quoted" as const },
+    { label: "Booked", value: "booked" as const },
+    { label: "Lost", value: "lost" as const },
   ];
 
-  const currencyOptions = [
-    { label: "USD ($)", value: "USD" as Currency },
-    { label: "CAD (C$)", value: "CAD" as Currency },
-  ];
+  // Auto-set currency based on sales office location
+  useEffect(() => {
+    if (!store.salesOfficeId) return;
+    const office = salesOffices.find((o) => o.id === store.salesOfficeId);
+    if (!office) return;
+    const currency = isCanadianProvince(office.stateProvince) ? "CAD" : "USD";
+    if (store.currency !== currency) {
+      store.setField("currency", currency);
+    }
+  }, [store.salesOfficeId, salesOffices]);
 
   return (
     <section>
@@ -93,15 +97,7 @@ export function QuoteDetailsSection() {
           />
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-          <Dropdown
-            options={currencyOptions}
-            selected={store.currency}
-            onSelect={(val) => store.setField("currency", val)}
-          />
-        </div>
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Sales Office</label>
           <Dropdown

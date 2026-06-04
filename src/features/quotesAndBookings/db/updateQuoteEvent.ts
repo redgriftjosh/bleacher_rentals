@@ -63,6 +63,8 @@ export async function updateQuoteEvent(
     event_name: state.eventName,
     event_start: state.eventStart || undefined,
     event_end: state.eventEnd || undefined,
+    event_status: state.status || "draft",
+    event_type_uuid: state.eventTypeId || null,
     notes: state.clientFacingNotes || null,
     internal_notes: state.internalNotes || null,
     external_notes: state.clientFacingNotes || null,
@@ -83,7 +85,28 @@ export async function updateQuoteEvent(
     createErrorToast(["Failed to update quote.", error.message ?? ""]);
   }
 
-  // 3. Sync payment installments
+  // 3. Sync line items (delete old, insert new)
+  if (state.lineItems.length > 0) {
+    await supabase.from("EventLineItems").delete().eq("event_uuid", eventId);
+
+    const lineItemRows = state.lineItems.map((li) => ({
+      event_uuid: eventId,
+      header: li.label,
+      description: null as string | null,
+      bleacher_type_uuid: li.bleacherTypeUuid || null,
+      value_cents: li.category === "discounts" ? li.lineTotalCents : li.unitPriceCents,
+      quantity: li.qty,
+      currency: state.currency,
+      is_template: false,
+    }));
+
+    const { error: lineItemError } = await supabase.from("EventLineItems").insert(lineItemRows);
+    if (lineItemError) {
+      console.error("Line items sync failed (quote still saved):", lineItemError.message);
+    }
+  }
+
+  // 4. Sync payment installments
   try {
     await syncPaymentInstallments(eventId, state.paymentInstallments, state.currency);
   } catch (e) {

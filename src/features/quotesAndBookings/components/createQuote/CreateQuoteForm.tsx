@@ -9,7 +9,7 @@ import { ClientInfoSection } from "./sections/ClientInfoSection";
 import { EventDetailsSection } from "./sections/EventDetailsSection";
 import { LineItemsSection } from "./sections/LineItemsSection";
 import { TotalsDisplay } from "./sections/TotalsDisplay";
-import { PaymentInfoSection } from "./sections/PaymentInfoSection";
+
 import { NotesSection } from "./sections/NotesSection";
 import { PaymentScheduleSection } from "./sections/PaymentScheduleSection";
 import { TermsSection } from "./sections/TermsSection";
@@ -94,6 +94,8 @@ export function CreateQuoteForm() {
   const handleSendQuote = async () => {
     setSaving(true);
     try {
+      // Override status to "quoted" when sending
+      useCreateQuoteStore.getState().setField("status", "quoted");
       const state = useCreateQuoteStore.getState();
       let eventId: string;
       if (isEditing) {
@@ -156,7 +158,6 @@ export function CreateQuoteForm() {
         <LineItemsSection />
         <TotalsDisplay />
 
-        <PaymentInfoSection />
         <PaymentScheduleSection />
         <NotesSection />
         <TermsSection />
@@ -176,7 +177,7 @@ export function CreateQuoteForm() {
             disabled={saving}
             className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {saving ? "Saving..." : isEditing ? "Update Quote" : "Save Draft"}
+            {saving ? "Saving..." : "Save"}
           </button>
           <button
             onClick={handlePreviewPdf}

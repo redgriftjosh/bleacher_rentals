@@ -14,11 +14,11 @@ export function calculateTotals(
 ): TotalsResult {
   const subtotal = lineItems
     .filter((i) => i.category !== "discounts")
-    .reduce((sum, i) => sum + i.lineTotal, 0);
+    .reduce((sum, i) => sum + i.lineTotalCents, 0);
 
   const discountTotal = lineItems
     .filter((i) => i.category === "discounts")
-    .reduce((sum, i) => sum + i.lineTotal, 0);
+    .reduce((sum, i) => sum + i.lineTotalCents, 0);
 
   const taxableAmount = subtotal + discountTotal;
   const effectiveTaxPercent = taxPercent ?? 0;

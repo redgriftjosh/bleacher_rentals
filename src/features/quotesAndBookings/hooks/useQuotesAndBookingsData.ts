@@ -34,6 +34,7 @@ export function useQuotesAndBookingsData(filters: QuotesBookingsFilters) {
         "ct.email as contact_email",
         "co.company_name as company_name",
       ])
+      .where("e.deleted", "=", 0)
       .orderBy("e.created_at", "desc")
       .compile();
   }, []);

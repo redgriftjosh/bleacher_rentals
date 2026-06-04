@@ -1,10 +1,15 @@
 "use client";
 
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
+import { useEventTypes } from "../../../hooks/useEventTypes";
+import { Dropdown } from "@/components/DropDown";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 
 export function EventDetailsSection() {
   const store = useCreateQuoteStore();
+  const { eventTypes } = useEventTypes();
+
+  const eventTypeOptions = eventTypes.map((et) => ({ label: et.name, value: et.id }));
 
   return (
     <section>
@@ -19,6 +24,15 @@ export function EventDetailsSection() {
           onChange={(e) => store.setField("eventName", e.target.value)}
           placeholder="Stadium Concert 2024"
           className="w-full h-[40px] px-3 border rounded text-sm"
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+        <Dropdown
+          options={eventTypeOptions}
+          selected={store.eventTypeId}
+          onSelect={(val) => store.setField("eventTypeId", val)}
+          placeholder="Select event type"
         />
       </div>
       <div className="mb-4">

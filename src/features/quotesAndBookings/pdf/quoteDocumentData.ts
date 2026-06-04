@@ -169,12 +169,17 @@ export async function buildQuoteDocumentData(
     status: pi.status,
   }));
 
-  // 4. Calculate totals
-  const subtotalCents = lineItems.reduce((sum, li) => sum + li.total, 0);
-  const discountsCents = 0; // TODO: separate discount line items
+  // 4. Calculate totals (discount line items have negative value_cents)
+  const subtotalCents = lineItems
+    .filter((li) => li.total >= 0)
+    .reduce((sum, li) => sum + li.total, 0);
+  const discountsCents = lineItems
+    .filter((li) => li.total < 0)
+    .reduce((sum, li) => sum + li.total, 0);
+  const taxableAmount = subtotalCents + discountsCents;
   const taxPercent = 0; // TODO: fetch from QBO or store
-  const taxAmountCents = Math.round(subtotalCents * (taxPercent / 100));
-  const totalCents = subtotalCents + discountsCents + taxAmountCents;
+  const taxAmountCents = Math.round(taxableAmount * (taxPercent / 100));
+  const totalCents = taxableAmount + taxAmountCents;
 
   // 5. Determine currency from first line item or default
   const currency = (lineItemRows?.[0]?.currency as "USD" | "CAD") ?? "USD";

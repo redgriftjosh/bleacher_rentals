@@ -1,16 +1,11 @@
 "use client";
 
-import { X } from "lucide-react";
+import { useEffect } from "react";
+import { X, Lock, Unlock } from "lucide-react";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
-import { BLEACHER_TEMPLATES, RATE_TYPE_LABELS } from "../../../data/mockData";
+import { usePriceLookup } from "../../../hooks/usePriceLookup";
 import { Dropdown } from "@/components/DropDown";
-import { RateType, LineItem, DiscountType } from "../../../types/quoteTypes";
-import { formatCurrency } from "../../../utils/formatCurrency";
-
-const rateOptions = (Object.keys(RATE_TYPE_LABELS) as RateType[]).map((key) => ({
-  label: RATE_TYPE_LABELS[key],
-  value: key,
-}));
+import { LineItem, DiscountType } from "../../../types/quoteTypes";
 
 const discountTypeOptions = [
   { label: "%", value: "percentage" as DiscountType },
@@ -24,42 +19,85 @@ const CATEGORY_LABELS: Record<string, string> = {
   custom_service: "Services",
 };
 
-function recalcLineTotal(item: LineItem, subtotalForDiscounts: number): number {
+function formatCents(cents: number, currency: string): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
+}
+
+function recalcLineTotal(item: LineItem, subtotalCents: number): number {
   if (item.category === "discounts") {
     if (item.discountType === "percentage") {
-      return -(subtotalForDiscounts * (item.discountValue / 100));
+      return -Math.round(subtotalCents * (item.discountValue / 100));
     }
     return -Math.abs(item.discountValue);
   }
-  return item.unitPrice * item.qty * item.days;
+  return item.unitPriceCents * item.qty;
 }
 
 export function LineItemsSection() {
   const lineItems = useCreateQuoteStore((s) => s.lineItems);
   const currency = useCreateQuoteStore((s) => s.currency);
+  const eventTypeId = useCreateQuoteStore((s) => s.eventTypeId);
+  const eventStart = useCreateQuoteStore((s) => s.eventStart);
+  const eventEnd = useCreateQuoteStore((s) => s.eventEnd);
   const updateLineItem = useCreateQuoteStore((s) => s.updateLineItem);
   const removeLineItem = useCreateQuoteStore((s) => s.removeLineItem);
   const setField = useCreateQuoteStore((s) => s.setField);
 
-  const subtotalForDiscounts = lineItems
+  const { lookupPrice } = usePriceLookup();
+
+  // Auto-recalc bleacher prices when event type or dates change
+  useEffect(() => {
+    if (!eventTypeId || !eventStart || !eventEnd) return;
+
+    for (const item of lineItems) {
+      if (item.category !== "bleachers" || !item.bleacherTypeUuid || item.overridePrice) continue;
+
+      const priceCents = lookupPrice(item.bleacherTypeUuid, eventTypeId, eventStart, eventEnd);
+      if (priceCents !== null && priceCents !== item.unitPriceCents) {
+        const updated = { ...item, unitPriceCents: priceCents, lineTotalCents: priceCents * item.qty };
+        updateLineItem(item.id, updated);
+      }
+    }
+  }, [eventTypeId, eventStart, eventEnd]);
+
+  const subtotalCents = lineItems
     .filter((i) => i.category !== "discounts")
-    .reduce((sum, i) => sum + i.unitPrice * i.qty * i.days, 0);
+    .reduce((sum, i) => sum + i.unitPriceCents * i.qty, 0);
 
   const handleUpdate = (id: string, changes: Partial<LineItem>) => {
     const item = lineItems.find((i) => i.id === id);
     if (!item) return;
 
     const updated = { ...item, ...changes };
-
-    if (changes.rateType && item.bleacherType) {
-      const template = BLEACHER_TEMPLATES.find((t) => t.bleacherType === item.bleacherType);
-      if (template) {
-        updated.unitPrice = template.rates[changes.rateType as RateType];
-      }
-    }
-
-    updated.lineTotal = recalcLineTotal(updated, subtotalForDiscounts);
+    updated.lineTotalCents = recalcLineTotal(updated, subtotalCents);
     updateLineItem(id, updated);
+  };
+
+  const togglePriceOverride = (item: LineItem) => {
+    if (item.overridePrice) {
+      // Unlocking — try to restore price from matrix
+      if (item.bleacherTypeUuid && eventTypeId && eventStart && eventEnd) {
+        const priceCents = lookupPrice(item.bleacherTypeUuid, eventTypeId, eventStart, eventEnd);
+        if (priceCents !== null) {
+          const updated = {
+            ...item,
+            overridePrice: false,
+            unitPriceCents: priceCents,
+            lineTotalCents: priceCents * item.qty,
+          };
+          updateLineItem(item.id, updated);
+          return;
+        }
+      }
+      handleUpdate(item.id, { overridePrice: false });
+    } else {
+      handleUpdate(item.id, { overridePrice: true });
+    }
   };
 
   const grouped = lineItems.reduce(
@@ -101,15 +139,14 @@ export function LineItemsSection() {
                       {cat === "bleachers" && (
                         <>
                           <th className="pb-2 font-medium w-16 text-center">Qty</th>
-                          <th className="pb-2 font-medium w-16 text-center">Days</th>
-                          <th className="pb-2 font-medium w-28">Rate Type</th>
-                          <th className="pb-2 font-medium w-24 text-right">Unit Price</th>
+                          <th className="pb-2 font-medium w-28 text-right">Unit Price</th>
+                          <th className="pb-2 w-8"></th>
                         </>
                       )}
                       {(cat === "logistics" || cat === "custom_service") && (
                         <>
                           <th className="pb-2 font-medium w-16 text-center">Qty</th>
-                          <th className="pb-2 font-medium w-24 text-right">Unit Price</th>
+                          <th className="pb-2 font-medium w-28 text-right">Unit Price</th>
                         </>
                       )}
                       {cat === "discounts" && (
@@ -142,40 +179,48 @@ export function LineItemsSection() {
                                 min={1}
                                 value={item.qty}
                                 onChange={(e) =>
-                                  handleUpdate(item.id, { qty: Math.max(1, parseInt(e.target.value) || 1) })
+                                  handleUpdate(item.id, {
+                                    qty: Math.max(1, parseInt(e.target.value) || 1),
+                                  })
                                 }
                                 className="w-full h-8 px-2 border rounded text-sm text-center"
-                              />
-                            </td>
-                            <td className="py-2 px-1">
-                              <input
-                                type="number"
-                                min={1}
-                                value={item.days}
-                                onChange={(e) =>
-                                  handleUpdate(item.id, { days: Math.max(1, parseInt(e.target.value) || 1) })
-                                }
-                                className="w-full h-8 px-2 border rounded text-sm text-center"
-                              />
-                            </td>
-                            <td className="py-2 px-1">
-                              <Dropdown
-                                options={rateOptions}
-                                selected={item.rateType}
-                                onSelect={(val) => handleUpdate(item.id, { rateType: val })}
                               />
                             </td>
                             <td className="py-2 px-1">
                               <input
                                 type="number"
                                 min={0}
-                                step={0.01}
-                                value={item.unitPrice}
+                                step={1}
+                                value={item.unitPriceCents / 100}
+                                disabled={!item.overridePrice}
                                 onChange={(e) =>
-                                  handleUpdate(item.id, { unitPrice: parseFloat(e.target.value) || 0 })
+                                  handleUpdate(item.id, {
+                                    unitPriceCents: Math.round(
+                                      (parseFloat(e.target.value) || 0) * 100,
+                                    ),
+                                  })
                                 }
-                                className="w-full h-8 px-2 border rounded text-sm text-right"
+                                className={`w-full h-8 px-2 border rounded text-sm text-right ${
+                                  !item.overridePrice ? "bg-gray-50 text-gray-500" : ""
+                                }`}
                               />
+                            </td>
+                            <td className="py-2 px-1">
+                              <button
+                                onClick={() => togglePriceOverride(item)}
+                                className="text-gray-400 hover:text-gray-600 transition cursor-pointer"
+                                title={
+                                  item.overridePrice
+                                    ? "Unlock: restore price from matrix"
+                                    : "Lock: manually override price"
+                                }
+                              >
+                                {item.overridePrice ? (
+                                  <Lock className="w-4 h-4 text-amber-500" />
+                                ) : (
+                                  <Unlock className="w-4 h-4" />
+                                )}
+                              </button>
                             </td>
                           </>
                         )}
@@ -188,7 +233,9 @@ export function LineItemsSection() {
                                 min={1}
                                 value={item.qty}
                                 onChange={(e) =>
-                                  handleUpdate(item.id, { qty: Math.max(1, parseInt(e.target.value) || 1) })
+                                  handleUpdate(item.id, {
+                                    qty: Math.max(1, parseInt(e.target.value) || 1),
+                                  })
                                 }
                                 className="w-full h-8 px-2 border rounded text-sm text-center"
                               />
@@ -197,10 +244,14 @@ export function LineItemsSection() {
                               <input
                                 type="number"
                                 min={0}
-                                step={0.01}
-                                value={item.unitPrice}
+                                step={1}
+                                value={item.unitPriceCents / 100}
                                 onChange={(e) =>
-                                  handleUpdate(item.id, { unitPrice: parseFloat(e.target.value) || 0 })
+                                  handleUpdate(item.id, {
+                                    unitPriceCents: Math.round(
+                                      (parseFloat(e.target.value) || 0) * 100,
+                                    ),
+                                  })
                                 }
                                 className="w-full h-8 px-2 border rounded text-sm text-right"
                               />
@@ -221,11 +272,18 @@ export function LineItemsSection() {
                               <input
                                 type="number"
                                 min={0}
-                                step={0.01}
-                                value={item.discountValue}
-                                onChange={(e) =>
-                                  handleUpdate(item.id, { discountValue: parseFloat(e.target.value) || 0 })
+                                step={item.discountType === "percentage" ? 1 : 100}
+                                value={
+                                  item.discountType === "percentage"
+                                    ? item.discountValue
+                                    : item.discountValue / 100
                                 }
+                                onChange={(e) => {
+                                  const raw = parseFloat(e.target.value) || 0;
+                                  const value =
+                                    item.discountType === "percentage" ? raw : Math.round(raw * 100);
+                                  handleUpdate(item.id, { discountValue: value });
+                                }}
                                 className="w-full h-8 px-2 border rounded text-sm text-right"
                               />
                             </td>
@@ -233,7 +291,7 @@ export function LineItemsSection() {
                         )}
 
                         <td className="py-2 pl-2 text-right font-medium whitespace-nowrap">
-                          {formatCurrency(item.lineTotal, currency)}
+                          {formatCents(item.lineTotalCents, currency)}
                         </td>
                         <td className="py-2 text-center">
                           <button

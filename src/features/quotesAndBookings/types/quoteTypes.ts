@@ -1,10 +1,6 @@
-export type RateType = "rural" | "city" | "corporate";
-
-export type BleacherType = "7_row" | "10_row" | "15_row";
-
 export type PaymentMethod = "credit_card" | "physical_check" | "wire_ach" | "cash" | null;
 
-export type QuoteStatus = "draft" | "sent" | "accepted" | "declined" | "expired";
+export type QuoteStatus = "draft" | "quoted" | "booked" | "lost";
 
 export type LineItemCategory = "bleachers" | "discounts" | "logistics" | "custom_service";
 
@@ -16,12 +12,10 @@ export type LineItem = {
   id: string;
   category: LineItemCategory;
   label: string;
-  bleacherType: BleacherType | null;
+  bleacherTypeUuid: string | null;
   qty: number;
-  days: number;
-  rateType: RateType;
-  unitPrice: number;
-  lineTotal: number;
+  unitPriceCents: number;
+  lineTotalCents: number;
   overridePrice: boolean;
   discountType: DiscountType;
   discountValue: number;
@@ -67,9 +61,15 @@ export type PaymentInstallment = {
   status: PaymentInstallmentStatus;
 };
 
-export type LineItemTemplate = {
-  bleacherType: BleacherType;
+export type DiscountTemplate = {
+  id: string;
   label: string;
-  seats: number;
-  rates: Record<RateType, number>;
+  defaultType: DiscountType;
+  defaultValue: number;
+};
+
+export type ServiceTemplate = {
+  id: string;
+  label: string;
+  defaultPriceCents: number;
 };

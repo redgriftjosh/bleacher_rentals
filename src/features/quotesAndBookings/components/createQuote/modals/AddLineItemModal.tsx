@@ -8,36 +8,59 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
+import { useBleacherTypes } from "../../../hooks/useBleacherTypes";
+import { usePriceLookup } from "../../../hooks/usePriceLookup";
 import {
-  BLEACHER_TEMPLATES,
   DISCOUNT_TEMPLATES,
   LOGISTICS_TEMPLATES,
   CUSTOM_SERVICE_TEMPLATES,
 } from "../../../data/mockData";
-import { LineItem, RateType } from "../../../types/quoteTypes";
-import { formatCurrency } from "../../../utils/formatCurrency";
+import { LineItem } from "../../../types/quoteTypes";
+
+function formatCents(cents: number, currency: string): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
 
 export function AddLineItemModal() {
   const isOpen = useCreateQuoteStore((s) => s.isAddLineItemModalOpen);
   const currency = useCreateQuoteStore((s) => s.currency);
+  const eventTypeId = useCreateQuoteStore((s) => s.eventTypeId);
+  const eventStart = useCreateQuoteStore((s) => s.eventStart);
+  const eventEnd = useCreateQuoteStore((s) => s.eventEnd);
+  const lineItems = useCreateQuoteStore((s) => s.lineItems);
   const setField = useCreateQuoteStore((s) => s.setField);
   const addLineItem = useCreateQuoteStore((s) => s.addLineItem);
 
+  const { bleacherTypes } = useBleacherTypes();
+
+  const subtotalCents = lineItems
+    .filter((i) => i.category !== "discounts")
+    .reduce((sum, i) => sum + i.unitPriceCents * i.qty, 0);
+  const { lookupPrice, findDuration } = usePriceLookup();
+
   const close = () => setField("isAddLineItemModalOpen", false);
 
-  const addBleacher = (template: (typeof BLEACHER_TEMPLATES)[number]) => {
-    const defaultRate: RateType = "city";
+  const canLookupPrice = !!eventTypeId && !!eventStart && !!eventEnd;
+  const duration = eventStart && eventEnd ? findDuration(eventStart, eventEnd) : null;
+
+  const addBleacher = (bt: { id: string; name: string }) => {
+    const priceCents =
+      canLookupPrice ? lookupPrice(bt.id, eventTypeId!, eventStart, eventEnd) : null;
+
     const item: LineItem = {
       id: crypto.randomUUID(),
       category: "bleachers",
-      label: template.label,
-      bleacherType: template.bleacherType,
+      label: bt.name,
+      bleacherTypeUuid: bt.id,
       qty: 1,
-      days: 1,
-      rateType: defaultRate,
-      unitPrice: template.rates[defaultRate],
-      lineTotal: template.rates[defaultRate],
-      overridePrice: false,
+      unitPriceCents: priceCents ?? 0,
+      lineTotalCents: priceCents ?? 0,
+      overridePrice: priceCents === null,
       discountType: "percentage",
       discountValue: 0,
     };
@@ -46,54 +69,41 @@ export function AddLineItemModal() {
   };
 
   const addDiscount = (template: (typeof DISCOUNT_TEMPLATES)[number]) => {
+    let lineTotalCents = 0;
+    if (template.defaultType === "percentage" && template.defaultValue > 0) {
+      lineTotalCents = -Math.round(subtotalCents * (template.defaultValue / 100));
+    } else if (template.defaultType === "fixed" && template.defaultValue > 0) {
+      lineTotalCents = -Math.abs(template.defaultValue);
+    }
+
     const item: LineItem = {
       id: crypto.randomUUID(),
       category: "discounts",
       label: template.label,
-      bleacherType: null,
+      bleacherTypeUuid: null,
       qty: 1,
-      days: 1,
-      rateType: "city",
-      unitPrice: 0,
-      lineTotal: 0,
+      unitPriceCents: 0,
+      lineTotalCents,
       overridePrice: false,
-      discountType: template.defaultPercent > 0 ? "percentage" : "fixed",
-      discountValue: template.defaultPercent,
+      discountType: template.defaultType,
+      discountValue: template.defaultValue,
     };
     addLineItem(item);
     close();
   };
 
-  const addLogistics = (template: (typeof LOGISTICS_TEMPLATES)[number]) => {
+  const addService = (
+    category: "logistics" | "custom_service",
+    template: (typeof LOGISTICS_TEMPLATES)[number],
+  ) => {
     const item: LineItem = {
       id: crypto.randomUUID(),
-      category: "logistics",
+      category,
       label: template.label,
-      bleacherType: null,
+      bleacherTypeUuid: null,
       qty: 1,
-      days: 1,
-      rateType: "city",
-      unitPrice: template.defaultPrice,
-      lineTotal: template.defaultPrice,
-      overridePrice: false,
-      discountType: "percentage",
-      discountValue: 0,
-    };
-    addLineItem(item);
-    close();
-  };
-
-  const addCustomService = (template: (typeof CUSTOM_SERVICE_TEMPLATES)[number]) => {
-    const item: LineItem = {
-      id: crypto.randomUUID(),
-      category: "custom_service",
-      label: template.label,
-      bleacherType: null,
-      qty: 1,
-      days: 1,
-      rateType: "city",
-      unitPrice: template.defaultPrice,
-      lineTotal: template.defaultPrice,
+      unitPriceCents: template.defaultPriceCents,
+      lineTotalCents: template.defaultPriceCents,
       overridePrice: false,
       discountType: "percentage",
       discountValue: 0,
@@ -122,24 +132,51 @@ export function AddLineItemModal() {
           </TabsList>
 
           <TabsContent value="bleachers">
+            {!canLookupPrice && (
+              <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded p-2 mt-2">
+                Set event type and dates to see prices from the pricing matrix.
+              </p>
+            )}
             <div className="space-y-2 mt-2">
-              {BLEACHER_TEMPLATES.map((t) => (
-                <button
-                  key={t.bleacherType}
-                  onClick={() => addBleacher(t)}
-                  className="w-full flex items-center justify-between p-3 border rounded hover:bg-gray-50 transition cursor-pointer text-left"
-                >
-                  <div>
-                    <div className="font-medium text-sm">{t.label}</div>
-                    <div className="text-xs text-gray-500">{t.seats} seats</div>
-                  </div>
-                  <div className="text-right text-xs text-gray-500">
-                    <div>Rural: {formatCurrency(t.rates.rural, currency)}</div>
-                    <div>City: {formatCurrency(t.rates.city, currency)}</div>
-                    <div>Corporate: {formatCurrency(t.rates.corporate, currency)}</div>
-                  </div>
-                </button>
-              ))}
+              {bleacherTypes.map((bt) => {
+                const priceCents = canLookupPrice
+                  ? lookupPrice(bt.id, eventTypeId!, eventStart, eventEnd)
+                  : null;
+
+                return (
+                  <button
+                    key={bt.id}
+                    onClick={() => addBleacher(bt)}
+                    className="w-full flex items-center justify-between p-3 border rounded hover:bg-gray-50 transition cursor-pointer text-left"
+                  >
+                    <div>
+                      <div className="font-medium text-sm">{bt.name}</div>
+                      <div className="text-xs text-gray-500">{bt.rowCount} rows</div>
+                    </div>
+                    <div className="text-right text-xs text-gray-500">
+                      {priceCents !== null ? (
+                        <div>
+                          <span className="font-medium text-gray-700">
+                            {formatCents(priceCents, currency)}
+                          </span>
+                          {duration && (
+                            <span className="ml-1 text-gray-400">/ {duration.name}</span>
+                          )}
+                        </div>
+                      ) : canLookupPrice ? (
+                        <span className="text-amber-500">No price set</span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+              {bleacherTypes.length === 0 && (
+                <p className="text-sm text-gray-400 text-center py-4">
+                  No bleacher types found in the database.
+                </p>
+              )}
             </div>
           </TabsContent>
 
@@ -152,9 +189,13 @@ export function AddLineItemModal() {
                   className="w-full flex items-center justify-between p-3 border rounded hover:bg-gray-50 transition cursor-pointer text-left"
                 >
                   <div className="font-medium text-sm">{t.label}</div>
-                  {t.defaultPercent > 0 && (
-                    <div className="text-xs text-gray-500">Default: {t.defaultPercent}%</div>
-                  )}
+                  <div className="text-xs text-gray-500">
+                    {t.defaultValue > 0
+                      ? t.defaultType === "percentage"
+                        ? `${t.defaultValue}%`
+                        : formatCents(t.defaultValue, currency)
+                      : "Custom"}
+                  </div>
                 </button>
               ))}
             </div>
@@ -165,11 +206,15 @@ export function AddLineItemModal() {
               {LOGISTICS_TEMPLATES.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => addLogistics(t)}
+                  onClick={() => addService("logistics", t)}
                   className="w-full flex items-center justify-between p-3 border rounded hover:bg-gray-50 transition cursor-pointer text-left"
                 >
                   <div className="font-medium text-sm">{t.label}</div>
-                  <div className="text-xs text-gray-500">{formatCurrency(t.defaultPrice, currency)}</div>
+                  <div className="text-xs text-gray-500">
+                    {t.defaultPriceCents > 0
+                      ? formatCents(t.defaultPriceCents, currency)
+                      : "Enter price"}
+                  </div>
                 </button>
               ))}
             </div>
@@ -180,13 +225,15 @@ export function AddLineItemModal() {
               {CUSTOM_SERVICE_TEMPLATES.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => addCustomService(t)}
+                  onClick={() => addService("custom_service", t)}
                   className="w-full flex items-center justify-between p-3 border rounded hover:bg-gray-50 transition cursor-pointer text-left"
                 >
                   <div className="font-medium text-sm">{t.label}</div>
-                  {t.defaultPrice > 0 && (
-                    <div className="text-xs text-gray-500">{formatCurrency(t.defaultPrice, currency)}</div>
-                  )}
+                  <div className="text-xs text-gray-500">
+                    {t.defaultPriceCents > 0
+                      ? formatCents(t.defaultPriceCents, currency)
+                      : "Enter price"}
+                  </div>
                 </button>
               ))}
             </div>

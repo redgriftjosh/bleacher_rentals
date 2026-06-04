@@ -19,6 +19,7 @@ export async function loadQuoteIntoStore(eventId: string): Promise<string | null
   store.setField("eventName", data.eventName ?? "");
   store.setField("eventStart", data.eventStart ?? "");
   store.setField("eventEnd", data.eventEnd ?? "");
+  store.setField("eventTypeId", data.eventTypeUuid ?? null);
   store.setField("clientFacingNotes", data.externalNotes ?? data.notes ?? "");
   store.setField("internalNotes", data.internalNotes ?? "");
 

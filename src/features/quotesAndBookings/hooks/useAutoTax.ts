@@ -24,7 +24,7 @@ export function useAutoTax() {
 
   const subtotal = lineItems
     .filter((i) => i.category !== "discounts")
-    .reduce((sum, i) => sum + i.lineTotal, 0);
+    .reduce((sum, i) => sum + i.lineTotalCents, 0);
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -54,7 +54,7 @@ export function useAutoTax() {
         const result = await fetchTaxPercent({
           connectionId: office.quickbookUuid!,
           address: eventAddressData,
-          subtotal: subtotal > 0 ? subtotal : 100,
+          subtotal: subtotal > 0 ? subtotal / 100 : 100,
         });
 
         if (result) {
