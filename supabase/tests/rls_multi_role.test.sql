@@ -513,12 +513,12 @@ BEGIN
       WHERE am.user_uuid = user_am AND am.is_active = true;
 
     -- Create events as postgres (bypass RLS)
-    INSERT INTO public."Events" (event_name, event_start, event_end, lenient, booked, must_be_clean, created_by_user_uuid)
-    VALUES ('AM Own Event', '2026-07-01', '2026-07-01', false, false, false, user_am)
+    INSERT INTO public."Events" (event_name, event_start, event_end, lenient, must_be_clean, created_by_user_uuid)
+    VALUES ('AM Own Event', '2026-07-01', '2026-07-01', false, false, user_am)
     RETURNING id INTO event_own;
 
-    INSERT INTO public."Events" (event_name, event_start, event_end, lenient, booked, must_be_clean, created_by_user_uuid)
-    VALUES ('Other AM Event', '2026-07-02', '2026-07-02', false, false, false, user_admin_all)
+    INSERT INTO public."Events" (event_name, event_start, event_end, lenient, must_be_clean, created_by_user_uuid)
+    VALUES ('Other AM Event', '2026-07-02', '2026-07-02', false, false, user_admin_all)
     RETURNING id INTO event_other;
 
     -- Switch to authenticated role for RLS tests
@@ -532,14 +532,14 @@ BEGIN
     RAISE NOTICE 'TEST G1 (AM → Events SELECT all) ✓';
 
     -- TEST G2: AM CAN insert event with self as owner
-    INSERT INTO public."Events" (event_name, event_start, event_end, lenient, booked, must_be_clean, created_by_user_uuid)
-    VALUES ('AM New Event', '2026-08-01', '2026-08-01', false, false, false, user_am);
+    INSERT INTO public."Events" (event_name, event_start, event_end, lenient, must_be_clean, created_by_user_uuid)
+    VALUES ('AM New Event', '2026-08-01', '2026-08-01', false, false, user_am);
     RAISE NOTICE 'TEST G2 (AM → Events INSERT own) ✓';
 
     -- TEST G3: AM CANNOT insert event with other user as owner
     BEGIN
-      INSERT INTO public."Events" (event_name, event_start, event_end, lenient, booked, must_be_clean, created_by_user_uuid)
-      VALUES ('Fake Event', '2026-09-01', '2026-09-01', false, false, false, user_admin);
+      INSERT INTO public."Events" (event_name, event_start, event_end, lenient, must_be_clean, created_by_user_uuid)
+      VALUES ('Fake Event', '2026-09-01', '2026-09-01', false, false, user_admin);
       ASSERT false, 'G3 AM insert event for other should have failed';
     EXCEPTION WHEN insufficient_privilege THEN
       RAISE NOTICE 'TEST G3 (AM → Events INSERT for other blocked) ✓';
@@ -564,8 +564,8 @@ BEGIN
     DECLARE
       event_to_delete UUID;
     BEGIN
-      INSERT INTO public."Events" (event_name, event_start, event_end, lenient, booked, must_be_clean, created_by_user_uuid)
-      VALUES ('To Delete', '2026-10-01', '2026-10-01', false, false, false, user_am)
+      INSERT INTO public."Events" (event_name, event_start, event_end, lenient, must_be_clean, created_by_user_uuid)
+      VALUES ('To Delete', '2026-10-01', '2026-10-01', false, false, user_am)
       RETURNING id INTO event_to_delete;
 
       DELETE FROM public."Events" WHERE id = event_to_delete;
@@ -595,8 +595,8 @@ BEGIN
       event_admin_del UUID;
     BEGIN
       RESET ROLE;
-      INSERT INTO public."Events" (event_name, event_start, event_end, lenient, booked, must_be_clean, created_by_user_uuid)
-      VALUES ('Admin Del', '2026-11-01', '2026-11-01', false, false, false, user_admin)
+      INSERT INTO public."Events" (event_name, event_start, event_end, lenient, must_be_clean, created_by_user_uuid)
+      VALUES ('Admin Del', '2026-11-01', '2026-11-01', false, false, user_admin)
       RETURNING id INTO event_admin_del;
       SET LOCAL ROLE authenticated;
       PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
@@ -617,8 +617,8 @@ BEGIN
 
     -- TEST G11: Viewer CANNOT insert events
     BEGIN
-      INSERT INTO public."Events" (event_name, event_start, event_end, lenient, booked, must_be_clean, created_by_user_uuid)
-      VALUES ('Viewer Event', '2026-12-01', '2026-12-01', false, false, false, user_viewer);
+      INSERT INTO public."Events" (event_name, event_start, event_end, lenient, must_be_clean, created_by_user_uuid)
+      VALUES ('Viewer Event', '2026-12-01', '2026-12-01', false, false, user_viewer);
       ASSERT false, 'G11 viewer insert event should have failed';
     EXCEPTION WHEN insufficient_privilege THEN
       RAISE NOTICE 'TEST G11 (viewer → Events INSERT blocked) ✓';
@@ -1394,8 +1394,8 @@ BEGIN
 
     -- TEST L22: Inactive AM CANNOT insert Events
     BEGIN
-      INSERT INTO public."Events" (event_name, event_start, event_end, lenient, booked, must_be_clean, created_by_user_uuid)
-      VALUES ('Inactive Event', '2026-12-01', '2026-12-01', false, false, false, user_inactive_am);
+      INSERT INTO public."Events" (event_name, event_start, event_end, lenient, must_be_clean, created_by_user_uuid)
+      VALUES ('Inactive Event', '2026-12-01', '2026-12-01', false, false, user_inactive_am);
       ASSERT false, 'L22 inactive AM insert Event should have failed';
     EXCEPTION WHEN insufficient_privilege THEN
       RAISE NOTICE 'TEST L22 (inactive AM → Events INSERT blocked) ✓';

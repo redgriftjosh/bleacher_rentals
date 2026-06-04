@@ -1,7 +1,7 @@
 import { Database } from "../../../database.types";
 import { AddressData } from "../eventConfiguration/state/useCurrentEventStore";
 
-export type EventStatus = "quoted" | "booked" | "lost";
+export type EventStatus = "quoted" | "booked" | "lost" | "draft";
 
 export type EditBlock = {
   key: string;

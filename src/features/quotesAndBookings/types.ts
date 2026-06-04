@@ -9,6 +9,14 @@ export type QuotesBookingsEvent = {
   created_by_user_uuid: string | null;
   account_manager_first_name: string | null;
   account_manager_last_name: string | null;
+  account_manager_email: string | null;
+  address_street: string | null;
+  address_city: string | null;
+  address_state: string | null;
+  contact_first_name: string | null;
+  contact_last_name: string | null;
+  contact_email: string | null;
+  company_name: string | null;
 };
 
 export type QuotesBookingsFilters = {

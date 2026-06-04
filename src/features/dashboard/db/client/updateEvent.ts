@@ -56,7 +56,6 @@ export async function updateEvent(
     seven_row: state.sevenRow,
     ten_row: state.tenRow,
     fifteen_row: state.fifteenRow,
-    booked: state.selectedStatus === "booked",
     event_status: state.selectedStatus,
     contract_revenue_cents: state.contractRevenueCents,
     notes: state.notes,
