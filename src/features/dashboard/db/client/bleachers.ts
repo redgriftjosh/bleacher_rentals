@@ -119,6 +119,7 @@ export async function FetchDashboardBleachers(
         hsl_hue,
         event_status,
         goodshuffle_url,
+        deleted,
         address:Addresses!Events_address_uuid_fkey(
           street
         )
@@ -202,8 +203,8 @@ export async function FetchDashboardBleachers(
     bleacherEvents: (r.bleacher_events ?? [])
       // optional: if you *only* want rows that actually have an event
       .filter((be) => !!be.event)
-      // Exclude events marked as lost from dashboard display
-      .filter((be) => be.event!.event_status !== "lost")
+      // Exclude deleted and lost events from dashboard display
+      .filter((be) => !be.event!.deleted && be.event!.event_status !== "lost")
       .map((be) => ({
         eventUuid: be.event!.id,
         bleacherEventUuid: be.id,

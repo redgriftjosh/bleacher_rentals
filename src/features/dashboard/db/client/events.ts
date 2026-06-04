@@ -76,7 +76,7 @@ export async function FetchDashboardEvents(
       )
       `;
 
-  let builder = supabase.from("Events").select(queryString).neq("event_status", "lost");
+  let builder = supabase.from("Events").select(queryString).neq("event_status", "lost").eq("deleted", false);
   if (opts?.onlyMine) {
     const clerkUserId = opts.clerkUserId ?? null;
     if (clerkUserId) {
@@ -137,7 +137,7 @@ export async function FetchDashboardEvents(
     goodshuffleUrl: e.goodshuffle_url ?? null,
     ownerUserUuid: e.created_by_user_uuid ?? null,
   }));
-  console.log("FetchDashboardEvents events", events);
+  // console.log("FetchDashboardEvents count:", events.length);
 
   // Push into zustand store so Pixi can subscribe live
   try {
