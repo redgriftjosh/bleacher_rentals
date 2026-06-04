@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { AccountManagerCard } from "@/features/salesScorecard/components/AccountManagerCard";
 import { CompactDetailedStatWithGraph } from "@/features/salesScorecard/components/CompactDetailedStatWithGraph";
 import { ScorecardHeader } from "@/features/salesScorecard/components/ScorecardHeader";
@@ -8,7 +9,12 @@ import { useAccountManagers } from "@/features/salesScorecard/hooks/accountManag
 import { useEventData } from "@/features/salesScorecard/hooks/overview/useEventData";
 import { useGrossMarginData } from "@/features/salesScorecard/hooks/overview/useGrossMarginData";
 import { CompactDetailedStatWithSpeedometer } from "@/features/salesScorecard/components/CompactDetailedStatWithSpeedometer";
+import { useSalesScorecardAggregate } from "@/features/salesScorecard/hooks/queries/useSalesScorecardAggregate";
+import { useTargets } from "@/features/salesScorecard/hooks/queries/useTargets";
+
 export default function ScorecardPage() {
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
+
   const quotesSentData = useEventData({
     onlyBooked: false,
     useValue: false,
@@ -45,9 +51,24 @@ export default function ScorecardPage() {
     createdByUserUuid: null,
     accountManagerUuid: null,
   });
-  // const revenueData = useRevenue();
+
   const accountManagers = useAccountManagers();
-  console.log("Test");
+  const thisYearRows = useSalesScorecardAggregate(currentYear);
+  const lastYearRows = useSalesScorecardAggregate(currentYear - 1);
+  const { targets } = useTargets("annually", "quotes", null);
+
+  const thisYearByAm = useMemo(
+    () => new Map(thisYearRows.map((r) => [r.account_manager_uuid, r])),
+    [thisYearRows],
+  );
+  const lastYearByAm = useMemo(
+    () => new Map(lastYearRows.map((r) => [r.account_manager_uuid, r])),
+    [lastYearRows],
+  );
+  const targetByAm = useMemo(
+    () => new Map(targets.map((t) => [t.account_manager_uuid, t])),
+    [targets],
+  );
 
   return (
     <div className="p-4">
@@ -88,15 +109,6 @@ export default function ScorecardPage() {
           lastPeriod={revenueData.lastPeriod}
           chartData={revenueData.chartData}
         />
-        {/* <CompactDetailedStatWithGraph
-          label="Gross Margin"
-          statType="gross-margin"
-          historyHref={`/${PAGE_NAME}/history/gross-margin`}
-          unit="percentage"
-          thisPeriod={grossMarginData.thisPeriod}
-          lastPeriod={grossMarginData.lastPeriod}
-          chartData={grossMarginData.chartData}
-        /> */}
         <CompactDetailedStatWithSpeedometer
           label="Gross Margin"
           statType="gross-margin"
@@ -106,12 +118,15 @@ export default function ScorecardPage() {
           lastPeriod={grossMarginData.lastPeriod}
         />
       </div>
-      {/* <div className="mb-6">
-        <TestingSpeedometer />
-      </div> */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {accountManagers.map((am) => (
-          <AccountManagerCard key={am.accountManagerUuid} accountManager={am} />
+          <AccountManagerCard
+            key={am.accountManagerUuid}
+            accountManager={am}
+            thisYearAggregate={thisYearByAm.get(am.accountManagerUuid)}
+            lastYearAggregate={lastYearByAm.get(am.accountManagerUuid)}
+            target={targetByAm.get(am.accountManagerUuid)}
+          />
         ))}
       </div>
     </div>

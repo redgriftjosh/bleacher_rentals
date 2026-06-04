@@ -1,1 +1,2 @@
-select * from public."BleacherMaintEvents";
+UPDATE public."Users"
+SET expo_push_token = NULL;

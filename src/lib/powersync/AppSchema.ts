@@ -445,6 +445,20 @@ const DriverScorecardStatsPerDriver = new Table(DriverScorecardStatsPerDriverCol
   indexes: { driver_uuid: ["driver_uuid"], year: ["year"] },
 });
 
+const SalesScorecardStatsPerAccountManagerCols = {
+  account_manager_uuid: column.text,
+  year: column.integer,
+  quotes_sent_count: column.integer,
+  sales_count: column.integer,
+  value_of_sales_cents: column.integer,
+  revenue_cents: column.integer,
+  cogs_cents: column.integer,
+  last_updated: column.text,
+} satisfies PowerSyncColsFor<"SalesScorecardStatsPerAccountManager">;
+const SalesScorecardStatsPerAccountManager = new Table(SalesScorecardStatsPerAccountManagerCols, {
+  indexes: { account_manager_uuid: ["account_manager_uuid"], year: ["year"] },
+});
+
 const DriverScoreCardStatsCols = {
   year: column.integer,
   key: column.text,
@@ -809,6 +823,7 @@ export const AppSchema = new Schema({
   WorkTrackerInspections,
   DriverScorecardStatsPerDriver,
   DriverScoreCardStats,
+  SalesScorecardStatsPerAccountManager,
   RoadmapQuarters,
   RoadmapSprints,
   RoadmapFeatures,
@@ -865,6 +880,7 @@ export type MaintenanceEventsRecord = PowerSyncDB["MaintenanceEvents"];
 export type BleacherMaintEventsRecord = PowerSyncDB["BleacherMaintEvents"];
 export type DriverScorecardStatsPerDriverRecord = PowerSyncDB["DriverScorecardStatsPerDriver"];
 export type DriverScoreCardStatsRecord = PowerSyncDB["DriverScoreCardStats"];
+export type SalesScorecardStatsPerAccountManagerRecord = PowerSyncDB["SalesScorecardStatsPerAccountManager"];
 export type RoadmapQuarterRecord = PowerSyncDB["RoadmapQuarters"];
 export type RoadmapSprintRecord = PowerSyncDB["RoadmapSprints"];
 export type RoadmapFeatureRecord = PowerSyncDB["RoadmapFeatures"];

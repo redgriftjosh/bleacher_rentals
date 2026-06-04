@@ -6,107 +6,71 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CompactStatWithRing } from "./CompactStatWithRing";
 import { AccountManagerOption } from "@/features/manageTeam/hooks/useAccountManagers";
 import { PAGE_NAME } from "../constants/nav";
-import { useEventData } from "../hooks/overview/useEventData";
+import { SalesAggregateRow } from "../hooks/queries/useSalesScorecardAggregate";
+import { ScorecardTarget } from "../hooks/queries/useTargets";
 
 type AccountManagerCardProps = {
   accountManager: AccountManagerOption;
+  thisYearAggregate: SalesAggregateRow | undefined;
+  lastYearAggregate: SalesAggregateRow | undefined;
+  target: ScorecardTarget | undefined;
 };
 
-const PLACEHOLDER_STATS = [
-  {
-    title: "Quotes Sent",
-    value: 42,
-    paceDelta: -4,
-    progress: 0.62,
-  },
-  {
-    title: "Quotes Signed",
-    value: 18,
-    paceDelta: -12,
-    progress: 0.38,
-  },
-  {
-    title: "Value Signed",
-    value: 125000,
-    paceDelta: 3,
-    progress: 0.74,
-    isMoney: true,
-  },
-  {
-    title: "Revenue",
-    value: 84000,
-    paceDelta: -2,
-    progress: 0.55,
-    isMoney: true,
-  },
-];
-
-export function AccountManagerCard({ accountManager }: AccountManagerCardProps) {
+export function AccountManagerCard({
+  accountManager,
+  thisYearAggregate,
+  lastYearAggregate,
+  target,
+}: AccountManagerCardProps) {
   const searchParams = useSearchParams();
   const timeRangeParam = searchParams.get("timeRange");
-  const quotesSentData = useEventData({
-    onlyBooked: false,
-    useValue: false,
-    createdByUserUuid: accountManager?.userUuid || null,
-    accountManagerUuid: accountManager.accountManagerUuid,
-    dateField: "created_at",
-    targetType: "quotes",
-  });
-  const quotesSignedData = useEventData({
-    onlyBooked: true,
-    useValue: false,
-    createdByUserUuid: accountManager?.userUuid || null,
-    accountManagerUuid: accountManager.accountManagerUuid,
-    dateField: "booked_at",
-    targetType: "sales",
-  });
-  const valueOfQuotesSignedData = useEventData({
-    onlyBooked: true,
-    useValue: true,
-    createdByUserUuid: accountManager?.userUuid || null,
-    accountManagerUuid: accountManager.accountManagerUuid,
-    dateField: "booked_at",
-    targetType: "value_of_sales",
-  });
-  const revenueData = useEventData({
-    onlyBooked: true,
-    useValue: true,
-    createdByUserUuid: accountManager?.userUuid || null,
-    accountManagerUuid: accountManager.accountManagerUuid,
-    dateField: "event_start",
-    targetType: "value_of_revenue",
-  });
   const manager = accountManager;
   const href = `/${PAGE_NAME}/account-manager/${manager.accountManagerUuid}?timeRange=${timeRangeParam ?? "weekly"}`;
+
+  const thisQuotes = thisYearAggregate?.quotes_sent_count ?? 0;
+  const lastQuotes = lastYearAggregate?.quotes_sent_count ?? 0;
+  const thisSales = thisYearAggregate?.sales_count ?? 0;
+  const lastSales = lastYearAggregate?.sales_count ?? 0;
+  const thisValueCents = thisYearAggregate?.value_of_sales_cents ?? 0;
+  const lastValueCents = lastYearAggregate?.value_of_sales_cents ?? 0;
+  const thisRevenueCents = thisYearAggregate?.revenue_cents ?? 0;
+  const lastRevenueCents = lastYearAggregate?.revenue_cents ?? 0;
+
+  const thisValue = thisValueCents / 100;
+  const lastValue = lastValueCents / 100;
+  const thisRevenue = thisRevenueCents / 100;
+  const lastRevenue = lastRevenueCents / 100;
+
+  const quotesGoal = target?.quotes_annually ?? 0;
+  const salesGoal = target?.sales_annually ?? 0;
+  const valueGoal = (target?.value_of_sales_annually_cents ?? 0) / 100;
+  const revenueGoal = (target?.value_of_revenue_annually_cents ?? 0) / 100;
 
   const stats = [
     {
       title: "Quotes Sent",
-      value: quotesSentData.thisPeriod.current,
-      paceDelta: quotesSentData.thisPeriod.current - quotesSentData.lastPeriod.currentAtSameDay,
-      progress: quotesSentData.thisPeriod.current / quotesSentData.thisPeriod.goal,
+      value: thisQuotes,
+      paceDelta: thisQuotes - lastQuotes,
+      progress: quotesGoal > 0 ? thisQuotes / quotesGoal : 0,
     },
     {
       title: "Quotes Signed",
-      value: quotesSignedData.thisPeriod.current,
-      paceDelta: quotesSignedData.thisPeriod.current - quotesSignedData.lastPeriod.currentAtSameDay,
-      progress: quotesSignedData.thisPeriod.current / quotesSignedData.thisPeriod.goal,
+      value: thisSales,
+      paceDelta: thisSales - lastSales,
+      progress: salesGoal > 0 ? thisSales / salesGoal : 0,
     },
     {
       title: "Value Signed",
-      value: valueOfQuotesSignedData.thisPeriod.current,
-      paceDelta:
-        valueOfQuotesSignedData.thisPeriod.current -
-        valueOfQuotesSignedData.lastPeriod.currentAtSameDay,
-      progress:
-        valueOfQuotesSignedData.thisPeriod.current / valueOfQuotesSignedData.thisPeriod.goal,
+      value: thisValue,
+      paceDelta: thisValue - lastValue,
+      progress: valueGoal > 0 ? thisValue / valueGoal : 0,
       isMoney: true,
     },
     {
       title: "Revenue",
-      value: revenueData.thisPeriod.current,
-      paceDelta: revenueData.thisPeriod.current - revenueData.lastPeriod.currentAtSameDay,
-      progress: revenueData.thisPeriod.current / revenueData.thisPeriod.goal,
+      value: thisRevenue,
+      paceDelta: thisRevenue - lastRevenue,
+      progress: revenueGoal > 0 ? thisRevenue / revenueGoal : 0,
       isMoney: true,
     },
   ];
