@@ -1,4 +1,4 @@
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { requireAuth } from "@/features/userAccess/logic/requireAuth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
 
     const origin = req.nextUrl.origin;
 
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
