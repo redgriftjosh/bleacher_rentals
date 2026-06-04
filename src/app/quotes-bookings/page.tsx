@@ -1,15 +1,17 @@
 "use client";
+import { useState, useMemo } from "react";
 import { DateTime } from "luxon";
+import { Search } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { DataTable, Column, CellText, CellSecondary, CellBadge } from "@/components/DataTable";
-import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
-import { loadEventForModal } from "@/features/eventConfiguration/functions/loadEventForModal";
 import { FilterButton } from "@/features/quotesAndBookings/components/FilterButton";
 import { FilterPanel } from "@/features/quotesAndBookings/components/FilterPanel";
 import { useQuotesAndBookingsFilters } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsFilters";
 import { useQuotesAndBookingsData } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsData";
 import type { QuotesBookingsEvent } from "@/features/quotesAndBookings/types";
+import { searchEvents } from "@/features/quotesAndBookings/utils/searchEvents";
+import { useRouter } from "next/navigation";
 
 function formatCurrency(cents: number | null): string {
   if (cents === null) return "$0.00";
@@ -42,7 +44,6 @@ function capitalizeStatus(status: string | null): string {
 }
 
 export default function QuotesBookingsPage() {
-  const openModal = useCurrentEventStore((s) => s.openModal);
   const {
     filters,
     toggleOpen,
@@ -54,6 +55,14 @@ export default function QuotesBookingsPage() {
   } = useQuotesAndBookingsFilters();
 
   const { data, isLoading, error } = useQuotesAndBookingsData(filters);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const searchedData = useMemo(() => {
+    if (!data) return data;
+    return searchEvents(data, searchQuery);
+  }, [data, searchQuery]);
+
+  const router = useRouter();
 
   const columns: Column<QuotesBookingsEvent>[] = [
     {
@@ -114,7 +123,9 @@ export default function QuotesBookingsPage() {
         action={
           <div className="flex items-center gap-2">
             <FilterButton isOpen={filters.isOpen} onClick={toggleOpen} />
-            <PrimaryButton onClick={openModal}>+ Create Quote</PrimaryButton>
+            <PrimaryButton onClick={() => router.push("/quotes-bookings/new")}>
+              + Create Quote
+            </PrimaryButton>
           </div>
         }
       />
@@ -134,14 +145,25 @@ export default function QuotesBookingsPage() {
         />
       </div>
 
+      <div className="relative mt-4 mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by name, manager, date, amount, address, contact, company..."
+          className="w-full h-[40px] pl-10 pr-4 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-darkBlue"
+        />
+      </div>
+
       <DataTable
         columns={columns}
-        data={data}
+        data={searchedData}
         keyExtractor={(event) => event.id}
         emptyMessage="No events found"
         isLoading={isLoading}
         loadingMessage="Loading events..."
-        onRowClick={(event) => loadEventForModal(event.id)}
+        onRowClick={(event) => router.push(`/quotes-bookings/${event.id}`)}
       />
     </main>
   );

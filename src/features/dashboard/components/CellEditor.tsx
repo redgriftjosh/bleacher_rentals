@@ -121,6 +121,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       bleacher_uuid: bleacherUuid,
       created_at: "",
       updated_at: "",
+      created_by_user_uuid: null,
       date: date,
       status: "draft",
       dropoff_address_uuid: null,
@@ -150,7 +151,6 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       project_number: null,
       setup_required: false,
       teardown_required: false,
-      created_by_user_uuid: null,
     };
 
     onWorkTrackerOpen?.(workTracker);

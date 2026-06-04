@@ -65,7 +65,7 @@ export function SelectUserDropDown<T extends UserOption>({
   };
 
   return (
-    <Popover open={open} onOpenChange={disabled ? undefined : setOpen}>
+    <Popover open={open} onOpenChange={disabled ? undefined : setOpen} modal>
       <PopoverTrigger asChild>
         <Button
           variant="outline"

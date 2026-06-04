@@ -27,6 +27,7 @@ import {
 } from "../../types";
 import { Database, Tables, TablesInsert } from "../../../../../database.types";
 import { calculateEventAlerts, calculateNumDays, checkEventFormRules } from "../../functions";
+import { useDashboardEventsStore } from "../../state/useDashboardEventsStore";
 import {
   buildTripDeletedNotification,
   buildTripStatusNotification,
@@ -115,10 +116,10 @@ export function fetchBleachers() {
               sameDayTeardown: !event.teardown_end, // same logic
               lenient: event.lenient,
               token: "", // not needed or included here
-              selectedStatus: event.event_status ?? (event.booked ? "booked" : "quoted"),
+              selectedStatus: event.event_status,
               notes: event.notes ?? "",
               numDays: calculateNumDays(event.event_start, event.event_end),
-              status: event.event_status ?? (event.booked ? "booked" : "quoted"),
+              status: event.event_status,
               hslHue: event.hsl_hue,
               alerts: relatedAlerts,
               mustBeClean: event.must_be_clean,
@@ -168,7 +169,9 @@ export function fetchDashboardEvents() {
   return useMemo(() => {
     if (!events) return [];
 
-    const dashboardEvents: DashboardEvent[] = events.map((event) => {
+    const activeEvents = events.filter((e) => !e.deleted);
+
+    const dashboardEvents: DashboardEvent[] = activeEvents.map((event) => {
       const address = addresses.find((a) => a.id === event.address_uuid);
       const relatedAlerts = eventAlerts[event.id] || [];
 
@@ -207,10 +210,10 @@ export function fetchDashboardEvents() {
         sameDayTeardown: !event.teardown_end,
         lenient: event.lenient,
         token: "", // unused
-        selectedStatus: event.event_status ?? (event.booked ? "booked" : "quoted"),
+        selectedStatus: (event.event_status ?? "quoted") as Enums<"event_status">,
         notes: event.notes ?? "",
         numDays: calculateNumDays(event.event_start, event.event_end),
-        status: event.event_status ?? (event.booked ? "booked" : "quoted"),
+        status: (event.event_status ?? "quoted") as Enums<"event_status">,
         hslHue: event.hsl_hue,
         alerts: relatedAlerts,
         mustBeClean: event.must_be_clean,
@@ -799,7 +802,6 @@ export async function createEvent(
     ten_row: state.tenRow,
     fifteen_row: state.fifteenRow,
     address_uuid: address_uuid,
-    booked: state.selectedStatus === "booked",
     event_status: state.selectedStatus,
     contract_revenue_cents: state.contractRevenueCents,
     notes: state.notes,
@@ -898,75 +900,35 @@ export async function deleteEvent(
 
   // isUserPermitted(stateProv, user);
 
-  // 1. Find the event to get address_uuid
-  const { data: eventData, error: fetchEventError } = await supabase
+  // Soft delete — mark as deleted instead of removing rows
+  const { error: softDeleteError } = await supabase
     .from("Events")
-    .select("address_uuid")
-    .eq("id", eventUuid)
-    .single();
+    .update({ deleted: true })
+    .eq("id", eventUuid);
 
-  if (fetchEventError || !eventData) {
-    console.error("Failed to fetch event details:", fetchEventError);
-    throw new Error(`Failed to fetch event: ${fetchEventError?.message}`);
-  }
+  // Immediately update local stores so UI updates without waiting for Pusher
+  const currentEvents = useEventsStore.getState().events;
+  useEventsStore.getState().setEvents(
+    currentEvents.map((e) => (e.id === eventUuid ? { ...e, deleted: true } : e)),
+  );
 
-  const address_uuid = eventData.address_uuid;
+  // Remove from dashboard events store (Pixi grid)
+  const dashEvents = useDashboardEventsStore.getState().data;
+  useDashboardEventsStore.getState().setData(
+    dashEvents.filter((e) => e.eventUuid !== eventUuid),
+  );
 
-  // 2. Delete from BleacherEvents
-  const { error: bleacherEventError } = await supabase
-    .from("BleacherEvents")
-    .delete()
-    .eq("event_uuid", eventUuid);
-  // NOTE: ownerUserId not persisted yet; requires schema change to store owner.
-
-  if (bleacherEventError) {
-    console.error("Failed to delete bleacher-event links:", bleacherEventError);
+  if (softDeleteError) {
+    console.error("Failed to delete event:", softDeleteError);
     toast.custom(
       (t) =>
         React.createElement(ErrorToast, {
           id: t,
-          lines: ["Failed to remove event from bleachers.", bleacherEventError.message],
+          lines: ["Failed to delete event.", softDeleteError.message],
         }),
       { duration: 10000 },
     );
-    throw new Error(`Failed to delete bleacher-event links: ${bleacherEventError.message}`);
-  }
-
-  // 3. Delete Event
-  const { error: eventDeleteError } = await supabase.from("Events").delete().eq("id", eventUuid);
-
-  if (eventDeleteError) {
-    console.error("Failed to delete event:", eventDeleteError);
-    toast.custom(
-      (t) =>
-        React.createElement(ErrorToast, {
-          id: t,
-          lines: ["Failed to delete event.", eventDeleteError.message],
-        }),
-      { duration: 10000 },
-    );
-    throw new Error(`Failed to delete event: ${eventDeleteError.message}`);
-  }
-
-  // 4. Delete Address
-  if (address_uuid) {
-    const { error: addressDeleteError } = await supabase
-      .from("Addresses")
-      .delete()
-      .eq("id", address_uuid);
-
-    if (addressDeleteError) {
-      console.error("Failed to delete address:", addressDeleteError);
-      toast.custom(
-        (t) =>
-          React.createElement(ErrorToast, {
-            id: t,
-            lines: ["Failed to delete address.", addressDeleteError.message],
-          }),
-        { duration: 10000 },
-      );
-      // We won't throw here — event and bleacher links are already deleted
-    }
+    throw new Error(`Failed to delete event: ${softDeleteError.message}`);
   }
 
   toast.custom(
@@ -977,5 +939,5 @@ export async function deleteEvent(
       }),
     { duration: 10000 },
   );
-  updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
+  updateDataBase(["Events"]);
 }
