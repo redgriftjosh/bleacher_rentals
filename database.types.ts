@@ -1185,6 +1185,7 @@ export type Database = {
           lenient: boolean
           must_be_clean: boolean
           notes: string | null
+          quote_valid_till: string | null
           sales_office_uuid: string | null
           setup_start: string | null
           seven_row: number | null
@@ -1214,6 +1215,7 @@ export type Database = {
           lenient: boolean
           must_be_clean?: boolean
           notes?: string | null
+          quote_valid_till?: string | null
           sales_office_uuid?: string | null
           setup_start?: string | null
           seven_row?: number | null
@@ -1243,6 +1245,7 @@ export type Database = {
           lenient?: boolean
           must_be_clean?: boolean
           notes?: string | null
+          quote_valid_till?: string | null
           sales_office_uuid?: string | null
           setup_start?: string | null
           seven_row?: number | null

@@ -29,6 +29,7 @@ type Row = {
       hsl_hue: number | null;
       event_status: string | null;
       goodshuffle_url: string | null;
+      deleted: boolean;
       address: { street: string } | null;
     } | null;
   }[];

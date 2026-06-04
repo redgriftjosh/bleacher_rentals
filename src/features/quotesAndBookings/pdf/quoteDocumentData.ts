@@ -115,6 +115,7 @@ export async function buildQuoteDocumentData(
       internal_notes,
       external_notes,
       contract_revenue_cents,
+      quote_valid_till,
       created_at,
       created_by_user_uuid,
       Addresses!Events_address_uuid_fkey (
@@ -191,7 +192,7 @@ export async function buildQuoteDocumentData(
   return {
     quoteNumber: `${eventId}`,
     quoteDate: event.created_at?.split("T")[0] ?? "",
-    validUntil: "", // TODO: store quote_valid_till on Events
+    validUntil: (event as any).quote_valid_till ?? "",
     status: event.event_status ?? "draft",
     currency,
 

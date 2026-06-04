@@ -44,6 +44,7 @@ export async function createQuoteEvent(
     address_uuid: addressUuid,
     event_status: state.status || "draft",
     event_type_uuid: state.eventTypeId || null,
+    quote_valid_till: state.quoteValidTill || null,
     lenient: false,
     must_be_clean: false,
     notes: state.clientFacingNotes || null,

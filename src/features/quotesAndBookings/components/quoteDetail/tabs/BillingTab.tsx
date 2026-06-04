@@ -2,14 +2,14 @@
 
 import { QuoteDetail } from "../../../db/fetchQuoteDetail";
 
-function formatCurrency(cents: number | null): string {
-  if (cents === null) return "$0.00";
-  return `$${(cents / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+function formatCurrency(cents: number): string {
+  const negative = cents < 0;
+  const abs = Math.abs(cents);
+  const str = `$${(abs / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  return negative ? `-${str}` : str;
 }
 
-export function BillingTab({ quote }: { quote: QuoteDetail }) {
-  const contractTotal = quote.contractRevenueCents;
-
+export function BillingTab({ quote, contractTotalCents }: { quote: QuoteDetail; contractTotalCents: number }) {
   return (
     <div className="space-y-6">
       {/* Payment Summary */}
@@ -19,7 +19,7 @@ export function BillingTab({ quote }: { quote: QuoteDetail }) {
           <div className="flex justify-between">
             <span>Contract Total</span>
             <div className="flex items-center gap-2">
-              <span className="font-semibold">{formatCurrency(contractTotal)}</span>
+              <span className="font-semibold">{formatCurrency(contractTotalCents)}</span>
               <span className={`text-xs px-2 py-0.5 rounded ${
                 quote.eventStatus === "booked" ? "bg-green-100 text-green-800" :
                 "bg-yellow-100 text-yellow-800"
@@ -34,7 +34,7 @@ export function BillingTab({ quote }: { quote: QuoteDetail }) {
           </div>
           <div className="flex justify-between text-red-600 border-t pt-2">
             <span className="font-medium">Balance Due</span>
-            <span className="font-bold">{formatCurrency(contractTotal)}</span>
+            <span className="font-bold">{formatCurrency(contractTotalCents)}</span>
           </div>
         </div>
       </div>

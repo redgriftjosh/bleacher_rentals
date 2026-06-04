@@ -65,6 +65,7 @@ export async function updateQuoteEvent(
     event_end: state.eventEnd || undefined,
     event_status: state.status || "draft",
     event_type_uuid: state.eventTypeId || null,
+    quote_valid_till: state.quoteValidTill || null,
     notes: state.clientFacingNotes || null,
     internal_notes: state.internalNotes || null,
     external_notes: state.clientFacingNotes || null,
@@ -76,10 +77,7 @@ export async function updateQuoteEvent(
     updates.address_uuid = addressUuid;
   }
 
-  const { error } = await supabase
-    .from("Events")
-    .update(updates)
-    .eq("id", eventId);
+  const { error } = await supabase.from("Events").update(updates).eq("id", eventId);
 
   if (error) {
     createErrorToast(["Failed to update quote.", error.message ?? ""]);

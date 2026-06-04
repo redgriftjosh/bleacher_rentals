@@ -117,6 +117,7 @@ const EventsCols = {
   external_notes: column.text,
   sales_office_uuid: column.text,
   deleted: column.integer,
+  quote_valid_till: column.text,
 } satisfies PowerSyncColsFor<"Events">;
 const Events = new Table(EventsCols, {
   indexes: {

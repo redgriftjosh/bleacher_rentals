@@ -13,6 +13,7 @@ export type QuoteDetail = {
   externalNotes: string | null;
   contractRevenueCents: number | null;
   eventTypeUuid: string | null;
+  quoteValidTill: string | null;
   bookedAt: string | null;
   createdAt: string;
   address: {
@@ -47,6 +48,7 @@ type Row = {
   external_notes: string | null;
   contract_revenue_cents: number | null;
   event_type_uuid: string | null;
+  quote_valid_till: string | null;
   booked_at: string | null;
   created_at: string;
   address_street: string | null;
@@ -81,6 +83,7 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
       "e.external_notes as external_notes",
       "e.contract_revenue_cents as contract_revenue_cents",
       "e.event_type_uuid as event_type_uuid",
+      "e.quote_valid_till as quote_valid_till",
       "e.booked_at as booked_at",
       "e.created_at as created_at",
       "a.street as address_street",
@@ -117,6 +120,7 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
     externalNotes: r.external_notes,
     contractRevenueCents: r.contract_revenue_cents,
     eventTypeUuid: r.event_type_uuid,
+    quoteValidTill: r.quote_valid_till,
     bookedAt: r.booked_at,
     createdAt: r.created_at,
     address: r.address_street

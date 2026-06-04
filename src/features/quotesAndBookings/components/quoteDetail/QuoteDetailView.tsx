@@ -1,21 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { Trash2, Send } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { QuoteDetail, fetchQuoteDetail } from "../../db/fetchQuoteDetail";
 import { softDeleteEvent } from "../../db/softDeleteEvent";
+import { useEventLineItems } from "../../hooks/useEventLineItems";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
+import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { ContractTab } from "./tabs/ContractTab";
 import { BillingTab } from "./tabs/BillingTab";
 import { FilesTab } from "./tabs/FilesTab";
 import { LogTab } from "./tabs/LogTab";
 
-function formatCurrency(cents: number | null): string {
-  if (cents === null) return "$0.00";
-  return `$${(cents / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+function formatCurrency(cents: number): string {
+  const negative = cents < 0;
+  const abs = Math.abs(cents);
+  const str = `$${(abs / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  return negative ? `-${str}` : str;
 }
 
 export function QuoteDetailView({ eventId }: { eventId: string }) {
@@ -24,6 +28,14 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
   const [quote, setQuote] = useState<QuoteDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  // Line items from PowerSync (reactive)
+  const { lineItems } = useEventLineItems(eventId);
+
+  const contractTotalCents = useMemo(() => {
+    return lineItems.reduce((sum, li) => sum + li.valueCents * li.quantity, 0);
+  }, [lineItems]);
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this quote? This action can be undone by an admin.")) return;
@@ -34,6 +46,38 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
       router.push("/quotes-bookings");
     }
     setDeleting(false);
+  };
+
+  const handleSendToClient = async () => {
+    if (!quote) return;
+
+    const recipientEmail = quote.contact?.email;
+    if (!recipientEmail) {
+      createErrorToast(["No contact email found. Please add a contact with an email address first."]);
+      return;
+    }
+
+    if (!confirm(`Send quote to ${recipientEmail}?`)) return;
+
+    setSending(true);
+    try {
+      const res = await fetch(`/api/quotes/${eventId}/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientEmail }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Failed (${res.status})`);
+      }
+
+      createSuccessToast([`Quote sent to ${recipientEmail}`]);
+    } catch (err: any) {
+      createErrorToast(["Failed to send quote.", err.message ?? ""]);
+    } finally {
+      setSending(false);
+    }
   };
 
   useEffect(() => {
@@ -124,7 +168,7 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
           </TabsList>
 
           <div className="flex items-center gap-3 py-2">
-            <span className="text-sm font-bold">{formatCurrency(quote.contractRevenueCents)}</span>
+            <span className="text-sm font-bold">{formatCurrency(contractTotalCents)}</span>
             <span className="text-xs text-gray-500">Contract Total</span>
             <button
               onClick={() => router.push(`/quotes-bookings/${quote.id}/edit`)}
@@ -139,11 +183,13 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
             >
               <Trash2 className="w-4 h-4" />
             </button>
-            <button className="text-xs text-gray-500 hover:text-gray-700 transition cursor-pointer underline">
-              Add Quote Expiration
-            </button>
-            <button className="px-3 py-1.5 text-sm font-semibold text-white bg-darkBlue rounded-sm hover:bg-lightBlue transition cursor-pointer">
-              Send To Client
+            <button
+              onClick={handleSendToClient}
+              disabled={sending}
+              className="px-3 py-1.5 text-sm font-semibold text-white bg-darkBlue rounded-sm hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+            >
+              <Send className="w-3.5 h-3.5" />
+              {sending ? "Sending..." : "Send To Client"}
             </button>
           </div>
         </div>
@@ -153,7 +199,7 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
             <ContractTab quote={quote} />
           </TabsContent>
           <TabsContent value="billing">
-            <BillingTab quote={quote} />
+            <BillingTab quote={quote} contractTotalCents={contractTotalCents} />
           </TabsContent>
           <TabsContent value="files">
             <FilesTab quoteId={quote.id} />
