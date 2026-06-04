@@ -121,6 +121,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       bleacher_uuid: bleacherUuid,
       created_at: "",
       updated_at: "",
+      created_by_user_uuid: null,
       date: date,
       status: "draft",
       dropoff_address_uuid: null,

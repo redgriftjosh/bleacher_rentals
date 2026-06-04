@@ -102,7 +102,6 @@ const EventsCols = {
   ten_row: column.integer,
   fifteen_row: column.integer,
   lenient: column.integer,
-  booked: column.integer,
   notes: column.text,
   must_be_clean: column.integer,
   hsl_hue: column.integer,
@@ -112,6 +111,13 @@ const EventsCols = {
   event_status: column.text,
   contract_revenue_cents: column.integer,
   booked_at: column.text,
+  event_type_uuid: column.text,
+  contact_uuid: column.text,
+  internal_notes: column.text,
+  external_notes: column.text,
+  sales_office_uuid: column.text,
+  deleted: column.integer,
+  quote_valid_till: column.text,
 } satisfies PowerSyncColsFor<"Events">;
 const Events = new Table(EventsCols, {
   indexes: {
@@ -591,6 +597,190 @@ const RoadmapTaskTypingIndicators = new Table(RoadmapTaskTypingIndicatorsCols, {
   },
 });
 
+// =====================
+// Send Quotes
+// =====================
+const BleacherTypesCols = {
+  created_at: column.text,
+  created_by_user_uuid: column.text,
+  deleted: column.integer,
+  name: column.text,
+  row_count: column.integer,
+} satisfies PowerSyncColsFor<"BleacherTypes">;
+const BleacherTypes = new Table(BleacherTypesCols);
+
+const CompaniesCols = {
+  billing_address_uuid: column.text,
+  company_name: column.text,
+  created_at: column.text,
+  created_by_user_uuid: column.text,
+  deleted: column.integer,
+  email: column.text,
+  notes: column.text,
+  phone: column.text,
+  shipping_address_uuid: column.text,
+} satisfies PowerSyncColsFor<"Companies">;
+const Companies = new Table(CompaniesCols, {
+  indexes: {
+    billing_address_uuid: ["billing_address_uuid"],
+    shipping_address_uuid: ["shipping_address_uuid"],
+  },
+});
+
+const ContactsCols = {
+  company_uuid: column.text,
+  created_at: column.text,
+  created_by_user_uuid: column.text,
+  deleted: column.integer,
+  email: column.text,
+  first_name: column.text,
+  last_name: column.text,
+  notes: column.text,
+  phone: column.text,
+} satisfies PowerSyncColsFor<"Contacts">;
+const Contacts = new Table(ContactsCols, {
+  indexes: { company_uuid: ["company_uuid"] },
+});
+
+const EventAttachmentsCols = {
+  created_at: column.text,
+  event_uuid: column.text,
+  file_name: column.text,
+  storage_path: column.text,
+  uploaded_by_user_uuid: column.text,
+} satisfies PowerSyncColsFor<"EventAttachments">;
+const EventAttachments = new Table(EventAttachmentsCols, {
+  indexes: { event_uuid: ["event_uuid"] },
+});
+
+const EventChangeLogCols = {
+  changed_at: column.text,
+  changed_by_user_uuid: column.text,
+  event_uuid: column.text,
+  next_value: column.text,
+  prev_value: column.text,
+} satisfies PowerSyncColsFor<"EventChangeLog">;
+const EventChangeLog = new Table(EventChangeLogCols, {
+  indexes: { event_uuid: ["event_uuid"] },
+});
+
+const EventLineItemsCols = {
+  bleacher_type_uuid: column.text,
+  created_at: column.text,
+  created_by_user_uuid: column.text,
+  currency: column.text,
+  deleted: column.integer,
+  description: column.text,
+  event_uuid: column.text,
+  header: column.text,
+  is_template: column.integer,
+  quantity: column.integer,
+  value_cents: column.integer,
+} satisfies PowerSyncColsFor<"EventLineItems">;
+const EventLineItems = new Table(EventLineItemsCols, {
+  indexes: { event_uuid: ["event_uuid"], bleacher_type_uuid: ["bleacher_type_uuid"] },
+});
+
+const EventMessageReadReceiptsCols = {
+  message_id: column.text,
+  read_at: column.text,
+  user_uuid: column.text,
+} satisfies PowerSyncColsFor<"EventMessageReadReceipts">;
+const EventMessageReadReceipts = new Table(EventMessageReadReceiptsCols, {
+  indexes: { message_id: ["message_id"], user_uuid: ["user_uuid"] },
+});
+
+const EventMessagesCols = {
+  body: column.text,
+  created_at: column.text,
+  event_uuid: column.text,
+  is_system: column.integer,
+  user_uuid: column.text,
+} satisfies PowerSyncColsFor<"EventMessages">;
+const EventMessages = new Table(EventMessagesCols, {
+  indexes: { event_uuid: ["event_uuid"] },
+});
+
+const EventSubscriptionsCols = {
+  account_manager_uuid: column.text,
+  created_at: column.text,
+  event_uuid: column.text,
+} satisfies PowerSyncColsFor<"EventSubscriptions">;
+const EventSubscriptions = new Table(EventSubscriptionsCols, {
+  indexes: { event_uuid: ["event_uuid"], account_manager_uuid: ["account_manager_uuid"] },
+});
+
+const EventTypesCols = {
+  created_at: column.text,
+  created_by_user_uuid: column.text,
+  deleted: column.integer,
+  name: column.text,
+} satisfies PowerSyncColsFor<"EventTypes">;
+const EventTypes = new Table(EventTypesCols);
+
+const EventTypingIndicatorsCols = {
+  event_uuid: column.text,
+  is_typing: column.integer,
+  updated_at: column.text,
+  user_uuid: column.text,
+} satisfies PowerSyncColsFor<"EventTypingIndicators">;
+const EventTypingIndicators = new Table(EventTypingIndicatorsCols, {
+  indexes: { event_uuid: ["event_uuid"] },
+});
+
+const PaymentInstallmentsCols = {
+  amount_cents: column.integer,
+  created_at: column.text,
+  currency: column.text,
+  due_date: column.text,
+  event_uuid: column.text,
+  paid_at: column.text,
+  status: column.text,
+} satisfies PowerSyncColsFor<"PaymentInstallments">;
+const PaymentInstallments = new Table(PaymentInstallmentsCols, {
+  indexes: { event_uuid: ["event_uuid"] },
+});
+
+const PriceDurationsCols = {
+  created_at: column.text,
+  created_by_user_uuid: column.text,
+  deleted: column.integer,
+  max_days: column.integer,
+  min_days: column.integer,
+  name: column.text,
+} satisfies PowerSyncColsFor<"PriceDurations">;
+const PriceDurations = new Table(PriceDurationsCols);
+
+const PricesCols = {
+  bleacher_type_uuid: column.text,
+  created_at: column.text,
+  created_by_user_uuid: column.text,
+  currency: column.text,
+  deleted: column.integer,
+  event_type_uuid: column.text,
+  price_cents: column.integer,
+  price_duration_uuid: column.text,
+} satisfies PowerSyncColsFor<"Prices">;
+const Prices = new Table(PricesCols, {
+  indexes: {
+    bleacher_type_uuid: ["bleacher_type_uuid"],
+    event_type_uuid: ["event_type_uuid"],
+    price_duration_uuid: ["price_duration_uuid"],
+  },
+});
+
+const SalesOfficesCols = {
+  address_uuid: column.text,
+  created_at: column.text,
+  created_by_user_uuid: column.text,
+  deleted: column.integer,
+  name: column.text,
+  quickbook_uuid: column.text,
+} satisfies PowerSyncColsFor<"SalesOffices">;
+const SalesOffices = new Table(SalesOfficesCols, {
+  indexes: { address_uuid: ["address_uuid"] },
+});
+
 export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
@@ -631,6 +821,21 @@ export const AppSchema = new Schema({
   RoadmapTaskTypingIndicators,
   Alerts,
   UserAlerts,
+  BleacherTypes,
+  Companies,
+  Contacts,
+  EventAttachments,
+  EventChangeLog,
+  EventLineItems,
+  EventMessageReadReceipts,
+  EventMessages,
+  EventSubscriptions,
+  EventTypes,
+  EventTypingIndicators,
+  PaymentInstallments,
+  PriceDurations,
+  Prices,
+  SalesOffices,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
@@ -670,3 +875,18 @@ export type RoadmapTaskSubscriptionRecord = PowerSyncDB["RoadmapTaskSubscription
 export type RoadmapTaskMessageRecord = PowerSyncDB["RoadmapTaskMessages"];
 export type RoadmapTaskMessageReadReceiptRecord = PowerSyncDB["RoadmapTaskMessageReadReceipts"];
 export type RoadmapTaskTypingIndicatorRecord = PowerSyncDB["RoadmapTaskTypingIndicators"];
+export type BleacherTypesRecord = PowerSyncDB["BleacherTypes"];
+export type CompaniesRecord = PowerSyncDB["Companies"];
+export type ContactsRecord = PowerSyncDB["Contacts"];
+export type EventAttachmentsRecord = PowerSyncDB["EventAttachments"];
+export type EventChangeLogRecord = PowerSyncDB["EventChangeLog"];
+export type EventLineItemsRecord = PowerSyncDB["EventLineItems"];
+export type EventMessageReadReceiptsRecord = PowerSyncDB["EventMessageReadReceipts"];
+export type EventMessagesRecord = PowerSyncDB["EventMessages"];
+export type EventSubscriptionsRecord = PowerSyncDB["EventSubscriptions"];
+export type EventTypesRecord = PowerSyncDB["EventTypes"];
+export type EventTypingIndicatorsRecord = PowerSyncDB["EventTypingIndicators"];
+export type PaymentInstallmentsRecord = PowerSyncDB["PaymentInstallments"];
+export type PriceDurationsRecord = PowerSyncDB["PriceDurations"];
+export type PricesRecord = PowerSyncDB["Prices"];
+export type SalesOfficesRecord = PowerSyncDB["SalesOffices"];

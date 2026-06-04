@@ -79,7 +79,7 @@ class SchedulingConflictsDefinition extends AlertDefinition<SchedulingConflictCo
       );
 
       if (!hasOverlappingBleacher) continue;
-      if (!other.booked) continue;
+      if (other.event_status !== "booked") continue;
 
       if (currentSetupStart <= otherTeardownEnd && otherSetupStart <= currentTeardownEnd) {
         alerts.push(makeAlert("This event is overlapping with other events!"));
@@ -144,7 +144,7 @@ class SchedulingConflictsDefinition extends AlertDefinition<SchedulingConflictCo
     currentEvent: CurrentEventState,
   ): AlertPayload[] {
     // Only booked events can have a scheduling conflict.
-    if (!other.booked) return [];
+    if (other.event_status !== "booked") return [];
 
     const otherStart = new Date(other.setup_start ?? other.event_start);
     const otherEnd = new Date(other.teardown_end ?? other.event_end);
@@ -172,7 +172,7 @@ class SchedulingConflictsDefinition extends AlertDefinition<SchedulingConflictCo
       const candidateIsBooked =
         candidate.id === currentEvent.eventUuid
           ? currentEvent.selectedStatus === "booked"
-          : candidate.booked;
+          : candidate.event_status === "booked";
       if (!candidateIsBooked) continue;
 
       if (otherStart <= candidateEnd && candidateStart <= otherEnd) {

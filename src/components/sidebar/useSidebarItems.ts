@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   BookText,
   Settings,
+  Building2,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";
@@ -115,6 +116,13 @@ const ALL_ITEMS: SidebarItemConfig[] = [
     icon: CalendarDays,
   },
   {
+    type: "button",
+    key: "sales-offices",
+    label: "Sales Offices",
+    href: "/sales-offices",
+    icon: Building2,
+  },
+  {
     type: "section",
     key: "configuration",
     label: "Configuration",
@@ -165,6 +173,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
   admin: [
     "dashboard",
     "quotes-bookings",
+    "sales-offices",
     "team",
     "assets",
     "quality-assurance",
@@ -178,6 +187,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
   account_manager: [
     "dashboard",
     "quotes-bookings",
+    "sales-offices",
     "team",
     "assets",
     "quality-assurance",
@@ -191,6 +201,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
   viewer: [
     "dashboard",
     "quotes-bookings",
+    "sales-offices",
     "team",
     "assets",
     "quality-assurance",

@@ -100,6 +100,7 @@ export function Dropdown<T>({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -5 }}
                 transition={{ duration: 0.15 }}
+                onMouseDown={(e) => e.stopPropagation()}
                 className="absolute z-[9999] bg-white border border-gray-200 rounded shadow-lg overflow-y-auto max-h-[60vh]"
                 style={{
                   position: "absolute",
@@ -112,7 +113,7 @@ export function Dropdown<T>({
                 {options.map((option) => (
                   <li
                     key={String(option.value)}
-                    onClick={() => {
+                    onPointerDown={() => {
                       onSelect(option.value);
                       setIsOpen(false);
                     }}

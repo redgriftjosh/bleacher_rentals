@@ -11,6 +11,9 @@ export function useQuotesAndBookingsData(filters: QuotesBookingsFilters) {
     return db
       .selectFrom("Events as e")
       .leftJoin("Users as u", "e.created_by_user_uuid", "u.id")
+      .leftJoin("Addresses as a", "e.address_uuid", "a.id")
+      .leftJoin("Contacts as ct", "e.contact_uuid", "ct.id")
+      .leftJoin("Companies as co", "ct.company_uuid", "co.id")
       .select([
         "e.id as id",
         "e.event_name as event_name",
@@ -22,7 +25,16 @@ export function useQuotesAndBookingsData(filters: QuotesBookingsFilters) {
         "e.created_by_user_uuid as created_by_user_uuid",
         "u.first_name as account_manager_first_name",
         "u.last_name as account_manager_last_name",
+        "u.email as account_manager_email",
+        "a.street as address_street",
+        "a.city as address_city",
+        "a.state_province as address_state",
+        "ct.first_name as contact_first_name",
+        "ct.last_name as contact_last_name",
+        "ct.email as contact_email",
+        "co.company_name as company_name",
       ])
+      .where("e.deleted", "=", 0)
       .orderBy("e.created_at", "desc")
       .compile();
   }, []);

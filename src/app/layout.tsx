@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ClerkProvider, SignedIn, SignedOut, SignIn } from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { AuthFallback } from "@/components/AuthFallback";
 import Script from "next/script";
 import { SignedInComponents } from "../components/SignedInComponents";
 import { Toaster } from "sonner";
 import { TanstackProvider } from "@/components/providers/TanstackProvider";
 import { DynamicSystemProvider } from "@/components/providers/DynamicSystemProvider";
-// import TestComponent from "@/components/TestComponent";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,36 +29,36 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { userId } = await auth();
+
   return (
     <ClerkProvider>
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-hidden`}>
-          <SignedOut>
-            <div className="flex items-center justify-center min-h-screen">
-              <SignIn routing="hash" forceRedirectUrl="/dashboard" />
-              {/* <TestComponent /> */}
-            </div>
-          </SignedOut>
-          <Script
-            src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
-            strategy="beforeInteractive"
-          />
-          <SignedIn>
-            <Toaster />
-            {/* <TestComponent /> */}
-            <TanstackProvider>
-              <DynamicSystemProvider>
-                <SignedInComponents>{children}</SignedInComponents>
-              </DynamicSystemProvider>
-            </TanstackProvider>
-          </SignedIn>
+          {userId ? (
+            <>
+              <Script
+                src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+                strategy="beforeInteractive"
+              />
+              <Toaster />
+              <TanstackProvider>
+                <DynamicSystemProvider>
+                  <SignedInComponents>{children}</SignedInComponents>
+                </DynamicSystemProvider>
+              </TanstackProvider>
+            </>
+          ) : (
+            <AuthFallback>{children}</AuthFallback>
+          )}
         </body>
       </html>
     </ClerkProvider>
   );
 }
+
