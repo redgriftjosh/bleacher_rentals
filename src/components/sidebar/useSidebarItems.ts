@@ -195,6 +195,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
     "scorecard",
     "leaderboard",
     "driver-calendar",
+    "documentation",
   ],
   developer: ["roadmap"],
   viewer: [
@@ -208,6 +209,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
     "scorecard",
     "leaderboard",
     "driver-calendar",
+    "documentation",
   ],
   driver: [],
 };

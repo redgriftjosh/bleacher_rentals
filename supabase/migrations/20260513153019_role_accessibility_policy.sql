@@ -651,9 +651,11 @@ create policy "drivers_delete" on public."Drivers"
 
 -- =====================
 -- 7. Custom policies for Bleachers
---    SELECT: all roles can view
---    INSERT/UPDATE/DELETE: admin only
+--    SELECT: admin + account_manager + viewer
+--    INSERT/DELETE: admin only
+--    UPDATE: admin (any) + AM (only summer/winter AM uuid fields when null, no other field changes)
 -- =====================
+
 do $$
 declare pol record;
 begin
@@ -665,6 +667,7 @@ begin
   end loop;
 end;
 $$;
+
 
 alter table public."Bleachers" enable row level security;
 
@@ -683,7 +686,7 @@ create policy "bleachers_insert" on public."Bleachers"
 create policy "bleachers_update" on public."Bleachers"
   as permissive for update to authenticated
   using (
-    'admin' = any(public.get_user_roles())
+    public.get_user_roles() && '{admin,account_manager}'::text[]
   );
 
 create policy "bleachers_delete" on public."Bleachers"

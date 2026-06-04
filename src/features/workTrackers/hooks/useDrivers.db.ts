@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { useCurrentUser } from "@/hooks/db/useCurrentUser";
+import { STATUSES } from "@/features/manageTeam/constants";
 
 type Compiled = {
   driver_uuid: string;
@@ -100,10 +101,15 @@ export function useDrivers(options?: { showAll?: boolean }): {
         "u.last_name as last_name",
         "u.email as email",
       ])
-      .where("d.is_active", "=", 1);
-
-    // If not admin (and showAll is not set), filter by account manager
-    if (currentUser.is_admin !== 1 && !showAll) {
+      .where("d.is_active", "=", 1)
+      .where((eb) =>
+        eb.or([
+          eb("u.status_uuid", "=", STATUSES.active),
+          eb("u.status_uuid", "=", STATUSES.invited),
+        ]),
+      );
+    // If not admin, filter by account manager
+    if (currentUser.is_admin !== 1) {
       const accountManagerId = accountManagerData?.[0]?.id;
       if (accountManagerId) {
         query = query.where("d.account_manager_uuid", "=", accountManagerId);

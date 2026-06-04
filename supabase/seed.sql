@@ -142,6 +142,18 @@ SET row_security = off;
 
 
 --
+-- Data for Name: webauthn_challenges; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+
+
+
+--
+-- Data for Name: webauthn_credentials; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+
+
+
+--
 -- Data for Name: UserStatuses; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -210,7 +222,7 @@ INSERT INTO "public"."AccountManagers" ("created_at", "is_active", "id", "user_u
 	('2025-12-02 13:36:50.40714+00', true, '11d5e426-c1ed-4e1d-aef8-aea5f7194766', 'ba661483-ea76-40eb-9adc-65cca26390e8'),
 	('2025-12-02 13:38:19.481959+00', true, '6b2f41dc-7efc-400c-98e6-4bf6f8bef573', '55c1253d-6460-456d-91c9-e97290e8e599'),
 	('2026-01-14 15:35:39.430255+00', true, 'b5557f16-b67f-4aaf-a47e-1a2c8680db55', '15597d9e-7a32-44df-a02f-bce4c39dfdee'),
-	('2026-01-14 15:35:39.430255+00', true, 'd9fac195-5481-4818-8e15-17f87d1a5094', 'f09fcb39-4bdc-4000-b758-6171ea89b2eb');
+	('2026-01-14 15:35:39.430255+00', false, 'd9fac195-5481-4818-8e15-17f87d1a5094', 'f09fcb39-4bdc-4000-b758-6171ea89b2eb');
 
 
 --
@@ -1953,6 +1965,18 @@ INSERT INTO "public"."BleacherEvents" ("created_at", "setup_text", "setup_confir
 
 
 --
+-- Data for Name: MaintenanceEvents; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- Data for Name: BleacherMaintEvents; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
 -- Data for Name: BleacherUsers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -2822,6 +2846,14 @@ INSERT INTO "public"."Developers" ("id", "created_at", "user_uuid", "is_active",
 
 --
 -- Data for Name: Vehicles; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO "public"."Vehicles" ("id", "created_at", "make", "model", "year", "vin_number") VALUES
+	('e0cfcaf4-df0e-46ee-b91e-99dc076be6b6', '2026-06-03 18:26:41.522+00', 'Honda', 'civic', 2002, '12345678901234567');
+
+
+--
+-- Data for Name: Vendors; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 
