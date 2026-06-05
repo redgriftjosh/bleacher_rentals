@@ -68,7 +68,7 @@ export default function QuotesBookingsPage() {
   const columns: Column<QuotesBookingsEvent>[] = [
     {
       key: "event_name",
-      header: "Event Name",
+      header: `Event Name (${searchedData?.length ?? 0})`,
       render: (event) => (
         <div>
           <CellText bold>{event.event_name}</CellText>
