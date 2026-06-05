@@ -13544,3 +13544,20 @@ do update set
   quotes_signed_value_cents = excluded.quotes_signed_value_cents,
   updated_at                = now();
 
+insert into public."SalesScorecardDailyAccountManagerStats"
+  (account_manager_uuid, stat_date, revenue_cents)
+select
+  am.id                                        as account_manager_uuid,
+  e.event_start                                as stat_date,
+  coalesce(sum(e.contract_revenue_cents), 0)   as revenue_cents
+from public."Events" e
+join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+where e.event_start is not null
+  and e.deleted = false
+  and e.booked_at is not null
+group by am.id, e.event_start
+on conflict on constraint sales_daily_unique_account_manager_date
+do update set
+  revenue_cents = excluded.revenue_cents,
+  updated_at    = now();
+

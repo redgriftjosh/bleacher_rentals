@@ -533,3 +533,124 @@ do update set
   quotes_signed_value_cents = excluded.quotes_signed_value_cents,
   updated_at                = now();
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Trigger: keep revenue_cents in sync with Events
+-- Fires AFTER INSERT / UPDATE / DELETE on Events.
+-- Same (AM, date) pair logic but uses event_start (which is already a date,
+-- not timestamptz) and sums contract_revenue_cents for booked, non-deleted
+-- events.
+-- ─────────────────────────────────────────────────────────────────────────────
+create or replace function sync_sales_daily_revenue()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_old_am_uuid uuid;
+  v_old_date    date;
+  v_new_am_uuid uuid;
+  v_new_date    date;
+  v_total       bigint;
+begin
+
+  -- ── OLD pair (DELETE or UPDATE) ──────────────────────────────────────────
+  if tg_op = 'DELETE' or tg_op = 'UPDATE' then
+    if OLD.created_by_user_uuid is not null and OLD.event_start is not null then
+      v_old_date := OLD.event_start;
+
+      select am.id into v_old_am_uuid
+        from public."AccountManagers" am
+       where am.user_uuid = OLD.created_by_user_uuid;
+
+      if v_old_am_uuid is not null then
+        select coalesce(sum(e.contract_revenue_cents), 0) into v_total
+          from public."Events" e
+          join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+         where am.id = v_old_am_uuid
+           and e.event_start = v_old_date
+           and e.deleted = false
+           and e.booked_at is not null;
+
+        insert into public."SalesScorecardDailyAccountManagerStats"
+          (account_manager_uuid, stat_date, revenue_cents)
+        values
+          (v_old_am_uuid, v_old_date, v_total)
+        on conflict on constraint sales_daily_unique_account_manager_date
+        do update set
+          revenue_cents = excluded.revenue_cents,
+          updated_at    = now();
+      end if;
+
+    end if;
+  end if;
+
+  -- ── NEW pair (INSERT or UPDATE) ──────────────────────────────────────────
+  if tg_op = 'INSERT' or tg_op = 'UPDATE' then
+    if NEW.created_by_user_uuid is not null and NEW.event_start is not null then
+      v_new_date := NEW.event_start;
+
+      select am.id into v_new_am_uuid
+        from public."AccountManagers" am
+       where am.user_uuid = NEW.created_by_user_uuid;
+
+      if v_new_am_uuid is not null then
+        if not (
+          tg_op = 'UPDATE'
+          and v_new_am_uuid = v_old_am_uuid
+          and v_new_date = v_old_date
+        ) then
+          select coalesce(sum(e.contract_revenue_cents), 0) into v_total
+            from public."Events" e
+            join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+           where am.id = v_new_am_uuid
+             and e.event_start = v_new_date
+             and e.deleted = false
+             and e.booked_at is not null;
+
+          insert into public."SalesScorecardDailyAccountManagerStats"
+            (account_manager_uuid, stat_date, revenue_cents)
+          values
+            (v_new_am_uuid, v_new_date, v_total)
+          on conflict on constraint sales_daily_unique_account_manager_date
+          do update set
+            revenue_cents = excluded.revenue_cents,
+            updated_at    = now();
+        end if;
+      end if;
+
+    end if;
+  end if;
+
+  if tg_op = 'DELETE' then
+    return OLD;
+  end if;
+  return NEW;
+end;
+$$;
+
+create trigger trg_sync_sales_daily_revenue
+after insert or update or delete on public."Events"
+for each row execute function sync_sales_daily_revenue();
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Backfill: populate revenue_cents from all existing Events rows.
+-- Groups by (account_manager_uuid, event_start) and upserts the sums.
+-- ─────────────────────────────────────────────────────────────────────────────
+insert into public."SalesScorecardDailyAccountManagerStats"
+  (account_manager_uuid, stat_date, revenue_cents)
+select
+  am.id                                        as account_manager_uuid,
+  e.event_start                                as stat_date,
+  coalesce(sum(e.contract_revenue_cents), 0)   as revenue_cents
+from public."Events" e
+join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+where e.event_start is not null
+  and e.deleted = false
+  and e.booked_at is not null
+group by am.id, e.event_start
+on conflict on constraint sales_daily_unique_account_manager_date
+do update set
+  revenue_cents = excluded.revenue_cents,
+  updated_at    = now();
+
