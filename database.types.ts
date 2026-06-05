@@ -637,35 +637,44 @@ export type Database = {
         Row: {
           bleacher_uuid: string
           created_at: string
+          created_by_user_uuid: string | null
+          haul_damage: Database["public"]["Enums"]["damage_severity"]
           id: string
-          inspection_uuid: string
+          inspection_uuid: string | null
           is_safe_to_haul: boolean
           is_safe_to_sit: boolean
           maintenance_event_uuid: string | null
           note: string | null
           resolved_at: string | null
+          seat_damage: Database["public"]["Enums"]["damage_severity"]
         }
         Insert: {
           bleacher_uuid: string
           created_at?: string
+          created_by_user_uuid?: string | null
+          haul_damage?: Database["public"]["Enums"]["damage_severity"]
           id?: string
-          inspection_uuid: string
+          inspection_uuid?: string | null
           is_safe_to_haul?: boolean
           is_safe_to_sit?: boolean
           maintenance_event_uuid?: string | null
           note?: string | null
           resolved_at?: string | null
+          seat_damage?: Database["public"]["Enums"]["damage_severity"]
         }
         Update: {
           bleacher_uuid?: string
           created_at?: string
+          created_by_user_uuid?: string | null
+          haul_damage?: Database["public"]["Enums"]["damage_severity"]
           id?: string
-          inspection_uuid?: string
+          inspection_uuid?: string | null
           is_safe_to_haul?: boolean
           is_safe_to_sit?: boolean
           maintenance_event_uuid?: string | null
           note?: string | null
           resolved_at?: string | null
+          seat_damage?: Database["public"]["Enums"]["damage_severity"]
         }
         Relationships: [
           {
@@ -673,6 +682,13 @@ export type Database = {
             columns: ["bleacher_uuid"]
             isOneToOne: false
             referencedRelation: "Bleachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "DamageReports_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
             referencedColumns: ["id"]
           },
           {
@@ -3079,6 +3095,7 @@ export type Database = {
       bleacher_opening_dir: "driver" | "passenger"
       bluebook_region: "CAN" | "US" | "Both"
       currency: "USD" | "CAD"
+      damage_severity: "none" | "minor" | "major"
       event_status: "quoted" | "booked" | "lost" | "draft"
       pay_currency_type: "CAD" | "USD"
       pay_per_unit_type: "KM" | "MI" | "HR"
@@ -3246,6 +3263,7 @@ export const Constants = {
       bleacher_opening_dir: ["driver", "passenger"],
       bluebook_region: ["CAN", "US", "Both"],
       currency: ["USD", "CAD"],
+      damage_severity: ["none", "minor", "major"],
       event_status: ["quoted", "booked", "lost", "draft"],
       pay_currency_type: ["CAD", "USD"],
       pay_per_unit_type: ["KM", "MI", "HR"],

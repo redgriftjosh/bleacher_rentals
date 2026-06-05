@@ -139,16 +139,19 @@ export type BleacherMaintenanceEvent = {
   address: string;
 };
 
+export type DamageSeverity = "none" | "minor" | "major";
+
 export type BleacherDamageReport = {
   damageReportUuid: string;
   bleacherUuid: string;
-  inspectionUuid: string;
+  inspectionUuid: string | null;
   isSafeToSit: boolean;
   isSafeToHaul: boolean;
+  seatDamage: DamageSeverity;
+  haulDamage: DamageSeverity;
   note: string | null;
   createdAt: string;
   resolvedAt: string | null;
   maintenanceEventUuid: string | null;
-  /** Date of the associated work tracker (resolved at mapping time) */
   workTrackerDate: string | null;
 };

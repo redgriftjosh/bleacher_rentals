@@ -97,6 +97,8 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
           inspection_uuid,
           is_safe_to_sit,
           is_safe_to_haul,
+          seat_damage,
+          haul_damage,
           note,
           resolved_at,
           maintenance_event_uuid,
@@ -170,7 +172,7 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
           .filter((dr) => dr.bleacher_uuid === bUuid)
           .map((dr) => ({
             ...dr,
-            work_tracker_date: wtDateMap.get(dr.inspection_uuid) ?? null,
+            work_tracker_date: dr.inspection_uuid ? wtDateMap.get(dr.inspection_uuid) ?? null : null,
           }))
           .filter((dr) => dr.work_tracker_date && dr.work_tracker_date < eventStart)
           .sort((a, b) => (b.work_tracker_date ?? "").localeCompare(a.work_tracker_date ?? ""));

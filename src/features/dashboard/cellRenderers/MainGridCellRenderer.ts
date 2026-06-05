@@ -303,11 +303,20 @@ export class MainGridCellRenderer implements ICellRenderer {
       const ranges: DamageOverlayRange[] = [];
 
       for (const dr of damageReports) {
-        if (!dr.workTrackerDate) continue;
+        const referenceDate = dr.workTrackerDate ?? dr.createdAt;
+        if (!referenceDate) continue;
 
-        const severity: DamageSeverity = !dr.isSafeToSit || !dr.isSafeToHaul ? "major" : "minor";
+        const hasMajor = dr.seatDamage === "major" || dr.haulDamage === "major";
+        const hasMinor = dr.seatDamage === "minor" || dr.haulDamage === "minor";
+        const severity: DamageSeverity = hasMajor
+          ? "major"
+          : hasMinor
+            ? "minor"
+            : !dr.isSafeToSit || !dr.isSafeToHaul
+              ? "major"
+              : "minor";
 
-        const wtDateISO = DateTime.fromISO(dr.workTrackerDate).toISODate();
+        const wtDateISO = DateTime.fromISO(referenceDate).toISODate();
         if (!wtDateISO) continue;
 
         const wtCol = dateToIndex.get(wtDateISO);
