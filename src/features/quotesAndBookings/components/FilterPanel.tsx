@@ -10,6 +10,7 @@ type FilterPanelProps = {
   onStatusesChange: (values: string[]) => void;
   onCreatedRangeChange: (from: string | null, to: string | null) => void;
   onEventRangeChange: (from: string | null, to: string | null) => void;
+  onBookedRangeChange: (from: string | null, to: string | null) => void;
   onAccountManagerChange: (uuid: string | null) => void;
   onClear: () => void;
 };
@@ -19,6 +20,7 @@ export function FilterPanel({
   onStatusesChange,
   onCreatedRangeChange,
   onEventRangeChange,
+  onBookedRangeChange,
   onAccountManagerChange,
   onClear,
 }: FilterPanelProps) {
@@ -48,6 +50,16 @@ export function FilterPanel({
               from={filters.eventFrom}
               to={filters.eventTo}
               onChange={onEventRangeChange}
+            />
+          </div>
+
+          <div>
+            <div className="text-sm font-semibold text-gray-800 mb-2">Booked</div>
+            <DateRangeInput
+              label="Booked"
+              from={filters.bookedFrom}
+              to={filters.bookedTo}
+              onChange={onBookedRangeChange}
             />
           </div>
         </div>

@@ -19,6 +19,10 @@ export function filterQuotesBookingsEvents(
       return false;
     }
 
+    if (!isWithinRange(event.booked_at, filters.bookedFrom, filters.bookedTo)) {
+      return false;
+    }
+
     if (filters.accountManagerUserUuid) {
       const owner = event.created_by_user_uuid ?? "";
       if (filters.accountManagerUserUuid !== owner) return false;

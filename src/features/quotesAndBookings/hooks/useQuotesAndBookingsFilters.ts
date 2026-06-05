@@ -10,6 +10,8 @@ const initialFilters: QuotesBookingsFilters = {
   createdTo: null,
   eventFrom: null,
   eventTo: null,
+  bookedFrom: null,
+  bookedTo: null,
   accountManagerUserUuid: null,
 };
 
@@ -32,6 +34,10 @@ export function useQuotesAndBookingsFilters() {
     setFilters((prev) => ({ ...prev, eventFrom: from, eventTo: to }));
   }, []);
 
+  const setBookedRange = useCallback((from: string | null, to: string | null) => {
+    setFilters((prev) => ({ ...prev, bookedFrom: from, bookedTo: to }));
+  }, []);
+
   const setAccountManagerUserUuid = useCallback((uuid: string | null) => {
     setFilters((prev) => ({ ...prev, accountManagerUserUuid: uuid }));
   }, []);
@@ -44,6 +50,8 @@ export function useQuotesAndBookingsFilters() {
       createdTo: null,
       eventFrom: null,
       eventTo: null,
+      bookedFrom: null,
+      bookedTo: null,
       accountManagerUserUuid: null,
     }));
   }, []);
@@ -54,6 +62,7 @@ export function useQuotesAndBookingsFilters() {
     setStatuses,
     setCreatedRange,
     setEventRange,
+    setBookedRange,
     setAccountManagerUserUuid,
     clearFilters,
   };

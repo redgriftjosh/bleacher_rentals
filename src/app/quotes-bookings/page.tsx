@@ -50,6 +50,7 @@ export default function QuotesBookingsPage() {
     setStatuses,
     setCreatedRange,
     setEventRange,
+    setBookedRange,
     setAccountManagerUserUuid,
     clearFilters,
   } = useQuotesAndBookingsFilters();
@@ -147,6 +148,7 @@ export default function QuotesBookingsPage() {
           onStatusesChange={setStatuses}
           onCreatedRangeChange={setCreatedRange}
           onEventRangeChange={setEventRange}
+          onBookedRangeChange={setBookedRange}
           onAccountManagerChange={setAccountManagerUserUuid}
           onClear={clearFilters}
         />

@@ -27,5 +27,7 @@ export type QuotesBookingsFilters = {
   createdTo: string | null;
   eventFrom: string | null;
   eventTo: string | null;
+  bookedFrom: string | null;
+  bookedTo: string | null;
   accountManagerUserUuid: string | null;
 };
