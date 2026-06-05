@@ -12,25 +12,25 @@ import { useValueOfQuotesSignedData } from "@/features/scorecard/hooks/overview/
 import { useNumberOfQuotesSignedData } from "@/features/scorecard/hooks/overview/useNumberOfQuotesSignedData";
 import { useNumberOfQuotesSentData } from "@/features/scorecard/hooks/overview/useNumberOfQuotesSentData";
 import { CompactDetailedStatWithSpeedometer } from "@/features/scorecard/components/CompactDetailedStatWithSpeedometer";
+
 export default function ScorecardPage() {
-  const quotesSentData = useNumberOfQuotesSentData();
-  console.log("Quotes Sent Data:", quotesSentData);
-  const quotesSignedData = useNumberOfQuotesSignedData();
-  const valueOfQuotesSignedData = useValueOfQuotesSignedData();
-  const revenueData = useRevenueData();
-  const grossMarginData = useGrossMarginData({
-    accountManagerUuid: null,
-  });
+  // const quotesSentData = useNumberOfQuotesSentData();
+  // const quotesSignedData = useNumberOfQuotesSignedData();
+  // const valueOfQuotesSignedData = useValueOfQuotesSignedData();
+  // const revenueData = useRevenueData();
+  // const grossMarginData = useGrossMarginData({
+  //   accountManagerUuid: null,
+  // });
   const driverPayData = useDriverPayData();
   // const revenueData = useRevenue();
-  const accountManagers = useAccountManagers();
+  // const accountManagers = useAccountManagers();
   console.log("Test");
 
   return (
     <div className="p-4">
       <ScorecardHeader />
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <CompactDetailedStatWithGraph
+        {/* <CompactDetailedStatWithGraph
           label="Number of Quotes Sent"
           statType="number-of-quotes-sent"
           historyHref={`/${PAGE_NAME}/history/quotes-sent`}
@@ -72,7 +72,7 @@ export default function ScorecardPage() {
           unit="percentage"
           thisPeriod={grossMarginData.thisPeriod}
           lastPeriod={grossMarginData.lastPeriod}
-        />
+        /> */}
         <CompactDetailedStatWithGraph
           label="Driver Pay"
           unit="money"
@@ -84,11 +84,11 @@ export default function ScorecardPage() {
       {/* <div className="mb-6">
         <TestingSpeedometer />
       </div> */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {accountManagers.map((am) => (
           <AccountManagerCard key={am.accountManagerUuid} accountManager={am} />
         ))}
-      </div>
+      </div> */}
     </div>
   );
 }

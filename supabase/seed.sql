@@ -13463,3 +13463,24 @@ SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 1, false);
 --
 
 -- \unrestrict zjRjV0JcyqHadPDdp2nk3oBU9Y826tYfifsnmuMh08A3ffTfuntN6GleTsThhRw
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Backfill: populate driver_pay_cents from all existing WorkTrackers rows.
+-- Groups by (account_manager_uuid, stat_date) and upserts the totals.
+-- ─────────────────────────────────────────────────────────────────────────────
+insert into public."SalesScorecardDailyAccountManagerStats"
+  (account_manager_uuid, stat_date, driver_pay_cents)
+select
+  d.account_manager_uuid,
+  wt.date                         as stat_date,
+  coalesce(sum(wt.pay_cents), 0)  as driver_pay_cents
+from public."WorkTrackers" wt
+join public."Drivers" d on d.id = wt.driver_uuid
+where wt.date is not null
+  and d.account_manager_uuid is not null
+group by d.account_manager_uuid, wt.date
+on conflict on constraint sales_daily_unique_account_manager_date
+do update set
+  driver_pay_cents = excluded.driver_pay_cents,
+  updated_at       = now();
+
