@@ -7,6 +7,7 @@ import { PAGE_NAME } from "@/features/scorecard/constants/nav";
 import { useAccountManagers } from "@/features/scorecard/hooks/accountManager/useAccountManagers";
 import { useEventData } from "@/features/scorecard/hooks/overview/useEventData";
 import { useGrossMarginData } from "@/features/scorecard/hooks/overview/useGrossMarginData";
+import { useDriverPayData } from "@/features/scorecard/hooks/overview/useDriverPayData";
 import { CompactDetailedStatWithSpeedometer } from "@/features/scorecard/components/CompactDetailedStatWithSpeedometer";
 export default function ScorecardPage() {
   const quotesSentData = useEventData({
@@ -17,6 +18,7 @@ export default function ScorecardPage() {
     dateField: "created_at",
     targetType: "quotes",
   });
+  console.log("Quotes Sent Data:", quotesSentData);
   const quotesSignedData = useEventData({
     onlyBooked: true,
     useValue: false,
@@ -45,6 +47,7 @@ export default function ScorecardPage() {
     createdByUserUuid: null,
     accountManagerUuid: null,
   });
+  const driverPayData = useDriverPayData();
   // const revenueData = useRevenue();
   const accountManagers = useAccountManagers();
   console.log("Test");
@@ -79,7 +82,7 @@ export default function ScorecardPage() {
           chartData={valueOfQuotesSignedData.chartData}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         <CompactDetailedStatWithGraph
           label="Revenue"
           statType="revenue"
@@ -88,15 +91,6 @@ export default function ScorecardPage() {
           lastPeriod={revenueData.lastPeriod}
           chartData={revenueData.chartData}
         />
-        {/* <CompactDetailedStatWithGraph
-          label="Gross Margin"
-          statType="gross-margin"
-          historyHref={`/${PAGE_NAME}/history/gross-margin`}
-          unit="percentage"
-          thisPeriod={grossMarginData.thisPeriod}
-          lastPeriod={grossMarginData.lastPeriod}
-          chartData={grossMarginData.chartData}
-        /> */}
         <CompactDetailedStatWithSpeedometer
           label="Gross Margin"
           statType="gross-margin"
@@ -104,6 +98,13 @@ export default function ScorecardPage() {
           unit="percentage"
           thisPeriod={grossMarginData.thisPeriod}
           lastPeriod={grossMarginData.lastPeriod}
+        />
+        <CompactDetailedStatWithGraph
+          label="Driver Pay"
+          unit="money"
+          thisPeriod={driverPayData.thisPeriod}
+          lastPeriod={driverPayData.lastPeriod}
+          chartData={driverPayData.chartData}
         />
       </div>
       {/* <div className="mb-6">
