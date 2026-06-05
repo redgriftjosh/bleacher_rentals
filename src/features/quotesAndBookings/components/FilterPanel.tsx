@@ -42,16 +42,13 @@ export function FilterPanel({
           </div>
 
           <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2">Event Date</div>
+            <div className="text-sm font-semibold text-gray-800 mb-2">Event Start</div>
             <DateRangeInput
               label="Event"
               from={filters.eventFrom}
               to={filters.eventTo}
               onChange={onEventRangeChange}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Events are included if their date range overlaps the selected range.
-            </p>
           </div>
         </div>
 

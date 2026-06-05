@@ -1,5 +1,5 @@
 import { QuotesBookingsEvent, QuotesBookingsFilters } from "../types";
-import { isWithinRange, overlapsRange } from "./dateRange";
+import { isWithinRange } from "./dateRange";
 
 export function filterQuotesBookingsEvents(
   events: QuotesBookingsEvent[],
@@ -15,7 +15,7 @@ export function filterQuotesBookingsEvents(
       return false;
     }
 
-    if (!overlapsRange(event.event_start, event.event_end, filters.eventFrom, filters.eventTo)) {
+    if (!isWithinRange(event.event_start, filters.eventFrom, filters.eventTo)) {
       return false;
     }
 
