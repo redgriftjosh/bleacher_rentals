@@ -21,6 +21,7 @@ export type StatsWithDate = {
   stat_date: string | null;
   created_at: string | null;
   updated_at: string | null;
+  quotes_signed_value_cents: number | null;
   revenue_cents: number | null;
   driver_pay_cents: number | null;
 };
@@ -38,6 +39,7 @@ export function useSalesScorecardDailyAccountManagerStats(
         "ssdams.stat_date as stat_date",
         "ssdams.created_at as created_at",
         "ssdams.updated_at as updated_at",
+        "ssdams.quotes_signed_value_cents as quotes_signed_value_cents",
         "ssdams.revenue_cents as revenue_cents",
         "ssdams.driver_pay_cents as driver_pay_cents",
       ]);
