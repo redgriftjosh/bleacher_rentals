@@ -1,11 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { useSearchParams } from "next/navigation";
 import { roundToTwo } from "../../util/math";
-import { TimeRange, validTimeRanges } from "../queries/useEventsWithinTimeRange";
-import { useTargets } from "../queries/useTargets";
-import { useSalesScorecardDailyAccountManagerStats } from "../queries/useSalesScorecardDailyAccountManagerStats";
+import { useScorecardStatsContext } from "../ScorecardStatsContext";
 
 type GrossMarginData = {
   thisPeriod: {
@@ -17,48 +14,33 @@ type GrossMarginData = {
   };
 };
 
-/**
- * Gross Margin = (Revenue - Driver Pay) / Revenue * 100
- *
- * Revenue:    sum of revenue_cents from SalesScorecardDailyAccountManagerStats for the period.
- * Driver Pay: sum of driver_pay_cents from SalesScorecardDailyAccountManagerStats for the period.
- */
-export function useGrossMarginData(props: { accountManagerUuid: string | null }): GrossMarginData {
-  const searchParams = useSearchParams();
-  const timeRangeParam = searchParams.get("timeRange");
-  const activeRange: TimeRange = validTimeRanges.includes(timeRangeParam as TimeRange)
-    ? (timeRangeParam as TimeRange)
-    : "weekly";
+export function useGrossMarginData(): GrossMarginData {
+  const { allStats, thisPeriodDays, lastPeriodDays, getGoal } = useScorecardStatsContext();
 
-  const thisPeriodStats = useSalesScorecardDailyAccountManagerStats(
-    activeRange,
-    "this",
-    props.accountManagerUuid,
-  );
-  const lastPeriodStats = useSalesScorecardDailyAccountManagerStats(
-    activeRange,
-    "last",
-    props.accountManagerUuid,
-  );
+  const goal = getGoal("gross_margin_percent");
 
-  const { goal } = useTargets(activeRange, "gross_margin_percent", props.accountManagerUuid);
+  const thisPeriodDaySet = useMemo(() => new Set(thisPeriodDays), [thisPeriodDays]);
+  const lastPeriodDaySet = useMemo(() => new Set(lastPeriodDays), [lastPeriodDays]);
 
-  const thisRevenue = useMemo(
-    () => thisPeriodStats.reduce((sum, s) => sum + (s.revenue_cents ?? 0) / 100, 0),
-    [thisPeriodStats],
-  );
-  const thisDriverPay = useMemo(
-    () => thisPeriodStats.reduce((sum, s) => sum + (s.driver_pay_cents ?? 0) / 100, 0),
-    [thisPeriodStats],
-  );
-  const lastRevenue = useMemo(
-    () => lastPeriodStats.reduce((sum, s) => sum + (s.revenue_cents ?? 0) / 100, 0),
-    [lastPeriodStats],
-  );
-  const lastDriverPay = useMemo(
-    () => lastPeriodStats.reduce((sum, s) => sum + (s.driver_pay_cents ?? 0) / 100, 0),
-    [lastPeriodStats],
-  );
+  const { thisRevenue, thisDriverPay, lastRevenue, lastDriverPay } = useMemo(() => {
+    let thisRev = 0;
+    let thisDp = 0;
+    let lastRev = 0;
+    let lastDp = 0;
+
+    for (const stat of allStats) {
+      if (!stat.stat_date) continue;
+      if (thisPeriodDaySet.has(stat.stat_date)) {
+        thisRev += (stat.revenue_cents ?? 0) / 100;
+        thisDp += (stat.driver_pay_cents ?? 0) / 100;
+      } else if (lastPeriodDaySet.has(stat.stat_date)) {
+        lastRev += (stat.revenue_cents ?? 0) / 100;
+        lastDp += (stat.driver_pay_cents ?? 0) / 100;
+      }
+    }
+
+    return { thisRevenue: thisRev, thisDriverPay: thisDp, lastRevenue: lastRev, lastDriverPay: lastDp };
+  }, [allStats, thisPeriodDaySet, lastPeriodDaySet]);
 
   const currentMarginRaw = roundToTwo(((thisRevenue - thisDriverPay) / thisRevenue) * 100);
   const lastMarginRaw = roundToTwo(((lastRevenue - lastDriverPay) / lastRevenue) * 100);

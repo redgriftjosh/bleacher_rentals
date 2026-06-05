@@ -1,82 +1,25 @@
 "use client";
 
 import { useMemo } from "react";
-import { useSearchParams } from "next/navigation";
-import { getCurrentDay, getLastPeriodSameElapsedDayKey } from "../../util/datetime";
-import { TimeRange, validTimeRanges } from "../queries/useEventsWithinTimeRange";
-import { assembleChartData, getDayKeysForTimeRange, getPaceForEachDay } from "../../util/quotes";
-import {
-  StatsWithDate,
-  useSalesScorecardDailyAccountManagerStats,
-} from "../queries/useSalesScorecardDailyAccountManagerStats";
-import { useTargets } from "../queries/useTargets";
+import { assembleChartData, getPaceForEachDay } from "../../util/quotes";
+import { cumulativeCountByDay } from "../../util/scorecardAggregation";
+import { useScorecardStatsContext } from "../ScorecardStatsContext";
 
-function getNumberOfQuotesSignedCumulativeByDay(
-  days: string[],
-  stats: StatsWithDate[],
-): Record<string, number> {
-  return useMemo(() => {
-    const daily: Record<string, number> = {};
-    const cumulative: Record<string, number> = {};
-    const daySet = new Set(days);
+export function useNumberOfQuotesSignedData() {
+  const { allStats, activeRange, currentDay, thisPeriodDays, lastPeriodDays, lastPeriodSameElapsedDayKey, getGoal } =
+    useScorecardStatsContext();
 
-    days.forEach((day) => {
-      daily[day] = 0;
-    });
+  const goal = getGoal("sales");
 
-    stats.forEach((stat) => {
-      if (!stat.stat_date || !daySet.has(stat.stat_date)) return;
-      daily[stat.stat_date] += stat.quotes_signed_count ?? 0;
-    });
-
-    let runningTotal = 0;
-    days.forEach((day) => {
-      runningTotal += daily[day] ?? 0;
-      cumulative[day] = runningTotal;
-    });
-
-    return cumulative;
-  }, [days, stats]);
-}
-
-export function useNumberOfQuotesSignedData(accountManagerUuid?: string | null) {
-  const currentDay = useMemo(() => getCurrentDay(), []);
-  const searchParams = useSearchParams();
-  const timeRangeParam = searchParams.get("timeRange");
-  const activeRange: TimeRange = validTimeRanges.includes(timeRangeParam as TimeRange)
-    ? (timeRangeParam as TimeRange)
-    : "weekly";
-
-  const thisPeriodStats = useSalesScorecardDailyAccountManagerStats(
-    activeRange,
-    "this",
-    accountManagerUuid,
+  const thisPeriodCumulativeByDay = useMemo(
+    () => cumulativeCountByDay(thisPeriodDays, allStats, "quotes_signed_count"),
+    [thisPeriodDays, allStats],
   );
-  const lastPeriodStats = useSalesScorecardDailyAccountManagerStats(
-    activeRange,
-    "last",
-    accountManagerUuid,
+  const lastPeriodCumulativeByDay = useMemo(
+    () => cumulativeCountByDay(lastPeriodDays, allStats, "quotes_signed_count"),
+    [lastPeriodDays, allStats],
   );
 
-  const { goal } = useTargets(activeRange, "sales", accountManagerUuid);
-
-  const thisPeriodDays = getDayKeysForTimeRange(activeRange, "this");
-  const lastPeriodDays = getDayKeysForTimeRange(activeRange, "last");
-
-  const lastPeriodSameElapsedDayKey = getLastPeriodSameElapsedDayKey(
-    thisPeriodDays,
-    lastPeriodDays,
-    currentDay,
-  );
-
-  const thisPeriodCumulativeByDay = getNumberOfQuotesSignedCumulativeByDay(
-    thisPeriodDays,
-    thisPeriodStats,
-  );
-  const lastPeriodCumulativeByDay = getNumberOfQuotesSignedCumulativeByDay(
-    lastPeriodDays,
-    lastPeriodStats,
-  );
   const paceByDay = getPaceForEachDay(thisPeriodDays, goal);
 
   const chartData = assembleChartData(
