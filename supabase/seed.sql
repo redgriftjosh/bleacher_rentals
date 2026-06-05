@@ -13503,3 +13503,24 @@ on conflict on constraint sales_daily_unique_account_manager_date
 do update set
   quotes_sent = excluded.quotes_sent,
   updated_at  = now();
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Backfill: populate quotes_signed_count from all existing Events rows.
+-- Groups by (account_manager_uuid, booked_at date) and upserts the counts.
+-- ─────────────────────────────────────────────────────────────────────────────
+insert into public."SalesScorecardDailyAccountManagerStats"
+  (account_manager_uuid, stat_date, quotes_signed_count)
+select
+  am.id                                        as account_manager_uuid,
+  (e.booked_at at time zone 'UTC')::date       as stat_date,
+  count(*)::integer                             as quotes_signed_count
+from public."Events" e
+join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+where e.booked_at is not null
+  and e.deleted = false
+group by am.id, (e.booked_at at time zone 'UTC')::date
+on conflict on constraint sales_daily_unique_account_manager_date
+do update set
+  quotes_signed_count = excluded.quotes_signed_count,
+  updated_at          = now();
+
