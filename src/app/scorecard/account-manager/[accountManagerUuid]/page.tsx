@@ -49,7 +49,6 @@ export default function AccountManagerDetailPage() {
     targetType: "value_of_revenue",
   });
   const grossMarginData = useGrossMarginData({
-    createdByUserUuid: accountManager?.userUuid || null,
     accountManagerUuid: params.accountManagerUuid,
   });
 

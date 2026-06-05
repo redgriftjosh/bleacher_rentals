@@ -43,11 +43,7 @@ export function useSalesScorecardDailyAccountManagerStats(
       ]);
 
     if (accountManagerUuid) {
-      statsBuilder = statsBuilder.where(
-        "ssdams.account_manager_uuid",
-        "=",
-        accountManagerUuid,
-      );
+      statsBuilder = statsBuilder.where("ssdams.account_manager_uuid", "=", accountManagerUuid);
     }
 
     if (activeRange === "annually") {

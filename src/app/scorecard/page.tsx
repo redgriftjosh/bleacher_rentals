@@ -44,7 +44,6 @@ export default function ScorecardPage() {
     targetType: "value_of_revenue",
   });
   const grossMarginData = useGrossMarginData({
-    createdByUserUuid: null,
     accountManagerUuid: null,
   });
   const driverPayData = useDriverPayData();
