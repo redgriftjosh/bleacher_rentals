@@ -8,6 +8,7 @@ import { CompactDetailedStatWithGraph } from "@/features/scorecard/components/Co
 import { PAGE_NAME } from "@/features/scorecard/constants/nav";
 import { useEventData } from "@/features/scorecard/hooks/overview/useEventData";
 import { useGrossMarginData } from "@/features/scorecard/hooks/overview/useGrossMarginData";
+import { useRevenueData } from "@/features/scorecard/hooks/overview/useRevenueData";
 import TimeRangeToggle from "@/features/scorecard/components/TimeRangeToggle";
 import { CompactDetailedStatWithSpeedometer } from "@/features/scorecard/components/CompactDetailedStatWithSpeedometer";
 
@@ -40,14 +41,7 @@ export default function AccountManagerDetailPage() {
     dateField: "booked_at",
     targetType: "value_of_sales",
   });
-  const revenueData = useEventData({
-    onlyBooked: true,
-    useValue: true,
-    createdByUserUuid: accountManager?.userUuid || null,
-    accountManagerUuid: params.accountManagerUuid,
-    dateField: "event_start",
-    targetType: "value_of_revenue",
-  });
+  const revenueData = useRevenueData(params.accountManagerUuid);
   const grossMarginData = useGrossMarginData({
     accountManagerUuid: params.accountManagerUuid,
   });

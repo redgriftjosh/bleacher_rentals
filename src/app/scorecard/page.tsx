@@ -8,6 +8,7 @@ import { useAccountManagers } from "@/features/scorecard/hooks/accountManager/us
 import { useEventData } from "@/features/scorecard/hooks/overview/useEventData";
 import { useGrossMarginData } from "@/features/scorecard/hooks/overview/useGrossMarginData";
 import { useDriverPayData } from "@/features/scorecard/hooks/overview/useDriverPayData";
+import { useRevenueData } from "@/features/scorecard/hooks/overview/useRevenueData";
 import { CompactDetailedStatWithSpeedometer } from "@/features/scorecard/components/CompactDetailedStatWithSpeedometer";
 export default function ScorecardPage() {
   const quotesSentData = useEventData({
@@ -35,14 +36,7 @@ export default function ScorecardPage() {
     dateField: "booked_at",
     targetType: "value_of_sales",
   });
-  const revenueData = useEventData({
-    onlyBooked: true,
-    useValue: true,
-    createdByUserUuid: null,
-    accountManagerUuid: null,
-    dateField: "event_start",
-    targetType: "value_of_revenue",
-  });
+  const revenueData = useRevenueData();
   const grossMarginData = useGrossMarginData({
     accountManagerUuid: null,
   });
