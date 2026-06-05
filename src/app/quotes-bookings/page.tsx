@@ -12,6 +12,7 @@ import { useQuotesAndBookingsData } from "@/features/quotesAndBookings/hooks/use
 import type { QuotesBookingsEvent } from "@/features/quotesAndBookings/types";
 import { searchEvents } from "@/features/quotesAndBookings/utils/searchEvents";
 import { useRouter } from "next/navigation";
+import { formatValue } from "@/utils/formatters";
 
 function formatCurrency(cents: number | null): string {
   if (cents === null) return "$0.00";
@@ -110,7 +111,7 @@ export default function QuotesBookingsPage() {
     },
     {
       key: "amount",
-      header: "Amount",
+      header: `Amount (${formatValue((searchedData?.reduce((sum, e) => sum + (e.contract_revenue_cents ?? 0), 0) ?? 0) / 100, "money")})`,
       render: (event) => <CellText bold>{formatCurrency(event.contract_revenue_cents)}</CellText>,
     },
   ];
