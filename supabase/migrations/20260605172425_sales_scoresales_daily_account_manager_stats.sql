@@ -168,3 +168,126 @@ do update set
   driver_pay_cents = excluded.driver_pay_cents,
   updated_at       = now();
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Trigger: keep quotes_sent in sync with Events
+-- Fires AFTER INSERT / UPDATE / DELETE on Events.
+-- Recalculates the aggregate for every (account_manager, date) pair that could
+-- have changed: the OLD pair (AM + created_at date before the change) and the
+-- NEW pair (AM + created_at date after the change).
+--
+-- An event's account manager is resolved via:
+--   Events.created_by_user_uuid → AccountManagers.user_uuid
+--
+-- quotes_sent = count of non-deleted events for that AM on that date.
+-- ─────────────────────────────────────────────────────────────────────────────
+create or replace function sync_sales_daily_quotes_sent()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_old_am_uuid uuid;
+  v_old_date    date;
+  v_new_am_uuid uuid;
+  v_new_date    date;
+  v_total       integer;
+begin
+
+  -- ── OLD pair (DELETE or UPDATE) ──────────────────────────────────────────
+  if tg_op = 'DELETE' or tg_op = 'UPDATE' then
+    if OLD.created_by_user_uuid is not null and OLD.created_at is not null then
+      v_old_date := (OLD.created_at at time zone 'UTC')::date;
+
+      select am.id into v_old_am_uuid
+        from public."AccountManagers" am
+       where am.user_uuid = OLD.created_by_user_uuid;
+
+      if v_old_am_uuid is not null then
+        select count(*)::integer into v_total
+          from public."Events" e
+          join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+         where am.id = v_old_am_uuid
+           and (e.created_at at time zone 'UTC')::date = v_old_date
+           and e.deleted = false;
+
+        insert into public."SalesScorecardDailyAccountManagerStats"
+          (account_manager_uuid, stat_date, quotes_sent)
+        values
+          (v_old_am_uuid, v_old_date, v_total)
+        on conflict on constraint sales_daily_unique_account_manager_date
+        do update set
+          quotes_sent = excluded.quotes_sent,
+          updated_at  = now();
+      end if;
+
+    end if;
+  end if;
+
+  -- ── NEW pair (INSERT or UPDATE) ──────────────────────────────────────────
+  if tg_op = 'INSERT' or tg_op = 'UPDATE' then
+    if NEW.created_by_user_uuid is not null and NEW.created_at is not null then
+      v_new_date := (NEW.created_at at time zone 'UTC')::date;
+
+      select am.id into v_new_am_uuid
+        from public."AccountManagers" am
+       where am.user_uuid = NEW.created_by_user_uuid;
+
+      if v_new_am_uuid is not null then
+        if not (
+          tg_op = 'UPDATE'
+          and v_new_am_uuid = v_old_am_uuid
+          and v_new_date = v_old_date
+        ) then
+          select count(*)::integer into v_total
+            from public."Events" e
+            join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+           where am.id = v_new_am_uuid
+             and (e.created_at at time zone 'UTC')::date = v_new_date
+             and e.deleted = false;
+
+          insert into public."SalesScorecardDailyAccountManagerStats"
+            (account_manager_uuid, stat_date, quotes_sent)
+          values
+            (v_new_am_uuid, v_new_date, v_total)
+          on conflict on constraint sales_daily_unique_account_manager_date
+          do update set
+            quotes_sent = excluded.quotes_sent,
+            updated_at  = now();
+        end if;
+      end if;
+
+    end if;
+  end if;
+
+  if tg_op = 'DELETE' then
+    return OLD;
+  end if;
+  return NEW;
+end;
+$$;
+
+create trigger trg_sync_sales_daily_quotes_sent
+after insert or update or delete on public."Events"
+for each row execute function sync_sales_daily_quotes_sent();
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Backfill: populate quotes_sent from all existing Events rows.
+-- Groups by (account_manager_uuid, stat_date) and upserts the counts.
+-- ─────────────────────────────────────────────────────────────────────────────
+insert into public."SalesScorecardDailyAccountManagerStats"
+  (account_manager_uuid, stat_date, quotes_sent)
+select
+  am.id                                        as account_manager_uuid,
+  (e.created_at at time zone 'UTC')::date      as stat_date,
+  count(*)::integer                             as quotes_sent
+from public."Events" e
+join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+where e.created_at is not null
+  and e.deleted = false
+group by am.id, (e.created_at at time zone 'UTC')::date
+on conflict on constraint sales_daily_unique_account_manager_date
+do update set
+  quotes_sent = excluded.quotes_sent,
+  updated_at  = now();
+

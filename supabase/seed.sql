@@ -13484,3 +13484,22 @@ do update set
   driver_pay_cents = excluded.driver_pay_cents,
   updated_at       = now();
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Backfill: populate quotes_sent from all existing Events rows.
+-- Groups by (account_manager_uuid, stat_date) and upserts the counts.
+-- ─────────────────────────────────────────────────────────────────────────────
+insert into public."SalesScorecardDailyAccountManagerStats"
+  (account_manager_uuid, stat_date, quotes_sent)
+select
+  am.id                                        as account_manager_uuid,
+  (e.created_at at time zone 'UTC')::date      as stat_date,
+  count(*)::integer                             as quotes_sent
+from public."Events" e
+join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+where e.created_at is not null
+  and e.deleted = false
+group by am.id, (e.created_at at time zone 'UTC')::date
+on conflict on constraint sales_daily_unique_account_manager_date
+do update set
+  quotes_sent = excluded.quotes_sent,
+  updated_at  = now();
