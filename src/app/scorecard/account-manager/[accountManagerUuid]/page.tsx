@@ -6,11 +6,11 @@ import { ArrowLeft } from "lucide-react";
 import { useAccountManager } from "@/features/scorecard/hooks/accountManager/useAccountManager";
 import { CompactDetailedStatWithGraph } from "@/features/scorecard/components/CompactDetailedStatWithGraph";
 import { PAGE_NAME } from "@/features/scorecard/constants/nav";
-import { useEventData } from "@/features/scorecard/hooks/overview/useEventData";
 import { useGrossMarginData } from "@/features/scorecard/hooks/overview/useGrossMarginData";
 import { useRevenueData } from "@/features/scorecard/hooks/overview/useRevenueData";
 import { useValueOfQuotesSignedData } from "@/features/scorecard/hooks/overview/useValueOfQuotesSignedData";
 import { useNumberOfQuotesSignedData } from "@/features/scorecard/hooks/overview/useNumberOfQuotesSignedData";
+import { useNumberOfQuotesSentData } from "@/features/scorecard/hooks/overview/useNumberOfQuotesSentData";
 import TimeRangeToggle from "@/features/scorecard/components/TimeRangeToggle";
 import { CompactDetailedStatWithSpeedometer } from "@/features/scorecard/components/CompactDetailedStatWithSpeedometer";
 
@@ -19,14 +19,7 @@ export default function AccountManagerDetailPage() {
   const searchParams = useSearchParams();
   const timeRangeParam = searchParams.get("timeRange");
   const accountManager = useAccountManager(params.accountManagerUuid);
-  const quotesSentData = useEventData({
-    onlyBooked: false,
-    useValue: false,
-    createdByUserUuid: accountManager?.userUuid || null,
-    accountManagerUuid: params.accountManagerUuid,
-    dateField: "created_at",
-    targetType: "quotes",
-  });
+  const quotesSentData = useNumberOfQuotesSentData(params.accountManagerUuid);
   const quotesSignedData = useNumberOfQuotesSignedData(params.accountManagerUuid);
   const valueOfQuotesSignedData = useValueOfQuotesSignedData(params.accountManagerUuid);
   const revenueData = useRevenueData(params.accountManagerUuid);

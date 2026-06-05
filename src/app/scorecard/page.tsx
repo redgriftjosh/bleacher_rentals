@@ -5,22 +5,15 @@ import { CompactDetailedStatWithGraph } from "@/features/scorecard/components/Co
 import { ScorecardHeader } from "@/features/scorecard/components/ScorecardHeader";
 import { PAGE_NAME } from "@/features/scorecard/constants/nav";
 import { useAccountManagers } from "@/features/scorecard/hooks/accountManager/useAccountManagers";
-import { useEventData } from "@/features/scorecard/hooks/overview/useEventData";
 import { useGrossMarginData } from "@/features/scorecard/hooks/overview/useGrossMarginData";
 import { useDriverPayData } from "@/features/scorecard/hooks/overview/useDriverPayData";
 import { useRevenueData } from "@/features/scorecard/hooks/overview/useRevenueData";
 import { useValueOfQuotesSignedData } from "@/features/scorecard/hooks/overview/useValueOfQuotesSignedData";
 import { useNumberOfQuotesSignedData } from "@/features/scorecard/hooks/overview/useNumberOfQuotesSignedData";
+import { useNumberOfQuotesSentData } from "@/features/scorecard/hooks/overview/useNumberOfQuotesSentData";
 import { CompactDetailedStatWithSpeedometer } from "@/features/scorecard/components/CompactDetailedStatWithSpeedometer";
 export default function ScorecardPage() {
-  const quotesSentData = useEventData({
-    onlyBooked: false,
-    useValue: false,
-    createdByUserUuid: null,
-    accountManagerUuid: null,
-    dateField: "created_at",
-    targetType: "quotes",
-  });
+  const quotesSentData = useNumberOfQuotesSentData();
   console.log("Quotes Sent Data:", quotesSentData);
   const quotesSignedData = useNumberOfQuotesSignedData();
   const valueOfQuotesSignedData = useValueOfQuotesSignedData();
