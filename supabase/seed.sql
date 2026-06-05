@@ -13524,3 +13524,23 @@ do update set
   quotes_signed_count = excluded.quotes_signed_count,
   updated_at          = now();
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Backfill: populate quotes_signed_value_cents from all existing Events rows.
+-- Groups by (account_manager_uuid, booked_at date) and upserts the sums.
+-- ─────────────────────────────────────────────────────────────────────────────
+insert into public."SalesScorecardDailyAccountManagerStats"
+  (account_manager_uuid, stat_date, quotes_signed_value_cents)
+select
+  am.id                                                  as account_manager_uuid,
+  (e.booked_at at time zone 'UTC')::date                 as stat_date,
+  coalesce(sum(e.contract_revenue_cents), 0)              as quotes_signed_value_cents
+from public."Events" e
+join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+where e.booked_at is not null
+  and e.deleted = false
+group by am.id, (e.booked_at at time zone 'UTC')::date
+on conflict on constraint sales_daily_unique_account_manager_date
+do update set
+  quotes_signed_value_cents = excluded.quotes_signed_value_cents,
+  updated_at                = now();
+
