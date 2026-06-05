@@ -68,7 +68,12 @@ export default function QuotesBookingsPage() {
     {
       key: "event_name",
       header: "Event Name",
-      render: (event) => <CellText bold>{event.event_name}</CellText>,
+      render: (event) => (
+        <div>
+          <CellText bold>{event.event_name}</CellText>
+          <CellSecondary>Created: {formatDate(event.created_at)}</CellSecondary>
+        </div>
+      ),
     },
     {
       key: "status",
