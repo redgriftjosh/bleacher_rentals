@@ -22,6 +22,7 @@ export function useQuotesAndBookingsData(filters: QuotesBookingsFilters) {
         "e.event_status as event_status",
         "e.contract_revenue_cents as contract_revenue_cents",
         "e.created_at as created_at",
+        "e.booked_at as booked_at",
         "e.created_by_user_uuid as created_by_user_uuid",
         "u.first_name as account_manager_first_name",
         "u.last_name as account_manager_last_name",

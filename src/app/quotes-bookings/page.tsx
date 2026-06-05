@@ -102,8 +102,10 @@ export default function QuotesBookingsPage() {
     },
     {
       key: "end_date",
-      header: "End Date",
-      render: (event) => <CellSecondary>{formatDate(event.event_end)}</CellSecondary>,
+      header: "Booked",
+      render: (event) => (
+        <CellSecondary>{event.booked_at ? formatDate(event.booked_at) : "—"}</CellSecondary>
+      ),
     },
     {
       key: "amount",
