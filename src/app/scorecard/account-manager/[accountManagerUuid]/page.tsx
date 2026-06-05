@@ -10,6 +10,7 @@ import { useEventData } from "@/features/scorecard/hooks/overview/useEventData";
 import { useGrossMarginData } from "@/features/scorecard/hooks/overview/useGrossMarginData";
 import { useRevenueData } from "@/features/scorecard/hooks/overview/useRevenueData";
 import { useValueOfQuotesSignedData } from "@/features/scorecard/hooks/overview/useValueOfQuotesSignedData";
+import { useNumberOfQuotesSignedData } from "@/features/scorecard/hooks/overview/useNumberOfQuotesSignedData";
 import TimeRangeToggle from "@/features/scorecard/components/TimeRangeToggle";
 import { CompactDetailedStatWithSpeedometer } from "@/features/scorecard/components/CompactDetailedStatWithSpeedometer";
 
@@ -26,14 +27,7 @@ export default function AccountManagerDetailPage() {
     dateField: "created_at",
     targetType: "quotes",
   });
-  const quotesSignedData = useEventData({
-    onlyBooked: true,
-    useValue: false,
-    createdByUserUuid: accountManager?.userUuid || null,
-    accountManagerUuid: params.accountManagerUuid,
-    dateField: "booked_at",
-    targetType: "sales",
-  });
+  const quotesSignedData = useNumberOfQuotesSignedData(params.accountManagerUuid);
   const valueOfQuotesSignedData = useValueOfQuotesSignedData(params.accountManagerUuid);
   const revenueData = useRevenueData(params.accountManagerUuid);
   const grossMarginData = useGrossMarginData({
