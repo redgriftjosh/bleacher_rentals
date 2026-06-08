@@ -9,6 +9,7 @@ import { SetTargetsModal, type StatType } from "./SetTargetsModal";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { canEditTargets } from "../util/canEditTargets";
 import { formatCompactRounded, formatValue, type FormatUnit } from "@/utils/formatters";
+import { getPaceStatus, PACE_TEXT_COLOR, PACE_HEX } from "../util/paceStatus";
 
 type ChartDataPoint = {
   day: string;
@@ -52,16 +53,9 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
 
   const unit = props.unit ?? "number";
 
-  // Calculate pace status
-  const paceDelta = props.thisPeriod.paceTarget - props.thisPeriod.current;
-  const paceStatus = paceDelta <= 0 ? "good" : paceDelta <= 5 ? "warn" : "bad";
-
-  const paceColor =
-    paceStatus === "good"
-      ? "text-green-600"
-      : paceStatus === "warn"
-        ? "text-amber-500"
-        : "text-red-600";
+  const paceStatus = getPaceStatus(props.thisPeriod.current, props.thisPeriod.paceTarget);
+  const paceTextColor = PACE_TEXT_COLOR[paceStatus];
+  const paceHex = PACE_HEX[paceStatus];
 
   // Calculate max values for chart scaling
   const thisPeriodValues = props.chartData
@@ -102,11 +96,11 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
         <div className="relative border border-gray-200 rounded-lg p-3 pt-4">
-          <div className="absolute -top-2 left-3 bg-white px-2 text-xs font-semibold text-green-600 tracking-wide">
+          <div className={`absolute -top-2 left-3 bg-white px-2 text-xs font-semibold ${paceTextColor} tracking-wide`}>
             {`THIS ${periodLabel.toUpperCase()}`}
           </div>
           <div className="flex items-baseline gap-2 -mt-2">
-            <span className="text-4xl font-semibold text-green-600">
+            <span className={`text-4xl font-semibold ${paceTextColor}`}>
               {formatValue(props.thisPeriod.current, unit)}
             </span>
             <span className="text-sm font-medium text-gray-400">
@@ -197,9 +191,7 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
               <Line
                 type="monotone"
                 dataKey="thisPeriod"
-                stroke={
-                  paceStatus === "good" ? "#16A34A" : paceStatus === "warn" ? "#F59E0B" : "#DC2626"
-                }
+                stroke={paceHex}
                 strokeWidth={3}
                 dot={false}
               />

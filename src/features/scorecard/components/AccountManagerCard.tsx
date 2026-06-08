@@ -28,53 +28,41 @@ export function AccountManagerCard({ accountManager }: AccountManagerCardProps) 
     {
       title: "Quotes Sent",
       value: data.quotesSent.thisPeriod.current,
-      paceDelta: data.quotesSent.thisPeriod.current - data.quotesSent.lastPeriod.currentAtSameDay,
-      progress: data.quotesSent.thisPeriod.goal > 0
-        ? data.quotesSent.thisPeriod.current / data.quotesSent.thisPeriod.goal
-        : 0,
+      paceTarget: data.quotesSent.thisPeriod.paceTarget,
+      goal: data.quotesSent.thisPeriod.goal,
     },
     {
       title: "Quotes Signed",
       value: data.quotesSigned.thisPeriod.current,
-      paceDelta: data.quotesSigned.thisPeriod.current - data.quotesSigned.lastPeriod.currentAtSameDay,
-      progress: data.quotesSigned.thisPeriod.goal > 0
-        ? data.quotesSigned.thisPeriod.current / data.quotesSigned.thisPeriod.goal
-        : 0,
+      paceTarget: data.quotesSigned.thisPeriod.paceTarget,
+      goal: data.quotesSigned.thisPeriod.goal,
     },
     {
       title: "Value Signed",
       value: data.valueOfQuotesSigned.thisPeriod.current,
-      paceDelta:
-        data.valueOfQuotesSigned.thisPeriod.current -
-        data.valueOfQuotesSigned.lastPeriod.currentAtSameDay,
-      progress: data.valueOfQuotesSigned.thisPeriod.goal > 0
-        ? data.valueOfQuotesSigned.thisPeriod.current / data.valueOfQuotesSigned.thisPeriod.goal
-        : 0,
+      paceTarget: data.valueOfQuotesSigned.thisPeriod.paceTarget,
+      goal: data.valueOfQuotesSigned.thisPeriod.goal,
       isMoney: true,
     },
     {
       title: "Revenue",
       value: data.revenue.thisPeriod.current,
-      paceDelta: data.revenue.thisPeriod.current - data.revenue.lastPeriod.currentAtSameDay,
-      progress: data.revenue.thisPeriod.goal > 0
-        ? data.revenue.thisPeriod.current / data.revenue.thisPeriod.goal
-        : 0,
+      paceTarget: data.revenue.thisPeriod.paceTarget,
+      goal: data.revenue.thisPeriod.goal,
       isMoney: true,
     },
     {
       title: "Driver Pay",
       value: data.driverPay.thisPeriod.current,
-      paceDelta: data.driverPay.thisPeriod.current - data.driverPay.lastPeriod.currentAtSameDay,
-      progress: 0,
+      paceTarget: 0,
+      goal: 0,
       isMoney: true,
     },
     {
       title: "Gross Margin",
       value: data.grossMargin.thisPeriod.current,
-      paceDelta: data.grossMargin.thisPeriod.current - data.grossMargin.lastPeriod.value,
-      progress: data.grossMargin.thisPeriod.goal > 0
-        ? data.grossMargin.thisPeriod.current / data.grossMargin.thisPeriod.goal
-        : 0,
+      paceTarget: data.grossMargin.thisPeriod.goal, // gross margin pace = goal (it's a %)
+      goal: data.grossMargin.thisPeriod.goal,
       isPercentage: true,
     },
   ];
@@ -104,8 +92,8 @@ export function AccountManagerCard({ accountManager }: AccountManagerCardProps) 
             key={stat.title}
             title={stat.title}
             value={stat.value}
-            paceDelta={stat.paceDelta}
-            progress={stat.progress}
+            paceTarget={stat.paceTarget}
+            goal={stat.goal}
             isMoney={stat.isMoney}
             isPercentage={stat.isPercentage}
           />
