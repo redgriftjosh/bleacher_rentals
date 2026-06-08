@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Flag, History, Target } from "lucide-react";
+import { ExternalLink, Flag, History, Target } from "lucide-react";
 import Link from "next/link";
 import { LineChart, Line, ResponsiveContainer, XAxis, Tooltip as RechartsTooltip } from "recharts";
 import { useSearchParams } from "next/navigation";
 import { SetTargetsModal, type StatType } from "./SetTargetsModal";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { canEditTargets } from "../util/canEditTargets";
+import { formatCompactRounded, formatValue, type FormatUnit } from "@/utils/formatters";
 
 type ChartDataPoint = {
   day: string;
@@ -18,14 +19,13 @@ type ChartDataPoint = {
   pace: number;
 };
 
-type Unit = "money" | "number" | "percentage";
-
 type CompactDetailedStatWithGraphProps = {
   label: string;
   accountManagerUuid?: string | null;
   statType?: StatType;
   historyHref?: string;
-  unit?: Unit;
+  seeDataHref?: string;
+  unit?: FormatUnit;
   thisPeriod: {
     current: number;
     goal: number;
@@ -51,43 +51,6 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
     timeRangeParam === "quarterly" ? "Quarter" : timeRangeParam === "annually" ? "Year" : "Week";
 
   const unit = props.unit ?? "number";
-
-  const formatCompactRounded = (value: number) => {
-    const rounded = Math.round(value);
-    const absValue = Math.abs(rounded);
-
-    if (absValue < 1_000) {
-      return `${rounded}`;
-    }
-
-    if (absValue < 10_000) {
-      return `${(rounded / 1_000).toFixed(1)}k`;
-    }
-
-    if (absValue < 1_000_000) {
-      return `${Math.round(rounded / 1_000)}k`;
-    }
-
-    if (absValue < 10_000_000) {
-      return `${(rounded / 1_000_000).toFixed(1)}m`;
-    }
-
-    return `${Math.round(rounded / 1_000_000)}m`;
-  };
-
-  const formatValue = (value: number) => {
-    if (unit === "percentage") {
-      return `${Math.round(value)}%`;
-    }
-
-    const compactValue = formatCompactRounded(value);
-
-    if (unit === "money") {
-      return `$${compactValue}`;
-    }
-
-    return compactValue;
-  };
 
   // Calculate pace status
   const paceDelta = props.thisPeriod.paceTarget - props.thisPeriod.current;
@@ -115,6 +78,16 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
           {props.label}
         </span>
         <div className="flex items-center gap-2">
+          {props.seeDataHref && (
+            <Link
+              href={props.seeDataHref}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition"
+              title="See the data behind this number"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span className="whitespace-nowrap">See data</span>
+            </Link>
+          )}
           {canOpenTargets && (
             <button
               onClick={() => setTargetsModalOpen(true)}
@@ -125,16 +98,6 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
               <span className="whitespace-nowrap">Set targets</span>
             </button>
           )}
-          {/* {props.historyHref && (
-            <Link
-              href={props.historyHref}
-              className="text-gray-400 hover:text-gray-600 transition"
-              aria-label={`View ${props.label.toLowerCase()} history`}
-              title="View history"
-            >
-              <History className="h-4 w-4" />
-            </Link>
-          )} */}
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
@@ -144,14 +107,14 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
           </div>
           <div className="flex items-baseline gap-2 -mt-2">
             <span className="text-4xl font-semibold text-green-600">
-              {formatValue(props.thisPeriod.current)}
+              {formatValue(props.thisPeriod.current, unit)}
             </span>
             <span className="text-sm font-medium text-gray-400">
-              / {formatValue(props.thisPeriod.paceTarget)}
+              / {formatValue(props.thisPeriod.paceTarget, unit)}
             </span>
           </div>
           <div className="flex items-center gap-2  text-sm text-gray-500">
-            <span>{formatValue(props.thisPeriod.goal)}</span>
+            <span>{formatValue(props.thisPeriod.goal, unit)}</span>
             <Target className="h-4 w-4 -ml-1 text-gray-400" />
           </div>
         </div>
@@ -162,11 +125,11 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
           </div>
           <div className="flex items-baseline gap-2 -mt-2">
             <span className="text-4xl font-semibold text-gray-400">
-              {formatValue(props.lastPeriod.currentAtSameDay)}
+              {formatValue(props.lastPeriod.currentAtSameDay, unit)}
             </span>
           </div>
           <div className="flex items-center gap-2  text-sm text-gray-500">
-            <span>{formatValue(props.lastPeriod.totalAtEnd)}</span>
+            <span>{formatValue(props.lastPeriod.totalAtEnd, unit)}</span>
             <Flag className="h-4 w-4 -ml-1 text-gray-400" />
           </div>
         </div>
@@ -197,7 +160,7 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
                 }}
                 formatter={(value, name) => {
                   const numericValue = typeof value === "number" ? value : 0;
-                  const formattedValue = formatValue(numericValue);
+                  const formattedValue = formatValue(numericValue, unit);
                   if (name === "pace") return [formattedValue, "Pace"];
                   if (name === "lastPeriod") return [formattedValue, `Last ${periodLabel}`];
                   return [formattedValue, `This ${periodLabel}`];

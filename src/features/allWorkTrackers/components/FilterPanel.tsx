@@ -1,17 +1,18 @@
 "use client";
 
-import { QuotesBookingsFilters } from "../types";
+import { WorkTrackerFilters } from "../types";
 import { StatusMultiSelect } from "./filters/StatusMultiSelect";
-import { DateRangeInput } from "./filters/DateRangeInput";
-import { AccountManagerMultiSelect } from "./filters/AccountManagerMultiSelect";
-import { TimezoneSelect } from "./filters/TimezoneSelect";
+import { DriverSelect } from "./filters/DriverSelect";
+import { AccountManagerSelect } from "./filters/AccountManagerSelect";
+import { DateRangeInput } from "@/features/quotesAndBookings/components/filters/DateRangeInput";
+import { TimezoneSelect } from "@/features/quotesAndBookings/components/filters/TimezoneSelect";
 
 type FilterPanelProps = {
-  filters: QuotesBookingsFilters;
+  filters: WorkTrackerFilters;
   onStatusesChange: (values: string[]) => void;
-  onCreatedRangeChange: (from: string | null, to: string | null) => void;
-  onEventRangeChange: (from: string | null, to: string | null) => void;
-  onBookedRangeChange: (from: string | null, to: string | null) => void;
+  onDateRangeChange: (from: string | null, to: string | null) => void;
+  onCompletedRangeChange: (from: string | null, to: string | null) => void;
+  onDriverChange: (uuid: string | null) => void;
   onAccountManagerChange: (uuid: string | null) => void;
   onClear: () => void;
 };
@@ -19,9 +20,9 @@ type FilterPanelProps = {
 export function FilterPanel({
   filters,
   onStatusesChange,
-  onCreatedRangeChange,
-  onEventRangeChange,
-  onBookedRangeChange,
+  onDateRangeChange,
+  onCompletedRangeChange,
+  onDriverChange,
   onAccountManagerChange,
   onClear,
 }: FilterPanelProps) {
@@ -35,32 +36,22 @@ export function FilterPanel({
           </div>
 
           <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2">Created At</div>
+            <div className="text-sm font-semibold text-gray-800 mb-2">Work Date</div>
             <DateRangeInput
-              label="Created"
-              from={filters.createdFrom}
-              to={filters.createdTo}
-              onChange={onCreatedRangeChange}
+              label="Date"
+              from={filters.dateFrom}
+              to={filters.dateTo}
+              onChange={onDateRangeChange}
             />
           </div>
 
           <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2">Event Start</div>
+            <div className="text-sm font-semibold text-gray-800 mb-2">Completed</div>
             <DateRangeInput
-              label="Event"
-              from={filters.eventFrom}
-              to={filters.eventTo}
-              onChange={onEventRangeChange}
-            />
-          </div>
-
-          <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2">Booked</div>
-            <DateRangeInput
-              label="Booked"
-              from={filters.bookedFrom}
-              to={filters.bookedTo}
-              onChange={onBookedRangeChange}
+              label="Completed"
+              from={filters.completedFrom}
+              to={filters.completedTo}
+              onChange={onCompletedRangeChange}
             />
           </div>
         </div>
@@ -68,9 +59,17 @@ export function FilterPanel({
         <div className="space-y-4">
           <div>
             <div className="text-sm font-semibold text-gray-800 mb-2">Account Manager</div>
-            <AccountManagerMultiSelect
-              selectedUserUuid={filters.accountManagerUserUuid}
+            <AccountManagerSelect
+              selectedAccountManagerUuid={filters.accountManagerUuid}
               onChange={onAccountManagerChange}
+            />
+          </div>
+
+          <div>
+            <div className="text-sm font-semibold text-gray-800 mb-2">Driver</div>
+            <DriverSelect
+              selectedDriverUuid={filters.driverUuid}
+              onChange={onDriverChange}
             />
           </div>
 
