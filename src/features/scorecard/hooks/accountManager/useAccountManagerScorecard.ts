@@ -144,8 +144,9 @@ export function useAccountManagerScorecard(accountManagerUuid: string, userUuid:
   const driverPayChart = assembleChartData(activeRange, thisPeriodDays, lastPeriodDays, currentDay, driverPayThisCumulative, driverPayLastCumulative, getPaceForEachDay(thisPeriodDays, 0));
 
   // ── Gross Margin ──
-  const thisRevenue = revenueThisCumulative[thisPeriodDays[thisPeriodDays.length - 1]] ?? 0;
-  const thisDriverPay = driverPayThisCumulative[thisPeriodDays[thisPeriodDays.length - 1]] ?? 0;
+  // Read at currentDay so gross margin matches the same point-in-time as the other cards.
+  const thisRevenue = revenueThisCumulative[currentDay] ?? 0;
+  const thisDriverPay = driverPayThisCumulative[currentDay] ?? 0;
   const lastRevenue = revenueLastCumulative[lastPeriodDays[lastPeriodDays.length - 1]] ?? 0;
   const lastDriverPay = driverPayLastCumulative[lastPeriodDays[lastPeriodDays.length - 1]] ?? 0;
 

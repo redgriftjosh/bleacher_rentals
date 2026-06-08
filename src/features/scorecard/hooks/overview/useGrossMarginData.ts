@@ -20,7 +20,7 @@ type GrossMarginData = {
 };
 
 export function useGrossMarginData(): GrossMarginData {
-  const { allEvents, allWorkTrackers, activeRange, periodStart, thisPeriodDays, lastPeriodDays, getGoal, timezone } =
+  const { allEvents, allWorkTrackers, activeRange, periodStart, currentDay, thisPeriodDays, lastPeriodDays, getGoal, timezone } =
     useScorecardStatsContext();
 
   const goal = getGoal("gross_margin_percent");
@@ -53,8 +53,10 @@ export function useGrossMarginData(): GrossMarginData {
     [lastPeriodDays, allWorkTrackers, timezone],
   );
 
-  const thisRevenue = thisRevenueCumulative[thisPeriodDays[thisPeriodDays.length - 1]] ?? 0;
-  const thisDriverPay = thisDriverPayCumulative[thisPeriodDays[thisPeriodDays.length - 1]] ?? 0;
+  // Read at currentDay (not end-of-period) so gross margin matches the
+  // same point-in-time as the driver pay card and revenue card.
+  const thisRevenue = thisRevenueCumulative[currentDay] ?? 0;
+  const thisDriverPay = thisDriverPayCumulative[currentDay] ?? 0;
   const lastRevenue = lastRevenueCumulative[lastPeriodDays[lastPeriodDays.length - 1]] ?? 0;
   const lastDriverPay = lastDriverPayCumulative[lastPeriodDays[lastPeriodDays.length - 1]] ?? 0;
 
