@@ -101,7 +101,7 @@ export default function QuotesBookingsPage() {
       header: `Event Name (${searchedData?.length ?? 0})`,
       render: (event) => (
         <div>
-          <CellText bold>{event.event_name}</CellText>
+          <CellText bold>{event.event_name && event.event_name.length > 70 ? `${event.event_name.slice(0, 70)}...` : event.event_name}</CellText>
           <CellSecondary>Created: {formatDate(event.created_at)}</CellSecondary>
         </div>
       ),
