@@ -64,6 +64,7 @@ export async function updateEvent(
     goodshuffle_url: state.goodshuffleUrl ?? null,
     created_by_user_uuid: state.ownerUserUuid ?? null,
     booked_at: state.bookedAt ? new Date(state.bookedAt).toISOString() : null,
+    ...(state.createdAt ? { created_at: new Date(state.createdAt).toISOString() } : {}),
   };
 
   const { error: eventError } = await supabase

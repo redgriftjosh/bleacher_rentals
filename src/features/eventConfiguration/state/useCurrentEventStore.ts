@@ -47,6 +47,7 @@ export type CurrentEventState = {
   hueOpen: boolean;
   contractRevenueCents: number | null;
   bookedAt: string | null;
+  createdAt: string | null;
   // Modal state for Create Quote modal
   isModalOpen: boolean;
 };
@@ -95,6 +96,7 @@ const initialState: CurrentEventState = {
   contractRevenueCents: null,
   isModalOpen: false,
   bookedAt: null,
+  createdAt: null,
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.
