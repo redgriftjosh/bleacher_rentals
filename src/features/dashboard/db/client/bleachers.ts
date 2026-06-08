@@ -2,7 +2,7 @@
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { Database, Tables } from "../../../../../database.types";
 // import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
-import { Bleacher } from "../../types";
+import { Bleacher, DamageSeverity } from "../../types";
 import { useDashboardBleachersStore } from "../../state/useDashboardBleachersStore";
 import { SupabaseClient } from "@supabase/supabase-js";
 
@@ -73,9 +73,11 @@ type Row = {
   damage_reports: {
     id: string;
     bleacher_uuid: string;
-    inspection_uuid: string;
+    inspection_uuid: string | null;
     is_safe_to_sit: boolean;
     is_safe_to_haul: boolean;
+    seat_damage: string | null;
+    haul_damage: string | null;
     note: string | null;
     created_at: string;
     resolved_at: string | null;
@@ -173,6 +175,8 @@ export async function FetchDashboardBleachers(
       inspection_uuid,
       is_safe_to_sit,
       is_safe_to_haul,
+      seat_damage,
+      haul_damage,
       note,
       created_at,
       resolved_at,
@@ -259,9 +263,11 @@ export async function FetchDashboardBleachers(
       return {
         damageReportUuid: dr.id,
         bleacherUuid: dr.bleacher_uuid,
-        inspectionUuid: dr.inspection_uuid,
+        inspectionUuid: dr.inspection_uuid ?? null,
         isSafeToSit: dr.is_safe_to_sit,
         isSafeToHaul: dr.is_safe_to_haul,
+        seatDamage: (dr.seat_damage ?? "none") as DamageSeverity,
+        haulDamage: (dr.haul_damage ?? "none") as DamageSeverity,
         note: dr.note,
         createdAt: dr.created_at,
         resolvedAt: dr.resolved_at,

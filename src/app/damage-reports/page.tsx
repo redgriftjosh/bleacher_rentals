@@ -8,12 +8,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Plus, X } from "lucide-react";
 import { DamageReportModal, EditDamageReport } from "./DamageReportModal";
 
+type DamageSeverity = "none" | "minor" | "major";
+
 type DamageReport = {
   id: string;
   bleacher_uuid: string;
-  inspection_uuid: string;
+  inspection_uuid: string | null;
   is_safe_to_sit: boolean;
   is_safe_to_haul: boolean;
+  seat_damage: DamageSeverity;
+  haul_damage: DamageSeverity;
   note: string | null;
   created_at: string;
   resolved_at: string | null;
@@ -187,6 +191,22 @@ function DamageReportsContent() {
   );
 }
 
+// ─── Severity Badge ──────────────────────────────────────────────────────────
+
+const SEVERITY_COLORS: Record<DamageSeverity, string> = {
+  none: "text-green-700",
+  minor: "text-yellow-700",
+  major: "text-red-700",
+};
+
+function SeverityBadge({ label, severity }: { label: string; severity: DamageSeverity }) {
+  return (
+    <span className={`font-medium capitalize ${SEVERITY_COLORS[severity]}`}>
+      {label}: {severity}
+    </span>
+  );
+}
+
 // ─── Damage Report Card ───────────────────────────────────────────────────────
 
 function DamageReportCard({ report, onClick }: { report: DamageReport; onClick: () => void }) {
@@ -226,16 +246,8 @@ function DamageReportCard({ report, onClick }: { report: DamageReport; onClick: 
           </div>
 
           <div className="flex gap-4 text-xs mb-2">
-            <span
-              className={`font-medium ${report.is_safe_to_sit ? "text-green-700" : "text-red-700"}`}
-            >
-              Safe to sit: {report.is_safe_to_sit ? "Yes" : "No"}
-            </span>
-            <span
-              className={`font-medium ${report.is_safe_to_haul ? "text-green-700" : "text-red-700"}`}
-            >
-              Safe to haul: {report.is_safe_to_haul ? "Yes" : "No"}
-            </span>
+            <SeverityBadge label="Seat" severity={report.seat_damage} />
+            <SeverityBadge label="Haul" severity={report.haul_damage} />
           </div>
 
           {report.note && <p className="text-sm text-gray-700 mb-2">{report.note}</p>}

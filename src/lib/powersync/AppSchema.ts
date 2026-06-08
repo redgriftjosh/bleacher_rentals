@@ -6,6 +6,8 @@ export const DASHBOARD_FILTER_SETTINGS_TABLE = "DashboardFilterSettings";
 export const DRIVERS_TABLE = "Drivers";
 export const USERS_TABLE = "Users";
 export const WORK_TRACKERS_TABLE = "WorkTrackers";
+export const SALES_SCORECARD_DAILY_ACCOUNT_MANAGER_STATS_TABLE =
+  "SalesScorecardDailyAccountManagerStats";
 
 const AccountManagersCols = {
   created_at: column.text,
@@ -56,6 +58,7 @@ const BleachersCols = {
   opening_direction: column.text,
   deleted: column.integer,
   nvis_pdf_path: column.text,
+  zone_uuid: column.text,
 } satisfies PowerSyncColsFor<"Bleachers">;
 const Bleachers = new Table(BleachersCols, {
   indexes: {
@@ -63,6 +66,31 @@ const Bleachers = new Table(BleachersCols, {
     winter_account_manager_uuid: ["winter_account_manager_uuid"],
     summer_home_base_uuid: ["summer_home_base_uuid"],
     winter_home_base_uuid: ["winter_home_base_uuid"],
+    zone_uuid: ["zone_uuid"],
+  },
+});
+
+const AccountManagerZonesCols = {
+  created_at: column.text,
+  account_manager_uuid: column.text,
+  zone_uuid: column.text,
+} satisfies PowerSyncColsFor<"AccountManagerZones">;
+const AccountManagerZones = new Table(AccountManagerZonesCols, {
+  indexes: {
+    account_manager_uuid: ["account_manager_uuid"],
+    zone_uuid: ["zone_uuid"],
+  },
+});
+
+const DriverZonesCols = {
+  created_at: column.text,
+  driver_uuid: column.text,
+  zone_uuid: column.text,
+} satisfies PowerSyncColsFor<"DriverZones">;
+const DriverZones = new Table(DriverZonesCols, {
+  indexes: {
+    driver_uuid: ["driver_uuid"],
+    zone_uuid: ["zone_uuid"],
   },
 });
 
@@ -400,10 +428,13 @@ const DamageReportsCols = {
   bleacher_uuid: column.text,
   is_safe_to_sit: column.integer,
   is_safe_to_haul: column.integer,
+  seat_damage: column.text,
+  haul_damage: column.text,
   note: column.text,
   created_at: column.text,
   resolved_at: column.text,
   maintenance_event_uuid: column.text,
+  created_by_user_uuid: column.text,
 } satisfies PowerSyncColsFor<"DamageReports">;
 const DamageReports = new Table(DamageReportsCols, {
   indexes: { bleacher_uuid: ["bleacher_uuid"], maintenance_event_uuid: ["maintenance_event_uuid"] },
@@ -781,9 +812,34 @@ const SalesOffices = new Table(SalesOfficesCols, {
   indexes: { address_uuid: ["address_uuid"] },
 });
 
+// =====================
+// Sales Scorecard
+// =====================
+const SalesScorecardDailyAccountManagerStatsCols = {
+  account_manager_uuid: column.text,
+  stat_date: column.text,
+  quotes_sent: column.integer,
+  quotes_signed_count: column.integer,
+  quotes_signed_value_cents: column.integer,
+  revenue_cents: column.integer,
+  driver_pay_cents: column.integer,
+  created_at: column.text,
+  updated_at: column.text,
+} satisfies PowerSyncColsFor<"SalesScorecardDailyAccountManagerStats">;
+const SalesScorecardDailyAccountManagerStats = new Table(
+  SalesScorecardDailyAccountManagerStatsCols,
+  {
+    indexes: {
+      account_manager_uuid: ["account_manager_uuid"],
+      stat_date: ["stat_date"],
+    },
+  },
+);
+
 export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
+  AccountManagerZones,
   Developers,
   DashboardFilterSettings,
   DriverUnavailability,
@@ -796,6 +852,7 @@ export const AppSchema = new Schema({
   Events,
   HomeBases,
   Drivers,
+  DriverZones,
   DamageReports,
   InspectionQuestions,
   MaintenanceEvents,
@@ -836,16 +893,19 @@ export const AppSchema = new Schema({
   PriceDurations,
   Prices,
   SalesOffices,
+  SalesScorecardDailyAccountManagerStats,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
 export type BlocksRecord = PowerSyncDB["Blocks"];
 export type AddressRecord = PowerSyncDB["Addresses"];
 export type AccountManagerRecord = PowerSyncDB["AccountManagers"];
+export type AccountManagerZonesRecord = PowerSyncDB["AccountManagerZones"];
 export type DeveloperRecord = PowerSyncDB["Developers"];
 export type DashboardFilterSettingsRecord = PowerSyncDB["DashboardFilterSettings"];
 export type TaskRecord = PowerSyncDB["Tasks"];
 export type DriverRecord = PowerSyncDB["Drivers"];
+export type DriverZonesRecord = PowerSyncDB["DriverZones"];
 export type UserRecord = PowerSyncDB["Users"];
 export type UserStatusRecord = PowerSyncDB["UserStatuses"];
 export type HomeBasesRecord = PowerSyncDB["HomeBases"];
@@ -890,3 +950,5 @@ export type PaymentInstallmentsRecord = PowerSyncDB["PaymentInstallments"];
 export type PriceDurationsRecord = PowerSyncDB["PriceDurations"];
 export type PricesRecord = PowerSyncDB["Prices"];
 export type SalesOfficesRecord = PowerSyncDB["SalesOffices"];
+export type SalesScorecardDailyAccountManagerStatsRecord =
+  PowerSyncDB["SalesScorecardDailyAccountManagerStats"];
