@@ -4,12 +4,14 @@ import { QuotesBookingsFilters } from "../types";
 import { StatusMultiSelect } from "./filters/StatusMultiSelect";
 import { DateRangeInput } from "./filters/DateRangeInput";
 import { AccountManagerMultiSelect } from "./filters/AccountManagerMultiSelect";
+import { TimezoneSelect } from "./filters/TimezoneSelect";
 
 type FilterPanelProps = {
   filters: QuotesBookingsFilters;
   onStatusesChange: (values: string[]) => void;
   onCreatedRangeChange: (from: string | null, to: string | null) => void;
   onEventRangeChange: (from: string | null, to: string | null) => void;
+  onBookedRangeChange: (from: string | null, to: string | null) => void;
   onAccountManagerChange: (uuid: string | null) => void;
   onClear: () => void;
 };
@@ -19,6 +21,7 @@ export function FilterPanel({
   onStatusesChange,
   onCreatedRangeChange,
   onEventRangeChange,
+  onBookedRangeChange,
   onAccountManagerChange,
   onClear,
 }: FilterPanelProps) {
@@ -42,16 +45,23 @@ export function FilterPanel({
           </div>
 
           <div>
-            <div className="text-sm font-semibold text-gray-800 mb-2">Event Date</div>
+            <div className="text-sm font-semibold text-gray-800 mb-2">Event Start</div>
             <DateRangeInput
               label="Event"
               from={filters.eventFrom}
               to={filters.eventTo}
               onChange={onEventRangeChange}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Events are included if their date range overlaps the selected range.
-            </p>
+          </div>
+
+          <div>
+            <div className="text-sm font-semibold text-gray-800 mb-2">Booked</div>
+            <DateRangeInput
+              label="Booked"
+              from={filters.bookedFrom}
+              to={filters.bookedTo}
+              onChange={onBookedRangeChange}
+            />
           </div>
         </div>
 
@@ -62,6 +72,11 @@ export function FilterPanel({
               selectedUserUuid={filters.accountManagerUserUuid}
               onChange={onAccountManagerChange}
             />
+          </div>
+
+          <div>
+            <div className="text-sm font-semibold text-gray-800 mb-2">Timezone</div>
+            <TimezoneSelect />
           </div>
         </div>
       </div>

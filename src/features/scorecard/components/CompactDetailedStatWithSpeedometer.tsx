@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Target } from "lucide-react";
+import { ExternalLink, Target } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { SetTargetsModal, type StatType } from "./SetTargetsModal";
 import ReactSpeedometer from "react-d3-speedometer";
@@ -23,6 +23,7 @@ export type CompactDetailedStatWithSpeedometerProps = {
   accountManagerUuid?: string | null;
   statType?: StatType;
   historyHref?: string;
+  onSeeDataClick?: () => void;
   unit?: Unit;
   thisPeriod: {
     current: number;
@@ -122,6 +123,16 @@ export function CompactDetailedStatWithSpeedometer(props: CompactDetailedStatWit
           {props.label}
         </span>
         <div className="flex items-center gap-2">
+          {props.onSeeDataClick && (
+            <button
+              onClick={props.onSeeDataClick}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition cursor-pointer"
+              title="See data"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span className="whitespace-nowrap">See data</span>
+            </button>
+          )}
           {canOpenTargets && (
             <button
               onClick={() => setTargetsModalOpen(true)}
@@ -132,16 +143,6 @@ export function CompactDetailedStatWithSpeedometer(props: CompactDetailedStatWit
               <span className="whitespace-nowrap">Set targets</span>
             </button>
           )}
-          {/* {props.historyHref && (
-            <Link
-              href={props.historyHref}
-              className="text-gray-400 hover:text-gray-600 transition"
-              aria-label={`View ${props.label.toLowerCase()} history`}
-              title="View history"
-            >
-              <History className="h-4 w-4" />
-            </Link>
-          )} */}
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">

@@ -8,6 +8,9 @@ import { ZoneWithStateProvinces } from "../_lib/types";
 import { SelectQboClassSimple } from "@/features/quickbooks-integration/components/SelectQboClassSimple";
 import { fetchQboConnections, QboConnection } from "@/features/quickbooks-integration/api";
 import { useQuery } from "@tanstack/react-query";
+import { SelectZoneBleachers } from "./SelectZoneBleachers";
+import { SelectZoneAccountManagers } from "./SelectZoneAccountManagers";
+import { SelectZoneDrivers } from "./SelectZoneDrivers";
 
 export type ZoneQboClassMapping = {
   connectionId: string;
@@ -119,6 +122,9 @@ interface ZoneFormProps {
     stateProvinces: string[],
     mapImageBlob: Blob | null,
     qboClassMappings: ZoneQboClassMapping[],
+    bleacherUuids: string[],
+    accountManagerUuids: string[],
+    driverUuids: string[],
   ) => Promise<void>;
   onCancel: () => void;
   saving: boolean;
@@ -146,6 +152,16 @@ export function ZoneForm({ zone, unavailableRegions, onSave, onCancel, saving }:
     }
     return map;
   });
+
+  const [bleacherUuids, setBleacherUuids] = useState<string[]>(
+    () => zone?.bleacher_uuids ?? [],
+  );
+  const [accountManagerUuids, setAccountManagerUuids] = useState<string[]>(
+    () => zone?.account_manager_uuids ?? [],
+  );
+  const [driverUuids, setDriverUuids] = useState<string[]>(
+    () => zone?.driver_uuids ?? [],
+  );
 
   const { data: qboConnections = [] } = useQuery<QboConnection[]>({
     queryKey: ["qbo-connections"],
@@ -185,6 +201,9 @@ export function ZoneForm({ zone, unavailableRegions, onSave, onCancel, saving }:
       Object.entries(qboClassMap)
         .filter((entry): entry is [string, string] => entry[1] != null && entry[1] !== "")
         .map(([connectionId, classId]) => ({ connectionId, classId })),
+      bleacherUuids,
+      accountManagerUuids,
+      driverUuids,
     );
   };
 
@@ -243,6 +262,32 @@ export function ZoneForm({ zone, unavailableRegions, onSave, onCancel, saving }:
               ))}
             </div>
           )}
+
+          {/* Zone Assignments */}
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-gray-700">Bleachers</p>
+            <SelectZoneBleachers
+              selectedBleacherUuids={bleacherUuids}
+              onChange={setBleacherUuids}
+              currentZoneUuid={zone?.id}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-gray-700">Account Managers</p>
+            <SelectZoneAccountManagers
+              selectedAccountManagerUuids={accountManagerUuids}
+              onChange={setAccountManagerUuids}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-gray-700">Drivers</p>
+            <SelectZoneDrivers
+              selectedDriverUuids={driverUuids}
+              onChange={setDriverUuids}
+            />
+          </div>
 
           {/* Selected regions list */}
           <div>
