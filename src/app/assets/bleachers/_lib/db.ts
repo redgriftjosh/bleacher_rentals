@@ -12,6 +12,7 @@ import { Database } from "../../../../../database.types";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { InsertBleacher, UpdateBleacher } from "@/types/tables/Bleachers";
+import { useMemo } from "react";
 
 type Query = {
   bleacher_number: number | null;
@@ -150,6 +151,28 @@ export function useBleacherQuery(bleacherNumber: number | null) {
     },
     enabled: !!supabase && bleacherNumber !== null,
   });
+}
+
+export function useBleacherTotalDistance(bleacherUuid: string | null): number {
+  const compiled = useMemo(
+    () =>
+      db
+        .selectFrom("WorkTrackers")
+        .select(["distance_meters"])
+        .where("bleacher_uuid", "=", bleacherUuid ?? "")
+        .compile(),
+    [bleacherUuid],
+  );
+
+  const { data = [] } = useTypedQuery(
+    compiled,
+    expect<{ distance_meters: number | null }>(),
+  );
+
+  return useMemo(
+    () => data.reduce((sum, r) => sum + (r.distance_meters ?? 0), 0),
+    [data],
+  );
 }
 
 export async function insertBleacher(
