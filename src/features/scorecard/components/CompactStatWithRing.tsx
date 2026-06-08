@@ -75,7 +75,10 @@ export function CompactStatWithRing({
           <div className={`text-lg font-bold ${tone.text}`}>
             {formatValue(value, isMoney, isPercentage)}
           </div>
-          <div className={`text-[10px] font-semibold ${tone.text}`}>PACE {paceDelta}</div>
+          <div className={`text-[10px] font-semibold ${tone.text}`}>
+            PACE {paceDelta >= 0 ? "" : ""}
+            {formatValue(paceDelta, isMoney, isPercentage)}
+          </div>
         </div>
       </div>
     </div>
