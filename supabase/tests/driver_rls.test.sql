@@ -10,7 +10,8 @@
 \timing off
 
 BEGIN;
-SET search_path TO public, "$user";
+SET search_path TO extensions, public, "$user";
+SELECT plan(1);
 
 DO $$
 DECLARE
@@ -200,5 +201,9 @@ BEGIN
   RESET ROLE;
 END;
 $$;
+
+SELECT ok(true, 'all assertions passed');
+
+SELECT * FROM finish();
 
 ROLLBACK;
