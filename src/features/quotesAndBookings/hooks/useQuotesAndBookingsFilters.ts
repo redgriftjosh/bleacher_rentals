@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { QuotesBookingsFilters } from "../types";
 
-const initialFilters: QuotesBookingsFilters = {
+const emptyFilters: QuotesBookingsFilters = {
   isOpen: false,
   statuses: [],
   createdFrom: null,
@@ -15,8 +15,13 @@ const initialFilters: QuotesBookingsFilters = {
   accountManagerUserUuid: null,
 };
 
-export function useQuotesAndBookingsFilters() {
-  const [filters, setFilters] = useState<QuotesBookingsFilters>(initialFilters);
+export function useQuotesAndBookingsFilters(
+  initialOverrides?: Partial<QuotesBookingsFilters>,
+) {
+  const [filters, setFilters] = useState<QuotesBookingsFilters>(() => {
+    if (!initialOverrides) return emptyFilters;
+    return { ...emptyFilters, ...initialOverrides, isOpen: true };
+  });
 
   const toggleOpen = useCallback(() => {
     setFilters((prev) => ({ ...prev, isOpen: !prev.isOpen }));

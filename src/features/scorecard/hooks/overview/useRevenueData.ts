@@ -2,22 +2,33 @@
 
 import { useMemo } from "react";
 import { assembleChartData, getPaceForEachDay } from "../../util/quotes";
-import { cumulativeCentsByDay } from "../../util/scorecardAggregation";
+import { cumulativeEventCentsByDay } from "../../util/scorecardAggregation";
 import { useScorecardStatsContext } from "../ScorecardStatsContext";
+import { filterQuotesBookingsEvents } from "@/features/quotesAndBookings/utils/filterEvents";
+import { filtersForTemplate } from "@/features/quotesAndBookings/utils/scorecardTemplates";
 
 export function useRevenueData() {
-  const { allStats, activeRange, currentDay, thisPeriodDays, lastPeriodDays, lastPeriodSameElapsedDayKey, getGoal } =
+  const { allEvents, activeRange, periodStart, currentDay, thisPeriodDays, lastPeriodDays, lastPeriodSameElapsedDayKey, getGoal, timezone } =
     useScorecardStatsContext();
 
   const goal = getGoal("value_of_revenue");
 
+  const thisFiltered = useMemo(
+    () => filterQuotesBookingsEvents(allEvents, filtersForTemplate("revenue", activeRange, "this", null, periodStart), timezone),
+    [allEvents, activeRange, periodStart, timezone],
+  );
+  const lastFiltered = useMemo(
+    () => filterQuotesBookingsEvents(allEvents, filtersForTemplate("revenue", activeRange, "last", null, periodStart), timezone),
+    [allEvents, activeRange, periodStart, timezone],
+  );
+
   const thisPeriodCumulativeByDay = useMemo(
-    () => cumulativeCentsByDay(thisPeriodDays, allStats, "revenue_cents"),
-    [thisPeriodDays, allStats],
+    () => cumulativeEventCentsByDay(thisPeriodDays, thisFiltered, "event_start", "contract_revenue_cents", timezone),
+    [thisPeriodDays, thisFiltered, timezone],
   );
   const lastPeriodCumulativeByDay = useMemo(
-    () => cumulativeCentsByDay(lastPeriodDays, allStats, "revenue_cents"),
-    [lastPeriodDays, allStats],
+    () => cumulativeEventCentsByDay(lastPeriodDays, lastFiltered, "event_start", "contract_revenue_cents", timezone),
+    [lastPeriodDays, lastFiltered, timezone],
   );
 
   const paceByDay = getPaceForEachDay(thisPeriodDays, goal);

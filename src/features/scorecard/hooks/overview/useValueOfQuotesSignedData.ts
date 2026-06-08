@@ -2,22 +2,33 @@
 
 import { useMemo } from "react";
 import { assembleChartData, getPaceForEachDay } from "../../util/quotes";
-import { cumulativeCentsByDay } from "../../util/scorecardAggregation";
+import { cumulativeEventCentsByDay } from "../../util/scorecardAggregation";
 import { useScorecardStatsContext } from "../ScorecardStatsContext";
+import { filterQuotesBookingsEvents } from "@/features/quotesAndBookings/utils/filterEvents";
+import { filtersForTemplate } from "@/features/quotesAndBookings/utils/scorecardTemplates";
 
 export function useValueOfQuotesSignedData() {
-  const { allStats, activeRange, currentDay, thisPeriodDays, lastPeriodDays, lastPeriodSameElapsedDayKey, getGoal } =
+  const { allEvents, activeRange, periodStart, currentDay, thisPeriodDays, lastPeriodDays, lastPeriodSameElapsedDayKey, getGoal, timezone } =
     useScorecardStatsContext();
 
   const goal = getGoal("value_of_sales");
 
+  const thisFiltered = useMemo(
+    () => filterQuotesBookingsEvents(allEvents, filtersForTemplate("value-of-quotes-signed", activeRange, "this", null, periodStart), timezone),
+    [allEvents, activeRange, periodStart, timezone],
+  );
+  const lastFiltered = useMemo(
+    () => filterQuotesBookingsEvents(allEvents, filtersForTemplate("value-of-quotes-signed", activeRange, "last", null, periodStart), timezone),
+    [allEvents, activeRange, periodStart, timezone],
+  );
+
   const thisPeriodCumulativeByDay = useMemo(
-    () => cumulativeCentsByDay(thisPeriodDays, allStats, "quotes_signed_value_cents"),
-    [thisPeriodDays, allStats],
+    () => cumulativeEventCentsByDay(thisPeriodDays, thisFiltered, "booked_at", "contract_revenue_cents", timezone),
+    [thisPeriodDays, thisFiltered, timezone],
   );
   const lastPeriodCumulativeByDay = useMemo(
-    () => cumulativeCentsByDay(lastPeriodDays, allStats, "quotes_signed_value_cents"),
-    [lastPeriodDays, allStats],
+    () => cumulativeEventCentsByDay(lastPeriodDays, lastFiltered, "booked_at", "contract_revenue_cents", timezone),
+    [lastPeriodDays, lastFiltered, timezone],
   );
 
   const paceByDay = getPaceForEachDay(thisPeriodDays, goal);

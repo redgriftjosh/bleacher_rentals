@@ -2,22 +2,33 @@
 
 import { useMemo } from "react";
 import { assembleChartData, getPaceForEachDay } from "../../util/quotes";
-import { cumulativeCountByDay } from "../../util/scorecardAggregation";
+import { cumulativeEventCountByDay } from "../../util/scorecardAggregation";
 import { useScorecardStatsContext } from "../ScorecardStatsContext";
+import { filterQuotesBookingsEvents } from "@/features/quotesAndBookings/utils/filterEvents";
+import { filtersForTemplate } from "@/features/quotesAndBookings/utils/scorecardTemplates";
 
 export function useNumberOfQuotesSignedData() {
-  const { allStats, activeRange, currentDay, thisPeriodDays, lastPeriodDays, lastPeriodSameElapsedDayKey, getGoal } =
+  const { allEvents, activeRange, periodStart, currentDay, thisPeriodDays, lastPeriodDays, lastPeriodSameElapsedDayKey, getGoal, timezone } =
     useScorecardStatsContext();
 
   const goal = getGoal("sales");
 
+  const thisFiltered = useMemo(
+    () => filterQuotesBookingsEvents(allEvents, filtersForTemplate("quotes-signed", activeRange, "this", null, periodStart), timezone),
+    [allEvents, activeRange, periodStart, timezone],
+  );
+  const lastFiltered = useMemo(
+    () => filterQuotesBookingsEvents(allEvents, filtersForTemplate("quotes-signed", activeRange, "last", null, periodStart), timezone),
+    [allEvents, activeRange, periodStart, timezone],
+  );
+
   const thisPeriodCumulativeByDay = useMemo(
-    () => cumulativeCountByDay(thisPeriodDays, allStats, "quotes_signed_count"),
-    [thisPeriodDays, allStats],
+    () => cumulativeEventCountByDay(thisPeriodDays, thisFiltered, "booked_at", timezone),
+    [thisPeriodDays, thisFiltered, timezone],
   );
   const lastPeriodCumulativeByDay = useMemo(
-    () => cumulativeCountByDay(lastPeriodDays, allStats, "quotes_signed_count"),
-    [lastPeriodDays, allStats],
+    () => cumulativeEventCountByDay(lastPeriodDays, lastFiltered, "booked_at", timezone),
+    [lastPeriodDays, lastFiltered, timezone],
   );
 
   const paceByDay = getPaceForEachDay(thisPeriodDays, goal);

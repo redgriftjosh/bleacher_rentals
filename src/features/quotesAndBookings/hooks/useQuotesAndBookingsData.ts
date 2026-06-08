@@ -5,8 +5,11 @@ import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { filterQuotesBookingsEvents } from "../utils/filterEvents";
 import { QuotesBookingsEvent, QuotesBookingsFilters } from "../types";
+import { useTimezoneStore } from "@/lib/useTimezoneStore";
 
 export function useQuotesAndBookingsData(filters: QuotesBookingsFilters) {
+  const timezone = useTimezoneStore((s) => s.timezone);
+
   const compiled = useMemo(() => {
     return db
       .selectFrom("Events as e")
@@ -44,8 +47,8 @@ export function useQuotesAndBookingsData(filters: QuotesBookingsFilters) {
 
   const filtered = useMemo(() => {
     if (!data) return data;
-    return filterQuotesBookingsEvents(data, filters);
-  }, [data, filters]);
+    return filterQuotesBookingsEvents(data, filters, timezone);
+  }, [data, filters, timezone]);
 
   return { data: filtered, isLoading, error };
 }

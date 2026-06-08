@@ -13464,100 +13464,100 @@ SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 1, false);
 
 -- \unrestrict zjRjV0JcyqHadPDdp2nk3oBU9Y826tYfifsnmuMh08A3ffTfuntN6GleTsThhRw
 
--- ─────────────────────────────────────────────────────────────────────────────
--- Backfill: populate driver_pay_cents from all existing WorkTrackers rows.
--- Groups by (account_manager_uuid, stat_date) and upserts the totals.
--- ─────────────────────────────────────────────────────────────────────────────
-insert into public."SalesScorecardDailyAccountManagerStats"
-  (account_manager_uuid, stat_date, driver_pay_cents)
-select
-  d.account_manager_uuid,
-  wt.date                         as stat_date,
-  coalesce(sum(wt.pay_cents), 0)  as driver_pay_cents
-from public."WorkTrackers" wt
-join public."Drivers" d on d.id = wt.driver_uuid
-where wt.date is not null
-  and d.account_manager_uuid is not null
-group by d.account_manager_uuid, wt.date
-on conflict on constraint sales_daily_unique_account_manager_date
-do update set
-  driver_pay_cents = excluded.driver_pay_cents,
-  updated_at       = now();
+-- -- ─────────────────────────────────────────────────────────────────────────────
+-- -- Backfill: populate driver_pay_cents from all existing WorkTrackers rows.
+-- -- Groups by (account_manager_uuid, stat_date) and upserts the totals.
+-- -- ─────────────────────────────────────────────────────────────────────────────
+-- insert into public."SalesScorecardDailyAccountManagerStats"
+--   (account_manager_uuid, stat_date, driver_pay_cents)
+-- select
+--   d.account_manager_uuid,
+--   wt.date                         as stat_date,
+--   coalesce(sum(wt.pay_cents), 0)  as driver_pay_cents
+-- from public."WorkTrackers" wt
+-- join public."Drivers" d on d.id = wt.driver_uuid
+-- where wt.date is not null
+--   and d.account_manager_uuid is not null
+-- group by d.account_manager_uuid, wt.date
+-- on conflict on constraint sales_daily_unique_account_manager_date
+-- do update set
+--   driver_pay_cents = excluded.driver_pay_cents,
+--   updated_at       = now();
 
--- ─────────────────────────────────────────────────────────────────────────────
--- Backfill: populate quotes_sent from all existing Events rows.
--- Groups by (account_manager_uuid, stat_date) and upserts the counts.
--- ─────────────────────────────────────────────────────────────────────────────
-insert into public."SalesScorecardDailyAccountManagerStats"
-  (account_manager_uuid, stat_date, quotes_sent)
-select
-  am.id                                        as account_manager_uuid,
-  (e.created_at at time zone 'UTC')::date      as stat_date,
-  count(*)::integer                             as quotes_sent
-from public."Events" e
-join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
-where e.created_at is not null
-  and e.deleted = false
-group by am.id, (e.created_at at time zone 'UTC')::date
-on conflict on constraint sales_daily_unique_account_manager_date
-do update set
-  quotes_sent = excluded.quotes_sent,
-  updated_at  = now();
+-- -- ─────────────────────────────────────────────────────────────────────────────
+-- -- Backfill: populate quotes_sent from all existing Events rows.
+-- -- Groups by (account_manager_uuid, stat_date) and upserts the counts.
+-- -- ─────────────────────────────────────────────────────────────────────────────
+-- insert into public."SalesScorecardDailyAccountManagerStats"
+--   (account_manager_uuid, stat_date, quotes_sent)
+-- select
+--   am.id                                        as account_manager_uuid,
+--   (e.created_at at time zone 'UTC')::date      as stat_date,
+--   count(*)::integer                             as quotes_sent
+-- from public."Events" e
+-- join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+-- where e.created_at is not null
+--   and e.deleted = false
+-- group by am.id, (e.created_at at time zone 'UTC')::date
+-- on conflict on constraint sales_daily_unique_account_manager_date
+-- do update set
+--   quotes_sent = excluded.quotes_sent,
+--   updated_at  = now();
 
--- ─────────────────────────────────────────────────────────────────────────────
--- Backfill: populate quotes_signed_count from all existing Events rows.
--- Groups by (account_manager_uuid, booked_at date) and upserts the counts.
--- ─────────────────────────────────────────────────────────────────────────────
-insert into public."SalesScorecardDailyAccountManagerStats"
-  (account_manager_uuid, stat_date, quotes_signed_count)
-select
-  am.id                                        as account_manager_uuid,
-  (e.booked_at at time zone 'UTC')::date       as stat_date,
-  count(*)::integer                             as quotes_signed_count
-from public."Events" e
-join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
-where e.booked_at is not null
-  and e.deleted = false
-group by am.id, (e.booked_at at time zone 'UTC')::date
-on conflict on constraint sales_daily_unique_account_manager_date
-do update set
-  quotes_signed_count = excluded.quotes_signed_count,
-  updated_at          = now();
+-- -- ─────────────────────────────────────────────────────────────────────────────
+-- -- Backfill: populate quotes_signed_count from all existing Events rows.
+-- -- Groups by (account_manager_uuid, booked_at date) and upserts the counts.
+-- -- ─────────────────────────────────────────────────────────────────────────────
+-- insert into public."SalesScorecardDailyAccountManagerStats"
+--   (account_manager_uuid, stat_date, quotes_signed_count)
+-- select
+--   am.id                                        as account_manager_uuid,
+--   (e.booked_at at time zone 'UTC')::date       as stat_date,
+--   count(*)::integer                             as quotes_signed_count
+-- from public."Events" e
+-- join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+-- where e.booked_at is not null
+--   and e.deleted = false
+-- group by am.id, (e.booked_at at time zone 'UTC')::date
+-- on conflict on constraint sales_daily_unique_account_manager_date
+-- do update set
+--   quotes_signed_count = excluded.quotes_signed_count,
+--   updated_at          = now();
 
--- ─────────────────────────────────────────────────────────────────────────────
--- Backfill: populate quotes_signed_value_cents from all existing Events rows.
--- Groups by (account_manager_uuid, booked_at date) and upserts the sums.
--- ─────────────────────────────────────────────────────────────────────────────
-insert into public."SalesScorecardDailyAccountManagerStats"
-  (account_manager_uuid, stat_date, quotes_signed_value_cents)
-select
-  am.id                                                  as account_manager_uuid,
-  (e.booked_at at time zone 'UTC')::date                 as stat_date,
-  coalesce(sum(e.contract_revenue_cents), 0)              as quotes_signed_value_cents
-from public."Events" e
-join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
-where e.booked_at is not null
-  and e.deleted = false
-group by am.id, (e.booked_at at time zone 'UTC')::date
-on conflict on constraint sales_daily_unique_account_manager_date
-do update set
-  quotes_signed_value_cents = excluded.quotes_signed_value_cents,
-  updated_at                = now();
+-- -- ─────────────────────────────────────────────────────────────────────────────
+-- -- Backfill: populate quotes_signed_value_cents from all existing Events rows.
+-- -- Groups by (account_manager_uuid, booked_at date) and upserts the sums.
+-- -- ─────────────────────────────────────────────────────────────────────────────
+-- insert into public."SalesScorecardDailyAccountManagerStats"
+--   (account_manager_uuid, stat_date, quotes_signed_value_cents)
+-- select
+--   am.id                                                  as account_manager_uuid,
+--   (e.booked_at at time zone 'UTC')::date                 as stat_date,
+--   coalesce(sum(e.contract_revenue_cents), 0)              as quotes_signed_value_cents
+-- from public."Events" e
+-- join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+-- where e.booked_at is not null
+--   and e.deleted = false
+-- group by am.id, (e.booked_at at time zone 'UTC')::date
+-- on conflict on constraint sales_daily_unique_account_manager_date
+-- do update set
+--   quotes_signed_value_cents = excluded.quotes_signed_value_cents,
+--   updated_at                = now();
 
-insert into public."SalesScorecardDailyAccountManagerStats"
-  (account_manager_uuid, stat_date, revenue_cents)
-select
-  am.id                                        as account_manager_uuid,
-  e.event_start                                as stat_date,
-  coalesce(sum(e.contract_revenue_cents), 0)   as revenue_cents
-from public."Events" e
-join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
-where e.event_start is not null
-  and e.deleted = false
-  and e.booked_at is not null
-group by am.id, e.event_start
-on conflict on constraint sales_daily_unique_account_manager_date
-do update set
-  revenue_cents = excluded.revenue_cents,
-  updated_at    = now();
+-- insert into public."SalesScorecardDailyAccountManagerStats"
+--   (account_manager_uuid, stat_date, revenue_cents)
+-- select
+--   am.id                                        as account_manager_uuid,
+--   e.event_start                                as stat_date,
+--   coalesce(sum(e.contract_revenue_cents), 0)   as revenue_cents
+-- from public."Events" e
+-- join public."AccountManagers" am on am.user_uuid = e.created_by_user_uuid
+-- where e.event_start is not null
+--   and e.deleted = false
+--   and e.booked_at is not null
+-- group by am.id, e.event_start
+-- on conflict on constraint sales_daily_unique_account_manager_date
+-- do update set
+--   revenue_cents = excluded.revenue_cents,
+--   updated_at    = now();
 

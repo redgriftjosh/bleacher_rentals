@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Flag, History, Target } from "lucide-react";
+import { ExternalLink, Flag, History, Target } from "lucide-react";
 import Link from "next/link";
 import { LineChart, Line, ResponsiveContainer, XAxis, Tooltip as RechartsTooltip } from "recharts";
 import { useSearchParams } from "next/navigation";
@@ -24,6 +24,7 @@ type CompactDetailedStatWithGraphProps = {
   accountManagerUuid?: string | null;
   statType?: StatType;
   historyHref?: string;
+  seeDataHref?: string;
   unit?: FormatUnit;
   thisPeriod: {
     current: number;
@@ -77,6 +78,16 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
           {props.label}
         </span>
         <div className="flex items-center gap-2">
+          {props.seeDataHref && (
+            <Link
+              href={props.seeDataHref}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition"
+              title="See the data behind this number"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span className="whitespace-nowrap">See data</span>
+            </Link>
+          )}
           {canOpenTargets && (
             <button
               onClick={() => setTargetsModalOpen(true)}
@@ -87,16 +98,6 @@ export function CompactDetailedStatWithGraph(props: CompactDetailedStatWithGraph
               <span className="whitespace-nowrap">Set targets</span>
             </button>
           )}
-          {/* {props.historyHref && (
-            <Link
-              href={props.historyHref}
-              className="text-gray-400 hover:text-gray-600 transition"
-              aria-label={`View ${props.label.toLowerCase()} history`}
-              title="View history"
-            >
-              <History className="h-4 w-4" />
-            </Link>
-          )} */}
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">

@@ -2,12 +2,17 @@
 
 import { useMemo } from "react";
 import { roundToTwo } from "../../util/math";
+import { cumulativeEventCentsByDay, cumulativeWorkTrackerPayByDay } from "../../util/scorecardAggregation";
 import { useScorecardStatsContext } from "../ScorecardStatsContext";
+import { filterQuotesBookingsEvents } from "@/features/quotesAndBookings/utils/filterEvents";
+import { filtersForTemplate } from "@/features/quotesAndBookings/utils/scorecardTemplates";
 
 type GrossMarginData = {
   thisPeriod: {
     current: number;
     goal: number;
+    revenueDollars: number;
+    driverPayDollars: number;
   };
   lastPeriod: {
     value: number;
@@ -15,32 +20,43 @@ type GrossMarginData = {
 };
 
 export function useGrossMarginData(): GrossMarginData {
-  const { allStats, thisPeriodDays, lastPeriodDays, getGoal } = useScorecardStatsContext();
+  const { allEvents, allWorkTrackers, activeRange, periodStart, thisPeriodDays, lastPeriodDays, getGoal, timezone } =
+    useScorecardStatsContext();
 
   const goal = getGoal("gross_margin_percent");
 
-  const thisPeriodDaySet = useMemo(() => new Set(thisPeriodDays), [thisPeriodDays]);
-  const lastPeriodDaySet = useMemo(() => new Set(lastPeriodDays), [lastPeriodDays]);
+  // Revenue uses the same filter as the "revenue" template — status === "booked" + event_start in range
+  const thisRevenueFiltered = useMemo(
+    () => filterQuotesBookingsEvents(allEvents, filtersForTemplate("revenue", activeRange, "this", null, periodStart), timezone),
+    [allEvents, activeRange, periodStart, timezone],
+  );
+  const lastRevenueFiltered = useMemo(
+    () => filterQuotesBookingsEvents(allEvents, filtersForTemplate("revenue", activeRange, "last", null, periodStart), timezone),
+    [allEvents, activeRange, periodStart, timezone],
+  );
 
-  const { thisRevenue, thisDriverPay, lastRevenue, lastDriverPay } = useMemo(() => {
-    let thisRev = 0;
-    let thisDp = 0;
-    let lastRev = 0;
-    let lastDp = 0;
+  const thisRevenueCumulative = useMemo(
+    () => cumulativeEventCentsByDay(thisPeriodDays, thisRevenueFiltered, "event_start", "contract_revenue_cents", timezone),
+    [thisPeriodDays, thisRevenueFiltered, timezone],
+  );
+  const lastRevenueCumulative = useMemo(
+    () => cumulativeEventCentsByDay(lastPeriodDays, lastRevenueFiltered, "event_start", "contract_revenue_cents", timezone),
+    [lastPeriodDays, lastRevenueFiltered, timezone],
+  );
 
-    for (const stat of allStats) {
-      if (!stat.stat_date) continue;
-      if (thisPeriodDaySet.has(stat.stat_date)) {
-        thisRev += (stat.revenue_cents ?? 0) / 100;
-        thisDp += (stat.driver_pay_cents ?? 0) / 100;
-      } else if (lastPeriodDaySet.has(stat.stat_date)) {
-        lastRev += (stat.revenue_cents ?? 0) / 100;
-        lastDp += (stat.driver_pay_cents ?? 0) / 100;
-      }
-    }
+  const thisDriverPayCumulative = useMemo(
+    () => cumulativeWorkTrackerPayByDay(thisPeriodDays, allWorkTrackers, timezone),
+    [thisPeriodDays, allWorkTrackers, timezone],
+  );
+  const lastDriverPayCumulative = useMemo(
+    () => cumulativeWorkTrackerPayByDay(lastPeriodDays, allWorkTrackers, timezone),
+    [lastPeriodDays, allWorkTrackers, timezone],
+  );
 
-    return { thisRevenue: thisRev, thisDriverPay: thisDp, lastRevenue: lastRev, lastDriverPay: lastDp };
-  }, [allStats, thisPeriodDaySet, lastPeriodDaySet]);
+  const thisRevenue = thisRevenueCumulative[thisPeriodDays[thisPeriodDays.length - 1]] ?? 0;
+  const thisDriverPay = thisDriverPayCumulative[thisPeriodDays[thisPeriodDays.length - 1]] ?? 0;
+  const lastRevenue = lastRevenueCumulative[lastPeriodDays[lastPeriodDays.length - 1]] ?? 0;
+  const lastDriverPay = lastDriverPayCumulative[lastPeriodDays[lastPeriodDays.length - 1]] ?? 0;
 
   const currentMarginRaw = roundToTwo(((thisRevenue - thisDriverPay) / thisRevenue) * 100);
   const lastMarginRaw = roundToTwo(((lastRevenue - lastDriverPay) / lastRevenue) * 100);
@@ -51,6 +67,8 @@ export function useGrossMarginData(): GrossMarginData {
     thisPeriod: {
       current: currentMargin,
       goal,
+      revenueDollars: thisRevenue,
+      driverPayDollars: thisDriverPay,
     },
     lastPeriod: {
       value: lastMargin,

@@ -2,20 +2,20 @@
 
 import { useMemo } from "react";
 import { assembleChartData, getPaceForEachDay } from "../../util/quotes";
-import { cumulativeCentsByDay } from "../../util/scorecardAggregation";
+import { cumulativeWorkTrackerPayByDay } from "../../util/scorecardAggregation";
 import { useScorecardStatsContext } from "../ScorecardStatsContext";
 
 export function useDriverPayData() {
-  const { allStats, activeRange, currentDay, thisPeriodDays, lastPeriodDays, lastPeriodSameElapsedDayKey } =
+  const { allWorkTrackers, activeRange, currentDay, thisPeriodDays, lastPeriodDays, lastPeriodSameElapsedDayKey, timezone } =
     useScorecardStatsContext();
 
   const thisPeriodCumulativeByDay = useMemo(
-    () => cumulativeCentsByDay(thisPeriodDays, allStats, "driver_pay_cents"),
-    [thisPeriodDays, allStats],
+    () => cumulativeWorkTrackerPayByDay(thisPeriodDays, allWorkTrackers, timezone),
+    [thisPeriodDays, allWorkTrackers, timezone],
   );
   const lastPeriodCumulativeByDay = useMemo(
-    () => cumulativeCentsByDay(lastPeriodDays, allStats, "driver_pay_cents"),
-    [lastPeriodDays, allStats],
+    () => cumulativeWorkTrackerPayByDay(lastPeriodDays, allWorkTrackers, timezone),
+    [lastPeriodDays, allWorkTrackers, timezone],
   );
 
   const paceByDay = getPaceForEachDay(thisPeriodDays, 0);

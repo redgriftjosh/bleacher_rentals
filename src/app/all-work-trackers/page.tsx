@@ -3,21 +3,20 @@ import { useState, useMemo } from "react";
 import { DateTime } from "luxon";
 import { Search, ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { PrimaryButton } from "@/components/PrimaryButton";
 import { DataTable, Column, CellText, CellSecondary, CellBadge } from "@/components/DataTable";
 import { FilterButton } from "@/features/quotesAndBookings/components/FilterButton";
-import { FilterPanel } from "@/features/quotesAndBookings/components/FilterPanel";
-import { useQuotesAndBookingsFilters } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsFilters";
-import { useQuotesAndBookingsData } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsData";
-import type { QuotesBookingsEvent } from "@/features/quotesAndBookings/types";
-import { searchEvents } from "@/features/quotesAndBookings/utils/searchEvents";
+import { FilterPanel } from "@/features/allWorkTrackers/components/FilterPanel";
+import { useAllWorkTrackersFilters } from "@/features/allWorkTrackers/hooks/useAllWorkTrackersFilters";
+import { useAllWorkTrackersData } from "@/features/allWorkTrackers/hooks/useAllWorkTrackersData";
+import { searchWorkTrackers } from "@/features/allWorkTrackers/utils/searchWorkTrackers";
 import {
-  isScorecardTemplate,
-  filtersForTemplate,
-  SCORECARD_TEMPLATES,
-} from "@/features/quotesAndBookings/utils/scorecardTemplates";
-import { useRouter, useSearchParams } from "next/navigation";
+  isWorkTrackerTemplate,
+  filtersForWorkTrackerTemplate,
+  WORK_TRACKER_TEMPLATES,
+} from "@/features/allWorkTrackers/utils/workTrackerTemplates";
+import type { WorkTrackerRow } from "@/features/allWorkTrackers/types";
 import { formatValue } from "@/utils/formatters";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function formatCurrency(cents: number | null): string {
   if (cents === null) return "$0.00";
@@ -31,13 +30,16 @@ function formatDate(dateString: string | null): string {
   return date.toFormat("MMM d, yyyy");
 }
 
-function getStatusVariant(status: string | null): "success" | "warning" | "error" | "default" {
+function getStatusVariant(
+  status: string | null,
+): "success" | "warning" | "error" | "default" {
   switch (status?.toLowerCase()) {
-    case "booked":
+    case "completed":
       return "success";
-    case "quoted":
+    case "released":
+    case "accepted":
       return "warning";
-    case "lost":
+    case "cancelled":
       return "error";
     default:
       return "default";
@@ -46,11 +48,15 @@ function getStatusVariant(status: string | null): "success" | "warning" | "error
 
 function capitalizeStatus(status: string | null): string {
   if (!status) return "Unknown";
-  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+  return status
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
 }
 
-export default function QuotesBookingsPage() {
+export default function AllWorkTrackersPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const templateParam = searchParams.get("template");
   const timeRangeParam = searchParams.get("timeRange") as
     | "weekly"
@@ -60,33 +66,31 @@ export default function QuotesBookingsPage() {
 
   const accountManagerParam = searchParams.get("accountManager");
   const periodStartParam = searchParams.get("periodStart");
-  const activeTemplate = isScorecardTemplate(templateParam) ? templateParam : null;
+  const activeTemplate = isWorkTrackerTemplate(templateParam) ? templateParam : null;
 
   const initialOverrides = useMemo(() => {
     if (!activeTemplate || !timeRangeParam) return undefined;
-    return filtersForTemplate(activeTemplate, timeRangeParam, "this", accountManagerParam, periodStartParam);
+    return filtersForWorkTrackerTemplate(activeTemplate, timeRangeParam, "this", accountManagerParam, periodStartParam);
   }, [activeTemplate, timeRangeParam, accountManagerParam, periodStartParam]);
 
   const {
     filters,
     toggleOpen,
     setStatuses,
-    setCreatedRange,
-    setEventRange,
-    setBookedRange,
-    setAccountManagerUserUuid,
+    setDateRange,
+    setCompletedRange,
+    setDriverUuid,
+    setAccountManagerUuid,
     clearFilters,
-  } = useQuotesAndBookingsFilters(initialOverrides);
+  } = useAllWorkTrackersFilters(initialOverrides);
 
-  const { data, isLoading, error } = useQuotesAndBookingsData(filters);
+  const { data, isLoading, error } = useAllWorkTrackersData(filters);
   const [searchQuery, setSearchQuery] = useState("");
 
   const searchedData = useMemo(() => {
     if (!data) return data;
-    return searchEvents(data, searchQuery);
+    return searchWorkTrackers(data, searchQuery);
   }, [data, searchQuery]);
-
-  const router = useRouter();
 
   const periodLabel =
     timeRangeParam === "quarterly"
@@ -95,60 +99,74 @@ export default function QuotesBookingsPage() {
         ? "this year"
         : "this week";
 
-  const columns: Column<QuotesBookingsEvent>[] = [
+  const columns: Column<WorkTrackerRow>[] = [
     {
-      key: "event_name",
-      header: `Event Name (${searchedData?.length ?? 0})`,
-      render: (event) => (
+      key: "project",
+      header: `Work Tracker (${searchedData?.length ?? 0})`,
+      render: (wt) => (
         <div>
-          <CellText bold>{event.event_name}</CellText>
-          <CellSecondary>Created: {formatDate(event.created_at)}</CellSecondary>
+          <CellText bold>
+            {wt.project_number ? `#${wt.project_number}` : "No Project #"}
+            {wt.bleacher_number != null ? ` — Bleacher #${wt.bleacher_number}` : ""}
+          </CellText>
+          <CellSecondary>Created: {formatDate(wt.created_at)}</CellSecondary>
         </div>
       ),
     },
     {
       key: "status",
       header: "Status",
-      render: (event) => (
-        <CellBadge variant={getStatusVariant(event.event_status)}>
-          {capitalizeStatus(event.event_status)}
+      render: (wt) => (
+        <CellBadge variant={getStatusVariant(wt.status)}>
+          {capitalizeStatus(wt.status)}
         </CellBadge>
       ),
     },
     {
       key: "account_manager",
       header: "Account Manager",
-      render: (event) => (
+      render: (wt) => (
         <CellText>
-          {event.account_manager_first_name || event.account_manager_last_name
-            ? `${event.account_manager_first_name || ""} ${event.account_manager_last_name || ""}`.trim()
+          {wt.account_manager_first_name || wt.account_manager_last_name
+            ? `${wt.account_manager_first_name || ""} ${wt.account_manager_last_name || ""}`.trim()
             : "Not Assigned"}
         </CellText>
       ),
     },
     {
-      key: "start_date",
-      header: "Start Date",
-      render: (event) => <CellSecondary>{formatDate(event.event_start)}</CellSecondary>,
-    },
-    {
-      key: "end_date",
-      header: "Booked",
-      render: (event) => (
-        <CellSecondary>{event.booked_at ? formatDate(event.booked_at) : "—"}</CellSecondary>
+      key: "driver",
+      header: "Driver",
+      render: (wt) => (
+        <CellText>
+          {wt.driver_first_name || wt.driver_last_name
+            ? `${wt.driver_first_name || ""} ${wt.driver_last_name || ""}`.trim()
+            : "Not Assigned"}
+        </CellText>
       ),
     },
     {
-      key: "amount",
-      header: `Amount (${formatValue((searchedData?.reduce((sum, e) => sum + (e.contract_revenue_cents ?? 0), 0) ?? 0) / 100, "money")})`,
-      render: (event) => <CellText bold>{formatCurrency(event.contract_revenue_cents)}</CellText>,
+      key: "date",
+      header: "Work Date",
+      render: (wt) => <CellSecondary>{formatDate(wt.date)}</CellSecondary>,
+    },
+    {
+      key: "completed",
+      header: "Completed",
+      render: (wt) => (
+        <CellSecondary>{wt.completed_at ? formatDate(wt.completed_at) : "—"}</CellSecondary>
+      ),
+    },
+    {
+      key: "pay",
+      header: `Pay (${formatValue((searchedData?.reduce((sum, wt) => sum + (wt.pay_cents ?? 0), 0) ?? 0) / 100, "money")})`,
+      render: (wt) => <CellText bold>{formatCurrency(wt.pay_cents)}</CellText>,
     },
   ];
 
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-red-500">Error loading events: {error.message}</div>
+        <div className="text-red-500">Error loading work trackers: {error.message}</div>
       </div>
     );
   }
@@ -156,14 +174,11 @@ export default function QuotesBookingsPage() {
   return (
     <main>
       <PageHeader
-        title="Quotes & Bookings"
-        subtitle="View all events ordered by most recent creation date"
+        title="All Work Trackers"
+        subtitle="View all work trackers ordered by most recent date"
         action={
           <div className="flex items-center gap-2">
             <FilterButton isOpen={filters.isOpen} onClick={toggleOpen} />
-            <PrimaryButton onClick={() => router.push("/quotes-bookings/new")}>
-              + Create Quote
-            </PrimaryButton>
           </div>
         }
       />
@@ -173,7 +188,7 @@ export default function QuotesBookingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <span className="font-semibold">
-                Scorecard: {SCORECARD_TEMPLATES[activeTemplate].label}
+                Scorecard: {WORK_TRACKER_TEMPLATES[activeTemplate].label}
               </span>
               <span className="text-indigo-600 ml-1">({periodLabel})</span>
             </div>
@@ -186,7 +201,7 @@ export default function QuotesBookingsPage() {
             </button>
           </div>
           <p className="mt-1 text-indigo-700">
-            {SCORECARD_TEMPLATES[activeTemplate].description}
+            {WORK_TRACKER_TEMPLATES[activeTemplate].description}
           </p>
         </div>
       )}
@@ -199,10 +214,10 @@ export default function QuotesBookingsPage() {
         <FilterPanel
           filters={filters}
           onStatusesChange={setStatuses}
-          onCreatedRangeChange={setCreatedRange}
-          onEventRangeChange={setEventRange}
-          onBookedRangeChange={setBookedRange}
-          onAccountManagerChange={setAccountManagerUserUuid}
+          onDateRangeChange={setDateRange}
+          onCompletedRangeChange={setCompletedRange}
+          onDriverChange={setDriverUuid}
+          onAccountManagerChange={setAccountManagerUuid}
           onClear={clearFilters}
         />
       </div>
@@ -213,7 +228,7 @@ export default function QuotesBookingsPage() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by name, manager, date, amount, address, contact, company..."
+          placeholder="Search by project, driver, date, bleacher, address, pay..."
           className="w-full h-[40px] pl-10 pr-4 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-darkBlue"
         />
       </div>
@@ -221,11 +236,10 @@ export default function QuotesBookingsPage() {
       <DataTable
         columns={columns}
         data={searchedData}
-        keyExtractor={(event) => event.id}
-        emptyMessage="No events found"
+        keyExtractor={(wt) => wt.id}
+        emptyMessage="No work trackers found"
         isLoading={isLoading}
-        loadingMessage="Loading events..."
-        onRowClick={(event) => router.push(`/quotes-bookings/${event.id}`)}
+        loadingMessage="Loading work trackers..."
       />
     </main>
   );
