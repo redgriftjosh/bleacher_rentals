@@ -1,9 +1,10 @@
 import { QuotesBookingsEvent, QuotesBookingsFilters } from "../types";
-import { isWithinRange, overlapsRange } from "./dateRange";
+import { isWithinRange } from "./dateRange";
 
 export function filterQuotesBookingsEvents(
   events: QuotesBookingsEvent[],
   filters: QuotesBookingsFilters,
+  timezone?: string,
 ): QuotesBookingsEvent[] {
   return events.filter((event) => {
     if (filters.statuses.length > 0) {
@@ -11,11 +12,15 @@ export function filterQuotesBookingsEvents(
       if (!filters.statuses.includes(status)) return false;
     }
 
-    if (!isWithinRange(event.created_at, filters.createdFrom, filters.createdTo)) {
+    if (!isWithinRange(event.created_at, filters.createdFrom, filters.createdTo, timezone)) {
       return false;
     }
 
-    if (!overlapsRange(event.event_start, event.event_end, filters.eventFrom, filters.eventTo)) {
+    if (!isWithinRange(event.event_start, filters.eventFrom, filters.eventTo, timezone)) {
+      return false;
+    }
+
+    if (!isWithinRange(event.booked_at, filters.bookedFrom, filters.bookedTo, timezone)) {
       return false;
     }
 

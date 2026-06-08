@@ -3,18 +3,25 @@
 import { useCallback, useState } from "react";
 import { QuotesBookingsFilters } from "../types";
 
-const initialFilters: QuotesBookingsFilters = {
+const emptyFilters: QuotesBookingsFilters = {
   isOpen: false,
   statuses: [],
   createdFrom: null,
   createdTo: null,
   eventFrom: null,
   eventTo: null,
+  bookedFrom: null,
+  bookedTo: null,
   accountManagerUserUuid: null,
 };
 
-export function useQuotesAndBookingsFilters() {
-  const [filters, setFilters] = useState<QuotesBookingsFilters>(initialFilters);
+export function useQuotesAndBookingsFilters(
+  initialOverrides?: Partial<QuotesBookingsFilters>,
+) {
+  const [filters, setFilters] = useState<QuotesBookingsFilters>(() => {
+    if (!initialOverrides) return emptyFilters;
+    return { ...emptyFilters, ...initialOverrides, isOpen: true };
+  });
 
   const toggleOpen = useCallback(() => {
     setFilters((prev) => ({ ...prev, isOpen: !prev.isOpen }));
@@ -32,6 +39,10 @@ export function useQuotesAndBookingsFilters() {
     setFilters((prev) => ({ ...prev, eventFrom: from, eventTo: to }));
   }, []);
 
+  const setBookedRange = useCallback((from: string | null, to: string | null) => {
+    setFilters((prev) => ({ ...prev, bookedFrom: from, bookedTo: to }));
+  }, []);
+
   const setAccountManagerUserUuid = useCallback((uuid: string | null) => {
     setFilters((prev) => ({ ...prev, accountManagerUserUuid: uuid }));
   }, []);
@@ -44,6 +55,8 @@ export function useQuotesAndBookingsFilters() {
       createdTo: null,
       eventFrom: null,
       eventTo: null,
+      bookedFrom: null,
+      bookedTo: null,
       accountManagerUserUuid: null,
     }));
   }, []);
@@ -54,6 +67,7 @@ export function useQuotesAndBookingsFilters() {
     setStatuses,
     setCreatedRange,
     setEventRange,
+    setBookedRange,
     setAccountManagerUserUuid,
     clearFilters,
   };

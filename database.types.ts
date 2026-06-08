@@ -38,6 +38,42 @@ export type Database = {
           },
         ]
       }
+      AccountManagerZones: {
+        Row: {
+          account_manager_uuid: string
+          created_at: string
+          id: string
+          zone_uuid: string
+        }
+        Insert: {
+          account_manager_uuid: string
+          created_at?: string
+          id?: string
+          zone_uuid: string
+        }
+        Update: {
+          account_manager_uuid?: string
+          created_at?: string
+          id?: string
+          zone_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accountmanagerzones_am_uuid_fkey"
+            columns: ["account_manager_uuid"]
+            isOneToOne: false
+            referencedRelation: "AccountManagers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accountmanagerzones_zone_uuid_fkey"
+            columns: ["zone_uuid"]
+            isOneToOne: false
+            referencedRelation: "Zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Addresses: {
         Row: {
           city: string
@@ -208,6 +244,7 @@ export type Database = {
           vin_number: string | null
           winter_account_manager_uuid: string | null
           winter_home_base_uuid: string | null
+          zone_uuid: string | null
         }
         Insert: {
           bleacher_number: number
@@ -237,6 +274,7 @@ export type Database = {
           vin_number?: string | null
           winter_account_manager_uuid?: string | null
           winter_home_base_uuid?: string | null
+          zone_uuid?: string | null
         }
         Update: {
           bleacher_number?: number
@@ -266,6 +304,7 @@ export type Database = {
           vin_number?: string | null
           winter_account_manager_uuid?: string | null
           winter_home_base_uuid?: string | null
+          zone_uuid?: string | null
         }
         Relationships: [
           {
@@ -294,6 +333,13 @@ export type Database = {
             columns: ["winter_home_base_uuid"]
             isOneToOne: false
             referencedRelation: "HomeBases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Bleachers_zone_uuid_fkey"
+            columns: ["zone_uuid"]
+            isOneToOne: false
+            referencedRelation: "Zones"
             referencedColumns: ["id"]
           },
         ]
@@ -591,35 +637,44 @@ export type Database = {
         Row: {
           bleacher_uuid: string
           created_at: string
+          created_by_user_uuid: string | null
+          haul_damage: Database["public"]["Enums"]["damage_severity"]
           id: string
-          inspection_uuid: string
+          inspection_uuid: string | null
           is_safe_to_haul: boolean
           is_safe_to_sit: boolean
           maintenance_event_uuid: string | null
           note: string | null
           resolved_at: string | null
+          seat_damage: Database["public"]["Enums"]["damage_severity"]
         }
         Insert: {
           bleacher_uuid: string
           created_at?: string
+          created_by_user_uuid?: string | null
+          haul_damage?: Database["public"]["Enums"]["damage_severity"]
           id?: string
-          inspection_uuid: string
+          inspection_uuid?: string | null
           is_safe_to_haul?: boolean
           is_safe_to_sit?: boolean
           maintenance_event_uuid?: string | null
           note?: string | null
           resolved_at?: string | null
+          seat_damage?: Database["public"]["Enums"]["damage_severity"]
         }
         Update: {
           bleacher_uuid?: string
           created_at?: string
+          created_by_user_uuid?: string | null
+          haul_damage?: Database["public"]["Enums"]["damage_severity"]
           id?: string
-          inspection_uuid?: string
+          inspection_uuid?: string | null
           is_safe_to_haul?: boolean
           is_safe_to_sit?: boolean
           maintenance_event_uuid?: string | null
           note?: string | null
           resolved_at?: string | null
+          seat_damage?: Database["public"]["Enums"]["damage_severity"]
         }
         Relationships: [
           {
@@ -627,6 +682,13 @@ export type Database = {
             columns: ["bleacher_uuid"]
             isOneToOne: false
             referencedRelation: "Bleachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "DamageReports_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
             referencedColumns: ["id"]
           },
           {
@@ -929,6 +991,42 @@ export type Database = {
             columns: ["driver_uuid"]
             isOneToOne: false
             referencedRelation: "Drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      DriverZones: {
+        Row: {
+          created_at: string
+          driver_uuid: string
+          id: string
+          zone_uuid: string
+        }
+        Insert: {
+          created_at?: string
+          driver_uuid: string
+          id?: string
+          zone_uuid: string
+        }
+        Update: {
+          created_at?: string
+          driver_uuid?: string
+          id?: string
+          zone_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driverzones_driver_uuid_fkey"
+            columns: ["driver_uuid"]
+            isOneToOne: false
+            referencedRelation: "Drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driverzones_zone_uuid_fkey"
+            columns: ["zone_uuid"]
+            isOneToOne: false
+            referencedRelation: "Zones"
             referencedColumns: ["id"]
           },
         ]
@@ -2217,6 +2315,53 @@ export type Database = {
           },
         ]
       }
+      SalesScorecardDailyAccountManagerStats: {
+        Row: {
+          account_manager_uuid: string | null
+          created_at: string
+          driver_pay_cents: number
+          id: string
+          quotes_sent: number
+          quotes_signed_count: number
+          quotes_signed_value_cents: number
+          revenue_cents: number
+          stat_date: string
+          updated_at: string
+        }
+        Insert: {
+          account_manager_uuid?: string | null
+          created_at?: string
+          driver_pay_cents?: number
+          id?: string
+          quotes_sent?: number
+          quotes_signed_count?: number
+          quotes_signed_value_cents?: number
+          revenue_cents?: number
+          stat_date: string
+          updated_at?: string
+        }
+        Update: {
+          account_manager_uuid?: string | null
+          created_at?: string
+          driver_pay_cents?: number
+          id?: string
+          quotes_sent?: number
+          quotes_signed_count?: number
+          quotes_signed_value_cents?: number
+          revenue_cents?: number
+          stat_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "SalesScorecardDailyAccountManagerStat_account_manager_uuid_fkey"
+            columns: ["account_manager_uuid"]
+            isOneToOne: false
+            referencedRelation: "AccountManagers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ScorecardTargets: {
         Row: {
           account_manager_uuid: string
@@ -2997,6 +3142,7 @@ export type Database = {
       bleacher_opening_dir: "driver" | "passenger"
       bluebook_region: "CAN" | "US" | "Both"
       currency: "USD" | "CAD"
+      damage_severity: "none" | "minor" | "major"
       event_status: "quoted" | "booked" | "lost" | "draft"
       pay_currency_type: "CAD" | "USD"
       pay_per_unit_type: "KM" | "MI" | "HR"
@@ -3164,6 +3310,7 @@ export const Constants = {
       bleacher_opening_dir: ["driver", "passenger"],
       bluebook_region: ["CAN", "US", "Both"],
       currency: ["USD", "CAD"],
+      damage_severity: ["none", "minor", "major"],
       event_status: ["quoted", "booked", "lost", "draft"],
       pay_currency_type: ["CAD", "USD"],
       pay_per_unit_type: ["KM", "MI", "HR"],

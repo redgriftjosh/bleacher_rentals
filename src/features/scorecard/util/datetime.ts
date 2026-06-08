@@ -41,7 +41,9 @@ export function getLastPeriodSameElapsedDayKey(
 }
 
 export function toLocalDateKey(input: string) {
-  const d = new Date(input);
+  // If input is a bare date (YYYY-MM-DD), append T00:00:00 to avoid UTC parsing.
+  const safe = input.includes("T") ? input : `${input}T00:00:00`;
+  const d = new Date(safe);
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
@@ -49,8 +51,11 @@ export function toLocalDateKey(input: string) {
 }
 
 export function getDateKeys(startIso: string, endIsoExclusive: string) {
-  const start = new Date(startIso);
-  const end = new Date(endIsoExclusive);
+  // Append T00:00:00 to force local-time parsing. Without it, new Date("2026-01-01")
+  // is parsed as UTC midnight, which in negative-offset timezones (e.g. EST) falls on
+  // the previous local date — causing an off-by-one that silently breaks aggregation.
+  const start = new Date(`${startIso}T00:00:00`);
+  const end = new Date(`${endIsoExclusive}T00:00:00`);
   const keys: string[] = [];
 
   const cursor = new Date(start);

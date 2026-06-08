@@ -5,6 +5,7 @@ import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { sql } from "@powersync/kysely-driver";
 import { filterBySearch } from "../util/filterBySearch";
 import { useSearchQueryStore } from "../state/useSearchQueryStore";
+import { STATUSES } from "../constants";
 
 export type AccountManagerOption = {
   accountManagerUuid: string;
@@ -41,6 +42,7 @@ export function useAccountManagers(filter: boolean = true): AccountManagerOption
       sql<number>`count(d.id)`.as("numDrivers"),
     ])
     .where("am.is_active", "=", 1)
+    .where("u.status_uuid", "=", STATUSES.active)
     .groupBy(["am.id", "u.id", "u.first_name", "u.last_name", "u.email", "u.clerk_user_id"])
     .orderBy("u.first_name", "asc")
     .orderBy("u.last_name", "asc")

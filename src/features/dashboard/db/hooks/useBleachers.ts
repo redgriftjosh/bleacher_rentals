@@ -49,6 +49,8 @@ type BleacherFlatRow = {
   dr_inspection_uuid: string | null;
   dr_is_safe_to_sit: number | null;
   dr_is_safe_to_haul: number | null;
+  dr_seat_damage: string | null;
+  dr_haul_damage: string | null;
   dr_note: string | null;
   dr_created_at: string | null;
   dr_resolved_at: string | null;
@@ -191,9 +193,11 @@ function reshapeBleachers(rows: BleacherFlatRow[]): Bleacher[] {
         b.damageReports.push({
           damageReportUuid: r.dr_uuid,
           bleacherUuid: r.bleacher_uuid,
-          inspectionUuid: r.dr_inspection_uuid ?? "",
+          inspectionUuid: r.dr_inspection_uuid ?? null,
           isSafeToSit: toBool(r.dr_is_safe_to_sit),
           isSafeToHaul: toBool(r.dr_is_safe_to_haul),
+          seatDamage: (r.dr_seat_damage as any) ?? "none",
+          haulDamage: (r.dr_haul_damage as any) ?? "none",
           note: r.dr_note,
           createdAt: r.dr_created_at ?? "",
           resolvedAt: r.dr_resolved_at,
@@ -269,6 +273,8 @@ export function useBleachers() {
       "dr.inspection_uuid as dr_inspection_uuid",
       "dr.is_safe_to_sit as dr_is_safe_to_sit",
       "dr.is_safe_to_haul as dr_is_safe_to_haul",
+      "dr.seat_damage as dr_seat_damage",
+      "dr.haul_damage as dr_haul_damage",
       "dr.note as dr_note",
       "dr.created_at as dr_created_at",
       "dr.resolved_at as dr_resolved_at",

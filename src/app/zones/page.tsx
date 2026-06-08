@@ -59,6 +59,9 @@ export default function ZonesPage() {
       stateProvinces: string[],
       mapImageBlob: Blob | null,
       qboClassMappings: ZoneQboClassMapping[],
+      bleacherUuids: string[],
+      accountManagerUuids: string[],
+      driverUuids: string[],
     ) => {
       try {
         setSaving(true);
@@ -68,6 +71,9 @@ export default function ZonesPage() {
           description,
           stateProvinces,
           qboClassMappings,
+          bleacherUuids,
+          accountManagerUuids,
+          driverUuids,
         );
         if (mapImageBlob) {
           await uploadZonePhoto(supabase, zoneId, mapImageBlob);
@@ -91,6 +97,9 @@ export default function ZonesPage() {
       stateProvinces: string[],
       mapImageBlob: Blob | null,
       qboClassMappings: ZoneQboClassMapping[],
+      bleacherUuids: string[],
+      accountManagerUuids: string[],
+      driverUuids: string[],
     ) => {
       if (!editingZone) return;
       try {
@@ -102,6 +111,9 @@ export default function ZonesPage() {
           description,
           stateProvinces,
           qboClassMappings,
+          bleacherUuids,
+          accountManagerUuids,
+          driverUuids,
         );
         if (mapImageBlob) {
           await uploadZonePhoto(supabase, editingZone.id, mapImageBlob, editingZone.photo_path);

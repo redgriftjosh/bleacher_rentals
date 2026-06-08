@@ -34,6 +34,7 @@ export default function TimeRangeToggle() {
         const nextRange = RANGES[nextIndex];
         const params = new URLSearchParams(searchParams.toString());
         params.set("timeRange", nextRange);
+        params.delete("periodStart");
         router.replace(`?${params.toString()}`);
         setIsRangeAnimating(true);
         window.setTimeout(() => setIsRangeAnimating(false), 220);
