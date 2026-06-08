@@ -77,6 +77,11 @@ export function filtersForWorkTrackerTemplate(
 ): WorkTrackerFilters {
   const { from, to } = getPeriodDates(timeRange, period, periodStart);
 
+  // For "this" period, cap the end date at today so the work-trackers page
+  // shows the same running total as the scorecard (which reads at currentDay).
+  const today = DateTime.local().toFormat("yyyy-MM-dd");
+  const effectiveTo = period === "this" && to > today ? today : to;
+
   const base: WorkTrackerFilters = {
     isOpen: true,
     statuses: [],
@@ -90,7 +95,7 @@ export function filtersForWorkTrackerTemplate(
 
   switch (template) {
     case "driver-pay":
-      return { ...base, dateFrom: from, dateTo: to };
+      return { ...base, dateFrom: from, dateTo: effectiveTo };
   }
 }
 
