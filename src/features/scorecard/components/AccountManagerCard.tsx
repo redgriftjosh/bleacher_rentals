@@ -6,108 +6,76 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CompactStatWithRing } from "./CompactStatWithRing";
 import { AccountManagerOption } from "@/features/manageTeam/hooks/useAccountManagers";
 import { PAGE_NAME } from "../constants/nav";
-import { useEventData } from "../hooks/overview/useEventData";
+import { useAccountManagerScorecard } from "../hooks/accountManager/useAccountManagerScorecard";
 
 type AccountManagerCardProps = {
   accountManager: AccountManagerOption;
 };
 
-const PLACEHOLDER_STATS = [
-  {
-    title: "Quotes Sent",
-    value: 42,
-    paceDelta: -4,
-    progress: 0.62,
-  },
-  {
-    title: "Quotes Signed",
-    value: 18,
-    paceDelta: -12,
-    progress: 0.38,
-  },
-  {
-    title: "Value Signed",
-    value: 125000,
-    paceDelta: 3,
-    progress: 0.74,
-    isMoney: true,
-  },
-  {
-    title: "Revenue",
-    value: 84000,
-    paceDelta: -2,
-    progress: 0.55,
-    isMoney: true,
-  },
-];
-
 export function AccountManagerCard({ accountManager }: AccountManagerCardProps) {
   const searchParams = useSearchParams();
   const timeRangeParam = searchParams.get("timeRange");
-  const quotesSentData = useEventData({
-    onlyBooked: false,
-    useValue: false,
-    createdByUserUuid: accountManager?.userUuid || null,
-    accountManagerUuid: accountManager.accountManagerUuid,
-    dateField: "created_at",
-    targetType: "quotes",
-  });
-  const quotesSignedData = useEventData({
-    onlyBooked: true,
-    useValue: false,
-    createdByUserUuid: accountManager?.userUuid || null,
-    accountManagerUuid: accountManager.accountManagerUuid,
-    dateField: "booked_at",
-    targetType: "sales",
-  });
-  const valueOfQuotesSignedData = useEventData({
-    onlyBooked: true,
-    useValue: true,
-    createdByUserUuid: accountManager?.userUuid || null,
-    accountManagerUuid: accountManager.accountManagerUuid,
-    dateField: "booked_at",
-    targetType: "value_of_sales",
-  });
-  const revenueData = useEventData({
-    onlyBooked: true,
-    useValue: true,
-    createdByUserUuid: accountManager?.userUuid || null,
-    accountManagerUuid: accountManager.accountManagerUuid,
-    dateField: "event_start",
-    targetType: "value_of_revenue",
-  });
   const manager = accountManager;
+
+  const data = useAccountManagerScorecard(
+    manager.accountManagerUuid,
+    manager.userUuid,
+  );
+
   const href = `/${PAGE_NAME}/account-manager/${manager.accountManagerUuid}?timeRange=${timeRangeParam ?? "weekly"}`;
 
   const stats = [
     {
       title: "Quotes Sent",
-      value: quotesSentData.thisPeriod.current,
-      paceDelta: quotesSentData.thisPeriod.current - quotesSentData.lastPeriod.currentAtSameDay,
-      progress: quotesSentData.thisPeriod.current / quotesSentData.thisPeriod.goal,
+      value: data.quotesSent.thisPeriod.current,
+      paceDelta: data.quotesSent.thisPeriod.current - data.quotesSent.lastPeriod.currentAtSameDay,
+      progress: data.quotesSent.thisPeriod.goal > 0
+        ? data.quotesSent.thisPeriod.current / data.quotesSent.thisPeriod.goal
+        : 0,
     },
     {
       title: "Quotes Signed",
-      value: quotesSignedData.thisPeriod.current,
-      paceDelta: quotesSignedData.thisPeriod.current - quotesSignedData.lastPeriod.currentAtSameDay,
-      progress: quotesSignedData.thisPeriod.current / quotesSignedData.thisPeriod.goal,
+      value: data.quotesSigned.thisPeriod.current,
+      paceDelta: data.quotesSigned.thisPeriod.current - data.quotesSigned.lastPeriod.currentAtSameDay,
+      progress: data.quotesSigned.thisPeriod.goal > 0
+        ? data.quotesSigned.thisPeriod.current / data.quotesSigned.thisPeriod.goal
+        : 0,
     },
     {
       title: "Value Signed",
-      value: valueOfQuotesSignedData.thisPeriod.current,
+      value: data.valueOfQuotesSigned.thisPeriod.current,
       paceDelta:
-        valueOfQuotesSignedData.thisPeriod.current -
-        valueOfQuotesSignedData.lastPeriod.currentAtSameDay,
-      progress:
-        valueOfQuotesSignedData.thisPeriod.current / valueOfQuotesSignedData.thisPeriod.goal,
+        data.valueOfQuotesSigned.thisPeriod.current -
+        data.valueOfQuotesSigned.lastPeriod.currentAtSameDay,
+      progress: data.valueOfQuotesSigned.thisPeriod.goal > 0
+        ? data.valueOfQuotesSigned.thisPeriod.current / data.valueOfQuotesSigned.thisPeriod.goal
+        : 0,
       isMoney: true,
     },
     {
       title: "Revenue",
-      value: revenueData.thisPeriod.current,
-      paceDelta: revenueData.thisPeriod.current - revenueData.lastPeriod.currentAtSameDay,
-      progress: revenueData.thisPeriod.current / revenueData.thisPeriod.goal,
+      value: data.revenue.thisPeriod.current,
+      paceDelta: data.revenue.thisPeriod.current - data.revenue.lastPeriod.currentAtSameDay,
+      progress: data.revenue.thisPeriod.goal > 0
+        ? data.revenue.thisPeriod.current / data.revenue.thisPeriod.goal
+        : 0,
       isMoney: true,
+    },
+    {
+      title: "Driver Pay",
+      value: data.driverPay.thisPeriod.current,
+      paceDelta: data.driverPay.thisPeriod.current - data.driverPay.lastPeriod.currentAtSameDay,
+      progress: 0,
+      isMoney: true,
+    },
+    {
+      title: "Gross Margin",
+      value: data.grossMargin.thisPeriod.current,
+      paceDelta: data.grossMargin.thisPeriod.current - data.grossMargin.lastPeriod.value,
+      progress: data.grossMargin.thisPeriod.goal > 0
+        ? data.grossMargin.thisPeriod.current / data.grossMargin.thisPeriod.goal
+        : 0,
+      isPercentage: true,
     },
   ];
 
@@ -130,7 +98,7 @@ export function AccountManagerCard({ accountManager }: AccountManagerCardProps) 
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {stats.map((stat) => (
           <CompactStatWithRing
             key={stat.title}
@@ -139,6 +107,7 @@ export function AccountManagerCard({ accountManager }: AccountManagerCardProps) 
             paceDelta={stat.paceDelta}
             progress={stat.progress}
             isMoney={stat.isMoney}
+            isPercentage={stat.isPercentage}
           />
         ))}
       </div>

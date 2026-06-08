@@ -2315,6 +2315,53 @@ export type Database = {
           },
         ]
       }
+      SalesScorecardDailyAccountManagerStats: {
+        Row: {
+          account_manager_uuid: string | null
+          created_at: string
+          driver_pay_cents: number
+          id: string
+          quotes_sent: number
+          quotes_signed_count: number
+          quotes_signed_value_cents: number
+          revenue_cents: number
+          stat_date: string
+          updated_at: string
+        }
+        Insert: {
+          account_manager_uuid?: string | null
+          created_at?: string
+          driver_pay_cents?: number
+          id?: string
+          quotes_sent?: number
+          quotes_signed_count?: number
+          quotes_signed_value_cents?: number
+          revenue_cents?: number
+          stat_date: string
+          updated_at?: string
+        }
+        Update: {
+          account_manager_uuid?: string | null
+          created_at?: string
+          driver_pay_cents?: number
+          id?: string
+          quotes_sent?: number
+          quotes_signed_count?: number
+          quotes_signed_value_cents?: number
+          revenue_cents?: number
+          stat_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "SalesScorecardDailyAccountManagerStat_account_manager_uuid_fkey"
+            columns: ["account_manager_uuid"]
+            isOneToOne: false
+            referencedRelation: "AccountManagers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ScorecardTargets: {
         Row: {
           account_manager_uuid: string

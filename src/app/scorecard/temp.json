@@ -1,0 +1,2933 @@
+{
+  "thisPeriod": {
+    "current": 660,
+    "goal": 1586,
+    "paceTarget": 680.58
+  },
+  "lastPeriod": {
+    "currentAtSameDay": 40,
+    "totalAtEnd": 230
+  },
+  "chartData": [
+    {
+      "day": "2026-01-01",
+      "dayTick": "Jan",
+      "dayLabel": "January 1",
+      "thisPeriod": 0,
+      "lastPeriod": 0,
+      "pace": 6.08
+    },
+    {
+      "day": "2026-01-02",
+      "dayTick": "",
+      "dayLabel": "January 2",
+      "thisPeriod": 0,
+      "lastPeriod": 0,
+      "pace": 12.15
+    },
+    {
+      "day": "2026-01-03",
+      "dayTick": "",
+      "dayLabel": "January 3",
+      "thisPeriod": 0,
+      "lastPeriod": 0,
+      "pace": 12.15
+    },
+    {
+      "day": "2026-01-04",
+      "dayTick": "",
+      "dayLabel": "January 4",
+      "thisPeriod": 0,
+      "lastPeriod": 0,
+      "pace": 12.15
+    },
+    {
+      "day": "2026-01-05",
+      "dayTick": "",
+      "dayLabel": "January 5",
+      "thisPeriod": 1,
+      "lastPeriod": 0,
+      "pace": 18.23
+    },
+    {
+      "day": "2026-01-06",
+      "dayTick": "",
+      "dayLabel": "January 6",
+      "thisPeriod": 2,
+      "lastPeriod": 0,
+      "pace": 24.31
+    },
+    {
+      "day": "2026-01-07",
+      "dayTick": "",
+      "dayLabel": "January 7",
+      "thisPeriod": 4,
+      "lastPeriod": 0,
+      "pace": 30.38
+    },
+    {
+      "day": "2026-01-08",
+      "dayTick": "",
+      "dayLabel": "January 8",
+      "thisPeriod": 4,
+      "lastPeriod": 0,
+      "pace": 36.46
+    },
+    {
+      "day": "2026-01-09",
+      "dayTick": "",
+      "dayLabel": "January 9",
+      "thisPeriod": 5,
+      "lastPeriod": 0,
+      "pace": 42.54
+    },
+    {
+      "day": "2026-01-10",
+      "dayTick": "",
+      "dayLabel": "January 10",
+      "thisPeriod": 5,
+      "lastPeriod": 0,
+      "pace": 42.54
+    },
+    {
+      "day": "2026-01-11",
+      "dayTick": "",
+      "dayLabel": "January 11",
+      "thisPeriod": 5,
+      "lastPeriod": 0,
+      "pace": 42.54
+    },
+    {
+      "day": "2026-01-12",
+      "dayTick": "",
+      "dayLabel": "January 12",
+      "thisPeriod": 11,
+      "lastPeriod": 0,
+      "pace": 48.61
+    },
+    {
+      "day": "2026-01-13",
+      "dayTick": "",
+      "dayLabel": "January 13",
+      "thisPeriod": 22,
+      "lastPeriod": 0,
+      "pace": 54.69
+    },
+    {
+      "day": "2026-01-14",
+      "dayTick": "",
+      "dayLabel": "January 14",
+      "thisPeriod": 30,
+      "lastPeriod": 0,
+      "pace": 60.77
+    },
+    {
+      "day": "2026-01-15",
+      "dayTick": "",
+      "dayLabel": "January 15",
+      "thisPeriod": 32,
+      "lastPeriod": 0,
+      "pace": 66.84
+    },
+    {
+      "day": "2026-01-16",
+      "dayTick": "",
+      "dayLabel": "January 16",
+      "thisPeriod": 34,
+      "lastPeriod": 0,
+      "pace": 72.92
+    },
+    {
+      "day": "2026-01-17",
+      "dayTick": "",
+      "dayLabel": "January 17",
+      "thisPeriod": 34,
+      "lastPeriod": 0,
+      "pace": 72.92
+    },
+    {
+      "day": "2026-01-18",
+      "dayTick": "",
+      "dayLabel": "January 18",
+      "thisPeriod": 34,
+      "lastPeriod": 0,
+      "pace": 72.92
+    },
+    {
+      "day": "2026-01-19",
+      "dayTick": "",
+      "dayLabel": "January 19",
+      "thisPeriod": 41,
+      "lastPeriod": 0,
+      "pace": 79
+    },
+    {
+      "day": "2026-01-20",
+      "dayTick": "",
+      "dayLabel": "January 20",
+      "thisPeriod": 44,
+      "lastPeriod": 0,
+      "pace": 85.07
+    },
+    {
+      "day": "2026-01-21",
+      "dayTick": "",
+      "dayLabel": "January 21",
+      "thisPeriod": 51,
+      "lastPeriod": 0,
+      "pace": 91.15
+    },
+    {
+      "day": "2026-01-22",
+      "dayTick": "",
+      "dayLabel": "January 22",
+      "thisPeriod": 54,
+      "lastPeriod": 0,
+      "pace": 97.23
+    },
+    {
+      "day": "2026-01-23",
+      "dayTick": "",
+      "dayLabel": "January 23",
+      "thisPeriod": 58,
+      "lastPeriod": 0,
+      "pace": 103.3
+    },
+    {
+      "day": "2026-01-24",
+      "dayTick": "",
+      "dayLabel": "January 24",
+      "thisPeriod": 58,
+      "lastPeriod": 0,
+      "pace": 103.3
+    },
+    {
+      "day": "2026-01-25",
+      "dayTick": "",
+      "dayLabel": "January 25",
+      "thisPeriod": 58,
+      "lastPeriod": 0,
+      "pace": 103.3
+    },
+    {
+      "day": "2026-01-26",
+      "dayTick": "",
+      "dayLabel": "January 26",
+      "thisPeriod": 68,
+      "lastPeriod": 0,
+      "pace": 109.38
+    },
+    {
+      "day": "2026-01-27",
+      "dayTick": "",
+      "dayLabel": "January 27",
+      "thisPeriod": 73,
+      "lastPeriod": 0,
+      "pace": 115.46
+    },
+    {
+      "day": "2026-01-28",
+      "dayTick": "",
+      "dayLabel": "January 28",
+      "thisPeriod": 76,
+      "lastPeriod": 0,
+      "pace": 121.53
+    },
+    {
+      "day": "2026-01-29",
+      "dayTick": "",
+      "dayLabel": "January 29",
+      "thisPeriod": 79,
+      "lastPeriod": 0,
+      "pace": 127.61
+    },
+    {
+      "day": "2026-01-30",
+      "dayTick": "",
+      "dayLabel": "January 30",
+      "thisPeriod": 86,
+      "lastPeriod": 0,
+      "pace": 133.69
+    },
+    {
+      "day": "2026-01-31",
+      "dayTick": "",
+      "dayLabel": "January 31",
+      "thisPeriod": 86,
+      "lastPeriod": 0,
+      "pace": 133.69
+    },
+    {
+      "day": "2026-02-01",
+      "dayTick": "",
+      "dayLabel": "February 1",
+      "thisPeriod": 86,
+      "lastPeriod": 0,
+      "pace": 133.69
+    },
+    {
+      "day": "2026-02-02",
+      "dayTick": "",
+      "dayLabel": "February 2",
+      "thisPeriod": 87,
+      "lastPeriod": 0,
+      "pace": 139.76
+    },
+    {
+      "day": "2026-02-03",
+      "dayTick": "",
+      "dayLabel": "February 3",
+      "thisPeriod": 90,
+      "lastPeriod": 0,
+      "pace": 145.84
+    },
+    {
+      "day": "2026-02-04",
+      "dayTick": "",
+      "dayLabel": "February 4",
+      "thisPeriod": 94,
+      "lastPeriod": 0,
+      "pace": 151.92
+    },
+    {
+      "day": "2026-02-05",
+      "dayTick": "",
+      "dayLabel": "February 5",
+      "thisPeriod": 102,
+      "lastPeriod": 0,
+      "pace": 157.99
+    },
+    {
+      "day": "2026-02-06",
+      "dayTick": "",
+      "dayLabel": "February 6",
+      "thisPeriod": 131,
+      "lastPeriod": 0,
+      "pace": 164.07
+    },
+    {
+      "day": "2026-02-07",
+      "dayTick": "",
+      "dayLabel": "February 7",
+      "thisPeriod": 133,
+      "lastPeriod": 0,
+      "pace": 164.07
+    },
+    {
+      "day": "2026-02-08",
+      "dayTick": "",
+      "dayLabel": "February 8",
+      "thisPeriod": 140,
+      "lastPeriod": 0,
+      "pace": 164.07
+    },
+    {
+      "day": "2026-02-09",
+      "dayTick": "",
+      "dayLabel": "February 9",
+      "thisPeriod": 148,
+      "lastPeriod": 0,
+      "pace": 170.15
+    },
+    {
+      "day": "2026-02-10",
+      "dayTick": "",
+      "dayLabel": "February 10",
+      "thisPeriod": 151,
+      "lastPeriod": 0,
+      "pace": 176.22
+    },
+    {
+      "day": "2026-02-11",
+      "dayTick": "",
+      "dayLabel": "February 11",
+      "thisPeriod": 153,
+      "lastPeriod": 0,
+      "pace": 182.3
+    },
+    {
+      "day": "2026-02-12",
+      "dayTick": "",
+      "dayLabel": "February 12",
+      "thisPeriod": 159,
+      "lastPeriod": 0,
+      "pace": 188.38
+    },
+    {
+      "day": "2026-02-13",
+      "dayTick": "",
+      "dayLabel": "February 13",
+      "thisPeriod": 161,
+      "lastPeriod": 0,
+      "pace": 194.45
+    },
+    {
+      "day": "2026-02-14",
+      "dayTick": "",
+      "dayLabel": "February 14",
+      "thisPeriod": 161,
+      "lastPeriod": 0,
+      "pace": 194.45
+    },
+    {
+      "day": "2026-02-15",
+      "dayTick": "",
+      "dayLabel": "February 15",
+      "thisPeriod": 161,
+      "lastPeriod": 0,
+      "pace": 194.45
+    },
+    {
+      "day": "2026-02-16",
+      "dayTick": "",
+      "dayLabel": "February 16",
+      "thisPeriod": 162,
+      "lastPeriod": 0,
+      "pace": 200.53
+    },
+    {
+      "day": "2026-02-17",
+      "dayTick": "",
+      "dayLabel": "February 17",
+      "thisPeriod": 172,
+      "lastPeriod": 0,
+      "pace": 206.61
+    },
+    {
+      "day": "2026-02-18",
+      "dayTick": "",
+      "dayLabel": "February 18",
+      "thisPeriod": 176,
+      "lastPeriod": 0,
+      "pace": 212.68
+    },
+    {
+      "day": "2026-02-19",
+      "dayTick": "",
+      "dayLabel": "February 19",
+      "thisPeriod": 181,
+      "lastPeriod": 0,
+      "pace": 218.76
+    },
+    {
+      "day": "2026-02-20",
+      "dayTick": "",
+      "dayLabel": "February 20",
+      "thisPeriod": 185,
+      "lastPeriod": 0,
+      "pace": 224.84
+    },
+    {
+      "day": "2026-02-21",
+      "dayTick": "",
+      "dayLabel": "February 21",
+      "thisPeriod": 187,
+      "lastPeriod": 0,
+      "pace": 224.84
+    },
+    {
+      "day": "2026-02-22",
+      "dayTick": "",
+      "dayLabel": "February 22",
+      "thisPeriod": 187,
+      "lastPeriod": 0,
+      "pace": 224.84
+    },
+    {
+      "day": "2026-02-23",
+      "dayTick": "",
+      "dayLabel": "February 23",
+      "thisPeriod": 201,
+      "lastPeriod": 0,
+      "pace": 230.91
+    },
+    {
+      "day": "2026-02-24",
+      "dayTick": "",
+      "dayLabel": "February 24",
+      "thisPeriod": 208,
+      "lastPeriod": 0,
+      "pace": 236.99
+    },
+    {
+      "day": "2026-02-25",
+      "dayTick": "",
+      "dayLabel": "February 25",
+      "thisPeriod": 210,
+      "lastPeriod": 0,
+      "pace": 243.07
+    },
+    {
+      "day": "2026-02-26",
+      "dayTick": "",
+      "dayLabel": "February 26",
+      "thisPeriod": 217,
+      "lastPeriod": 0,
+      "pace": 249.14
+    },
+    {
+      "day": "2026-02-27",
+      "dayTick": "",
+      "dayLabel": "February 27",
+      "thisPeriod": 239,
+      "lastPeriod": 0,
+      "pace": 255.22
+    },
+    {
+      "day": "2026-02-28",
+      "dayTick": "",
+      "dayLabel": "February 28",
+      "thisPeriod": 239,
+      "lastPeriod": 0,
+      "pace": 255.22
+    },
+    {
+      "day": "2026-03-01",
+      "dayTick": "",
+      "dayLabel": "March 1",
+      "thisPeriod": 239,
+      "lastPeriod": 0,
+      "pace": 255.22
+    },
+    {
+      "day": "2026-03-02",
+      "dayTick": "",
+      "dayLabel": "March 2",
+      "thisPeriod": 244,
+      "lastPeriod": 0,
+      "pace": 261.3
+    },
+    {
+      "day": "2026-03-03",
+      "dayTick": "",
+      "dayLabel": "March 3",
+      "thisPeriod": 249,
+      "lastPeriod": 0,
+      "pace": 267.37
+    },
+    {
+      "day": "2026-03-04",
+      "dayTick": "",
+      "dayLabel": "March 4",
+      "thisPeriod": 253,
+      "lastPeriod": 0,
+      "pace": 273.45
+    },
+    {
+      "day": "2026-03-05",
+      "dayTick": "",
+      "dayLabel": "March 5",
+      "thisPeriod": 256,
+      "lastPeriod": 0,
+      "pace": 279.52
+    },
+    {
+      "day": "2026-03-06",
+      "dayTick": "",
+      "dayLabel": "March 6",
+      "thisPeriod": 262,
+      "lastPeriod": 0,
+      "pace": 285.6
+    },
+    {
+      "day": "2026-03-07",
+      "dayTick": "",
+      "dayLabel": "March 7",
+      "thisPeriod": 263,
+      "lastPeriod": 0,
+      "pace": 285.6
+    },
+    {
+      "day": "2026-03-08",
+      "dayTick": "",
+      "dayLabel": "March 8",
+      "thisPeriod": 263,
+      "lastPeriod": 0,
+      "pace": 285.6
+    },
+    {
+      "day": "2026-03-09",
+      "dayTick": "",
+      "dayLabel": "March 9",
+      "thisPeriod": 267,
+      "lastPeriod": 0,
+      "pace": 291.68
+    },
+    {
+      "day": "2026-03-10",
+      "dayTick": "",
+      "dayLabel": "March 10",
+      "thisPeriod": 271,
+      "lastPeriod": 0,
+      "pace": 297.75
+    },
+    {
+      "day": "2026-03-11",
+      "dayTick": "",
+      "dayLabel": "March 11",
+      "thisPeriod": 279,
+      "lastPeriod": 0,
+      "pace": 303.83
+    },
+    {
+      "day": "2026-03-12",
+      "dayTick": "",
+      "dayLabel": "March 12",
+      "thisPeriod": 280,
+      "lastPeriod": 0,
+      "pace": 309.91
+    },
+    {
+      "day": "2026-03-13",
+      "dayTick": "",
+      "dayLabel": "March 13",
+      "thisPeriod": 283,
+      "lastPeriod": 0,
+      "pace": 315.98
+    },
+    {
+      "day": "2026-03-14",
+      "dayTick": "",
+      "dayLabel": "March 14",
+      "thisPeriod": 283,
+      "lastPeriod": 0,
+      "pace": 315.98
+    },
+    {
+      "day": "2026-03-15",
+      "dayTick": "",
+      "dayLabel": "March 15",
+      "thisPeriod": 283,
+      "lastPeriod": 0,
+      "pace": 315.98
+    },
+    {
+      "day": "2026-03-16",
+      "dayTick": "",
+      "dayLabel": "March 16",
+      "thisPeriod": 292,
+      "lastPeriod": 0,
+      "pace": 322.06
+    },
+    {
+      "day": "2026-03-17",
+      "dayTick": "",
+      "dayLabel": "March 17",
+      "thisPeriod": 298,
+      "lastPeriod": 0,
+      "pace": 328.14
+    },
+    {
+      "day": "2026-03-18",
+      "dayTick": "",
+      "dayLabel": "March 18",
+      "thisPeriod": 302,
+      "lastPeriod": 0,
+      "pace": 334.21
+    },
+    {
+      "day": "2026-03-19",
+      "dayTick": "",
+      "dayLabel": "March 19",
+      "thisPeriod": 308,
+      "lastPeriod": 0,
+      "pace": 340.29
+    },
+    {
+      "day": "2026-03-20",
+      "dayTick": "",
+      "dayLabel": "March 20",
+      "thisPeriod": 310,
+      "lastPeriod": 0,
+      "pace": 346.37
+    },
+    {
+      "day": "2026-03-21",
+      "dayTick": "",
+      "dayLabel": "March 21",
+      "thisPeriod": 311,
+      "lastPeriod": 0,
+      "pace": 346.37
+    },
+    {
+      "day": "2026-03-22",
+      "dayTick": "",
+      "dayLabel": "March 22",
+      "thisPeriod": 311,
+      "lastPeriod": 0,
+      "pace": 346.37
+    },
+    {
+      "day": "2026-03-23",
+      "dayTick": "",
+      "dayLabel": "March 23",
+      "thisPeriod": 324,
+      "lastPeriod": 0,
+      "pace": 352.44
+    },
+    {
+      "day": "2026-03-24",
+      "dayTick": "",
+      "dayLabel": "March 24",
+      "thisPeriod": 331,
+      "lastPeriod": 0,
+      "pace": 358.52
+    },
+    {
+      "day": "2026-03-25",
+      "dayTick": "",
+      "dayLabel": "March 25",
+      "thisPeriod": 339,
+      "lastPeriod": 0,
+      "pace": 364.6
+    },
+    {
+      "day": "2026-03-26",
+      "dayTick": "",
+      "dayLabel": "March 26",
+      "thisPeriod": 342,
+      "lastPeriod": 0,
+      "pace": 370.67
+    },
+    {
+      "day": "2026-03-27",
+      "dayTick": "",
+      "dayLabel": "March 27",
+      "thisPeriod": 348,
+      "lastPeriod": 0,
+      "pace": 376.75
+    },
+    {
+      "day": "2026-03-28",
+      "dayTick": "",
+      "dayLabel": "March 28",
+      "thisPeriod": 348,
+      "lastPeriod": 0,
+      "pace": 376.75
+    },
+    {
+      "day": "2026-03-29",
+      "dayTick": "",
+      "dayLabel": "March 29",
+      "thisPeriod": 348,
+      "lastPeriod": 0,
+      "pace": 376.75
+    },
+    {
+      "day": "2026-03-30",
+      "dayTick": "",
+      "dayLabel": "March 30",
+      "thisPeriod": 359,
+      "lastPeriod": 0,
+      "pace": 382.83
+    },
+    {
+      "day": "2026-03-31",
+      "dayTick": "",
+      "dayLabel": "March 31",
+      "thisPeriod": 368,
+      "lastPeriod": 0,
+      "pace": 388.9
+    },
+    {
+      "day": "2026-04-01",
+      "dayTick": "Apr",
+      "dayLabel": "April 1",
+      "thisPeriod": 376,
+      "lastPeriod": 0,
+      "pace": 394.98
+    },
+    {
+      "day": "2026-04-02",
+      "dayTick": "",
+      "dayLabel": "April 2",
+      "thisPeriod": 380,
+      "lastPeriod": 0,
+      "pace": 401.06
+    },
+    {
+      "day": "2026-04-03",
+      "dayTick": "",
+      "dayLabel": "April 3",
+      "thisPeriod": 382,
+      "lastPeriod": 0,
+      "pace": 407.13
+    },
+    {
+      "day": "2026-04-04",
+      "dayTick": "",
+      "dayLabel": "April 4",
+      "thisPeriod": 382,
+      "lastPeriod": 0,
+      "pace": 407.13
+    },
+    {
+      "day": "2026-04-05",
+      "dayTick": "",
+      "dayLabel": "April 5",
+      "thisPeriod": 382,
+      "lastPeriod": 0,
+      "pace": 407.13
+    },
+    {
+      "day": "2026-04-06",
+      "dayTick": "",
+      "dayLabel": "April 6",
+      "thisPeriod": 392,
+      "lastPeriod": 0,
+      "pace": 413.21
+    },
+    {
+      "day": "2026-04-07",
+      "dayTick": "",
+      "dayLabel": "April 7",
+      "thisPeriod": 397,
+      "lastPeriod": 0,
+      "pace": 419.29
+    },
+    {
+      "day": "2026-04-08",
+      "dayTick": "",
+      "dayLabel": "April 8",
+      "thisPeriod": 403,
+      "lastPeriod": 0,
+      "pace": 425.36
+    },
+    {
+      "day": "2026-04-09",
+      "dayTick": "",
+      "dayLabel": "April 9",
+      "thisPeriod": 411,
+      "lastPeriod": 0,
+      "pace": 431.44
+    },
+    {
+      "day": "2026-04-10",
+      "dayTick": "",
+      "dayLabel": "April 10",
+      "thisPeriod": 413,
+      "lastPeriod": 0,
+      "pace": 437.52
+    },
+    {
+      "day": "2026-04-11",
+      "dayTick": "",
+      "dayLabel": "April 11",
+      "thisPeriod": 413,
+      "lastPeriod": 0,
+      "pace": 437.52
+    },
+    {
+      "day": "2026-04-12",
+      "dayTick": "",
+      "dayLabel": "April 12",
+      "thisPeriod": 413,
+      "lastPeriod": 0,
+      "pace": 437.52
+    },
+    {
+      "day": "2026-04-13",
+      "dayTick": "",
+      "dayLabel": "April 13",
+      "thisPeriod": 415,
+      "lastPeriod": 0,
+      "pace": 443.59
+    },
+    {
+      "day": "2026-04-14",
+      "dayTick": "",
+      "dayLabel": "April 14",
+      "thisPeriod": 417,
+      "lastPeriod": 0,
+      "pace": 449.67
+    },
+    {
+      "day": "2026-04-15",
+      "dayTick": "",
+      "dayLabel": "April 15",
+      "thisPeriod": 420,
+      "lastPeriod": 0,
+      "pace": 455.75
+    },
+    {
+      "day": "2026-04-16",
+      "dayTick": "",
+      "dayLabel": "April 16",
+      "thisPeriod": 430,
+      "lastPeriod": 0,
+      "pace": 461.82
+    },
+    {
+      "day": "2026-04-17",
+      "dayTick": "",
+      "dayLabel": "April 17",
+      "thisPeriod": 436,
+      "lastPeriod": 0,
+      "pace": 467.9
+    },
+    {
+      "day": "2026-04-18",
+      "dayTick": "",
+      "dayLabel": "April 18",
+      "thisPeriod": 436,
+      "lastPeriod": 0,
+      "pace": 467.9
+    },
+    {
+      "day": "2026-04-19",
+      "dayTick": "",
+      "dayLabel": "April 19",
+      "thisPeriod": 436,
+      "lastPeriod": 0,
+      "pace": 467.9
+    },
+    {
+      "day": "2026-04-20",
+      "dayTick": "",
+      "dayLabel": "April 20",
+      "thisPeriod": 441,
+      "lastPeriod": 0,
+      "pace": 473.98
+    },
+    {
+      "day": "2026-04-21",
+      "dayTick": "",
+      "dayLabel": "April 21",
+      "thisPeriod": 453,
+      "lastPeriod": 0,
+      "pace": 480.05
+    },
+    {
+      "day": "2026-04-22",
+      "dayTick": "",
+      "dayLabel": "April 22",
+      "thisPeriod": 461,
+      "lastPeriod": 0,
+      "pace": 486.13
+    },
+    {
+      "day": "2026-04-23",
+      "dayTick": "",
+      "dayLabel": "April 23",
+      "thisPeriod": 469,
+      "lastPeriod": 0,
+      "pace": 492.21
+    },
+    {
+      "day": "2026-04-24",
+      "dayTick": "",
+      "dayLabel": "April 24",
+      "thisPeriod": 471,
+      "lastPeriod": 0,
+      "pace": 498.28
+    },
+    {
+      "day": "2026-04-25",
+      "dayTick": "",
+      "dayLabel": "April 25",
+      "thisPeriod": 471,
+      "lastPeriod": 0,
+      "pace": 498.28
+    },
+    {
+      "day": "2026-04-26",
+      "dayTick": "",
+      "dayLabel": "April 26",
+      "thisPeriod": 471,
+      "lastPeriod": 0,
+      "pace": 498.28
+    },
+    {
+      "day": "2026-04-27",
+      "dayTick": "",
+      "dayLabel": "April 27",
+      "thisPeriod": 480,
+      "lastPeriod": 0,
+      "pace": 504.36
+    },
+    {
+      "day": "2026-04-28",
+      "dayTick": "",
+      "dayLabel": "April 28",
+      "thisPeriod": 485,
+      "lastPeriod": 0,
+      "pace": 510.44
+    },
+    {
+      "day": "2026-04-29",
+      "dayTick": "",
+      "dayLabel": "April 29",
+      "thisPeriod": 486,
+      "lastPeriod": 0,
+      "pace": 516.51
+    },
+    {
+      "day": "2026-04-30",
+      "dayTick": "",
+      "dayLabel": "April 30",
+      "thisPeriod": 488,
+      "lastPeriod": 0,
+      "pace": 522.59
+    },
+    {
+      "day": "2026-05-01",
+      "dayTick": "",
+      "dayLabel": "May 1",
+      "thisPeriod": 490,
+      "lastPeriod": 1,
+      "pace": 528.67
+    },
+    {
+      "day": "2026-05-02",
+      "dayTick": "",
+      "dayLabel": "May 2",
+      "thisPeriod": 490,
+      "lastPeriod": 1,
+      "pace": 528.67
+    },
+    {
+      "day": "2026-05-03",
+      "dayTick": "",
+      "dayLabel": "May 3",
+      "thisPeriod": 491,
+      "lastPeriod": 1,
+      "pace": 528.67
+    },
+    {
+      "day": "2026-05-04",
+      "dayTick": "",
+      "dayLabel": "May 4",
+      "thisPeriod": 493,
+      "lastPeriod": 1,
+      "pace": 534.74
+    },
+    {
+      "day": "2026-05-05",
+      "dayTick": "",
+      "dayLabel": "May 5",
+      "thisPeriod": 502,
+      "lastPeriod": 1,
+      "pace": 540.82
+    },
+    {
+      "day": "2026-05-06",
+      "dayTick": "",
+      "dayLabel": "May 6",
+      "thisPeriod": 506,
+      "lastPeriod": 1,
+      "pace": 546.9
+    },
+    {
+      "day": "2026-05-07",
+      "dayTick": "",
+      "dayLabel": "May 7",
+      "thisPeriod": 510,
+      "lastPeriod": 1,
+      "pace": 552.97
+    },
+    {
+      "day": "2026-05-08",
+      "dayTick": "",
+      "dayLabel": "May 8",
+      "thisPeriod": 517,
+      "lastPeriod": 1,
+      "pace": 559.05
+    },
+    {
+      "day": "2026-05-09",
+      "dayTick": "",
+      "dayLabel": "May 9",
+      "thisPeriod": 519,
+      "lastPeriod": 1,
+      "pace": 559.05
+    },
+    {
+      "day": "2026-05-10",
+      "dayTick": "",
+      "dayLabel": "May 10",
+      "thisPeriod": 519,
+      "lastPeriod": 1,
+      "pace": 559.05
+    },
+    {
+      "day": "2026-05-11",
+      "dayTick": "",
+      "dayLabel": "May 11",
+      "thisPeriod": 524,
+      "lastPeriod": 1,
+      "pace": 565.13
+    },
+    {
+      "day": "2026-05-12",
+      "dayTick": "",
+      "dayLabel": "May 12",
+      "thisPeriod": 534,
+      "lastPeriod": 1,
+      "pace": 571.2
+    },
+    {
+      "day": "2026-05-13",
+      "dayTick": "",
+      "dayLabel": "May 13",
+      "thisPeriod": 539,
+      "lastPeriod": 1,
+      "pace": 577.28
+    },
+    {
+      "day": "2026-05-14",
+      "dayTick": "",
+      "dayLabel": "May 14",
+      "thisPeriod": 541,
+      "lastPeriod": 1,
+      "pace": 583.36
+    },
+    {
+      "day": "2026-05-15",
+      "dayTick": "",
+      "dayLabel": "May 15",
+      "thisPeriod": 547,
+      "lastPeriod": 1,
+      "pace": 589.43
+    },
+    {
+      "day": "2026-05-16",
+      "dayTick": "",
+      "dayLabel": "May 16",
+      "thisPeriod": 547,
+      "lastPeriod": 1,
+      "pace": 589.43
+    },
+    {
+      "day": "2026-05-17",
+      "dayTick": "",
+      "dayLabel": "May 17",
+      "thisPeriod": 547,
+      "lastPeriod": 1,
+      "pace": 589.43
+    },
+    {
+      "day": "2026-05-18",
+      "dayTick": "",
+      "dayLabel": "May 18",
+      "thisPeriod": 558,
+      "lastPeriod": 1,
+      "pace": 595.51
+    },
+    {
+      "day": "2026-05-19",
+      "dayTick": "",
+      "dayLabel": "May 19",
+      "thisPeriod": 563,
+      "lastPeriod": 1,
+      "pace": 601.59
+    },
+    {
+      "day": "2026-05-20",
+      "dayTick": "",
+      "dayLabel": "May 20",
+      "thisPeriod": 572,
+      "lastPeriod": 1,
+      "pace": 607.66
+    },
+    {
+      "day": "2026-05-21",
+      "dayTick": "",
+      "dayLabel": "May 21",
+      "thisPeriod": 576,
+      "lastPeriod": 1,
+      "pace": 613.74
+    },
+    {
+      "day": "2026-05-22",
+      "dayTick": "",
+      "dayLabel": "May 22",
+      "thisPeriod": 577,
+      "lastPeriod": 38,
+      "pace": 619.82
+    },
+    {
+      "day": "2026-05-23",
+      "dayTick": "",
+      "dayLabel": "May 23",
+      "thisPeriod": 577,
+      "lastPeriod": 39,
+      "pace": 619.82
+    },
+    {
+      "day": "2026-05-24",
+      "dayTick": "",
+      "dayLabel": "May 24",
+      "thisPeriod": 578,
+      "lastPeriod": 39,
+      "pace": 619.82
+    },
+    {
+      "day": "2026-05-25",
+      "dayTick": "",
+      "dayLabel": "May 25",
+      "thisPeriod": 585,
+      "lastPeriod": 39,
+      "pace": 625.89
+    },
+    {
+      "day": "2026-05-26",
+      "dayTick": "",
+      "dayLabel": "May 26",
+      "thisPeriod": 591,
+      "lastPeriod": 39,
+      "pace": 631.97
+    },
+    {
+      "day": "2026-05-27",
+      "dayTick": "",
+      "dayLabel": "May 27",
+      "thisPeriod": 605,
+      "lastPeriod": 39,
+      "pace": 638.05
+    },
+    {
+      "day": "2026-05-28",
+      "dayTick": "",
+      "dayLabel": "May 28",
+      "thisPeriod": 610,
+      "lastPeriod": 39,
+      "pace": 644.12
+    },
+    {
+      "day": "2026-05-29",
+      "dayTick": "",
+      "dayLabel": "May 29",
+      "thisPeriod": 614,
+      "lastPeriod": 39,
+      "pace": 650.2
+    },
+    {
+      "day": "2026-05-30",
+      "dayTick": "",
+      "dayLabel": "May 30",
+      "thisPeriod": 614,
+      "lastPeriod": 39,
+      "pace": 650.2
+    },
+    {
+      "day": "2026-05-31",
+      "dayTick": "",
+      "dayLabel": "May 31",
+      "thisPeriod": 614,
+      "lastPeriod": 39,
+      "pace": 650.2
+    },
+    {
+      "day": "2026-06-01",
+      "dayTick": "",
+      "dayLabel": "June 1",
+      "thisPeriod": 629,
+      "lastPeriod": 39,
+      "pace": 656.28
+    },
+    {
+      "day": "2026-06-02",
+      "dayTick": "",
+      "dayLabel": "June 2",
+      "thisPeriod": 634,
+      "lastPeriod": 39,
+      "pace": 662.35
+    },
+    {
+      "day": "2026-06-03",
+      "dayTick": "",
+      "dayLabel": "June 3",
+      "thisPeriod": 654,
+      "lastPeriod": 39,
+      "pace": 668.43
+    },
+    {
+      "day": "2026-06-04",
+      "dayTick": "",
+      "dayLabel": "June 4",
+      "thisPeriod": 660,
+      "lastPeriod": 40,
+      "pace": 674.51
+    },
+    {
+      "day": "2026-06-05",
+      "dayTick": "",
+      "dayLabel": "June 5",
+      "thisPeriod": 660,
+      "lastPeriod": 40,
+      "pace": 680.58
+    },
+    {
+      "day": "2026-06-06",
+      "dayTick": "",
+      "dayLabel": "June 6",
+      "thisPeriod": null,
+      "lastPeriod": 40,
+      "pace": 680.58
+    },
+    {
+      "day": "2026-06-07",
+      "dayTick": "",
+      "dayLabel": "June 7",
+      "thisPeriod": null,
+      "lastPeriod": 40,
+      "pace": 680.58
+    },
+    {
+      "day": "2026-06-08",
+      "dayTick": "",
+      "dayLabel": "June 8",
+      "thisPeriod": null,
+      "lastPeriod": 40,
+      "pace": 686.66
+    },
+    {
+      "day": "2026-06-09",
+      "dayTick": "",
+      "dayLabel": "June 9",
+      "thisPeriod": null,
+      "lastPeriod": 40,
+      "pace": 692.74
+    },
+    {
+      "day": "2026-06-10",
+      "dayTick": "",
+      "dayLabel": "June 10",
+      "thisPeriod": null,
+      "lastPeriod": 40,
+      "pace": 698.81
+    },
+    {
+      "day": "2026-06-11",
+      "dayTick": "",
+      "dayLabel": "June 11",
+      "thisPeriod": null,
+      "lastPeriod": 40,
+      "pace": 704.89
+    },
+    {
+      "day": "2026-06-12",
+      "dayTick": "",
+      "dayLabel": "June 12",
+      "thisPeriod": null,
+      "lastPeriod": 40,
+      "pace": 710.97
+    },
+    {
+      "day": "2026-06-13",
+      "dayTick": "",
+      "dayLabel": "June 13",
+      "thisPeriod": null,
+      "lastPeriod": 61,
+      "pace": 710.97
+    },
+    {
+      "day": "2026-06-14",
+      "dayTick": "",
+      "dayLabel": "June 14",
+      "thisPeriod": null,
+      "lastPeriod": 61,
+      "pace": 710.97
+    },
+    {
+      "day": "2026-06-15",
+      "dayTick": "",
+      "dayLabel": "June 15",
+      "thisPeriod": null,
+      "lastPeriod": 61,
+      "pace": 717.04
+    },
+    {
+      "day": "2026-06-16",
+      "dayTick": "",
+      "dayLabel": "June 16",
+      "thisPeriod": null,
+      "lastPeriod": 66,
+      "pace": 723.12
+    },
+    {
+      "day": "2026-06-17",
+      "dayTick": "",
+      "dayLabel": "June 17",
+      "thisPeriod": null,
+      "lastPeriod": 66,
+      "pace": 729.2
+    },
+    {
+      "day": "2026-06-18",
+      "dayTick": "",
+      "dayLabel": "June 18",
+      "thisPeriod": null,
+      "lastPeriod": 66,
+      "pace": 735.27
+    },
+    {
+      "day": "2026-06-19",
+      "dayTick": "",
+      "dayLabel": "June 19",
+      "thisPeriod": null,
+      "lastPeriod": 66,
+      "pace": 741.35
+    },
+    {
+      "day": "2026-06-20",
+      "dayTick": "",
+      "dayLabel": "June 20",
+      "thisPeriod": null,
+      "lastPeriod": 66,
+      "pace": 741.35
+    },
+    {
+      "day": "2026-06-21",
+      "dayTick": "",
+      "dayLabel": "June 21",
+      "thisPeriod": null,
+      "lastPeriod": 66,
+      "pace": 741.35
+    },
+    {
+      "day": "2026-06-22",
+      "dayTick": "",
+      "dayLabel": "June 22",
+      "thisPeriod": null,
+      "lastPeriod": 66,
+      "pace": 747.43
+    },
+    {
+      "day": "2026-06-23",
+      "dayTick": "",
+      "dayLabel": "June 23",
+      "thisPeriod": null,
+      "lastPeriod": 66,
+      "pace": 753.5
+    },
+    {
+      "day": "2026-06-24",
+      "dayTick": "",
+      "dayLabel": "June 24",
+      "thisPeriod": null,
+      "lastPeriod": 66,
+      "pace": 759.58
+    },
+    {
+      "day": "2026-06-25",
+      "dayTick": "",
+      "dayLabel": "June 25",
+      "thisPeriod": null,
+      "lastPeriod": 66,
+      "pace": 765.66
+    },
+    {
+      "day": "2026-06-26",
+      "dayTick": "",
+      "dayLabel": "June 26",
+      "thisPeriod": null,
+      "lastPeriod": 66,
+      "pace": 771.73
+    },
+    {
+      "day": "2026-06-27",
+      "dayTick": "",
+      "dayLabel": "June 27",
+      "thisPeriod": null,
+      "lastPeriod": 67,
+      "pace": 771.73
+    },
+    {
+      "day": "2026-06-28",
+      "dayTick": "",
+      "dayLabel": "June 28",
+      "thisPeriod": null,
+      "lastPeriod": 67,
+      "pace": 771.73
+    },
+    {
+      "day": "2026-06-29",
+      "dayTick": "",
+      "dayLabel": "June 29",
+      "thisPeriod": null,
+      "lastPeriod": 67,
+      "pace": 777.81
+    },
+    {
+      "day": "2026-06-30",
+      "dayTick": "",
+      "dayLabel": "June 30",
+      "thisPeriod": null,
+      "lastPeriod": 69,
+      "pace": 783.89
+    },
+    {
+      "day": "2026-07-01",
+      "dayTick": "Jul",
+      "dayLabel": "July 1",
+      "thisPeriod": null,
+      "lastPeriod": 69,
+      "pace": 789.96
+    },
+    {
+      "day": "2026-07-02",
+      "dayTick": "",
+      "dayLabel": "July 2",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 796.04
+    },
+    {
+      "day": "2026-07-03",
+      "dayTick": "",
+      "dayLabel": "July 3",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 802.11
+    },
+    {
+      "day": "2026-07-04",
+      "dayTick": "",
+      "dayLabel": "July 4",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 802.11
+    },
+    {
+      "day": "2026-07-05",
+      "dayTick": "",
+      "dayLabel": "July 5",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 802.11
+    },
+    {
+      "day": "2026-07-06",
+      "dayTick": "",
+      "dayLabel": "July 6",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 808.19
+    },
+    {
+      "day": "2026-07-07",
+      "dayTick": "",
+      "dayLabel": "July 7",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 814.27
+    },
+    {
+      "day": "2026-07-08",
+      "dayTick": "",
+      "dayLabel": "July 8",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 820.34
+    },
+    {
+      "day": "2026-07-09",
+      "dayTick": "",
+      "dayLabel": "July 9",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 826.42
+    },
+    {
+      "day": "2026-07-10",
+      "dayTick": "",
+      "dayLabel": "July 10",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 832.5
+    },
+    {
+      "day": "2026-07-11",
+      "dayTick": "",
+      "dayLabel": "July 11",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 832.5
+    },
+    {
+      "day": "2026-07-12",
+      "dayTick": "",
+      "dayLabel": "July 12",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 832.5
+    },
+    {
+      "day": "2026-07-13",
+      "dayTick": "",
+      "dayLabel": "July 13",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 838.57
+    },
+    {
+      "day": "2026-07-14",
+      "dayTick": "",
+      "dayLabel": "July 14",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 844.65
+    },
+    {
+      "day": "2026-07-15",
+      "dayTick": "",
+      "dayLabel": "July 15",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 850.73
+    },
+    {
+      "day": "2026-07-16",
+      "dayTick": "",
+      "dayLabel": "July 16",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 856.8
+    },
+    {
+      "day": "2026-07-17",
+      "dayTick": "",
+      "dayLabel": "July 17",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 862.88
+    },
+    {
+      "day": "2026-07-18",
+      "dayTick": "",
+      "dayLabel": "July 18",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 862.88
+    },
+    {
+      "day": "2026-07-19",
+      "dayTick": "",
+      "dayLabel": "July 19",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 862.88
+    },
+    {
+      "day": "2026-07-20",
+      "dayTick": "",
+      "dayLabel": "July 20",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 868.96
+    },
+    {
+      "day": "2026-07-21",
+      "dayTick": "",
+      "dayLabel": "July 21",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 875.03
+    },
+    {
+      "day": "2026-07-22",
+      "dayTick": "",
+      "dayLabel": "July 22",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 881.11
+    },
+    {
+      "day": "2026-07-23",
+      "dayTick": "",
+      "dayLabel": "July 23",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 887.19
+    },
+    {
+      "day": "2026-07-24",
+      "dayTick": "",
+      "dayLabel": "July 24",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 893.26
+    },
+    {
+      "day": "2026-07-25",
+      "dayTick": "",
+      "dayLabel": "July 25",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 893.26
+    },
+    {
+      "day": "2026-07-26",
+      "dayTick": "",
+      "dayLabel": "July 26",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 893.26
+    },
+    {
+      "day": "2026-07-27",
+      "dayTick": "",
+      "dayLabel": "July 27",
+      "thisPeriod": null,
+      "lastPeriod": 70,
+      "pace": 899.34
+    },
+    {
+      "day": "2026-07-28",
+      "dayTick": "",
+      "dayLabel": "July 28",
+      "thisPeriod": null,
+      "lastPeriod": 83,
+      "pace": 905.42
+    },
+    {
+      "day": "2026-07-29",
+      "dayTick": "",
+      "dayLabel": "July 29",
+      "thisPeriod": null,
+      "lastPeriod": 85,
+      "pace": 911.49
+    },
+    {
+      "day": "2026-07-30",
+      "dayTick": "",
+      "dayLabel": "July 30",
+      "thisPeriod": null,
+      "lastPeriod": 95,
+      "pace": 917.57
+    },
+    {
+      "day": "2026-07-31",
+      "dayTick": "",
+      "dayLabel": "July 31",
+      "thisPeriod": null,
+      "lastPeriod": 95,
+      "pace": 923.65
+    },
+    {
+      "day": "2026-08-01",
+      "dayTick": "",
+      "dayLabel": "August 1",
+      "thisPeriod": null,
+      "lastPeriod": 95,
+      "pace": 923.65
+    },
+    {
+      "day": "2026-08-02",
+      "dayTick": "",
+      "dayLabel": "August 2",
+      "thisPeriod": null,
+      "lastPeriod": 95,
+      "pace": 923.65
+    },
+    {
+      "day": "2026-08-03",
+      "dayTick": "",
+      "dayLabel": "August 3",
+      "thisPeriod": null,
+      "lastPeriod": 95,
+      "pace": 929.72
+    },
+    {
+      "day": "2026-08-04",
+      "dayTick": "",
+      "dayLabel": "August 4",
+      "thisPeriod": null,
+      "lastPeriod": 98,
+      "pace": 935.8
+    },
+    {
+      "day": "2026-08-05",
+      "dayTick": "",
+      "dayLabel": "August 5",
+      "thisPeriod": null,
+      "lastPeriod": 99,
+      "pace": 941.88
+    },
+    {
+      "day": "2026-08-06",
+      "dayTick": "",
+      "dayLabel": "August 6",
+      "thisPeriod": null,
+      "lastPeriod": 103,
+      "pace": 947.95
+    },
+    {
+      "day": "2026-08-07",
+      "dayTick": "",
+      "dayLabel": "August 7",
+      "thisPeriod": null,
+      "lastPeriod": 125,
+      "pace": 954.03
+    },
+    {
+      "day": "2026-08-08",
+      "dayTick": "",
+      "dayLabel": "August 8",
+      "thisPeriod": null,
+      "lastPeriod": 126,
+      "pace": 954.03
+    },
+    {
+      "day": "2026-08-09",
+      "dayTick": "",
+      "dayLabel": "August 9",
+      "thisPeriod": null,
+      "lastPeriod": 126,
+      "pace": 954.03
+    },
+    {
+      "day": "2026-08-10",
+      "dayTick": "",
+      "dayLabel": "August 10",
+      "thisPeriod": null,
+      "lastPeriod": 126,
+      "pace": 960.11
+    },
+    {
+      "day": "2026-08-11",
+      "dayTick": "",
+      "dayLabel": "August 11",
+      "thisPeriod": null,
+      "lastPeriod": 126,
+      "pace": 966.18
+    },
+    {
+      "day": "2026-08-12",
+      "dayTick": "",
+      "dayLabel": "August 12",
+      "thisPeriod": null,
+      "lastPeriod": 127,
+      "pace": 972.26
+    },
+    {
+      "day": "2026-08-13",
+      "dayTick": "",
+      "dayLabel": "August 13",
+      "thisPeriod": null,
+      "lastPeriod": 127,
+      "pace": 978.34
+    },
+    {
+      "day": "2026-08-14",
+      "dayTick": "",
+      "dayLabel": "August 14",
+      "thisPeriod": null,
+      "lastPeriod": 127,
+      "pace": 984.41
+    },
+    {
+      "day": "2026-08-15",
+      "dayTick": "",
+      "dayLabel": "August 15",
+      "thisPeriod": null,
+      "lastPeriod": 130,
+      "pace": 984.41
+    },
+    {
+      "day": "2026-08-16",
+      "dayTick": "",
+      "dayLabel": "August 16",
+      "thisPeriod": null,
+      "lastPeriod": 130,
+      "pace": 984.41
+    },
+    {
+      "day": "2026-08-17",
+      "dayTick": "",
+      "dayLabel": "August 17",
+      "thisPeriod": null,
+      "lastPeriod": 130,
+      "pace": 990.49
+    },
+    {
+      "day": "2026-08-18",
+      "dayTick": "",
+      "dayLabel": "August 18",
+      "thisPeriod": null,
+      "lastPeriod": 132,
+      "pace": 996.57
+    },
+    {
+      "day": "2026-08-19",
+      "dayTick": "",
+      "dayLabel": "August 19",
+      "thisPeriod": null,
+      "lastPeriod": 133,
+      "pace": 1002.64
+    },
+    {
+      "day": "2026-08-20",
+      "dayTick": "",
+      "dayLabel": "August 20",
+      "thisPeriod": null,
+      "lastPeriod": 133,
+      "pace": 1008.72
+    },
+    {
+      "day": "2026-08-21",
+      "dayTick": "",
+      "dayLabel": "August 21",
+      "thisPeriod": null,
+      "lastPeriod": 134,
+      "pace": 1014.8
+    },
+    {
+      "day": "2026-08-22",
+      "dayTick": "",
+      "dayLabel": "August 22",
+      "thisPeriod": null,
+      "lastPeriod": 134,
+      "pace": 1014.8
+    },
+    {
+      "day": "2026-08-23",
+      "dayTick": "",
+      "dayLabel": "August 23",
+      "thisPeriod": null,
+      "lastPeriod": 134,
+      "pace": 1014.8
+    },
+    {
+      "day": "2026-08-24",
+      "dayTick": "",
+      "dayLabel": "August 24",
+      "thisPeriod": null,
+      "lastPeriod": 134,
+      "pace": 1020.87
+    },
+    {
+      "day": "2026-08-25",
+      "dayTick": "",
+      "dayLabel": "August 25",
+      "thisPeriod": null,
+      "lastPeriod": 134,
+      "pace": 1026.95
+    },
+    {
+      "day": "2026-08-26",
+      "dayTick": "",
+      "dayLabel": "August 26",
+      "thisPeriod": null,
+      "lastPeriod": 136,
+      "pace": 1033.03
+    },
+    {
+      "day": "2026-08-27",
+      "dayTick": "",
+      "dayLabel": "August 27",
+      "thisPeriod": null,
+      "lastPeriod": 136,
+      "pace": 1039.1
+    },
+    {
+      "day": "2026-08-28",
+      "dayTick": "",
+      "dayLabel": "August 28",
+      "thisPeriod": null,
+      "lastPeriod": 136,
+      "pace": 1045.18
+    },
+    {
+      "day": "2026-08-29",
+      "dayTick": "",
+      "dayLabel": "August 29",
+      "thisPeriod": null,
+      "lastPeriod": 136,
+      "pace": 1045.18
+    },
+    {
+      "day": "2026-08-30",
+      "dayTick": "",
+      "dayLabel": "August 30",
+      "thisPeriod": null,
+      "lastPeriod": 136,
+      "pace": 1045.18
+    },
+    {
+      "day": "2026-08-31",
+      "dayTick": "",
+      "dayLabel": "August 31",
+      "thisPeriod": null,
+      "lastPeriod": 136,
+      "pace": 1051.26
+    },
+    {
+      "day": "2026-09-01",
+      "dayTick": "",
+      "dayLabel": "September 1",
+      "thisPeriod": null,
+      "lastPeriod": 136,
+      "pace": 1057.33
+    },
+    {
+      "day": "2026-09-02",
+      "dayTick": "",
+      "dayLabel": "September 2",
+      "thisPeriod": null,
+      "lastPeriod": 136,
+      "pace": 1063.41
+    },
+    {
+      "day": "2026-09-03",
+      "dayTick": "",
+      "dayLabel": "September 3",
+      "thisPeriod": null,
+      "lastPeriod": 138,
+      "pace": 1069.49
+    },
+    {
+      "day": "2026-09-04",
+      "dayTick": "",
+      "dayLabel": "September 4",
+      "thisPeriod": null,
+      "lastPeriod": 139,
+      "pace": 1075.56
+    },
+    {
+      "day": "2026-09-05",
+      "dayTick": "",
+      "dayLabel": "September 5",
+      "thisPeriod": null,
+      "lastPeriod": 139,
+      "pace": 1075.56
+    },
+    {
+      "day": "2026-09-06",
+      "dayTick": "",
+      "dayLabel": "September 6",
+      "thisPeriod": null,
+      "lastPeriod": 140,
+      "pace": 1075.56
+    },
+    {
+      "day": "2026-09-07",
+      "dayTick": "",
+      "dayLabel": "September 7",
+      "thisPeriod": null,
+      "lastPeriod": 140,
+      "pace": 1081.64
+    },
+    {
+      "day": "2026-09-08",
+      "dayTick": "",
+      "dayLabel": "September 8",
+      "thisPeriod": null,
+      "lastPeriod": 140,
+      "pace": 1087.72
+    },
+    {
+      "day": "2026-09-09",
+      "dayTick": "",
+      "dayLabel": "September 9",
+      "thisPeriod": null,
+      "lastPeriod": 140,
+      "pace": 1093.79
+    },
+    {
+      "day": "2026-09-10",
+      "dayTick": "",
+      "dayLabel": "September 10",
+      "thisPeriod": null,
+      "lastPeriod": 141,
+      "pace": 1099.87
+    },
+    {
+      "day": "2026-09-11",
+      "dayTick": "",
+      "dayLabel": "September 11",
+      "thisPeriod": null,
+      "lastPeriod": 143,
+      "pace": 1105.95
+    },
+    {
+      "day": "2026-09-12",
+      "dayTick": "",
+      "dayLabel": "September 12",
+      "thisPeriod": null,
+      "lastPeriod": 144,
+      "pace": 1105.95
+    },
+    {
+      "day": "2026-09-13",
+      "dayTick": "",
+      "dayLabel": "September 13",
+      "thisPeriod": null,
+      "lastPeriod": 144,
+      "pace": 1105.95
+    },
+    {
+      "day": "2026-09-14",
+      "dayTick": "",
+      "dayLabel": "September 14",
+      "thisPeriod": null,
+      "lastPeriod": 144,
+      "pace": 1112.02
+    },
+    {
+      "day": "2026-09-15",
+      "dayTick": "",
+      "dayLabel": "September 15",
+      "thisPeriod": null,
+      "lastPeriod": 147,
+      "pace": 1118.1
+    },
+    {
+      "day": "2026-09-16",
+      "dayTick": "",
+      "dayLabel": "September 16",
+      "thisPeriod": null,
+      "lastPeriod": 147,
+      "pace": 1124.18
+    },
+    {
+      "day": "2026-09-17",
+      "dayTick": "",
+      "dayLabel": "September 17",
+      "thisPeriod": null,
+      "lastPeriod": 147,
+      "pace": 1130.25
+    },
+    {
+      "day": "2026-09-18",
+      "dayTick": "",
+      "dayLabel": "September 18",
+      "thisPeriod": null,
+      "lastPeriod": 148,
+      "pace": 1136.33
+    },
+    {
+      "day": "2026-09-19",
+      "dayTick": "",
+      "dayLabel": "September 19",
+      "thisPeriod": null,
+      "lastPeriod": 148,
+      "pace": 1136.33
+    },
+    {
+      "day": "2026-09-20",
+      "dayTick": "",
+      "dayLabel": "September 20",
+      "thisPeriod": null,
+      "lastPeriod": 148,
+      "pace": 1136.33
+    },
+    {
+      "day": "2026-09-21",
+      "dayTick": "",
+      "dayLabel": "September 21",
+      "thisPeriod": null,
+      "lastPeriod": 148,
+      "pace": 1142.41
+    },
+    {
+      "day": "2026-09-22",
+      "dayTick": "",
+      "dayLabel": "September 22",
+      "thisPeriod": null,
+      "lastPeriod": 151,
+      "pace": 1148.48
+    },
+    {
+      "day": "2026-09-23",
+      "dayTick": "",
+      "dayLabel": "September 23",
+      "thisPeriod": null,
+      "lastPeriod": 152,
+      "pace": 1154.56
+    },
+    {
+      "day": "2026-09-24",
+      "dayTick": "",
+      "dayLabel": "September 24",
+      "thisPeriod": null,
+      "lastPeriod": 152,
+      "pace": 1160.64
+    },
+    {
+      "day": "2026-09-25",
+      "dayTick": "",
+      "dayLabel": "September 25",
+      "thisPeriod": null,
+      "lastPeriod": 154,
+      "pace": 1166.71
+    },
+    {
+      "day": "2026-09-26",
+      "dayTick": "",
+      "dayLabel": "September 26",
+      "thisPeriod": null,
+      "lastPeriod": 154,
+      "pace": 1166.71
+    },
+    {
+      "day": "2026-09-27",
+      "dayTick": "",
+      "dayLabel": "September 27",
+      "thisPeriod": null,
+      "lastPeriod": 154,
+      "pace": 1166.71
+    },
+    {
+      "day": "2026-09-28",
+      "dayTick": "",
+      "dayLabel": "September 28",
+      "thisPeriod": null,
+      "lastPeriod": 154,
+      "pace": 1172.79
+    },
+    {
+      "day": "2026-09-29",
+      "dayTick": "",
+      "dayLabel": "September 29",
+      "thisPeriod": null,
+      "lastPeriod": 154,
+      "pace": 1178.87
+    },
+    {
+      "day": "2026-09-30",
+      "dayTick": "",
+      "dayLabel": "September 30",
+      "thisPeriod": null,
+      "lastPeriod": 154,
+      "pace": 1184.94
+    },
+    {
+      "day": "2026-10-01",
+      "dayTick": "Oct",
+      "dayLabel": "October 1",
+      "thisPeriod": null,
+      "lastPeriod": 154,
+      "pace": 1191.02
+    },
+    {
+      "day": "2026-10-02",
+      "dayTick": "",
+      "dayLabel": "October 2",
+      "thisPeriod": null,
+      "lastPeriod": 154,
+      "pace": 1197.1
+    },
+    {
+      "day": "2026-10-03",
+      "dayTick": "",
+      "dayLabel": "October 3",
+      "thisPeriod": null,
+      "lastPeriod": 154,
+      "pace": 1197.1
+    },
+    {
+      "day": "2026-10-04",
+      "dayTick": "",
+      "dayLabel": "October 4",
+      "thisPeriod": null,
+      "lastPeriod": 154,
+      "pace": 1197.1
+    },
+    {
+      "day": "2026-10-05",
+      "dayTick": "",
+      "dayLabel": "October 5",
+      "thisPeriod": null,
+      "lastPeriod": 154,
+      "pace": 1203.17
+    },
+    {
+      "day": "2026-10-06",
+      "dayTick": "",
+      "dayLabel": "October 6",
+      "thisPeriod": null,
+      "lastPeriod": 155,
+      "pace": 1209.25
+    },
+    {
+      "day": "2026-10-07",
+      "dayTick": "",
+      "dayLabel": "October 7",
+      "thisPeriod": null,
+      "lastPeriod": 156,
+      "pace": 1215.33
+    },
+    {
+      "day": "2026-10-08",
+      "dayTick": "",
+      "dayLabel": "October 8",
+      "thisPeriod": null,
+      "lastPeriod": 156,
+      "pace": 1221.4
+    },
+    {
+      "day": "2026-10-09",
+      "dayTick": "",
+      "dayLabel": "October 9",
+      "thisPeriod": null,
+      "lastPeriod": 156,
+      "pace": 1227.48
+    },
+    {
+      "day": "2026-10-10",
+      "dayTick": "",
+      "dayLabel": "October 10",
+      "thisPeriod": null,
+      "lastPeriod": 156,
+      "pace": 1227.48
+    },
+    {
+      "day": "2026-10-11",
+      "dayTick": "",
+      "dayLabel": "October 11",
+      "thisPeriod": null,
+      "lastPeriod": 156,
+      "pace": 1227.48
+    },
+    {
+      "day": "2026-10-12",
+      "dayTick": "",
+      "dayLabel": "October 12",
+      "thisPeriod": null,
+      "lastPeriod": 156,
+      "pace": 1233.56
+    },
+    {
+      "day": "2026-10-13",
+      "dayTick": "",
+      "dayLabel": "October 13",
+      "thisPeriod": null,
+      "lastPeriod": 156,
+      "pace": 1239.63
+    },
+    {
+      "day": "2026-10-14",
+      "dayTick": "",
+      "dayLabel": "October 14",
+      "thisPeriod": null,
+      "lastPeriod": 158,
+      "pace": 1245.71
+    },
+    {
+      "day": "2026-10-15",
+      "dayTick": "",
+      "dayLabel": "October 15",
+      "thisPeriod": null,
+      "lastPeriod": 158,
+      "pace": 1251.79
+    },
+    {
+      "day": "2026-10-16",
+      "dayTick": "",
+      "dayLabel": "October 16",
+      "thisPeriod": null,
+      "lastPeriod": 159,
+      "pace": 1257.86
+    },
+    {
+      "day": "2026-10-17",
+      "dayTick": "",
+      "dayLabel": "October 17",
+      "thisPeriod": null,
+      "lastPeriod": 159,
+      "pace": 1257.86
+    },
+    {
+      "day": "2026-10-18",
+      "dayTick": "",
+      "dayLabel": "October 18",
+      "thisPeriod": null,
+      "lastPeriod": 159,
+      "pace": 1257.86
+    },
+    {
+      "day": "2026-10-19",
+      "dayTick": "",
+      "dayLabel": "October 19",
+      "thisPeriod": null,
+      "lastPeriod": 159,
+      "pace": 1263.94
+    },
+    {
+      "day": "2026-10-20",
+      "dayTick": "",
+      "dayLabel": "October 20",
+      "thisPeriod": null,
+      "lastPeriod": 159,
+      "pace": 1270.02
+    },
+    {
+      "day": "2026-10-21",
+      "dayTick": "",
+      "dayLabel": "October 21",
+      "thisPeriod": null,
+      "lastPeriod": 159,
+      "pace": 1276.09
+    },
+    {
+      "day": "2026-10-22",
+      "dayTick": "",
+      "dayLabel": "October 22",
+      "thisPeriod": null,
+      "lastPeriod": 159,
+      "pace": 1282.17
+    },
+    {
+      "day": "2026-10-23",
+      "dayTick": "",
+      "dayLabel": "October 23",
+      "thisPeriod": null,
+      "lastPeriod": 159,
+      "pace": 1288.25
+    },
+    {
+      "day": "2026-10-24",
+      "dayTick": "",
+      "dayLabel": "October 24",
+      "thisPeriod": null,
+      "lastPeriod": 159,
+      "pace": 1288.25
+    },
+    {
+      "day": "2026-10-25",
+      "dayTick": "",
+      "dayLabel": "October 25",
+      "thisPeriod": null,
+      "lastPeriod": 159,
+      "pace": 1288.25
+    },
+    {
+      "day": "2026-10-26",
+      "dayTick": "",
+      "dayLabel": "October 26",
+      "thisPeriod": null,
+      "lastPeriod": 159,
+      "pace": 1294.32
+    },
+    {
+      "day": "2026-10-27",
+      "dayTick": "",
+      "dayLabel": "October 27",
+      "thisPeriod": null,
+      "lastPeriod": 160,
+      "pace": 1300.4
+    },
+    {
+      "day": "2026-10-28",
+      "dayTick": "",
+      "dayLabel": "October 28",
+      "thisPeriod": null,
+      "lastPeriod": 161,
+      "pace": 1306.48
+    },
+    {
+      "day": "2026-10-29",
+      "dayTick": "",
+      "dayLabel": "October 29",
+      "thisPeriod": null,
+      "lastPeriod": 163,
+      "pace": 1312.55
+    },
+    {
+      "day": "2026-10-30",
+      "dayTick": "",
+      "dayLabel": "October 30",
+      "thisPeriod": null,
+      "lastPeriod": 163,
+      "pace": 1318.63
+    },
+    {
+      "day": "2026-10-31",
+      "dayTick": "",
+      "dayLabel": "October 31",
+      "thisPeriod": null,
+      "lastPeriod": 166,
+      "pace": 1318.63
+    },
+    {
+      "day": "2026-11-01",
+      "dayTick": "",
+      "dayLabel": "November 1",
+      "thisPeriod": null,
+      "lastPeriod": 166,
+      "pace": 1318.63
+    },
+    {
+      "day": "2026-11-02",
+      "dayTick": "",
+      "dayLabel": "November 2",
+      "thisPeriod": null,
+      "lastPeriod": 166,
+      "pace": 1324.7
+    },
+    {
+      "day": "2026-11-03",
+      "dayTick": "",
+      "dayLabel": "November 3",
+      "thisPeriod": null,
+      "lastPeriod": 167,
+      "pace": 1330.78
+    },
+    {
+      "day": "2026-11-04",
+      "dayTick": "",
+      "dayLabel": "November 4",
+      "thisPeriod": null,
+      "lastPeriod": 167,
+      "pace": 1336.86
+    },
+    {
+      "day": "2026-11-05",
+      "dayTick": "",
+      "dayLabel": "November 5",
+      "thisPeriod": null,
+      "lastPeriod": 167,
+      "pace": 1342.93
+    },
+    {
+      "day": "2026-11-06",
+      "dayTick": "",
+      "dayLabel": "November 6",
+      "thisPeriod": null,
+      "lastPeriod": 167,
+      "pace": 1349.01
+    },
+    {
+      "day": "2026-11-07",
+      "dayTick": "",
+      "dayLabel": "November 7",
+      "thisPeriod": null,
+      "lastPeriod": 168,
+      "pace": 1349.01
+    },
+    {
+      "day": "2026-11-08",
+      "dayTick": "",
+      "dayLabel": "November 8",
+      "thisPeriod": null,
+      "lastPeriod": 168,
+      "pace": 1349.01
+    },
+    {
+      "day": "2026-11-09",
+      "dayTick": "",
+      "dayLabel": "November 9",
+      "thisPeriod": null,
+      "lastPeriod": 168,
+      "pace": 1355.09
+    },
+    {
+      "day": "2026-11-10",
+      "dayTick": "",
+      "dayLabel": "November 10",
+      "thisPeriod": null,
+      "lastPeriod": 168,
+      "pace": 1361.16
+    },
+    {
+      "day": "2026-11-11",
+      "dayTick": "",
+      "dayLabel": "November 11",
+      "thisPeriod": null,
+      "lastPeriod": 168,
+      "pace": 1367.24
+    },
+    {
+      "day": "2026-11-12",
+      "dayTick": "",
+      "dayLabel": "November 12",
+      "thisPeriod": null,
+      "lastPeriod": 169,
+      "pace": 1373.32
+    },
+    {
+      "day": "2026-11-13",
+      "dayTick": "",
+      "dayLabel": "November 13",
+      "thisPeriod": null,
+      "lastPeriod": 169,
+      "pace": 1379.39
+    },
+    {
+      "day": "2026-11-14",
+      "dayTick": "",
+      "dayLabel": "November 14",
+      "thisPeriod": null,
+      "lastPeriod": 185,
+      "pace": 1379.39
+    },
+    {
+      "day": "2026-11-15",
+      "dayTick": "",
+      "dayLabel": "November 15",
+      "thisPeriod": null,
+      "lastPeriod": 185,
+      "pace": 1379.39
+    },
+    {
+      "day": "2026-11-16",
+      "dayTick": "",
+      "dayLabel": "November 16",
+      "thisPeriod": null,
+      "lastPeriod": 185,
+      "pace": 1385.47
+    },
+    {
+      "day": "2026-11-17",
+      "dayTick": "",
+      "dayLabel": "November 17",
+      "thisPeriod": null,
+      "lastPeriod": 187,
+      "pace": 1391.55
+    },
+    {
+      "day": "2026-11-18",
+      "dayTick": "",
+      "dayLabel": "November 18",
+      "thisPeriod": null,
+      "lastPeriod": 187,
+      "pace": 1397.62
+    },
+    {
+      "day": "2026-11-19",
+      "dayTick": "",
+      "dayLabel": "November 19",
+      "thisPeriod": null,
+      "lastPeriod": 190,
+      "pace": 1403.7
+    },
+    {
+      "day": "2026-11-20",
+      "dayTick": "",
+      "dayLabel": "November 20",
+      "thisPeriod": null,
+      "lastPeriod": 192,
+      "pace": 1409.78
+    },
+    {
+      "day": "2026-11-21",
+      "dayTick": "",
+      "dayLabel": "November 21",
+      "thisPeriod": null,
+      "lastPeriod": 193,
+      "pace": 1409.78
+    },
+    {
+      "day": "2026-11-22",
+      "dayTick": "",
+      "dayLabel": "November 22",
+      "thisPeriod": null,
+      "lastPeriod": 193,
+      "pace": 1409.78
+    },
+    {
+      "day": "2026-11-23",
+      "dayTick": "",
+      "dayLabel": "November 23",
+      "thisPeriod": null,
+      "lastPeriod": 193,
+      "pace": 1415.85
+    },
+    {
+      "day": "2026-11-24",
+      "dayTick": "",
+      "dayLabel": "November 24",
+      "thisPeriod": null,
+      "lastPeriod": 193,
+      "pace": 1421.93
+    },
+    {
+      "day": "2026-11-25",
+      "dayTick": "",
+      "dayLabel": "November 25",
+      "thisPeriod": null,
+      "lastPeriod": 198,
+      "pace": 1428.01
+    },
+    {
+      "day": "2026-11-26",
+      "dayTick": "",
+      "dayLabel": "November 26",
+      "thisPeriod": null,
+      "lastPeriod": 198,
+      "pace": 1434.08
+    },
+    {
+      "day": "2026-11-27",
+      "dayTick": "",
+      "dayLabel": "November 27",
+      "thisPeriod": null,
+      "lastPeriod": 199,
+      "pace": 1440.16
+    },
+    {
+      "day": "2026-11-28",
+      "dayTick": "",
+      "dayLabel": "November 28",
+      "thisPeriod": null,
+      "lastPeriod": 199,
+      "pace": 1440.16
+    },
+    {
+      "day": "2026-11-29",
+      "dayTick": "",
+      "dayLabel": "November 29",
+      "thisPeriod": null,
+      "lastPeriod": 199,
+      "pace": 1440.16
+    },
+    {
+      "day": "2026-11-30",
+      "dayTick": "",
+      "dayLabel": "November 30",
+      "thisPeriod": null,
+      "lastPeriod": 199,
+      "pace": 1446.24
+    },
+    {
+      "day": "2026-12-01",
+      "dayTick": "",
+      "dayLabel": "December 1",
+      "thisPeriod": null,
+      "lastPeriod": 199,
+      "pace": 1452.31
+    },
+    {
+      "day": "2026-12-02",
+      "dayTick": "",
+      "dayLabel": "December 2",
+      "thisPeriod": null,
+      "lastPeriod": 199,
+      "pace": 1458.39
+    },
+    {
+      "day": "2026-12-03",
+      "dayTick": "",
+      "dayLabel": "December 3",
+      "thisPeriod": null,
+      "lastPeriod": 199,
+      "pace": 1464.47
+    },
+    {
+      "day": "2026-12-04",
+      "dayTick": "",
+      "dayLabel": "December 4",
+      "thisPeriod": null,
+      "lastPeriod": 199,
+      "pace": 1470.54
+    },
+    {
+      "day": "2026-12-05",
+      "dayTick": "",
+      "dayLabel": "December 5",
+      "thisPeriod": null,
+      "lastPeriod": 200,
+      "pace": 1470.54
+    },
+    {
+      "day": "2026-12-06",
+      "dayTick": "",
+      "dayLabel": "December 6",
+      "thisPeriod": null,
+      "lastPeriod": 200,
+      "pace": 1470.54
+    },
+    {
+      "day": "2026-12-07",
+      "dayTick": "",
+      "dayLabel": "December 7",
+      "thisPeriod": null,
+      "lastPeriod": 200,
+      "pace": 1476.62
+    },
+    {
+      "day": "2026-12-08",
+      "dayTick": "",
+      "dayLabel": "December 8",
+      "thisPeriod": null,
+      "lastPeriod": 201,
+      "pace": 1482.7
+    },
+    {
+      "day": "2026-12-09",
+      "dayTick": "",
+      "dayLabel": "December 9",
+      "thisPeriod": null,
+      "lastPeriod": 202,
+      "pace": 1488.77
+    },
+    {
+      "day": "2026-12-10",
+      "dayTick": "",
+      "dayLabel": "December 10",
+      "thisPeriod": null,
+      "lastPeriod": 204,
+      "pace": 1494.85
+    },
+    {
+      "day": "2026-12-11",
+      "dayTick": "",
+      "dayLabel": "December 11",
+      "thisPeriod": null,
+      "lastPeriod": 204,
+      "pace": 1500.93
+    },
+    {
+      "day": "2026-12-12",
+      "dayTick": "",
+      "dayLabel": "December 12",
+      "thisPeriod": null,
+      "lastPeriod": 205,
+      "pace": 1500.93
+    },
+    {
+      "day": "2026-12-13",
+      "dayTick": "",
+      "dayLabel": "December 13",
+      "thisPeriod": null,
+      "lastPeriod": 205,
+      "pace": 1500.93
+    },
+    {
+      "day": "2026-12-14",
+      "dayTick": "",
+      "dayLabel": "December 14",
+      "thisPeriod": null,
+      "lastPeriod": 205,
+      "pace": 1507
+    },
+    {
+      "day": "2026-12-15",
+      "dayTick": "",
+      "dayLabel": "December 15",
+      "thisPeriod": null,
+      "lastPeriod": 207,
+      "pace": 1513.08
+    },
+    {
+      "day": "2026-12-16",
+      "dayTick": "",
+      "dayLabel": "December 16",
+      "thisPeriod": null,
+      "lastPeriod": 208,
+      "pace": 1519.16
+    },
+    {
+      "day": "2026-12-17",
+      "dayTick": "",
+      "dayLabel": "December 17",
+      "thisPeriod": null,
+      "lastPeriod": 208,
+      "pace": 1525.23
+    },
+    {
+      "day": "2026-12-18",
+      "dayTick": "",
+      "dayLabel": "December 18",
+      "thisPeriod": null,
+      "lastPeriod": 217,
+      "pace": 1531.31
+    },
+    {
+      "day": "2026-12-19",
+      "dayTick": "",
+      "dayLabel": "December 19",
+      "thisPeriod": null,
+      "lastPeriod": 225,
+      "pace": 1531.31
+    },
+    {
+      "day": "2026-12-20",
+      "dayTick": "",
+      "dayLabel": "December 20",
+      "thisPeriod": null,
+      "lastPeriod": 225,
+      "pace": 1531.31
+    },
+    {
+      "day": "2026-12-21",
+      "dayTick": "",
+      "dayLabel": "December 21",
+      "thisPeriod": null,
+      "lastPeriod": 226,
+      "pace": 1537.39
+    },
+    {
+      "day": "2026-12-22",
+      "dayTick": "",
+      "dayLabel": "December 22",
+      "thisPeriod": null,
+      "lastPeriod": 227,
+      "pace": 1543.46
+    },
+    {
+      "day": "2026-12-23",
+      "dayTick": "",
+      "dayLabel": "December 23",
+      "thisPeriod": null,
+      "lastPeriod": 228,
+      "pace": 1549.54
+    },
+    {
+      "day": "2026-12-24",
+      "dayTick": "",
+      "dayLabel": "December 24",
+      "thisPeriod": null,
+      "lastPeriod": 228,
+      "pace": 1555.62
+    },
+    {
+      "day": "2026-12-25",
+      "dayTick": "",
+      "dayLabel": "December 25",
+      "thisPeriod": null,
+      "lastPeriod": 228,
+      "pace": 1561.69
+    },
+    {
+      "day": "2026-12-26",
+      "dayTick": "",
+      "dayLabel": "December 26",
+      "thisPeriod": null,
+      "lastPeriod": 228,
+      "pace": 1561.69
+    },
+    {
+      "day": "2026-12-27",
+      "dayTick": "",
+      "dayLabel": "December 27",
+      "thisPeriod": null,
+      "lastPeriod": 228,
+      "pace": 1561.69
+    },
+    {
+      "day": "2026-12-28",
+      "dayTick": "",
+      "dayLabel": "December 28",
+      "thisPeriod": null,
+      "lastPeriod": 228,
+      "pace": 1567.77
+    },
+    {
+      "day": "2026-12-29",
+      "dayTick": "",
+      "dayLabel": "December 29",
+      "thisPeriod": null,
+      "lastPeriod": 228,
+      "pace": 1573.85
+    },
+    {
+      "day": "2026-12-30",
+      "dayTick": "",
+      "dayLabel": "December 30",
+      "thisPeriod": null,
+      "lastPeriod": 230,
+      "pace": 1579.92
+    },
+    {
+      "day": "2026-12-31",
+      "dayTick": "",
+      "dayLabel": "December 31",
+      "thisPeriod": null,
+      "lastPeriod": 230,
+      "pace": 1586
+    }
+  ]
+}
