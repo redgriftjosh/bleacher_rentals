@@ -2959,18 +2959,21 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          is_deleted: boolean
           sort_order: number
         }
         Insert: {
           created_at?: string
           display_name: string
           id?: string
+          is_deleted?: boolean
           sort_order?: number
         }
         Update: {
           created_at?: string
           display_name?: string
           id?: string
+          is_deleted?: boolean
           sort_order?: number
         }
         Relationships: []
