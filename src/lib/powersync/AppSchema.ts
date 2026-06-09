@@ -36,6 +36,7 @@ const BleachersCols = {
   bleacher_number: column.integer,
   bleacher_rows: column.integer,
   bleacher_seats: column.integer,
+  bleacher_type_uuid: column.text,
   created_by: column.text,
   updated_at: column.text,
   updated_by: column.text,

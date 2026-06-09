@@ -220,6 +220,7 @@ export type Database = {
           bleacher_number: number
           bleacher_rows: number
           bleacher_seats: number
+          bleacher_type_uuid: string | null
           created_at: string
           created_by: string | null
           deleted: boolean
@@ -250,6 +251,7 @@ export type Database = {
           bleacher_number: number
           bleacher_rows: number
           bleacher_seats: number
+          bleacher_type_uuid?: string | null
           created_at?: string
           created_by?: string | null
           deleted?: boolean
@@ -280,6 +282,7 @@ export type Database = {
           bleacher_number?: number
           bleacher_rows?: number
           bleacher_seats?: number
+          bleacher_type_uuid?: string | null
           created_at?: string
           created_by?: string | null
           deleted?: boolean
@@ -307,6 +310,13 @@ export type Database = {
           zone_uuid?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "Bleachers_bleacher_type_uuid_fkey"
+            columns: ["bleacher_type_uuid"]
+            isOneToOne: false
+            referencedRelation: "BleacherTypes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "Bleachers_summer_account_manager_uuid_fkey"
             columns: ["summer_account_manager_uuid"]
