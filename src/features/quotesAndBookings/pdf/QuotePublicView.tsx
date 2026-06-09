@@ -193,7 +193,7 @@ export function QuotePublicView({ data }: { data: QuoteDocumentData }) {
             {data.company.name} &middot; {data.quoteNumber}
           </p>
           <a
-            href={`/api/quotes/${data.quoteNumber}/pdf`}
+            href={`/api/quotes/${data.eventId}/pdf`}
             className="px-4 py-2 text-sm font-medium text-darkBlue border border-darkBlue rounded-sm hover:bg-blue-50 transition"
           >
             Download PDF

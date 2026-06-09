@@ -2,6 +2,7 @@ import { db, powerSyncDb } from "@/components/providers/SystemProvider";
 
 export type QuoteDetail = {
   id: string;
+  invoiceNumber: number | null;
   eventName: string;
   eventStatus: string | null;
   eventStart: string | null;
@@ -37,6 +38,7 @@ export type QuoteDetail = {
 
 type Row = {
   id: string;
+  invoice_number: number | null;
   event_name: string;
   event_status: string | null;
   event_start: string | null;
@@ -72,6 +74,7 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
     .leftJoin("Users as u", "e.created_by_user_uuid", "u.id")
     .select([
       "e.id as id",
+      "e.invoice_number as invoice_number",
       "e.event_name as event_name",
       "e.event_status as event_status",
       "e.event_start as event_start",
@@ -109,6 +112,7 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
 
   return {
     id: r.id,
+    invoiceNumber: r.invoice_number,
     eventName: r.event_name,
     eventStatus: r.event_status,
     eventStart: r.event_start,

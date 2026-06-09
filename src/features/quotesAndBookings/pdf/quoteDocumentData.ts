@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { resolveInvoiceDisplay, buildPublicQuoteUrl, parseInvoiceParam } from "../utils/invoiceNumber";
 
 // ── The single source of truth for rendering a quote ──
 
@@ -17,6 +18,8 @@ export type QuotePaymentInstallment = {
 };
 
 export type QuoteDocumentData = {
+  // Internal ID (for API routes)
+  eventId: string;
   // Header
   quoteNumber: string;
   quoteDate: string;
@@ -105,6 +108,7 @@ export async function buildQuoteDocumentData(
     .select(
       `
       id,
+      invoice_number,
       event_name,
       event_status,
       event_start,
@@ -185,12 +189,14 @@ export async function buildQuoteDocumentData(
   // 5. Determine currency from first line item or default
   const currency = (lineItemRows?.[0]?.currency as "USD" | "CAD") ?? "USD";
 
-  // 6. Build public URL
+  // 6. Build public URL — use invoice_number for public-facing link
   const appOrigin = origin ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://app.bleacherrentals.com";
-  const publicUrl = `${appOrigin}/quote/${eventId}`;
+  const invoiceNum = resolveInvoiceDisplay(event.invoice_number, eventId);
+  const publicUrl = buildPublicQuoteUrl(appOrigin, event.invoice_number, eventId);
 
   return {
-    quoteNumber: `${eventId}`,
+    eventId,
+    quoteNumber: invoiceNum,
     quoteDate: event.created_at?.split("T")[0] ?? "",
     validUntil: (event as any).quote_valid_till ?? "",
     status: event.event_status ?? "draft",
@@ -241,4 +247,30 @@ export async function buildQuoteDocumentData(
 
     accountManager: user ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() : "",
   };
+}
+
+/**
+ * Lookup by invoice_number (for public /quote/[invoiceNumber] route).
+ * Falls back to UUID lookup for backward compatibility with old links.
+ */
+export async function buildQuoteDocumentDataByInvoice(
+  invoiceNumberOrId: string,
+  origin?: string,
+): Promise<QuoteDocumentData | null> {
+  const supabase = getSupabaseAdmin();
+
+  const parsed = parseInvoiceParam(invoiceNumberOrId);
+
+  if (parsed.type === "invoice_number") {
+    const { data } = await supabase
+      .from("Events")
+      .select("id")
+      .eq("invoice_number", parsed.value as number)
+      .single();
+
+    if (data) return buildQuoteDocumentData(data.id, origin);
+  }
+
+  // Fallback: treat as UUID (backward compat for old bookmarked links)
+  return buildQuoteDocumentData(invoiceNumberOrId, origin);
 }

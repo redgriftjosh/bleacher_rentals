@@ -51,7 +51,7 @@ export async function POST(
     await client.sendEmail({
       From: fromEmail,
       To: recipientEmail,
-      Subject: `Quote ${data.quoteNumber} from ${data.company.name}`,
+      Subject: `Invoice ${data.quoteNumber} from ${data.company.name}`,
       HtmlBody: htmlBody,
       MessageStream: "outbound",
       Attachments: [

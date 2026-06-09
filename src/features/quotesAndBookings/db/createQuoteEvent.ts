@@ -69,6 +69,16 @@ export async function createQuoteEvent(
 
   const eventUuid = eventData!.id;
 
+  // Generate unique 9-digit invoice number
+  const { data: invoiceData } = await (supabase.rpc as any)("generate_invoice_number");
+
+  if (invoiceData != null) {
+    await supabase
+      .from("Events")
+      .update({ invoice_number: Number(invoiceData) })
+      .eq("id", eventUuid);
+  }
+
   // 3. Insert line items
   if (state.lineItems.length > 0) {
     const lineItemRows = state.lineItems.map((li) => ({

@@ -107,6 +107,12 @@ export function ContractTab({ quote }: { quote: QuoteDetail }) {
         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Project Info</h3>
         <div className="grid grid-cols-2 gap-6">
           <div className="space-y-2 text-sm">
+            {quote.invoiceNumber && (
+              <div>
+                <span className="text-gray-500">Invoice #:</span>{" "}
+                <span className="font-medium">{quote.invoiceNumber}</span>
+              </div>
+            )}
             <div>
               <span className="text-gray-500">Event Name:</span>{" "}
               <span className="font-medium">{quote.eventName}</span>

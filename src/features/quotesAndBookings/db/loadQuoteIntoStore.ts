@@ -1,6 +1,7 @@
 import { useCreateQuoteStore } from "../state/useCreateQuoteStore";
 import { fetchPaymentInstallments } from "./paymentInstallments";
 import { fetchQuoteDetail } from "./fetchQuoteDetail";
+import { resolveInvoiceDisplay } from "../utils/invoiceNumber";
 
 /**
  * Fetches an event by ID (via PowerSync) and loads its data into useCreateQuoteStore for editing.
@@ -16,6 +17,7 @@ export async function loadQuoteIntoStore(eventId: string): Promise<string | null
 
   const store = useCreateQuoteStore.getState();
 
+  store.setField("quoteNumber", resolveInvoiceDisplay(data.invoiceNumber, data.id));
   store.setField("eventName", data.eventName ?? "");
   store.setField("eventStart", data.eventStart ?? "");
   store.setField("eventEnd", data.eventEnd ?? "");

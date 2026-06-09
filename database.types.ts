@@ -1290,6 +1290,7 @@ export type Database = {
           hsl_hue: number | null
           id: string
           internal_notes: string | null
+          invoice_number: number | null
           lenient: boolean
           must_be_clean: boolean
           notes: string | null
@@ -1320,6 +1321,7 @@ export type Database = {
           hsl_hue?: number | null
           id?: string
           internal_notes?: string | null
+          invoice_number?: number | null
           lenient: boolean
           must_be_clean?: boolean
           notes?: string | null
@@ -1350,6 +1352,7 @@ export type Database = {
           hsl_hue?: number | null
           id?: string
           internal_notes?: string | null
+          invoice_number?: number | null
           lenient?: boolean
           must_be_clean?: boolean
           notes?: string | null

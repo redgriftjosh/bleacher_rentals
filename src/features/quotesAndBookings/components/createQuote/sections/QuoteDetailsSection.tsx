@@ -70,11 +70,11 @@ export function QuoteDetailsSection() {
       <div className="grid grid-cols-4 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Quote # (Auto-generated)
+            Invoice # (Auto-generated)
           </label>
           <input
             type="text"
-            value={store.quoteNumber || "QT-XXXXX"}
+            value={store.quoteNumber || "Auto-generated on save"}
             disabled
             className="w-full h-[40px] px-3 border rounded text-sm bg-gray-50 text-gray-500"
           />
