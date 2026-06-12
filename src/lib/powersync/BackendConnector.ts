@@ -25,6 +25,9 @@ const FATAL_RESPONSE_CODES = [
 //   return JSON.parse(json);
 // }
 
+let _cachedCredentials: { endpoint: string; token: string; expiresAt: number } | null = null;
+const CREDENTIALS_TTL_MS = 50_000; // cache for 50s (Clerk tokens live ~60s)
+
 export class BackendConnector implements PowerSyncBackendConnector {
   client: SupabaseClient;
   supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -40,19 +43,19 @@ export class BackendConnector implements PowerSyncBackendConnector {
   }
 
   async fetchCredentials() {
+    if (_cachedCredentials && Date.now() < _cachedCredentials.expiresAt) {
+      return { endpoint: _cachedCredentials.endpoint, token: _cachedCredentials.token };
+    }
+
     const res = await fetch("/api/powersync/credentials?template=powersync", {
       cache: "no-store",
     });
     if (!res.ok) throw new Error(await res.text());
     const { endpoint, token } = await res.json();
 
-    // console.debug("Fetched PowerSync credentials from Clerk");
-    // console.log(getJwtPayload(token));
+    _cachedCredentials = { endpoint, token, expiresAt: Date.now() + CREDENTIALS_TTL_MS };
 
-    return {
-      endpoint: endpoint,
-      token: token,
-    };
+    return { endpoint, token };
   }
 
   async uploadData(database: AbstractPowerSyncDatabase): Promise<void> {

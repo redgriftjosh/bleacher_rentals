@@ -7,7 +7,6 @@ import {
   type BlockedReason,
 } from "../logic/determineAccess";
 import { useMemo } from "react";
-import { usePowerSync } from "@powersync/react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import type { UserAccessData } from "../types";
@@ -20,7 +19,6 @@ export type UserAccessState =
   | { status: "active"; roles: WebRole[]; userId: string; accountManagerId: string | null };
 
 export function useUserAccess(): UserAccessState {
-  const powerSync = usePowerSync();
   const { user } = useUser();
   const clerkUserId = user?.id ?? null;
 
@@ -54,28 +52,8 @@ export function useUserAccess(): UserAccessState {
 
   const { data, isLoading, error } = useTypedQuery(compiled, expect<UserAccessData>());
 
-  if (process.env.NODE_ENV !== "production") {
-    console.log("User Access Data:", JSON.stringify(data, null, 2));
-    console.log("User Access Query Error:", error);
-    console.log("User Access Query Loading:", isLoading);
-
-    const hasSynced = powerSync.currentStatus?.hasSynced === true;
-    const downloading = powerSync.currentStatus?.dataFlowStatus?.downloading === true;
-    const downloadError = powerSync.currentStatus?.dataFlowStatus?.downloadError;
-
-    console.log("[PowerSync] status", {
-      hasSynced,
-      downloading,
-      downloadError: downloadError?.message,
-    });
-
-    if (!hasSynced || downloading || downloadError) {
-      console.warn("[PowerSync] Not fully synced yet", {
-        hasSynced,
-        downloading,
-        downloadError: downloadError?.message,
-      });
-    }
+  if (process.env.NODE_ENV !== "production" && error) {
+    console.warn("[useUserAccess] query error:", error);
   }
 
   if (!clerkUserId || isLoading) {
