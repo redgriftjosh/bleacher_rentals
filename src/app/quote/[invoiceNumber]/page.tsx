@@ -1,5 +1,5 @@
 import { buildQuoteDocumentDataByInvoice } from "@/features/quotesAndBookings/pdf/quoteDocumentData";
-import { QuotePublicView } from "@/features/quotesAndBookings/pdf/QuotePublicView";
+import { QuotePublicTabs } from "@/features/quotesAndBookings/pdf/QuotePublicTabs";
 import { notFound } from "next/navigation";
 
 export default async function PublicQuotePage({
@@ -14,5 +14,5 @@ export default async function PublicQuotePage({
     notFound();
   }
 
-  return <QuotePublicView data={data} />;
+  return <QuotePublicTabs data={data} />;
 }

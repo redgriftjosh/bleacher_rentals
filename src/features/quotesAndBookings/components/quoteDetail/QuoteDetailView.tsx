@@ -34,8 +34,10 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
   const { lineItems } = useEventLineItems(eventId);
 
   const contractTotalCents = useMemo(() => {
-    return lineItems.reduce((sum, li) => sum + li.valueCents * li.quantity, 0);
-  }, [lineItems]);
+    const lineTotal = lineItems.reduce((sum, li) => sum + li.valueCents * li.quantity, 0);
+    const tax = quote?.taxAmountCents ?? 0;
+    return lineTotal + tax;
+  }, [lineItems, quote?.taxAmountCents]);
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this quote? This action can be undone by an admin.")) return;

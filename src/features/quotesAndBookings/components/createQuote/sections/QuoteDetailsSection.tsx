@@ -9,34 +9,38 @@ import { useAccountManagers } from "@/features/manageTeam/hooks/useAccountManage
 import { useSalesOffices, isCanadianProvince } from "../../../hooks/useSalesOffices";
 
 export function QuoteDetailsSection() {
-  const store = useCreateQuoteStore();
+  const quoteNumber = useCreateQuoteStore((s) => s.quoteNumber);
+  const quoteValidTill = useCreateQuoteStore((s) => s.quoteValidTill);
+  const status = useCreateQuoteStore((s) => s.status);
+  const salesOfficeId = useCreateQuoteStore((s) => s.salesOfficeId);
+  const accountManagerId = useCreateQuoteStore((s) => s.accountManagerId);
+  const currency = useCreateQuoteStore((s) => s.currency);
+  const setField = useCreateQuoteStore((s) => s.setField);
+
   const permissions = useTeamPermissions();
   const accountManagers = useAccountManagers(false);
-
-  // Reactive — auto-updates when PowerSync syncs
   const { salesOffices, isLoading: loadingOffices } = useSalesOffices();
 
-  // Auto-select Account Manager for non-admin users
   useEffect(() => {
-    if (!permissions.accountManagerId || store.accountManagerId) return;
+    if (!permissions.accountManagerId || accountManagerId) return;
     if (!permissions.isAdmin) {
-      store.setField("accountManagerId", permissions.accountManagerId);
+      setField("accountManagerId", permissions.accountManagerId);
       const am = accountManagers.find((a) => a.accountManagerUuid === permissions.accountManagerId);
-      if (am) store.setField("ownerUserUuid", am.userUuid);
+      if (am) setField("ownerUserUuid", am.userUuid);
     }
   }, [permissions.accountManagerId, permissions.isAdmin, accountManagers]);
 
   const handleAccountManagerChange = useCallback(
     (amId: string | null) => {
-      store.setField("accountManagerId", amId);
+      setField("accountManagerId", amId);
       if (!amId) {
-        store.setField("ownerUserUuid", null);
+        setField("ownerUserUuid", null);
         return;
       }
       const am = accountManagers.find((a) => a.accountManagerUuid === amId);
-      store.setField("ownerUserUuid", am?.userUuid ?? null);
+      setField("ownerUserUuid", am?.userUuid ?? null);
     },
-    [accountManagers, store],
+    [accountManagers, setField],
   );
 
   const salesOfficeOptions = salesOffices.map((o) => ({
@@ -51,16 +55,15 @@ export function QuoteDetailsSection() {
     { label: "Lost", value: "lost" as const },
   ];
 
-  // Auto-set currency based on sales office location
   useEffect(() => {
-    if (!store.salesOfficeId) return;
-    const office = salesOffices.find((o) => o.id === store.salesOfficeId);
+    if (!salesOfficeId) return;
+    const office = salesOffices.find((o) => o.id === salesOfficeId);
     if (!office) return;
-    const currency = isCanadianProvince(office.stateProvince) ? "CAD" : "USD";
-    if (store.currency !== currency) {
-      store.setField("currency", currency);
+    const newCurrency = isCanadianProvince(office.stateProvince) ? "CAD" : "USD";
+    if (currency !== newCurrency) {
+      setField("currency", newCurrency);
     }
-  }, [store.salesOfficeId, salesOffices]);
+  }, [salesOfficeId, salesOffices]);
 
   return (
     <section>
@@ -74,7 +77,7 @@ export function QuoteDetailsSection() {
           </label>
           <input
             type="text"
-            value={store.quoteNumber || "Auto-generated on save"}
+            value={quoteNumber || "Auto-generated on save"}
             disabled
             className="w-full h-[40px] px-3 border rounded text-sm bg-gray-50 text-gray-500"
           />
@@ -83,8 +86,8 @@ export function QuoteDetailsSection() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Quote Valid Till</label>
           <input
             type="date"
-            value={store.quoteValidTill}
-            onChange={(e) => store.setField("quoteValidTill", e.target.value)}
+            value={quoteValidTill}
+            onChange={(e) => setField("quoteValidTill", e.target.value)}
             className="w-full h-[40px] px-3 border rounded text-sm"
           />
         </div>
@@ -92,8 +95,8 @@ export function QuoteDetailsSection() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
           <Dropdown
             options={statusOptions}
-            selected={store.status}
-            onSelect={(val) => store.setField("status", val)}
+            selected={status}
+            onSelect={(val) => setField("status", val)}
           />
         </div>
       </div>
@@ -102,8 +105,8 @@ export function QuoteDetailsSection() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Sales Office</label>
           <Dropdown
             options={salesOfficeOptions}
-            selected={store.salesOfficeId}
-            onSelect={(val) => store.setField("salesOfficeId", val)}
+            selected={salesOfficeId}
+            onSelect={(val) => setField("salesOfficeId", val)}
             placeholder={loadingOffices ? "Loading..." : "Select office..."}
             disabled={loadingOffices}
           />
@@ -111,7 +114,7 @@ export function QuoteDetailsSection() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Account Manager</label>
           <SelectAccountManager
-            value={store.accountManagerId}
+            value={accountManagerId}
             onChange={handleAccountManagerChange}
           />
         </div>

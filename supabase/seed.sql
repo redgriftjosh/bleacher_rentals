@@ -3588,4 +3588,129 @@ SELECT pg_catalog.setval('"supabase_functions"."hooks_id_seq"', 1, false);
 -- PostgreSQL database dump complete
 --
 
+-- ── Seed SalesOffices with Addresses ──
+
+-- Florida office address
+INSERT INTO public."Addresses" (id, street, city, state_province, zip_postal)
+VALUES ('a0000000-0000-0000-0000-000000000001', '7901 4th St N 25767', 'St. Petersburg', 'FL', '33702')
+ON CONFLICT (id) DO NOTHING;
+
+-- Florida sales office
+INSERT INTO public."SalesOffices" (id, name, phone, address_uuid, quickbook_uuid)
+VALUES ('50000000-0000-0000-0000-000000000001', 'Bleacher Rentals Florida LLC', '(800) 436-0416', 'a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000f1')
+ON CONFLICT (id) DO NOTHING;
+
+-- Canada office address
+INSERT INTO public."Addresses" (id, street, city, state_province, zip_postal)
+VALUES ('a0000000-0000-0000-0000-000000000002', '123 Main St', 'Toronto', 'ON', 'M5V 1A1')
+ON CONFLICT (id) DO NOTHING;
+
+-- Canada sales office
+INSERT INTO public."SalesOffices" (id, name, phone, address_uuid, quickbook_uuid)
+VALUES ('50000000-0000-0000-0000-000000000002', 'Bleacher Rentals Canada', '(800) 436-0417', 'a0000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-0000000000f2')
+ON CONFLICT (id) DO NOTHING;
+
+-- ── Seed Client: Company + Contact ──
+
+-- Company address
+INSERT INTO public."Addresses" (id, street, city, state_province, zip_postal)
+VALUES ('a0000000-0000-0000-0000-000000000010', '500 W Madison St', 'Chicago', 'IL', '60661')
+ON CONFLICT (id) DO NOTHING;
+
+-- Company
+INSERT INTO public."Companies" (id, company_name, email, phone, billing_address_uuid)
+VALUES ('c0000000-0000-0000-0000-000000000001', 'Acme Events LLC', 'billing@acmeevents.com', '(312) 555-0100', 'a0000000-0000-0000-0000-000000000010')
+ON CONFLICT (id) DO NOTHING;
+
+-- Contact (linked to company)
+INSERT INTO public."Contacts" (id, first_name, last_name, email, phone, company_uuid)
+VALUES ('d0000000-0000-0000-0000-000000000001', 'John', 'Smith', 'john.smith@acmeevents.com', '(312) 555-0101', 'c0000000-0000-0000-0000-000000000001')
+ON CONFLICT (id) DO NOTHING;
+
+-- ── Seed Quote (Event + LineItems + PaymentInstallments) ──
+
+-- Event address (venue)
+INSERT INTO public."Addresses" (id, street, city, state_province, zip_postal)
+VALUES ('a0000000-0000-0000-0000-000000000011', '1060 W Addison St', 'Chicago', 'IL', '60613')
+ON CONFLICT (id) DO NOTHING;
+
+-- Event (quote)
+INSERT INTO public."Events" (
+  id, event_name, event_start, event_end, event_status, invoice_number,
+  address_uuid, contact_uuid, sales_office_uuid, po_number,
+  lenient, must_be_clean, notes, external_notes, quote_valid_till
+)
+VALUES (
+  'e0000000-0000-0000-0000-000000000001',
+  'Wrigley Field Summer Festival',
+  '2026-07-15', '2026-07-20',
+  'quoted', 100000001,
+  'a0000000-0000-0000-0000-000000000011',
+  'd0000000-0000-0000-0000-000000000001',
+  '50000000-0000-0000-0000-000000000001',
+  'PO-2026-001',
+  false, false,
+  'Outdoor festival seating for 3-day event',
+  'Outdoor festival seating for 3-day event',
+  '2026-07-01'
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Line items
+INSERT INTO public."EventLineItems" (id, event_uuid, header, description, quantity, value_cents, currency, is_template)
+VALUES
+  ('f0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', '10-Row Bleacher Section', 'Standard 10-row aluminum bleacher', 4, 250000, 'USD', false),
+  ('f0000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000001', '7-Row Bleacher Section', 'Standard 7-row aluminum bleacher', 2, 175000, 'USD', false),
+  ('f0000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000001', 'Delivery & Setup', null, 1, 150000, 'USD', false)
+ON CONFLICT (id) DO NOTHING;
+
+-- Payment installments
+INSERT INTO public."PaymentInstallments" (id, event_uuid, amount_cents, currency, due_date, status)
+VALUES
+  ('b0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', 725000, 'USD', '2026-07-01', 'unpaid'),
+  ('b0000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000001', 725000, 'USD', '2026-07-15', 'unpaid')
+ON CONFLICT (id) DO NOTHING;
+
+-- ── Seed Terms & Conditions template ──
+
+INSERT INTO public."TermsAndConditions" (id, name, html_content)
+VALUES (
+  'cc000000-0000-0000-0000-000000000001',
+  'Standard Rental Agreement',
+  '<h1>TERMS &amp; CONDITIONS</h1>
+<p><strong>This Agreement, together with the accompanying quote, constitutes a legally binding contract between Bleacher Rentals and the client (renter). By signing this Agreement, client acknowledges that they have read, understood, and agreed to all terms and conditions. Client is advised to review this Agreement carefully prior to signing.</strong></p>
+<h2>Reservation &amp; Payment</h2>
+<p>A non-refundable deposit is required to confirm a reservation; balance is due per payment terms below. Additional charges may apply for damage, excessive cleaning, extended setup/teardown, late payments, or returned checks. A completed &quot;Client Billing, Credit &amp; AP Form&quot; must be returned unless a credit card is on file.</p>
+<h2>Returned Check Fee</h2>
+<p>$30 per check.</p>
+<h2>Finance Charges</h2>
+<p>2% monthly on past due balances.</p>
+<h2>Expired Quotes</h2>
+<p>Pricing is subject to change once a quote expires.</p>
+<h2>Permitting</h2>
+<p>Client is responsible for securing any required permits.</p>
+<h2>Delivery, Setup &amp; Pickup</h2>
+<p>Changes to delivery/pickup times after signing, as well as rental extensions may incur additional fees. Specific delivery requirements must be requested before signing. Client must ensure adequate, safe site access. Delays beyond one hour due to site issues or unsafe conditions will be billed at $120/hour. Once bleachers have been set up in the position requested by the client, any additional moves will incur an additional cost.</p>
+<h2>Use of Bleachers</h2>
+<p>Bleachers must be used safely and client must adhere to maximum seating capacity. Client may not alter setups or operate controls without written approval. Unauthorized operation will result in a $500 fee plus liability for damages. Any damages will be billed to the client (including cleaning fees for stickers and tape).</p>
+<h2>Liability &amp; Insurance</h2>
+<p>Proof of liability insurance will be provided upon contract execution. Bleacher Rentals'' insurance does not cover misuse, abuse, or negligence by client or guests. Client is liable for damages and unauthorized teardowns.</p>
+<h2>Termination</h2>
+<p>If the renter fails to comply with the terms of this contract, Bleacher Rentals reserves the right to terminate the rental agreement. If terms are violated, deposit paid is non-refundable, and renter will be liable for any additional fees incurred by Bleacher Rentals.</p>
+<h2>Cancellation Policy</h2>
+<p><strong>91+ days:</strong> No cancellation fee (Deposit remains non-refundable)<br><strong>31-90 days:</strong> 10% of contract total<br><strong>9-30 days:</strong> 50% of contract total<br><strong>8 days prior:</strong> 100% of contract total</p>
+<h2>Entire Agreement</h2>
+<p>This agreement constitutes the entire contract between Bleacher Rentals and the client, superseding all prior communications. By signing below, the client acknowledges they have read, understood, and agreed to all terms, including the non-refundable deposit and waivers.</p>
+<h1>PAYMENT POLICY</h1>
+<p>A 50% deposit is required to confirm the order.</p>
+<p>The remaining balance is due <strong>eight (8) calendar days prior</strong> to the earliest booked date.</p>
+<p>Additional payment processing fees will be charged to your card.</p>'
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Link seed event to the T&C template
+UPDATE public."Events"
+SET terms_and_conditions_uuid = 'cc000000-0000-0000-0000-000000000001'
+WHERE id = 'e0000000-0000-0000-0000-000000000001';
+
 -- \unrestrict Ds99ET2g3yzgVD4mH2iEedXtqMC3vgEuBVzNtymQhXweMgwTljWJNMT9iRZOArE

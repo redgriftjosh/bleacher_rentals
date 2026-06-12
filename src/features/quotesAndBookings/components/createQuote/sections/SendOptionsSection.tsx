@@ -3,7 +3,8 @@
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 
 export function SendOptionsSection() {
-  const store = useCreateQuoteStore();
+  const attachPdfViaEmail = useCreateQuoteStore((s) => s.attachPdfViaEmail);
+  const setField = useCreateQuoteStore((s) => s.setField);
 
   return (
     <section>
@@ -13,8 +14,8 @@ export function SendOptionsSection() {
       <label className="flex items-center gap-2 text-sm cursor-pointer">
         <input
           type="checkbox"
-          checked={store.attachPdfViaEmail}
-          onChange={(e) => store.setField("attachPdfViaEmail", e.target.checked)}
+          checked={attachPdfViaEmail}
+          onChange={(e) => setField("attachPdfViaEmail", e.target.checked)}
           className="rounded"
         />
         Attach as PDF via Email

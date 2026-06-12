@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CreateQuoteForm } from "@/features/quotesAndBookings/components/createQuote/CreateQuoteForm";
-import { useCreateQuoteStore } from "@/features/quotesAndBookings/state/useCreateQuoteStore";
+import { useCreateQuoteStore, hasUnsavedChanges } from "@/features/quotesAndBookings/state/useCreateQuoteStore";
 import { loadQuoteIntoStore } from "@/features/quotesAndBookings/db/loadQuoteIntoStore";
 
 export default function EditQuotePage({ params }: { params: Promise<{ id: string }> }) {
@@ -14,7 +14,6 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
   const setField = useCreateQuoteStore((s) => s.setField);
 
   useEffect(() => {
-    // Reset form before loading to clear any stale data
     resetForm();
 
     loadQuoteIntoStore(id).then((eventId) => {
@@ -26,6 +25,16 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
       setLoading(false);
     });
   }, [id]);
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges()) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
 
   if (loading) {
     return (

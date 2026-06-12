@@ -3,6 +3,7 @@ import { Database, TablesInsert } from "../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { CreateQuoteState } from "../state/useCreateQuoteStore";
 import { syncPaymentInstallments } from "./paymentInstallments";
+import { calculateTotals } from "../utils/calculateTotals";
 
 /**
  * Creates a full quote:
@@ -37,6 +38,10 @@ export async function createQuoteEvent(
   }
 
   // 2. Insert Event
+  const { taxAmount } = calculateTotals(state.lineItems, state.taxPercent);
+  const effectiveTaxCents = state.taxOverrideCents ?? Math.round(taxAmount);
+  const contractRevenueCents = state.lineItems.reduce((sum, li) => sum + li.lineTotalCents, 0) + effectiveTaxCents;
+
   const newEvent: TablesInsert<"Events"> = {
     event_name: state.eventName,
     event_start: state.eventStart || null!,
@@ -45,6 +50,9 @@ export async function createQuoteEvent(
     event_status: state.status || "draft",
     event_type_uuid: state.eventTypeId || null,
     quote_valid_till: state.quoteValidTill || null,
+    contract_revenue_cents: contractRevenueCents,
+    tax_percent: state.taxPercent,
+    tax_amount_cents: effectiveTaxCents,
     lenient: false,
     must_be_clean: false,
     notes: state.clientFacingNotes || null,
@@ -52,6 +60,8 @@ export async function createQuoteEvent(
     external_notes: state.clientFacingNotes || null,
     created_by_user_uuid: state.ownerUserUuid ?? null,
     contact_uuid: state.contactId || null,
+    sales_office_uuid: state.salesOfficeId || null,
+    terms_and_conditions_uuid: state.termsDocumentId || null,
   };
 
   const { data: eventData, error: eventError } = await supabase

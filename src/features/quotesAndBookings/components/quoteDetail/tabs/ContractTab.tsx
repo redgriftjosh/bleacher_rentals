@@ -3,7 +3,14 @@
 import { QuoteDetail } from "../../../db/fetchQuoteDetail";
 import { useEventLineItems, EventLineItemRow } from "../../../hooks/useEventLineItems";
 import { DateTime } from "luxon";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { ExternalLink, FileText } from "lucide-react";
+import { resolveInvoiceDisplay } from "../../../utils/invoiceNumber";
+
+type SignatureInfo = {
+  signerName: string;
+  signedAt: string;
+} | null;
 
 function formatDate(d: string | null): string {
   if (!d) return "N/A";
@@ -18,31 +25,35 @@ function formatCurrency(cents: number): string {
   return negative ? `-${str}` : str;
 }
 
-function LineItemsTable({ lineItems }: { lineItems: EventLineItemRow[] }) {
-  const { subtotalCents, discountsCents, totalCents } = useMemo(() => {
-    let sub = 0;
-    let disc = 0;
-    for (const li of lineItems) {
-      const lineTotal = li.valueCents * li.quantity;
-      if (lineTotal < 0) {
-        disc += lineTotal;
-      } else {
-        sub += lineTotal;
-      }
+type CategorizedItems = {
+  bleachers: EventLineItemRow[];
+  logistics: EventLineItemRow[];
+  discounts: EventLineItemRow[];
+  services: EventLineItemRow[];
+};
+
+function categorizeItems(items: EventLineItemRow[]): CategorizedItems {
+  const result: CategorizedItems = { bleachers: [], logistics: [], discounts: [], services: [] };
+  for (const li of items) {
+    const lineTotal = li.valueCents * li.quantity;
+    if (li.bleacherTypeUuid) {
+      result.bleachers.push(li);
+    } else if (lineTotal < 0) {
+      result.discounts.push(li);
+    } else if (/deliver|pickup|setup|teardown|transport|logistic|fuel|mileage/i.test(li.header)) {
+      result.logistics.push(li);
+    } else {
+      result.services.push(li);
     }
-    return { subtotalCents: sub, discountsCents: disc, totalCents: sub + disc };
-  }, [lineItems]);
-
-  if (lineItems.length === 0) {
-    return (
-      <p className="text-sm text-gray-400 py-4 text-center border rounded">
-        No line items yet. Edit the quote to add rental items.
-      </p>
-    );
   }
+  return result;
+}
 
+function ItemSection({ title, items, color }: { title: string; items: EventLineItemRow[]; color?: string }) {
+  if (items.length === 0) return null;
   return (
-    <div>
+    <div className="mb-4">
+      <h4 className={`text-xs font-bold uppercase tracking-wide mb-2 ${color ?? "text-gray-500"}`}>{title}</h4>
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b text-left text-gray-500 text-xs uppercase tracking-wide">
@@ -53,7 +64,7 @@ function LineItemsTable({ lineItems }: { lineItems: EventLineItemRow[] }) {
           </tr>
         </thead>
         <tbody>
-          {lineItems.map((li) => {
+          {items.map((li) => {
             const lineTotal = li.valueCents * li.quantity;
             const isDiscount = lineTotal < 0;
             return (
@@ -75,6 +86,45 @@ function LineItemsTable({ lineItems }: { lineItems: EventLineItemRow[] }) {
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function LineItemsTable({ lineItems, taxPercent, taxAmountCents }: { lineItems: EventLineItemRow[]; taxPercent: number | null; taxAmountCents: number | null }) {
+  const categories = useMemo(() => categorizeItems(lineItems), [lineItems]);
+
+  const { subtotalCents, discountsCents } = useMemo(() => {
+    let sub = 0;
+    let disc = 0;
+    for (const li of lineItems) {
+      const lineTotal = li.valueCents * li.quantity;
+      if (lineTotal < 0) {
+        disc += lineTotal;
+      } else {
+        sub += lineTotal;
+      }
+    }
+    return { subtotalCents: sub, discountsCents: disc };
+  }, [lineItems]);
+
+  const taxable = subtotalCents + discountsCents;
+  const effectiveTax = taxAmountCents ?? (taxPercent ? Math.round(taxable * (taxPercent / 100)) : 0);
+  const totalCents = taxable + effectiveTax;
+
+  if (lineItems.length === 0) {
+    return (
+      <p className="text-sm text-gray-400 py-4 text-center border rounded">
+        No line items yet. Edit the quote to add rental items.
+      </p>
+    );
+  }
+
+  return (
+    <div>
+      <ItemSection title="Bleachers" items={categories.bleachers} />
+      <ItemSection title="Logistics" items={categories.logistics} />
+      <ItemSection title="Services" items={categories.services} />
+      <ItemSection title="Discounts" items={categories.discounts} color="text-red-600" />
 
       {/* Totals */}
       <div className="mt-4 flex flex-col items-end gap-1 text-sm">
@@ -88,6 +138,12 @@ function LineItemsTable({ lineItems }: { lineItems: EventLineItemRow[] }) {
             <span className="font-medium w-24 text-right">{formatCurrency(discountsCents)}</span>
           </div>
         )}
+        {effectiveTax > 0 && (
+          <div className="flex gap-8">
+            <span className="text-gray-500">Tax{taxPercent ? ` (${taxPercent}%)` : ""}</span>
+            <span className="font-medium w-24 text-right">{formatCurrency(effectiveTax)}</span>
+          </div>
+        )}
         <div className="flex gap-8 border-t pt-1 mt-1">
           <span className="font-semibold">Total</span>
           <span className="font-bold w-24 text-right">{formatCurrency(totalCents)}</span>
@@ -97,11 +153,62 @@ function LineItemsTable({ lineItems }: { lineItems: EventLineItemRow[] }) {
   );
 }
 
+function formatSignedAt(iso: string): string {
+  const dt = DateTime.fromISO(iso);
+  return dt.isValid ? dt.toFormat("MMM d, yyyy 'at' h:mm a ZZZZ") : iso;
+}
+
 export function ContractTab({ quote }: { quote: QuoteDetail }) {
   const { lineItems, isLoading } = useEventLineItems(quote.id);
+  const [signature, setSignature] = useState<SignatureInfo>(null);
+
+  useEffect(() => {
+    fetch(`/api/contracts/${quote.id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.signature) {
+          setSignature({
+            signerName: data.signature.signerName,
+            signedAt: data.signature.signedAt,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [quote.id]);
+
+  const invoiceSlug = resolveInvoiceDisplay(quote.invoiceNumber, quote.id);
 
   return (
     <div className="space-y-6">
+      {/* Action buttons + signature info */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <a
+            href={`/quote/${invoiceSlug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-darkBlue border border-darkBlue rounded-sm hover:bg-blue-50 transition"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            Show Customer View
+          </a>
+          <a
+            href={`/api/quotes/${quote.id}/pdf`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            View PDF
+          </a>
+        </div>
+        {signature && (
+          <div className="text-sm text-green-700 bg-green-50 px-3 py-1.5 rounded">
+            Signed: {formatSignedAt(signature.signedAt)} by {signature.signerName}
+          </div>
+        )}
+      </div>
+
       {/* Project Info */}
       <div>
         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Project Info</h3>
@@ -197,26 +304,36 @@ export function ContractTab({ quote }: { quote: QuoteDetail }) {
         </div>
       </div>
 
-      {/* Notes */}
+      {/* Client-Facing Notes */}
       {(quote.notes || quote.externalNotes) && (
         <div>
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Notes</h3>
           {quote.externalNotes && (
-            <p className="text-sm mb-2">{quote.externalNotes}</p>
+            <p className="text-sm mb-2 whitespace-pre-wrap">{quote.externalNotes}</p>
           )}
           {quote.notes && !quote.externalNotes && (
-            <p className="text-sm">{quote.notes}</p>
+            <p className="text-sm whitespace-pre-wrap">{quote.notes}</p>
           )}
         </div>
       )}
 
-      {/* Rental Items */}
+      {/* Internal Notes */}
+      {quote.internalNotes && (
+        <div>
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Internal Notes</h3>
+          <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+            <p className="text-sm whitespace-pre-wrap">{quote.internalNotes}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Line Items (categorized) */}
       <div>
-        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Rental Items</h3>
+        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Line Items</h3>
         {isLoading ? (
           <p className="text-sm text-gray-400 py-4 text-center">Loading line items...</p>
         ) : (
-          <LineItemsTable lineItems={lineItems} />
+          <LineItemsTable lineItems={lineItems} taxPercent={quote.taxPercent} taxAmountCents={quote.taxAmountCents} />
         )}
       </div>
     </div>

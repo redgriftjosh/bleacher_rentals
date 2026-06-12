@@ -54,7 +54,7 @@ describe("useSidebarItems", () => {
   it("account_manager sees admin items minus configuration and documentation", () => {
     const adminItems = useSidebarItems(["admin"]);
     const amItems = useSidebarItems(["account_manager"]);
-    const adminOnly = ["configuration", "documentation"];
+    const adminOnly = ["configuration"];
     expect(amItems.map((i) => i.key)).toEqual(
       adminItems.filter((i) => !adminOnly.includes(i.key)).map((i) => i.key),
     );

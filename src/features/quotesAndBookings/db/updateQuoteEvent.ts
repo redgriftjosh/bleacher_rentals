@@ -3,6 +3,7 @@ import { Database, TablesUpdate } from "../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { CreateQuoteState } from "../state/useCreateQuoteStore";
 import { syncPaymentInstallments } from "./paymentInstallments";
+import { calculateTotals } from "../utils/calculateTotals";
 
 /**
  * Updates an existing quote/event.
@@ -59,6 +60,10 @@ export async function updateQuoteEvent(
   }
 
   // 2. Update Event
+  const { taxAmount } = calculateTotals(state.lineItems, state.taxPercent);
+  const effectiveTaxCents = state.taxOverrideCents ?? Math.round(taxAmount);
+  const contractRevenueCents = state.lineItems.reduce((sum, li) => sum + li.lineTotalCents, 0) + effectiveTaxCents;
+
   const updates: TablesUpdate<"Events"> = {
     event_name: state.eventName,
     event_start: state.eventStart || undefined,
@@ -66,11 +71,16 @@ export async function updateQuoteEvent(
     event_status: state.status || "draft",
     event_type_uuid: state.eventTypeId || null,
     quote_valid_till: state.quoteValidTill || null,
+    contract_revenue_cents: contractRevenueCents,
+    tax_percent: state.taxPercent,
+    tax_amount_cents: effectiveTaxCents,
     notes: state.clientFacingNotes || null,
     internal_notes: state.internalNotes || null,
     external_notes: state.clientFacingNotes || null,
     created_by_user_uuid: state.ownerUserUuid ?? undefined,
     contact_uuid: state.contactId || null,
+    sales_office_uuid: state.salesOfficeId || null,
+    terms_and_conditions_uuid: state.termsDocumentId || null,
   };
 
   if (addressUuid) {
