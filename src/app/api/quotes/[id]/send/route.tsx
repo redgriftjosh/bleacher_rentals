@@ -5,6 +5,8 @@ import * as postmark from "postmark";
 import { buildQuoteDocumentData } from "@/features/quotesAndBookings/pdf/quoteDocumentData";
 import { QuotePdfDocument } from "@/features/quotesAndBookings/pdf/QuotePdfDocument";
 import { buildQuoteEmailHtml } from "@/features/quotesAndBookings/pdf/quoteEmailHtml";
+import { logSingleChange } from "@/features/quotesAndBookings/db/logEventChanges";
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(
   req: NextRequest,
@@ -70,6 +72,13 @@ export async function POST(
       { status: 500 },
     );
   }
+
+  // Log the send action
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  await logSingleChange(supabase, id, userId, "email_sent", null, recipientEmail, "send");
 
   return NextResponse.json({ success: true, sentTo: recipientEmail });
 }

@@ -50,20 +50,20 @@ export function LineItemsSection() {
 
   const { lookupPrice } = usePriceLookup();
 
-  // Auto-recalc bleacher prices when event type or dates change
+  // Auto-recalc bleacher prices when event type, dates, or currency change
   useEffect(() => {
     if (!eventTypeId || !eventStart || !eventEnd) return;
 
     for (const item of lineItems) {
       if (item.category !== "bleachers" || !item.bleacherTypeUuid || item.overridePrice) continue;
 
-      const priceCents = lookupPrice(item.bleacherTypeUuid, eventTypeId, eventStart, eventEnd);
+      const priceCents = lookupPrice(item.bleacherTypeUuid, eventTypeId, eventStart, eventEnd, currency);
       if (priceCents !== null && priceCents !== item.unitPriceCents) {
         const updated = { ...item, unitPriceCents: priceCents, lineTotalCents: priceCents * item.qty };
         updateLineItem(item.id, updated);
       }
     }
-  }, [eventTypeId, eventStart, eventEnd]);
+  }, [eventTypeId, eventStart, eventEnd, currency]);
 
   const subtotalCents = lineItems
     .filter((i) => i.category !== "discounts")
@@ -82,7 +82,7 @@ export function LineItemsSection() {
     if (item.overridePrice) {
       // Unlocking — try to restore price from matrix
       if (item.bleacherTypeUuid && eventTypeId && eventStart && eventEnd) {
-        const priceCents = lookupPrice(item.bleacherTypeUuid, eventTypeId, eventStart, eventEnd);
+        const priceCents = lookupPrice(item.bleacherTypeUuid, eventTypeId, eventStart, eventEnd, currency);
         if (priceCents !== null) {
           const updated = {
             ...item,

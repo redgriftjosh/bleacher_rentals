@@ -2,6 +2,8 @@
 
 import { QuoteDetail } from "../../../db/fetchQuoteDetail";
 import { useEventLineItems, EventLineItemRow } from "../../../hooks/useEventLineItems";
+import { useEventCurrency } from "../../../hooks/useEventCurrency";
+import { formatMoney } from "../../../utils/formatMoney";
 import { DateTime } from "luxon";
 import { useMemo, useState, useEffect } from "react";
 import { ExternalLink, FileText } from "lucide-react";
@@ -16,13 +18,6 @@ function formatDate(d: string | null): string {
   if (!d) return "N/A";
   const dt = DateTime.fromISO(d);
   return dt.isValid ? dt.toFormat("MMM d, yyyy") : "N/A";
-}
-
-function formatCurrency(cents: number): string {
-  const negative = cents < 0;
-  const abs = Math.abs(cents);
-  const str = `$${(abs / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
-  return negative ? `-${str}` : str;
 }
 
 type CategorizedItems = {
@@ -49,7 +44,7 @@ function categorizeItems(items: EventLineItemRow[]): CategorizedItems {
   return result;
 }
 
-function ItemSection({ title, items, color }: { title: string; items: EventLineItemRow[]; color?: string }) {
+function ItemSection({ title, items, color, currency = "USD" }: { title: string; items: EventLineItemRow[]; color?: string; currency?: "USD" | "CAD" }) {
   if (items.length === 0) return null;
   return (
     <div className="mb-4">
@@ -79,8 +74,8 @@ function ItemSection({ title, items, color }: { title: string; items: EventLineI
                   )}
                 </td>
                 <td className="py-2 text-right">{li.quantity}</td>
-                <td className="py-2 text-right">{formatCurrency(li.valueCents)}</td>
-                <td className="py-2 text-right font-medium">{formatCurrency(lineTotal)}</td>
+                <td className="py-2 text-right">{formatMoney(li.valueCents, currency)}</td>
+                <td className="py-2 text-right font-medium">{formatMoney(lineTotal, currency)}</td>
               </tr>
             );
           })}
@@ -90,7 +85,7 @@ function ItemSection({ title, items, color }: { title: string; items: EventLineI
   );
 }
 
-function LineItemsTable({ lineItems, taxPercent, taxAmountCents }: { lineItems: EventLineItemRow[]; taxPercent: number | null; taxAmountCents: number | null }) {
+function LineItemsTable({ lineItems, taxPercent, taxAmountCents, currency = "USD" }: { lineItems: EventLineItemRow[]; taxPercent: number | null; taxAmountCents: number | null; currency?: "USD" | "CAD" }) {
   const categories = useMemo(() => categorizeItems(lineItems), [lineItems]);
 
   const { subtotalCents, discountsCents } = useMemo(() => {
@@ -121,32 +116,32 @@ function LineItemsTable({ lineItems, taxPercent, taxAmountCents }: { lineItems: 
 
   return (
     <div>
-      <ItemSection title="Bleachers" items={categories.bleachers} />
-      <ItemSection title="Logistics" items={categories.logistics} />
-      <ItemSection title="Services" items={categories.services} />
-      <ItemSection title="Discounts" items={categories.discounts} color="text-red-600" />
+      <ItemSection title="Bleachers" items={categories.bleachers} currency={currency} />
+      <ItemSection title="Logistics" items={categories.logistics} currency={currency} />
+      <ItemSection title="Services" items={categories.services} currency={currency} />
+      <ItemSection title="Discounts" items={categories.discounts} color="text-red-600" currency={currency} />
 
       {/* Totals */}
       <div className="mt-4 flex flex-col items-end gap-1 text-sm">
         <div className="flex gap-8">
           <span className="text-gray-500">Subtotal</span>
-          <span className="font-medium w-24 text-right">{formatCurrency(subtotalCents)}</span>
+          <span className="font-medium w-24 text-right">{formatMoney(subtotalCents, currency)}</span>
         </div>
         {discountsCents !== 0 && (
           <div className="flex gap-8 text-red-600">
             <span>Discounts</span>
-            <span className="font-medium w-24 text-right">{formatCurrency(discountsCents)}</span>
+            <span className="font-medium w-24 text-right">{formatMoney(discountsCents, currency)}</span>
           </div>
         )}
         {effectiveTax > 0 && (
           <div className="flex gap-8">
             <span className="text-gray-500">Tax{taxPercent ? ` (${taxPercent}%)` : ""}</span>
-            <span className="font-medium w-24 text-right">{formatCurrency(effectiveTax)}</span>
+            <span className="font-medium w-24 text-right">{formatMoney(effectiveTax, currency)}</span>
           </div>
         )}
         <div className="flex gap-8 border-t pt-1 mt-1">
           <span className="font-semibold">Total</span>
-          <span className="font-bold w-24 text-right">{formatCurrency(totalCents)}</span>
+          <span className="font-bold w-24 text-right">{formatMoney(totalCents, currency)}</span>
         </div>
       </div>
     </div>
@@ -160,6 +155,7 @@ function formatSignedAt(iso: string): string {
 
 export function ContractTab({ quote }: { quote: QuoteDetail }) {
   const { lineItems, isLoading } = useEventLineItems(quote.id);
+  const currency = useEventCurrency(quote.id);
   const [signature, setSignature] = useState<SignatureInfo>(null);
 
   useEffect(() => {
@@ -333,7 +329,7 @@ export function ContractTab({ quote }: { quote: QuoteDetail }) {
         {isLoading ? (
           <p className="text-sm text-gray-400 py-4 text-center">Loading line items...</p>
         ) : (
-          <LineItemsTable lineItems={lineItems} taxPercent={quote.taxPercent} taxAmountCents={quote.taxAmountCents} />
+          <LineItemsTable lineItems={lineItems} taxPercent={quote.taxPercent} taxAmountCents={quote.taxAmountCents} currency={currency} />
         )}
       </div>
     </div>

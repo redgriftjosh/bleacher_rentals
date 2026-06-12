@@ -11,7 +11,7 @@ export function usePriceLookup() {
   const priceMap = useMemo(() => {
     const map = new Map<string, number>();
     for (const p of prices) {
-      const key = `${p.bleacherTypeUuid}|${p.eventTypeUuid}|${p.priceDurationUuid}`;
+      const key = `${p.bleacherTypeUuid}|${p.eventTypeUuid}|${p.priceDurationUuid}|${p.currency}`;
       map.set(key, p.priceCents);
     }
     return map;
@@ -36,11 +36,12 @@ export function usePriceLookup() {
       eventTypeUuid: string,
       startDate: string,
       endDate: string,
+      currency: string = "USD",
     ): number | null => {
       const duration = findDuration(startDate, endDate);
       if (!duration) return null;
 
-      const key = `${bleacherTypeUuid}|${eventTypeUuid}|${duration.id}`;
+      const key = `${bleacherTypeUuid}|${eventTypeUuid}|${duration.id}|${currency}`;
       return priceMap.get(key) ?? null;
     },
     [priceMap, findDuration],

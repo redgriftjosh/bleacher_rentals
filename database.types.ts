@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       AccountManagers: {
@@ -1161,25 +1136,31 @@ export type Database = {
       }
       EventChangeLog: {
         Row: {
+          action_type: string
           changed_at: string
           changed_by_user_uuid: string | null
           event_uuid: string
+          field_name: string | null
           id: string
           next_value: string | null
           prev_value: string | null
         }
         Insert: {
+          action_type?: string
           changed_at?: string
           changed_by_user_uuid?: string | null
           event_uuid: string
+          field_name?: string | null
           id?: string
           next_value?: string | null
           prev_value?: string | null
         }
         Update: {
+          action_type?: string
           changed_at?: string
           changed_by_user_uuid?: string | null
           event_uuid?: string
+          field_name?: string | null
           id?: string
           next_value?: string | null
           prev_value?: string | null
@@ -3477,9 +3458,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       alert_entity_type: ["event"],

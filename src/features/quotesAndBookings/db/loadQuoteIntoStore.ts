@@ -3,6 +3,7 @@ import { fetchPaymentInstallments } from "./paymentInstallments";
 import { fetchQuoteDetail } from "./fetchQuoteDetail";
 import { fetchLineItemsForEvent } from "./fetchLineItems";
 import { resolveInvoiceDisplay } from "../utils/invoiceNumber";
+import { db, powerSyncDb } from "@/components/providers/SystemProvider";
 
 /**
  * Fetches an event by ID (via PowerSync) and loads its data into useCreateQuoteStore for editing.
@@ -31,6 +32,26 @@ export async function loadQuoteIntoStore(eventId: string): Promise<string | null
   store.setField("internalNotes", data.internalNotes ?? "");
   store.setField("taxPercent", data.taxPercent ?? null);
   store.setField("taxOverrideCents", data.taxAmountCents ?? null);
+
+  // Look up AccountManager by created_by_user_uuid
+  if (data.createdByUserUuid) {
+    store.setField("ownerUserUuid", data.createdByUserUuid);
+    try {
+      const amQuery = db
+        .selectFrom("AccountManagers")
+        .select(["id"])
+        .where("user_uuid", "=", data.createdByUserUuid)
+        .where("is_active", "=", 1)
+        .limit(1)
+        .compile();
+      const amRows = await powerSyncDb.getAll<{ id: string }>(amQuery.sql, amQuery.parameters as any[]);
+      if (amRows.length > 0) {
+        store.setField("accountManagerId", amRows[0].id);
+      }
+    } catch (e) {
+      console.error("Failed to look up account manager:", e);
+    }
+  }
 
   if (data.address) {
     store.setField("eventAddress", data.address.street);

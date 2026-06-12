@@ -4,6 +4,7 @@ import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { CreateQuoteState } from "../state/useCreateQuoteStore";
 import { syncPaymentInstallments } from "./paymentInstallments";
 import { calculateTotals } from "../utils/calculateTotals";
+import { logSingleChange } from "./logEventChanges";
 
 /**
  * Creates a full quote:
@@ -14,6 +15,7 @@ import { calculateTotals } from "../utils/calculateTotals";
 export async function createQuoteEvent(
   state: CreateQuoteState,
   supabase: SupabaseClient<Database>,
+  currentUserUuid?: string | null,
 ): Promise<string> {
   // 1. Insert Address
   let addressUuid: string | null = null;
@@ -117,6 +119,17 @@ export async function createQuoteEvent(
       console.error("Payment installments sync failed (quote still saved):", e);
     }
   }
+
+  // 5. Log creation
+  await logSingleChange(
+    supabase,
+    eventUuid,
+    currentUserUuid ?? null,
+    "event_name",
+    null,
+    state.eventName,
+    "create",
+  );
 
   return eventUuid;
 }

@@ -168,4 +168,15 @@ BEGIN
     (pd_monthly, bt_4row, et_corporate, 70000, 'USD');
 
 
+  -- =====================
+  -- CAD Prices (derived from USD × 1.3981, rounded UP to nearest $10 = 1000 cents)
+  -- =====================
+
+  INSERT INTO public."Prices" (price_duration_uuid, bleacher_type_uuid, event_type_uuid, price_cents, currency)
+  SELECT price_duration_uuid, bleacher_type_uuid, event_type_uuid,
+         ceil(price_cents * 1.3981 / 1000.0)::int * 1000,
+         'CAD'
+  FROM public."Prices"
+  WHERE currency = 'USD';
+
 END $$;

@@ -689,9 +689,11 @@ const EventAttachments = new Table(EventAttachmentsCols, {
 });
 
 const EventChangeLogCols = {
+  action_type: column.text,
   changed_at: column.text,
   changed_by_user_uuid: column.text,
   event_uuid: column.text,
+  field_name: column.text,
   next_value: column.text,
   prev_value: column.text,
 } satisfies PowerSyncColsFor<"EventChangeLog">;

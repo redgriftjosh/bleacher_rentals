@@ -21,6 +21,7 @@ export type QuoteDetail = {
   taxAmountCents: number | null;
   bookedAt: string | null;
   createdAt: string;
+  createdByUserUuid: string | null;
   address: {
     street: string;
     city: string;
@@ -61,6 +62,7 @@ type Row = {
   tax_amount_cents: number | null;
   booked_at: string | null;
   created_at: string;
+  created_by_user_uuid: string | null;
   address_street: string | null;
   address_city: string | null;
   address_state_province: string | null;
@@ -101,6 +103,7 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
       "e.tax_amount_cents as tax_amount_cents",
       "e.booked_at as booked_at",
       "e.created_at as created_at",
+      "e.created_by_user_uuid as created_by_user_uuid",
       "a.street as address_street",
       "a.city as address_city",
       "a.state_province as address_state_province",
@@ -143,6 +146,7 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
     taxAmountCents: r.tax_amount_cents,
     bookedAt: r.booked_at,
     createdAt: r.created_at,
+    createdByUserUuid: r.created_by_user_uuid,
     address: r.address_street
       ? {
           street: r.address_street,

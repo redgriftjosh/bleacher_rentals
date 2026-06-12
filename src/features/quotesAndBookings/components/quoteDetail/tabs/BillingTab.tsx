@@ -2,14 +2,10 @@
 
 import { QuoteDetail } from "../../../db/fetchQuoteDetail";
 import { usePaymentInstallments, PaymentInstallmentRow } from "../../../hooks/usePaymentInstallments";
+import { useEventCurrency } from "../../../hooks/useEventCurrency";
+import { formatMoney } from "../../../utils/formatMoney";
+import { Currency } from "../../../types/quoteTypes";
 import { DateTime } from "luxon";
-
-function formatCurrency(cents: number): string {
-  const negative = cents < 0;
-  const abs = Math.abs(cents);
-  const str = `$${(abs / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
-  return negative ? `-${str}` : str;
-}
 
 function formatDate(d: string | null): string {
   if (!d) return "—";
@@ -23,7 +19,7 @@ function formatDateTime(d: string | null): string {
   return dt.isValid ? dt.toFormat("MMM d, yyyy 'at' h:mm a") : "—";
 }
 
-function PaymentScheduleTable({ installments }: { installments: PaymentInstallmentRow[] }) {
+function PaymentScheduleTable({ installments, currency }: { installments: PaymentInstallmentRow[]; currency: Currency }) {
   if (installments.length === 0) {
     return (
       <p className="text-sm text-gray-400 py-4 text-center border rounded">
@@ -54,7 +50,7 @@ function PaymentScheduleTable({ installments }: { installments: PaymentInstallme
             <tr key={inst.id} className="border-b">
               <td className="py-2 text-gray-400">{i + 1}</td>
               <td className="py-2">{formatDate(inst.dueDate)}</td>
-              <td className="py-2 text-right font-medium">{formatCurrency(inst.amountCents)}</td>
+              <td className="py-2 text-right font-medium">{formatMoney(inst.amountCents, currency)}</td>
               <td className="py-2 text-center">
                 <span
                   className={`text-xs px-2 py-0.5 rounded ${
@@ -75,15 +71,15 @@ function PaymentScheduleTable({ installments }: { installments: PaymentInstallme
       <div className="mt-3 flex flex-col items-end gap-1 text-sm">
         <div className="flex gap-8">
           <span className="text-gray-500">Scheduled Total</span>
-          <span className="font-medium w-24 text-right">{formatCurrency(totalCents)}</span>
+          <span className="font-medium w-24 text-right">{formatMoney(totalCents, currency)}</span>
         </div>
         <div className="flex gap-8 text-green-600">
           <span>Paid</span>
-          <span className="font-medium w-24 text-right">{formatCurrency(paidCents)}</span>
+          <span className="font-medium w-24 text-right">{formatMoney(paidCents, currency)}</span>
         </div>
         <div className="flex gap-8 border-t pt-1 mt-1">
           <span className="font-semibold">Remaining</span>
-          <span className="font-bold w-24 text-right">{formatCurrency(totalCents - paidCents)}</span>
+          <span className="font-bold w-24 text-right">{formatMoney(totalCents - paidCents, currency)}</span>
         </div>
       </div>
     </div>
@@ -92,6 +88,7 @@ function PaymentScheduleTable({ installments }: { installments: PaymentInstallme
 
 export function BillingTab({ quote, contractTotalCents }: { quote: QuoteDetail; contractTotalCents: number }) {
   const { installments, isLoading } = usePaymentInstallments(quote.id);
+  const currency = useEventCurrency(quote.id);
 
   const paidCents = installments
     .filter((i) => i.status === "paid")
@@ -106,7 +103,7 @@ export function BillingTab({ quote, contractTotalCents }: { quote: QuoteDetail; 
           <div className="flex justify-between">
             <span>Contract Total</span>
             <div className="flex items-center gap-2">
-              <span className="font-semibold">{formatCurrency(contractTotalCents)}</span>
+              <span className="font-semibold">{formatMoney(contractTotalCents, currency)}</span>
               <span className={`text-xs px-2 py-0.5 rounded ${
                 quote.eventStatus === "booked" ? "bg-green-100 text-green-800" :
                 "bg-yellow-100 text-yellow-800"
@@ -117,11 +114,11 @@ export function BillingTab({ quote, contractTotalCents }: { quote: QuoteDetail; 
           </div>
           <div className="flex justify-between text-green-600">
             <span>Payments Received</span>
-            <span className="font-semibold">{formatCurrency(paidCents)}</span>
+            <span className="font-semibold">{formatMoney(paidCents, currency)}</span>
           </div>
           <div className="flex justify-between text-red-600 border-t pt-2">
             <span className="font-medium">Balance Due</span>
-            <span className="font-bold">{formatCurrency(contractTotalCents - paidCents)}</span>
+            <span className="font-bold">{formatMoney(contractTotalCents - paidCents, currency)}</span>
           </div>
         </div>
       </div>
@@ -132,7 +129,7 @@ export function BillingTab({ quote, contractTotalCents }: { quote: QuoteDetail; 
         {isLoading ? (
           <p className="text-sm text-gray-400 py-4 text-center">Loading payment schedule...</p>
         ) : (
-          <PaymentScheduleTable installments={installments} />
+          <PaymentScheduleTable installments={installments} currency={currency} />
         )}
       </div>
 
@@ -160,7 +157,7 @@ export function BillingTab({ quote, contractTotalCents }: { quote: QuoteDetail; 
                   <tr key={inst.id} className="border-b">
                     <td className="py-2">{formatDateTime(inst.paidAt)}</td>
                     <td className="py-2 text-right font-medium text-green-600">
-                      {formatCurrency(inst.amountCents)}
+                      {formatMoney(inst.amountCents, currency)}
                     </td>
                     <td className="py-2 text-gray-500">Due {formatDate(inst.dueDate)}</td>
                   </tr>

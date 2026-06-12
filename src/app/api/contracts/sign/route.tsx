@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { buildQuoteDocumentData } from "@/features/quotesAndBookings/pdf/quoteDocumentData";
 import { QuotePdfDocument } from "@/features/quotesAndBookings/pdf/QuotePdfDocument";
+import { logSingleChange } from "@/features/quotesAndBookings/db/logEventChanges";
 
 function getSupabaseAdmin() {
   return createClient(
@@ -48,10 +49,19 @@ export async function POST(req: NextRequest) {
   }
 
   // Update event status to "booked"
+  const { data: oldEvent } = await supabase
+    .from("Events")
+    .select("event_status")
+    .eq("id", eventId)
+    .single();
+
   await supabase
     .from("Events")
     .update({ event_status: "booked", booked_at: signedAt })
     .eq("id", eventId);
+
+  await logSingleChange(supabase, eventId, null, "signature", null, signerName.trim(), "sign");
+  await logSingleChange(supabase, eventId, null, "event_status", oldEvent?.event_status ?? null, "booked", "status_change");
 
   // Generate and store the signed PDF
   try {
