@@ -114,7 +114,7 @@ export const SystemProvider = ({ children }: { children: React.ReactNode }) => {
 
     instance.connect(connector, {
       params: { app: "web" },
-      connectionMethod: SyncStreamConnectionMethod.HTTP,
+      connectionMethod: SyncStreamConnectionMethod.WEB_SOCKET,
     });
 
     return () => {

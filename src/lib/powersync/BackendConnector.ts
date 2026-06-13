@@ -26,7 +26,8 @@ const FATAL_RESPONSE_CODES = [
 // }
 
 let _cachedCredentials: { endpoint: string; token: string; expiresAt: number } | null = null;
-const CREDENTIALS_TTL_MS = 50_000; // cache for 50s (Clerk tokens live ~60s)
+let _inflight: Promise<{ endpoint: string; token: string }> | null = null;
+const CREDENTIALS_TTL_MS = 50_000;
 
 export class BackendConnector implements PowerSyncBackendConnector {
   client: SupabaseClient;
@@ -47,15 +48,21 @@ export class BackendConnector implements PowerSyncBackendConnector {
       return { endpoint: _cachedCredentials.endpoint, token: _cachedCredentials.token };
     }
 
-    const res = await fetch("/api/powersync/credentials?template=powersync", {
-      cache: "no-store",
+    if (_inflight) return _inflight;
+
+    _inflight = (async () => {
+      const res = await fetch("/api/powersync/credentials?template=powersync", {
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const { endpoint, token } = await res.json();
+      _cachedCredentials = { endpoint, token, expiresAt: Date.now() + CREDENTIALS_TTL_MS };
+      return { endpoint, token };
+    })().finally(() => {
+      _inflight = null;
     });
-    if (!res.ok) throw new Error(await res.text());
-    const { endpoint, token } = await res.json();
 
-    _cachedCredentials = { endpoint, token, expiresAt: Date.now() + CREDENTIALS_TTL_MS };
-
-    return { endpoint, token };
+    return _inflight;
   }
 
   async uploadData(database: AbstractPowerSyncDatabase): Promise<void> {
