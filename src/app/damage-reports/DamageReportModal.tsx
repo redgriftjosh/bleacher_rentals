@@ -56,6 +56,7 @@ export type EditDamageReport = {
   resolved_at: string | null;
   maintenance_event_uuid: string | null;
   bleacher: { bleacher_number: number } | null;
+  created_by_user: { first_name: string; last_name: string } | null;
   photos: { id: string; photo_path: string }[];
 };
 
@@ -102,6 +103,7 @@ type DamageReportModalProps = {
   onOpenChange: (open: boolean) => void;
   onSaved: () => void;
   editReport?: EditDamageReport | null;
+  currentUserUuid?: string | null;
 };
 
 export function DamageReportModal({
@@ -109,6 +111,7 @@ export function DamageReportModal({
   onOpenChange,
   onSaved,
   editReport,
+  currentUserUuid,
 }: DamageReportModalProps) {
   const supabase = useClerkSupabaseClient();
   const isEditing = !!editReport;
@@ -250,6 +253,7 @@ export function DamageReportModal({
           is_safe_to_sit: seatDamage === "none",
           is_safe_to_haul: haulDamage === "none",
           note: note || null,
+          created_by_user_uuid: currentUserUuid ?? null,
         })
         .select("id")
         .single();
@@ -420,8 +424,15 @@ export function DamageReportModal({
 
           {/* Bleacher display — edit mode */}
           {isEditing && displayBleacherNumber != null && (
-            <div className="text-sm text-gray-500 bg-gray-50 rounded-md px-3 py-2">
-              Bleacher: <span className="font-medium">#{displayBleacherNumber}</span>
+            <div className="text-sm text-gray-500 bg-gray-50 rounded-md px-3 py-2 flex items-center justify-between">
+              <span>
+                Bleacher: <span className="font-medium">#{displayBleacherNumber}</span>
+              </span>
+              {editReport.created_by_user && (
+                <span>
+                  Created by: <span className="font-medium">{editReport.created_by_user.first_name} {editReport.created_by_user.last_name}</span>
+                </span>
+              )}
             </div>
           )}
 

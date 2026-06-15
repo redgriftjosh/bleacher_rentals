@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { useUser } from "@clerk/nextjs";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Plus, X } from "lucide-react";
 import { DamageReportModal, EditDamageReport } from "./DamageReportModal";
@@ -22,8 +23,10 @@ type DamageReport = {
   created_at: string;
   resolved_at: string | null;
   maintenance_event_uuid: string | null;
+  created_by_user_uuid: string | null;
   bleacher: { bleacher_number: number } | null;
   maintenance_event: { event_name: string } | null;
+  created_by_user: { first_name: string; last_name: string } | null;
   photos: { id: string; photo_path: string }[];
 };
 
@@ -31,12 +34,26 @@ function DamageReportsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = useClerkSupabaseClient();
+  const { user: clerkUser } = useUser();
   const queryClient = useQueryClient();
   const [showResolved, setShowResolved] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingReport, setEditingReport] = useState<DamageReport | null>(null);
 
   const bleacherUuid = searchParams.get("bleacher_uuid");
+
+  const { data: currentUserUuid } = useQuery({
+    queryKey: ["current-user-uuid", clerkUser?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("Users")
+        .select("id")
+        .eq("clerk_user_id", clerkUser!.id)
+        .single();
+      return data?.id ?? null;
+    },
+    enabled: !!supabase && !!clerkUser?.id,
+  });
 
   // Fetch all bleachers for the filter dropdown
   const { data: bleachers = [] } = useQuery({
@@ -64,6 +81,7 @@ function DamageReportsContent() {
           *,
           bleacher:Bleachers!DamageReports_bleacher_uuid_fkey(bleacher_number),
           maintenance_event:MaintenanceEvents!DamageReports_maintenance_event_uuid_fkey(event_name),
+          created_by_user:Users!DamageReports_created_by_user_uuid_fkey(first_name, last_name),
           photos:DamageReportPhotos!DamageReportPhotos_damage_report_uuid_fkey(id, photo_path)
         `,
         )
@@ -198,6 +216,7 @@ function DamageReportsContent() {
         <DamageReportModal
           open={showCreateModal}
           onOpenChange={setShowCreateModal}
+          currentUserUuid={currentUserUuid ?? null}
           onSaved={() => {
             setShowCreateModal(false);
             queryClient.invalidateQueries({ queryKey: ["damage-reports"] });

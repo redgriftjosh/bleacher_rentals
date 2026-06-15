@@ -2,7 +2,9 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!);
+}
 
 function getSupabaseAdmin() {
   return createClient(
@@ -35,6 +37,8 @@ export async function POST(req: NextRequest) {
   const invoiceLabel = event.invoice_number
     ? `#${event.invoice_number}`
     : event.id.slice(0, 8);
+
+  const stripe = getStripe();
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
