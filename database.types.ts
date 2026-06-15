@@ -1188,6 +1188,50 @@ export type Database = {
           },
         ]
       }
+      EventFiles: {
+        Row: {
+          created_at: string
+          event_uuid: string
+          file_name: string
+          file_size_bytes: number | null
+          id: string
+          mime_type: string | null
+          source: string
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_uuid: string
+          file_name: string
+          file_size_bytes?: number | null
+          id?: string
+          mime_type?: string | null
+          source?: string
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_uuid?: string
+          file_name?: string
+          file_size_bytes?: number | null
+          id?: string
+          mime_type?: string | null
+          source?: string
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventFiles_event_uuid_fkey"
+            columns: ["event_uuid"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       EventLineItems: {
         Row: {
           bleacher_type_uuid: string | null

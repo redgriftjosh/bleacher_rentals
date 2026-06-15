@@ -73,12 +73,41 @@ export async function POST(
     );
   }
 
-  // Log the send action
+  // Log the send action and store PDF in EventFiles
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
   await logSingleChange(supabase, id, userId, "email_sent", null, recipientEmail, "send");
+
+  // Save sent quote PDF to event-files bucket
+  try {
+    const pdfFileName = `${data.quoteNumber}.pdf`;
+    const storagePath = `${id}/sent-quote-${Date.now()}.pdf`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("event-files")
+      .upload(storagePath, pdfBuffer, {
+        contentType: "application/pdf",
+        upsert: false,
+      });
+
+    if (!uploadError) {
+      await supabase.from("EventFiles").insert({
+        event_uuid: id,
+        file_name: pdfFileName,
+        storage_path: storagePath,
+        mime_type: "application/pdf",
+        file_size_bytes: pdfBuffer.byteLength,
+        source: "sent_quote",
+        uploaded_by: userId,
+      });
+    } else {
+      console.error("Failed to store sent quote PDF:", uploadError);
+    }
+  } catch (e) {
+    console.error("Failed to store sent quote PDF (email still sent):", e);
+  }
 
   return NextResponse.json({ success: true, sentTo: recipientEmail });
 }

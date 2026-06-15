@@ -90,4 +90,5 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   SalesOffices: () => {},
   TermsAndConditions: () => {},
   ContractSignatures: () => {},
+  EventFiles: () => {},
 };

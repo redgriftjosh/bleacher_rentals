@@ -86,6 +86,17 @@ export async function POST(req: NextRequest) {
           .from("ContractSignatures")
           .update({ signed_pdf_path: storagePath })
           .eq("id", data.id);
+
+        const pdfFileName = `Signed Contract - ${docData.quoteNumber}.pdf`;
+        await supabase.from("EventFiles").insert({
+          event_uuid: eventId,
+          file_name: pdfFileName,
+          storage_path: `contracts/${storagePath}`,
+          mime_type: "application/pdf",
+          file_size_bytes: buffer.byteLength,
+          source: "signed_contract",
+          uploaded_by: null,
+        });
       }
     }
   } catch (e) {
