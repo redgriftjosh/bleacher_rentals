@@ -19,6 +19,7 @@ import { createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
 export type StatType =
   | "number-of-quotes-sent"
   | "number-of-quotes-signed"
+  | "value-of-quotes-sent"
   | "value-of-quotes-signed"
   | "revenue"
   | "gross-margin"
@@ -38,6 +39,11 @@ const STAT_TARGET_COLUMNS: Record<
     weekly: "sales_weekly",
     quarterly: "sales_quarterly",
     annually: "sales_annually",
+  },
+  "value-of-quotes-sent": {
+    weekly: "quotes_weekly", // no specific target column yet
+    quarterly: "quotes_quarterly",
+    annually: "quotes_annually",
   },
   "value-of-quotes-signed": {
     weekly: "value_of_sales_weekly_cents",
@@ -64,6 +70,7 @@ const STAT_TARGET_COLUMNS: Record<
 const STAT_LABELS: Record<StatType, string> = {
   "number-of-quotes-sent": "Quotes Sent",
   "number-of-quotes-signed": "Quotes Signed",
+  "value-of-quotes-sent": "Value of Quotes Sent",
   "value-of-quotes-signed": "Value of Quotes Signed",
   revenue: "Revenue",
   "gross-margin": "Gross Margin",
