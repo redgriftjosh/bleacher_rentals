@@ -3,6 +3,8 @@ import { Database, TablesUpdate } from "../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { CreateQuoteState } from "../state/useCreateQuoteStore";
 import { syncPaymentInstallments } from "./paymentInstallments";
+import { calculateTotals } from "../utils/calculateTotals";
+import { logEventChanges, logLineItemChanges, TRACKED_FIELDS, SimpleLineItem } from "./logEventChanges";
 
 /**
  * Updates an existing quote/event.
@@ -13,6 +15,7 @@ export async function updateQuoteEvent(
   eventId: string,
   state: CreateQuoteState,
   supabase: SupabaseClient<Database>,
+  currentUserUuid?: string | null,
 ): Promise<void> {
   // 1. Handle address
   let addressUuid: string | null = null;
@@ -58,7 +61,32 @@ export async function updateQuoteEvent(
     }
   }
 
-  // 2. Update Event
+  // 2. Fetch old state for change logging
+  const [{ data: oldEvent }, { data: oldLineItemRows }] = await Promise.all([
+    supabase
+      .from("Events")
+      .select(TRACKED_FIELDS.join(", "))
+      .eq("id", eventId)
+      .single(),
+    supabase
+      .from("EventLineItems")
+      .select("header, quantity, value_cents, currency")
+      .eq("event_uuid", eventId)
+      .eq("deleted", false),
+  ]);
+
+  const oldLineItems: SimpleLineItem[] = (oldLineItemRows ?? []).map((r: any) => ({
+    label: r.header ?? "",
+    qty: r.quantity ?? 1,
+    unitPriceCents: r.value_cents ?? 0,
+    lineTotalCents: (r.value_cents ?? 0) * (r.quantity ?? 1),
+  }));
+
+  // 3. Update Event
+  const { taxAmount } = calculateTotals(state.lineItems, state.taxPercent);
+  const effectiveTaxCents = state.taxOverrideCents ?? Math.round(taxAmount);
+  const contractRevenueCents = state.lineItems.reduce((sum, li) => sum + li.lineTotalCents, 0) + effectiveTaxCents;
+
   const updates: TablesUpdate<"Events"> = {
     event_name: state.eventName,
     event_start: state.eventStart || undefined,
@@ -66,11 +94,16 @@ export async function updateQuoteEvent(
     event_status: state.status || "draft",
     event_type_uuid: state.eventTypeId || null,
     quote_valid_till: state.quoteValidTill || null,
+    contract_revenue_cents: contractRevenueCents,
+    tax_percent: state.taxPercent,
+    tax_amount_cents: effectiveTaxCents,
     notes: state.clientFacingNotes || null,
     internal_notes: state.internalNotes || null,
     external_notes: state.clientFacingNotes || null,
     created_by_user_uuid: state.ownerUserUuid ?? undefined,
     contact_uuid: state.contactId || null,
+    sales_office_uuid: state.salesOfficeId || null,
+    terms_and_conditions_uuid: state.termsDocumentId || null,
   };
 
   if (addressUuid) {
@@ -83,7 +116,44 @@ export async function updateQuoteEvent(
     createErrorToast(["Failed to update quote.", error.message ?? ""]);
   }
 
-  // 3. Sync line items (delete old, insert new)
+  // 4. Log field changes + line item changes in parallel
+  if (oldEvent) {
+    const newState: Record<string, unknown> = {};
+    for (const key of TRACKED_FIELDS) {
+      if (key in updates) {
+        newState[key] = (updates as Record<string, unknown>)[key] ?? null;
+      }
+    }
+
+    const newLineItems: SimpleLineItem[] = state.lineItems.map((li) => ({
+      label: li.label,
+      qty: li.qty,
+      unitPriceCents: li.category === "discounts" ? li.lineTotalCents : li.unitPriceCents,
+      lineTotalCents: li.lineTotalCents,
+    }));
+
+    await Promise.all([
+      logEventChanges(
+        supabase,
+        eventId,
+        currentUserUuid ?? null,
+        oldEvent as unknown as Record<string, unknown>,
+        newState,
+        "update",
+        state.currency,
+      ),
+      logLineItemChanges(
+        supabase,
+        eventId,
+        currentUserUuid ?? null,
+        oldLineItems,
+        newLineItems,
+        state.currency,
+      ),
+    ]);
+  }
+
+  // 5. Sync line items (delete old, insert new)
   if (state.lineItems.length > 0) {
     await supabase.from("EventLineItems").delete().eq("event_uuid", eventId);
 
@@ -104,7 +174,7 @@ export async function updateQuoteEvent(
     }
   }
 
-  // 4. Sync payment installments
+  // 6. Sync payment installments
   try {
     await syncPaymentInstallments(eventId, state.paymentInstallments, state.currency);
   } catch (e) {

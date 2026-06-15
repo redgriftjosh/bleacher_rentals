@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { fetchTakenBleacherNumbers, updateBleacher, useBleacherQuery } from "../../db";
+import { fetchTakenBleacherNumbers, updateBleacher, useBleacherQuery, useBleacherTotalDistance } from "../../db";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
@@ -61,6 +61,8 @@ export function SheetEditBleacher() {
 
   const [openingDirection, setOpeningDirection] = useState<"driver" | "passenger" | null>(null);
   const [nvisPdfPath, setNvisPdfPath] = useState<string | null>(null);
+
+  const totalDistanceMeters = useBleacherTotalDistance(id);
 
   const [isTakenNumber, setIsTakenNumber] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -516,6 +518,17 @@ export function SheetEditBleacher() {
                     onChange={(e) => setGvwr(e.target.value ? Number(e.target.value) : null)}
                     className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                   />
+                </div>
+
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Total Distance</label>
+                  <span className="col-span-3 px-3 py-2 text-sm font-medium text-gray-700">
+                    {(totalDistanceMeters / 1000).toLocaleString(undefined, {
+                      minimumFractionDigits: 1,
+                      maximumFractionDigits: 1,
+                    })}{" "}
+                    km
+                  </span>
                 </div>
 
                 {/* NVIS PDF Upload */}

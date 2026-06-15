@@ -25,6 +25,10 @@ const FATAL_RESPONSE_CODES = [
 //   return JSON.parse(json);
 // }
 
+let _cachedCredentials: { endpoint: string; token: string; expiresAt: number } | null = null;
+let _inflight: Promise<{ endpoint: string; token: string }> | null = null;
+const CREDENTIALS_TTL_MS = 50_000;
+
 export class BackendConnector implements PowerSyncBackendConnector {
   client: SupabaseClient;
   supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -40,19 +44,25 @@ export class BackendConnector implements PowerSyncBackendConnector {
   }
 
   async fetchCredentials() {
-    const res = await fetch("/api/powersync/credentials?template=powersync", {
-      cache: "no-store",
+    if (_cachedCredentials && Date.now() < _cachedCredentials.expiresAt) {
+      return { endpoint: _cachedCredentials.endpoint, token: _cachedCredentials.token };
+    }
+
+    if (_inflight) return _inflight;
+
+    _inflight = (async () => {
+      const res = await fetch("/api/powersync/credentials?template=powersync", {
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const { endpoint, token } = await res.json();
+      _cachedCredentials = { endpoint, token, expiresAt: Date.now() + CREDENTIALS_TTL_MS };
+      return { endpoint, token };
+    })().finally(() => {
+      _inflight = null;
     });
-    if (!res.ok) throw new Error(await res.text());
-    const { endpoint, token } = await res.json();
 
-    // console.debug("Fetched PowerSync credentials from Clerk");
-    // console.log(getJwtPayload(token));
-
-    return {
-      endpoint: endpoint,
-      token: token,
-    };
+    return _inflight;
   }
 
   async uploadData(database: AbstractPowerSyncDatabase): Promise<void> {

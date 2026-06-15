@@ -1,18 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { useCreateQuoteStore } from "../state/useCreateQuoteStore";
 import { fetchTaxPercent } from "../db/fetchTaxPercent";
 import { useSalesOffices } from "./useSalesOffices";
 
-/**
- * Automatically fetches tax percent from QBO when:
- * - A sales office is selected (has quickbook_uuid)
- * - An event address is set
- * - Line items change (subtotal changes)
- *
- * Debounces calls to avoid hammering the API.
- */
 export function useAutoTax() {
   const salesOfficeId = useCreateQuoteStore((s) => s.salesOfficeId);
   const eventAddressData = useCreateQuoteStore((s) => s.eventAddressData);
@@ -22,9 +14,13 @@ export function useAutoTax() {
   const { salesOffices } = useSalesOffices();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const subtotal = lineItems
-    .filter((i) => i.category !== "discounts")
-    .reduce((sum, i) => sum + i.lineTotalCents, 0);
+  const subtotal = useMemo(
+    () =>
+      lineItems
+        .filter((i) => i.category !== "discounts")
+        .reduce((sum, i) => sum + i.lineTotalCents, 0),
+    [lineItems],
+  );
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -68,7 +64,7 @@ export function useAutoTax() {
       } finally {
         setField("taxLoading", false);
       }
-    }, 500);
+    }, 1500);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);

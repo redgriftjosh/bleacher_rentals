@@ -17,6 +17,7 @@ import { SelectQboAccountSimple } from "@/features/quickbooks-integration/compon
 import { fetchQboConnections, QboConnection } from "@/features/quickbooks-integration/api";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
+import { classifyWorkTrackerTypes } from "../util/classifyWorkTrackerTypes";
 
 type LocalType = Tables<"WorkTrackerTypes"> & {
   _deleted?: boolean;
@@ -53,6 +54,7 @@ export function EditWorkTrackerTypesModal({ isOpen, onClose }: EditWorkTrackerTy
       const { data, error } = await supabase
         .from("WorkTrackerTypes")
         .select("*")
+        .eq("is_deleted", false)
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return data as Tables<"WorkTrackerTypes">[];
@@ -125,6 +127,7 @@ export function EditWorkTrackerTypesModal({ isOpen, onClose }: EditWorkTrackerTy
       created_at: new Date().toISOString(),
       display_name: "New Type",
       sort_order: localTypes.length + 1,
+      is_deleted: false,
       _new: true,
       _qboAccountMap: {},
     };
@@ -138,13 +141,14 @@ export function EditWorkTrackerTypesModal({ isOpen, onClose }: EditWorkTrackerTy
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const toDelete = localTypes.filter((t) => t._deleted && !t._new);
-      const toInsert = localTypes.filter((t) => t._new && !t._deleted);
-      const toUpdate = localTypes.filter((t) => !t._new && !t._deleted);
+      const { toDelete, toInsert, toUpdate } = classifyWorkTrackerTypes(localTypes);
 
-      // Delete removed types
+      // Soft-delete removed types
       for (const t of toDelete) {
-        const { error } = await supabase.from("WorkTrackerTypes").delete().eq("id", t.id);
+        const { error } = await supabase
+          .from("WorkTrackerTypes")
+          .update({ is_deleted: true })
+          .eq("id", t.id);
         if (error) throw error;
       }
 
@@ -218,7 +222,7 @@ export function EditWorkTrackerTypesModal({ isOpen, onClose }: EditWorkTrackerTy
     }
   };
 
-  const visibleTypes = localTypes.filter((t) => !t._deleted);
+  const { visible: visibleTypes } = classifyWorkTrackerTypes(localTypes);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

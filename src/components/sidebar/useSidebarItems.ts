@@ -14,6 +14,7 @@ import {
   BookText,
   Settings,
   Building2,
+  ScrollText,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";
@@ -141,6 +142,13 @@ const ALL_ITEMS: SidebarItemConfig[] = [
         label: "Inspection Form",
         href: "/inspection-questions",
         icon: ClipboardCheck,
+      },
+      {
+        type: "button",
+        key: "terms-and-conditions",
+        label: "Terms & Conditions",
+        href: "/terms-and-conditions",
+        icon: ScrollText,
       },
       {
         type: "button",

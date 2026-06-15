@@ -14,13 +14,8 @@ import { ContractTab } from "./tabs/ContractTab";
 import { BillingTab } from "./tabs/BillingTab";
 import { FilesTab } from "./tabs/FilesTab";
 import { LogTab } from "./tabs/LogTab";
-
-function formatCurrency(cents: number): string {
-  const negative = cents < 0;
-  const abs = Math.abs(cents);
-  const str = `$${(abs / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
-  return negative ? `-${str}` : str;
-}
+import { useEventCurrency } from "../../hooks/useEventCurrency";
+import { formatMoney } from "../../utils/formatMoney";
 
 export function QuoteDetailView({ eventId }: { eventId: string }) {
   const router = useRouter();
@@ -32,10 +27,13 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
 
   // Line items from PowerSync (reactive)
   const { lineItems } = useEventLineItems(eventId);
+  const currency = useEventCurrency(eventId);
 
   const contractTotalCents = useMemo(() => {
-    return lineItems.reduce((sum, li) => sum + li.valueCents * li.quantity, 0);
-  }, [lineItems]);
+    const lineTotal = lineItems.reduce((sum, li) => sum + li.valueCents * li.quantity, 0);
+    const tax = quote?.taxAmountCents ?? 0;
+    return lineTotal + tax;
+  }, [lineItems, quote?.taxAmountCents]);
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this quote? This action can be undone by an admin.")) return;
@@ -168,7 +166,7 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
           </TabsList>
 
           <div className="flex items-center gap-3 py-2">
-            <span className="text-sm font-bold">{formatCurrency(contractTotalCents)}</span>
+            <span className="text-sm font-bold">{formatMoney(contractTotalCents, currency)}</span>
             <span className="text-xs text-gray-500">Contract Total</span>
             <button
               onClick={() => router.push(`/quotes-bookings/${quote.id}/edit`)}
@@ -205,7 +203,7 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
             <FilesTab quoteId={quote.id} />
           </TabsContent>
           <TabsContent value="log">
-            <LogTab quote={quote} />
+            <LogTab quoteId={quote.id} />
           </TabsContent>
         </div>
       </Tabs>

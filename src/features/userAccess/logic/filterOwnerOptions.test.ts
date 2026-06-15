@@ -3,22 +3,29 @@ import { filterOwnerOptions } from "./filterOwnerOptions";
 
 describe("filterOwnerOptions (Owner dropdown filtering)", () => {
   const allUsers = [
-    { id: "user-admin", name: "Admin User" },
-    { id: "user-am-1", name: "AM One" },
-    { id: "user-am-2", name: "AM Two" },
-    { id: "user-viewer", name: "Viewer User" },
+    { id: "user-admin", name: "Admin User", is_admin: true },
+    { id: "user-am-1", name: "AM One", is_admin: false },
+    { id: "user-am-2", name: "AM Two", is_admin: false },
+    { id: "user-viewer", name: "Viewer User", is_admin: false },
   ];
+
+  const accountManagerUserIds = new Set(["user-am-1", "user-am-2"]);
 
   // ═══ Admin ═══
 
-  it("admin sees all users", () => {
+  it("admin sees only admins and account managers", () => {
     const result = filterOwnerOptions({
       users: allUsers,
       isAdmin: true,
       currentUserId: "user-admin",
       disabled: false,
+      accountManagerUserIds,
     });
-    expect(result).toEqual(allUsers);
+    expect(result).toEqual([
+      { id: "user-admin", name: "Admin User", is_admin: true },
+      { id: "user-am-1", name: "AM One", is_admin: false },
+      { id: "user-am-2", name: "AM Two", is_admin: false },
+    ]);
   });
 
   // ═══ AM (non-admin) ═══
@@ -29,8 +36,9 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
       isAdmin: false,
       currentUserId: "user-am-1",
       disabled: false,
+      accountManagerUserIds,
     });
-    expect(result).toEqual([{ id: "user-am-1", name: "AM One" }]);
+    expect(result).toEqual([{ id: "user-am-1", name: "AM One", is_admin: false }]);
   });
 
   // ═══ Read-only mode (disabled) ═══
@@ -41,6 +49,7 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
       isAdmin: false,
       currentUserId: "user-am-1",
       disabled: true,
+      accountManagerUserIds,
     });
     expect(result).toEqual(allUsers);
   });
@@ -51,6 +60,7 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
       isAdmin: false,
       currentUserId: "user-viewer",
       disabled: true,
+      accountManagerUserIds,
     });
     expect(result).toEqual(allUsers);
   });
@@ -63,8 +73,9 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
       isAdmin: false,
       currentUserId: "user-viewer",
       disabled: false,
+      accountManagerUserIds,
     });
-    expect(result).toEqual([{ id: "user-viewer", name: "Viewer User" }]);
+    expect(result).toEqual([{ id: "user-viewer", name: "Viewer User", is_admin: false }]);
   });
 
   // ═══ Edge cases ═══
@@ -75,6 +86,7 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
       isAdmin: false,
       currentUserId: null,
       disabled: false,
+      accountManagerUserIds,
     });
     expect(result).toEqual([]);
   });
@@ -85,6 +97,7 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
       isAdmin: true,
       currentUserId: "user-admin",
       disabled: false,
+      accountManagerUserIds,
     });
     expect(result).toEqual([]);
   });
@@ -95,6 +108,7 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
       isAdmin: true,
       currentUserId: "user-admin",
       disabled: true,
+      accountManagerUserIds,
     });
     expect(result).toEqual(allUsers);
   });

@@ -7,7 +7,6 @@ import { Currency } from "../types/quoteTypes";
  * Sync payment installments for an event via PowerSync.
  *
  * Strategy: delete all existing installments for the event, then insert the new set.
- * This keeps it simple and avoids diffing.
  */
 export async function syncPaymentInstallments(
   eventUuid: string,
@@ -27,7 +26,7 @@ export async function syncPaymentInstallments(
         .values({
           id: inst.id,
           event_uuid: eventUuid,
-          due_date: inst.dueDate,
+          due_date: inst.dueDate || null,
           amount_cents: inst.amountCents,
           currency: currency,
           status: inst.status,
@@ -48,7 +47,6 @@ type InstallmentRow = {
 
 /**
  * Fetch payment installments for an event (one-time, non-reactive read).
- * Uses typedGetAll per POWERSYNC_ARCHITECTURE.md.
  */
 export async function fetchPaymentInstallments(
   eventUuid: string,

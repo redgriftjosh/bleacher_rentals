@@ -15,6 +15,7 @@ export function resolveAddress(bleacher: Bleacher, targetDate: string): string |
   let bestEventAddress: string | null = null;
 
   for (const ev of bleacher.bleacherEvents) {
+    if (!ev.booked) continue;
     const startDate = DateTime.fromISO(ev.eventStart).toISODate();
     if (!startDate || startDate > targetDate) continue;
     if (!ev.address) continue;
