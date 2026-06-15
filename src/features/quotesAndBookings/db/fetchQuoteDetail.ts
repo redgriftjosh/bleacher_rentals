@@ -2,6 +2,7 @@ import { db, powerSyncDb } from "@/components/providers/SystemProvider";
 
 export type QuoteDetail = {
   id: string;
+  invoiceNumber: number | null;
   eventName: string;
   eventStatus: string | null;
   eventStart: string | null;
@@ -14,8 +15,13 @@ export type QuoteDetail = {
   contractRevenueCents: number | null;
   eventTypeUuid: string | null;
   quoteValidTill: string | null;
+  salesOfficeUuid: string | null;
+  termsAndConditionsUuid: string | null;
+  taxPercent: number | null;
+  taxAmountCents: number | null;
   bookedAt: string | null;
   createdAt: string;
+  createdByUserUuid: string | null;
   address: {
     street: string;
     city: string;
@@ -37,6 +43,7 @@ export type QuoteDetail = {
 
 type Row = {
   id: string;
+  invoice_number: number | null;
   event_name: string;
   event_status: string | null;
   event_start: string | null;
@@ -49,8 +56,13 @@ type Row = {
   contract_revenue_cents: number | null;
   event_type_uuid: string | null;
   quote_valid_till: string | null;
+  sales_office_uuid: string | null;
+  terms_and_conditions_uuid: string | null;
+  tax_percent: number | null;
+  tax_amount_cents: number | null;
   booked_at: string | null;
   created_at: string;
+  created_by_user_uuid: string | null;
   address_street: string | null;
   address_city: string | null;
   address_state_province: string | null;
@@ -72,6 +84,7 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
     .leftJoin("Users as u", "e.created_by_user_uuid", "u.id")
     .select([
       "e.id as id",
+      "e.invoice_number as invoice_number",
       "e.event_name as event_name",
       "e.event_status as event_status",
       "e.event_start as event_start",
@@ -84,8 +97,13 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
       "e.contract_revenue_cents as contract_revenue_cents",
       "e.event_type_uuid as event_type_uuid",
       "e.quote_valid_till as quote_valid_till",
+      "e.sales_office_uuid as sales_office_uuid",
+      "e.terms_and_conditions_uuid as terms_and_conditions_uuid",
+      "e.tax_percent as tax_percent",
+      "e.tax_amount_cents as tax_amount_cents",
       "e.booked_at as booked_at",
       "e.created_at as created_at",
+      "e.created_by_user_uuid as created_by_user_uuid",
       "a.street as address_street",
       "a.city as address_city",
       "a.state_province as address_state_province",
@@ -109,6 +127,7 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
 
   return {
     id: r.id,
+    invoiceNumber: r.invoice_number,
     eventName: r.event_name,
     eventStatus: r.event_status,
     eventStart: r.event_start,
@@ -121,8 +140,13 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
     contractRevenueCents: r.contract_revenue_cents,
     eventTypeUuid: r.event_type_uuid,
     quoteValidTill: r.quote_valid_till,
+    salesOfficeUuid: r.sales_office_uuid,
+    termsAndConditionsUuid: r.terms_and_conditions_uuid,
+    taxPercent: r.tax_percent,
+    taxAmountCents: r.tax_amount_cents,
     bookedAt: r.booked_at,
     createdAt: r.created_at,
+    createdByUserUuid: r.created_by_user_uuid,
     address: r.address_street
       ? {
           street: r.address_street,

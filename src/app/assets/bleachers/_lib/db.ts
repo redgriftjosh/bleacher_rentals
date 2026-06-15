@@ -12,6 +12,7 @@ import { Database } from "../../../../../database.types";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { InsertBleacher, UpdateBleacher } from "@/types/tables/Bleachers";
+import { useMemo } from "react";
 
 type Query = {
   bleacher_number: number | null;
@@ -139,7 +140,8 @@ export function useBleacherQuery(bleacherNumber: number | null) {
           winter_home_base_uuid,
           linxup_device_id,
           summer_account_manager_uuid,
-          winter_account_manager_uuid
+          winter_account_manager_uuid,
+          bleacher_type_uuid
         `,
         )
         .eq("bleacher_number", bleacherNumber)
@@ -152,13 +154,62 @@ export function useBleacherQuery(bleacherNumber: number | null) {
   });
 }
 
+export function useBleacherTotalDistance(bleacherUuid: string | null): number {
+  const compiled = useMemo(
+    () =>
+      db
+        .selectFrom("WorkTrackers")
+        .select(["distance_meters"])
+        .where("bleacher_uuid", "=", bleacherUuid ?? "")
+        .compile(),
+    [bleacherUuid],
+  );
+
+  const { data = [] } = useTypedQuery(
+    compiled,
+    expect<{ distance_meters: number | null }>(),
+  );
+
+  return useMemo(
+    () => data.reduce((sum, r) => sum + (r.distance_meters ?? 0), 0),
+    [data],
+  );
+}
+
+async function findOrCreateBleacherType(
+  rowCount: number,
+  supabase: SupabaseClient<Database>,
+): Promise<string> {
+  const { data: existing } = await supabase
+    .from("BleacherTypes")
+    .select("id")
+    .eq("row_count", rowCount)
+    .eq("deleted", false)
+    .limit(1)
+    .single();
+
+  if (existing) return existing.id;
+
+  const { data: created, error } = await supabase
+    .from("BleacherTypes")
+    .insert({ name: `${rowCount} Row`, row_count: rowCount })
+    .select("id")
+    .single();
+
+  if (error || !created) throw new Error(`Failed to create BleacherType: ${error?.message}`);
+  return created.id;
+}
+
 export async function insertBleacher(
   bleacher: InsertBleacher,
   supabase: SupabaseClient<Database>,
   queryClient?: any,
 ) {
-  // console.log("inserting bleacher", token);
-  const { error } = await supabase.from("Bleachers").insert(bleacher);
+  // Dual write: ensure BleacherType exists and link it
+  const bleacherTypeUuid = await findOrCreateBleacherType(bleacher.bleacher_rows, supabase);
+  const { error } = await supabase
+    .from("Bleachers")
+    .insert({ ...bleacher, bleacher_type_uuid: bleacherTypeUuid });
   if (error) {
     // console.log("Error inserting bleacher:", error);
     let errorMessage = error.message;
@@ -207,9 +258,19 @@ export async function updateBleacher(
   supabase: SupabaseClient<Database>,
   queryClient?: any,
 ) {
-  // console.log("Updating bleacher", token);
-  // const supabase = createClient(token);
-  const { error } = await supabase.from("Bleachers").update(bleacher).eq("id", bleacher.id);
+  // Dual write: ensure BleacherType exists and link it
+  const bleacherTypeUuid = await findOrCreateBleacherType(bleacher.bleacher_rows, supabase);
+
+  // Also update row_count in BleacherTypes
+  await supabase
+    .from("BleacherTypes")
+    .update({ row_count: bleacher.bleacher_rows })
+    .eq("id", bleacherTypeUuid);
+
+  const { error } = await supabase
+    .from("Bleachers")
+    .update({ ...bleacher, bleacher_type_uuid: bleacherTypeUuid })
+    .eq("id", bleacher.id);
 
   if (error) {
     // console.log("Error inserting bleacher:", error);

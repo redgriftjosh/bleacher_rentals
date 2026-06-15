@@ -4,6 +4,7 @@ import { QuotesBookingsFilters } from "../types";
 export type ScorecardTemplate =
   | "quotes-sent"
   | "quotes-signed"
+  | "value-of-quotes-sent"
   | "value-of-quotes-signed"
   | "revenue";
 
@@ -20,6 +21,11 @@ export const SCORECARD_TEMPLATES: Record<
     label: "Quotes Signed",
     description:
       "Showing all events with a Booked At date within the selected period. The scorecard counts rows where Booked At falls in the range.",
+  },
+  "value-of-quotes-sent": {
+    label: "Value of Quotes Sent",
+    description:
+      "Showing all events created within the selected period. The scorecard sums the contract revenue of those events.",
   },
   "value-of-quotes-signed": {
     label: "Value of Quotes Signed",
@@ -116,6 +122,7 @@ export function filtersForTemplate(
 
   switch (template) {
     case "quotes-sent":
+    case "value-of-quotes-sent":
       return { ...base, createdFrom: from, createdTo: effectiveTo };
     case "quotes-signed":
       return { ...base, bookedFrom: from, bookedTo: effectiveTo };

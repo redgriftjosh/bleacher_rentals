@@ -5,7 +5,8 @@ import { Dropdown } from "@/components/DropDown";
 import { useContacts } from "../../../hooks/useContacts";
 
 export function ClientInfoSection() {
-  const store = useCreateQuoteStore();
+  const contactId = useCreateQuoteStore((s) => s.contactId);
+  const setField = useCreateQuoteStore((s) => s.setField);
   const { contacts, isLoading } = useContacts();
 
   const contactOptions = contacts.map((c) => ({
@@ -13,14 +14,14 @@ export function ClientInfoSection() {
     value: c.id,
   }));
 
-  const handleContactSelect = (contactId: string | null) => {
-    store.setField("contactId", contactId);
-    if (!contactId) return;
-    const contact = contacts.find((c) => c.id === contactId);
+  const handleContactSelect = (cId: string | null) => {
+    setField("contactId", cId);
+    if (!cId) return;
+    const contact = contacts.find((c) => c.id === cId);
     if (contact) {
-      store.setField("contactName", `${contact.firstName} ${contact.lastName ?? ""}`.trim());
-      if (contact.email) store.setField("companyEmail", contact.email);
-      if (contact.phone) store.setField("phone", contact.phone);
+      setField("contactName", `${contact.firstName} ${contact.lastName ?? ""}`.trim());
+      if (contact.email) setField("companyEmail", contact.email);
+      if (contact.phone) setField("phone", contact.phone);
     }
   };
 
@@ -34,14 +35,14 @@ export function ClientInfoSection() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
           <Dropdown
             options={contactOptions}
-            selected={store.contactId}
+            selected={contactId}
             onSelect={handleContactSelect}
             placeholder={isLoading ? "Loading contacts..." : "Search contacts..."}
             disabled={isLoading}
           />
         </div>
         <button
-          onClick={() => store.setField("isNewContactModalOpen", true)}
+          onClick={() => setField("isNewContactModalOpen", true)}
           className="h-[40px] px-4 text-sm font-medium text-darkBlue border border-darkBlue rounded-sm hover:bg-blue-50 transition cursor-pointer whitespace-nowrap"
         >
           + New Contact

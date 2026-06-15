@@ -10,6 +10,7 @@ import { useDriverPayData } from "../hooks/overview/useDriverPayData";
 import { useAccountManagers } from "@/features/manageTeam/hooks/useAccountManagers";
 import { useNumberOfQuotesSentData } from "../hooks/overview/useNumberOfQuotesSentData";
 import { useNumberOfQuotesSignedData } from "../hooks/overview/useNumberOfQuotesSignedData";
+import { useValueOfQuotesSentData } from "../hooks/overview/useValueOfQuotesSentData";
 import { useValueOfQuotesSignedData } from "../hooks/overview/useValueOfQuotesSignedData";
 import { useRevenueData } from "../hooks/overview/useRevenueData";
 import { useGrossMarginData } from "../hooks/overview/useGrossMarginData";
@@ -21,6 +22,7 @@ import { GrossMarginBreakdownModal } from "./GrossMarginBreakdownModal";
 
 export function ScorecardContent() {
   const quotesSentData = useNumberOfQuotesSentData();
+  const valueOfQuotesSentData = useValueOfQuotesSentData();
   const quotesSignedData = useNumberOfQuotesSignedData();
   const valueOfQuotesSignedData = useValueOfQuotesSignedData();
   const revenueData = useRevenueData();
@@ -46,7 +48,7 @@ export function ScorecardContent() {
         </a>{" "}
         page.
       </div>
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-4 gap-4 mb-6">
         <CompactDetailedStatWithGraph
           label="Number of Quotes Sent"
           statType="number-of-quotes-sent"
@@ -55,6 +57,15 @@ export function ScorecardContent() {
           thisPeriod={quotesSentData.thisPeriod}
           lastPeriod={quotesSentData.lastPeriod}
           chartData={quotesSentData.chartData}
+        />
+        <CompactDetailedStatWithGraph
+          label="Value of Quotes Sent"
+          statType="value-of-quotes-sent"
+          seeDataHref={buildScorecardTemplateUrl("value-of-quotes-sent", activeRange, null, periodStart)}
+          unit="money"
+          thisPeriod={valueOfQuotesSentData.thisPeriod}
+          lastPeriod={valueOfQuotesSentData.lastPeriod}
+          chartData={valueOfQuotesSentData.chartData}
         />
         <CompactDetailedStatWithGraph
           label="Number of Quotes Signed"

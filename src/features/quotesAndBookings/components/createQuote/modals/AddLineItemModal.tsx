@@ -50,7 +50,7 @@ export function AddLineItemModal() {
 
   const addBleacher = (bt: { id: string; name: string }) => {
     const priceCents =
-      canLookupPrice ? lookupPrice(bt.id, eventTypeId!, eventStart, eventEnd) : null;
+      canLookupPrice ? lookupPrice(bt.id, eventTypeId!, eventStart, eventEnd, currency) : null;
 
     const item: LineItem = {
       id: crypto.randomUUID(),
@@ -140,7 +140,7 @@ export function AddLineItemModal() {
             <div className="space-y-2 mt-2">
               {bleacherTypes.map((bt) => {
                 const priceCents = canLookupPrice
-                  ? lookupPrice(bt.id, eventTypeId!, eventStart, eventEnd)
+                  ? lookupPrice(bt.id, eventTypeId!, eventStart, eventEnd, currency)
                   : null;
 
                 return (

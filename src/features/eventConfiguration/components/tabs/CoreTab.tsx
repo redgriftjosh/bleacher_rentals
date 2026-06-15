@@ -9,6 +9,7 @@ import { useScrollToDateStore } from "@/features/dashboard/state/useScrollToDate
 import { LocateFixed } from "lucide-react";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { filterOwnerOptions } from "@/features/userAccess/logic/filterOwnerOptions";
+import { useAccountManagerUserIds } from "@/features/userAccess/hooks/useAccountManagerUserIds";
 
 type Props = {
   showSetupTeardown: boolean;
@@ -19,13 +20,13 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
   const currentEventStore = useCurrentEventStore();
   const users = useUsersStore((s) => s.users);
   const permissions = useTeamPermissions();
-  // In read-only mode (disabled) show all users so the owner name is visible.
-  // When creating/editing: admin sees all, AM sees only self.
+  const accountManagerUserIds = useAccountManagerUserIds();
   const filteredUsers = filterOwnerOptions({
     users,
     isAdmin: permissions.isAdmin,
     currentUserId: permissions.userId,
     disabled,
+    accountManagerUserIds,
   });
   const ownerOptions = filteredUsers.map((u) => ({
     label: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.email,

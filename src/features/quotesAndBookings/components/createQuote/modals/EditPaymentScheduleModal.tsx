@@ -82,6 +82,8 @@ export function EditPaymentScheduleModal() {
   const scheduledCents = draft.reduce((sum, i) => sum + i.amountCents, 0);
   const remaining = totalCents - scheduledCents;
   const isBalanced = remaining === 0;
+  const hasMissingDates = draft.some((i) => !i.dueDate);
+  const canSave = isBalanced && !hasMissingDates;
 
   const close = () => setField("isEditPaymentScheduleModalOpen", false);
 
@@ -285,8 +287,12 @@ export function EditPaymentScheduleModal() {
           <Button variant="outline" onClick={close}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!isBalanced}>
-            {isBalanced ? "Save Schedule" : "Amounts must equal total"}
+          <Button onClick={handleSave} disabled={!canSave}>
+            {hasMissingDates
+              ? "All due dates are required"
+              : isBalanced
+                ? "Save Schedule"
+                : "Amounts must equal total"}
           </Button>
         </DialogFooter>
       </DialogContent>

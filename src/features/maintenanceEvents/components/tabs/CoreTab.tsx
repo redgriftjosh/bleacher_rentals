@@ -8,6 +8,7 @@ import { useScrollToDateStore } from "@/features/dashboard/state/useScrollToDate
 import { LocateFixed, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { filterOwnerOptions } from "@/features/userAccess/logic/filterOwnerOptions";
+import { useAccountManagerUserIds } from "@/features/userAccess/hooks/useAccountManagerUserIds";
 import CentsInput from "@/components/CentsInput";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -23,13 +24,13 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
   const queryClient = useQueryClient();
   const users = useUsersStore((s) => s.users);
   const permissions = useTeamPermissions();
-  // In read-only mode (disabled) show all users so the owner name is visible.
-  // When creating/editing: admin sees all, AM sees only self.
+  const accountManagerUserIds = useAccountManagerUserIds();
   const filteredUsers = filterOwnerOptions({
     users,
     isAdmin: permissions.isAdmin,
     currentUserId: permissions.userId,
     disabled,
+    accountManagerUserIds,
   });
   const ownerOptions = filteredUsers.map((u) => ({
     label: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.email,

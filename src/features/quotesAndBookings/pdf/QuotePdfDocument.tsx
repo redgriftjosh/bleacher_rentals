@@ -1,5 +1,6 @@
 import { Page, Text, View, Document, StyleSheet } from "@react-pdf/renderer";
 import { QuoteDocumentData } from "./quoteDocumentData";
+import { ContractPdfPages } from "./ContractPdfPages";
 
 const DARK_BLUE = "#10365a";
 const LIGHT_GRAY = "#f3f4f6";
@@ -217,7 +218,11 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
         <View style={styles.header}>
           <View>
             <Text style={styles.companyName}>{data.company.name}</Text>
-            {data.company.address ? <Text style={styles.infoText}>{data.company.address}</Text> : null}
+            {data.company.street ? (
+              <Text style={styles.infoText}>
+                {data.company.street}{"\n"}{data.company.city}, {data.company.state} {data.company.zip}
+              </Text>
+            ) : null}
           </View>
           <View>
             <Text style={styles.quoteTitle}>QUOTE</Text>
@@ -352,6 +357,9 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
           <Text style={styles.footerText}>{data.quoteNumber}</Text>
         </View>
       </Page>
+
+      {/* Contract pages (T&C + signature) */}
+      <ContractPdfPages data={data} />
     </Document>
   );
 }
