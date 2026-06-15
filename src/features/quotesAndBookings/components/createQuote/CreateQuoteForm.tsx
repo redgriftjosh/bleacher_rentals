@@ -23,12 +23,14 @@ import { updateQuoteEvent } from "../../db/updateQuoteEvent";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { useAutoTax } from "../../hooks/useAutoTax";
+import { useCurrentUserUuid } from "../../hooks/useCurrentUserUuid";
 
 export function CreateQuoteForm() {
   const router = useRouter();
   const resetForm = useCreateQuoteStore((s) => s.resetForm);
   const editingEventId = useCreateQuoteStore((s) => s.editingEventId);
   const supabase = useClerkSupabaseClient();
+  const currentUserUuid = useCurrentUserUuid();
   const [saving, setSaving] = useState(false);
 
   // Auto-fetch tax from QBO when office + address are set
@@ -50,12 +52,12 @@ export function CreateQuoteForm() {
     try {
       const state = useCreateQuoteStore.getState();
       if (isEditing) {
-        await updateQuoteEvent(editingEventId, state, supabase);
+        await updateQuoteEvent(editingEventId, state, supabase, currentUserUuid);
         createSuccessToast(["Quote updated."]);
         resetForm();
         router.push(`/quotes-bookings/${editingEventId}`);
       } else {
-        const eventId = await createQuoteEvent(state, supabase);
+        const eventId = await createQuoteEvent(state, supabase, currentUserUuid);
         createSuccessToast(["Quote draft saved."]);
         resetForm();
         router.push(`/quotes-bookings/${eventId}`);
@@ -73,10 +75,10 @@ export function CreateQuoteForm() {
       const state = useCreateQuoteStore.getState();
       let eventId: string;
       if (isEditing) {
-        await updateQuoteEvent(editingEventId, state, supabase);
+        await updateQuoteEvent(editingEventId, state, supabase, currentUserUuid);
         eventId = editingEventId;
       } else {
-        eventId = await createQuoteEvent(state, supabase);
+        eventId = await createQuoteEvent(state, supabase, currentUserUuid);
       }
       // Open preview in new tab, keep form open
       window.open(`/quotes-bookings/${eventId}/preview`, "_blank");
@@ -99,10 +101,10 @@ export function CreateQuoteForm() {
       const state = useCreateQuoteStore.getState();
       let eventId: string;
       if (isEditing) {
-        await updateQuoteEvent(editingEventId, state, supabase);
+        await updateQuoteEvent(editingEventId, state, supabase, currentUserUuid);
         eventId = editingEventId;
       } else {
-        eventId = await createQuoteEvent(state, supabase);
+        eventId = await createQuoteEvent(state, supabase, currentUserUuid);
       }
 
       // Determine recipient email

@@ -78,6 +78,7 @@ export default function WorkTrackerModal({
       const { data, error } = await supabase
         .from("WorkTrackerTypes")
         .select("*")
+        .eq("is_deleted", false)
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return data;

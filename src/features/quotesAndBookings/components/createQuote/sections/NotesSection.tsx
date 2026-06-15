@@ -3,7 +3,9 @@
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 
 export function NotesSection() {
-  const store = useCreateQuoteStore();
+  const clientFacingNotes = useCreateQuoteStore((s) => s.clientFacingNotes);
+  const internalNotes = useCreateQuoteStore((s) => s.internalNotes);
+  const setField = useCreateQuoteStore((s) => s.setField);
 
   return (
     <section>
@@ -15,8 +17,8 @@ export function NotesSection() {
           Client-Facing Notes
         </label>
         <textarea
-          value={store.clientFacingNotes}
-          onChange={(e) => store.setField("clientFacingNotes", e.target.value)}
+          value={clientFacingNotes}
+          onChange={(e) => setField("clientFacingNotes", e.target.value)}
           placeholder="Visible to client..."
           rows={3}
           className="w-full px-3 py-2 border rounded text-sm resize-none"
@@ -27,8 +29,8 @@ export function NotesSection() {
           Internal Notes (not visible to client)
         </label>
         <textarea
-          value={store.internalNotes}
-          onChange={(e) => store.setField("internalNotes", e.target.value)}
+          value={internalNotes}
+          onChange={(e) => setField("internalNotes", e.target.value)}
           placeholder="Internal team notes..."
           rows={3}
           className="w-full px-3 py-2 border rounded text-sm resize-none"

@@ -220,6 +220,7 @@ export type Database = {
           bleacher_number: number
           bleacher_rows: number
           bleacher_seats: number
+          bleacher_type_uuid: string | null
           created_at: string
           created_by: string | null
           deleted: boolean
@@ -250,6 +251,7 @@ export type Database = {
           bleacher_number: number
           bleacher_rows: number
           bleacher_seats: number
+          bleacher_type_uuid?: string | null
           created_at?: string
           created_by?: string | null
           deleted?: boolean
@@ -280,6 +282,7 @@ export type Database = {
           bleacher_number?: number
           bleacher_rows?: number
           bleacher_seats?: number
+          bleacher_type_uuid?: string | null
           created_at?: string
           created_by?: string | null
           deleted?: boolean
@@ -307,6 +310,13 @@ export type Database = {
           zone_uuid?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "Bleachers_bleacher_type_uuid_fkey"
+            columns: ["bleacher_type_uuid"]
+            isOneToOne: false
+            referencedRelation: "BleacherTypes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "Bleachers_summer_account_manager_uuid_fkey"
             columns: ["summer_account_manager_uuid"]
@@ -600,6 +610,57 @@ export type Database = {
             columns: ["created_by_user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ContractSignatures: {
+        Row: {
+          created_at: string
+          event_uuid: string
+          id: string
+          invalidated_at: string | null
+          signed_at: string
+          signed_pdf_path: string | null
+          signer_name: string
+          status: Database["public"]["Enums"]["contract_signature_status"]
+          terms_and_conditions_uuid: string
+        }
+        Insert: {
+          created_at?: string
+          event_uuid: string
+          id?: string
+          invalidated_at?: string | null
+          signed_at?: string
+          signed_pdf_path?: string | null
+          signer_name: string
+          status?: Database["public"]["Enums"]["contract_signature_status"]
+          terms_and_conditions_uuid: string
+        }
+        Update: {
+          created_at?: string
+          event_uuid?: string
+          id?: string
+          invalidated_at?: string | null
+          signed_at?: string
+          signed_pdf_path?: string | null
+          signer_name?: string
+          status?: Database["public"]["Enums"]["contract_signature_status"]
+          terms_and_conditions_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ContractSignatures_event_uuid_fkey"
+            columns: ["event_uuid"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ContractSignatures_terms_and_conditions_uuid_fkey"
+            columns: ["terms_and_conditions_uuid"]
+            isOneToOne: false
+            referencedRelation: "TermsAndConditions"
             referencedColumns: ["id"]
           },
         ]
@@ -1081,25 +1142,31 @@ export type Database = {
       }
       EventChangeLog: {
         Row: {
+          action_type: string
           changed_at: string
           changed_by_user_uuid: string | null
           event_uuid: string
+          field_name: string | null
           id: string
           next_value: string | null
           prev_value: string | null
         }
         Insert: {
+          action_type?: string
           changed_at?: string
           changed_by_user_uuid?: string | null
           event_uuid: string
+          field_name?: string | null
           id?: string
           next_value?: string | null
           prev_value?: string | null
         }
         Update: {
+          action_type?: string
           changed_at?: string
           changed_by_user_uuid?: string | null
           event_uuid?: string
+          field_name?: string | null
           id?: string
           next_value?: string | null
           prev_value?: string | null
@@ -1286,15 +1353,20 @@ export type Database = {
           hsl_hue: number | null
           id: string
           internal_notes: string | null
+          invoice_number: number | null
           lenient: boolean
           must_be_clean: boolean
           notes: string | null
+          po_number: string | null
           quote_valid_till: string | null
           sales_office_uuid: string | null
           setup_start: string | null
           seven_row: number | null
+          tax_amount_cents: number | null
+          tax_percent: number | null
           teardown_end: string | null
           ten_row: number | null
+          terms_and_conditions_uuid: string | null
           total_seats: number | null
         }
         Insert: {
@@ -1316,15 +1388,20 @@ export type Database = {
           hsl_hue?: number | null
           id?: string
           internal_notes?: string | null
+          invoice_number?: number | null
           lenient: boolean
           must_be_clean?: boolean
           notes?: string | null
+          po_number?: string | null
           quote_valid_till?: string | null
           sales_office_uuid?: string | null
           setup_start?: string | null
           seven_row?: number | null
+          tax_amount_cents?: number | null
+          tax_percent?: number | null
           teardown_end?: string | null
           ten_row?: number | null
+          terms_and_conditions_uuid?: string | null
           total_seats?: number | null
         }
         Update: {
@@ -1346,15 +1423,20 @@ export type Database = {
           hsl_hue?: number | null
           id?: string
           internal_notes?: string | null
+          invoice_number?: number | null
           lenient?: boolean
           must_be_clean?: boolean
           notes?: string | null
+          po_number?: string | null
           quote_valid_till?: string | null
           sales_office_uuid?: string | null
           setup_start?: string | null
           seven_row?: number | null
+          tax_amount_cents?: number | null
+          tax_percent?: number | null
           teardown_end?: string | null
           ten_row?: number | null
+          terms_and_conditions_uuid?: string | null
           total_seats?: number | null
         }
         Relationships: [
@@ -1391,6 +1473,13 @@ export type Database = {
             columns: ["sales_office_uuid"]
             isOneToOne: false
             referencedRelation: "SalesOffices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Events_terms_and_conditions_uuid_fkey"
+            columns: ["terms_and_conditions_uuid"]
+            isOneToOne: false
+            referencedRelation: "TermsAndConditions"
             referencedColumns: ["id"]
           },
         ]
@@ -1687,6 +1776,75 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      PaymentHistory: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          event_uuid: string
+          id: string
+          installment_id: string | null
+          notes: string | null
+          paid_at: string | null
+          payer_email: string | null
+          payer_name: string
+          payment_method_type: string | null
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_receipt_url: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          event_uuid: string
+          id?: string
+          installment_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          payer_email?: string | null
+          payer_name: string
+          payment_method_type?: string | null
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_receipt_url?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          event_uuid?: string
+          id?: string
+          installment_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          payer_email?: string | null
+          payer_name?: string
+          payment_method_type?: string | null
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_receipt_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "PaymentHistory_event_uuid_fkey"
+            columns: ["event_uuid"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "PaymentHistory_installment_id_fkey"
+            columns: ["installment_id"]
+            isOneToOne: false
+            referencedRelation: "PaymentInstallments"
             referencedColumns: ["id"]
           },
         ]
@@ -2277,6 +2435,7 @@ export type Database = {
           deleted: boolean
           id: string
           name: string
+          phone: string | null
           quickbook_uuid: string
         }
         Insert: {
@@ -2286,6 +2445,7 @@ export type Database = {
           deleted?: boolean
           id?: string
           name: string
+          phone?: string | null
           quickbook_uuid: string
         }
         Update: {
@@ -2295,6 +2455,7 @@ export type Database = {
           deleted?: boolean
           id?: string
           name?: string
+          phone?: string | null
           quickbook_uuid?: string
         }
         Relationships: [
@@ -2426,6 +2587,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "Tasks_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      TermsAndConditions: {
+        Row: {
+          created_at: string
+          created_by_user_uuid: string | null
+          deleted: boolean
+          html_content: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          html_content?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted?: boolean
+          html_content?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "TermsAndConditions_created_by_user_uuid_fkey"
             columns: ["created_by_user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
@@ -2965,18 +3161,21 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          is_deleted: boolean
           sort_order: number
         }
         Insert: {
           created_at?: string
           display_name: string
           id?: string
+          is_deleted?: boolean
           sort_order?: number
         }
         Update: {
           created_at?: string
           display_name?: string
           id?: string
+          is_deleted?: boolean
           sort_order?: number
         }
         Relationships: []
@@ -3078,6 +3277,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_invoice_number: { Args: never; Returns: number }
       get_current_account_manager_id: { Args: never; Returns: string }
       get_current_driver_id: { Args: never; Returns: string }
       get_current_user_uuid: { Args: never; Returns: string }
@@ -3100,6 +3300,7 @@ export type Database = {
       alert_entity_type: "event"
       bleacher_opening_dir: "driver" | "passenger"
       bluebook_region: "CAN" | "US" | "Both"
+      contract_signature_status: "active" | "invalidated"
       currency: "USD" | "CAD"
       damage_severity: "none" | "minor" | "major"
       event_status: "quoted" | "booked" | "lost" | "draft"
@@ -3268,6 +3469,7 @@ export const Constants = {
       alert_entity_type: ["event"],
       bleacher_opening_dir: ["driver", "passenger"],
       bluebook_region: ["CAN", "US", "Both"],
+      contract_signature_status: ["active", "invalidated"],
       currency: ["USD", "CAD"],
       damage_severity: ["none", "minor", "major"],
       event_status: ["quoted", "booked", "lost", "draft"],

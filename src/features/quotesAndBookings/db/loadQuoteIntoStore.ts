@@ -1,6 +1,9 @@
 import { useCreateQuoteStore } from "../state/useCreateQuoteStore";
 import { fetchPaymentInstallments } from "./paymentInstallments";
 import { fetchQuoteDetail } from "./fetchQuoteDetail";
+import { fetchLineItemsForEvent } from "./fetchLineItems";
+import { resolveInvoiceDisplay } from "../utils/invoiceNumber";
+import { db, powerSyncDb } from "@/components/providers/SystemProvider";
 
 /**
  * Fetches an event by ID (via PowerSync) and loads its data into useCreateQuoteStore for editing.
@@ -16,6 +19,10 @@ export async function loadQuoteIntoStore(eventId: string): Promise<string | null
 
   const store = useCreateQuoteStore.getState();
 
+  store.setField("quoteNumber", resolveInvoiceDisplay(data.invoiceNumber, data.id));
+  store.setField("status", (data.eventStatus as any) ?? "draft");
+  store.setField("salesOfficeId", data.salesOfficeUuid ?? null);
+  store.setField("termsDocumentId", data.termsAndConditionsUuid ?? null);
   store.setField("eventName", data.eventName ?? "");
   store.setField("eventStart", data.eventStart ?? "");
   store.setField("eventEnd", data.eventEnd ?? "");
@@ -23,6 +30,28 @@ export async function loadQuoteIntoStore(eventId: string): Promise<string | null
   store.setField("quoteValidTill", data.quoteValidTill ?? "");
   store.setField("clientFacingNotes", data.externalNotes ?? data.notes ?? "");
   store.setField("internalNotes", data.internalNotes ?? "");
+  store.setField("taxPercent", data.taxPercent ?? null);
+  store.setField("taxOverrideCents", data.taxAmountCents ?? null);
+
+  // Look up AccountManager by created_by_user_uuid
+  if (data.createdByUserUuid) {
+    store.setField("ownerUserUuid", data.createdByUserUuid);
+    try {
+      const amQuery = db
+        .selectFrom("AccountManagers")
+        .select(["id"])
+        .where("user_uuid", "=", data.createdByUserUuid)
+        .where("is_active", "=", 1)
+        .limit(1)
+        .compile();
+      const amRows = await powerSyncDb.getAll<{ id: string }>(amQuery.sql, amQuery.parameters as any[]);
+      if (amRows.length > 0) {
+        store.setField("accountManagerId", amRows[0].id);
+      }
+    } catch (e) {
+      console.error("Failed to look up account manager:", e);
+    }
+  }
 
   if (data.address) {
     store.setField("eventAddress", data.address.street);
@@ -42,6 +71,14 @@ export async function loadQuoteIntoStore(eventId: string): Promise<string | null
     );
     if (data.contact.email) store.setField("companyEmail", data.contact.email);
     if (data.contact.phone) store.setField("phone", data.contact.phone);
+  }
+
+  // Load line items from PowerSync
+  try {
+    const lineItems = await fetchLineItemsForEvent(data.id);
+    store.setField("lineItems", lineItems);
+  } catch (e) {
+    console.error("Failed to load line items:", e);
   }
 
   // Load payment installments from PowerSync

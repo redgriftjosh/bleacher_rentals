@@ -6,8 +6,6 @@ export const DASHBOARD_FILTER_SETTINGS_TABLE = "DashboardFilterSettings";
 export const DRIVERS_TABLE = "Drivers";
 export const USERS_TABLE = "Users";
 export const WORK_TRACKERS_TABLE = "WorkTrackers";
-export const SALES_SCORECARD_DAILY_ACCOUNT_MANAGER_STATS_TABLE =
-  "SalesScorecardDailyAccountManagerStats";
 
 const AccountManagersCols = {
   created_at: column.text,
@@ -38,6 +36,7 @@ const BleachersCols = {
   bleacher_number: column.integer,
   bleacher_rows: column.integer,
   bleacher_seats: column.integer,
+  bleacher_type_uuid: column.text,
   created_by: column.text,
   updated_at: column.text,
   updated_by: column.text,
@@ -145,7 +144,12 @@ const EventsCols = {
   external_notes: column.text,
   sales_office_uuid: column.text,
   deleted: column.integer,
+  invoice_number: column.integer,
+  po_number: column.text,
   quote_valid_till: column.text,
+  terms_and_conditions_uuid: column.text,
+  tax_percent: column.real,
+  tax_amount_cents: column.integer,
 } satisfies PowerSyncColsFor<"Events">;
 const Events = new Table(EventsCols, {
   indexes: {
@@ -685,9 +689,11 @@ const EventAttachments = new Table(EventAttachmentsCols, {
 });
 
 const EventChangeLogCols = {
+  action_type: column.text,
   changed_at: column.text,
   changed_by_user_uuid: column.text,
   event_uuid: column.text,
+  field_name: column.text,
   next_value: column.text,
   prev_value: column.text,
 } satisfies PowerSyncColsFor<"EventChangeLog">;
@@ -800,12 +806,56 @@ const Prices = new Table(PricesCols, {
   },
 });
 
+const TermsAndConditionsCols = {
+  name: column.text,
+  html_content: column.text,
+  created_at: column.text,
+  created_by_user_uuid: column.text,
+  deleted: column.integer,
+} satisfies PowerSyncColsFor<"TermsAndConditions">;
+const TermsAndConditions = new Table(TermsAndConditionsCols);
+
+const PaymentHistoryCols = {
+  event_uuid: column.text,
+  installment_id: column.text,
+  amount_cents: column.integer,
+  currency: column.text,
+  status: column.text,
+  stripe_payment_intent_id: column.text,
+  stripe_checkout_session_id: column.text,
+  stripe_receipt_url: column.text,
+  payment_method_type: column.text,
+  payer_name: column.text,
+  payer_email: column.text,
+  notes: column.text,
+  paid_at: column.text,
+  created_at: column.text,
+} satisfies PowerSyncColsFor<"PaymentHistory">;
+const PaymentHistory = new Table(PaymentHistoryCols, {
+  indexes: { event_uuid: ["event_uuid"], installment_id: ["installment_id"] },
+});
+
+const ContractSignaturesCols = {
+  event_uuid: column.text,
+  terms_and_conditions_uuid: column.text,
+  signer_name: column.text,
+  signed_at: column.text,
+  signed_pdf_path: column.text,
+  status: column.text,
+  invalidated_at: column.text,
+  created_at: column.text,
+} satisfies PowerSyncColsFor<"ContractSignatures">;
+const ContractSignatures = new Table(ContractSignaturesCols, {
+  indexes: { event_uuid: ["event_uuid"] },
+});
+
 const SalesOfficesCols = {
   address_uuid: column.text,
   created_at: column.text,
   created_by_user_uuid: column.text,
   deleted: column.integer,
   name: column.text,
+  phone: column.text,
   quickbook_uuid: column.text,
 } satisfies PowerSyncColsFor<"SalesOffices">;
 const SalesOffices = new Table(SalesOfficesCols, {
@@ -865,11 +915,13 @@ export const AppSchema = new Schema({
   EventSubscriptions,
   EventTypes,
   EventTypingIndicators,
+  PaymentHistory,
   PaymentInstallments,
   PriceDurations,
   Prices,
   SalesOffices,
-  // SalesScorecardDailyAccountManagerStats,
+  TermsAndConditions,
+  ContractSignatures,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
@@ -922,7 +974,10 @@ export type EventMessagesRecord = PowerSyncDB["EventMessages"];
 export type EventSubscriptionsRecord = PowerSyncDB["EventSubscriptions"];
 export type EventTypesRecord = PowerSyncDB["EventTypes"];
 export type EventTypingIndicatorsRecord = PowerSyncDB["EventTypingIndicators"];
+export type PaymentHistoryRecord = PowerSyncDB["PaymentHistory"];
 export type PaymentInstallmentsRecord = PowerSyncDB["PaymentInstallments"];
 export type PriceDurationsRecord = PowerSyncDB["PriceDurations"];
 export type PricesRecord = PowerSyncDB["Prices"];
 export type SalesOfficesRecord = PowerSyncDB["SalesOffices"];
+export type TermsAndConditionsRecord = PowerSyncDB["TermsAndConditions"];
+export type ContractSignaturesRecord = PowerSyncDB["ContractSignatures"];

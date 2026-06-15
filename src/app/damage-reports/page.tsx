@@ -32,6 +32,7 @@ function DamageReportsContent() {
   const router = useRouter();
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
+  const [showResolved, setShowResolved] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingReport, setEditingReport] = useState<DamageReport | null>(null);
 
@@ -78,6 +79,14 @@ function DamageReportsContent() {
     },
     enabled: !!supabase,
   });
+
+  const filteredReports = useMemo(
+    () =>
+      reports.filter((r) =>
+        showResolved ? r.resolved_at !== null : r.resolved_at === null,
+      ),
+    [reports, showResolved],
+  );
 
   const selectedBleacherNumber = useMemo(() => {
     if (!bleacherUuid) return null;
@@ -138,20 +147,43 @@ function DamageReportsContent() {
             Clear
           </button>
         )}
+
+        <button
+          onClick={() => setShowResolved((v) => !v)}
+          className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition cursor-pointer ${
+            showResolved
+              ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
+              : "border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+          }`}
+        >
+          {showResolved ? (
+            <>
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Showing Resolved
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Showing Open
+            </>
+          )}
+        </button>
       </div>
 
       {isLoading ? (
         <div className="flex justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-darkBlue" />
         </div>
-      ) : reports.length === 0 ? (
+      ) : filteredReports.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           <AlertTriangle className="h-10 w-10 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">No damage reports found.</p>
+          <p className="text-sm">
+            No {showResolved ? "resolved" : "open"} damage reports found.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {reports.map((report) => (
+          {filteredReports.map((report) => (
             <DamageReportCard
               key={report.id}
               report={report}

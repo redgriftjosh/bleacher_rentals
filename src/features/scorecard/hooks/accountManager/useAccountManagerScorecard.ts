@@ -72,6 +72,24 @@ export function useAccountManagerScorecard(accountManagerUuid: string, userUuid:
     [lastPeriodDays, quotesSentLast, timezone],
   );
 
+  // ── Value of Quotes Sent ──
+  const valueQuotesSentThis = useMemo(
+    () => filterQuotesBookingsEvents(amEvents, filtersForTemplate("value-of-quotes-sent", activeRange, "this", null, periodStart), timezone),
+    [amEvents, activeRange, periodStart, timezone],
+  );
+  const valueQuotesSentLast = useMemo(
+    () => filterQuotesBookingsEvents(amEvents, filtersForTemplate("value-of-quotes-sent", activeRange, "last", null, periodStart), timezone),
+    [amEvents, activeRange, periodStart, timezone],
+  );
+  const valueQuotesSentThisCumulative = useMemo(
+    () => cumulativeEventCentsByDay(thisPeriodDays, valueQuotesSentThis, "created_at", "contract_revenue_cents", timezone),
+    [thisPeriodDays, valueQuotesSentThis, timezone],
+  );
+  const valueQuotesSentLastCumulative = useMemo(
+    () => cumulativeEventCentsByDay(lastPeriodDays, valueQuotesSentLast, "created_at", "contract_revenue_cents", timezone),
+    [lastPeriodDays, valueQuotesSentLast, timezone],
+  );
+
   // ── Quotes Signed ──
   const quotesSignedThis = useMemo(
     () => filterQuotesBookingsEvents(amEvents, filtersForTemplate("quotes-signed", activeRange, "this", null, periodStart), timezone),
@@ -138,6 +156,7 @@ export function useAccountManagerScorecard(accountManagerUuid: string, userUuid:
 
   // ── Assemble chart data ──
   const quotesSentChart = assembleChartData(activeRange, thisPeriodDays, lastPeriodDays, currentDay, quotesSentThisCumulative, quotesSentLastCumulative, getPaceForEachDay(thisPeriodDays, quotesGoal));
+  const valueQuotesSentChart = assembleChartData(activeRange, thisPeriodDays, lastPeriodDays, currentDay, valueQuotesSentThisCumulative, valueQuotesSentLastCumulative, getPaceForEachDay(thisPeriodDays, 0));
   const quotesSignedChart = assembleChartData(activeRange, thisPeriodDays, lastPeriodDays, currentDay, quotesSignedThisCumulative, quotesSignedLastCumulative, getPaceForEachDay(thisPeriodDays, salesGoal));
   const valueSignedChart = assembleChartData(activeRange, thisPeriodDays, lastPeriodDays, currentDay, valueSignedThisCumulative, valueSignedLastCumulative, getPaceForEachDay(thisPeriodDays, valueOfSalesGoal));
   const revenueChart = assembleChartData(activeRange, thisPeriodDays, lastPeriodDays, currentDay, revenueThisCumulative, revenueLastCumulative, getPaceForEachDay(thisPeriodDays, revenueGoal));
@@ -167,6 +186,18 @@ export function useAccountManagerScorecard(accountManagerUuid: string, userUuid:
         totalAtEnd: quotesSentLastCumulative[lastPeriodDays[lastPeriodDays.length - 1]] ?? 0,
       },
       chartData: quotesSentChart,
+    },
+    valueOfQuotesSent: {
+      thisPeriod: {
+        current: valueQuotesSentThisCumulative[currentDay] ?? 0,
+        goal: 0,
+        paceTarget: 0,
+      },
+      lastPeriod: {
+        currentAtSameDay: lastPeriodSameElapsedDayKey ? (valueQuotesSentLastCumulative[lastPeriodSameElapsedDayKey] ?? 0) : 0,
+        totalAtEnd: valueQuotesSentLastCumulative[lastPeriodDays[lastPeriodDays.length - 1]] ?? 0,
+      },
+      chartData: valueQuotesSentChart,
     },
     quotesSigned: {
       thisPeriod: {

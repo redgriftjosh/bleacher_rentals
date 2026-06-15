@@ -83,8 +83,11 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   EventSubscriptions: () => {},
   EventTypes: () => {},
   EventTypingIndicators: () => {},
+  PaymentHistory: () => {},
   PaymentInstallments: () => {},
   PriceDurations: () => {},
   Prices: () => {},
   SalesOffices: () => {},
+  TermsAndConditions: () => {},
+  ContractSignatures: () => {},
 };

@@ -64,7 +64,7 @@ function AccountManagerContent() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-4 gap-4 mb-6">
         <CompactDetailedStatWithGraph
           label="Number of Quotes Sent"
           accountManagerUuid={params.accountManagerUuid}
@@ -74,6 +74,16 @@ function AccountManagerContent() {
           thisPeriod={data.quotesSent.thisPeriod}
           lastPeriod={data.quotesSent.lastPeriod}
           chartData={data.quotesSent.chartData}
+        />
+        <CompactDetailedStatWithGraph
+          label="Value of Quotes Sent"
+          accountManagerUuid={params.accountManagerUuid}
+          statType="value-of-quotes-sent"
+          seeDataHref={buildScorecardTemplateUrl("value-of-quotes-sent", activeRange, accountManager.userUuid, periodStart)}
+          unit="money"
+          thisPeriod={data.valueOfQuotesSent.thisPeriod}
+          lastPeriod={data.valueOfQuotesSent.lastPeriod}
+          chartData={data.valueOfQuotesSent.chartData}
         />
         <CompactDetailedStatWithGraph
           label="Number of Quotes Signed"

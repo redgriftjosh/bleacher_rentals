@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { resolveInvoiceDisplay, buildPublicQuoteUrl, parseInvoiceParam } from "../utils/invoiceNumber";
 
 // ── The single source of truth for rendering a quote ──
 
@@ -17,6 +18,8 @@ export type QuotePaymentInstallment = {
 };
 
 export type QuoteDocumentData = {
+  // Internal ID (for API routes)
+  eventId: string;
   // Header
   quoteNumber: string;
   quoteDate: string;
@@ -24,12 +27,16 @@ export type QuoteDocumentData = {
   status: string;
   currency: "USD" | "CAD";
 
-  // Company (the business sending the quote)
+  // Company (the business sending the quote — from SalesOffice)
   company: {
     name: string;
-    address: string;
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
     phone: string;
     email: string;
+    website: string;
   };
 
   // Client contact
@@ -38,6 +45,9 @@ export type QuoteDocumentData = {
     email: string;
     phone: string;
   } | null;
+
+  // Purchase Order number (from client, set after payment)
+  poNumber: string | null;
 
   // Venue / event address
   venue: {
@@ -76,6 +86,16 @@ export type QuoteDocumentData = {
 
   // Account manager
   accountManager: string;
+
+  // Terms & Conditions
+  termsAndConditionsUuid: string | null;
+  termsHtml: string | null;
+
+  // Contract signature
+  contractSignature: {
+    signerName: string;
+    signedAt: string;
+  } | null;
 };
 
 // ── Helper ──
@@ -105,6 +125,8 @@ export async function buildQuoteDocumentData(
     .select(
       `
       id,
+      invoice_number,
+      po_number,
       event_name,
       event_status,
       event_start,
@@ -118,6 +140,10 @@ export async function buildQuoteDocumentData(
       quote_valid_till,
       created_at,
       created_by_user_uuid,
+      sales_office_uuid,
+      terms_and_conditions_uuid,
+      tax_percent,
+      tax_amount_cents,
       Addresses!Events_address_uuid_fkey (
         street, city, state_province, zip_postal
       ),
@@ -141,14 +167,76 @@ export async function buildQuoteDocumentData(
   const contact = event.Contacts as any;
   const user = event.Users as any;
 
-  // 2. Fetch line items
-  const { data: lineItemRows } = await supabase
-    .from("EventLineItems")
-    .select("header, description, quantity, value_cents, currency")
-    .eq("event_uuid", eventId)
-    .eq("deleted", false)
-    .order("created_at");
+  // Parallel fetch: salesOffice, lineItems, installments, terms, signature
+  const [soResult, lineItemResult, installmentResult, termsResult, sigResult] =
+    await Promise.all([
+      // SalesOffice
+      event.sales_office_uuid
+        ? supabase
+            .from("SalesOffices")
+            .select(`
+              name,
+              phone,
+              Addresses!SalesOffices_address_uuid_fkey (
+                street, city, state_province, zip_postal
+              )
+            `)
+            .eq("id", event.sales_office_uuid)
+            .single()
+        : Promise.resolve({ data: null }),
 
+      // Line items
+      supabase
+        .from("EventLineItems")
+        .select("header, description, quantity, value_cents, currency")
+        .eq("event_uuid", eventId)
+        .eq("deleted", false)
+        .order("created_at"),
+
+      // Payment installments
+      supabase
+        .from("PaymentInstallments")
+        .select("due_date, amount_cents, status")
+        .eq("event_uuid", eventId)
+        .order("due_date"),
+
+      // Terms & Conditions
+      (event as any).terms_and_conditions_uuid
+        ? supabase
+            .from("TermsAndConditions")
+            .select("html_content")
+            .eq("id", (event as any).terms_and_conditions_uuid)
+            .single()
+        : Promise.resolve({ data: null }),
+
+      // Contract signature
+      (event as any).terms_and_conditions_uuid
+        ? supabase
+            .from("ContractSignatures")
+            .select("signer_name, signed_at")
+            .eq("event_uuid", eventId)
+            .eq("status", "active")
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+
+  // Process SalesOffice
+  let salesOffice: { name: string; phone: string | null; street: string; city: string; state: string; zip: string } | null = null;
+  if (soResult.data) {
+    const so = soResult.data as any;
+    const soAddr = so.Addresses;
+    salesOffice = {
+      name: so.name,
+      phone: so.phone ?? null,
+      street: soAddr?.street ?? "",
+      city: soAddr?.city ?? "",
+      state: soAddr?.state_province ?? "",
+      zip: soAddr?.zip_postal ?? "",
+    };
+  }
+
+  // Process line items
+  const lineItemRows = lineItemResult.data;
   const lineItems: QuoteLineItem[] = (lineItemRows ?? []).map((li: any) => ({
     label: li.header,
     description: li.description ?? "",
@@ -157,20 +245,14 @@ export async function buildQuoteDocumentData(
     total: (li.quantity ?? 1) * li.value_cents,
   }));
 
-  // 3. Fetch payment installments
-  const { data: installmentRows } = await supabase
-    .from("PaymentInstallments")
-    .select("due_date, amount_cents, status")
-    .eq("event_uuid", eventId)
-    .order("due_date");
-
-  const paymentSchedule: QuotePaymentInstallment[] = (installmentRows ?? []).map((pi: any) => ({
+  // Process installments
+  const paymentSchedule: QuotePaymentInstallment[] = (installmentResult.data ?? []).map((pi: any) => ({
     dueDate: pi.due_date,
     amountCents: pi.amount_cents,
     status: pi.status,
   }));
 
-  // 4. Calculate totals (discount line items have negative value_cents)
+  // Calculate totals
   const subtotalCents = lineItems
     .filter((li) => li.total >= 0)
     .reduce((sum, li) => sum + li.total, 0);
@@ -178,29 +260,36 @@ export async function buildQuoteDocumentData(
     .filter((li) => li.total < 0)
     .reduce((sum, li) => sum + li.total, 0);
   const taxableAmount = subtotalCents + discountsCents;
-  const taxPercent = 0; // TODO: fetch from QBO or store
-  const taxAmountCents = Math.round(taxableAmount * (taxPercent / 100));
+  const taxPercent = (event as any).tax_percent ?? 0;
+  const taxAmountCents = (event as any).tax_amount_cents ?? Math.round(taxableAmount * (taxPercent / 100));
   const totalCents = taxableAmount + taxAmountCents;
 
-  // 5. Determine currency from first line item or default
   const currency = (lineItemRows?.[0]?.currency as "USD" | "CAD") ?? "USD";
 
-  // 6. Build public URL
   const appOrigin = origin ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://app.bleacherrentals.com";
-  const publicUrl = `${appOrigin}/quote/${eventId}`;
+  const invoiceNum = resolveInvoiceDisplay(event.invoice_number, eventId);
+  const publicUrl = buildPublicQuoteUrl(appOrigin, event.invoice_number, eventId);
+
+  // Process terms & signature
+  const sig = sigResult.data as any;
 
   return {
-    quoteNumber: `${eventId}`,
+    eventId,
+    quoteNumber: invoiceNum,
     quoteDate: event.created_at?.split("T")[0] ?? "",
     validUntil: (event as any).quote_valid_till ?? "",
     status: event.event_status ?? "draft",
     currency,
 
     company: {
-      name: "Bleacher Rentals",
-      address: "", // TODO: from SalesOffice address
-      phone: "",
-      email: "",
+      name: salesOffice?.name ?? "Bleacher Rentals",
+      street: salesOffice?.street ?? "",
+      city: salesOffice?.city ?? "",
+      state: salesOffice?.state ?? "",
+      zip: salesOffice?.zip ?? "",
+      phone: salesOffice?.phone ?? "",
+      email: "office@bleacherrentals.com",
+      website: "www.BleacherRentals.com",
     },
 
     contact: contact
@@ -210,6 +299,8 @@ export async function buildQuoteDocumentData(
           phone: contact.phone ?? "",
         }
       : null,
+
+    poNumber: (event as any).po_number ?? null,
 
     venue: {
       name: event.event_name,
@@ -225,20 +316,48 @@ export async function buildQuoteDocumentData(
     },
 
     lineItems,
-
     subtotalCents,
     discountsCents,
     taxPercent,
     taxAmountCents,
     totalCents,
-
     paymentSchedule,
 
     clientNotes: event.external_notes ?? event.notes ?? "",
     internalNotes: event.internal_notes ?? "",
-
     publicUrl,
-
     accountManager: user ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() : "",
-  };
+
+    termsAndConditionsUuid: (event as any).terms_and_conditions_uuid ?? null,
+    termsHtml: (termsResult.data as any)?.html_content ?? null,
+    contractSignature: sig
+      ? { signerName: sig.signer_name, signedAt: sig.signed_at }
+      : null,
+  } satisfies QuoteDocumentData;
+}
+
+/**
+ * Lookup by invoice_number (for public /quote/[invoiceNumber] route).
+ * Falls back to UUID lookup for backward compatibility with old links.
+ */
+export async function buildQuoteDocumentDataByInvoice(
+  invoiceNumberOrId: string,
+  origin?: string,
+): Promise<QuoteDocumentData | null> {
+  const supabase = getSupabaseAdmin();
+
+  const parsed = parseInvoiceParam(invoiceNumberOrId);
+
+  if (parsed.type === "invoice_number") {
+    const { data } = await supabase
+      .from("Events")
+      .select("id")
+      .eq("invoice_number", parsed.value as number)
+      .single();
+
+    if (data) return buildQuoteDocumentData(data.id, origin);
+  }
+
+  // Fallback: treat as UUID (backward compat for old bookmarked links)
+  return buildQuoteDocumentData(invoiceNumberOrId, origin);
 }

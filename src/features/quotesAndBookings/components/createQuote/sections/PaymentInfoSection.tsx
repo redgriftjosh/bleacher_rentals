@@ -13,7 +13,8 @@ const paymentOptions = (Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[])
   }));
 
 export function PaymentInfoSection() {
-  const store = useCreateQuoteStore();
+  const paymentMethod = useCreateQuoteStore((s) => s.paymentMethod);
+  const setField = useCreateQuoteStore((s) => s.setField);
 
   return (
     <section>
@@ -25,8 +26,8 @@ export function PaymentInfoSection() {
         <div className="max-w-xs">
           <Dropdown
             options={paymentOptions}
-            selected={store.paymentMethod}
-            onSelect={(val) => store.setField("paymentMethod", val)}
+            selected={paymentMethod}
+            onSelect={(val) => setField("paymentMethod", val)}
             placeholder="Select method..."
           />
         </div>
