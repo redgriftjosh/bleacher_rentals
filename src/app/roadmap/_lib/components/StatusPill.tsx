@@ -15,7 +15,7 @@ export function StatusPill({
     <span
       className={cn(
         "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-gray-800",
-        className
+        className,
       )}
       style={{ backgroundColor: hex }}
     >

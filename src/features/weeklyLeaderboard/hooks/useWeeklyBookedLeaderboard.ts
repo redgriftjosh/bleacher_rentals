@@ -34,7 +34,7 @@ export function useWeeklyBookedLeaderboard() {
       .where("e.event_status", "=", "booked")
       .where("e.booked_at", ">=", week.start)
       .where("e.booked_at", "<=", week.end)
-        .where("e.contract_revenue_cents", ">", 0)
+      .where("e.contract_revenue_cents", ">", 0)
       .groupBy(["u.id", "u.first_name", "u.last_name", "u.avatar_image_url"])
       .orderBy(sql`bookedValueCents`, "desc")
       .compile();

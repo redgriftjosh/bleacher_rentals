@@ -5,11 +5,7 @@ import { Loader2, Paperclip, Upload, X } from "lucide-react";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { useAttachments } from "../hooks/useAttachments";
-import {
-  deleteAttachment,
-  getPublicUrl,
-  uploadAttachment,
-} from "../db/attachments";
+import { deleteAttachment, getPublicUrl, uploadAttachment } from "../db/attachments";
 import type { AttachmentParentType } from "../types";
 
 type Props = {
@@ -26,12 +22,7 @@ function formatBytes(bytes: number | null) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function AttachmentList({
-  parentType,
-  parentId,
-  uploadedByUserUuid,
-  disabled,
-}: Props) {
+export function AttachmentList({ parentType, parentId, uploadedByUserUuid, disabled }: Props) {
   const supabase = useClerkSupabaseClient();
   const { attachments } = useAttachments(parentType, parentId);
   const [busy, setBusy] = useState(false);
@@ -119,9 +110,7 @@ export function AttachmentList({
               >
                 {a.file_name}
               </a>
-              <span className="text-xs text-gray-500 mr-2">
-                {formatBytes(a.file_size_bytes)}
-              </span>
+              <span className="text-xs text-gray-500 mr-2">{formatBytes(a.file_size_bytes)}</span>
               {!disabled && (
                 <button
                   type="button"

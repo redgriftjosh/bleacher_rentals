@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Target } from "lucide-react";
+import { ExternalLink, Target } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { SetTargetsModal, type StatType } from "./SetTargetsModal";
 import ReactSpeedometer from "react-d3-speedometer";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
+import { canEditTargets } from "../util/canEditTargets";
 
 const MIN_VALUE = 0;
 const MAX_VALUE = 100;
@@ -21,6 +23,7 @@ export type CompactDetailedStatWithSpeedometerProps = {
   accountManagerUuid?: string | null;
   statType?: StatType;
   historyHref?: string;
+  onSeeDataClick?: () => void;
   unit?: Unit;
   thisPeriod: {
     current: number;
@@ -35,7 +38,8 @@ export function CompactDetailedStatWithSpeedometer(props: CompactDetailedStatWit
   const [targetsModalOpen, setTargetsModalOpen] = useState(false);
   const searchParams = useSearchParams();
   const timeRangeParam = searchParams.get("timeRange");
-  const canOpenTargets = Boolean(props.accountManagerUuid && props.statType);
+  const { isAdmin } = useTeamPermissions();
+  const canOpenTargets = canEditTargets(isAdmin, props.accountManagerUuid, props.statType);
   const modalAccountManagerUuid = props.accountManagerUuid ?? undefined;
   const modalStatType = props.statType;
 
@@ -119,6 +123,16 @@ export function CompactDetailedStatWithSpeedometer(props: CompactDetailedStatWit
           {props.label}
         </span>
         <div className="flex items-center gap-2">
+          {props.onSeeDataClick && (
+            <button
+              onClick={props.onSeeDataClick}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition cursor-pointer"
+              title="See data"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span className="whitespace-nowrap">See data</span>
+            </button>
+          )}
           {canOpenTargets && (
             <button
               onClick={() => setTargetsModalOpen(true)}
@@ -129,16 +143,6 @@ export function CompactDetailedStatWithSpeedometer(props: CompactDetailedStatWit
               <span className="whitespace-nowrap">Set targets</span>
             </button>
           )}
-          {/* {props.historyHref && (
-            <Link
-              href={props.historyHref}
-              className="text-gray-400 hover:text-gray-600 transition"
-              aria-label={`View ${props.label.toLowerCase()} history`}
-              title="View history"
-            >
-              <History className="h-4 w-4" />
-            </Link>
-          )} */}
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">

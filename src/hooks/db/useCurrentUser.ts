@@ -13,6 +13,7 @@ type CurrentUser = {
   expo_push_token: string | null;
   first_name: string | null;
   is_admin: number | null;
+  is_viewer: number | null;
   last_name: string | null;
   phone: string | null;
   role: number | null;

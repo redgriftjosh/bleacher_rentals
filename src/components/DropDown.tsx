@@ -17,6 +17,7 @@ type DropdownProps<T> = {
   selected?: T;
   className?: string;
   formatSelectedLabel?: (label: string) => string;
+  disabled?: boolean;
 };
 
 export function Dropdown<T>({
@@ -26,6 +27,7 @@ export function Dropdown<T>({
   selected,
   className = "",
   formatSelectedLabel,
+  disabled = false,
 }: DropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -69,28 +71,36 @@ export function Dropdown<T>({
       <div ref={ref} className={`relative w-full ${className}`}>
         <button
           ref={buttonRef}
-          onClick={() => setIsOpen((prev) => !prev)}
-          className="w-full h-[40px] flex items-center text-sm text-muted-foreground font-medium cursor-pointer justify-between bg-white border rounded px-2 py-2 text-left hover:shadow transition-all"
+          onClick={() => !disabled && setIsOpen((prev) => !prev)}
+          disabled={disabled}
+          className={`w-full h-[40px] flex items-center text-sm font-medium justify-between border rounded px-2 py-2 text-left transition-all disabled:opacity-100 ${
+            disabled
+              ? "bg-gray-50 text-gray-700 cursor-default"
+              : "bg-white text-muted-foreground cursor-pointer hover:shadow"
+          }`}
         >
           <span>{selectedLabel}</span>
-          <ChevronDown
-            size={16}
-            className={`ml-2 text-gray-500 transition-transform duration-200 ${
-              isOpen ? "rotate-180" : "rotate-0"
-            }`}
-          />
+          {!disabled && (
+            <ChevronDown
+              size={16}
+              className={`ml-2 text-gray-500 transition-transform duration-200 ${
+                isOpen ? "rotate-180" : "rotate-0"
+              }`}
+            />
+          )}
         </button>
       </div>
 
       {typeof window !== "undefined" &&
         createPortal(
           <AnimatePresence>
-            {isOpen && (
+            {isOpen && !disabled && (
               <motion.ul
                 initial={{ opacity: 0, scale: 0.95, y: -5 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -5 }}
                 transition={{ duration: 0.15 }}
+                onMouseDown={(e) => e.stopPropagation()}
                 className="absolute z-[9999] bg-white border border-gray-200 rounded shadow-lg overflow-y-auto max-h-[60vh]"
                 style={{
                   position: "absolute",
@@ -103,7 +113,7 @@ export function Dropdown<T>({
                 {options.map((option) => (
                   <li
                     key={String(option.value)}
-                    onClick={() => {
+                    onPointerDown={() => {
                       onSelect(option.value);
                       setIsOpen(false);
                     }}
@@ -115,7 +125,7 @@ export function Dropdown<T>({
               </motion.ul>
             )}
           </AnimatePresence>,
-          document.body // 👈 Renders the dropdown directly into the body
+          document.body, // 👈 Renders the dropdown directly into the body
         )}
     </>
   );

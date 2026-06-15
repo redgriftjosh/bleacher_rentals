@@ -1,97 +1,76 @@
 "use client";
 
 import { useMemo } from "react";
-import { useSearchParams } from "next/navigation";
 import { roundToTwo } from "../../util/math";
-import {
-  TimeRange,
-  useEventsWithinTimeRange,
-  validTimeRanges,
-} from "../queries/useEventsWithinTimeRange";
-import { useWorkTrackersWithinTimeRange } from "../queries/useWorkTrackersWithinTimeRange";
-import { useTargets } from "../queries/useTargets";
+import { cumulativeEventCentsByDay, cumulativeWorkTrackerPayByDay } from "../../util/scorecardAggregation";
+import { useScorecardStatsContext } from "../ScorecardStatsContext";
+import { filterQuotesBookingsEvents } from "@/features/quotesAndBookings/utils/filterEvents";
+import { filtersForTemplate } from "@/features/quotesAndBookings/utils/scorecardTemplates";
 
 type GrossMarginData = {
   thisPeriod: {
     current: number;
     goal: number;
+    revenueDollars: number;
+    driverPayDollars: number;
   };
   lastPeriod: {
     value: number;
   };
 };
 
-/**
- * Gross Margin = (Revenue - COGS) / Revenue * 100
- *
- * Revenue: sum of contract_revenue_cents for booked events with event_start in the period.
- * COGS:    sum of pay_cents for work trackers with date in the period.
- */
-export function useGrossMarginData(props: {
-  createdByUserUuid: string | null;
-  accountManagerUuid: string | null;
-}): GrossMarginData {
-  const searchParams = useSearchParams();
-  const timeRangeParam = searchParams.get("timeRange");
-  const activeRange: TimeRange = validTimeRanges.includes(timeRangeParam as TimeRange)
-    ? (timeRangeParam as TimeRange)
-    : "weekly";
+export function useGrossMarginData(): GrossMarginData {
+  const { allEvents, allWorkTrackers, activeRange, periodStart, currentDay, thisPeriodDays, lastPeriodDays, getGoal, timezone } =
+    useScorecardStatsContext();
 
-  const thisPeriodEvents = useEventsWithinTimeRange(
-    activeRange,
-    "this",
-    "event_start",
-    true,
-    props.createdByUserUuid,
+  const goal = getGoal("gross_margin_percent");
+
+  // Revenue uses the same filter as the "revenue" template — status === "booked" + event_start in range
+  const thisRevenueFiltered = useMemo(
+    () => filterQuotesBookingsEvents(allEvents, filtersForTemplate("revenue", activeRange, "this", null, periodStart), timezone),
+    [allEvents, activeRange, periodStart, timezone],
   );
-  const lastPeriodEvents = useEventsWithinTimeRange(
-    activeRange,
-    "last",
-    "event_start",
-    true,
-    props.createdByUserUuid,
-  );
-  const thisPeriodWorkTrackers = useWorkTrackersWithinTimeRange(
-    activeRange,
-    "this",
-    props.accountManagerUuid,
-  );
-  const lastPeriodWorkTrackers = useWorkTrackersWithinTimeRange(
-    activeRange,
-    "last",
-    props.accountManagerUuid,
+  const lastRevenueFiltered = useMemo(
+    () => filterQuotesBookingsEvents(allEvents, filtersForTemplate("revenue", activeRange, "last", null, periodStart), timezone),
+    [allEvents, activeRange, periodStart, timezone],
   );
 
-  const { goal } = useTargets(activeRange, "gross_margin_percent", props.accountManagerUuid);
-
-  const thisRevenue = useMemo(
-    () => thisPeriodEvents.reduce((sum, e) => sum + (e.contract_revenue_cents ?? 0) / 100, 0),
-    [thisPeriodEvents],
+  const thisRevenueCumulative = useMemo(
+    () => cumulativeEventCentsByDay(thisPeriodDays, thisRevenueFiltered, "event_start", "contract_revenue_cents", timezone),
+    [thisPeriodDays, thisRevenueFiltered, timezone],
   );
-  const thisCOGS = useMemo(
-    () => thisPeriodWorkTrackers.reduce((sum, wt) => sum + (wt.pay_cents ?? 0) / 100, 0),
-    [thisPeriodWorkTrackers],
-  );
-  const lastRevenue = useMemo(
-    () => lastPeriodEvents.reduce((sum, e) => sum + (e.contract_revenue_cents ?? 0) / 100, 0),
-    [lastPeriodEvents],
-  );
-  const lastCOGS = useMemo(
-    () => lastPeriodWorkTrackers.reduce((sum, wt) => sum + (wt.pay_cents ?? 0) / 100, 0),
-    [lastPeriodWorkTrackers],
+  const lastRevenueCumulative = useMemo(
+    () => cumulativeEventCentsByDay(lastPeriodDays, lastRevenueFiltered, "event_start", "contract_revenue_cents", timezone),
+    [lastPeriodDays, lastRevenueFiltered, timezone],
   );
 
-  const currentMarginRaw = roundToTwo(((thisRevenue - thisCOGS) / thisRevenue) * 100);
-  const lastMarginRaw = roundToTwo(((lastRevenue - lastCOGS) / lastRevenue) * 100);
+  const thisDriverPayCumulative = useMemo(
+    () => cumulativeWorkTrackerPayByDay(thisPeriodDays, allWorkTrackers, timezone),
+    [thisPeriodDays, allWorkTrackers, timezone],
+  );
+  const lastDriverPayCumulative = useMemo(
+    () => cumulativeWorkTrackerPayByDay(lastPeriodDays, allWorkTrackers, timezone),
+    [lastPeriodDays, allWorkTrackers, timezone],
+  );
+
+  // Read at currentDay (not end-of-period) so gross margin matches the
+  // same point-in-time as the driver pay card and revenue card.
+  const thisRevenue = thisRevenueCumulative[currentDay] ?? 0;
+  const thisDriverPay = thisDriverPayCumulative[currentDay] ?? 0;
+  const lastRevenue = lastRevenueCumulative[lastPeriodDays[lastPeriodDays.length - 1]] ?? 0;
+  const lastDriverPay = lastDriverPayCumulative[lastPeriodDays[lastPeriodDays.length - 1]] ?? 0;
+
+  const currentMarginRaw = roundToTwo(((thisRevenue - thisDriverPay) / thisRevenue) * 100);
+  const lastMarginRaw = roundToTwo(((lastRevenue - lastDriverPay) / lastRevenue) * 100);
   const currentMargin = isFinite(currentMarginRaw) ? currentMarginRaw : 0;
   const lastMargin = isFinite(lastMarginRaw) ? lastMarginRaw : 0;
-
-  console.log("current margin", currentMargin, "last margin", lastMargin, "goal", goal);
 
   return {
     thisPeriod: {
       current: currentMargin,
       goal,
+      revenueDollars: thisRevenue,
+      driverPayDollars: thisDriverPay,
     },
     lastPeriod: {
       value: lastMargin,

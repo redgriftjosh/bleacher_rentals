@@ -13,7 +13,7 @@ export function main(
     initialScrollX?: number | null;
     initialScrollY?: number | null;
     filters?: DashboardFilterState;
-  }
+  },
 ) {
   PngManager.fetchAndCachePng(app);
   return new Dashboard(app, {

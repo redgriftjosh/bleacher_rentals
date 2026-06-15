@@ -1,0 +1,765 @@
+{
+  "info": {
+    "name": "API Security Tests",
+    "description": "Test auth guards on all API routes.\n\n**Setup:**\n1. Go to Variables tab and set `base_url`\n2. Log in as admin in browser, run `await window.Clerk.session.getToken()` in console, paste into `admin_token`\n3. Log in as AM, do the same, paste into `am_token`\n\nTokens expire in ~60s — refresh as needed.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "am_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "connection_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Admin-Only Routes",
+      "description": "These routes require `requireAdmin()`. Admin → 200, AM → 403, No token → 401.",
+      "item": [
+        {
+          "name": "QBO Connections",
+          "item": [
+            {
+              "name": "GET connections (admin)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/connections",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "connections"]
+                }
+              }
+            },
+            {
+              "name": "GET connections (AM — expect 403)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/connections",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "connections"]
+                }
+              }
+            },
+            {
+              "name": "GET connections (no token — expect 401)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/connections",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "connections"]
+                }
+              }
+            },
+            {
+              "name": "POST connections (admin)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"displayName\": \"Postman Test Connection\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/connections",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "connections"]
+                }
+              }
+            },
+            {
+              "name": "POST connections (AM — expect 403)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"displayName\": \"Postman Test Connection\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/connections",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "connections"]
+                }
+              }
+            },
+            {
+              "name": "PATCH connections (AM — expect 403)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"connectionId\": \"{{connection_id}}\",\n  \"displayName\": \"Hacked Name\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/connections",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "connections"]
+                }
+              }
+            },
+            {
+              "name": "DELETE connections (AM — expect 403)",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/connections?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "connections"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "QBO Connection Health",
+          "item": [
+            {
+              "name": "GET health (admin)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/connections/health?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "connections", "health"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET health (AM — expect 403)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/connections/health?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "connections", "health"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "QBO Auth (OAuth init)",
+          "item": [
+            {
+              "name": "GET auth (admin)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/auth?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "auth"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET auth (AM — expect 403)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/auth?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "auth"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET auth (no token — expect 401)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/auth?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "auth"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "QBO Tax Codes",
+          "item": [
+            {
+              "name": "GET tax-codes (admin)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/tax-codes?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "tax-codes"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET tax-codes (AM — expect 403)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/tax-codes?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "tax-codes"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invite",
+          "item": [
+            {
+              "name": "POST invite (admin)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"test-postman@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/invite",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "invite"]
+                }
+              }
+            },
+            {
+              "name": "POST invite (AM — expect 403)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"test-postman@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/invite",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "invite"]
+                }
+              }
+            },
+            {
+              "name": "POST invite (no token — expect 401)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"test-postman@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/invite",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "invite"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Authenticated Routes",
+      "description": "These routes require `requireAuth()`. Any logged-in user → 200, No token → 401.",
+      "item": [
+        {
+          "name": "QBO Accounts",
+          "item": [
+            {
+              "name": "GET accounts (AM)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/accounts?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "accounts"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET accounts (no token — expect 401)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/accounts?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "accounts"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "QBO Classes",
+          "item": [
+            {
+              "name": "GET classes (AM)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/classes?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "classes"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET classes (no token — expect 401)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/classes?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "classes"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "QBO Vendors",
+          "item": [
+            {
+              "name": "GET vendors (AM)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/vendors?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "vendors"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET vendors (no token — expect 401)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/vendors?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "vendors"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "QBO Payments",
+          "item": [
+            {
+              "name": "GET payments (AM)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/payments?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "payments"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET payments (no token — expect 401)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/payments?connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "payments"],
+                  "query": [
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "QBO Get Bill",
+          "item": [
+            {
+              "name": "GET bill (AM)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/get-bill?billId=123&connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "get-bill"],
+                  "query": [
+                    {
+                      "key": "billId",
+                      "value": "123"
+                    },
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET bill (no token — expect 401)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/quickbooks/get-bill?billId=123&connectionId={{connection_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "quickbooks", "get-bill"],
+                  "query": [
+                    {
+                      "key": "billId",
+                      "value": "123"
+                    },
+                    {
+                      "key": "connectionId",
+                      "value": "{{connection_id}}"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Distance",
+          "item": [
+            {
+              "name": "GET distance (AM)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/distance?origin=New York, NY&dest=Los Angeles, CA",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "distance"],
+                  "query": [
+                    {
+                      "key": "origin",
+                      "value": "New York, NY"
+                    },
+                    {
+                      "key": "dest",
+                      "value": "Los Angeles, CA"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET distance (no token — expect 401)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/distance?origin=New York, NY&dest=Los Angeles, CA",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "distance"],
+                  "query": [
+                    {
+                      "key": "origin",
+                      "value": "New York, NY"
+                    },
+                    {
+                      "key": "dest",
+                      "value": "Los Angeles, CA"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Linxup Devices",
+          "item": [
+            {
+              "name": "GET devices (AM)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{am_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/linxup/devices",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "linxup", "devices"]
+                }
+              }
+            },
+            {
+              "name": "GET devices (no token — expect 401)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/linxup/devices",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "linxup", "devices"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

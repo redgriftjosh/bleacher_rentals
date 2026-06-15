@@ -51,6 +51,6 @@ export const createServiceRoleClient = async () => {
           }
         },
       },
-    }
+    },
   );
 };

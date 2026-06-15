@@ -71,7 +71,7 @@ export async function loadEventById(
     setField("teardownEnd", eventData.teardown_end ?? "");
     setField("sameDayTeardown", !eventData.teardown_end);
     setField("lenient", eventData.lenient);
-    setField("selectedStatus", eventData.event_status ?? (eventData.booked ? "booked" : "quoted"));
+    setField("selectedStatus", eventData.event_status ?? "quoted");
     setField("contractRevenueCents", eventData.contract_revenue_cents ?? null);
     setField("notes", eventData.notes ?? "");
     setField("mustBeClean", eventData.must_be_clean);
@@ -81,6 +81,7 @@ export async function loadEventById(
     setField("goodshuffleUrl", eventData.goodshuffle_url);
     setField("ownerUserUuid", eventData.created_by_user_uuid ?? null);
     setField("bookedAt", eventData.booked_at ? eventData.booked_at.split("T")[0] : null);
+    setField("createdAt", eventData.created_at ?? null);
   } catch (error) {
     console.error("Failed to load event:", error);
   }

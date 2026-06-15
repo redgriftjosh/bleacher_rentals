@@ -5,39 +5,48 @@ import { useEffect, useRef, useState } from "react";
 import { useSelectedBlockStore } from "../state/useSelectedBlock";
 import { Tables } from "../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
-import {
-  saveBlockPowerSync,
-  deleteBlockPowerSync,
-} from "../db/powersync/blocks";
+import { useQueryClient } from "@tanstack/react-query";
+import { deleteBlock, saveBlock } from "../db/client/db";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
 import { useUser } from "@clerk/nextjs";
 import { useUsersStore } from "@/state/userStore";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
+import { isBleacherOwnedByAM } from "@/features/userAccess/logic/isBleacherOwnedByAM";
+import { canEditCell as canEditCellFn } from "@/features/userAccess/logic/canEditCell";
 
 type CellEditorProps = {
   onWorkTrackerOpen?: (workTracker: Tables<"WorkTrackers">) => void;
 };
 
 export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
+  const qc = useQueryClient();
+  const supabase = useClerkSupabaseClient();
   const { user } = useUser();
   const users = useUsersStore((s) => s.users);
-  const {
-    isOpen,
-    key,
-    blockUuid,
+  const { isOpen, key, blockUuid, bleacherUuid, date, text, workTrackerUuid, setField, resetForm } =
+    useSelectedBlockStore();
+
+  // ── Permissions: determine if user can edit this cell ──
+  const perms = usePermissionsStore();
+  const dashBleachers = useDashboardBleachersStore((s) => s.data);
+  const isViewer = !perms.isAdmin && !perms.isAccountManager;
+  const bl = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid) ?? null;
+  const canEditCell = canEditCellFn({
+    isAdmin: perms.isAdmin,
+    isAccountManager: perms.isAccountManager,
+    accountManagerId: perms.accountManagerId,
     bleacherUuid,
-    date,
-    text,
-    workTrackerUuid,
-    setField,
-    resetForm,
-  } = useSelectedBlockStore();
+    bleacher: bl
+      ? {
+          summerAccountManagerUuid: bl.summerAccountManagerUuid,
+          winterAccountManagerUuid: bl.winterAccountManagerUuid,
+        }
+      : null,
+  });
 
   const [currentText, setCurrentText] = useState(text);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -63,7 +72,13 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         text: currentText,
         workTrackerUuid,
       };
-      await saveBlockPowerSync(editBlock);
+      await saveBlock(editBlock, supabase);
+      // Refresh bleachers store directly so Pixi updates without remounting
+      try {
+        const { FetchDashboardBleachers } =
+          await import("@/features/dashboard/db/client/bleachers");
+        await FetchDashboardBleachers(supabase);
+      } catch {}
       resetForm();
     } catch (error) {
       console.error("Failed to Save Block:", error);
@@ -82,7 +97,13 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         text: currentText,
         workTrackerUuid,
       };
-      await deleteBlockPowerSync(editBlock);
+      await deleteBlock(editBlock, supabase);
+      // Refresh bleachers store directly so Pixi updates without remounting
+      try {
+        const { FetchDashboardBleachers } =
+          await import("@/features/dashboard/db/client/bleachers");
+        await FetchDashboardBleachers(supabase);
+      } catch {}
       resetForm();
     } catch (error) {
       console.error("Failed to Delete Block:", error);
@@ -91,9 +112,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
 
   const handleOpenWorkTracker = () => {
     if (!date || !bleacherUuid) {
-      createErrorToast([
-        "Failed to open work tracker. Missing date or bleacher id.",
-      ]);
+      createErrorToast(["Failed to open work tracker. Missing date or bleacher id."]);
       return;
     }
 
@@ -102,6 +121,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       bleacher_uuid: bleacherUuid,
       created_at: "",
       updated_at: "",
+      created_by_user_uuid: null,
       date: date,
       status: "draft",
       dropoff_address_uuid: null,
@@ -138,10 +158,26 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
 
   const handleCreateEvent = () => {
     if (!date || !bleacherUuid) {
-      createErrorToast([
-        "Failed to create event. Missing date or bleacher id.",
-      ]);
+      createErrorToast(["Failed to create event. Missing date or bleacher id."]);
       return;
+    }
+
+    // AM can only create events with own bleachers
+    const perms = usePermissionsStore.getState();
+    if (perms.isAccountManager && !perms.isAdmin) {
+      const dashBleachers = useDashboardBleachersStore.getState().data;
+      const bleacher = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid);
+      if (
+        bleacher &&
+        !isBleacherOwnedByAM({
+          summerAccountManagerUuid: bleacher.summerAccountManagerUuid,
+          winterAccountManagerUuid: bleacher.winterAccountManagerUuid,
+          currentAccountManagerId: perms.accountManagerId,
+        })
+      ) {
+        createErrorToast(["You can only create events with bleachers assigned to you."]);
+        return;
+      }
     }
 
     const eventStore = useCurrentEventStore.getState();
@@ -176,10 +212,28 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
 
   const handleCreateMaintenance = () => {
     if (!date || !bleacherUuid) {
-      createErrorToast([
-        "Failed to create maintenance event. Missing date or bleacher id.",
-      ]);
+      createErrorToast(["Failed to create maintenance event. Missing date or bleacher id."]);
       return;
+    }
+
+    // AM can only create maintenance events with own bleachers
+    const perms = usePermissionsStore.getState();
+    if (perms.isAccountManager && !perms.isAdmin) {
+      const dashBleachers = useDashboardBleachersStore.getState().data;
+      const bleacher = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid);
+      if (
+        bleacher &&
+        !isBleacherOwnedByAM({
+          summerAccountManagerUuid: bleacher.summerAccountManagerUuid,
+          winterAccountManagerUuid: bleacher.winterAccountManagerUuid,
+          currentAccountManagerId: perms.accountManagerId,
+        })
+      ) {
+        createErrorToast([
+          "You can only create maintenance events with bleachers assigned to you.",
+        ]);
+        return;
+      }
     }
 
     const maintenanceStore = useMaintenanceEventStore.getState();
@@ -251,10 +305,18 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
 
         <textarea
           ref={textareaRef}
-          className="w-full text-sm border p-2 rounded mb-4"
+          className={`w-full text-sm border p-2 rounded mb-4 ${!canEditCell ? "bg-gray-50 text-gray-700" : ""}`}
           value={currentText}
           onChange={(e) => setCurrentText(e.target.value)}
+          readOnly={!canEditCell}
           onKeyDown={(e) => {
+            if (!canEditCell) {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                handleClose();
+              }
+              return;
+            }
             const isModifier = e.shiftKey || e.metaKey || e.ctrlKey || e.altKey;
 
             if (e.key === "Enter" && !isModifier) {
@@ -271,71 +333,77 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         />
 
         <div className="flex justify-between gap-2">
-          <TooltipProvider delayDuration={0}>
-            <div className="flex gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    aria-label="Work Tracker"
-                    className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
-                    onClick={handleOpenWorkTracker}
-                  >
-                    <Truck className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="z-[1100]">
-                  Work Tracker
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    aria-label="Create Event"
-                    className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
-                    onClick={handleCreateEvent}
-                  >
-                    <CalendarPlus className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="z-[1100]">
-                  Create Event
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    aria-label="Maintenance"
-                    className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-red-700 hover:bg-gray-100 transition-all duration-200"
-                    onClick={handleCreateMaintenance}
-                  >
-                    <Wrench className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="z-[1100]">
-                  Maintenance
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </TooltipProvider>
+          {/* Action buttons: hidden for viewer */}
+          {!isViewer && (
+            <TooltipProvider delayDuration={0}>
+              <div className="flex gap-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      aria-label="Work Tracker"
+                      className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
+                      onClick={handleOpenWorkTracker}
+                    >
+                      <Truck className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="z-[1100]">
+                    Work Tracker
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      aria-label="Create Event"
+                      className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
+                      onClick={handleCreateEvent}
+                    >
+                      <CalendarPlus className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="z-[1100]">
+                    Create Event
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      aria-label="Maintenance"
+                      className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-red-700 hover:bg-gray-100 transition-all duration-200"
+                      onClick={handleCreateMaintenance}
+                    >
+                      <Wrench className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="z-[1100]">
+                    Maintenance
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
+          )}
+          {isViewer && <div />}
 
-          <div className="flex gap-2">
-            {blockUuid && (
+          {canEditCell && (
+            <div className="flex gap-2">
+              {blockUuid && (
+                <button
+                  className="flex items-center gap-1 text-sm text-gray-500 px-3 py-1 rounded bg-gray-200 cursor-pointer hover:bg-red-900/20 hover:text-red-700 hover:border-red-700 border-1 border-gray-200 transition-all duration-200"
+                  onClick={handleDelete}
+                >
+                  <Trash className="h-4 w-4" />
+                  Delete
+                </button>
+              )}
               <button
-                className="flex items-center gap-1 text-sm text-gray-500 px-3 py-1 rounded bg-gray-200 cursor-pointer hover:bg-red-900/20 hover:text-red-700 hover:border-red-700 border-1 border-gray-200 transition-all duration-200"
-                onClick={handleDelete}
+                className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-darkBlue text-white cursor-pointer hover:bg-lightBlue transition-all duration-200"
+                onClick={handleSave}
               >
-                <Trash className="h-4 w-4" />
-                Delete
+                <Check className="h-4 w-4" />
+                Save
               </button>
-            )}
-            <button
-              className="flex items-center gap-1 text-sm px-3 py-1 rounded bg-darkBlue text-white cursor-pointer hover:bg-lightBlue transition-all duration-200"
-              onClick={handleSave}
-            >
-              <Check className="h-4 w-4" />
-              Save
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

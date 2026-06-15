@@ -1,20 +1,15 @@
 import { getBaseUrl, getQboAccessTokenAndRealmId } from "@/features/quickbooks-integration/util";
-import { auth } from "@clerk/nextjs/server";
+import { requireAuth } from "@/features/userAccess/logic/requireAuth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-  // Require authentication
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const connectionId = req.nextUrl.searchParams.get("connectionId");
-  if (!connectionId) {
-    return NextResponse.json({ error: "connectionId is required" }, { status: 400 });
-  }
-
   try {
+    await requireAuth();
+
+    const connectionId = req.nextUrl.searchParams.get("connectionId");
+    if (!connectionId) {
+      return NextResponse.json({ error: "connectionId is required" }, { status: 400 });
+    }
     const { accessToken, realmId } = await getQboAccessTokenAndRealmId(connectionId);
     const baseUrl = getBaseUrl();
 
@@ -60,6 +55,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ vendors: formattedVendors });
   } catch (error: any) {
+    if (error instanceof Response) return error;
     console.error("QuickBooks vendors error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

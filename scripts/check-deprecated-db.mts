@@ -28,7 +28,7 @@ function generateDeprecationPatterns() {
     patterns.push({
       pattern: new RegExp(
         `\\.from\\(["']${table}["']\\)[^;{]*\\.select\\([^)]*["']${column}["']`,
-        "gs"
+        "gs",
       ),
       message: `Column "${table}.${column}" is deprecated in SELECT. ${reason}`,
     });

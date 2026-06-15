@@ -12,15 +12,17 @@ import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient"
 // ─── Region badge ─────────────────────────────────────────────────────────────
 
 const REGION_STYLES: Record<string, { label: string; className: string }> = {
-  CAN:  { label: "CAN",      className: "bg-red-100 text-red-700 border border-red-200" },
-  US:   { label: "US",       className: "bg-blue-100 text-blue-700 border border-blue-200" },
+  CAN: { label: "CAN", className: "bg-red-100 text-red-700 border border-red-200" },
+  US: { label: "US", className: "bg-blue-100 text-blue-700 border border-blue-200" },
   Both: { label: "CAN & US", className: "bg-green-100 text-green-700 border border-green-200" },
 };
 
 function RegionBadge({ region }: { region: string | null }) {
   const cfg = REGION_STYLES[region ?? "Both"] ?? REGION_STYLES["Both"];
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${cfg.className}`}>
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${cfg.className}`}
+    >
       {cfg.label}
     </span>
   );
@@ -51,11 +53,13 @@ function EditSheet({ initial, onClose }: { initial: BlueBookData; onClose: () =>
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const set = (field: keyof FormState, value: any) =>
-    setForm((f) => ({ ...f, [field]: value }));
+  const set = (field: keyof FormState, value: any) => setForm((f) => ({ ...f, [field]: value }));
 
   const handleSave = async () => {
-    if (!form.name.trim()) { setError("Name is required."); return; }
+    if (!form.name.trim()) {
+      setError("Name is required.");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -94,10 +98,16 @@ function EditSheet({ initial, onClose }: { initial: BlueBookData; onClose: () =>
         <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-4">
             <div className="grid grid-cols-5 items-center gap-4">
-              <label className="text-right text-sm font-medium col-span-2">Name <span className="text-red-500">*</span></label>
-              <input type="text" value={form.name} onChange={(e) => set("name", e.target.value)}
+              <label className="text-right text-sm font-medium col-span-2">
+                Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => set("name", e.target.value)}
                 placeholder="e.g. Driver Checklist"
-                className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0" />
+                className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+              />
             </div>
 
             {/* Document PDF Upload */}
@@ -117,17 +127,13 @@ function EditSheet({ initial, onClose }: { initial: BlueBookData; onClose: () =>
             </div>
 
             <div className="grid grid-cols-5 items-start gap-4">
-              <label className="text-right text-sm font-medium col-span-2 pt-2">
-                Link
-              </label>
+              <label className="text-right text-sm font-medium col-span-2 pt-2">Link</label>
 
               <div className="col-span-3 space-y-2">
                 {/* Deprecation warning */}
                 <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md px-3 py-2 text-xs">
                   <span className="font-bold">⚠️</span>
-                  <span>
-                    This feature is deprecated and will be removed in a future release.
-                  </span>
+                  <span>This feature is deprecated and will be removed in a future release.</span>
                 </div>
 
                 <input
@@ -142,19 +148,28 @@ function EditSheet({ initial, onClose }: { initial: BlueBookData; onClose: () =>
 
             <div className="grid grid-cols-5 items-start gap-4">
               <label className="text-right text-sm font-medium col-span-2 pt-2">Description</label>
-              <textarea value={form.description} onChange={(e) => set("description", e.target.value)}
-                placeholder="Brief description..." rows={3}
-                className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0 resize-none" />
+              <textarea
+                value={form.description}
+                onChange={(e) => set("description", e.target.value)}
+                placeholder="Brief description..."
+                rows={3}
+                className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0 resize-none"
+              />
             </div>
 
             <div className="grid grid-cols-5 items-center gap-4">
               <label className="text-right text-sm font-medium col-span-2">Region</label>
               <div className="col-span-3 flex gap-1">
                 {(["Both", "CAN", "US"] as const).map((r) => (
-                  <button key={r} onClick={() => set("region", r)}
+                  <button
+                    key={r}
+                    onClick={() => set("region", r)}
                     className={`flex-1 py-1.5 rounded-md text-xs font-semibold border transition-all ${
-                      form.region === r ? "bg-darkBlue text-white border-darkBlue" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-                    }`}>
+                      form.region === r
+                        ? "bg-darkBlue text-white border-darkBlue"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                    }`}
+                  >
                     {r}
                   </button>
                 ))}
@@ -164,33 +179,49 @@ function EditSheet({ initial, onClose }: { initial: BlueBookData; onClose: () =>
             <div className="grid grid-cols-5 items-center gap-4">
               <label className="text-right text-sm font-medium col-span-2">Sort Order</label>
               <div className="col-span-3">
-                <input type="number" value={form.sort_order}
+                <input
+                  type="number"
+                  value={form.sort_order}
                   onChange={(e) => set("sort_order", parseInt(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0" />
-                <p className="text-xs text-gray-400 mt-1">Lower = appears first. Use multiples of 10.</p>
+                  className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Lower = appears first. Use multiples of 10.
+                </p>
               </div>
             </div>
 
             <div className="grid grid-cols-5 items-center gap-4">
               <label className="text-right text-sm font-medium col-span-2">Active</label>
               <div className="col-span-3 flex items-center gap-3">
-                <button onClick={() => set("is_active", !form.is_active)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.is_active ? "bg-green-500" : "bg-gray-300"}`}>
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${form.is_active ? "translate-x-6" : "translate-x-1"}`} />
+                <button
+                  onClick={() => set("is_active", !form.is_active)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.is_active ? "bg-green-500" : "bg-gray-300"}`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${form.is_active ? "translate-x-6" : "translate-x-1"}`}
+                  />
                 </button>
-                <span className="text-sm text-gray-500">{form.is_active ? "Visible to drivers" : "Hidden from drivers"}</span>
+                <span className="text-sm text-gray-500">
+                  {form.is_active ? "Visible to drivers" : "Hidden from drivers"}
+                </span>
               </div>
             </div>
 
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                {error}
+              </p>
             )}
           </div>
         </div>
 
         <div className="p-6 border-t flex justify-end">
-          <button onClick={handleSave} disabled={saving}
-            className="px-4 py-2 bg-darkBlue text-white rounded-md hover:bg-lightBlue transition-colors cursor-pointer disabled:opacity-50">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-4 py-2 bg-darkBlue text-white rounded-md hover:bg-lightBlue transition-colors cursor-pointer disabled:opacity-50"
+          >
             {saving ? "Saving…" : "Save Changes"}
           </button>
         </div>
@@ -223,15 +254,21 @@ function DeleteDialog({ entry, onClose }: { entry: BlueBookData; onClose: () => 
           <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Entry</h3>
           <p className="text-sm text-gray-500 mb-6">
             Are you sure you want to delete{" "}
-            <span className="font-semibold text-gray-800">"{entry.name}"</span>? This cannot be undone.
+            <span className="font-semibold text-gray-800">"{entry.name}"</span>? This cannot be
+            undone.
           </p>
           <div className="flex gap-3">
-            <button onClick={onClose}
-              className="flex-1 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+            <button
+              onClick={onClose}
+              className="flex-1 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+            >
               Cancel
             </button>
-            <button onClick={handleDelete} disabled={deleting}
-              className="flex-1 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-50">
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex-1 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-50"
+            >
               {deleting ? "Deleting…" : "Delete"}
             </button>
           </div>
@@ -267,12 +304,24 @@ export default function BlueBookPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide w-8">#</th>
-                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Name</th>
-                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Attachment</th>
-                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Link</th>
-                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Region</th>
-                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Status</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide w-8">
+                  #
+                </th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">
+                  Name
+                </th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">
+                  Attachment
+                </th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">
+                  Link
+                </th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">
+                  Region
+                </th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">
+                  Status
+                </th>
                 <th className="px-5 py-3 w-24" />
               </tr>
             </thead>
@@ -281,17 +330,26 @@ export default function BlueBookPage() {
                 const handlePdfClick = (e: React.MouseEvent) => {
                   e.stopPropagation();
                   if (!entry.document_path) return;
-                  const { data } = supabase.storage.from("documents").getPublicUrl(entry.document_path);
+                  const { data } = supabase.storage
+                    .from("documents")
+                    .getPublicUrl(entry.document_path);
                   window.open(data.publicUrl, "_blank");
                 };
 
                 return (
-                  <tr key={entry.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors">
-                    <td className="px-5 py-3.5 text-gray-300 font-mono text-xs">{entry.sort_order}</td>
+                  <tr
+                    key={entry.id}
+                    className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors"
+                  >
+                    <td className="px-5 py-3.5 text-gray-300 font-mono text-xs">
+                      {entry.sort_order}
+                    </td>
                     <td className="px-5 py-3.5">
                       <p className="font-semibold text-gray-900">{entry.name}</p>
                       {entry.description && (
-                        <p className="text-xs text-gray-400 mt-0.5 max-w-xs truncate">{entry.description}</p>
+                        <p className="text-xs text-gray-400 mt-0.5 max-w-xs truncate">
+                          {entry.description}
+                        </p>
                       )}
                     </td>
                     <td className="p-3 text-left">
@@ -310,34 +368,46 @@ export default function BlueBookPage() {
                     </td>
                     <td className="px-5 py-3.5">
                       {entry.link ? (
-                        <a href={entry.link} target="_blank" rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline text-xs font-medium">
+                        <a
+                          href={entry.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-xs font-medium"
+                        >
                           Open ↗
                         </a>
                       ) : (
                         <span className="text-xs text-gray-300 italic">No link</span>
                       )}
                     </td>
-                    <td className="px-5 py-3.5"><RegionBadge region={entry.region} /></td>
+                    <td className="px-5 py-3.5">
+                      <RegionBadge region={entry.region} />
+                    </td>
                     <td className="px-5 py-3.5">
                       {entry.is_active !== 0 ? (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" /> Active
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />{" "}
+                          Active
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400">
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300 inline-block" /> Inactive
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300 inline-block" />{" "}
+                          Inactive
                         </span>
                       )}
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2 justify-end">
-                        <button onClick={() => setEditTarget(entry)}
-                          className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors px-2 py-1 rounded hover:bg-blue-50">
+                        <button
+                          onClick={() => setEditTarget(entry)}
+                          className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors px-2 py-1 rounded hover:bg-blue-50"
+                        >
                           Edit
                         </button>
-                        <button onClick={() => setDeleteTarget(entry)}
-                          className="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded hover:bg-red-50">
+                        <button
+                          onClick={() => setDeleteTarget(entry)}
+                          className="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded hover:bg-red-50"
+                        >
                           Delete
                         </button>
                       </div>

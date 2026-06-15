@@ -24,7 +24,7 @@ export async function deleteInviteUserEmail(email: string): Promise<boolean> {
         }),
       {
         duration: 10000, // 20 seconds
-      }
+      },
     );
     return false;
   }

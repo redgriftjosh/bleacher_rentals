@@ -1,23 +1,40 @@
 import { DateTime } from "luxon";
 
+/**
+ * Check if a date value falls within a from/to range.
+ *
+ * When a timezone is provided, the value is converted to that timezone before
+ * comparison — so "which day does this timestamp fall on?" is answered
+ * consistently regardless of the browser's local timezone.
+ *
+ * This is the single source of truth for date filtering across the app
+ * (quotes & bookings page, scorecard, etc.).
+ */
 export function isWithinRange(
   value: string | null,
   from: string | null,
   to: string | null,
+  timezone?: string,
 ): boolean {
   if (!from && !to) return true;
   if (!value) return false;
 
-  const date = DateTime.fromISO(value);
+  const date = timezone
+    ? DateTime.fromISO(value, { zone: timezone })
+    : DateTime.fromISO(value);
   if (!date.isValid) return false;
 
   if (from) {
-    const fromDate = DateTime.fromISO(from);
+    const fromDate = timezone
+      ? DateTime.fromISO(from, { zone: timezone })
+      : DateTime.fromISO(from);
     if (fromDate.isValid && date < fromDate.startOf("day")) return false;
   }
 
   if (to) {
-    const toDate = DateTime.fromISO(to);
+    const toDate = timezone
+      ? DateTime.fromISO(to, { zone: timezone })
+      : DateTime.fromISO(to);
     if (toDate.isValid && date > toDate.endOf("day")) return false;
   }
 

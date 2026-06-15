@@ -12,7 +12,6 @@ type Row = {
   event_start: string;
   event_end: string;
   hsl_hue: number | null;
-  booked: boolean;
   event_status: Database["public"]["Enums"]["event_status"] | null;
   contract_revenue_cents: number | null;
   goodshuffle_url: string | null;
@@ -40,7 +39,7 @@ type Row = {
 // Includes address, basic fields, and bleacherIds via BleacherEvents. Setup/Teardown-specific text/flags use defaults.
 export async function FetchDashboardEvents(
   supabase: SupabaseClient<Database>,
-  opts?: { onlyMine?: boolean; clerkUserId?: string | null }
+  opts?: { onlyMine?: boolean; clerkUserId?: string | null },
 ): Promise<{ events: DashboardEvent[] }> {
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);
@@ -52,7 +51,6 @@ export async function FetchDashboardEvents(
       event_start,
       event_end,
       hsl_hue,
-      booked,
       event_status,
       contract_revenue_cents,
       goodshuffle_url,
@@ -78,7 +76,7 @@ export async function FetchDashboardEvents(
       )
       `;
 
-  let builder = supabase.from("Events").select(queryString).neq("event_status", "lost");
+  let builder = supabase.from("Events").select(queryString).neq("event_status", "lost").eq("deleted", false);
   if (opts?.onlyMine) {
     const clerkUserId = opts.clerkUserId ?? null;
     if (clerkUserId) {
@@ -128,10 +126,10 @@ export async function FetchDashboardEvents(
     sameDayTeardown: !e.teardown_end,
     lenient: e.lenient,
     token: "",
-    selectedStatus: e.event_status ?? (e.booked ? "booked" : "quoted"),
+    selectedStatus: e.event_status ?? "quoted",
     notes: e.notes ?? "",
     numDays: 0, // optional; compute in UI if needed
-    status: e.event_status ?? (e.booked ? "booked" : "quoted"),
+    status: e.event_status ?? "quoted",
     hslHue: e.hsl_hue,
     alerts: [],
     mustBeClean: e.must_be_clean,
@@ -139,7 +137,7 @@ export async function FetchDashboardEvents(
     goodshuffleUrl: e.goodshuffle_url ?? null,
     ownerUserUuid: e.created_by_user_uuid ?? null,
   }));
-  console.log("FetchDashboardEvents events", events);
+  // console.log("FetchDashboardEvents count:", events.length);
 
   // Push into zustand store so Pixi can subscribe live
   try {

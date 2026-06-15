@@ -136,7 +136,7 @@ export class GoodShuffleIcon extends Container {
       10, // x position (slightly right of center)
       12, // y position (below the icon)
       8, // width radius (slightly wider than icon)
-      8 // height radius (squashed ellipse)
+      8, // height radius (squashed ellipse)
     );
     this.shadowGraphics.fill();
 
@@ -209,7 +209,7 @@ export class GoodShuffleIcon extends Container {
         logoSprite.position.set(0, 0);
         logoSprite.anchor.set(0, 0);
         c.addChild(logoSprite);
-      }
+      },
     );
 
     this.iconSprite.texture = newTexture;
@@ -227,7 +227,7 @@ export class GoodShuffleIcon extends Container {
         fallbackGraphics.roundRect(0, 0, 16, 16, 3); // Rounded rectangle
         fallbackGraphics.fill();
         c.addChild(fallbackGraphics);
-      }
+      },
     );
 
     this.iconSprite.texture = fallbackTexture;
@@ -256,7 +256,7 @@ export class GoodShuffleIcon extends Container {
           logoSprite.position.set(0, 0);
           logoSprite.anchor.set(0, 0);
           c.addChild(logoSprite);
-        }
+        },
       );
 
       // Replace the fallback texture with the real one

@@ -41,8 +41,8 @@ export function BleacherCard({
         isDisabled
           ? "border-gray-200 bg-gray-100 cursor-not-allowed opacity-60"
           : isSelected
-          ? "border-greenAccent bg-greenAccent/10 hover:shadow-md hover:border-greenAccent/50"
-          : "border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md hover:border-greenAccent/50"
+            ? "border-greenAccent bg-greenAccent/10 hover:shadow-md hover:border-greenAccent/50"
+            : "border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md hover:border-greenAccent/50",
       )}
     >
       <div className="flex flex-col items-start">
@@ -52,12 +52,12 @@ export function BleacherCard({
             isDisabled
               ? "text-gray-400"
               : bleacherRows === 7
-              ? "text-green-700"
-              : bleacherRows === 10
-              ? "text-red-700"
-              : bleacherRows === 15
-              ? "text-yellow-500"
-              : ""
+                ? "text-green-700"
+                : bleacherRows === 10
+                  ? "text-red-700"
+                  : bleacherRows === 15
+                    ? "text-yellow-500"
+                    : "",
           )}
         >
           #{bleacherNumber}
@@ -71,7 +71,7 @@ export function BleacherCard({
           <span
             className={cn(
               "font-medium text-xs mr-2",
-              isDisabled ? "text-gray-400" : "text-gray-500"
+              isDisabled ? "text-gray-400" : "text-gray-500",
             )}
           >
             {" "}
@@ -93,7 +93,7 @@ export function BleacherCard({
           <span
             className={cn(
               "font-medium mr-2 text-xs",
-              isDisabled ? "text-gray-400" : "text-amber-500"
+              isDisabled ? "text-gray-400" : "text-amber-500",
             )}
           >
             {homeBaseName}

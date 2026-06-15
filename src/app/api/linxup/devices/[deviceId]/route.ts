@@ -1,5 +1,6 @@
 // app/api/linxup/devices/[deviceId]/route.ts
 import { NextResponse, NextRequest } from "next/server";
+import { requireAuth } from "@/features/userAccess/logic/requireAuth";
 
 const HOST = (process.env.LINXUP_API_HOST || "").replace(/\/+$/, "");
 const TOKEN = process.env.LINXUP_API_TOKEN || "";
@@ -7,13 +8,14 @@ const BASE = `${HOST}/ibis/rest/api/v2`;
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ deviceId: string }> }) {
   try {
+    await requireAuth();
     const { deviceId } = await params;
 
     if (!HOST || !TOKEN) {
       console.error("[linxup] Missing env vars");
       return NextResponse.json(
         { error: "LINXUP_API_HOST or LINXUP_API_TOKEN missing" },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
@@ -42,7 +44,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ devi
         d.imei === deviceId ||
         d.deviceUUID === deviceId ||
         d.deviceSerialNumber === deviceId ||
-        String(d.imei) === deviceId
+        String(d.imei) === deviceId,
     );
 
     if (!device) {
@@ -67,6 +69,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ devi
 
     return NextResponse.json(normalized);
   } catch (e: any) {
+    if (e instanceof Response) return e;
     console.error("[linxup] Error fetching device:", e);
     return NextResponse.json({ error: e?.message ?? "Internal server error" }, { status: 500 });
   }

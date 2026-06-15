@@ -15,6 +15,7 @@ export const DetailsTab = () => {
   const notes = useCurrentEventStore((s) => s.notes);
   const eventId = useCurrentEventStore((s) => s.eventUuid);
   const bookedAt = useCurrentEventStore((s) => s.bookedAt);
+  const createdAt = useCurrentEventStore((s) => s.createdAt);
 
   const [revenueDisplay, setRevenueDisplay] = React.useState(
     contractRevenueCents !== null ? (contractRevenueCents / 100).toFixed(2) : "",
@@ -64,10 +65,23 @@ export const DetailsTab = () => {
                 type="date"
                 className="w-full h-[40px] px-3 py-2 border bg-white rounded text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
                 value={bookedAt?.split("T")[0] ?? ""}
-                onChange={(e) => setField("bookedAt", e.target.value ? e.target.value + "T12:00:00Z" : null)}
+                onChange={(e) =>
+                  setField("bookedAt", e.target.value ? e.target.value + "T12:00:00Z" : null)
+                }
               />
             </div>
           )}
+          <div>
+            <label className="block text-sm font-medium text-black/70">Created At</label>
+            <input
+              type="datetime-local"
+              className="w-full h-[40px] px-3 py-2 border bg-white rounded text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+              value={createdAt ? createdAt.slice(0, 16) : ""}
+              onChange={(e) =>
+                setField("createdAt", e.target.value ? e.target.value + ":00Z" : null)
+              }
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-black/70">Contract Revenue</label>
             <CentsInput

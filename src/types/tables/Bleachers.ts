@@ -6,6 +6,7 @@ export type SelectBleacher = {
   winter_home_base_uuid: string;
   bleacher_rows: number;
   bleacher_seats: number;
+  bleacher_type_uuid: string | null;
   linxup_device_id: string | null;
   summer_account_manager_uuid: string | null;
   winter_account_manager_uuid: string | null;
@@ -26,6 +27,7 @@ export type InsertBleacher = {
   winter_home_base_uuid: string;
   bleacher_rows: number;
   bleacher_seats: number;
+  bleacher_type_uuid?: string | null;
   linxup_device_id?: string | null;
   summer_account_manager_uuid?: string | null;
   winter_account_manager_uuid?: string | null;
@@ -47,6 +49,7 @@ export type UpdateBleacher = {
   winter_home_base_uuid: string;
   bleacher_rows: number;
   bleacher_seats: number;
+  bleacher_type_uuid?: string | null;
   linxup_device_id?: string | null;
   summer_account_manager_uuid?: string | null;
   winter_account_manager_uuid?: string | null;

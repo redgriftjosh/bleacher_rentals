@@ -3,10 +3,7 @@ import { useHomeBasesStore } from "@/state/homeBaseStore";
 import { toast } from "sonner";
 import React from "react";
 import { createErrorToast, ErrorToast } from "@/components/toasts/ErrorToast";
-import {
-  createSuccessToast,
-  SuccessToast,
-} from "@/components/toasts/SuccessToast";
+import { createSuccessToast, SuccessToast } from "@/components/toasts/SuccessToast";
 import {
   AddressData,
   CurrentEventStore,
@@ -29,11 +26,8 @@ import {
   SetupTeardownBlock,
 } from "../../types";
 import { Database, Tables, TablesInsert } from "../../../../../database.types";
-import {
-  calculateEventAlerts,
-  calculateNumDays,
-  checkEventFormRules,
-} from "../../functions";
+import { calculateEventAlerts, calculateNumDays, checkEventFormRules } from "../../functions";
+import { useDashboardEventsStore } from "../../state/useDashboardEventsStore";
 import {
   buildTripDeletedNotification,
   buildTripStatusNotification,
@@ -64,16 +58,10 @@ export function fetchBleachers() {
 
     const formattedBleachers: DashboardBleacher[] = bleachers
       .map((bleacher) => {
-        const homeBase = homeBases.find(
-          (base) => base.id === bleacher.summer_home_base_uuid,
-        );
-        const winterHomeBase = homeBases.find(
-          (base) => base.id === bleacher.winter_home_base_uuid,
-        );
+        const homeBase = homeBases.find((base) => base.id === bleacher.summer_home_base_uuid);
+        const winterHomeBase = homeBases.find((base) => base.id === bleacher.winter_home_base_uuid);
 
-        const relatedWorkTrackers = workTrackers.filter(
-          (wt) => wt.bleacher_uuid === bleacher.id,
-        );
+        const relatedWorkTrackers = workTrackers.filter((wt) => wt.bleacher_uuid === bleacher.id);
 
         const relatedBlocks: DashboardBlock[] = blocks
           .filter((block) => block.bleacher_uuid === bleacher.id)
@@ -128,12 +116,10 @@ export function fetchBleachers() {
               sameDayTeardown: !event.teardown_end, // same logic
               lenient: event.lenient,
               token: "", // not needed or included here
-              selectedStatus:
-                event.event_status ?? (event.booked ? "booked" : "quoted"),
+              selectedStatus: event.event_status,
               notes: event.notes ?? "",
               numDays: calculateNumDays(event.event_start, event.event_end),
-              status:
-                event.event_status ?? (event.booked ? "booked" : "quoted"),
+              status: event.event_status,
               hslHue: event.hsl_hue,
               alerts: relatedAlerts,
               mustBeClean: event.must_be_clean,
@@ -183,14 +169,14 @@ export function fetchDashboardEvents() {
   return useMemo(() => {
     if (!events) return [];
 
-    const dashboardEvents: DashboardEvent[] = events.map((event) => {
+    const activeEvents = events.filter((e) => !e.deleted);
+
+    const dashboardEvents: DashboardEvent[] = activeEvents.map((event) => {
       const address = addresses.find((a) => a.id === event.address_uuid);
       const relatedAlerts = eventAlerts[event.id] || [];
 
       // ✅ Filter out null values from bleacher UUIDs
-      const eventBleachers = bleacherEvents.filter(
-        (be) => be.event_uuid === event.id,
-      );
+      const eventBleachers = bleacherEvents.filter((be) => be.event_uuid === event.id);
       const bleacherUuids = eventBleachers
         .map((be) => be.bleacher_uuid)
         .filter((uuid): uuid is string => uuid !== null); // Type guard to remove nulls
@@ -224,11 +210,10 @@ export function fetchDashboardEvents() {
         sameDayTeardown: !event.teardown_end,
         lenient: event.lenient,
         token: "", // unused
-        selectedStatus:
-          event.event_status ?? (event.booked ? "booked" : "quoted"),
+        selectedStatus: (event.event_status ?? "quoted") as Enums<"event_status">,
         notes: event.notes ?? "",
         numDays: calculateNumDays(event.event_start, event.event_end),
-        status: event.event_status ?? (event.booked ? "booked" : "quoted"),
+        status: (event.event_status ?? "quoted") as Enums<"event_status">,
         hslHue: event.hsl_hue,
         alerts: relatedAlerts,
         mustBeClean: event.must_be_clean,
@@ -268,10 +253,7 @@ async function saveAddress(
       .eq("id", addressUuid);
 
     if (addressError) {
-      createErrorToast([
-        "Failed to update address.",
-        addressError?.message ?? "",
-      ]);
+      createErrorToast(["Failed to update address.", addressError?.message ?? ""]);
     }
     return addressUuid;
   } else {
@@ -287,10 +269,7 @@ async function saveAddress(
       .single();
 
     if (addressError || !addressData) {
-      createErrorToast([
-        "Failed to insert address.",
-        addressError?.message ?? "",
-      ]);
+      createErrorToast(["Failed to insert address.", addressError?.message ?? ""]);
     }
     if (!addressData?.id) {
       createErrorToast(["Inserted an address, but no address_id returned."]);
@@ -299,9 +278,7 @@ async function saveAddress(
   }
 }
 
-export function getAddressFromUuid(
-  addressUuid: string | null,
-): AddressData | null {
+export function getAddressFromUuid(addressUuid: string | null): AddressData | null {
   const addresses = useAddressesStore.getState().addresses;
   if (!addressUuid) return null;
   const address = addresses.find((a) => a.id === addressUuid);
@@ -331,19 +308,13 @@ async function fetchDriverUserUuidByDriverUuid(
   return data?.user_uuid ?? null;
 }
 
-function toNotificationAddress(
-  address: AddressData | null,
-  fallback: string,
-): string {
+function toNotificationAddress(address: AddressData | null, fallback: string): string {
   const formatted = (address?.address ?? "").trim();
   if (formatted.length > 0) return formatted;
   return fallback;
 }
 
-function toNotificationCity(
-  address: AddressData | null,
-  fallback?: string,
-): string | undefined {
+function toNotificationCity(address: AddressData | null, fallback?: string): string | undefined {
   const formatted = (address?.city ?? "").trim();
   if (formatted.length > 0) return formatted;
 
@@ -356,11 +327,7 @@ export async function fetchAddressFromUuid(
   supabase: SupabaseClient<Database>,
   isServer?: boolean,
 ): Promise<Tables<"Addresses"> | null> {
-  const { data, error } = await supabase
-    .from("Addresses")
-    .select("*")
-    .eq("id", uuid)
-    .single();
+  const { data, error } = await supabase.from("Addresses").select("*").eq("id", uuid).single();
 
   if (error) {
     if (isServer) {
@@ -385,30 +352,19 @@ export async function saveWorkTracker(
     previousDropoffAddress?: string;
     previousDropoffCity?: string;
   },
-): Promise<string | null> {
+): Promise<void> {
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);
   }
   if (!workTracker) {
-    createErrorToast([
-      "Failed to save work tracker. No work tracker provided.",
-    ]);
+    createErrorToast(["Failed to save work tracker. No work tracker provided."]);
   }
   // const payCents = Math.round(payInput * 100);
 
-  let savedId: string | null = workTracker.id !== "-1" ? workTracker.id : null;
   let pickUpAddressUuid: string | null = workTracker.pickup_address_uuid;
   let dropOffAddressUuid: string | null = workTracker.dropoff_address_uuid;
-  pickUpAddressUuid = await saveAddress(
-    pickUpAddress,
-    pickUpAddressUuid,
-    supabase,
-  );
-  dropOffAddressUuid = await saveAddress(
-    dropOffAddress,
-    dropOffAddressUuid,
-    supabase,
-  );
+  pickUpAddressUuid = await saveAddress(pickUpAddress, pickUpAddressUuid, supabase);
+  dropOffAddressUuid = await saveAddress(dropOffAddress, dropOffAddressUuid, supabase);
 
   const wasInsert = workTracker.id === "-1";
   const previousStatus = options?.previousStatus ?? "draft";
@@ -417,18 +373,12 @@ export async function saveWorkTracker(
     pickUpAddress,
     options?.previousPickupAddress ?? "an unknown pickup location",
   );
-  const pickupCityText = toNotificationCity(
-    pickUpAddress,
-    options?.previousPickupCity,
-  );
+  const pickupCityText = toNotificationCity(pickUpAddress, options?.previousPickupCity);
   const dropoffAddressText = toNotificationAddress(
     dropOffAddress,
     options?.previousDropoffAddress ?? "an unknown dropoff location",
   );
-  const dropoffCityText = toNotificationCity(
-    dropOffAddress,
-    options?.previousDropoffCity,
-  );
+  const dropoffCityText = toNotificationCity(dropOffAddress, options?.previousDropoffCity);
 
   if (!wasInsert) {
     const { error: workTrackerError } = await supabase
@@ -459,10 +409,7 @@ export async function saveWorkTracker(
       .eq("id", workTracker.id);
 
     if (workTrackerError) {
-      createErrorToast([
-        "Failed to update work tracker.",
-        workTrackerError?.message ?? "",
-      ]);
+      createErrorToast(["Failed to update work tracker.", workTrackerError?.message ?? ""]);
     }
   } else {
     const { data: workTrackerData, error: workTrackerError } = await supabase
@@ -494,17 +441,10 @@ export async function saveWorkTracker(
       .single();
 
     if (workTrackerError || !workTrackerData) {
-      createErrorToast([
-        "Failed to insert work tracker.",
-        workTrackerError?.message ?? "",
-      ]);
+      createErrorToast(["Failed to insert work tracker.", workTrackerError?.message ?? ""]);
     }
     if (!workTrackerData?.id) {
-      createErrorToast([
-        "Inserted a work tracker, but no work_tracker_id returned.",
-      ]);
-    } else {
-      savedId = workTrackerData.id;
+      createErrorToast(["Inserted a work tracker, but no work_tracker_id returned."]);
     }
   }
 
@@ -521,10 +461,7 @@ export async function saveWorkTracker(
   if (notification) {
     const driverUserUuid =
       options?.driverUserUuid ??
-      (await fetchDriverUserUuidByDriverUuid(
-        workTracker.driver_uuid,
-        supabase,
-      ));
+      (await fetchDriverUserUuidByDriverUuid(workTracker.driver_uuid, supabase));
 
     if (driverUserUuid) {
       await insertDriverNotification(supabase, driverUserUuid, notification);
@@ -533,7 +470,6 @@ export async function saveWorkTracker(
 
   updateDataBase(["WorkTrackers", "Addresses"]);
   createSuccessToast(["Work Tracker saved"]);
-  return savedId;
 }
 
 export async function deleteWorkTracker(
@@ -560,10 +496,7 @@ export async function deleteWorkTracker(
 
   const driverUserUuid =
     options?.driverUserUuid ??
-    (await fetchDriverUserUuidByDriverUuid(
-      options?.driverUuid ?? null,
-      supabase,
-    ));
+    (await fetchDriverUserUuidByDriverUuid(options?.driverUuid ?? null, supabase));
 
   if (driverUserUuid) {
     await insertDriverNotification(
@@ -572,18 +505,14 @@ export async function deleteWorkTracker(
       buildTripDeletedNotification({
         pickupAddress: options?.pickupAddress ?? "an unknown pickup location",
         pickupCity: options?.pickupCity,
-        dropoffAddress:
-          options?.dropoffAddress ?? "an unknown dropoff location",
+        dropoffAddress: options?.dropoffAddress ?? "an unknown dropoff location",
         dropoffCity: options?.dropoffCity,
         date: options?.date ?? null,
       }),
     );
   }
 
-  const { error } = await supabase
-    .from("WorkTrackers")
-    .delete()
-    .eq("id", workTrackerUuid);
+  const { error } = await supabase.from("WorkTrackers").delete().eq("id", workTrackerUuid);
 
   if (error) {
     createErrorToast(["Failed to delete work tracker.", error?.message ?? ""]);
@@ -594,11 +523,235 @@ export async function deleteWorkTracker(
   createSuccessToast(["Work Tracker deleted"]);
 }
 
+export async function saveSetupTeardownBlock(
+  block: SetupTeardownBlock | null,
+  supabase: SupabaseClient<Database>,
+): Promise<void> {
+  if (!supabase) {
+    console.warn("No Supabase Client found");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No Supabase Client found"],
+        }),
+      { duration: 10000 },
+    );
+    throw new Error("No Supabase Client found");
+  }
+
+  if (!block) {
+    console.error("No setup block provided for save");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No setup block provided for save"],
+        }),
+      { duration: 10000 },
+    );
+    throw new Error("No setup block selected to save.");
+  }
+
+  if (block.bleacherEventUuid) {
+    const data =
+      block.type === "setup"
+        ? {
+            setup_text: block.text,
+            setup_confirmed: block.confirmed,
+          }
+        : {
+            teardown_text: block.text,
+            teardown_confirmed: block.confirmed,
+          };
+    const { error } = await supabase
+      .from("BleacherEvents")
+      .update(data)
+      .eq("bleacher_event_uuid", block.bleacherEventUuid);
+    if (error) {
+      console.error("Failed to update BleacherEvent:", error);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: [`Failed to update ${block.type} block`, error.message],
+          }),
+        { duration: 10000 },
+      );
+      throw new Error(`Failed to update ${block.type} block: ${error.message}`);
+    }
+  } else {
+    console.error(`Failed to update ${block.type} block: No BleacherEventUuid provided.`);
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: [`Failed to update ${block.type} block: No BleacherEventUuid provided.`],
+        }),
+      { duration: 10000 },
+    );
+    throw new Error(`Failed to update ${block.type} block: No BleacherEventUuid provided.`);
+  }
+  toast.custom(
+    (t) =>
+      React.createElement(SuccessToast, {
+        id: t,
+        lines: ["Setup Block saved"],
+      }),
+    { duration: 10000 },
+  );
+  updateDataBase(["BleacherEvents"]);
+}
+
+export async function saveBlock(
+  block: EditBlock | null,
+  supabase: SupabaseClient<Database>,
+): Promise<void> {
+  if (!supabase) {
+    console.warn("No Supabase Client found");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No Supabase Client found"],
+        }),
+      { duration: 10000 },
+    );
+    throw new Error("No Supabase Client found");
+  }
+
+  if (!block) {
+    console.error("No block provided for save");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No block provided for save"],
+        }),
+      { duration: 10000 },
+    );
+    throw new Error("No block selected to save.");
+  }
+
+  if (block.blockUuid) {
+    const { error } = await supabase
+      .from("Blocks")
+      .update({ text: block.text })
+      .eq("id", block.blockUuid);
+    if (error) {
+      console.error("Failed to update block:", error);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: ["Failed to update block", error.message],
+          }),
+        { duration: 10000 },
+      );
+      throw new Error(`Failed to update block: ${error.message}`);
+    }
+  } else {
+    const { error } = await supabase.from("Blocks").insert({
+      bleacher_uuid: block.bleacherUuid,
+      date: block.date,
+      text: block.text,
+    });
+    if (error) {
+      console.error("Failed to insert block:", error);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: ["Failed to insert block", error.message],
+          }),
+        { duration: 10000 },
+      );
+      throw new Error(`Failed to insert block: ${error.message}`);
+    }
+  }
+  toast.custom(
+    (t) =>
+      React.createElement(SuccessToast, {
+        id: t,
+        lines: ["Block saved"],
+      }),
+    { duration: 10000 },
+  );
+  updateDataBase(["Blocks"]);
+}
+
+export async function deleteBlock(
+  block: EditBlock | null,
+  supabase: SupabaseClient<Database>,
+): Promise<void> {
+  if (!supabase) {
+    console.warn("No Supabase Client found");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No Supabase Client found"],
+        }),
+      { duration: 10000 },
+    );
+    throw new Error("No Supabase Client found");
+  }
+
+  if (!block) {
+    console.error("No block provided for save");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["No block provided for save"],
+        }),
+      { duration: 10000 },
+    );
+    throw new Error("No block selected to save.");
+  }
+
+  if (block.blockUuid) {
+    const { error } = await supabase.from("Blocks").delete().eq("id", block.blockUuid);
+    if (error) {
+      console.error("Failed to delete block:", error);
+      toast.custom(
+        (t) =>
+          React.createElement(ErrorToast, {
+            id: t,
+            lines: ["Failed to delete block", error.message],
+          }),
+        { duration: 10000 },
+      );
+      throw new Error(`Failed to delete block: ${error.message}`);
+    }
+  } else {
+    console.error("No Block ID provided for delete.");
+    toast.custom(
+      (t) =>
+        React.createElement(ErrorToast, {
+          id: t,
+          lines: ["Failed to delete block, no block ID provided."],
+        }),
+      { duration: 10000 },
+    );
+    throw new Error(`No Block ID provided for delete.`);
+  }
+  toast.custom(
+    (t) =>
+      React.createElement(SuccessToast, {
+        id: t,
+        lines: ["Block Deleted"],
+      }),
+    { duration: 10000 },
+  );
+  updateDataBase(["Blocks"]);
+}
+
 export async function createEvent(
   state: CurrentEventStore,
   supabase: SupabaseClient<Database>,
   user: UserResource | null,
-): Promise<{ eventUuid: string; addressUuid: string }> {
+): Promise<string> {
   if (!supabase) {
     console.warn("No Supabase Client found");
     throw new Error("No Supabase Client found");
@@ -649,7 +802,6 @@ export async function createEvent(
     ten_row: state.tenRow,
     fifteen_row: state.fifteenRow,
     address_uuid: address_uuid,
-    booked: state.selectedStatus === "booked",
     event_status: state.selectedStatus,
     contract_revenue_cents: state.contractRevenueCents,
     notes: state.notes,
@@ -658,6 +810,7 @@ export async function createEvent(
     goodshuffle_url: state.goodshuffleUrl ?? null,
     created_by_user_uuid: state.ownerUserUuid ?? null,
     booked_at: state.bookedAt ? new Date(state.bookedAt).toISOString() : null,
+    ...(state.createdAt ? { created_at: new Date(state.createdAt).toISOString() } : {}),
   };
 
   const { data: eventData, error: eventError } = await supabase
@@ -711,10 +864,7 @@ export async function createEvent(
       (t) =>
         React.createElement(ErrorToast, {
           id: t,
-          lines: [
-            "Event created, but failed to link bleachers.",
-            bleacherEventError.message,
-          ],
+          lines: ["Event created, but failed to link bleachers.", bleacherEventError.message],
         }),
       { duration: 10000 },
     );
@@ -730,7 +880,7 @@ export async function createEvent(
     { duration: 10000 },
   );
   updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
-  return { eventUuid: event_uuid, addressUuid: address_uuid };
+  return event_uuid;
 }
 
 export async function deleteEvent(
@@ -751,83 +901,35 @@ export async function deleteEvent(
 
   // isUserPermitted(stateProv, user);
 
-  // 1. Find the event to get address_uuid
-  const { data: eventData, error: fetchEventError } = await supabase
+  // Soft delete — mark as deleted instead of removing rows
+  const { error: softDeleteError } = await supabase
     .from("Events")
-    .select("address_uuid")
-    .eq("id", eventUuid)
-    .single();
-
-  if (fetchEventError || !eventData) {
-    console.error("Failed to fetch event details:", fetchEventError);
-    throw new Error(`Failed to fetch event: ${fetchEventError?.message}`);
-  }
-
-  const address_uuid = eventData.address_uuid;
-
-  // 2. Delete from BleacherEvents
-  const { error: bleacherEventError } = await supabase
-    .from("BleacherEvents")
-    .delete()
-    .eq("event_uuid", eventUuid);
-  // NOTE: ownerUserId not persisted yet; requires schema change to store owner.
-
-  if (bleacherEventError) {
-    console.error("Failed to delete bleacher-event links:", bleacherEventError);
-    toast.custom(
-      (t) =>
-        React.createElement(ErrorToast, {
-          id: t,
-          lines: [
-            "Failed to remove event from bleachers.",
-            bleacherEventError.message,
-          ],
-        }),
-      { duration: 10000 },
-    );
-    throw new Error(
-      `Failed to delete bleacher-event links: ${bleacherEventError.message}`,
-    );
-  }
-
-  // 3. Delete Event
-  const { error: eventDeleteError } = await supabase
-    .from("Events")
-    .delete()
+    .update({ deleted: true })
     .eq("id", eventUuid);
 
-  if (eventDeleteError) {
-    console.error("Failed to delete event:", eventDeleteError);
+  // Immediately update local stores so UI updates without waiting for Pusher
+  const currentEvents = useEventsStore.getState().events;
+  useEventsStore.getState().setEvents(
+    currentEvents.map((e) => (e.id === eventUuid ? { ...e, deleted: true } : e)),
+  );
+
+  // Remove from dashboard events store (Pixi grid)
+  const dashEvents = useDashboardEventsStore.getState().data;
+  useDashboardEventsStore.getState().setData(
+    dashEvents.filter((e) => e.eventUuid !== eventUuid),
+  );
+
+  if (softDeleteError) {
+    console.error("Failed to delete event:", softDeleteError);
     toast.custom(
       (t) =>
         React.createElement(ErrorToast, {
           id: t,
-          lines: ["Failed to delete event.", eventDeleteError.message],
+          lines: ["Failed to delete event.", softDeleteError.message],
         }),
       { duration: 10000 },
     );
-    throw new Error(`Failed to delete event: ${eventDeleteError.message}`);
-  }
-
-  // 4. Delete Address
-  if (address_uuid) {
-    const { error: addressDeleteError } = await supabase
-      .from("Addresses")
-      .delete()
-      .eq("id", address_uuid);
-
-    if (addressDeleteError) {
-      console.error("Failed to delete address:", addressDeleteError);
-      toast.custom(
-        (t) =>
-          React.createElement(ErrorToast, {
-            id: t,
-            lines: ["Failed to delete address.", addressDeleteError.message],
-          }),
-        { duration: 10000 },
-      );
-      // We won't throw here — event and bleacher links are already deleted
-    }
+    throw new Error(`Failed to delete event: ${softDeleteError.message}`);
   }
 
   toast.custom(
@@ -838,5 +940,5 @@ export async function deleteEvent(
       }),
     { duration: 10000 },
   );
-  updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
+  updateDataBase(["Events"]);
 }

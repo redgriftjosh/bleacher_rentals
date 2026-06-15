@@ -42,7 +42,7 @@ export function useFeaturesForQuarter(quarterId: string | null) {
         .orderBy("sort_order", "asc")
         .orderBy("created_at", "asc")
         .compile(),
-    [safeId]
+    [safeId],
   );
 
   const labelsCompiled = useMemo(
@@ -53,13 +53,14 @@ export function useFeaturesForQuarter(quarterId: string | null) {
         .select(["l.feature_id as feature_id", "l.sprint_id as sprint_id"])
         .where("f.quarter_id", "=", safeId)
         .compile(),
-    [safeId]
+    [safeId],
   );
 
-  const { data: featureRows, isLoading, error } = useTypedQuery(
-    featuresCompiled,
-    expect<FeatureRow>()
-  );
+  const {
+    data: featureRows,
+    isLoading,
+    error,
+  } = useTypedQuery(featuresCompiled, expect<FeatureRow>());
   const { data: labelRows } = useTypedQuery(labelsCompiled, expect<LabelRow>());
 
   const features = useMemo<Feature[]>(() => {
@@ -107,7 +108,7 @@ export function useFeature(featureId: string | null) {
         .where("id", "=", safeId)
         .limit(1)
         .compile(),
-    [safeId]
+    [safeId],
   );
 
   const labelsCompiled = useMemo(
@@ -117,7 +118,7 @@ export function useFeature(featureId: string | null) {
         .select(["feature_id", "sprint_id"])
         .where("feature_id", "=", safeId)
         .compile(),
-    [safeId]
+    [safeId],
   );
 
   const { data, isLoading, error } = useTypedQuery(compiled, expect<FeatureRow>());
@@ -136,9 +137,7 @@ export function useFeature(featureId: string | null) {
       description: r.description,
       status: (r.status as FeatureStatus) ?? "draft",
       sort_order: r.sort_order ?? 0,
-      sprint_ids: (labelRows ?? [])
-        .map((l) => l.sprint_id)
-        .filter((s): s is string => s !== null),
+      sprint_ids: (labelRows ?? []).map((l) => l.sprint_id).filter((s): s is string => s !== null),
     };
   }, [data, labelRows, featureId]);
 

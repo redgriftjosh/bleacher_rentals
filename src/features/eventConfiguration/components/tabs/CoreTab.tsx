@@ -7,15 +7,28 @@ import { Dropdown } from "@/components/DropDown";
 import { useCurrentEventStore } from "../../state/useCurrentEventStore";
 import { useScrollToDateStore } from "@/features/dashboard/state/useScrollToDateStore";
 import { LocateFixed } from "lucide-react";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
+import { filterOwnerOptions } from "@/features/userAccess/logic/filterOwnerOptions";
+import { useAccountManagerUserIds } from "@/features/userAccess/hooks/useAccountManagerUserIds";
 
 type Props = {
   showSetupTeardown: boolean;
+  disabled?: boolean;
 };
 
-export const CoreTab = ({ showSetupTeardown }: Props) => {
+export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
   const currentEventStore = useCurrentEventStore();
   const users = useUsersStore((s) => s.users);
-  const ownerOptions = users.map((u) => ({
+  const permissions = useTeamPermissions();
+  const accountManagerUserIds = useAccountManagerUserIds();
+  const filteredUsers = filterOwnerOptions({
+    users,
+    isAdmin: permissions.isAdmin,
+    currentUserId: permissions.userId,
+    disabled,
+    accountManagerUserIds,
+  });
+  const ownerOptions = filteredUsers.map((u) => ({
     label: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.email,
     value: String(u.id),
   }));
@@ -225,6 +238,7 @@ export const CoreTab = ({ showSetupTeardown }: Props) => {
             }
           }}
           placeholder="Select owner"
+          disabled={disabled}
         />
       </div>
     </div>

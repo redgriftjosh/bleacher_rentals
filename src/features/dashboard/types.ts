@@ -1,7 +1,7 @@
 import { Database } from "../../../database.types";
 import { AddressData } from "../eventConfiguration/state/useCurrentEventStore";
 
-export type EventStatus = "quoted" | "booked" | "lost";
+export type EventStatus = "quoted" | "booked" | "lost" | "draft";
 
 export type EditBlock = {
   key: string;
@@ -139,16 +139,19 @@ export type BleacherMaintenanceEvent = {
   address: string;
 };
 
+export type DamageSeverity = "none" | "minor" | "major";
+
 export type BleacherDamageReport = {
   damageReportUuid: string;
   bleacherUuid: string;
-  inspectionUuid: string;
+  inspectionUuid: string | null;
   isSafeToSit: boolean;
   isSafeToHaul: boolean;
+  seatDamage: DamageSeverity;
+  haulDamage: DamageSeverity;
   note: string | null;
   createdAt: string;
   resolvedAt: string | null;
   maintenanceEventUuid: string | null;
-  /** Date of the associated work tracker (resolved at mapping time) */
   workTrackerDate: string | null;
 };

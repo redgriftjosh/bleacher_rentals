@@ -2,7 +2,7 @@
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { Database, Tables } from "../../../../../database.types";
 // import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
-import { Bleacher } from "../../types";
+import { Bleacher, DamageSeverity } from "../../types";
 import { useDashboardBleachersStore } from "../../state/useDashboardBleachersStore";
 import { SupabaseClient } from "@supabase/supabase-js";
 
@@ -27,9 +27,9 @@ type Row = {
       event_start: string;
       event_end: string;
       hsl_hue: number | null;
-      booked: boolean;
       event_status: string | null;
       goodshuffle_url: string | null;
+      deleted: boolean;
       address: { street: string } | null;
     } | null;
   }[];
@@ -73,9 +73,11 @@ type Row = {
   damage_reports: {
     id: string;
     bleacher_uuid: string;
-    inspection_uuid: string;
+    inspection_uuid: string | null;
     is_safe_to_sit: boolean;
     is_safe_to_haul: boolean;
+    seat_damage: string | null;
+    haul_damage: string | null;
     note: string | null;
     created_at: string;
     resolved_at: string | null;
@@ -89,8 +91,8 @@ export async function FetchDashboardBleachers(
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);
   }
-  const { data, error } = await supabase
-    .from("Bleachers")
+  const { data, error } = (await (supabase
+    .from("Bleachers") as any)
     .select(
       `
       id,
@@ -118,9 +120,9 @@ export async function FetchDashboardBleachers(
         event_start,
         event_end,
         hsl_hue,
-        booked,
         event_status,
         goodshuffle_url,
+        deleted,
         address:Addresses!Events_address_uuid_fkey(
           street
         )
@@ -173,6 +175,8 @@ export async function FetchDashboardBleachers(
       inspection_uuid,
       is_safe_to_sit,
       is_safe_to_haul,
+      seat_damage,
+      haul_damage,
       note,
       created_at,
       resolved_at,
@@ -181,8 +185,7 @@ export async function FetchDashboardBleachers(
       `,
     )
     .eq("deleted", false)
-    .order("bleacher_number", { ascending: true })
-    .overrideTypes<Row[], { merge: false }>();
+    .order("bleacher_number", { ascending: true })) as { data: Row[] | null; error: any };
 
   if (error) {
     createErrorToast(["Failed to fetch Dashboard Bleachers.", error.message]);
@@ -209,8 +212,8 @@ export async function FetchDashboardBleachers(
     bleacherEvents: (r.bleacher_events ?? [])
       // optional: if you *only* want rows that actually have an event
       .filter((be) => !!be.event)
-      // Exclude events marked as lost from dashboard display
-      .filter((be) => be.event!.event_status !== "lost")
+      // Exclude deleted and lost events from dashboard display
+      .filter((be) => !be.event!.deleted && be.event!.event_status !== "lost")
       .map((be) => ({
         eventUuid: be.event!.id,
         bleacherEventUuid: be.id,
@@ -218,7 +221,7 @@ export async function FetchDashboardBleachers(
         eventStart: be.event!.event_start,
         eventEnd: be.event!.event_end,
         hslHue: be.event!.hsl_hue,
-        booked: be.event!.booked,
+        booked: be.event!.event_status === "booked",
         goodshuffleUrl: be.event!.goodshuffle_url ?? null,
         address: be.event!.address?.street ?? "",
       })),
@@ -264,9 +267,11 @@ export async function FetchDashboardBleachers(
       return {
         damageReportUuid: dr.id,
         bleacherUuid: dr.bleacher_uuid,
-        inspectionUuid: dr.inspection_uuid,
+        inspectionUuid: dr.inspection_uuid ?? null,
         isSafeToSit: dr.is_safe_to_sit,
         isSafeToHaul: dr.is_safe_to_haul,
+        seatDamage: (dr.seat_damage ?? "none") as DamageSeverity,
+        haulDamage: (dr.haul_damage ?? "none") as DamageSeverity,
         note: dr.note,
         createdAt: dr.created_at,
         resolvedAt: dr.resolved_at,

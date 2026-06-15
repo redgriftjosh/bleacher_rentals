@@ -6,17 +6,33 @@ import { Dropdown } from "@/components/DropDown";
 import { useMaintenanceEventStore } from "../../state/useMaintenanceEventStore";
 import { useScrollToDateStore } from "@/features/dashboard/state/useScrollToDateStore";
 import { LocateFixed, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
+import { filterOwnerOptions } from "@/features/userAccess/logic/filterOwnerOptions";
+import { useAccountManagerUserIds } from "@/features/userAccess/hooks/useAccountManagerUserIds";
 import CentsInput from "@/components/CentsInput";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DamageReportModal, EditDamageReport } from "@/app/damage-reports/DamageReportModal";
 
-export const MaintenanceCoreTab = () => {
+type Props = {
+  disabled?: boolean;
+};
+
+export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
   const store = useMaintenanceEventStore();
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
   const users = useUsersStore((s) => s.users);
-  const ownerOptions = users.map((u) => ({
+  const permissions = useTeamPermissions();
+  const accountManagerUserIds = useAccountManagerUserIds();
+  const filteredUsers = filterOwnerOptions({
+    users,
+    isAdmin: permissions.isAdmin,
+    currentUserId: permissions.userId,
+    disabled,
+    accountManagerUserIds,
+  });
+  const ownerOptions = filteredUsers.map((u) => ({
     label: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.email,
     value: String(u.id),
   }));
@@ -82,6 +98,8 @@ export const MaintenanceCoreTab = () => {
           inspection_uuid,
           is_safe_to_sit,
           is_safe_to_haul,
+          seat_damage,
+          haul_damage,
           note,
           resolved_at,
           maintenance_event_uuid,
@@ -155,7 +173,7 @@ export const MaintenanceCoreTab = () => {
           .filter((dr) => dr.bleacher_uuid === bUuid)
           .map((dr) => ({
             ...dr,
-            work_tracker_date: wtDateMap.get(dr.inspection_uuid) ?? null,
+            work_tracker_date: dr.inspection_uuid ? wtDateMap.get(dr.inspection_uuid) ?? null : null,
           }))
           .filter((dr) => dr.work_tracker_date && dr.work_tracker_date < eventStart)
           .sort((a, b) => (b.work_tracker_date ?? "").localeCompare(a.work_tracker_date ?? ""));
@@ -307,6 +325,7 @@ export const MaintenanceCoreTab = () => {
               }
             }}
             placeholder="Select owner"
+            disabled={disabled}
           />
         </div>
       </div>

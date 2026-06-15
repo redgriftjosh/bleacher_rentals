@@ -4,22 +4,29 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { useUser } from "@clerk/nextjs";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Plus, X } from "lucide-react";
 import { DamageReportModal, EditDamageReport } from "./DamageReportModal";
 
+type DamageSeverity = "none" | "minor" | "major";
+
 type DamageReport = {
   id: string;
   bleacher_uuid: string;
-  inspection_uuid: string;
+  inspection_uuid: string | null;
   is_safe_to_sit: boolean;
   is_safe_to_haul: boolean;
+  seat_damage: DamageSeverity;
+  haul_damage: DamageSeverity;
   note: string | null;
   created_at: string;
   resolved_at: string | null;
   maintenance_event_uuid: string | null;
+  created_by_user_uuid: string | null;
   bleacher: { bleacher_number: number } | null;
   maintenance_event: { event_name: string } | null;
+  created_by_user: { first_name: string; last_name: string } | null;
   photos: { id: string; photo_path: string }[];
 };
 
@@ -27,11 +34,26 @@ function DamageReportsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = useClerkSupabaseClient();
+  const { user: clerkUser } = useUser();
   const queryClient = useQueryClient();
+  const [showResolved, setShowResolved] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingReport, setEditingReport] = useState<DamageReport | null>(null);
 
   const bleacherUuid = searchParams.get("bleacher_uuid");
+
+  const { data: currentUserUuid } = useQuery({
+    queryKey: ["current-user-uuid", clerkUser?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("Users")
+        .select("id")
+        .eq("clerk_user_id", clerkUser!.id)
+        .single();
+      return data?.id ?? null;
+    },
+    enabled: !!supabase && !!clerkUser?.id,
+  });
 
   // Fetch all bleachers for the filter dropdown
   const { data: bleachers = [] } = useQuery({
@@ -59,6 +81,7 @@ function DamageReportsContent() {
           *,
           bleacher:Bleachers!DamageReports_bleacher_uuid_fkey(bleacher_number),
           maintenance_event:MaintenanceEvents!DamageReports_maintenance_event_uuid_fkey(event_name),
+          created_by_user:Users!DamageReports_created_by_user_uuid_fkey(first_name, last_name),
           photos:DamageReportPhotos!DamageReportPhotos_damage_report_uuid_fkey(id, photo_path)
         `,
         )
@@ -74,6 +97,14 @@ function DamageReportsContent() {
     },
     enabled: !!supabase,
   });
+
+  const filteredReports = useMemo(
+    () =>
+      reports.filter((r) =>
+        showResolved ? r.resolved_at !== null : r.resolved_at === null,
+      ),
+    [reports, showResolved],
+  );
 
   const selectedBleacherNumber = useMemo(() => {
     if (!bleacherUuid) return null;
@@ -134,20 +165,43 @@ function DamageReportsContent() {
             Clear
           </button>
         )}
+
+        <button
+          onClick={() => setShowResolved((v) => !v)}
+          className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition cursor-pointer ${
+            showResolved
+              ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
+              : "border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+          }`}
+        >
+          {showResolved ? (
+            <>
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Showing Resolved
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Showing Open
+            </>
+          )}
+        </button>
       </div>
 
       {isLoading ? (
         <div className="flex justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-darkBlue" />
         </div>
-      ) : reports.length === 0 ? (
+      ) : filteredReports.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           <AlertTriangle className="h-10 w-10 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">No damage reports found.</p>
+          <p className="text-sm">
+            No {showResolved ? "resolved" : "open"} damage reports found.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {reports.map((report) => (
+          {filteredReports.map((report) => (
             <DamageReportCard
               key={report.id}
               report={report}
@@ -162,6 +216,7 @@ function DamageReportsContent() {
         <DamageReportModal
           open={showCreateModal}
           onOpenChange={setShowCreateModal}
+          currentUserUuid={currentUserUuid ?? null}
           onSaved={() => {
             setShowCreateModal(false);
             queryClient.invalidateQueries({ queryKey: ["damage-reports"] });
@@ -184,6 +239,22 @@ function DamageReportsContent() {
         />
       )}
     </>
+  );
+}
+
+// ─── Severity Badge ──────────────────────────────────────────────────────────
+
+const SEVERITY_COLORS: Record<DamageSeverity, string> = {
+  none: "text-green-700",
+  minor: "text-yellow-700",
+  major: "text-red-700",
+};
+
+function SeverityBadge({ label, severity }: { label: string; severity: DamageSeverity }) {
+  return (
+    <span className={`font-medium capitalize ${SEVERITY_COLORS[severity]}`}>
+      {label}: {severity}
+    </span>
   );
 }
 
@@ -226,16 +297,8 @@ function DamageReportCard({ report, onClick }: { report: DamageReport; onClick: 
           </div>
 
           <div className="flex gap-4 text-xs mb-2">
-            <span
-              className={`font-medium ${report.is_safe_to_sit ? "text-green-700" : "text-red-700"}`}
-            >
-              Safe to sit: {report.is_safe_to_sit ? "Yes" : "No"}
-            </span>
-            <span
-              className={`font-medium ${report.is_safe_to_haul ? "text-green-700" : "text-red-700"}`}
-            >
-              Safe to haul: {report.is_safe_to_haul ? "Yes" : "No"}
-            </span>
+            <SeverityBadge label="Seat" severity={report.seat_damage} />
+            <SeverityBadge label="Haul" severity={report.haul_damage} />
           </div>
 
           {report.note && <p className="text-sm text-gray-700 mb-2">{report.note}</p>}

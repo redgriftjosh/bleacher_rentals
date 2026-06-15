@@ -1,13 +1,15 @@
 import { getBaseUrl, getQboAccessTokenAndRealmId } from "@/features/quickbooks-integration/util";
-import { auth } from "@clerk/nextjs/server";
+import { requireAdmin } from "@/features/userAccess/logic/requireAdmin";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
  * Checks whether a QBO connection is healthy by making a lightweight API call.
  */
 export async function GET(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
+  try {
+    await requireAdmin();
+  } catch (error) {
+    if (error instanceof Response) return error;
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

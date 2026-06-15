@@ -32,7 +32,7 @@ export class VerticalScrollbar {
     gridY: number = 0,
     gridWidth: number = app.screen.width,
     gridHeight: number = app.screen.height,
-    showScrollbar: boolean = true
+    showScrollbar: boolean = true,
   ) {
     this.app = app;
     this.grid = grid;
@@ -56,7 +56,7 @@ export class VerticalScrollbar {
     gridX: number = 0,
     gridY: number = 0,
     gridWidth: number = this.app.screen.width,
-    gridHeight: number = this.app.screen.height
+    gridHeight: number = this.app.screen.height,
   ) {
     this.scrollbarContainer = new Container();
     // Position scrollbar at the right edge of the grid
@@ -128,7 +128,8 @@ export class VerticalScrollbar {
       let deltaY = e.deltaY;
 
       // Normalize delta based on mode
-      if (e.deltaMode === 1) deltaY *= 16; // Lines to pixels
+      if (e.deltaMode === 1)
+        deltaY *= 16; // Lines to pixels
       else if (e.deltaMode === 2) deltaY *= 100; // Pages to pixels
 
       const newContentY = this.contentY + deltaY;

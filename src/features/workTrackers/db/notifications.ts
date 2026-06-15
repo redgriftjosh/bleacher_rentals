@@ -56,8 +56,7 @@ function compactAddress(street: string, city?: string): string {
   if (value.length === 0) return "an unknown location";
 
   const firstCommaIndex = value.indexOf(",");
-  const firstSegment =
-    firstCommaIndex >= 0 ? value.slice(0, firstCommaIndex + 1).trim() : value;
+  const firstSegment = firstCommaIndex >= 0 ? value.slice(0, firstCommaIndex + 1).trim() : value;
 
   const cleanCity = (city ?? "").trim();
   if (!cleanCity) {

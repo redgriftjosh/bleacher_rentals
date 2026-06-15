@@ -11,7 +11,7 @@ export async function updateEvent(
   state: CurrentEventStore,
   supabase: SupabaseClient<Database>,
   user: UserResource | null,
-  bleacherEvents: Tables<"BleacherEvents">[]
+  bleacherEvents: Tables<"BleacherEvents">[],
 ): Promise<void> {
   if (!supabase) {
     createErrorToast(["No Supabase Client found"]);
@@ -56,7 +56,6 @@ export async function updateEvent(
     seven_row: state.sevenRow,
     ten_row: state.tenRow,
     fifteen_row: state.fifteenRow,
-    booked: state.selectedStatus === "booked",
     event_status: state.selectedStatus,
     contract_revenue_cents: state.contractRevenueCents,
     notes: state.notes,
@@ -65,6 +64,7 @@ export async function updateEvent(
     goodshuffle_url: state.goodshuffleUrl ?? null,
     created_by_user_uuid: state.ownerUserUuid ?? null,
     booked_at: state.bookedAt ? new Date(state.bookedAt).toISOString() : null,
+    ...(state.createdAt ? { created_at: new Date(state.createdAt).toISOString() } : {}),
   };
 
   const { error: eventError } = await supabase
@@ -98,7 +98,8 @@ async function updateBleacherEvents(state: CurrentEventStore, supabase: Supabase
   }
 
   const existingBleacherUuids = new Set(
-    existingLinks?.map((b) => b.bleacher_uuid).filter((uuid): uuid is string => uuid !== null) ?? []
+    existingLinks?.map((b) => b.bleacher_uuid).filter((uuid): uuid is string => uuid !== null) ??
+      [],
   );
   const incomingBleacherUuids = new Set(state.bleacherUuids);
 

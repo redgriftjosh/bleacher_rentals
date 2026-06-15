@@ -1,5 +1,6 @@
 // app/api/linxup/devices/route.ts
 import { NextResponse, NextRequest } from "next/server";
+import { requireAuth } from "@/features/userAccess/logic/requireAuth";
 
 const HOST = (process.env.LINXUP_API_HOST || "").replace(/\/+$/, ""); // e.g. https://app02.linxup.com
 const TOKEN = process.env.LINXUP_API_TOKEN || ""; // Bearer token from Linxup portal
@@ -7,11 +8,12 @@ const BASE = `${HOST}/ibis/rest/api/v2`; // Linxup REST base path
 
 export async function GET(req: NextRequest) {
   try {
+    await requireAuth();
     if (!HOST || !TOKEN) {
       console.error("[linxup] Missing env vars", { hasHost: !!HOST, hasToken: !!TOKEN });
       return NextResponse.json(
         { error: "LINXUP_API_HOST or LINXUP_API_TOKEN missing" },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
@@ -57,7 +59,7 @@ export async function GET(req: NextRequest) {
         "[linxup] data.keys:",
         !Array.isArray(json.data)
           ? Object.keys(json.data).slice(0, 20)
-          : `length=${json.data.length}`
+          : `length=${json.data.length}`,
       );
     }
 
@@ -81,16 +83,16 @@ export async function GET(req: NextRequest) {
       // Give more hints in logs: show a short preview of json.data if it's an object
       if (json?.data && typeof json.data === "object" && !Array.isArray(json.data)) {
         const sampleEntryKey = Object.keys(json.data).find((k) =>
-          Array.isArray((json.data as any)[k])
+          Array.isArray((json.data as any)[k]),
         );
         console.warn(
           "[linxup] Could not find array; sample array-like key under data:",
-          sampleEntryKey
+          sampleEntryKey,
         );
         if (sampleEntryKey) {
           console.warn(
             "[linxup] Example first item keys:",
-            Object.keys(json.data[sampleEntryKey][0] || {}).slice(0, 20)
+            Object.keys(json.data[sampleEntryKey][0] || {}).slice(0, 20),
           );
         }
       }
@@ -106,7 +108,7 @@ export async function GET(req: NextRequest) {
         Object.entries(d).forEach(([key, value]) => {
           console.log(
             `[linxup]   ${key}:`,
-            typeof value === "object" ? JSON.stringify(value) : value
+            typeof value === "object" ? JSON.stringify(value) : value,
           );
         });
       }
@@ -129,7 +131,7 @@ export async function GET(req: NextRequest) {
           dev?.imei,
           d?.imei,
           dev?.id,
-          d?.id
+          d?.id,
         ) || "";
 
       const name =
@@ -145,7 +147,7 @@ export async function GET(req: NextRequest) {
           d?.vehicleName,
           dev?.friendlyName,
           d?.friendlyName,
-          d?.vin ? `VIN ${d.vin}` : undefined
+          d?.vin ? `VIN ${d.vin}` : undefined,
         ) || "Unnamed device";
 
       const updatedAt =
@@ -155,7 +157,7 @@ export async function GET(req: NextRequest) {
           d?.gpsTimestamp,
           d?.lastUpdate,
           d?.lastUpdatedTime,
-          d?.updateTime
+          d?.updateTime,
         ) || null;
 
       return {
@@ -192,6 +194,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(devices);
   } catch (e: any) {
+    if (e instanceof Response) return e;
     console.error("[linxup] Unhandled error:", e);
     return NextResponse.json({ error: e?.message ?? "Internal server error" }, { status: 500 });
   }
