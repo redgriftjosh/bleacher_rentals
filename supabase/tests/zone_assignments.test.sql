@@ -24,10 +24,10 @@ DECLARE
   clerk_driver   TEXT := 'clerk_za_driver';
 
   am_uuid        UUID;
-  driver_uuid    UUID;
-  zone_uuid      UUID;
-  zone2_uuid     UUID;
-  bleacher_uuid  UUID;
+  v_driver_id    UUID;
+  v_zone_a       UUID;
+  v_zone_b       UUID;
+  v_bleacher_id  UUID;
   v_count        INTEGER;
   v_zone         UUID;
 BEGIN
@@ -62,22 +62,22 @@ BEGIN
   RETURNING id INTO user_driver;
 
   INSERT INTO public."Drivers" (user_uuid, is_active, tax, pay_rate_cents, pay_currency, pay_per_unit)
-  VALUES (user_driver, true, 0, 100, 'USD', 'trip')
-  RETURNING id INTO driver_uuid;
+  VALUES (user_driver, true, 0, 100, 'USD', 'KM')
+  RETURNING id INTO v_driver_id;
 
   -- Zones
   INSERT INTO public."Zones" (display_name, description)
   VALUES ('Test Zone A', 'First test zone')
-  RETURNING id INTO zone_uuid;
+  RETURNING id INTO v_zone_a;
 
   INSERT INTO public."Zones" (display_name, description)
   VALUES ('Test Zone B', 'Second test zone')
-  RETURNING id INTO zone2_uuid;
+  RETURNING id INTO v_zone_b;
 
   -- Bleacher
   INSERT INTO public."Bleachers" (bleacher_number, bleacher_rows, bleacher_seats)
   VALUES (8888, 10, 100)
-  RETURNING id INTO bleacher_uuid;
+  RETURNING id INTO v_bleacher_id;
 
   -- ==========================================================================
   -- PART 1: Schema validation
@@ -106,23 +106,23 @@ BEGIN
   -- ==========================================================================
 
   -- TEST 2.1: Assign bleacher to zone
-  UPDATE public."Bleachers" SET zone_uuid = zone_uuid WHERE id = bleacher_uuid;
-  SELECT b.zone_uuid INTO v_zone FROM public."Bleachers" b WHERE b.id = bleacher_uuid;
-  ASSERT v_zone = zone_uuid,
+  UPDATE public."Bleachers" SET zone_uuid = v_zone_a WHERE id = v_bleacher_id;
+  SELECT b.zone_uuid INTO v_zone FROM public."Bleachers" b WHERE b.id = v_bleacher_id;
+  ASSERT v_zone = v_zone_a,
     format('2.1 Bleacher zone_uuid should be set, got %s', v_zone);
   RAISE NOTICE 'TEST 2.1 (bleacher zone assignment) OK';
 
   -- TEST 2.2: AccountManagerZones insert
   INSERT INTO public."AccountManagerZones" (account_manager_uuid, zone_uuid)
-  VALUES (am_uuid, zone_uuid);
+  VALUES (am_uuid, v_zone_a);
   SELECT count(*) INTO v_count FROM public."AccountManagerZones"
-  WHERE account_manager_uuid = am_uuid AND zone_uuid = zone_uuid;
+  WHERE account_manager_uuid = am_uuid AND zone_uuid = v_zone_a;
   ASSERT v_count = 1, '2.2 AM-Zone assignment should exist';
   RAISE NOTICE 'TEST 2.2 (AM-Zone insert) OK';
 
   -- TEST 2.3: AM can be assigned to multiple zones (many-to-many)
   INSERT INTO public."AccountManagerZones" (account_manager_uuid, zone_uuid)
-  VALUES (am_uuid, zone2_uuid);
+  VALUES (am_uuid, v_zone_b);
   SELECT count(*) INTO v_count FROM public."AccountManagerZones"
   WHERE account_manager_uuid = am_uuid;
   ASSERT v_count = 2, '2.3 AM should be in 2 zones';
@@ -131,7 +131,7 @@ BEGIN
   -- TEST 2.4: Unique constraint prevents duplicate AM-Zone
   BEGIN
     INSERT INTO public."AccountManagerZones" (account_manager_uuid, zone_uuid)
-    VALUES (am_uuid, zone_uuid);
+    VALUES (am_uuid, v_zone_a);
     ASSERT false, '2.4 Should have thrown unique violation';
   EXCEPTION WHEN unique_violation THEN
     RAISE NOTICE 'TEST 2.4 (AM-Zone unique constraint) OK';
@@ -139,24 +139,24 @@ BEGIN
 
   -- TEST 2.5: DriverZones insert
   INSERT INTO public."DriverZones" (driver_uuid, zone_uuid)
-  VALUES (driver_uuid, zone_uuid);
+  VALUES (v_driver_id, v_zone_a);
   SELECT count(*) INTO v_count FROM public."DriverZones"
-  WHERE driver_uuid = driver_uuid AND zone_uuid = zone_uuid;
+  WHERE driver_uuid = v_driver_id AND zone_uuid = v_zone_a;
   ASSERT v_count >= 1, '2.5 Driver-Zone assignment should exist';
   RAISE NOTICE 'TEST 2.5 (Driver-Zone insert) OK';
 
   -- TEST 2.6: Driver many-to-many
   INSERT INTO public."DriverZones" (driver_uuid, zone_uuid)
-  VALUES (driver_uuid, zone2_uuid);
+  VALUES (v_driver_id, v_zone_b);
   SELECT count(*) INTO v_count FROM public."DriverZones"
-  WHERE driver_uuid = driver_uuid;
+  WHERE driver_uuid = v_driver_id;
   ASSERT v_count >= 2, '2.6 Driver should be in 2 zones';
   RAISE NOTICE 'TEST 2.6 (Driver many-to-many) OK';
 
   -- TEST 2.7: Unique constraint prevents duplicate Driver-Zone
   BEGIN
     INSERT INTO public."DriverZones" (driver_uuid, zone_uuid)
-    VALUES (driver_uuid, zone_uuid);
+    VALUES (v_driver_id, v_zone_a);
     ASSERT false, '2.7 Should have thrown unique violation';
   EXCEPTION WHEN unique_violation THEN
     RAISE NOTICE 'TEST 2.7 (Driver-Zone unique constraint) OK';
@@ -206,7 +206,7 @@ BEGIN
   -- Just verify admin can delete (which implies write access)
   BEGIN
     DELETE FROM public."AccountManagerZones"
-    WHERE account_manager_uuid = am_uuid AND zone_uuid = zone2_uuid;
+    WHERE account_manager_uuid = am_uuid AND zone_uuid = v_zone_b;
     RAISE NOTICE 'TEST 3.5 (admin DELETE AccountManagerZones) OK';
   EXCEPTION WHEN others THEN
     ASSERT false, '3.5 Admin should be able to delete AccountManagerZones';
@@ -222,7 +222,7 @@ BEGIN
   PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
   BEGIN
     INSERT INTO public."DriverZones" (driver_uuid, zone_uuid)
-    VALUES (driver_uuid, gen_random_uuid());
+    VALUES (v_driver_id, gen_random_uuid());
     ASSERT false, '3.7 AM should not be able to insert into DriverZones';
   EXCEPTION WHEN others THEN
     RAISE NOTICE 'TEST 3.7 (AM INSERT DriverZones denied) OK';
@@ -232,7 +232,7 @@ BEGIN
   PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_viewer)::text, true);
   BEGIN
     INSERT INTO public."DriverZones" (driver_uuid, zone_uuid)
-    VALUES (driver_uuid, gen_random_uuid());
+    VALUES (v_driver_id, gen_random_uuid());
     ASSERT false, '3.8 Viewer should not be able to insert into DriverZones';
   EXCEPTION WHEN others THEN
     RAISE NOTICE 'TEST 3.8 (viewer INSERT DriverZones denied) OK';

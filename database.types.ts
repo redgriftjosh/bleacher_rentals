@@ -671,18 +671,24 @@ export type Database = {
           damage_report_uuid: string
           id: string
           photo_path: string
+          thumbnail: string | null
+          upload_status: string
         }
         Insert: {
           created_at?: string
           damage_report_uuid: string
           id?: string
           photo_path: string
+          thumbnail?: string | null
+          upload_status?: string
         }
         Update: {
           created_at?: string
           damage_report_uuid?: string
           id?: string
           photo_path?: string
+          thumbnail?: string | null
+          upload_status?: string
         }
         Relationships: [
           {

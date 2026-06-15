@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import { DateTime } from "luxon";
-import { Search } from "lucide-react";
+import { Search, ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { DataTable, Column, CellText, CellSecondary, CellBadge } from "@/components/DataTable";
@@ -11,7 +11,13 @@ import { useQuotesAndBookingsFilters } from "@/features/quotesAndBookings/hooks/
 import { useQuotesAndBookingsData } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsData";
 import type { QuotesBookingsEvent } from "@/features/quotesAndBookings/types";
 import { searchEvents } from "@/features/quotesAndBookings/utils/searchEvents";
-import { useRouter } from "next/navigation";
+import {
+  isScorecardTemplate,
+  filtersForTemplate,
+  SCORECARD_TEMPLATES,
+} from "@/features/quotesAndBookings/utils/scorecardTemplates";
+import { useRouter, useSearchParams } from "next/navigation";
+import { formatValue } from "@/utils/formatters";
 
 function formatCurrency(cents: number | null): string {
   if (cents === null) return "$0.00";
@@ -44,15 +50,33 @@ function capitalizeStatus(status: string | null): string {
 }
 
 export default function QuotesBookingsPage() {
+  const searchParams = useSearchParams();
+  const templateParam = searchParams.get("template");
+  const timeRangeParam = searchParams.get("timeRange") as
+    | "weekly"
+    | "quarterly"
+    | "annually"
+    | null;
+
+  const accountManagerParam = searchParams.get("accountManager");
+  const periodStartParam = searchParams.get("periodStart");
+  const activeTemplate = isScorecardTemplate(templateParam) ? templateParam : null;
+
+  const initialOverrides = useMemo(() => {
+    if (!activeTemplate || !timeRangeParam) return undefined;
+    return filtersForTemplate(activeTemplate, timeRangeParam, "this", accountManagerParam, periodStartParam);
+  }, [activeTemplate, timeRangeParam, accountManagerParam, periodStartParam]);
+
   const {
     filters,
     toggleOpen,
     setStatuses,
     setCreatedRange,
     setEventRange,
+    setBookedRange,
     setAccountManagerUserUuid,
     clearFilters,
-  } = useQuotesAndBookingsFilters();
+  } = useQuotesAndBookingsFilters(initialOverrides);
 
   const { data, isLoading, error } = useQuotesAndBookingsData(filters);
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,11 +88,23 @@ export default function QuotesBookingsPage() {
 
   const router = useRouter();
 
+  const periodLabel =
+    timeRangeParam === "quarterly"
+      ? "this quarter"
+      : timeRangeParam === "annually"
+        ? "this year"
+        : "this week";
+
   const columns: Column<QuotesBookingsEvent>[] = [
     {
       key: "event_name",
-      header: "Event Name",
-      render: (event) => <CellText bold>{event.event_name}</CellText>,
+      header: `Event Name (${searchedData?.length ?? 0})`,
+      render: (event) => (
+        <div>
+          <CellText bold>{event.event_name && event.event_name.length > 70 ? `${event.event_name.slice(0, 70)}...` : event.event_name}</CellText>
+          <CellSecondary>Created: {formatDate(event.created_at)}</CellSecondary>
+        </div>
+      ),
     },
     {
       key: "status",
@@ -97,12 +133,14 @@ export default function QuotesBookingsPage() {
     },
     {
       key: "end_date",
-      header: "End Date",
-      render: (event) => <CellSecondary>{formatDate(event.event_end)}</CellSecondary>,
+      header: "Booked",
+      render: (event) => (
+        <CellSecondary>{event.booked_at ? formatDate(event.booked_at) : "—"}</CellSecondary>
+      ),
     },
     {
       key: "amount",
-      header: "Amount",
+      header: `Amount (${formatValue((searchedData?.reduce((sum, e) => sum + (e.contract_revenue_cents ?? 0), 0) ?? 0) / 100, "money")})`,
       render: (event) => <CellText bold>{formatCurrency(event.contract_revenue_cents)}</CellText>,
     },
   ];
@@ -130,6 +168,29 @@ export default function QuotesBookingsPage() {
         }
       />
 
+      {activeTemplate && (
+        <div className="mt-4 rounded-md bg-indigo-50 border border-indigo-200 px-4 py-3 text-sm text-indigo-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="font-semibold">
+                Scorecard: {SCORECARD_TEMPLATES[activeTemplate].label}
+              </span>
+              <span className="text-indigo-600 ml-1">({periodLabel})</span>
+            </div>
+            <button
+              onClick={() => router.push("/scorecard" + (timeRangeParam ? `?timeRange=${timeRangeParam}` : ""))}
+              className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              Back to Scorecard
+            </button>
+          </div>
+          <p className="mt-1 text-indigo-700">
+            {SCORECARD_TEMPLATES[activeTemplate].description}
+          </p>
+        </div>
+      )}
+
       <div
         className={`overflow-hidden transition-all duration-700 ease-in-out ${
           filters.isOpen ? "max-h-[900px] mt-4" : "max-h-0"
@@ -140,6 +201,7 @@ export default function QuotesBookingsPage() {
           onStatusesChange={setStatuses}
           onCreatedRangeChange={setCreatedRange}
           onEventRangeChange={setEventRange}
+          onBookedRangeChange={setBookedRange}
           onAccountManagerChange={setAccountManagerUserUuid}
           onClear={clearFilters}
         />

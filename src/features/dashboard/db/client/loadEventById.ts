@@ -81,6 +81,7 @@ export async function loadEventById(
     setField("goodshuffleUrl", eventData.goodshuffle_url);
     setField("ownerUserUuid", eventData.created_by_user_uuid ?? null);
     setField("bookedAt", eventData.booked_at ? eventData.booked_at.split("T")[0] : null);
+    setField("createdAt", eventData.created_at ?? null);
   } catch (error) {
     console.error("Failed to load event:", error);
   }
