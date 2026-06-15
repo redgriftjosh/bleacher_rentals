@@ -849,6 +849,20 @@ const ContractSignatures = new Table(ContractSignaturesCols, {
   indexes: { event_uuid: ["event_uuid"] },
 });
 
+const EventFilesCols = {
+  event_uuid: column.text,
+  file_name: column.text,
+  storage_path: column.text,
+  mime_type: column.text,
+  file_size_bytes: column.integer,
+  source: column.text,
+  uploaded_by: column.text,
+  created_at: column.text,
+} satisfies PowerSyncColsFor<"EventFiles">;
+const EventFiles = new Table(EventFilesCols, {
+  indexes: { event_uuid: ["event_uuid"] },
+});
+
 const SalesOfficesCols = {
   address_uuid: column.text,
   created_at: column.text,
@@ -922,6 +936,7 @@ export const AppSchema = new Schema({
   SalesOffices,
   TermsAndConditions,
   ContractSignatures,
+  EventFiles,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
@@ -981,3 +996,4 @@ export type PricesRecord = PowerSyncDB["Prices"];
 export type SalesOfficesRecord = PowerSyncDB["SalesOffices"];
 export type TermsAndConditionsRecord = PowerSyncDB["TermsAndConditions"];
 export type ContractSignaturesRecord = PowerSyncDB["ContractSignatures"];
+export type EventFilesRecord = PowerSyncDB["EventFiles"];
