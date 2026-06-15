@@ -812,30 +812,6 @@ const SalesOffices = new Table(SalesOfficesCols, {
   indexes: { address_uuid: ["address_uuid"] },
 });
 
-// =====================
-// Sales Scorecard
-// =====================
-const SalesScorecardDailyAccountManagerStatsCols = {
-  account_manager_uuid: column.text,
-  stat_date: column.text,
-  quotes_sent: column.integer,
-  quotes_signed_count: column.integer,
-  quotes_signed_value_cents: column.integer,
-  revenue_cents: column.integer,
-  driver_pay_cents: column.integer,
-  created_at: column.text,
-  updated_at: column.text,
-} satisfies PowerSyncColsFor<"SalesScorecardDailyAccountManagerStats">;
-const SalesScorecardDailyAccountManagerStats = new Table(
-  SalesScorecardDailyAccountManagerStatsCols,
-  {
-    indexes: {
-      account_manager_uuid: ["account_manager_uuid"],
-      stat_date: ["stat_date"],
-    },
-  },
-);
-
 export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
@@ -893,7 +869,7 @@ export const AppSchema = new Schema({
   PriceDurations,
   Prices,
   SalesOffices,
-  SalesScorecardDailyAccountManagerStats,
+  // SalesScorecardDailyAccountManagerStats,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
@@ -950,5 +926,3 @@ export type PaymentInstallmentsRecord = PowerSyncDB["PaymentInstallments"];
 export type PriceDurationsRecord = PowerSyncDB["PriceDurations"];
 export type PricesRecord = PowerSyncDB["Prices"];
 export type SalesOfficesRecord = PowerSyncDB["SalesOffices"];
-export type SalesScorecardDailyAccountManagerStatsRecord =
-  PowerSyncDB["SalesScorecardDailyAccountManagerStats"];

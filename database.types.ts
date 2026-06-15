@@ -610,18 +610,24 @@ export type Database = {
           damage_report_uuid: string
           id: string
           photo_path: string
+          thumbnail: string | null
+          upload_status: string
         }
         Insert: {
           created_at?: string
           damage_report_uuid: string
           id?: string
           photo_path: string
+          thumbnail?: string | null
+          upload_status?: string
         }
         Update: {
           created_at?: string
           damage_report_uuid?: string
           id?: string
           photo_path?: string
+          thumbnail?: string | null
+          upload_status?: string
         }
         Relationships: [
           {
@@ -2311,53 +2317,6 @@ export type Database = {
             columns: ["quickbook_uuid"]
             isOneToOne: false
             referencedRelation: "QboConnections"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      SalesScorecardDailyAccountManagerStats: {
-        Row: {
-          account_manager_uuid: string | null
-          created_at: string
-          driver_pay_cents: number
-          id: string
-          quotes_sent: number
-          quotes_signed_count: number
-          quotes_signed_value_cents: number
-          revenue_cents: number
-          stat_date: string
-          updated_at: string
-        }
-        Insert: {
-          account_manager_uuid?: string | null
-          created_at?: string
-          driver_pay_cents?: number
-          id?: string
-          quotes_sent?: number
-          quotes_signed_count?: number
-          quotes_signed_value_cents?: number
-          revenue_cents?: number
-          stat_date: string
-          updated_at?: string
-        }
-        Update: {
-          account_manager_uuid?: string | null
-          created_at?: string
-          driver_pay_cents?: number
-          id?: string
-          quotes_sent?: number
-          quotes_signed_count?: number
-          quotes_signed_value_cents?: number
-          revenue_cents?: number
-          stat_date?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "SalesScorecardDailyAccountManagerStat_account_manager_uuid_fkey"
-            columns: ["account_manager_uuid"]
-            isOneToOne: false
-            referencedRelation: "AccountManagers"
             referencedColumns: ["id"]
           },
         ]
