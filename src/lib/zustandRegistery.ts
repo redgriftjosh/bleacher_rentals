@@ -87,5 +87,4 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   PriceDurations: () => {},
   Prices: () => {},
   SalesOffices: () => {},
-  SalesScorecardDailyAccountManagerStats: () => {},
 };
