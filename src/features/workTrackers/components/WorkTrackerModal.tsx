@@ -360,6 +360,7 @@ export default function WorkTrackerModal({
           wtId,
           null,
           supabase,
+          pickUpAddress?.address || undefined,
         );
       }
       setShowSaveConfirmModal(false);

@@ -4,6 +4,7 @@ import { CELL_HEIGHT } from "../../../values/constants";
 import type { BleacherWorkTracker } from "../../../types";
 import { STATUS_TINT } from "./statusTint";
 import { drawUnavailableOverlay } from "./unavailableOverlay";
+import { countAlertsForEntity, drawAlertBadge } from "../AlertCount";
 
 /**
  * Small work tracker thumbnail (CELL_HEIGHT/2 square).
@@ -17,7 +18,8 @@ export class WorkTrackerSmall extends Sprite {
     const bg = STATUS_TINT[tracker.status] ?? 0x808080;
     const initials = getInitials(tracker.driverFirstName, tracker.driverLastName);
 
-    const cacheKey = `WTSmall:${tracker.status}:${initials}:${isUnavailable ? "U" : ""}`;
+    const alertCount = countAlertsForEntity(tracker.workTrackerUuid, "work_tracker");
+    const cacheKey = `WTSmall:${tracker.status}:${initials}:${isUnavailable ? "U" : ""}:a${alertCount}`;
 
     this.texture = baker.getTexture(cacheKey, { width: size, height: size }, (c) => {
       // Background
@@ -51,6 +53,9 @@ export class WorkTrackerSmall extends Sprite {
       if (isUnavailable) {
         drawUnavailableOverlay(c, size, size);
       }
+
+      // Alert badge (top-left corner)
+      drawAlertBadge(c, alertCount, 1, 1);
     });
   }
 }

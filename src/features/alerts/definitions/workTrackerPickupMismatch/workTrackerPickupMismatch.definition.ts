@@ -170,6 +170,7 @@ class WorkTrackerPickupMismatchDefinition extends AlertDefinition<WorkTrackerPic
     workTrackerUuid: string,
     saverUserUuid: string | null,
     supabase: SupabaseClient<Database>,
+    pickupStreetOverride?: string,
   ): Promise<void> {
     const { data: wt, error: wtError } = await supabase
       .from("WorkTrackers")
@@ -267,6 +268,20 @@ class WorkTrackerPickupMismatchDefinition extends AlertDefinition<WorkTrackerPic
       addresses: addresses ?? [],
       allBleacherEvents: allBEs ?? [],
       allEvents: allEvents ?? [],
+      pickupStreetOverride,
+    });
+
+    console.log("[workTrackerPickupMismatch] syncForWorkTracker result:", {
+      workTrackerUuid,
+      pickupAddressUuid: wt.pickup_address_uuid,
+      pickupStreetOverride,
+      bleacherUuid: wt.bleacher_uuid,
+      numAllWts: (allWts ?? []).length,
+      numBEs: (allBEs ?? []).length,
+      numEvents: (allEvents ?? []).length,
+      numAddresses: (addresses ?? []).length,
+      alertsCount: alerts.length,
+      alerts,
     });
 
     // Resolve owner from the work tracker's user_uuid

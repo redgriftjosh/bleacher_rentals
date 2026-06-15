@@ -29,7 +29,8 @@ export class WorkTrackerHalf extends Sprite {
     const pickup = tracker.pickupTime ?? "";
     const dropoff = tracker.dropoffTime ?? "";
 
-    const cacheKey = `WTHalf:${tracker.status}:${driverName}:${pickup}:${dropoff}:${isLeft ? "L" : "R"}:${isUnavailable ? "U" : ""}`;
+    const alertCount = countAlertsForEntity(tracker.workTrackerUuid, "work_tracker");
+    const cacheKey = `WTHalf:${tracker.status}:${driverName}:${pickup}:${dropoff}:${isLeft ? "L" : "R"}:${isUnavailable ? "U" : ""}:a${alertCount}`;
 
     this.texture = baker.getTexture(cacheKey, { width: W, height: H }, (c) => {
       // Background fill
@@ -105,6 +106,9 @@ export class WorkTrackerHalf extends Sprite {
       if (isUnavailable) {
         drawUnavailableOverlay(c, W, H);
       }
+
+      // Alert badge (top-left corner)
+      drawAlertBadge(c, alertCount, 1, 1);
     });
   }
 }
