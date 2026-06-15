@@ -17,7 +17,7 @@ import {
   SCORECARD_TEMPLATES,
 } from "@/features/quotesAndBookings/utils/scorecardTemplates";
 import { useRouter, useSearchParams } from "next/navigation";
-import { formatValue } from "@/utils/formatters";
+
 
 function formatCurrency(cents: number | null): string {
   if (cents === null) return "$0.00";
@@ -140,7 +140,7 @@ export default function QuotesBookingsPage() {
     },
     {
       key: "amount",
-      header: `Amount (${formatValue((searchedData?.reduce((sum, e) => sum + (e.contract_revenue_cents ?? 0), 0) ?? 0) / 100, "money")})`,
+      header: `Amount ($${Math.round((searchedData?.reduce((sum, e) => sum + (e.contract_revenue_cents ?? 0), 0) ?? 0) / 100).toLocaleString()})`,
       render: (event) => <CellText bold>{formatCurrency(event.contract_revenue_cents)}</CellText>,
     },
   ];
