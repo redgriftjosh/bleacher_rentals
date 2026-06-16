@@ -18,7 +18,10 @@ type AddressResolvableBleacher = {
  * - If both fall on the same date, prefer the event.
  * - Events use `address` (street); work trackers use `dropoffAddress` (street).
  */
-export function resolveAddress(bleacher: AddressResolvableBleacher, targetDate: string): string | null {
+export function resolveAddress(
+  bleacher: AddressResolvableBleacher,
+  targetDate: string,
+): string | null {
   let bestEventDate: string | null = null;
   let bestEventAddress: string | null = null;
 
