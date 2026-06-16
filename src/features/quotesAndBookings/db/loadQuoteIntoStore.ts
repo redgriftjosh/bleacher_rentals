@@ -66,6 +66,7 @@ export async function loadQuoteIntoStore(eventId: string): Promise<string | null
   if (data.financeContact) {
     store.setField("useFinanceContact", true);
     store.setField("financeContactId", data.financeContact.id);
+    store.setField("financeContactEmail", data.financeContact.email ?? "");
   }
 
   if (data.contact) {

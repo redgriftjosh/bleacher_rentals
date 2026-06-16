@@ -49,20 +49,23 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
   const handleSendToClient = async () => {
     if (!quote) return;
 
-    const recipientEmail = quote.contact?.email;
-    if (!recipientEmail) {
+    const recipientEmails: string[] = [];
+    if (quote.contact?.email) recipientEmails.push(quote.contact.email);
+    if (quote.financeContact?.email) recipientEmails.push(quote.financeContact.email);
+
+    if (recipientEmails.length === 0) {
       createErrorToast(["No contact email found. Please add a contact with an email address first."]);
       return;
     }
 
-    if (!confirm(`Send quote to ${recipientEmail}?`)) return;
+    if (!confirm(`Send quote to ${recipientEmails.join(", ")}?`)) return;
 
     setSending(true);
     try {
       const res = await fetch(`/api/quotes/${eventId}/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipientEmail }),
+        body: JSON.stringify({ recipientEmails }),
       });
 
       if (!res.ok) {
@@ -70,7 +73,7 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
         throw new Error(body.error || `Failed (${res.status})`);
       }
 
-      createSuccessToast([`Quote sent to ${recipientEmail}`]);
+      createSuccessToast([`Quote sent to ${recipientEmails.join(", ")}`]);
     } catch (err: any) {
       createErrorToast(["Failed to send quote.", err.message ?? ""]);
     } finally {

@@ -31,6 +31,7 @@ export type CreateQuoteState = {
   phone: string;
   useFinanceContact: boolean;
   financeContactId: string | null;
+  financeContactEmail: string;
 
   // Event Details
   eventName: string;
@@ -99,6 +100,7 @@ const initialState: CreateQuoteState = {
   phone: "",
   useFinanceContact: false,
   financeContactId: null,
+  financeContactEmail: "",
 
   eventName: "",
   eventAddress: "",

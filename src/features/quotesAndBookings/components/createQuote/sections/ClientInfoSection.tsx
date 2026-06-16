@@ -58,7 +58,10 @@ export function ClientInfoSection() {
             checked={useFinanceContact}
             onChange={(e) => {
               setField("useFinanceContact", e.target.checked);
-              if (!e.target.checked) setField("financeContactId", null);
+              if (!e.target.checked) {
+                setField("financeContactId", null);
+                setField("financeContactEmail", "");
+              }
             }}
             className="rounded border-gray-300 text-darkBlue focus:ring-darkBlue"
           />
@@ -72,7 +75,11 @@ export function ClientInfoSection() {
           <Dropdown
             options={contactOptions}
             selected={financeContactId}
-            onSelect={(id) => setField("financeContactId", id)}
+            onSelect={(id) => {
+              setField("financeContactId", id);
+              const fc = contacts.find((c) => c.id === id);
+              setField("financeContactEmail", fc?.email ?? "");
+            }}
             placeholder={isLoading ? "Loading contacts..." : "Search finance contact..."}
             disabled={isLoading}
           />
