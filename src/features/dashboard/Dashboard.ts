@@ -23,7 +23,7 @@ import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEven
 import { useMaintenanceEventStore } from "../maintenanceEvents/state/useMaintenanceEventStore";
 import { WorkTrackerDragManager } from "./util/WorkTrackerDragManager";
 import { useAddressTooltipStore } from "./state/useAddressTooltipStore";
-import { resolveAddress } from "./util/resolveAddress";
+import { resolveAddress } from "../../utils/resolveAddress";
 import { useScrollToDateStore } from "./state/useScrollToDateStore";
 import { useAlertCountsStore } from "./db/hooks/useBleachers";
 

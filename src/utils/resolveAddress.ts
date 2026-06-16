@@ -1,5 +1,13 @@
 import { DateTime } from "luxon";
-import { Bleacher } from "../types";
+
+/**
+ * Minimal shape required by resolveAddress. Compatible with the full Bleacher
+ * dashboard type as well as lightweight objects constructed from PS queries.
+ */
+type AddressResolvableBleacher = {
+  bleacherEvents: Array<{ booked: boolean; eventStart: string; address: string }>;
+  workTrackers: Array<{ date: string | null; dropoffAddress: string | null }>;
+};
 
 /**
  * Resolve the most recent address for a bleacher at a given date.
@@ -10,7 +18,7 @@ import { Bleacher } from "../types";
  * - If both fall on the same date, prefer the event.
  * - Events use `address` (street); work trackers use `dropoffAddress` (street).
  */
-export function resolveAddress(bleacher: Bleacher, targetDate: string): string | null {
+export function resolveAddress(bleacher: AddressResolvableBleacher, targetDate: string): string | null {
   let bestEventDate: string | null = null;
   let bestEventAddress: string | null = null;
 

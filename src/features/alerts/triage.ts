@@ -1,11 +1,19 @@
+"use client";
+
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "../../../database.types";
-import { syncAlert } from "./engine";
-import { deleteAllAlertsForEntity } from "./engine";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, typedGetAll } from "@/lib/powersync/typedQuery";
+import { syncAlert, deleteAllAlertsForEntity } from "./engine";
 import { getDefinitionsForEntity } from "./registry";
 import { todayStart, getUpcomingWindowEnd } from "./util/getUpcomingWindow";
 
 type TriageTable = "Events" | "Events_deleted" | "WorkTrackers" | "WorkTrackers_deleted";
+
+type BeRow = { id: string; bleacher_uuid: string | null };
+type RelatedBeRow = { id: string };
+type WtIdRow = { id: string };
+type WtRow = { id: string; bleacher_uuid: string | null; date: string | null };
 
 export async function triage(
   table: TriageTable,
@@ -33,12 +41,14 @@ async function triageEventSaved(
   supabase: SupabaseClient<Database>,
 ): Promise<void> {
   // 1. Find all bleacher_events for this event
-  const { data: bleacherEvents } = await supabase
-    .from("BleacherEvents")
-    .select("id, bleacher_uuid")
-    .eq("event_uuid", eventUuid);
-
-  const bes = bleacherEvents ?? [];
+  const bes = await typedGetAll(
+    db
+      .selectFrom("BleacherEvents as be")
+      .select(["be.id as id", "be.bleacher_uuid as bleacher_uuid"])
+      .where("be.event_uuid", "=", eventUuid)
+      .compile(),
+    expect<BeRow>(),
+  );
   const bleacherUuids = [...new Set(bes.map((be) => be.bleacher_uuid).filter(Boolean))] as string[];
 
   // 2. Run event-level alerts on this event
@@ -59,14 +69,19 @@ async function triageEventSaved(
   //    These could be affected by this event changing the "last known location"
   //    or resolving/creating scheduling conflicts
   if (bleacherUuids.length > 0) {
-    const { data: relatedBEs } = await supabase
-      .from("BleacherEvents")
-      .select("id, event_uuid, Events!inner(event_start)")
-      .in("bleacher_uuid", bleacherUuids)
-      .neq("event_uuid", eventUuid)
-      .gte("Events.event_start", todayStart());
+    const relatedBEs = await typedGetAll(
+      db
+        .selectFrom("BleacherEvents as be")
+        .innerJoin("Events as e", "e.id", "be.event_uuid")
+        .select(["be.id as id"])
+        .where("be.bleacher_uuid", "in", bleacherUuids)
+        .where("be.event_uuid", "!=", eventUuid)
+        .where("e.event_start", ">=", todayStart())
+        .compile(),
+      expect<RelatedBeRow>(),
+    );
 
-    for (const rbe of relatedBEs ?? []) {
+    for (const rbe of relatedBEs) {
       for (const def of beDefs) {
         await syncAlert(def, rbe.id, supabase);
       }
@@ -75,13 +90,17 @@ async function triageEventSaved(
     // 5. Find work trackers on these bleachers (could affect WT transportation alerts)
     const wtDefs = getDefinitionsForEntity("work_tracker");
     if (wtDefs.length > 0) {
-      const { data: relatedWTs } = await supabase
-        .from("WorkTrackers")
-        .select("id")
-        .in("bleacher_uuid", bleacherUuids)
-        .gte("date", todayStart());
+      const relatedWTs = await typedGetAll(
+        db
+          .selectFrom("WorkTrackers as wt")
+          .select(["wt.id as id"])
+          .where("wt.bleacher_uuid", "in", bleacherUuids)
+          .where("wt.date", ">=", todayStart())
+          .compile(),
+        expect<WtIdRow>(),
+      );
 
-      for (const wt of relatedWTs ?? []) {
+      for (const wt of relatedWTs) {
         for (const def of wtDefs) {
           await syncAlert(def, wt.id, supabase);
         }
@@ -95,12 +114,14 @@ async function triageEventDeleted(
   supabase: SupabaseClient<Database>,
 ): Promise<void> {
   // Find bleacher_events for this event before they get cascade-deleted
-  const { data: bleacherEvents } = await supabase
-    .from("BleacherEvents")
-    .select("id, bleacher_uuid")
-    .eq("event_uuid", eventUuid);
-
-  const bes = bleacherEvents ?? [];
+  const bes = await typedGetAll(
+    db
+      .selectFrom("BleacherEvents as be")
+      .select(["be.id as id", "be.bleacher_uuid as bleacher_uuid"])
+      .where("be.event_uuid", "=", eventUuid)
+      .compile(),
+    expect<BeRow>(),
+  );
   const bleacherUuids = [...new Set(bes.map((be) => be.bleacher_uuid).filter(Boolean))] as string[];
 
   // Delete alerts on this event and its bleacher_events
@@ -112,14 +133,19 @@ async function triageEventDeleted(
   // Re-evaluate neighboring bleacher_events and work trackers
   if (bleacherUuids.length > 0) {
     const beDefs = getDefinitionsForEntity("bleacher_event");
-    const { data: relatedBEs } = await supabase
-      .from("BleacherEvents")
-      .select("id, Events!inner(event_start)")
-      .in("bleacher_uuid", bleacherUuids)
-      .neq("event_uuid", eventUuid)
-      .gte("Events.event_start", todayStart());
+    const relatedBEs = await typedGetAll(
+      db
+        .selectFrom("BleacherEvents as be")
+        .innerJoin("Events as e", "e.id", "be.event_uuid")
+        .select(["be.id as id"])
+        .where("be.bleacher_uuid", "in", bleacherUuids)
+        .where("be.event_uuid", "!=", eventUuid)
+        .where("e.event_start", ">=", todayStart())
+        .compile(),
+      expect<RelatedBeRow>(),
+    );
 
-    for (const rbe of relatedBEs ?? []) {
+    for (const rbe of relatedBEs) {
       for (const def of beDefs) {
         await syncAlert(def, rbe.id, supabase);
       }
@@ -127,13 +153,17 @@ async function triageEventDeleted(
 
     const wtDefs = getDefinitionsForEntity("work_tracker");
     if (wtDefs.length > 0) {
-      const { data: relatedWTs } = await supabase
-        .from("WorkTrackers")
-        .select("id")
-        .in("bleacher_uuid", bleacherUuids)
-        .gte("date", todayStart());
+      const relatedWTs = await typedGetAll(
+        db
+          .selectFrom("WorkTrackers as wt")
+          .select(["wt.id as id"])
+          .where("wt.bleacher_uuid", "in", bleacherUuids)
+          .where("wt.date", ">=", todayStart())
+          .compile(),
+        expect<WtIdRow>(),
+      );
 
-      for (const wt of relatedWTs ?? []) {
+      for (const wt of relatedWTs) {
         for (const def of wtDefs) {
           await syncAlert(def, wt.id, supabase);
         }
@@ -146,12 +176,16 @@ async function triageWorkTrackerSaved(
   workTrackerUuid: string,
   supabase: SupabaseClient<Database>,
 ): Promise<void> {
-  const { data: wt } = await supabase
-    .from("WorkTrackers")
-    .select("id, bleacher_uuid, date")
-    .eq("id", workTrackerUuid)
-    .single();
-
+  const rows = await typedGetAll(
+    db
+      .selectFrom("WorkTrackers as wt")
+      .select(["wt.id as id", "wt.bleacher_uuid as bleacher_uuid", "wt.date as date"])
+      .where("wt.id", "=", workTrackerUuid)
+      .limit(1)
+      .compile(),
+    expect<WtRow>(),
+  );
+  const wt = rows[0];
   if (!wt) return;
 
   // 1. Run work_tracker-level alerts on this work tracker
@@ -163,13 +197,18 @@ async function triageWorkTrackerSaved(
   // 2. Find upcoming bleacher_events for this bleacher (ripple effect on transportation)
   if (wt.bleacher_uuid) {
     const beDefs = getDefinitionsForEntity("bleacher_event");
-    const { data: relatedBEs } = await supabase
-      .from("BleacherEvents")
-      .select("id, Events!inner(event_start)")
-      .eq("bleacher_uuid", wt.bleacher_uuid)
-      .gte("Events.event_start", todayStart());
+    const relatedBEs = await typedGetAll(
+      db
+        .selectFrom("BleacherEvents as be")
+        .innerJoin("Events as e", "e.id", "be.event_uuid")
+        .select(["be.id as id"])
+        .where("be.bleacher_uuid", "=", wt.bleacher_uuid)
+        .where("e.event_start", ">=", todayStart())
+        .compile(),
+      expect<RelatedBeRow>(),
+    );
 
-    for (const rbe of relatedBEs ?? []) {
+    for (const rbe of relatedBEs) {
       for (const def of beDefs) {
         await syncAlert(def, rbe.id, supabase);
       }
@@ -186,13 +225,18 @@ async function triageWorkTrackerDeleted(
 
   if (bleacherUuid) {
     const beDefs = getDefinitionsForEntity("bleacher_event");
-    const { data: relatedBEs } = await supabase
-      .from("BleacherEvents")
-      .select("id, Events!inner(event_start)")
-      .eq("bleacher_uuid", bleacherUuid)
-      .gte("Events.event_start", todayStart());
+    const relatedBEs = await typedGetAll(
+      db
+        .selectFrom("BleacherEvents as be")
+        .innerJoin("Events as e", "e.id", "be.event_uuid")
+        .select(["be.id as id"])
+        .where("be.bleacher_uuid", "=", bleacherUuid)
+        .where("e.event_start", ">=", todayStart())
+        .compile(),
+      expect<RelatedBeRow>(),
+    );
 
-    for (const rbe of relatedBEs ?? []) {
+    for (const rbe of relatedBEs) {
       for (const def of beDefs) {
         await syncAlert(def, rbe.id, supabase);
       }
