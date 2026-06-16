@@ -63,6 +63,11 @@ export async function loadQuoteIntoStore(eventId: string): Promise<string | null
     });
   }
 
+  if (data.financeContact) {
+    store.setField("useFinanceContact", true);
+    store.setField("financeContactId", data.financeContact.id);
+  }
+
   if (data.contact) {
     store.setField("contactId", data.contact.id);
     store.setField(

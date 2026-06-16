@@ -10,6 +10,7 @@ export const TRACKED_FIELDS = [
   "event_status",
   "event_type_uuid",
   "contact_uuid",
+  "finance_contact_uuid",
   "address_uuid",
   "sales_office_uuid",
   "terms_and_conditions_uuid",
@@ -31,6 +32,7 @@ export const FIELD_LABELS: Record<string, string> = {
   event_status: "Status",
   event_type_uuid: "Event Type",
   contact_uuid: "Contact",
+  finance_contact_uuid: "Finance Contact",
   address_uuid: "Address",
   sales_office_uuid: "Sales Office",
   terms_and_conditions_uuid: "Terms & Conditions",
@@ -50,6 +52,7 @@ export const FIELD_LABELS: Record<string, string> = {
 
 const UUID_FIELDS_TO_SKIP_RAW = new Set([
   "contact_uuid",
+  "finance_contact_uuid",
   "sales_office_uuid",
   "event_type_uuid",
   "terms_and_conditions_uuid",
@@ -76,7 +79,7 @@ async function resolveUuid(
   field: string,
   uuid: string,
 ): Promise<string> {
-  if (field === "contact_uuid") {
+  if (field === "contact_uuid" || field === "finance_contact_uuid") {
     const { data } = await supabase.from("Contacts").select("first_name, last_name").eq("id", uuid).single();
     return data ? `${data.first_name} ${data.last_name ?? ""}`.trim() : uuid;
   }

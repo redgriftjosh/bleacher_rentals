@@ -150,6 +150,7 @@ const EventsCols = {
   terms_and_conditions_uuid: column.text,
   tax_percent: column.real,
   tax_amount_cents: column.integer,
+  finance_contact_uuid: column.text,
 } satisfies PowerSyncColsFor<"Events">;
 const Events = new Table(EventsCols, {
   indexes: {
@@ -640,6 +641,7 @@ const BleacherTypesCols = {
   created_by_user_uuid: column.text,
   deleted: column.integer,
   name: column.text,
+  roof_type: column.text,
   row_count: column.integer,
 } satisfies PowerSyncColsFor<"BleacherTypes">;
 const BleacherTypes = new Table(BleacherTypesCols);

@@ -62,6 +62,7 @@ export async function createQuoteEvent(
     external_notes: state.clientFacingNotes || null,
     created_by_user_uuid: state.ownerUserUuid ?? null,
     contact_uuid: state.contactId || null,
+    finance_contact_uuid: state.financeContactId || null,
     sales_office_uuid: state.salesOfficeId || null,
     terms_and_conditions_uuid: state.termsDocumentId || null,
   };

@@ -15,6 +15,7 @@ import {
   Settings,
   Building2,
   ScrollText,
+  DollarSign,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";
@@ -142,6 +143,13 @@ const ALL_ITEMS: SidebarItemConfig[] = [
         label: "Inspection Form",
         href: "/inspection-questions",
         icon: ClipboardCheck,
+      },
+      {
+        type: "button",
+        key: "pricing-matrix",
+        label: "Pricing Matrix",
+        href: "/pricing-matrix",
+        icon: DollarSign,
       },
       {
         type: "button",
