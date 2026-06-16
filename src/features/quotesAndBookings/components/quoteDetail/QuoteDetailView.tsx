@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Send } from "lucide-react";
+import { LayoutDashboard, Trash2, Send } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { QuoteDetail, fetchQuoteDetail } from "../../db/fetchQuoteDetail";
 import { softDeleteEvent } from "../../db/softDeleteEvent";
@@ -16,6 +16,8 @@ import { FilesTab } from "./tabs/FilesTab";
 import { LogTab } from "./tabs/LogTab";
 import { useEventCurrency } from "../../hooks/useEventCurrency";
 import { formatMoney } from "../../utils/formatMoney";
+import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
+import { loadEventForModal } from "@/features/eventConfiguration/functions/loadEventForModal";
 
 export function QuoteDetailView({ eventId }: { eventId: string }) {
   const router = useRouter();
@@ -35,8 +37,16 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
     return lineTotal + tax;
   }, [lineItems, quote?.taxAmountCents]);
 
+  const handleOpenInDashboard = async () => {
+    await loadEventForModal(eventId, "dashboard");
+    router.push("/dashboard");
+  };
+
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this quote? This action can be undone by an admin.")) return;
+    if (
+      !confirm("Are you sure you want to delete this quote? This action can be undone by an admin.")
+    )
+      return;
     setDeleting(true);
     const ok = await softDeleteEvent(eventId, supabase);
     if (ok) {
@@ -54,7 +64,9 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
     if (quote.financeContact?.email) recipientEmails.push(quote.financeContact.email);
 
     if (recipientEmails.length === 0) {
-      createErrorToast(["No contact email found. Please add a contact with an email address first."]);
+      createErrorToast([
+        "No contact email found. Please add a contact with an email address first.",
+      ]);
       return;
     }
 
@@ -171,6 +183,13 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
           <div className="flex items-center gap-3 py-2">
             <span className="text-sm font-bold">{formatMoney(contractTotalCents, currency)}</span>
             <span className="text-xs text-gray-500">Contract Total</span>
+            <button
+              onClick={handleOpenInDashboard}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Open in Dashboard
+            </button>
             <button
               onClick={() => router.push(`/quotes-bookings/${quote.id}/edit`)}
               className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"

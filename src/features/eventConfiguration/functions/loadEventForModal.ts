@@ -41,8 +41,12 @@ type LineItemRow = {
 /**
  * Loads an event by ID using PowerSync and opens it in the modal
  * @param eventId - The event UUID to load
+ * @param target - "modal" (default) opens the modal; "dashboard" expands the dashboard form
  */
-export async function loadEventForModal(eventId: string): Promise<void> {
+export async function loadEventForModal(
+  eventId: string,
+  target: "modal" | "dashboard" = "modal",
+): Promise<void> {
   try {
     // Fetch the event with address join using PowerSync/Kysely
     const eventQuery = db
@@ -111,7 +115,10 @@ export async function loadEventForModal(eventId: string): Promise<void> {
         reqMap.set(r.bleacher_type_uuid, (reqMap.get(r.bleacher_type_uuid) ?? 0) + r.quantity);
       }
     }
-    const bleacherRequirements = [...reqMap.entries()].map(([bleacherTypeUuid, quantity]) => ({ bleacherTypeUuid, quantity }));
+    const bleacherRequirements = [...reqMap.entries()].map(([bleacherTypeUuid, quantity]) => ({
+      bleacherTypeUuid,
+      quantity,
+    }));
 
     // Load all event data into the store and open modal
     const store = useCurrentEventStore.getState();
@@ -163,8 +170,8 @@ export async function loadEventForModal(eventId: string): Promise<void> {
       eventData.booked_at ? new Date(eventData.booked_at).toLocaleDateString("en-CA") : null,
     );
     // Open the modal (not the dashboard form)
-    setField("isModalOpen", true);
-    setField("isFormExpanded", false);
+    setField("isModalOpen", target === "modal");
+    setField("isFormExpanded", target === "dashboard");
     setField("isFormMinimized", false);
   } catch (error) {
     console.error("Failed to load event for modal:", error);

@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
-import { Palette, X } from "lucide-react";
+import { Palette, X, ExternalLink } from "lucide-react";
 import { useAuth, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +26,7 @@ import { useUsersStore } from "@/state/userStore";
 import { triage } from "@/features/alerts/triage";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { canEditOwnedEntity } from "@/features/userAccess/logic/canEditOwnedEntity";
+import { useCreateQuoteStore } from "@/features/quotesAndBookings/state/useCreateQuoteStore";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
@@ -54,6 +56,7 @@ export const EventConfigurationForm = ({
   const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
   const users = useUsersStore((s) => s.users);
   const permissions = useTeamPermissions();
+  const router = useRouter();
 
   const isEditing = !!currentEventStore.eventUuid;
   // Viewer can never edit — regardless of ownership
@@ -126,6 +129,32 @@ export const EventConfigurationForm = ({
       console.error("Failed to delete event:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenDetails = () => {
+    const state = useCurrentEventStore.getState();
+    if (state.eventUuid) {
+      // Existing event — go straight to its edit page
+      router.push(`/quotes-bookings/${state.eventUuid}/edit`);
+    } else {
+      // Unsaved event — pre-populate the quote store and open the new quote page
+      const store = useCreateQuoteStore.getState();
+      store.resetForm();
+      store.setField("eventName", state.eventName);
+      store.setField("eventStart", state.eventStart);
+      store.setField("eventEnd", state.eventEnd);
+      store.setField("ownerUserUuid", state.ownerUserUuid);
+      if (state.addressData) {
+        store.setField("eventAddress", state.addressData.address ?? "");
+        store.setField("eventAddressData", {
+          street: state.addressData.address ?? "",
+          city: state.addressData.city ?? "",
+          stateProvince: state.addressData.state ?? "",
+          zipPostal: state.addressData.postalCode ?? "",
+        });
+      }
+      router.push("/quotes-bookings/new");
     }
   };
 
@@ -204,6 +233,18 @@ export const EventConfigurationForm = ({
               ) : (
                 <Palette className="w-4 h-4" />
               )}
+            </button>
+          )}
+          {/* Details button — always visible when canEdit */}
+          {canEdit && (
+            <button
+              type="button"
+              title="Open in Quote Details"
+              className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-700 text-sm font-semibold border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
+              onClick={handleOpenDetails}
+            >
+              <ExternalLink className="w-4 h-4" />
+              Details
             </button>
           )}
           {/* Delete button - only for existing events the user can edit */}
@@ -310,7 +351,9 @@ export const EventConfigurationForm = ({
 
       {/* Tab content */}
       <fieldset disabled={!canEdit}>
-        {activeTab === "Core" && <CoreTab showSetupTeardown={showSetupTeardown} disabled={!canEdit} />}
+        {activeTab === "Core" && (
+          <CoreTab showSetupTeardown={showSetupTeardown} disabled={!canEdit} />
+        )}
         {activeTab === "Details" && <DetailsTab />}
         {activeTab === "Alerts" && <AlertsTab />}
       </fieldset>
