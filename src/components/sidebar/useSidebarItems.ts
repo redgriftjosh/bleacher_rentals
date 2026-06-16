@@ -118,13 +118,6 @@ const ALL_ITEMS: SidebarItemConfig[] = [
     icon: CalendarDays,
   },
   {
-    type: "button",
-    key: "sales-offices",
-    label: "Sales Offices",
-    href: "/sales-offices",
-    icon: Building2,
-  },
-  {
     type: "section",
     key: "configuration",
     label: "Configuration",
@@ -146,6 +139,13 @@ const ALL_ITEMS: SidebarItemConfig[] = [
       },
       {
         type: "button",
+        key: "quickbooks",
+        label: "QuickBooks",
+        href: "/quickbooks",
+        icon: QuickBooksIcon,
+      },
+      {
+        type: "button",
         key: "pricing-matrix",
         label: "Pricing Matrix",
         href: "/pricing-matrix",
@@ -160,10 +160,10 @@ const ALL_ITEMS: SidebarItemConfig[] = [
       },
       {
         type: "button",
-        key: "quickbooks",
-        label: "QuickBooks",
-        href: "/quickbooks",
-        icon: QuickBooksIcon,
+        key: "sales-offices",
+        label: "Sales Offices",
+        href: "/sales-offices",
+        icon: Building2,
       },
     ],
   },
