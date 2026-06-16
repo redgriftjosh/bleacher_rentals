@@ -1,8 +1,5 @@
 import { AlertDefinition } from "../types";
-import {
-  findLastKnownLocation,
-  resolveStreet,
-} from "../util/findLastKnownLocation";
+import { findLastKnownLocation, resolveStreet } from "../util/findLastKnownLocation";
 
 export const bleacherTransportation: AlertDefinition = {
   title: "No Transportation",
@@ -21,11 +18,7 @@ export const bleacherTransportation: AlertDefinition = {
     const event = be.Events;
     if (!event.address_uuid) return null;
 
-    const lastLocation = await findLastKnownLocation(
-      be.bleacher_uuid,
-      event.event_start,
-      supabase,
-    );
+    const lastLocation = await findLastKnownLocation(be.bleacher_uuid, event.event_start, supabase);
     if (!lastLocation) return null;
 
     const lastStreet = await resolveStreet(lastLocation.addressUuid, supabase);

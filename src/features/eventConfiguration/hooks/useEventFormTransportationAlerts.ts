@@ -65,10 +65,13 @@ export function useEventFormTransportationAlerts() {
         }
       }
 
-      const lastLocation =
-        !eventLocation ? wtLocation
-        : !wtLocation ? eventLocation
-        : eventLocation.lastDate >= wtLocation.lastDate ? eventLocation : wtLocation;
+      const lastLocation = !eventLocation
+        ? wtLocation
+        : !wtLocation
+          ? eventLocation
+          : eventLocation.lastDate >= wtLocation.lastDate
+            ? eventLocation
+            : wtLocation;
 
       if (!lastLocation) continue;
 
@@ -78,10 +81,7 @@ export function useEventFormTransportationAlerts() {
 
       const bleacher = bleachers.find((b) => b.id === bleacherUuid);
       const bleacherNum = bleacher?.bleacher_number;
-      const desc = [
-        bleacherNum != null ? `Bleacher #${bleacherNum}` : null,
-        eventName,
-      ]
+      const desc = [bleacherNum != null ? `Bleacher #${bleacherNum}` : null, eventName]
         .filter(Boolean)
         .join(" — ");
 
