@@ -3713,4 +3713,29 @@ UPDATE public."Events"
 SET terms_and_conditions_uuid = 'cc000000-0000-0000-0000-000000000001'
 WHERE id = 'e0000000-0000-0000-0000-000000000001';
 
+-- Link bleachers to BleacherTypes by row_count (post-seed fixup)
+-- Create any missing BleacherTypes for row counts present in Bleachers
+INSERT INTO public."BleacherTypes" (name, row_count, roof_type)
+SELECT
+  format('%s-Row, %s Seat', b.bleacher_rows, b.bleacher_seats),
+  b.bleacher_rows,
+  'none'::public.roof_type
+FROM (
+  SELECT DISTINCT bleacher_rows, bleacher_seats
+  FROM public."Bleachers"
+  WHERE deleted = false
+    AND bleacher_rows NOT IN (
+      SELECT row_count FROM public."BleacherTypes" WHERE deleted = false AND roof_type = 'none'::public.roof_type
+    )
+) b;
+
+UPDATE public."Bleachers" b
+SET bleacher_type_uuid = bt.id
+FROM public."BleacherTypes" bt
+WHERE bt.row_count = b.bleacher_rows
+  AND bt.roof_type = 'none'::public.roof_type
+  AND bt.deleted = false
+  AND b.deleted = false
+  AND b.bleacher_type_uuid IS NULL;
+
 -- \unrestrict Ds99ET2g3yzgVD4mH2iEedXtqMC3vgEuBVzNtymQhXweMgwTljWJNMT9iRZOArE

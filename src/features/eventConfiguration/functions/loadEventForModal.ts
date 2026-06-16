@@ -33,6 +33,11 @@ type BleacherEventRow = {
   bleacher_uuid: string | null;
 };
 
+type RequirementRow = {
+  bleacher_type_uuid: string | null;
+  quantity: number | null;
+};
+
 /**
  * Loads an event by ID using PowerSync and opens it in the modal
  * @param eventId - The event UUID to load
@@ -91,6 +96,18 @@ export async function loadEventForModal(eventId: string): Promise<void> {
 
     const bleacherUuids = bleacherEvents.map((be) => be.bleacher_uuid).filter(Boolean) as string[];
 
+    // Fetch bleacher requirements
+    const requirementsQuery = db
+      .selectFrom("EventBleacherRequirements")
+      .select(["bleacher_type_uuid", "quantity"])
+      .where("event_uuid", "=", eventId)
+      .compile();
+
+    const requirementRows = await typedGetAll(requirementsQuery, expect<RequirementRow>());
+    const bleacherRequirements = requirementRows
+      .filter((r) => r.bleacher_type_uuid && r.quantity)
+      .map((r) => ({ bleacherTypeUuid: r.bleacher_type_uuid!, quantity: r.quantity! }));
+
     // Load all event data into the store and open modal
     const store = useCurrentEventStore.getState();
     const { setField } = store;
@@ -132,6 +149,7 @@ export async function loadEventForModal(eventId: string): Promise<void> {
     setField("notes", eventData.notes ?? "");
     setField("mustBeClean", !!eventData.must_be_clean);
     setField("bleacherUuids", bleacherUuids);
+    setField("bleacherRequirements", bleacherRequirements);
     setField("hslHue", eventData.hsl_hue);
     setField("goodshuffleUrl", eventData.goodshuffle_url ?? null);
     setField("ownerUserUuid", eventData.created_by_user_uuid ?? null);

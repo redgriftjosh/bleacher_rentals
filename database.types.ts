@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       AccountManagers: {
@@ -1139,6 +1164,45 @@ export type Database = {
             columns: ["uploaded_by_user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      EventBleacherRequirements: {
+        Row: {
+          bleacher_type_uuid: string
+          created_at: string
+          event_uuid: string
+          id: string
+          quantity: number
+        }
+        Insert: {
+          bleacher_type_uuid: string
+          created_at?: string
+          event_uuid: string
+          id?: string
+          quantity?: number
+        }
+        Update: {
+          bleacher_type_uuid?: string
+          created_at?: string
+          event_uuid?: string
+          id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventBleacherRequirements_bleacher_type_uuid_fkey"
+            columns: ["bleacher_type_uuid"]
+            isOneToOne: false
+            referencedRelation: "BleacherTypes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventBleacherRequirements_event_uuid_fkey"
+            columns: ["event_uuid"]
+            isOneToOne: false
+            referencedRelation: "Events"
             referencedColumns: ["id"]
           },
         ]
@@ -3522,6 +3586,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       alert_entity_type: ["event"],

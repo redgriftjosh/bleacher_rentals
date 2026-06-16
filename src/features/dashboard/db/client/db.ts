@@ -104,6 +104,7 @@ export function fetchBleachers() {
               sevenRow: event.seven_row,
               tenRow: event.ten_row,
               fifteenRow: event.fifteen_row,
+              bleacherRequirements: [],
               setupStart: event.setup_start ?? "",
               setupText: be.setup_text,
               setupConfirmed: be.setup_confirmed,
@@ -198,6 +199,7 @@ export function fetchDashboardEvents() {
         sevenRow: event.seven_row,
         tenRow: event.ten_row,
         fifteenRow: event.fifteen_row,
+        bleacherRequirements: [],
         setupStart: event.setup_start ?? "",
         setupText: null, // unused
         setupConfirmed: false, // unused
@@ -869,6 +871,17 @@ export async function createEvent(
       { duration: 10000 },
     );
     throw new Error(`Failed to link bleachers: ${bleacherEventError.message}`);
+  }
+
+  // 4b. Insert bleacher requirements
+  const reqs = state.bleacherRequirements.filter((r) => r.quantity > 0);
+  if (reqs.length > 0) {
+    const reqRows = reqs.map((r) => ({
+      event_uuid,
+      bleacher_type_uuid: r.bleacherTypeUuid,
+      quantity: r.quantity,
+    }));
+    await supabase.from("EventBleacherRequirements").insert(reqRows);
   }
 
   toast.custom(

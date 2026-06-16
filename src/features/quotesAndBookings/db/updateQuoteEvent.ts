@@ -5,6 +5,8 @@ import { CreateQuoteState } from "../state/useCreateQuoteStore";
 import { syncPaymentInstallments } from "./paymentInstallments";
 import { calculateTotals } from "../utils/calculateTotals";
 import { logEventChanges, logLineItemChanges, TRACKED_FIELDS, SimpleLineItem } from "./logEventChanges";
+import { eventRequirements } from "@/features/alerts/definitions/eventRequirements";
+import { CurrentEventState } from "@/features/eventConfiguration/state/useCurrentEventStore";
 
 /**
  * Updates an existing quote/event.
@@ -175,7 +177,75 @@ export async function updateQuoteEvent(
     }
   }
 
-  // 6. Sync payment installments
+  // 6. Sync bleacher requirements from line items
+  const reqMap = new Map<string, number>();
+  for (const li of state.lineItems) {
+    if (li.category === "bleachers" && li.bleacherTypeUuid) {
+      reqMap.set(li.bleacherTypeUuid, (reqMap.get(li.bleacherTypeUuid) ?? 0) + li.qty);
+    }
+  }
+  await supabase.from("EventBleacherRequirements").delete().eq("event_uuid", eventId);
+  if (reqMap.size > 0) {
+    const reqRows = [...reqMap.entries()].map(([btUuid, qty]) => ({
+      event_uuid: eventId,
+      bleacher_type_uuid: btUuid,
+      quantity: qty,
+    }));
+    const { error: reqError } = await supabase.from("EventBleacherRequirements").insert(reqRows);
+    if (reqError) {
+      console.error("Bleacher requirements sync failed:", reqError.message);
+    }
+  }
+
+  // 7. Sync "requirements not met" alert
+  const requirements = [...reqMap.entries()].map(([btUuid, qty]) => ({
+    bleacherTypeUuid: btUuid,
+    quantity: qty,
+  }));
+
+  // Fetch currently assigned bleachers to compare
+  const { data: assignedBleacherRows } = await supabase
+    .from("BleacherEvents")
+    .select("bleacher_uuid")
+    .eq("event_uuid", eventId);
+  const assignedUuids = (assignedBleacherRows ?? []).map((r) => r.bleacher_uuid).filter(Boolean) as string[];
+
+  let assignedBleachers: { id: string; bleacher_type_uuid: string | null; bleacher_rows: number; bleacher_seats: number }[] = [];
+  if (assignedUuids.length > 0) {
+    const { data: bleacherRows } = await supabase
+      .from("Bleachers")
+      .select("id, bleacher_type_uuid, bleacher_rows, bleacher_seats")
+      .in("id", assignedUuids);
+    assignedBleachers = (bleacherRows ?? []) as typeof assignedBleachers;
+  }
+
+  const pseudoEvent: Partial<CurrentEventState> = {
+    eventUuid: eventId,
+    lenient: false,
+    bleacherUuids: assignedUuids,
+    bleacherRequirements: requirements,
+    sevenRow: 0,
+    tenRow: 0,
+    fifteenRow: 0,
+    seats: 0,
+    eventName: state.eventName,
+    eventStart: state.eventStart,
+    eventEnd: state.eventEnd,
+  };
+  const alerts = eventRequirements.evaluate({
+    event: pseudoEvent as CurrentEventState,
+    bleachers: assignedBleachers as any,
+  });
+  await eventRequirements.sync(
+    eventId,
+    "event",
+    alerts,
+    currentUserUuid ?? null,
+    state.ownerUserUuid ?? null,
+    supabase,
+  );
+
+  // 8. Sync payment installments
   try {
     await syncPaymentInstallments(eventId, state.paymentInstallments, state.currency);
   } catch (e) {

@@ -28,6 +28,7 @@ export type CurrentEventState = {
   sevenRow: number | null;
   tenRow: number | null;
   fifteenRow: number | null;
+  bleacherRequirements: { bleacherTypeUuid: string; quantity: number }[];
   setupStart: string;
   sameDaySetup: boolean;
   eventStart: string;
@@ -76,6 +77,7 @@ const initialState: CurrentEventState = {
   sevenRow: 0,
   tenRow: 0,
   fifteenRow: 0,
+  bleacherRequirements: [],
   setupStart: "",
   sameDaySetup: true,
   eventStart: "",
