@@ -56,7 +56,10 @@ export class BackendConnector implements PowerSyncBackendConnector {
       });
       if (!res.ok) throw new Error(await res.text());
       const { endpoint, token } = await res.json();
-      _cachedCredentials = { endpoint, token, expiresAt: Date.now() + CREDENTIALS_TTL_MS };
+      const base64 = token.split(".")[1];
+      const payload = JSON.parse(atob(base64.replace(/-/g, "+").replace(/_/g, "/")));
+      const expiresAt = payload.exp ? payload.exp * 1000 - 30_000 : Date.now() + CREDENTIALS_TTL_MS;
+      _cachedCredentials = { endpoint, token, expiresAt };
       return { endpoint, token };
     })().finally(() => {
       _inflight = null;
