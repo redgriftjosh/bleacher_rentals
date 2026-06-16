@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { CheckCircle, TriangleAlert } from "lucide-react";
 import { Dropdown } from "@/components/DropDown";
 import { Textarea } from "@/components/TextArea";
 import { useCurrentEventStore } from "../../state/useCurrentEventStore";
 import { EventStatus } from "@/features/dashboard/types";
 import CentsInput from "@/components/CentsInput";
 import { useBleacherTypesActive } from "@/features/pricingMatrix/hooks/useBleacherTypesActive";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 
 export const DetailsTab = () => {
   const contractRevenueCents = useCurrentEventStore((s) => s.contractRevenueCents);
@@ -15,7 +18,33 @@ export const DetailsTab = () => {
   const bookedAt = useCurrentEventStore((s) => s.bookedAt);
   const createdAt = useCurrentEventStore((s) => s.createdAt);
   const bleacherRequirements = useCurrentEventStore((s) => s.bleacherRequirements);
+  const bleacherUuids = useCurrentEventStore((s) => s.bleacherUuids);
   const { bleacherTypes } = useBleacherTypesActive();
+
+  const assignedBleachersQuery = useMemo(
+    () =>
+      db
+        .selectFrom("Bleachers")
+        .select(["id", "bleacher_type_uuid"])
+        .where("deleted", "=", 0)
+        .compile(),
+    [],
+  );
+  const { data: allBleacherRows } = useTypedQuery(
+    assignedBleachersQuery,
+    expect<{ id: string; bleacher_type_uuid: string | null }>(),
+  );
+
+  // Count assigned bleachers by type for just this event's assigned bleacher UUIDs
+  const assignedCountByType = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const row of allBleacherRows ?? []) {
+      if (!bleacherUuids.includes(row.id)) continue;
+      if (!row.bleacher_type_uuid) continue;
+      counts[row.bleacher_type_uuid] = (counts[row.bleacher_type_uuid] ?? 0) + 1;
+    }
+    return counts;
+  }, [allBleacherRows, bleacherUuids]);
 
   const [revenueDisplay, setRevenueDisplay] = React.useState(
     contractRevenueCents !== null ? (contractRevenueCents / 100).toFixed(2) : "",
@@ -55,14 +84,24 @@ export const DetailsTab = () => {
               {bleacherRequirements.map((req) => {
                 const bt = bleacherTypes.find((t) => t.id === req.bleacherTypeUuid);
                 const name =
-                  (bt?.name ?? bt?.row_count) ? `${bt?.row_count}-Row` : req.bleacherTypeUuid;
+                  bt?.name ?? (bt?.row_count ? `${bt.row_count}-Row` : req.bleacherTypeUuid);
+                const assigned = assignedCountByType[req.bleacherTypeUuid] ?? 0;
+                const met = assigned === req.quantity;
                 return (
                   <li
                     key={req.bleacherTypeUuid}
                     className="flex items-center justify-between text-sm rounded border border-gray-200 bg-gray-50 px-3 py-1.5"
                   >
                     <span className="font-medium text-gray-700">{name}</span>
-                    <span className="text-gray-500">×{req.quantity}</span>
+                    <span className="flex items-center gap-1.5 tabular-nums text-sm font-medium">
+                      <span className={met ? "text-green-700" : "text-red-600"}>
+                        {assigned} / {req.quantity}
+                      </span>
+                      {met
+                        ? <CheckCircle className="w-4 h-4 text-green-600" />
+                        : <TriangleAlert className="w-4 h-4 text-red-500" />
+                      }
+                    </span>
                   </li>
                 );
               })}
