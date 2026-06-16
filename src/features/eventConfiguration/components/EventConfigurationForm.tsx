@@ -27,6 +27,7 @@ import { triage } from "@/features/alerts/triage";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { canEditOwnedEntity } from "@/features/userAccess/logic/canEditOwnedEntity";
 import { useCreateQuoteStore } from "@/features/quotesAndBookings/state/useCreateQuoteStore";
+import { useEventFormTransportationAlerts } from "../hooks/useEventFormTransportationAlerts";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
@@ -57,6 +58,7 @@ export const EventConfigurationForm = ({
   const users = useUsersStore((s) => s.users);
   const permissions = useTeamPermissions();
   const router = useRouter();
+  useEventFormTransportationAlerts();
 
   const isEditing = !!currentEventStore.eventUuid;
   // Viewer can never edit — regardless of ownership
