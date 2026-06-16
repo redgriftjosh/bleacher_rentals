@@ -16,6 +16,7 @@ import {
   Building2,
   ScrollText,
   DollarSign,
+  BookUser,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";
@@ -118,6 +119,13 @@ const ALL_ITEMS: SidebarItemConfig[] = [
     icon: CalendarDays,
   },
   {
+    type: "button",
+    key: "companies-contacts",
+    label: "Companies & Contacts",
+    href: "/companies-contacts",
+    icon: BookUser,
+  },
+  {
     type: "section",
     key: "configuration",
     label: "Configuration",
@@ -189,6 +197,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
   admin: [
     "dashboard",
     "quotes-bookings",
+    "companies-contacts",
     "sales-offices",
     "team",
     "assets",
@@ -203,6 +212,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
   account_manager: [
     "dashboard",
     "quotes-bookings",
+    "companies-contacts",
     "sales-offices",
     "team",
     "assets",
