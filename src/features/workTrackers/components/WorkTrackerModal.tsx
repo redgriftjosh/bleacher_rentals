@@ -1,4 +1,5 @@
-import { Link, X, Trash2, Calculator, Pencil } from "lucide-react";
+import { LocateFixed, X, Trash2, Calculator, Pencil } from "lucide-react";
+import { AppTooltip } from "@/components/AppTooltip";
 import { Dropdown } from "@/components/DropDown";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { EditWorkTrackerTypesModal } from "./EditWorkTrackerTypesModal";
@@ -34,7 +35,8 @@ import BillOfLadingButton from "./billOfLading/BillOfLadingButton";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { canEditWorkTracker } from "@/features/userAccess/logic/canEditWorkTracker";
 import { db } from "@/components/providers/SystemProvider";
-import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { expect, useTypedQuery, typedGetAll } from "@/lib/powersync/typedQuery";
+import { resolveAddressFull } from "@/utils/resolveAddress";
 import { WorkTrackerAlertsDropDown } from "@/features/alerts/components/WorkTrackerAlertsDropDown";
 
 type WorkTrackerModalProps = {
@@ -200,6 +202,205 @@ export default function WorkTrackerModal({
   const bleacherAm = bleacherAmData?.[0] ?? null;
 
   // Viewer can never edit — regardless of ownership
+  // Populate pickup address from the bleacher's last known location in PS
+  const handlePopulatePickupFromLastAddress = async () => {
+    if (!workTracker?.bleacher_uuid || !workTracker?.date) return;
+
+    type FullBeRow = {
+      eventStart: string | null;
+      address: string | null;
+      eventStatus: string | null;
+      addressUuid: string | null;
+      city: string | null;
+      state: string | null;
+      postalCode: string | null;
+    };
+    type FullWtRow = {
+      date: string | null;
+      dropoffAddress: string | null;
+      dropoffAddressUuid: string | null;
+      dropoffCity: string | null;
+      dropoffState: string | null;
+      dropoffPostalCode: string | null;
+      pickupAddress: string | null;
+      pickupAddressUuid: string | null;
+      pickupCity: string | null;
+      pickupState: string | null;
+      pickupPostalCode: string | null;
+    };
+
+    const beRows = await typedGetAll(
+      db
+        .selectFrom("BleacherEvents as be")
+        .innerJoin("Events as e", "e.id", "be.event_uuid")
+        .innerJoin("Addresses as a", "a.id", "e.address_uuid")
+        .select([
+          "e.event_start as eventStart",
+          "a.street as address",
+          "e.event_status as eventStatus",
+          "e.address_uuid as addressUuid",
+          "a.city as city",
+          "a.state_province as state",
+          "a.zip_postal as postalCode",
+        ])
+        .where("be.bleacher_uuid", "=", workTracker.bleacher_uuid)
+        .compile(),
+      expect<FullBeRow>(),
+    );
+
+    const wtRows = await typedGetAll(
+      db
+        .selectFrom("WorkTrackers as wt")
+        .leftJoin("Addresses as ad", "ad.id", "wt.dropoff_address_uuid")
+        .leftJoin("Addresses as ap", "ap.id", "wt.pickup_address_uuid")
+        .select([
+          "wt.date as date",
+          "ad.street as dropoffAddress",
+          "wt.dropoff_address_uuid as dropoffAddressUuid",
+          "ad.city as dropoffCity",
+          "ad.state_province as dropoffState",
+          "ad.zip_postal as dropoffPostalCode",
+          "ap.street as pickupAddress",
+          "wt.pickup_address_uuid as pickupAddressUuid",
+          "ap.city as pickupCity",
+          "ap.state_province as pickupState",
+          "ap.zip_postal as pickupPostalCode",
+        ])
+        .where("wt.bleacher_uuid", "=", workTracker.bleacher_uuid)
+        .where("wt.id", "!=", workTracker.id)
+        .compile(),
+      expect<FullWtRow>(),
+    );
+
+    const resolvedPast = resolveAddressFull(
+      {
+        bleacherEvents: beRows
+          .filter((r) => r.eventStart != null)
+          .map((r) => ({
+            booked: r.eventStatus === "booked",
+            eventStart: r.eventStart!,
+            address: r.address ?? "",
+            addressUuid: r.addressUuid,
+            city: r.city,
+            state: r.state,
+            postalCode: r.postalCode,
+          })),
+        workTrackers: wtRows,
+      },
+      workTracker.date,
+      "past",
+    );
+
+    if (resolvedPast) {
+      setPickUpAddress({
+        addressUuid: null,
+        address: resolvedPast.street,
+        city: resolvedPast.city,
+        state: resolvedPast.state,
+        postalCode: resolvedPast.postalCode,
+      });
+    }
+  };
+
+  const handlePopulateDropoffFromNextAddress = async () => {
+    if (!workTracker?.bleacher_uuid || !workTracker?.date) return;
+
+    type FullBeRow = {
+      eventStart: string | null;
+      address: string | null;
+      eventStatus: string | null;
+      addressUuid: string | null;
+      city: string | null;
+      state: string | null;
+      postalCode: string | null;
+    };
+    type FullWtRow = {
+      date: string | null;
+      dropoffAddress: string | null;
+      dropoffAddressUuid: string | null;
+      dropoffCity: string | null;
+      dropoffState: string | null;
+      dropoffPostalCode: string | null;
+      pickupAddress: string | null;
+      pickupAddressUuid: string | null;
+      pickupCity: string | null;
+      pickupState: string | null;
+      pickupPostalCode: string | null;
+    };
+
+    const beRows = await typedGetAll(
+      db
+        .selectFrom("BleacherEvents as be")
+        .innerJoin("Events as e", "e.id", "be.event_uuid")
+        .innerJoin("Addresses as a", "a.id", "e.address_uuid")
+        .select([
+          "e.event_start as eventStart",
+          "a.street as address",
+          "e.event_status as eventStatus",
+          "e.address_uuid as addressUuid",
+          "a.city as city",
+          "a.state_province as state",
+          "a.zip_postal as postalCode",
+        ])
+        .where("be.bleacher_uuid", "=", workTracker.bleacher_uuid)
+        .compile(),
+      expect<FullBeRow>(),
+    );
+
+    const wtRows = await typedGetAll(
+      db
+        .selectFrom("WorkTrackers as wt")
+        .leftJoin("Addresses as ad", "ad.id", "wt.dropoff_address_uuid")
+        .leftJoin("Addresses as ap", "ap.id", "wt.pickup_address_uuid")
+        .select([
+          "wt.date as date",
+          "ad.street as dropoffAddress",
+          "wt.dropoff_address_uuid as dropoffAddressUuid",
+          "ad.city as dropoffCity",
+          "ad.state_province as dropoffState",
+          "ad.zip_postal as dropoffPostalCode",
+          "ap.street as pickupAddress",
+          "wt.pickup_address_uuid as pickupAddressUuid",
+          "ap.city as pickupCity",
+          "ap.state_province as pickupState",
+          "ap.zip_postal as pickupPostalCode",
+        ])
+        .where("wt.bleacher_uuid", "=", workTracker.bleacher_uuid)
+        .where("wt.id", "!=", workTracker.id)
+        .compile(),
+      expect<FullWtRow>(),
+    );
+
+    const resolvedFuture = resolveAddressFull(
+      {
+        bleacherEvents: beRows
+          .filter((r) => r.eventStart != null)
+          .map((r) => ({
+            booked: r.eventStatus === "booked",
+            eventStart: r.eventStart!,
+            address: r.address ?? "",
+            addressUuid: r.addressUuid,
+            city: r.city,
+            state: r.state,
+            postalCode: r.postalCode,
+          })),
+        workTrackers: wtRows,
+      },
+      workTracker.date,
+      "future",
+    );
+
+    if (resolvedFuture) {
+      setDropOffAddress({
+        addressUuid: null,
+        address: resolvedFuture.street,
+        city: resolvedFuture.city,
+        state: resolvedFuture.state,
+        postalCode: resolvedFuture.postalCode,
+      });
+    }
+  };
+
   const canEdit = permissions.canCreateUser
     ? canEditWorkTracker({
         isAdmin: permissions.isAdmin,
@@ -672,7 +873,15 @@ export default function WorkTrackerModal({
                           initialValue={pickUpAddress?.address || ""}
                         />
                         {canEdit && (
-                          <Link className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer" />
+                          <AppTooltip content="Populate from last known bleacher location">
+                            <button
+                              type="button"
+                              onClick={handlePopulatePickupFromLastAddress}
+                              className="text-gray-400 hover:text-darkBlue transition-colors"
+                            >
+                              <LocateFixed className="h-5 w-5" />
+                            </button>
+                          </AppTooltip>
                         )}
                       </div>
                       <label className={labelClassName}>Pickup Instructions</label>
@@ -726,16 +935,29 @@ export default function WorkTrackerModal({
                         }
                       />
                       <label className={labelClassName}>Dropoff Address</label>
-                      <AddressAutocomplete
-                        className="bg-white"
-                        onAddressSelect={(data) =>
-                          setDropOffAddress({
-                            ...data,
-                            addressUuid: dropOffAddress?.addressUuid ?? null,
-                          })
-                        }
-                        initialValue={dropOffAddress?.address || ""}
-                      />
+                      <div className="flex flex-row gap-2 items-center">
+                        <AddressAutocomplete
+                          className="bg-white"
+                          onAddressSelect={(data) =>
+                            setDropOffAddress({
+                              ...data,
+                              addressUuid: dropOffAddress?.addressUuid ?? null,
+                            })
+                          }
+                          initialValue={dropOffAddress?.address || ""}
+                        />
+                        {canEdit && (
+                          <AppTooltip content="Populate from next known bleacher location">
+                            <button
+                              type="button"
+                              onClick={handlePopulateDropoffFromNextAddress}
+                              className="text-gray-400 hover:text-darkBlue transition-colors"
+                            >
+                              <LocateFixed className="h-5 w-5" />
+                            </button>
+                          </AppTooltip>
+                        )}
+                      </div>
                       <label className={labelClassName}>Dropoff Instructions</label>
                       <textarea
                         className="w-full text-sm border p-1 rounded bg-white"

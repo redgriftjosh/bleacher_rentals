@@ -1,18 +1,44 @@
+"use client";
+
 import { AlertDefinition } from "../types";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, typedGetAll } from "@/lib/powersync/typedQuery";
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+
+type WtRow = {
+  status: string | null;
+  released_at: string | null;
+  accepted_at: string | null;
+  date: string | null;
+  bleacher_number: number | null;
+  created_by_user_uuid: string | null;
+};
 
 export const workTrackerPending: AlertDefinition = {
   title: "Work Tracker Pending Acceptance",
   entityType: "work_tracker",
 
-  async evaluate(workTrackerUuid, supabase) {
-    const { data: wt } = await supabase
-      .from("WorkTrackers")
-      .select("id, status, released_at, accepted_at, date, Bleachers(bleacher_number)")
-      .eq("id", workTrackerUuid)
-      .single();
+  async evaluate(workTrackerUuid, _supabase) {
+    const rows = await typedGetAll(
+      db
+        .selectFrom("WorkTrackers as wt")
+        .leftJoin("Bleachers as b", "b.id", "wt.bleacher_uuid")
+        .select([
+          "wt.status as status",
+          "wt.released_at as released_at",
+          "wt.accepted_at as accepted_at",
+          "wt.date as date",
+          "b.bleacher_number as bleacher_number",
+          "wt.created_by_user_uuid as created_by_user_uuid",
+        ])
+        .where("wt.id", "=", workTrackerUuid)
+        .limit(1)
+        .compile(),
+      expect<WtRow>(),
+    );
 
+    const wt = rows[0];
     if (!wt) return null;
     if (wt.status !== "released") return null;
     if (wt.accepted_at) return null;
@@ -21,10 +47,8 @@ export const workTrackerPending: AlertDefinition = {
     const releasedAt = new Date(wt.released_at).getTime();
     if (Date.now() - releasedAt < TWENTY_FOUR_HOURS_MS) return null;
 
-    const bleacherNum =
-      wt.Bleachers && !Array.isArray(wt.Bleachers) ? wt.Bleachers.bleacher_number : null;
     const desc = [
-      bleacherNum != null ? `Bleacher #${bleacherNum}` : null,
+      wt.bleacher_number != null ? `Bleacher #${wt.bleacher_number}` : null,
       wt.date ? `Date: ${wt.date}` : null,
     ]
       .filter(Boolean)
@@ -36,12 +60,17 @@ export const workTrackerPending: AlertDefinition = {
     };
   },
 
-  async recipients(workTrackerUuid, supabase) {
-    const { data } = await supabase
-      .from("WorkTrackers")
-      .select("created_by_user_uuid")
-      .eq("id", workTrackerUuid)
-      .single();
-    return data?.created_by_user_uuid ? [data.created_by_user_uuid] : [];
+  async recipients(workTrackerUuid, _supabase) {
+    const rows = await typedGetAll(
+      db
+        .selectFrom("WorkTrackers as wt")
+        .select(["wt.created_by_user_uuid as created_by_user_uuid"])
+        .where("wt.id", "=", workTrackerUuid)
+        .limit(1)
+        .compile(),
+      expect<{ created_by_user_uuid: string | null }>(),
+    );
+    const uuid = rows[0]?.created_by_user_uuid;
+    return uuid ? [uuid] : [];
   },
 };

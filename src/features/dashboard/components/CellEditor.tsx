@@ -12,7 +12,7 @@ import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCur
 import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
 import { useUser } from "@clerk/nextjs";
 import { useUsersStore } from "@/state/userStore";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AppTooltip } from "@/components/AppTooltip";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
 import { isBleacherOwnedByAM } from "@/features/userAccess/logic/isBleacherOwnedByAM";
@@ -323,52 +323,35 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         <div className="flex justify-between gap-2">
           {/* Action buttons: hidden for viewer */}
           {!isViewer && (
-            <TooltipProvider delayDuration={0}>
-              <div className="flex gap-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      aria-label="Work Tracker"
-                      className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
-                      onClick={handleOpenWorkTracker}
-                    >
-                      <Truck className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="z-[1100]">
-                    Work Tracker
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      aria-label="Create Event"
-                      className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
-                      onClick={handleCreateEvent}
-                    >
-                      <CalendarPlus className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="z-[1100]">
-                    Create Event
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      aria-label="Maintenance"
-                      className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-red-700 hover:bg-gray-100 transition-all duration-200"
-                      onClick={handleCreateMaintenance}
-                    >
-                      <Wrench className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="z-[1100]">
-                    Maintenance
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </TooltipProvider>
+            <div className="flex gap-1">
+              <AppTooltip content="Work Tracker">
+                <button
+                  aria-label="Work Tracker"
+                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
+                  onClick={handleOpenWorkTracker}
+                >
+                  <Truck className="h-4 w-4" />
+                </button>
+              </AppTooltip>
+              <AppTooltip content="Create Event">
+                <button
+                  aria-label="Create Event"
+                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
+                  onClick={handleCreateEvent}
+                >
+                  <CalendarPlus className="h-4 w-4" />
+                </button>
+              </AppTooltip>
+              <AppTooltip content="Maintenance">
+                <button
+                  aria-label="Maintenance"
+                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-red-700 hover:bg-gray-100 transition-all duration-200"
+                  onClick={handleCreateMaintenance}
+                >
+                  <Wrench className="h-4 w-4" />
+                </button>
+              </AppTooltip>
+            </div>
           )}
           {isViewer && <div />}
 
