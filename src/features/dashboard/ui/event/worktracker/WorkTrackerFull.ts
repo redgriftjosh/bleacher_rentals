@@ -5,6 +5,7 @@ import { CELL_HEIGHT, CELL_WIDTH } from "../../../values/constants";
 import type { BleacherWorkTracker } from "../../../types";
 import { STATUS_TINT } from "./statusTint";
 import { drawUnavailableOverlay } from "./unavailableOverlay";
+import { AlertBadge } from "../AlertBadge";
 
 /**
  * Full-cell work tracker display (1 tracker, no event overlap).
@@ -12,7 +13,7 @@ import { drawUnavailableOverlay } from "./unavailableOverlay";
  * Uses bleed pattern: texture is CELL_WIDTH+2 × CELL_HEIGHT+2, positioned at (-1,-1).
  */
 export class WorkTrackerFull extends Sprite {
-  constructor(baker: Baker, tracker: BleacherWorkTracker, isUnavailable: boolean = false) {
+  constructor(baker: Baker, tracker: BleacherWorkTracker, isUnavailable: boolean = false, alertCount: number = 0) {
     super();
 
     const W = CELL_WIDTH + 1;
@@ -23,7 +24,7 @@ export class WorkTrackerFull extends Sprite {
     const pickup = tracker.pickupTime ?? "";
     const dropoff = tracker.dropoffTime ?? "";
 
-    const cacheKey = `WTFull:${tracker.status}:${driverName}:${pickup}:${dropoff}:${isUnavailable ? "U" : ""}`;
+    const cacheKey = `WTFull:${tracker.status}:${driverName}:${pickup}:${dropoff}:${isUnavailable ? "U" : ""}:a${alertCount}`;
 
     this.texture = baker.getTexture(cacheKey, { width: W, height: H }, (c) => {
       // Background fill
@@ -92,6 +93,13 @@ export class WorkTrackerFull extends Sprite {
       // Unavailable driver overlay
       if (isUnavailable) {
         drawUnavailableOverlay(c, W, H);
+      }
+
+      // Alert badge (top-right)
+      if (alertCount > 0) {
+        const badge = new AlertBadge(baker, alertCount);
+        badge.position.set(W - 18, 1);
+        c.addChild(badge);
       }
     });
   }

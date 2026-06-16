@@ -25,6 +25,7 @@ import { WorkTrackerDragManager } from "./util/WorkTrackerDragManager";
 import { useAddressTooltipStore } from "./state/useAddressTooltipStore";
 import { resolveAddress } from "./util/resolveAddress";
 import { useScrollToDateStore } from "./state/useScrollToDateStore";
+import { useAlertCountsStore } from "./db/hooks/useBleachers";
 
 export class Dashboard {
   // Grids
@@ -54,6 +55,7 @@ export class Dashboard {
   private unsubEvents?: () => void;
   private unsubCurrentEvent?: () => void;
   private unsubMaintenance?: () => void;
+  private unsubAlertCounts?: () => void;
   private bleachers: Bleacher[] = [];
   private events: DashboardEvent[] = [];
   private dates: string[] = [];
@@ -175,6 +177,7 @@ export class Dashboard {
     this.unsubMaintenance = useMaintenanceEventStore.subscribe(() => scheduleRecompute());
     this.unsubEvents = useDashboardEventsStore.subscribe(() => scheduleRecompute());
     this.unsubBleachers = useDashboardBleachersStore.subscribe(() => scheduleRecompute());
+    this.unsubAlertCounts = useAlertCountsStore.subscribe(() => scheduleRecompute());
 
     // Note: initial scroll handling is performed in initGrids using opts
 
@@ -666,6 +669,9 @@ export class Dashboard {
     } catch {}
     try {
       this.unsubEvents?.();
+    } catch {}
+    try {
+      this.unsubAlertCounts?.();
     } catch {}
     try {
       if (this.onCanvasMouseMove) {

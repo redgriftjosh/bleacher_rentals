@@ -4,7 +4,45 @@ import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { Bleacher } from "../../types";
 import { Database } from "../../../../../database.types";
-import { useMemo } from "react";
+import { useMemo, useEffect, useRef } from "react";
+import { create } from "zustand";
+
+type AlertCountsState = {
+  byEventUuid: Map<string, number>;
+  byBleacherEventUuid: Map<string, number>;
+  byWorkTrackerUuid: Map<string, number>;
+};
+
+export const useAlertCountsStore = create<AlertCountsState>(() => ({
+  byEventUuid: new Map(),
+  byBleacherEventUuid: new Map(),
+  byWorkTrackerUuid: new Map(),
+}));
+
+export async function fetchAlertCounts(
+  supabase: import("@supabase/supabase-js").SupabaseClient<Database>,
+) {
+  const { data, error } = await supabase
+    .from("Alerts")
+    .select("entity_uuid, entity_type");
+
+  if (error || !data) {
+    console.error("[fetchAlertCounts] failed:", error);
+    return;
+  }
+
+  const byEvent = new Map<string, number>();
+  const byBe = new Map<string, number>();
+  for (const row of data) {
+    if (!row.entity_uuid) continue;
+    if (row.entity_type === "event") {
+      byEvent.set(row.entity_uuid, (byEvent.get(row.entity_uuid) ?? 0) + 1);
+    } else if (row.entity_type === "bleacher_event") {
+      byBe.set(row.entity_uuid, (byBe.get(row.entity_uuid) ?? 0) + 1);
+    }
+  }
+  useAlertCountsStore.setState({ byEventUuid: byEvent, byBleacherEventUuid: byBe });
+}
 
 type BleacherFlatRow = {
   bleacher_number: number | null;
@@ -211,7 +249,50 @@ function reshapeBleachers(rows: BleacherFlatRow[]): Bleacher[] {
   return [...byBleacher.values()];
 }
 
+type AlertCountRow = {
+  entity_uuid: string | null;
+  entity_type: string | null;
+  cnt: string;
+};
+
+function useAlertCountsSync() {
+  const alertsCompiled = db
+    .selectFrom("Alerts as a")
+    .select(({ fn }) => [
+      "a.entity_uuid",
+      "a.entity_type",
+      fn.count<string>("a.id").as("cnt"),
+    ])
+    .groupBy(["a.entity_uuid", "a.entity_type"])
+    .compile();
+
+  const { data: alertRows } = useTypedQuery(alertsCompiled, expect<AlertCountRow>());
+  const prevKeyRef = useRef("");
+
+  useEffect(() => {
+    const rows = alertRows ?? [];
+    const key = rows.map((r) => `${r.entity_uuid}:${r.entity_type}:${r.cnt}`).join("|");
+    if (key === prevKeyRef.current) return;
+    prevKeyRef.current = key;
+
+    const byEvent = new Map<string, number>();
+    const byBe = new Map<string, number>();
+    for (const row of rows) {
+      if (!row.entity_uuid) continue;
+      const count = parseInt(row.cnt, 10) || 0;
+      if (row.entity_type === "event") {
+        byEvent.set(row.entity_uuid, (byEvent.get(row.entity_uuid) ?? 0) + count);
+      } else if (row.entity_type === "bleacher_event") {
+        byBe.set(row.entity_uuid, (byBe.get(row.entity_uuid) ?? 0) + count);
+      }
+    }
+    useAlertCountsStore.setState({ byEventUuid: byEvent, byBleacherEventUuid: byBe });
+  }, [alertRows]);
+}
+
 export function useBleachers() {
+  useAlertCountsSync();
+
   const compiled = db
     .selectFrom("Bleachers as b")
     .leftJoin("HomeBases as summer_hb", "summer_hb.id", "b.summer_home_base_uuid")

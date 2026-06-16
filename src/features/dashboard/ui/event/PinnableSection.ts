@@ -2,6 +2,7 @@ import { Container, Text, Graphics, Application } from "pixi.js";
 import { EventSpanType } from "../../util/Events";
 import { LabelText } from "./LabelText";
 import { GoodShuffleIcon } from "./GoodShuffleIcon";
+import { AlertBadge } from "./AlertBadge";
 import { Baker } from "../../util/Baker";
 import { loadEventById } from "../../db/client/loadEventById";
 import { supabaseClientRegistry } from "../../util/supabaseClientRegistry";
@@ -29,15 +30,25 @@ export class PinnableSection extends Container {
 
     // Always create the static label
     this.labelText = new LabelText(eventInfo, availableWidth);
+    const labelDimensions = this.labelText.getNameLabelDimensions();
+    let nextX = labelDimensions.width + 4;
+
     if (eventInfo.ev.goodshuffleUrl) {
-      const labelDimensions = this.labelText.getNameLabelDimensions();
       const gsLogo = new GoodShuffleIcon(baker, eventInfo.ev.goodshuffleUrl);
-      gsLogo.position.set(
-        labelDimensions.width + 4, // 8px padding + 6px for pivot offset
-        0, // Centered vertically + 6px for pivot offset
-      );
+      gsLogo.position.set(nextX, 0);
       this.addChild(gsLogo);
+      nextX += 20;
     }
+
+    const hasDamageAlert = !!eventInfo.ev.hasDamageAlert;
+    const dbAlertCount = eventInfo.ev.alertCount ?? 0;
+    const alertCount = (hasDamageAlert ? 1 : 0) + dbAlertCount;
+    if (alertCount > 0) {
+      const badge = new AlertBadge(baker, alertCount);
+      badge.position.set(nextX, 0);
+      this.addChild(badge);
+    }
+
     this.addChild(this.labelText);
 
     // console.log("PinnableSection");

@@ -21,11 +21,24 @@ export function AlertDropDownListItem({ alert, onDismiss, onUndismiss, onRemindL
   const isDismissed =
     !!alert.dismissed && (alert.dismissedUntil === null || alert.dismissedUntil > today);
 
-  const isEventLink = alert.entityType === "event";
+  const isClickable =
+    alert.entityType === "event" ||
+    alert.entityType === "bleacher_event" ||
+    alert.entityType === "work_tracker";
 
-  const handleBodyClick = () => {
-    if (isEventLink && alert.entityUuid) {
+  const handleBodyClick = async () => {
+    if (!alert.entityUuid) return;
+
+    if (alert.entityType === "event") {
       loadEventForModal(alert.entityUuid);
+      router.push("/dashboard");
+    } else if (alert.entityType === "bleacher_event") {
+      const { loadBleacherEventForModal } = await import(
+        "@/features/alerts/util/loadBleacherEventForModal"
+      );
+      await loadBleacherEventForModal(alert.entityUuid);
+      router.push("/dashboard");
+    } else if (alert.entityType === "work_tracker") {
       router.push("/dashboard");
     }
   };
@@ -35,7 +48,7 @@ export function AlertDropDownListItem({ alert, onDismiss, onUndismiss, onRemindL
       <div className="flex flex-row items-center gap-1 px-3 py-2.5 border-b border-gray-100 last:border-b-0">
         {/* Column 1 - content */}
         <div
-          className={`flex-1 min-w-0 ${isEventLink ? "cursor-pointer hover:opacity-80" : ""}`}
+          className={`flex-1 min-w-0 ${isClickable ? "cursor-pointer hover:opacity-80" : ""}`}
           onClick={handleBodyClick}
         >
           {alert.title && (

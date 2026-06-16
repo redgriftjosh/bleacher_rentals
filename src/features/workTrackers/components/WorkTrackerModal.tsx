@@ -35,6 +35,7 @@ import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissio
 import { canEditWorkTracker } from "@/features/userAccess/logic/canEditWorkTracker";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { WorkTrackerAlertsDropDown } from "@/features/alerts/components/WorkTrackerAlertsDropDown";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -312,15 +313,8 @@ export default function WorkTrackerModal({
         previousDropoffCity: dropoffAddress?.city ?? "",
       });
       setShowSaveConfirmModal(false);
-      // Refresh bleachers directly into the zustand store so Pixi updates without remounting
-      try {
-        const { FetchDashboardBleachers } =
-          await import("@/features/dashboard/db/client/bleachers");
-        await FetchDashboardBleachers(supabase);
-      } catch {}
       // Invalidate this specific work tracker's cache so re-opening shows fresh data
       await queryClient.invalidateQueries({ queryKey: ["workTracker", workTracker?.id] });
-      // Optionally refresh any active work-tracker-specific queries used elsewhere
       await queryClient.invalidateQueries({ queryKey: ["work-trackers"], refetchType: "active" });
       setSelectedWorkTracker(null);
       setSelectedBlock(null);
@@ -351,13 +345,6 @@ export default function WorkTrackerModal({
         dropoffCity: dropOffAddress?.city ?? dropoffAddress?.city ?? "",
         date: workTracker.date,
       });
-      // Refresh bleachers directly into the zustand store so Pixi updates without remounting
-      try {
-        const { FetchDashboardBleachers } =
-          await import("@/features/dashboard/db/client/bleachers");
-        await FetchDashboardBleachers(supabase);
-      } catch {}
-      // Optionally refresh any active work-tracker-specific queries used elsewhere
       await queryClient.invalidateQueries({ queryKey: ["work-trackers"], refetchType: "active" });
       setSelectedWorkTracker(null);
       setSelectedBlock(null);
@@ -468,9 +455,14 @@ export default function WorkTrackerModal({
             className=" p-4 rounded shadow w-[900px] transition-colors duration-200 bg-white"
           >
             <div className="flex flex-row justify-between items-start">
-              <h2 className="text-sm font-semibold mb-2">
-                {selectedWorkTracker.id === "-1" ? "Create Work Tracker" : "Edit Work Tracker"}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold mb-2">
+                  {selectedWorkTracker.id === "-1" ? "Create Work Tracker" : "Edit Work Tracker"}
+                </h2>
+                {selectedWorkTracker.id !== "-1" && (
+                  <WorkTrackerAlertsDropDown workTrackerUuid={selectedWorkTracker.id} />
+                )}
+              </div>
               <X
                 className="-mt-1 cursor-pointer text-black/30 hover:text-black hover:drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] transition-all duration-200"
                 onClick={() => setSelectedWorkTracker(null)}

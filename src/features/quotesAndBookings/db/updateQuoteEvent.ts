@@ -4,9 +4,14 @@ import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { CreateQuoteState } from "../state/useCreateQuoteStore";
 import { syncPaymentInstallments } from "./paymentInstallments";
 import { calculateTotals } from "../utils/calculateTotals";
-import { logEventChanges, logLineItemChanges, TRACKED_FIELDS, SimpleLineItem } from "./logEventChanges";
+import {
+  logEventChanges,
+  logLineItemChanges,
+  TRACKED_FIELDS,
+  SimpleLineItem,
+} from "./logEventChanges";
 import { eventRequirements } from "@/features/alerts/definitions/eventRequirements";
-import { CurrentEventState } from "@/features/eventConfiguration/state/useCurrentEventStore";
+import { syncAlert } from "@/features/alerts/engine";
 
 /**
  * Updates an existing quote/event.
@@ -65,11 +70,7 @@ export async function updateQuoteEvent(
 
   // 2. Fetch old state for change logging
   const [{ data: oldEvent }, { data: oldLineItemRows }] = await Promise.all([
-    supabase
-      .from("Events")
-      .select(TRACKED_FIELDS.join(", "))
-      .eq("id", eventId)
-      .single(),
+    supabase.from("Events").select(TRACKED_FIELDS.join(", ")).eq("id", eventId).single(),
     supabase
       .from("EventLineItems")
       .select("header, quantity, value_cents, currency")
@@ -87,7 +88,8 @@ export async function updateQuoteEvent(
   // 3. Update Event
   const { taxAmount } = calculateTotals(state.lineItems, state.taxPercent);
   const effectiveTaxCents = state.taxOverrideCents ?? Math.round(taxAmount);
-  const contractRevenueCents = state.lineItems.reduce((sum, li) => sum + li.lineTotalCents, 0) + effectiveTaxCents;
+  const contractRevenueCents =
+    state.lineItems.reduce((sum, li) => sum + li.lineTotalCents, 0) + effectiveTaxCents;
 
   const updates: TablesUpdate<"Events"> = {
     event_name: state.eventName,
@@ -177,63 +179,10 @@ export async function updateQuoteEvent(
     }
   }
 
-  // 6. Derive bleacher requirements from line items for alert evaluation
-  const reqMap = new Map<string, number>();
-  for (const li of state.lineItems) {
-    if (li.category === "bleachers" && li.bleacherTypeUuid) {
-      reqMap.set(li.bleacherTypeUuid, (reqMap.get(li.bleacherTypeUuid) ?? 0) + li.qty);
-    }
-  }
+  // 6. Evaluate "requirements not met" alert
+  await syncAlert(eventRequirements, eventId, supabase);
 
-  // 7. Evaluate "requirements not met" alert
-  const requirements = [...reqMap.entries()].map(([btUuid, qty]) => ({
-    bleacherTypeUuid: btUuid,
-    quantity: qty,
-  }));
-
-  // Fetch currently assigned bleachers to compare
-  const { data: assignedBleacherRows } = await supabase
-    .from("BleacherEvents")
-    .select("bleacher_uuid")
-    .eq("event_uuid", eventId);
-  const assignedUuids = (assignedBleacherRows ?? []).map((r) => r.bleacher_uuid).filter(Boolean) as string[];
-
-  let assignedBleachers: { id: string; bleacher_type_uuid: string | null; bleacher_rows: number; bleacher_seats: number }[] = [];
-  if (assignedUuids.length > 0) {
-    const { data: bleacherRows } = await supabase
-      .from("Bleachers")
-      .select("id, bleacher_type_uuid, bleacher_rows, bleacher_seats")
-      .in("id", assignedUuids);
-    assignedBleachers = (bleacherRows ?? []) as typeof assignedBleachers;
-  }
-
-  const pseudoEvent: Partial<CurrentEventState> = {
-    eventUuid: eventId,
-    lenient: false,
-    bleacherUuids: assignedUuids,
-    bleacherRequirements: requirements,
-    sevenRow: 0,
-    tenRow: 0,
-    fifteenRow: 0,
-    seats: 0,
-    eventName: state.eventName,
-    eventStart: state.eventStart,
-    eventEnd: state.eventEnd,
-  };
-  const alerts = eventRequirements.evaluate({
-    event: pseudoEvent as CurrentEventState,
-    bleachers: assignedBleachers as any,
-  });
-  await eventRequirements.sync(
-    eventId,
-    "event",
-    alerts,
-    currentUserUuid ?? null,
-    state.ownerUserUuid ?? null,
-    supabase,
-  );
-
-  // 8. Sync payment installments
+  // 7. Sync payment installments
   try {
     await syncPaymentInstallments(eventId, state.paymentInstallments, state.currency);
   } catch (e) {

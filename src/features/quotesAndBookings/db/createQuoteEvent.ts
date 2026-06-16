@@ -6,7 +6,7 @@ import { syncPaymentInstallments } from "./paymentInstallments";
 import { calculateTotals } from "../utils/calculateTotals";
 import { logSingleChange } from "./logEventChanges";
 import { eventRequirements } from "@/features/alerts/definitions/eventRequirements";
-import { CurrentEventState } from "@/features/eventConfiguration/state/useCurrentEventStore";
+import { syncAlert } from "@/features/alerts/engine";
 
 /**
  * Creates a full quote:
@@ -44,7 +44,8 @@ export async function createQuoteEvent(
   // 2. Insert Event
   const { taxAmount } = calculateTotals(state.lineItems, state.taxPercent);
   const effectiveTaxCents = state.taxOverrideCents ?? Math.round(taxAmount);
-  const contractRevenueCents = state.lineItems.reduce((sum, li) => sum + li.lineTotalCents, 0) + effectiveTaxCents;
+  const contractRevenueCents =
+    state.lineItems.reduce((sum, li) => sum + li.lineTotalCents, 0) + effectiveTaxCents;
 
   const newEvent: TablesInsert<"Events"> = {
     event_name: state.eventName,
@@ -114,15 +115,7 @@ export async function createQuoteEvent(
     }
   }
 
-  // 4. Derive bleacher requirements from line items (for alert evaluation)
-  const reqMap = new Map<string, number>();
-  for (const li of state.lineItems) {
-    if (li.category === "bleachers" && li.bleacherTypeUuid) {
-      reqMap.set(li.bleacherTypeUuid, (reqMap.get(li.bleacherTypeUuid) ?? 0) + li.qty);
-    }
-  }
-
-  // 5. Sync payment installments
+  // 4. Sync payment installments
   if (state.paymentInstallments.length > 0) {
     try {
       await syncPaymentInstallments(eventUuid, state.paymentInstallments, state.currency);
@@ -131,40 +124,10 @@ export async function createQuoteEvent(
     }
   }
 
-  // 6. Evaluate "requirements not met" alert (no bleachers assigned yet)
-  const requirements = [...reqMap.entries()].map(([btUuid, qty]) => ({
-    bleacherTypeUuid: btUuid,
-    quantity: qty,
-  }));
-  if (requirements.length > 0) {
-    const pseudoEvent: Partial<CurrentEventState> = {
-      eventUuid: eventUuid,
-      lenient: false,
-      bleacherUuids: [],
-      bleacherRequirements: requirements,
-      sevenRow: 0,
-      tenRow: 0,
-      fifteenRow: 0,
-      seats: 0,
-      eventName: state.eventName,
-      eventStart: state.eventStart,
-      eventEnd: state.eventEnd,
-    };
-    const alerts = eventRequirements.evaluate({
-      event: pseudoEvent as CurrentEventState,
-      bleachers: [],
-    });
-    await eventRequirements.sync(
-      eventUuid,
-      "event",
-      alerts,
-      currentUserUuid ?? null,
-      state.ownerUserUuid ?? null,
-      supabase,
-    );
-  }
+  // 5. Evaluate "requirements not met" alert
+  await syncAlert(eventRequirements, eventUuid, supabase);
 
-  // 7. Log creation
+  // 6. Log creation
   await logSingleChange(
     supabase,
     eventUuid,
