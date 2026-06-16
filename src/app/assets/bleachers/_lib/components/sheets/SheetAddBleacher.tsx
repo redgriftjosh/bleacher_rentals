@@ -220,9 +220,7 @@ export function SheetAddBleacher() {
                   />
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Bleacher Type
-                  </label>
+                  <label className="text-right text-sm font-medium col-span-2">Bleacher Type</label>
                   <div className="col-span-3">
                     <Dropdown
                       options={[

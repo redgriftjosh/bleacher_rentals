@@ -2,7 +2,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { fetchTakenBleacherNumbers, updateBleacher, useBleacherQuery, useBleacherTotalDistance } from "../../db";
+import {
+  fetchTakenBleacherNumbers,
+  updateBleacher,
+  useBleacherQuery,
+  useBleacherTotalDistance,
+} from "../../db";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
@@ -331,9 +336,7 @@ export function SheetEditBleacher() {
                   />
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Bleacher Type
-                  </label>
+                  <label className="text-right text-sm font-medium col-span-2">Bleacher Type</label>
                   <div className="col-span-3">
                     <Dropdown
                       options={[
@@ -547,7 +550,9 @@ export function SheetEditBleacher() {
                 </div>
 
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Total Distance</label>
+                  <label className="text-right text-sm font-medium col-span-2">
+                    Total Distance
+                  </label>
                   <span className="col-span-3 px-3 py-2 text-sm font-medium text-gray-700">
                     {(totalDistanceMeters / 1000).toLocaleString(undefined, {
                       minimumFractionDigits: 1,
