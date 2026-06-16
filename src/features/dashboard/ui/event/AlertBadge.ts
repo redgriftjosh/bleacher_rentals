@@ -17,7 +17,8 @@ export class AlertBadge extends Sprite {
         c.addChild(bg);
 
         const label = new Text({
-          text: String(alertCount),
+          // text: String(alertCount),
+          text: "!",
           style: {
             fontFamily: "Helvetica",
             fontSize: 10,

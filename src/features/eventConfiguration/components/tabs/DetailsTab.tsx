@@ -97,10 +97,11 @@ export const DetailsTab = () => {
                       <span className={met ? "text-green-700" : "text-red-600"}>
                         {assigned} / {req.quantity}
                       </span>
-                      {met
-                        ? <CheckCircle className="w-4 h-4 text-green-600" />
-                        : <TriangleAlert className="w-4 h-4 text-red-500" />
-                      }
+                      {met ? (
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <TriangleAlert className="w-4 h-4 text-red-500" />
+                      )}
                     </span>
                   </li>
                 );

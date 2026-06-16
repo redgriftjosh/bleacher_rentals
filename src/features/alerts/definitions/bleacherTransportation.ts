@@ -1,11 +1,5 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "../../../../database.types";
-import { AlertDefinition, AlertPayload, InMemoryAlertContext } from "../types";
-import {
-  findLastKnownLocation,
-  findLastKnownLocationInMemory,
-  resolveStreet,
-} from "../util/findLastKnownLocation";
+import { AlertDefinition } from "../types";
+import { findLastKnownLocation, resolveStreet } from "../util/findLastKnownLocation";
 
 export const bleacherTransportation: AlertDefinition = {
   title: "No Transportation",
@@ -24,11 +18,7 @@ export const bleacherTransportation: AlertDefinition = {
     const event = be.Events;
     if (!event.address_uuid) return null;
 
-    const lastLocation = await findLastKnownLocation(
-      be.bleacher_uuid,
-      event.event_start,
-      supabase,
-    );
+    const lastLocation = await findLastKnownLocation(be.bleacher_uuid, event.event_start, supabase);
     if (!lastLocation) return null;
 
     const lastStreet = await resolveStreet(lastLocation.addressUuid, supabase);
@@ -48,59 +38,9 @@ export const bleacherTransportation: AlertDefinition = {
     };
   },
 
-  evaluateInMemory({
-    event,
-    allEvents,
-    allBleacherEvents,
-    allWorkTrackers,
-    allBleachers,
-    allAddresses,
-  }: InMemoryAlertContext): AlertPayload[] {
-    const alerts: AlertPayload[] = [];
-    if (!event.eventStart) return alerts;
-
-    const eventAddressUuid = event.addressData?.addressUuid ?? null;
-    if (!eventAddressUuid) return alerts;
-
-    const eventAddr = allAddresses.find((a) => a.id === eventAddressUuid);
-    const eventStreet = eventAddr?.street ?? "";
-    if (!eventStreet) return alerts;
-
-    for (const bleacherUuid of event.bleacherUuids) {
-      const lastLocation = findLastKnownLocationInMemory(
-        bleacherUuid,
-        event.eventStart,
-        allEvents,
-        allBleacherEvents,
-        allWorkTrackers,
-      );
-
-      if (!lastLocation) continue;
-
-      const lastAddr = allAddresses.find((a) => a.id === lastLocation.addressUuid);
-      const lastStreet = lastAddr?.street ?? "";
-
-      if (!lastStreet || lastStreet === eventStreet) continue;
-
-      const bleacher = allBleachers.find((b) => b.id === bleacherUuid);
-      const desc = [
-        bleacher?.bleacher_number != null ? `Bleacher #${bleacher.bleacher_number}` : null,
-        event.eventName,
-      ]
-        .filter(Boolean)
-        .join(" — ");
-
-      alerts.push({
-        entity_uuid: event.eventUuid,
-        entity_type: "bleacher_event",
-        title: "No Transportation",
-        message: `${desc}: Last known location: ${lastStreet}. Event location: ${eventStreet}.`,
-        entity_description: desc || null,
-      });
-    }
-
-    return alerts;
-  },
+  // evaluateInMemory is intentionally omitted — transportation alerts for the
+  // event config form are computed reactively by useEventFormTransportationAlerts
+  // using live PowerSync data, which also handles unsaved (new) events.
 
   async recipients(bleacherEventUuid, supabase) {
     const { data: be } = await supabase

@@ -1,30 +1,50 @@
+"use client";
+
+import { db } from "@/components/providers/SystemProvider";
+import { expect, typedExecute, typedGetAll } from "@/lib/powersync/typedQuery";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "../../../database.types";
 import { AlertDefinition, AlertEntityType, AlertPayload } from "./types";
 
+type AlertRow = {
+  id: string;
+  message: string | null;
+  entity_description: string | null;
+};
+
+type IdRow = { id: string };
+
+/**
+ * Syncs alerts for a given entity+title against the local PowerSync DB.
+ * Deletes stale alerts, updates changed descriptions, inserts new ones.
+ * PowerSync replicates all changes up to Supabase automatically.
+ */
 export async function syncAlertsForEntity(
   title: string,
   entityUuid: string,
   entityType: AlertEntityType,
   alerts: AlertPayload[],
   recipientUuids: string[],
-  supabase: SupabaseClient<Database>,
 ): Promise<void> {
   const myAlerts = alerts.filter((a) => a.title === title);
 
-  const { data: existingAlerts, error: fetchError } = await supabase
-    .from("Alerts")
-    .select("id, message, entity_description")
-    .eq("entity_uuid", entityUuid)
-    .eq("entity_type", entityType)
-    .eq("title", title);
-
-  if (fetchError) {
-    console.error(`[${title}] failed to fetch existing alerts`, fetchError);
+  let existing: AlertRow[];
+  try {
+    existing = await typedGetAll(
+      db
+        .selectFrom("Alerts as a")
+        .select(["a.id as id", "a.message as message", "a.entity_description as entity_description"])
+        .where("a.entity_uuid", "=", entityUuid)
+        .where("a.entity_type", "=", entityType)
+        .where("a.title", "=", title)
+        .compile(),
+      expect<AlertRow>(),
+    );
+  } catch (err) {
+    console.error(`[${title}] failed to fetch existing alerts`, err);
     return;
   }
 
-  const existing = existingAlerts ?? [];
   const existingMessages = new Set(existing.map((a) => a.message ?? ""));
   const currentMessages = new Set(myAlerts.map((a) => a.message));
 
@@ -35,95 +55,127 @@ export async function syncAlertsForEntity(
     return match && match.entity_description !== a.entity_description;
   });
 
-  if (toDelete.length > 0) {
-    const ids = toDelete.map((a) => a.id);
-    await supabase.from("UserAlerts").delete().in("alert_uuid", ids);
-    await supabase.from("Alerts").delete().in("id", ids);
+  for (const alert of toDelete) {
+    await typedExecute(
+      db.deleteFrom("UserAlerts").where("alert_uuid", "=", alert.id).compile(),
+    );
+    await typedExecute(
+      db.deleteFrom("Alerts").where("id", "=", alert.id).compile(),
+    );
   }
 
   for (const alert of toUpdate) {
     const match = existing.find((e) => e.message === alert.message)!;
-    const { error } = await supabase
-      .from("Alerts")
-      .update({ entity_description: alert.entity_description })
-      .eq("id", match.id);
-    if (error) {
-      console.error(`[${title}] failed to update entity_description`, error);
-    }
+    await typedExecute(
+      db
+        .updateTable("Alerts")
+        .set({ entity_description: alert.entity_description } as any)
+        .where("id", "=", match.id)
+        .compile(),
+    );
   }
 
-  if (toInsert.length > 0) {
-    const { data: insertedAlerts, error: insertError } = await supabase
-      .from("Alerts")
-      .insert(
-        toInsert.map((alert) => ({
+  const uniqueRecipients = [...new Set(recipientUuids.filter(Boolean))];
+  for (const alert of toInsert) {
+    const alertId = crypto.randomUUID();
+    await typedExecute(
+      db
+        .insertInto("Alerts")
+        .values({
+          id: alertId,
           entity_uuid: entityUuid,
           entity_type: entityType,
           title: alert.title,
           message: alert.message,
           entity_description: alert.entity_description,
-        })),
-      )
-      .select("id");
-
-    if (insertError || !insertedAlerts) {
-      console.error(`[${title}] failed to insert alerts`, insertError);
-      return;
-    }
-
-    const uniqueRecipients = [...new Set(recipientUuids.filter(Boolean))];
-    const userAlertRows = insertedAlerts.flatMap((alert) =>
-      uniqueRecipients.map((user_uuid) => ({ alert_uuid: alert.id, user_uuid })),
+        } as any)
+        .compile(),
     );
-
-    if (userAlertRows.length > 0) {
-      const { error: userAlertError } = await supabase.from("UserAlerts").insert(userAlertRows);
-      if (userAlertError) {
-        console.error(`[${title}] failed to insert UserAlerts`, userAlertError);
-      }
+    for (const userUuid of uniqueRecipients) {
+      await typedExecute(
+        db
+          .insertInto("UserAlerts")
+          .values({
+            id: crypto.randomUUID(),
+            alert_uuid: alertId,
+            user_uuid: userUuid,
+          } as any)
+          .compile(),
+      );
     }
   }
 }
 
+/**
+ * Deletes all alerts (and their UserAlerts) for a specific entity+title.
+ */
 export async function deleteAlertsForEntity(
   title: string,
   entityUuid: string,
-  supabase: SupabaseClient<Database>,
 ): Promise<void> {
-  const { data: alerts, error: fetchError } = await supabase
-    .from("Alerts")
-    .select("id")
-    .eq("entity_uuid", entityUuid)
-    .eq("title", title);
-
-  if (fetchError) {
-    console.error(`[${title}] failed to fetch alerts for deletion`, fetchError);
+  let rows: IdRow[];
+  try {
+    rows = await typedGetAll(
+      db
+        .selectFrom("Alerts as a")
+        .select(["a.id as id"])
+        .where("a.entity_uuid", "=", entityUuid)
+        .where("a.title", "=", title)
+        .compile(),
+      expect<IdRow>(),
+    );
+  } catch (err) {
+    console.error(`[${title}] failed to fetch alerts for deletion`, err);
     return;
   }
 
-  const ids = (alerts ?? []).map((a) => a.id);
-  if (ids.length === 0) return;
-
-  await supabase.from("UserAlerts").delete().in("alert_uuid", ids);
-  await supabase.from("Alerts").delete().in("id", ids);
+  for (const row of rows) {
+    await typedExecute(
+      db.deleteFrom("UserAlerts").where("alert_uuid", "=", row.id).compile(),
+    );
+    await typedExecute(
+      db.deleteFrom("Alerts").where("id", "=", row.id).compile(),
+    );
+  }
 }
 
-export async function deleteAllAlertsForEntity(
-  entityUuid: string,
-  supabase: SupabaseClient<Database>,
-): Promise<void> {
-  const { data: alerts } = await supabase
-    .from("Alerts")
-    .select("id")
-    .eq("entity_uuid", entityUuid);
+/**
+ * Deletes every alert (and their UserAlerts) associated with an entity UUID
+ * regardless of title.
+ */
+export async function deleteAllAlertsForEntity(entityUuid: string): Promise<void> {
+  let rows: IdRow[];
+  try {
+    rows = await typedGetAll(
+      db
+        .selectFrom("Alerts as a")
+        .select(["a.id as id"])
+        .where("a.entity_uuid", "=", entityUuid)
+        .compile(),
+      expect<IdRow>(),
+    );
+  } catch (err) {
+    console.error(`[deleteAllAlertsForEntity] failed to fetch alerts`, err);
+    return;
+  }
 
-  const ids = (alerts ?? []).map((a) => a.id);
-  if (ids.length === 0) return;
-
-  await supabase.from("UserAlerts").delete().in("alert_uuid", ids);
-  await supabase.from("Alerts").delete().in("id", ids);
+  for (const row of rows) {
+    await typedExecute(
+      db.deleteFrom("UserAlerts").where("alert_uuid", "=", row.id).compile(),
+    );
+    await typedExecute(
+      db.deleteFrom("Alerts").where("id", "=", row.id).compile(),
+    );
+  }
 }
 
+/**
+ * Evaluates a single AlertDefinition for a given entity and syncs the result
+ * to the local PowerSync DB (which replicates to Supabase).
+ *
+ * The `supabase` client is still needed for `definition.evaluate()` and
+ * `definition.recipients()` which query Supabase for evaluation logic.
+ */
 export async function syncAlert(
   definition: AlertDefinition,
   entityUuid: string,
@@ -148,6 +200,5 @@ export async function syncAlert(
     definition.entityType,
     alerts,
     recipients,
-    supabase,
   );
 }

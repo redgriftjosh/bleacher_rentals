@@ -104,9 +104,9 @@ async function triageEventDeleted(
   const bleacherUuids = [...new Set(bes.map((be) => be.bleacher_uuid).filter(Boolean))] as string[];
 
   // Delete alerts on this event and its bleacher_events
-  await deleteAllAlertsForEntity(eventUuid, supabase);
+  await deleteAllAlertsForEntity(eventUuid);
   for (const be of bes) {
-    await deleteAllAlertsForEntity(be.id, supabase);
+    await deleteAllAlertsForEntity(be.id);
   }
 
   // Re-evaluate neighboring bleacher_events and work trackers
@@ -182,7 +182,7 @@ async function triageWorkTrackerDeleted(
   bleacherUuid: string | null,
   supabase: SupabaseClient<Database>,
 ): Promise<void> {
-  await deleteAllAlertsForEntity(workTrackerUuid, supabase);
+  await deleteAllAlertsForEntity(workTrackerUuid);
 
   if (bleacherUuid) {
     const beDefs = getDefinitionsForEntity("bleacher_event");

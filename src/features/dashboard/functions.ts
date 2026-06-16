@@ -166,7 +166,6 @@ export function updateCurrentEventAlerts() {
   const events = useEventsStore.getState().events;
   const bleacherEvents = useBleacherEventsStore.getState().bleacherEvents;
   const bleachers = useBleachersStore.getState().bleachers;
-  // console.log("updateCurrentEventAlerts");
 
   // Only calculate if necessary
   if (!state.eventStart || !state.eventEnd) return;
@@ -182,9 +181,13 @@ export function updateCurrentEventAlerts() {
     allBleachers: bleachers,
     allAddresses: addresses,
   };
-  const newAlerts = alertDefinitions
+  const computedAlerts = alertDefinitions
     .filter((d) => d.evaluateInMemory)
     .flatMap((d) => d.evaluateInMemory!(context));
+
+  // Preserve transportation alerts set by useEventFormTransportationAlerts (PS-driven hook)
+  const existingTransportAlerts = oldAlerts.filter((a) => a.title === "No Transportation");
+  const newAlerts = [...computedAlerts, ...existingTransportAlerts];
 
   const oldMessages = oldAlerts.map((a) => a.message);
   const newMessages = newAlerts.map((a) => a.message);
