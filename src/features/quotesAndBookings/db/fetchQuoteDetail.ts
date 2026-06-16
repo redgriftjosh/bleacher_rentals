@@ -35,6 +35,13 @@ export type QuoteDetail = {
     email: string | null;
     phone: string | null;
   } | null;
+  financeContact: {
+    id: string;
+    firstName: string;
+    lastName: string | null;
+    email: string | null;
+    phone: string | null;
+  } | null;
   accountManager: {
     firstName: string | null;
     lastName: string | null;
@@ -72,6 +79,11 @@ type Row = {
   contact_last_name: string | null;
   contact_email: string | null;
   contact_phone: string | null;
+  fc_id: string | null;
+  fc_first_name: string | null;
+  fc_last_name: string | null;
+  fc_email: string | null;
+  fc_phone: string | null;
   am_first_name: string | null;
   am_last_name: string | null;
 };
@@ -81,6 +93,7 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
     .selectFrom("Events as e")
     .leftJoin("Addresses as a", "e.address_uuid", "a.id")
     .leftJoin("Contacts as ct", "e.contact_uuid", "ct.id")
+    .leftJoin("Contacts as fc", "e.finance_contact_uuid", "fc.id")
     .leftJoin("Users as u", "e.created_by_user_uuid", "u.id")
     .select([
       "e.id as id",
@@ -113,6 +126,11 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
       "ct.last_name as contact_last_name",
       "ct.email as contact_email",
       "ct.phone as contact_phone",
+      "fc.id as fc_id",
+      "fc.first_name as fc_first_name",
+      "fc.last_name as fc_last_name",
+      "fc.email as fc_email",
+      "fc.phone as fc_phone",
       "u.first_name as am_first_name",
       "u.last_name as am_last_name",
     ])
@@ -162,6 +180,15 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
           lastName: r.contact_last_name,
           email: r.contact_email,
           phone: r.contact_phone,
+        }
+      : null,
+    financeContact: r.fc_id
+      ? {
+          id: r.fc_id,
+          firstName: r.fc_first_name ?? "",
+          lastName: r.fc_last_name,
+          email: r.fc_email,
+          phone: r.fc_phone,
         }
       : null,
     accountManager:

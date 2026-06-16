@@ -15,6 +15,7 @@ import {
   Settings,
   Building2,
   ScrollText,
+  DollarSign,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";
@@ -117,13 +118,6 @@ const ALL_ITEMS: SidebarItemConfig[] = [
     icon: CalendarDays,
   },
   {
-    type: "button",
-    key: "sales-offices",
-    label: "Sales Offices",
-    href: "/sales-offices",
-    icon: Building2,
-  },
-  {
     type: "section",
     key: "configuration",
     label: "Configuration",
@@ -145,6 +139,20 @@ const ALL_ITEMS: SidebarItemConfig[] = [
       },
       {
         type: "button",
+        key: "quickbooks",
+        label: "QuickBooks",
+        href: "/quickbooks",
+        icon: QuickBooksIcon,
+      },
+      {
+        type: "button",
+        key: "pricing-matrix",
+        label: "Pricing Matrix",
+        href: "/pricing-matrix",
+        icon: DollarSign,
+      },
+      {
+        type: "button",
         key: "terms-and-conditions",
         label: "Terms & Conditions",
         href: "/terms-and-conditions",
@@ -152,10 +160,10 @@ const ALL_ITEMS: SidebarItemConfig[] = [
       },
       {
         type: "button",
-        key: "quickbooks",
-        label: "QuickBooks",
-        href: "/quickbooks",
-        icon: QuickBooksIcon,
+        key: "sales-offices",
+        label: "Sales Offices",
+        href: "/sales-offices",
+        icon: Building2,
       },
     ],
   },

@@ -36,6 +36,7 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
       "/dev-tools",
       "/sales-offices",
       "/terms-and-conditions",
+      "/pricing-matrix",
       "/quote",
     ],
     showSidebar: true,

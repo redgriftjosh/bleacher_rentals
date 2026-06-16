@@ -33,6 +33,7 @@ type Row = {
     zip_postal: string | null;
   } | null;
   bleacher_events: { bleacher_uuid: string }[];
+  bleacher_requirements: { bleacher_type_uuid: string; quantity: number }[];
 };
 
 // Fetch Events into DashboardEvent shape (similar to legacy fetchDashboardEvents)
@@ -73,6 +74,10 @@ export async function FetchDashboardEvents(
       ),
       bleacher_events:BleacherEvents!BleacherEvents_event_uuid_fkey(
         bleacher_uuid
+      ),
+      bleacher_requirements:EventBleacherRequirements!EventBleacherRequirements_event_uuid_fkey(
+        bleacher_type_uuid,
+        quantity
       )
       `;
 
@@ -134,6 +139,10 @@ export async function FetchDashboardEvents(
     alerts: [],
     mustBeClean: e.must_be_clean,
     bleacherUuids: (e.bleacher_events ?? []).map((be) => be.bleacher_uuid),
+    bleacherRequirements: (e.bleacher_requirements ?? []).map((br) => ({
+      bleacherTypeUuid: br.bleacher_type_uuid,
+      quantity: br.quantity,
+    })),
     goodshuffleUrl: e.goodshuffle_url ?? null,
     ownerUserUuid: e.created_by_user_uuid ?? null,
   }));

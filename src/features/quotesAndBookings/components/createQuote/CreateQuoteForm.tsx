@@ -107,9 +107,13 @@ export function CreateQuoteForm() {
         eventId = await createQuoteEvent(state, supabase, currentUserUuid);
       }
 
-      // Determine recipient email
-      const recipientEmail = state.companyEmail || state.contactName;
-      if (!recipientEmail || !recipientEmail.includes("@")) {
+      // Collect recipient emails (main + optional finance contact)
+      const recipientEmails: string[] = [];
+      const mainEmail = state.companyEmail || state.contactName;
+      if (mainEmail?.includes("@")) recipientEmails.push(mainEmail);
+      if (state.financeContactEmail?.includes("@")) recipientEmails.push(state.financeContactEmail);
+
+      if (recipientEmails.length === 0) {
         createSuccessToast(["Quote saved. Add a contact email to send."]);
         resetForm();
         router.push(`/quotes-bookings/${eventId}`);
@@ -120,11 +124,11 @@ export function CreateQuoteForm() {
       const res = await fetch(`/api/quotes/${eventId}/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipientEmail }),
+        body: JSON.stringify({ recipientEmails }),
       });
 
       if (res.ok) {
-        createSuccessToast([`Quote sent to ${recipientEmail}`]);
+        createSuccessToast([`Quote sent to ${recipientEmails.join(", ")}`]);
       } else {
         const err = await res.json().catch(() => ({}));
         console.error("Send failed:", err);

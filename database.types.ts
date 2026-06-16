@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       AccountManagers: {
@@ -361,6 +386,7 @@ export type Database = {
           deleted: boolean
           id: string
           name: string
+          roof_type: Database["public"]["Enums"]["roof_type"]
           row_count: number
         }
         Insert: {
@@ -369,6 +395,7 @@ export type Database = {
           deleted?: boolean
           id?: string
           name: string
+          roof_type?: Database["public"]["Enums"]["roof_type"]
           row_count: number
         }
         Update: {
@@ -377,6 +404,7 @@ export type Database = {
           deleted?: boolean
           id?: string
           name?: string
+          roof_type?: Database["public"]["Enums"]["roof_type"]
           row_count?: number
         }
         Relationships: [
@@ -1140,6 +1168,45 @@ export type Database = {
           },
         ]
       }
+      EventBleacherRequirements: {
+        Row: {
+          bleacher_type_uuid: string
+          created_at: string
+          event_uuid: string
+          id: string
+          quantity: number
+        }
+        Insert: {
+          bleacher_type_uuid: string
+          created_at?: string
+          event_uuid: string
+          id?: string
+          quantity?: number
+        }
+        Update: {
+          bleacher_type_uuid?: string
+          created_at?: string
+          event_uuid?: string
+          id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventBleacherRequirements_bleacher_type_uuid_fkey"
+            columns: ["bleacher_type_uuid"]
+            isOneToOne: false
+            referencedRelation: "BleacherTypes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventBleacherRequirements_event_uuid_fkey"
+            columns: ["event_uuid"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       EventChangeLog: {
         Row: {
           action_type: string
@@ -1393,6 +1460,7 @@ export type Database = {
           event_type_uuid: string | null
           external_notes: string | null
           fifteen_row: number | null
+          finance_contact_uuid: string | null
           goodshuffle_url: string | null
           hsl_hue: number | null
           id: string
@@ -1428,6 +1496,7 @@ export type Database = {
           event_type_uuid?: string | null
           external_notes?: string | null
           fifteen_row?: number | null
+          finance_contact_uuid?: string | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
           id?: string
@@ -1463,6 +1532,7 @@ export type Database = {
           event_type_uuid?: string | null
           external_notes?: string | null
           fifteen_row?: number | null
+          finance_contact_uuid?: string | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
           id?: string
@@ -1510,6 +1580,13 @@ export type Database = {
             columns: ["event_type_uuid"]
             isOneToOne: false
             referencedRelation: "EventTypes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Events_finance_contact_uuid_fkey"
+            columns: ["finance_contact_uuid"]
+            isOneToOne: false
+            referencedRelation: "Contacts"
             referencedColumns: ["id"]
           },
           {
@@ -3359,6 +3436,7 @@ export type Database = {
         | "in_progress"
         | "completed"
       roadmap_task_status: "to_do" | "in_progress" | "completed"
+      roof_type: "canopy" | "none"
       task_status:
         | "in_progress"
         | "backlog"
@@ -3508,6 +3586,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       alert_entity_type: ["event", "bleacher_event", "work_tracker"],
@@ -3529,6 +3610,7 @@ export const Constants = {
         "completed",
       ],
       roadmap_task_status: ["to_do", "in_progress", "completed"],
+      roof_type: ["canopy", "none"],
       task_status: [
         "in_progress",
         "backlog",

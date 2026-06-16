@@ -5,6 +5,8 @@ import { CreateQuoteState } from "../state/useCreateQuoteStore";
 import { syncPaymentInstallments } from "./paymentInstallments";
 import { calculateTotals } from "../utils/calculateTotals";
 import { logSingleChange } from "./logEventChanges";
+import { eventRequirements } from "@/features/alerts/definitions/eventRequirements";
+import { CurrentEventState } from "@/features/eventConfiguration/state/useCurrentEventStore";
 
 /**
  * Creates a full quote:
@@ -62,6 +64,7 @@ export async function createQuoteEvent(
     external_notes: state.clientFacingNotes || null,
     created_by_user_uuid: state.ownerUserUuid ?? null,
     contact_uuid: state.contactId || null,
+    finance_contact_uuid: state.financeContactId || null,
     sales_office_uuid: state.salesOfficeId || null,
     terms_and_conditions_uuid: state.termsDocumentId || null,
   };
@@ -111,7 +114,26 @@ export async function createQuoteEvent(
     }
   }
 
-  // 4. Sync payment installments
+  // 4. Sync bleacher requirements from line items
+  const reqMap = new Map<string, number>();
+  for (const li of state.lineItems) {
+    if (li.category === "bleachers" && li.bleacherTypeUuid) {
+      reqMap.set(li.bleacherTypeUuid, (reqMap.get(li.bleacherTypeUuid) ?? 0) + li.qty);
+    }
+  }
+  if (reqMap.size > 0) {
+    const reqRows = [...reqMap.entries()].map(([btUuid, qty]) => ({
+      event_uuid: eventUuid,
+      bleacher_type_uuid: btUuid,
+      quantity: qty,
+    }));
+    const { error: reqError } = await supabase.from("EventBleacherRequirements").insert(reqRows);
+    if (reqError) {
+      console.error("Bleacher requirements insert failed (quote still saved):", reqError.message);
+    }
+  }
+
+  // 5. Sync payment installments
   if (state.paymentInstallments.length > 0) {
     try {
       await syncPaymentInstallments(eventUuid, state.paymentInstallments, state.currency);
@@ -120,7 +142,40 @@ export async function createQuoteEvent(
     }
   }
 
-  // 5. Log creation
+  // 6. Sync "requirements not met" alert (no bleachers assigned yet)
+  const requirements = [...reqMap.entries()].map(([btUuid, qty]) => ({
+    bleacherTypeUuid: btUuid,
+    quantity: qty,
+  }));
+  if (requirements.length > 0) {
+    const pseudoEvent: Partial<CurrentEventState> = {
+      eventUuid: eventUuid,
+      lenient: false,
+      bleacherUuids: [],
+      bleacherRequirements: requirements,
+      sevenRow: 0,
+      tenRow: 0,
+      fifteenRow: 0,
+      seats: 0,
+      eventName: state.eventName,
+      eventStart: state.eventStart,
+      eventEnd: state.eventEnd,
+    };
+    const alerts = eventRequirements.evaluate({
+      event: pseudoEvent as CurrentEventState,
+      bleachers: [],
+    });
+    await eventRequirements.sync(
+      eventUuid,
+      "event",
+      alerts,
+      currentUserUuid ?? null,
+      state.ownerUserUuid ?? null,
+      supabase,
+    );
+  }
+
+  // 7. Log creation
   await logSingleChange(
     supabase,
     eventUuid,

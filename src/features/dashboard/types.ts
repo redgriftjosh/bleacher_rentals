@@ -106,6 +106,7 @@ export type DashboardEvent = {
   sevenRow: number | null;
   tenRow: number | null;
   fifteenRow: number | null;
+  bleacherRequirements: { bleacherTypeUuid: string; quantity: number }[];
   setupStart: string;
   setupText: string | null;
   setupConfirmed: boolean;
