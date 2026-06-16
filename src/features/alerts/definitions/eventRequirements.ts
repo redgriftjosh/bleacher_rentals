@@ -1,69 +1,114 @@
+"use client";
+
 import { AlertDefinition, AlertPayload, InMemoryAlertContext } from "../types";
 import { eventEntityDescription } from "../util/eventEntityDescription";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, typedGetAll } from "@/lib/powersync/typedQuery";
 
 const TITLE = "Event Requirements Not Met";
+
+type EventRow = {
+  event_name: string | null;
+  total_seats: number | null;
+  seven_row: number | null;
+  ten_row: number | null;
+  fifteen_row: number | null;
+  lenient: number | null;
+  street: string | null;
+  created_by_user_uuid: string | null;
+};
+
+type AssignedBleacherRow = {
+  bleacher_seats: number | null;
+  bleacher_rows: number | null;
+  bleacher_type_uuid: string | null;
+};
+
+type LineItemRow = {
+  bleacher_type_uuid: string | null;
+  quantity: number | null;
+  type_name: string | null;
+};
 
 export const eventRequirements: AlertDefinition = {
   title: TITLE,
   entityType: "event",
 
-  async evaluate(eventUuid, supabase) {
-    const { data: event } = await supabase
-      .from("Events")
-      .select(
-        "id, event_name, total_seats, seven_row, ten_row, fifteen_row, lenient, address_uuid, Addresses(street)",
-      )
-      .eq("id", eventUuid)
-      .single();
+  async evaluate(eventUuid, _supabase) {
+    const eventRows = await typedGetAll(
+      db
+        .selectFrom("Events as e")
+        .leftJoin("Addresses as a", "a.id", "e.address_uuid")
+        .select([
+          "e.event_name as event_name",
+          "e.total_seats as total_seats",
+          "e.seven_row as seven_row",
+          "e.ten_row as ten_row",
+          "e.fifteen_row as fifteen_row",
+          "e.lenient as lenient",
+          "a.street as street",
+          "e.created_by_user_uuid as created_by_user_uuid",
+        ])
+        .where("e.id", "=", eventUuid)
+        .limit(1)
+        .compile(),
+      expect<EventRow>(),
+    );
 
+    const event = eventRows[0];
     if (!event) return null;
 
-    const { data: bleacherEvents } = await supabase
-      .from("BleacherEvents")
-      .select("bleacher_uuid, Bleachers(id, bleacher_seats, bleacher_rows, bleacher_type_uuid)")
-      .eq("event_uuid", eventUuid);
+    const assignedRows = await typedGetAll(
+      db
+        .selectFrom("BleacherEvents as be")
+        .innerJoin("Bleachers as b", "b.id", "be.bleacher_uuid")
+        .select([
+          "b.bleacher_seats as bleacher_seats",
+          "b.bleacher_rows as bleacher_rows",
+          "b.bleacher_type_uuid as bleacher_type_uuid",
+        ])
+        .where("be.event_uuid", "=", eventUuid)
+        .compile(),
+      expect<AssignedBleacherRow>(),
+    );
 
-    if (!bleacherEvents) return null;
-
-    const assignedBleachers = bleacherEvents
-      .map((be) => be.Bleachers)
-      .filter((b): b is NonNullable<typeof b> & object => b !== null && !Array.isArray(b)) as {
-      id: string;
-      bleacher_seats: number;
-      bleacher_rows: number;
-      bleacher_type_uuid: string | null;
-    }[];
-
-    const address = event.Addresses && !Array.isArray(event.Addresses) ? event.Addresses : null;
-    const entityDescription =
-      [event.event_name, address?.street].filter(Boolean).join(" — ") || null;
+    const entityDescription = [event.event_name, event.street].filter(Boolean).join(" — ") || null;
 
     let message: string | null = null;
 
     if (event.lenient) {
       if (!event.total_seats) return null;
-      const totalAssignedSeats = assignedBleachers.reduce((sum, b) => sum + b.bleacher_seats, 0);
+      const totalAssignedSeats = assignedRows.reduce((sum, b) => sum + (b.bleacher_seats ?? 0), 0);
       if (totalAssignedSeats !== event.total_seats) {
         message = `Seat mismatch: ${event.total_seats} required, ${totalAssignedSeats} assigned.`;
       }
     } else {
-      const { data: lineItems } = await supabase
-        .from("EventLineItems")
-        .select("bleacher_type_uuid, quantity, BleacherTypes(name)")
-        .eq("event_uuid", eventUuid)
-        .eq("deleted", false);
+      const lineItems = await typedGetAll(
+        db
+          .selectFrom("EventLineItems as li")
+          .leftJoin("BleacherTypes as bt", "bt.id", "li.bleacher_type_uuid")
+          .select([
+            "li.bleacher_type_uuid as bleacher_type_uuid",
+            "li.quantity as quantity",
+            "bt.name as type_name",
+          ])
+          .where("li.event_uuid", "=", eventUuid)
+          .where("li.deleted", "=", 0)
+          .compile(),
+        expect<LineItemRow>(),
+      );
 
-      if (lineItems && lineItems.length > 0) {
+      if (lineItems.length > 0) {
         const mismatches: string[] = [];
         for (const item of lineItems) {
           if (!item.bleacher_type_uuid || !item.quantity) continue;
-          const assigned = assignedBleachers.filter(
+          const assigned = assignedRows.filter(
             (b) => b.bleacher_type_uuid === item.bleacher_type_uuid,
           ).length;
           if (assigned !== item.quantity) {
-            const bt = item.BleacherTypes;
-            const name = bt && !Array.isArray(bt) ? bt.name : "Unknown";
-            mismatches.push(`${name}: ${item.quantity} needed, ${assigned} assigned`);
+            mismatches.push(
+              `${item.type_name ?? "Unknown"}: ${item.quantity} needed, ${assigned} assigned`,
+            );
           }
         }
         if (mismatches.length > 0) {
@@ -75,9 +120,9 @@ export const eventRequirements: AlertDefinition = {
         const tenRowRequired = event.ten_row ?? 0;
         const fifteenRowRequired = event.fifteen_row ?? 0;
 
-        const sevenRowAssigned = assignedBleachers.filter((b) => b.bleacher_rows === 7).length;
-        const tenRowAssigned = assignedBleachers.filter((b) => b.bleacher_rows === 10).length;
-        const fifteenRowAssigned = assignedBleachers.filter((b) => b.bleacher_rows === 15).length;
+        const sevenRowAssigned = assignedRows.filter((b) => b.bleacher_rows === 7).length;
+        const tenRowAssigned = assignedRows.filter((b) => b.bleacher_rows === 10).length;
+        const fifteenRowAssigned = assignedRows.filter((b) => b.bleacher_rows === 15).length;
 
         const mismatches: string[] = [];
         if (sevenRowAssigned !== sevenRowRequired)
@@ -158,12 +203,17 @@ export const eventRequirements: AlertDefinition = {
     return alerts;
   },
 
-  async recipients(eventUuid, supabase) {
-    const { data } = await supabase
-      .from("Events")
-      .select("created_by_user_uuid")
-      .eq("id", eventUuid)
-      .single();
-    return data?.created_by_user_uuid ? [data.created_by_user_uuid] : [];
+  async recipients(eventUuid, _supabase) {
+    const rows = await typedGetAll(
+      db
+        .selectFrom("Events as e")
+        .select(["e.created_by_user_uuid as created_by_user_uuid"])
+        .where("e.id", "=", eventUuid)
+        .limit(1)
+        .compile(),
+      expect<{ created_by_user_uuid: string | null }>(),
+    );
+    const uuid = rows[0]?.created_by_user_uuid;
+    return uuid ? [uuid] : [];
   },
 };
