@@ -17,17 +17,12 @@ import { CoreTab } from "./tabs/CoreTab";
 import { DetailsTab } from "./tabs/DetailsTab";
 import { AlertsTab } from "./tabs/AlertsTab";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
-import { useEventsStore } from "@/state/eventsStore";
 import { useCurrentEventStore } from "../state/useCurrentEventStore";
 import { createEvent, deleteEvent } from "@/features/dashboard/db/client/db";
 import { updateEvent } from "@/features/dashboard/db/client/updateEvent";
-import { FetchDashboardBleachers } from "@/features/dashboard/db/client/bleachers";
-import { FetchDashboardEvents } from "@/features/dashboard/db/client/events";
-import { useDashboardFilterSettings } from "@/features/dashboardOptions/useDashboardFilterSettings";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useUsersStore } from "@/state/userStore";
-import { eventRequirements } from "@/features/alerts/definitions/eventRequirements";
-import { schedulingConflicts } from "@/features/alerts/definitions/schedulingConflicts";
+import { triage } from "@/features/alerts/triage";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { canEditOwnedEntity } from "@/features/userAccess/logic/canEditOwnedEntity";
 
@@ -56,10 +51,7 @@ export const EventConfigurationForm = ({
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const supabase = useClerkSupabaseClient();
-  const { state: dashboardFilters } = useDashboardFilterSettings();
-  const onlyShowMyEvents = dashboardFilters?.onlyShowMyEvents ?? true;
   const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
-  const allEvents = useEventsStore((s) => s.events);
   const users = useUsersStore((s) => s.users);
   const permissions = useTeamPermissions();
 
@@ -79,16 +71,10 @@ export const EventConfigurationForm = ({
     return users.find((u) => u.clerk_user_id === userId)?.id ?? null;
   };
 
-  // Refresh zustand stores directly without invalidating the page query
-  const refreshDashboardStores = async () => {
-    if (!supabase || !isLoaded || !userId) return;
-    // Mark BleacherEvents stale so useFetchTable re-fetches fresh assignments;
-    // without this, client-side conflict detection stays stale until Pusher fires.
+  // Mark global zustand stores stale so useFetchTable re-fetches fresh data;
+  // dashboard data itself is now driven by PowerSync reactive queries.
+  const refreshDashboardStores = () => {
     useBleacherEventsStore.getState().setStale(true);
-    await Promise.all([
-      FetchDashboardBleachers(supabase),
-      FetchDashboardEvents(supabase, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
-    ]);
   };
 
   const handleCreateEvent = async () => {
@@ -96,22 +82,8 @@ export const EventConfigurationForm = ({
     const state = useCurrentEventStore.getState();
     try {
       const newEventUuid = await createEvent(state, supabase, user ?? null);
-      await eventRequirements.sync(
-        newEventUuid,
-        "event",
-        state.alerts,
-        resolveSaverUuid(),
-        state.ownerUserUuid,
-        supabase,
-      );
-      await schedulingConflicts.syncAll(
-        newEventUuid,
-        { event: state, allEvents, allBleacherEvents: bleacherEvents },
-        resolveSaverUuid(),
-        state.ownerUserUuid,
-        supabase,
-      );
-      await refreshDashboardStores();
+      await triage("Events", { id: newEventUuid }, supabase);
+      refreshDashboardStores();
       currentEventStore.resetForm();
       if (currentEventStore.isModalOpen) {
         currentEventStore.closeModal();
@@ -129,23 +101,9 @@ export const EventConfigurationForm = ({
     try {
       await updateEvent(state, supabase, user ?? null, bleacherEvents);
       if (state.eventUuid) {
-        await eventRequirements.sync(
-          state.eventUuid,
-          "event",
-          state.alerts,
-          resolveSaverUuid(),
-          state.ownerUserUuid,
-          supabase,
-        );
-        await schedulingConflicts.syncAll(
-          state.eventUuid,
-          { event: state, allEvents, allBleacherEvents: bleacherEvents },
-          resolveSaverUuid(),
-          state.ownerUserUuid,
-          supabase,
-        );
+        await triage("Events", { id: state.eventUuid }, supabase);
       }
-      await refreshDashboardStores();
+      refreshDashboardStores();
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to update event:", error);
@@ -159,11 +117,10 @@ export const EventConfigurationForm = ({
     const state = useCurrentEventStore.getState();
     try {
       if (state.eventUuid) {
-        await eventRequirements.delete(state.eventUuid, supabase);
-        await schedulingConflicts.delete(state.eventUuid, supabase);
+        await triage("Events_deleted", { id: state.eventUuid }, supabase);
       }
       await deleteEvent(state.eventUuid, state.addressData?.state ?? "", supabase, user ?? null);
-      await refreshDashboardStores();
+      refreshDashboardStores();
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to delete event:", error);

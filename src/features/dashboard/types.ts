@@ -50,6 +50,7 @@ export type BleacherEvent = {
   goodshuffleUrl: string | null;
   isMaintenance?: boolean;
   hasDamageAlert?: boolean;
+  alertCount?: number;
   // Mark spans injected from current selection (not yet persisted)
   isSelected?: boolean;
 };

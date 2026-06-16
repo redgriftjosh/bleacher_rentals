@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, Text } from "pixi.js";
+import { Container, Graphics, Sprite } from "pixi.js";
 import { EventSpanType, EventsUtil } from "../../util/Events";
 import { CELL_HEIGHT, CELL_WIDTH } from "@/features/dashboard/values/constants";
 import { Baker } from "../../util/Baker";
@@ -42,7 +42,6 @@ export class EventBody extends Sprite {
 
     const isBooked = !!eventInfo.span?.ev.booked;
     const isMaintenance = !!eventInfo.span?.ev.isMaintenance;
-    const hasDamageAlert = !!eventInfo.span?.ev.hasDamageAlert;
     const eventColor = isMaintenance
       ? 0xff0000
       : eventInfo.span && eventInfo.span.ev.hslHue != null
@@ -52,7 +51,7 @@ export class EventBody extends Sprite {
     const texture = baker.getTexture(
       `EventBody:${eventInfo.span?.ev.eventUuid}:${isMaintenance ? "maint" : isBooked ? "booked" : "quoted"}:${
         eventInfo.isStart ? "start" : eventInfo.isEnd ? "end" : "middle"
-      }:top${topOffset}${hasDamageAlert ? ":dmg" : ""}`,
+      }:top${topOffset}`,
       { width: CELL_WIDTH + 2, height: CELL_HEIGHT + 2 },
       // null,
       (c) => {
@@ -166,20 +165,6 @@ export class EventBody extends Sprite {
         }
 
         c.addChild(fill, g);
-
-        // Damage alert indicator: small warning triangle on start cell
-        if (hasDamageAlert && eventInfo.isStart) {
-          const triSize = 8;
-          const tx = W - triSize - 2;
-          const ty = Math.max(2, topOffset + 2);
-          const tri = new Graphics();
-          tri.moveTo(tx + triSize / 2, ty);
-          tri.lineTo(tx + triSize, ty + triSize);
-          tri.lineTo(tx, ty + triSize);
-          tri.closePath();
-          tri.fill(0xdc2626); // red-600
-          c.addChild(tri);
-        }
         // console.log(
         //   "EventBody",
         //   isBooked ? "booked" : "quoted",

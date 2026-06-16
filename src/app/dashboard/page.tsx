@@ -1,16 +1,11 @@
 "use client";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { FetchDashboardBleachers } from "@/features/dashboard/db/client/bleachers";
-import { FetchDashboardEvents } from "@/features/dashboard/db/client/events";
 import { useAuth } from "@clerk/nextjs";
-import { useQuery } from "@tanstack/react-query";
 import DashboardApp from "@/features/dashboard/DashboardApp";
 import CellEditor from "@/features/dashboard/components/CellEditor";
 import { useEffect, useState } from "react";
 import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useWorkTrackerSelectionStore";
 import { Tables } from "../../../database.types";
-import { useDataRefreshTokenStore } from "@/state/dataRefreshTokenStore";
-// import { getSupabaseClient } from "@/utils/supabase/getSupabaseClient";
 import { useDashboardFilterSettings } from "@/features/dashboardOptions/useDashboardFilterSettings";
 import WorkTrackerModal from "@/features/workTrackers/components/WorkTrackerModal";
 import { DashboardOptions } from "@/features/dashboardOptions/DashboardOptions";
@@ -26,6 +21,7 @@ import { supabaseClientRegistry } from "@/features/dashboard/util/supabaseClient
 import { AddressTooltip } from "@/features/dashboard/components/AddressTooltip";
 import { useDriverUnavailability } from "@/features/dashboard/db/hooks/useDriverUnavailability";
 import { useDriverUnavailabilityStore } from "@/features/dashboard/state/useDriverUnavailabilityStore";
+import { useDashboardPowerSync } from "@/features/dashboard/db/hooks/powersync/useDashboardPowerSync";
 
 export default function Page() {
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
@@ -33,7 +29,6 @@ export default function Page() {
   );
   const { state: dashboardFilters } = useDashboardFilterSettings();
   const onlyShowMyEvents = dashboardFilters?.onlyShowMyEvents ?? true;
-  const refreshToken = useDataRefreshTokenStore((s) => s.token);
   const { isLoaded, userId } = useAuth();
   const supabase = useClerkSupabaseClient();
 
@@ -48,23 +43,10 @@ export default function Page() {
   // Bleacher location modal state
   const locationModal = useBleacherLocationModalStore();
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["FetchDashboardBleachersAndEvents", { onlyShowMyEvents, userId, refreshToken }],
-    enabled: isLoaded && !!userId,
-    queryFn: async () => {
-      const [b, e] = await Promise.all([
-        FetchDashboardBleachers(supabase),
-        FetchDashboardEvents(supabase, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
-      ]);
-
-      // Fetch BleacherUsers assignments for the logged-in user
-      // const supabase = await getSupabaseClient(token!);
-
-      return {
-        bleachers: b.bleachers,
-        events: e.events,
-      };
-    },
+  // Reactive PowerSync queries — replaces tanstack useQuery + Supabase REST
+  const { bleachers } = useDashboardPowerSync({
+    onlyShowMyEvents,
+    clerkUserId: userId,
   });
 
   const handleWorkTrackerOpen = (workTracker: Tables<"WorkTrackers">) => {
@@ -103,18 +85,14 @@ export default function Page() {
     useDriverUnavailabilityStore.getState().setUnavailableKeys(unavailKeys);
   }, [unavailKeys]);
 
-  if (error) {
-    return <div>Uh Oh, Something went wrong... 😬</div>;
-  }
-
-  if (isLoading) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
   }
-  if (!data?.bleachers || data.bleachers.length === 0) {
+  if (bleachers.length === 0) {
     return <div>No Bleachers!</div>;
   }
 

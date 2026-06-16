@@ -1,21 +1,13 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "../../../../database.types";
-import { AlertEntityType, AlertPayload } from "../types";
+import { Database } from "../../../database.types";
+import { AlertDefinition, AlertEntityType, AlertPayload } from "./types";
 
-/**
- * Diffs the given alerts (filtered to `title`) against what currently exists in
- * the DB for the entity, then inserts, updates, or deletes rows to make them match.
- * Creates UserAlerts rows for saverUserUuid and ownerUserUuid on any newly inserted alerts.
- *
- * Shared by all AlertDefinition implementations — import this instead of duplicating.
- */
 export async function syncAlertsForEntity(
   title: string,
   entityUuid: string,
   entityType: AlertEntityType,
   alerts: AlertPayload[],
-  saverUserUuid: string | null,
-  ownerUserUuid: string | null,
+  recipientUuids: string[],
   supabase: SupabaseClient<Database>,
 ): Promise<void> {
   const myAlerts = alerts.filter((a) => a.title === title);
@@ -79,10 +71,9 @@ export async function syncAlertsForEntity(
       return;
     }
 
-    const userUuids = [...new Set([saverUserUuid, ownerUserUuid].filter(Boolean) as string[])];
-
+    const uniqueRecipients = [...new Set(recipientUuids.filter(Boolean))];
     const userAlertRows = insertedAlerts.flatMap((alert) =>
-      userUuids.map((user_uuid) => ({ alert_uuid: alert.id, user_uuid })),
+      uniqueRecipients.map((user_uuid) => ({ alert_uuid: alert.id, user_uuid })),
     );
 
     if (userAlertRows.length > 0) {
@@ -94,12 +85,6 @@ export async function syncAlertsForEntity(
   }
 }
 
-/**
- * Deletes all alerts (and their UserAlerts) scoped to `title` for the given entity.
- * Call when the entity itself is deleted.
- *
- * Shared by all AlertDefinition implementations — import this instead of duplicating.
- */
 export async function deleteAlertsForEntity(
   title: string,
   entityUuid: string,
@@ -121,4 +106,48 @@ export async function deleteAlertsForEntity(
 
   await supabase.from("UserAlerts").delete().in("alert_uuid", ids);
   await supabase.from("Alerts").delete().in("id", ids);
+}
+
+export async function deleteAllAlertsForEntity(
+  entityUuid: string,
+  supabase: SupabaseClient<Database>,
+): Promise<void> {
+  const { data: alerts } = await supabase
+    .from("Alerts")
+    .select("id")
+    .eq("entity_uuid", entityUuid);
+
+  const ids = (alerts ?? []).map((a) => a.id);
+  if (ids.length === 0) return;
+
+  await supabase.from("UserAlerts").delete().in("alert_uuid", ids);
+  await supabase.from("Alerts").delete().in("id", ids);
+}
+
+export async function syncAlert(
+  definition: AlertDefinition,
+  entityUuid: string,
+  supabase: SupabaseClient<Database>,
+): Promise<void> {
+  const result = await definition.evaluate(entityUuid, supabase);
+  const alerts: AlertPayload[] = result
+    ? [
+        {
+          entity_uuid: entityUuid,
+          entity_type: definition.entityType,
+          title: definition.title,
+          message: result.message,
+          entity_description: result.entityDescription,
+        },
+      ]
+    : [];
+  const recipients = result ? await definition.recipients(entityUuid, supabase) : [];
+  await syncAlertsForEntity(
+    definition.title,
+    entityUuid,
+    definition.entityType,
+    alerts,
+    recipients,
+    supabase,
+  );
 }

@@ -1,6 +1,7 @@
 import { DateTime } from "luxon";
 import { Bleacher, BleacherEvent } from "../types";
 import { CELL_HEIGHT } from "../values/constants";
+import { useAlertCountsStore } from "../db/hooks/useBleachers";
 
 export type EventSpanType = {
   start: number;
@@ -170,10 +171,19 @@ export class EventsUtil {
             // skip this original span; it will be injected below as selected
             continue;
           }
+          const alertState = useAlertCountsStore.getState();
+          const eventAlerts = alertState.byEventUuid.get(ev.eventUuid) ?? 0;
+          const beAlerts = alertState.byBleacherEventUuid.get(ev.bleacherEventUuid) ?? 0;
+          const totalAlerts = eventAlerts + beAlerts;
+          const enrichedEv = {
+            ...ev,
+            ...(hasDamage && { hasDamageAlert: true }),
+            ...(totalAlerts > 0 && { alertCount: totalAlerts }),
+          };
           spans.push({
             start: startCol,
             end: endCol,
-            ev: hasDamage ? { ...ev, hasDamageAlert: true } : ev,
+            ev: enrichedEv,
             rowIndex,
           });
         }
