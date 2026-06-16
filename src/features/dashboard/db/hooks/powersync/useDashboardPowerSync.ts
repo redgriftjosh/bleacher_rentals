@@ -79,7 +79,8 @@ export function useDashboardPowerSync(opts?: {
       if (d.user_uuid) driverToUser.set(d.id, d.user_uuid);
     }
     const userMap = new Map<string, { first_name: string | null; last_name: string | null }>();
-    for (const u of userRows) userMap.set(u.id, { first_name: u.first_name, last_name: u.last_name });
+    for (const u of userRows)
+      userMap.set(u.id, { first_name: u.first_name, last_name: u.last_name });
     return { driverToUser, userMap };
   }, [driverRows, userRows]);
 
@@ -142,10 +143,16 @@ export function useDashboardPowerSync(opts?: {
     return bleacherRows.map((b) => {
       // Home bases
       const summerHomeBase = b.summer_home_base_uuid
-        ? { homeBaseUuid: b.summer_home_base_uuid, name: homeBaseMap.get(b.summer_home_base_uuid) ?? "" }
+        ? {
+            homeBaseUuid: b.summer_home_base_uuid,
+            name: homeBaseMap.get(b.summer_home_base_uuid) ?? "",
+          }
         : null;
       const winterHomeBase = b.winter_home_base_uuid
-        ? { homeBaseUuid: b.winter_home_base_uuid, name: homeBaseMap.get(b.winter_home_base_uuid) ?? "" }
+        ? {
+            homeBaseUuid: b.winter_home_base_uuid,
+            name: homeBaseMap.get(b.winter_home_base_uuid) ?? "",
+          }
         : null;
 
       // Bleacher events → BleacherEvent[]
@@ -180,9 +187,13 @@ export function useDashboardPowerSync(opts?: {
       // Work trackers
       const relatedWTs = wtsByBleacher.get(b.id) ?? [];
       const workTrackers = relatedWTs.map((wt) => {
-        const driverUserUuid = wt.driver_uuid ? driverUserMap.driverToUser.get(wt.driver_uuid) : undefined;
+        const driverUserUuid = wt.driver_uuid
+          ? driverUserMap.driverToUser.get(wt.driver_uuid)
+          : undefined;
         const driverUser = driverUserUuid ? driverUserMap.userMap.get(driverUserUuid) : undefined;
-        const dropoffAddr = wt.dropoff_address_uuid ? addressMap.get(wt.dropoff_address_uuid) : undefined;
+        const dropoffAddr = wt.dropoff_address_uuid
+          ? addressMap.get(wt.dropoff_address_uuid)
+          : undefined;
         return {
           workTrackerUuid: wt.id,
           date: wt.date ?? "",
@@ -301,6 +312,7 @@ export function useDashboardPowerSync(opts?: {
         sevenRow: e.seven_row,
         tenRow: e.ten_row,
         fifteenRow: e.fifteen_row,
+        bleacherRequirements: [],
         setupStart: e.setup_start ?? "",
         setupText: null,
         setupConfirmed: false,

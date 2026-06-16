@@ -101,6 +101,7 @@ export function fetchBleachers() {
               sevenRow: event.seven_row,
               tenRow: event.ten_row,
               fifteenRow: event.fifteen_row,
+              bleacherRequirements: [],
               setupStart: event.setup_start ?? "",
               setupText: be.setup_text,
               setupConfirmed: be.setup_confirmed,
@@ -192,6 +193,7 @@ export function fetchDashboardEvents() {
         sevenRow: event.seven_row,
         tenRow: event.ten_row,
         fifteenRow: event.fifteen_row,
+        bleacherRequirements: [],
         setupStart: event.setup_start ?? "",
         setupText: null, // unused
         setupConfirmed: false, // unused
@@ -395,11 +397,7 @@ export async function saveWorkTracker(
 
   if (!wasInsert) {
     await typedExecute(
-      db
-        .updateTable("WorkTrackers")
-        .set(wtFields)
-        .where("id", "=", workTracker.id)
-        .compile(),
+      db.updateTable("WorkTrackers").set(wtFields).where("id", "=", workTracker.id).compile(),
     );
   } else {
     savedWorkTrackerUuid = crypto.randomUUID();
@@ -490,15 +488,16 @@ export async function deleteWorkTracker(
   const wtRows = await typedGetAll(selectQuery, expect<{ bleacher_uuid: string | null }>());
   const bleacherUuid = wtRows[0]?.bleacher_uuid ?? null;
 
-  const deleteQuery = db
-    .deleteFrom("WorkTrackers")
-    .where("id", "=", workTrackerUuid)
-    .compile();
+  const deleteQuery = db.deleteFrom("WorkTrackers").where("id", "=", workTrackerUuid).compile();
   await typedExecute(deleteQuery);
 
   try {
     const { triage } = await import("@/features/alerts/triage");
-    await triage("WorkTrackers_deleted", { id: workTrackerUuid, bleacher_uuid: bleacherUuid }, supabase);
+    await triage(
+      "WorkTrackers_deleted",
+      { id: workTrackerUuid, bleacher_uuid: bleacherUuid },
+      supabase,
+    );
   } catch (e) {
     console.error("[alerts] failed to triage after work tracker delete", e);
   }
@@ -828,18 +827,14 @@ export async function deleteEvent(
 
   // Soft delete — mark as deleted instead of removing rows
   await typedExecute(
-    db
-      .updateTable("Events")
-      .set({ deleted: 1 })
-      .where("id", "=", eventUuid)
-      .compile(),
+    db.updateTable("Events").set({ deleted: 1 }).where("id", "=", eventUuid).compile(),
   );
 
   // Immediately update local stores so non-PowerSync consumers reflect the change
   const currentEvents = useEventsStore.getState().events;
-  useEventsStore.getState().setEvents(
-    currentEvents.map((e) => (e.id === eventUuid ? { ...e, deleted: true } : e)),
-  );
+  useEventsStore
+    .getState()
+    .setEvents(currentEvents.map((e) => (e.id === eventUuid ? { ...e, deleted: true } : e)));
 
   createSuccessToast(["Event Deleted"]);
   updateDataBase(["Events"]);
