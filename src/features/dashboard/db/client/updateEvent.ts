@@ -77,7 +77,6 @@ export async function updateEvent(
   }
 
   await updateBleacherEvents(state, supabase);
-  await syncBleacherRequirements(state, supabase);
 
   createSuccessToast(["Event Updated"]);
   updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
@@ -141,54 +140,3 @@ async function updateBleacherEvents(state: CurrentEventStore, supabase: Supabase
   }
 }
 
-async function syncBleacherRequirements(
-  state: CurrentEventStore,
-  supabase: SupabaseClient<Database>,
-) {
-  if (!state.eventUuid) return;
-
-  const { data: existing, error: fetchErr } = await supabase
-    .from("EventBleacherRequirements")
-    .select("id, bleacher_type_uuid, quantity")
-    .eq("event_uuid", state.eventUuid);
-
-  if (fetchErr) {
-    console.error("Failed to fetch bleacher requirements:", fetchErr.message);
-    return;
-  }
-
-  const existingMap = new Map(
-    (existing ?? []).map((r) => [r.bleacher_type_uuid, { id: r.id, quantity: r.quantity }]),
-  );
-  const incoming = state.bleacherRequirements.filter((r) => r.quantity > 0);
-  const incomingKeys = new Set(incoming.map((r) => r.bleacherTypeUuid));
-
-  const toInsert = incoming
-    .filter((r) => !existingMap.has(r.bleacherTypeUuid))
-    .map((r) => ({
-      event_uuid: state.eventUuid!,
-      bleacher_type_uuid: r.bleacherTypeUuid,
-      quantity: r.quantity,
-    }));
-
-  const toUpdate = incoming
-    .filter((r) => {
-      const ex = existingMap.get(r.bleacherTypeUuid);
-      return ex && ex.quantity !== r.quantity;
-    })
-    .map((r) => ({ id: existingMap.get(r.bleacherTypeUuid)!.id, quantity: r.quantity }));
-
-  const toDelete = [...existingMap.entries()]
-    .filter(([key]) => !incomingKeys.has(key))
-    .map(([, val]) => val.id);
-
-  if (toInsert.length > 0) {
-    await supabase.from("EventBleacherRequirements").insert(toInsert);
-  }
-  for (const upd of toUpdate) {
-    await supabase.from("EventBleacherRequirements").update({ quantity: upd.quantity }).eq("id", upd.id);
-  }
-  if (toDelete.length > 0) {
-    await supabase.from("EventBleacherRequirements").delete().in("id", toDelete);
-  }
-}

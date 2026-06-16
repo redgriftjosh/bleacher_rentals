@@ -114,22 +114,11 @@ export async function createQuoteEvent(
     }
   }
 
-  // 4. Sync bleacher requirements from line items
+  // 4. Derive bleacher requirements from line items (for alert evaluation)
   const reqMap = new Map<string, number>();
   for (const li of state.lineItems) {
     if (li.category === "bleachers" && li.bleacherTypeUuid) {
       reqMap.set(li.bleacherTypeUuid, (reqMap.get(li.bleacherTypeUuid) ?? 0) + li.qty);
-    }
-  }
-  if (reqMap.size > 0) {
-    const reqRows = [...reqMap.entries()].map(([btUuid, qty]) => ({
-      event_uuid: eventUuid,
-      bleacher_type_uuid: btUuid,
-      quantity: qty,
-    }));
-    const { error: reqError } = await supabase.from("EventBleacherRequirements").insert(reqRows);
-    if (reqError) {
-      console.error("Bleacher requirements insert failed (quote still saved):", reqError.message);
     }
   }
 
@@ -142,7 +131,7 @@ export async function createQuoteEvent(
     }
   }
 
-  // 6. Sync "requirements not met" alert (no bleachers assigned yet)
+  // 6. Evaluate "requirements not met" alert (no bleachers assigned yet)
   const requirements = [...reqMap.entries()].map(([btUuid, qty]) => ({
     bleacherTypeUuid: btUuid,
     quantity: qty,

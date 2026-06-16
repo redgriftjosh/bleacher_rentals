@@ -33,8 +33,20 @@ type Row = {
     zip_postal: string | null;
   } | null;
   bleacher_events: { bleacher_uuid: string }[];
-  bleacher_requirements: { bleacher_type_uuid: string; quantity: number }[];
+  line_items: { bleacher_type_uuid: string | null; quantity: number }[];
 };
+
+function deriveBleacherRequirements(
+  lineItems: { bleacher_type_uuid: string | null; quantity: number }[],
+): { bleacherTypeUuid: string; quantity: number }[] {
+  const map = new Map<string, number>();
+  for (const li of lineItems) {
+    if (li.bleacher_type_uuid) {
+      map.set(li.bleacher_type_uuid, (map.get(li.bleacher_type_uuid) ?? 0) + li.quantity);
+    }
+  }
+  return [...map.entries()].map(([bleacherTypeUuid, quantity]) => ({ bleacherTypeUuid, quantity }));
+}
 
 // Fetch Events into DashboardEvent shape (similar to legacy fetchDashboardEvents)
 // Includes address, basic fields, and bleacherIds via BleacherEvents. Setup/Teardown-specific text/flags use defaults.
@@ -75,7 +87,7 @@ export async function FetchDashboardEvents(
       bleacher_events:BleacherEvents!BleacherEvents_event_uuid_fkey(
         bleacher_uuid
       ),
-      bleacher_requirements:EventBleacherRequirements!EventBleacherRequirements_event_uuid_fkey(
+      line_items:EventLineItems!EventLineItems_event_uuid_fkey(
         bleacher_type_uuid,
         quantity
       )
@@ -139,10 +151,7 @@ export async function FetchDashboardEvents(
     alerts: [],
     mustBeClean: e.must_be_clean,
     bleacherUuids: (e.bleacher_events ?? []).map((be) => be.bleacher_uuid),
-    bleacherRequirements: (e.bleacher_requirements ?? []).map((br) => ({
-      bleacherTypeUuid: br.bleacher_type_uuid,
-      quantity: br.quantity,
-    })),
+    bleacherRequirements: deriveBleacherRequirements(e.line_items ?? []),
     goodshuffleUrl: e.goodshuffle_url ?? null,
     ownerUserUuid: e.created_by_user_uuid ?? null,
   }));

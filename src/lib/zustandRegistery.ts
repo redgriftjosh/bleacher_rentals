@@ -91,5 +91,4 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   TermsAndConditions: () => {},
   ContractSignatures: () => {},
   EventFiles: () => {},
-  EventBleacherRequirements: () => {},
 };

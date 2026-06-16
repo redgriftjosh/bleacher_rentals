@@ -873,17 +873,6 @@ export async function createEvent(
     throw new Error(`Failed to link bleachers: ${bleacherEventError.message}`);
   }
 
-  // 4b. Insert bleacher requirements
-  const reqs = state.bleacherRequirements.filter((r) => r.quantity > 0);
-  if (reqs.length > 0) {
-    const reqRows = reqs.map((r) => ({
-      event_uuid,
-      bleacher_type_uuid: r.bleacherTypeUuid,
-      quantity: r.quantity,
-    }));
-    await supabase.from("EventBleacherRequirements").insert(reqRows);
-  }
-
   toast.custom(
     (t) =>
       React.createElement(SuccessToast, {
