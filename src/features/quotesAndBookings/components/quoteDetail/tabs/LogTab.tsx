@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { FIELD_LABELS } from "../../../db/logEventChanges";
-import { X } from "lucide-react";
+import { X, Eye } from "lucide-react";
 
 type LogRow = {
   id: string;
@@ -29,6 +29,29 @@ const ACTION_CONFIG: Record<string, { icon: string; color: string; label: string
   line_item_remove: { icon: "➖", color: "text-red-600", label: "Removed" },
   line_item_change: { icon: "✏️", color: "text-amber-600", label: "Changed" },
 };
+
+export function isClientEvent(row: LogRow): boolean {
+  return row.action_type?.startsWith("client_") ?? false;
+}
+
+export function getClientTitle(row: LogRow): string {
+  switch (row.action_type) {
+    case "client_page_view":
+      return `Viewed quote${row.next_value ? ` #${row.next_value}` : ""}`;
+    case "client_tab_change":
+      return `Navigated to "${row.next_value ?? ""}"`;
+    case "client_contract_signed":
+      return `Signed contract${row.next_value ? ` as "${row.next_value}"` : ""}`;
+    case "client_po_submitted":
+      return `Submitted PO #${row.next_value ?? ""}`;
+    case "client_payment_started":
+      return `Initiated payment${row.next_value ? ` of ${row.next_value}` : ""}`;
+    case "client_pdf_download":
+      return "Downloaded PDF";
+    default:
+      return "Customer activity";
+  }
+}
 
 function formatDateTime(d: string | null): string {
   if (!d) return "";
@@ -67,37 +90,37 @@ function ChangeDetailModal({ log, onClose }: { log: LogRow; onClose: () => void 
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h3 className="font-semibold text-lg">{getTitle(log)}</h3>
+      <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h3 className="font-semibold text-base">{getTitle(log)}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer">
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="px-5 py-4 space-y-4">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-500">Changed by</span>
-              <p className="font-medium">{userName}</p>
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Changed by</p>
+              <p className="font-medium text-gray-800">{userName}</p>
             </div>
             <div>
-              <span className="text-gray-500">When</span>
-              <p className="font-medium">{formatDateTime(log.changed_at)}</p>
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">When</p>
+              <p className="font-medium text-gray-800">{formatDateTime(log.changed_at)}</p>
             </div>
           </div>
 
           {log.action_type === "update" && (
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-500 block mb-1">Previous Value</span>
-                <pre className="bg-red-50 border border-red-200 rounded p-3 text-xs whitespace-pre-wrap break-words min-h-[40px]">
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Previous</span>
+                <pre className="bg-red-50 border border-red-100 rounded-lg p-3 text-xs whitespace-pre-wrap break-words min-h-[40px]">
                   {formatValue(log.prev_value)}
                 </pre>
               </div>
               <div>
-                <span className="text-gray-500 block mb-1">New Value</span>
-                <pre className="bg-green-50 border border-green-200 rounded p-3 text-xs whitespace-pre-wrap break-words min-h-[40px]">
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">New</span>
+                <pre className="bg-green-50 border border-green-100 rounded-lg p-3 text-xs whitespace-pre-wrap break-words min-h-[40px]">
                   {formatValue(log.next_value)}
                 </pre>
               </div>
@@ -106,47 +129,47 @@ function ChangeDetailModal({ log, onClose }: { log: LogRow; onClose: () => void 
 
           {log.action_type === "line_item_add" && (
             <div className="text-sm">
-              <span className="text-gray-500 block mb-1">Added</span>
-              <p className="font-medium text-green-700 bg-green-50 border border-green-200 rounded p-3">{log.next_value}</p>
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Added</span>
+              <p className="font-medium text-green-700 bg-green-50 border border-green-100 rounded-lg p-3">{log.next_value}</p>
             </div>
           )}
 
           {log.action_type === "line_item_remove" && (
             <div className="text-sm">
-              <span className="text-gray-500 block mb-1">Removed</span>
-              <p className="font-medium text-red-700 bg-red-50 border border-red-200 rounded p-3">{log.prev_value}</p>
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Removed</span>
+              <p className="font-medium text-red-700 bg-red-50 border border-red-100 rounded-lg p-3">{log.prev_value}</p>
             </div>
           )}
 
           {log.action_type === "line_item_change" && (
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-500 block mb-1">Before</span>
-                <p className="bg-red-50 border border-red-200 rounded p-3 text-sm">{log.prev_value}</p>
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Before</span>
+                <p className="bg-red-50 border border-red-100 rounded-lg p-3 text-sm">{log.prev_value}</p>
               </div>
               <div>
-                <span className="text-gray-500 block mb-1">After</span>
-                <p className="bg-green-50 border border-green-200 rounded p-3 text-sm">{log.next_value}</p>
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">After</span>
+                <p className="bg-green-50 border border-green-100 rounded-lg p-3 text-sm">{log.next_value}</p>
               </div>
             </div>
           )}
 
           {log.action_type === "send" && (
             <div className="text-sm">
-              <span className="text-gray-500 block mb-1">Sent to</span>
-              <p className="font-medium">{log.next_value ?? "—"}</p>
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Sent to</span>
+              <p className="font-medium text-gray-800">{log.next_value ?? "—"}</p>
             </div>
           )}
 
           {log.action_type === "status_change" && (
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-500 block mb-1">Previous Status</span>
-                <p className="bg-red-50 border border-red-200 rounded p-3 font-medium">{formatValue(log.prev_value)}</p>
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Previous Status</span>
+                <p className="bg-red-50 border border-red-100 rounded-lg p-3 font-medium">{formatValue(log.prev_value)}</p>
               </div>
               <div>
-                <span className="text-gray-500 block mb-1">New Status</span>
-                <p className="bg-green-50 border border-green-200 rounded p-3 font-medium">{formatValue(log.next_value)}</p>
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">New Status</span>
+                <p className="bg-green-50 border border-green-100 rounded-lg p-3 font-medium">{formatValue(log.next_value)}</p>
               </div>
             </div>
           )}
@@ -156,8 +179,33 @@ function ChangeDetailModal({ log, onClose }: { log: LogRow; onClose: () => void 
   );
 }
 
+function ClientActivityRow({ log }: { log: LogRow }) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50/70 border border-amber-100 mb-2">
+      <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+        <Eye className="w-3.5 h-3.5 text-amber-600" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium text-gray-800">{getClientTitle(log)}</p>
+          <span className="bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide shrink-0">
+            Customer
+          </span>
+        </div>
+        {log.action_type === "client_tab_change" && log.prev_value && (
+          <p className="text-xs text-gray-400 mt-0.5">
+            {log.prev_value} → {log.next_value}
+          </p>
+        )}
+      </div>
+      <p className="text-xs text-gray-400 shrink-0">{formatDateTime(log.changed_at)}</p>
+    </div>
+  );
+}
+
 export function LogTab({ quoteId }: { quoteId: string }) {
   const [selectedLog, setSelectedLog] = useState<LogRow | null>(null);
+  const [activeSubTab, setActiveSubTab] = useState<"internal" | "customer">("internal");
 
   const compiled = useMemo(
     () =>
@@ -184,58 +232,104 @@ export function LogTab({ quoteId }: { quoteId: string }) {
   const { data, isLoading } = useTypedQuery(compiled, expect<LogRow>());
 
   const logs = data ?? [];
+  const clientLogs = logs.filter(isClientEvent);
+  const internalLogs = logs.filter((l) => !isClientEvent(l));
 
   if (isLoading) {
     return <p className="text-sm text-gray-400 py-4 text-center">Loading activity log...</p>;
   }
 
-  if (logs.length === 0) {
-    return <p className="text-sm text-gray-400 py-4 text-center">No activity recorded yet.</p>;
-  }
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Activity Log</h3>
-        <div className="space-y-0">
-          {logs.map((log) => {
-            const config = ACTION_CONFIG[log.action_type ?? "update"] ?? ACTION_CONFIG.update;
-            const userName = [log.first_name, log.last_name].filter(Boolean).join(" ") || "System";
-            return (
-              <button
-                key={log.id}
-                onClick={() => setSelectedLog(log)}
-                className="w-full flex items-start gap-3 py-3 border-b last:border-b-0 hover:bg-gray-50 transition text-left cursor-pointer"
-              >
-                <span className="text-lg mt-0.5">{config.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{getTitle(log)}</p>
-                  {log.action_type === "update" && (log.prev_value || log.next_value) && (
-                    <p className="text-xs text-gray-500 truncate">
-                      {formatValue(log.prev_value)} → {formatValue(log.next_value)}
-                    </p>
-                  )}
-                  {log.action_type === "line_item_add" && log.next_value && (
-                    <p className="text-xs text-green-600 truncate">{log.next_value}</p>
-                  )}
-                  {log.action_type === "line_item_remove" && log.prev_value && (
-                    <p className="text-xs text-red-600 truncate">{log.prev_value}</p>
-                  )}
-                  {log.action_type === "line_item_change" && (
-                    <p className="text-xs text-gray-500 truncate">
-                      {log.prev_value} → {log.next_value}
-                    </p>
-                  )}
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-xs text-gray-500">{formatDateTime(log.changed_at)}</p>
-                  <p className="text-xs text-gray-400">{userName}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+    <div className="space-y-4">
+      {/* Sub-tab bar */}
+      <div className="flex gap-1 border-b border-gray-100">
+        {(["internal", "customer"] as const).map((tab) => {
+          const label = tab === "internal" ? "Internal Activity" : "Customer Activity";
+          const count = tab === "internal" ? internalLogs.length : clientLogs.length;
+          const isActive = activeSubTab === tab;
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveSubTab(tab)}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors cursor-pointer ${
+                isActive
+                  ? "border-darkBlue text-darkBlue"
+                  : "border-transparent text-gray-400 hover:text-gray-600"
+              }`}
+            >
+              {label}
+              {count > 0 && (
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${
+                    isActive ? "bg-darkBlue/10 text-darkBlue" : "bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
+
+      {/* Internal Activity */}
+      {activeSubTab === "internal" && (
+        internalLogs.length === 0 ? (
+          <p className="text-sm text-gray-400 py-4 text-center">No internal activity recorded yet.</p>
+        ) : (
+          <div className="rounded-xl border border-gray-100 overflow-hidden">
+            {internalLogs.map((log) => {
+              const config = ACTION_CONFIG[log.action_type ?? "update"] ?? ACTION_CONFIG.update;
+              const userName = [log.first_name, log.last_name].filter(Boolean).join(" ") || "System";
+              return (
+                <button
+                  key={log.id}
+                  onClick={() => setSelectedLog(log)}
+                  className="w-full flex items-start gap-3 px-4 py-3 border-b border-gray-50 last:border-b-0 hover:bg-gray-50/80 transition text-left cursor-pointer"
+                >
+                  <span className="text-base mt-0.5 shrink-0">{config.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800">{getTitle(log)}</p>
+                    {log.action_type === "update" && (log.prev_value || log.next_value) && (
+                      <p className="text-xs text-gray-400 truncate">
+                        {formatValue(log.prev_value)} → {formatValue(log.next_value)}
+                      </p>
+                    )}
+                    {log.action_type === "line_item_add" && log.next_value && (
+                      <p className="text-xs text-green-600 truncate">{log.next_value}</p>
+                    )}
+                    {log.action_type === "line_item_remove" && log.prev_value && (
+                      <p className="text-xs text-red-500 truncate">{log.prev_value}</p>
+                    )}
+                    {log.action_type === "line_item_change" && (
+                      <p className="text-xs text-gray-400 truncate">
+                        {log.prev_value} → {log.next_value}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs text-gray-400">{formatDateTime(log.changed_at)}</p>
+                    <p className="text-xs text-gray-300">{userName}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )
+      )}
+
+      {/* Customer Activity */}
+      {activeSubTab === "customer" && (
+        clientLogs.length === 0 ? (
+          <p className="text-sm text-gray-400 py-4 text-center">No customer activity recorded yet.</p>
+        ) : (
+          <div>
+            {clientLogs.map((log) => (
+              <ClientActivityRow key={log.id} log={log} />
+            ))}
+          </div>
+        )
+      )}
 
       {selectedLog && <ChangeDetailModal log={selectedLog} onClose={() => setSelectedLog(null)} />}
     </div>

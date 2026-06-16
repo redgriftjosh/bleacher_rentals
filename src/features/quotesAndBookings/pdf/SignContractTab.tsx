@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { QuoteDocumentData } from "./quoteDocumentData";
+import { TrackEvent } from "./useQuoteActivityTracker";
 
 type ContractData = {
   termsAndConditionsUuid: string | null;
@@ -26,7 +27,13 @@ export function formatSignedAt(iso: string): string {
   return d.toLocaleString("en-US", options);
 }
 
-export function SignContractTab({ data }: { data: QuoteDocumentData }) {
+export function SignContractTab({
+  data,
+  track,
+}: {
+  data: QuoteDocumentData;
+  track: (e: TrackEvent) => void;
+}) {
   const [contract, setContract] = useState<ContractData | null>(null);
   const [loading, setLoading] = useState(true);
   const [signerName, setSignerName] = useState("");
@@ -54,6 +61,11 @@ export function SignContractTab({ data }: { data: QuoteDocumentData }) {
       });
       const result = await res.json();
       if (res.ok) {
+        track({
+          action_type: "client_contract_signed",
+          field_name: "contract",
+          next_value: signerName.trim(),
+        });
         setContract((prev) =>
           prev
             ? {

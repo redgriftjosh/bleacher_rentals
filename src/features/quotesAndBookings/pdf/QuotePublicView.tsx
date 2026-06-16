@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { QuoteDocumentData } from "./quoteDocumentData";
+import type { TrackEvent } from "./useQuoteActivityTracker";
 
 function formatMoney(cents: number, currency: "USD" | "CAD"): string {
   const symbol = currency === "CAD" ? "C$" : "$";
@@ -53,7 +56,13 @@ function companyFullAddress(c: QuoteDocumentData["company"]): string {
  * Server component — renders the quote as HTML for the public page.
  * Uses the same QuoteDocumentData as PDF and email (single source of truth).
  */
-export function QuotePublicView({ data }: { data: QuoteDocumentData }) {
+export function QuotePublicView({
+  data,
+  track,
+}: {
+  data: QuoteDocumentData;
+  track?: (event: TrackEvent) => void;
+}) {
   const { currency } = data;
 
   return (
@@ -270,6 +279,7 @@ export function QuotePublicView({ data }: { data: QuoteDocumentData }) {
           </p>
           <a
             href={`/api/quotes/${data.eventId}/pdf`}
+            onClick={() => track?.({ action_type: "client_pdf_download" })}
             className="px-4 py-2 text-sm font-medium text-darkBlue border border-darkBlue rounded-sm hover:bg-blue-50 transition"
           >
             Download PDF

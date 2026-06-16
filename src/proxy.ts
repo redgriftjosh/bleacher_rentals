@@ -4,6 +4,7 @@ const isPublicRoute = createRouteMatcher([
   "/quote/(.*)",
   "/api/contracts/(.*)",
   "/api/quotes/(.*)/pdf",
+  "/api/quotes/(.*)/activity",
   "/api/payments/(.*)",
   "/api/events/(.*)/po",
 ]);

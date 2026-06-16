@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { CreditCard, FileText, Pencil, Check, X, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { QuoteDocumentData } from "./quoteDocumentData";
+import { TrackEvent } from "./useQuoteActivityTracker";
 
 function formatMoney(cents: number, currency: "USD" | "CAD"): string {
   const symbol = currency === "CAD" ? "C$" : "$";
@@ -29,7 +30,13 @@ type PaymentHistoryRow = {
   created_at: string;
 };
 
-export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
+export function PayInvoiceTab({
+  data,
+  track,
+}: {
+  data: QuoteDocumentData;
+  track: (e: TrackEvent) => void;
+}) {
   const { currency } = data;
   const [payerName, setPayerName] = useState(data.contact?.name ?? "");
   const [payerEmail, setPayerEmail] = useState(data.contact?.email ?? "");
@@ -88,6 +95,11 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
       });
       const json = await res.json();
       if (json.url) {
+        track({
+          action_type: "client_payment_started",
+          field_name: "payment",
+          next_value: formatMoney(payAmountPositive, currency),
+        });
         window.location.href = json.url;
       }
     } catch (e) {
@@ -104,6 +116,12 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ poNumber }),
+      });
+      track({
+        action_type: "client_po_submitted",
+        field_name: "po_number",
+        prev_value: data.poNumber ?? null,
+        next_value: poNumber || null,
       });
       setEditingPo(false);
     } catch {
