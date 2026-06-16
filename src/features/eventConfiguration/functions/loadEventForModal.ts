@@ -33,7 +33,7 @@ type BleacherEventRow = {
   bleacher_uuid: string | null;
 };
 
-type RequirementRow = {
+type LineItemRow = {
   bleacher_type_uuid: string | null;
   quantity: number | null;
 };
@@ -96,17 +96,22 @@ export async function loadEventForModal(eventId: string): Promise<void> {
 
     const bleacherUuids = bleacherEvents.map((be) => be.bleacher_uuid).filter(Boolean) as string[];
 
-    // Fetch bleacher requirements
-    const requirementsQuery = db
-      .selectFrom("EventBleacherRequirements")
+    // Derive bleacher requirements from line items
+    const lineItemsQuery = db
+      .selectFrom("EventLineItems")
       .select(["bleacher_type_uuid", "quantity"])
       .where("event_uuid", "=", eventId)
+      .where("deleted", "=", 0)
       .compile();
 
-    const requirementRows = await typedGetAll(requirementsQuery, expect<RequirementRow>());
-    const bleacherRequirements = requirementRows
-      .filter((r) => r.bleacher_type_uuid && r.quantity)
-      .map((r) => ({ bleacherTypeUuid: r.bleacher_type_uuid!, quantity: r.quantity! }));
+    const lineItemRows = await typedGetAll(lineItemsQuery, expect<LineItemRow>());
+    const reqMap = new Map<string, number>();
+    for (const r of lineItemRows) {
+      if (r.bleacher_type_uuid && r.quantity) {
+        reqMap.set(r.bleacher_type_uuid, (reqMap.get(r.bleacher_type_uuid) ?? 0) + r.quantity);
+      }
+    }
+    const bleacherRequirements = [...reqMap.entries()].map(([bleacherTypeUuid, quantity]) => ({ bleacherTypeUuid, quantity }));
 
     // Load all event data into the store and open modal
     const store = useCurrentEventStore.getState();

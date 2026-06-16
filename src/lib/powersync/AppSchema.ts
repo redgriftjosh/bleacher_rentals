@@ -646,16 +646,6 @@ const BleacherTypesCols = {
 } satisfies PowerSyncColsFor<"BleacherTypes">;
 const BleacherTypes = new Table(BleacherTypesCols);
 
-const EventBleacherRequirementsCols = {
-  created_at: column.text,
-  event_uuid: column.text,
-  bleacher_type_uuid: column.text,
-  quantity: column.integer,
-} satisfies PowerSyncColsFor<"EventBleacherRequirements">;
-const EventBleacherRequirements = new Table(EventBleacherRequirementsCols, {
-  indexes: { event_uuid: ["event_uuid"] },
-});
-
 const CompaniesCols = {
   billing_address_uuid: column.text,
   company_name: column.text,
@@ -949,7 +939,6 @@ export const AppSchema = new Schema({
   TermsAndConditions,
   ContractSignatures,
   EventFiles,
-  EventBleacherRequirements,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
