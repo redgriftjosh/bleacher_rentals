@@ -36,10 +36,10 @@ import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissio
 import { canEditWorkTracker } from "@/features/userAccess/logic/canEditWorkTracker";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery, typedGetAll } from "@/lib/powersync/typedQuery";
-import { resolveAddressFull } from "@/utils/resolveAddress";
 import { WorkTrackerAlertsDropDown } from "@/features/alerts/components/WorkTrackerAlertsDropDown";
 import {
   getExpectedPickupStreetForWorkTracker,
+  getExpectedAddressFullForWorkTracker,
   isPickupTransportationMismatch,
 } from "@/features/alerts/util/workTrackerTransportation";
 import { getUpcomingWindowEnd } from "@/features/alerts/util/getUpcomingWindow";
@@ -188,98 +188,20 @@ export default function WorkTrackerModal({
   const handlePopulatePickupFromLastAddress = async () => {
     if (!workTracker?.bleacher_uuid || !workTracker?.date) return;
 
-    type FullBeRow = {
-      eventStart: string | null;
-      address: string | null;
-      eventStatus: string | null;
-      addressUuid: string | null;
-      city: string | null;
-      state: string | null;
-      postalCode: string | null;
-    };
-    type FullWtRow = {
-      date: string | null;
-      dropoffAddress: string | null;
-      dropoffAddressUuid: string | null;
-      dropoffCity: string | null;
-      dropoffState: string | null;
-      dropoffPostalCode: string | null;
-      pickupAddress: string | null;
-      pickupAddressUuid: string | null;
-      pickupCity: string | null;
-      pickupState: string | null;
-      pickupPostalCode: string | null;
-    };
+    const resolved = await getExpectedAddressFullForWorkTracker({
+      bleacherUuid: workTracker.bleacher_uuid,
+      targetDate: workTracker.date,
+      excludeWorkTrackerUuid: workTracker.id,
+      direction: "past",
+    });
 
-    const beRows = await typedGetAll(
-      db
-        .selectFrom("BleacherEvents as be")
-        .innerJoin("Events as e", "e.id", "be.event_uuid")
-        .innerJoin("Addresses as a", "a.id", "e.address_uuid")
-        .select([
-          "e.event_start as eventStart",
-          "a.street as address",
-          "e.event_status as eventStatus",
-          "e.address_uuid as addressUuid",
-          "a.city as city",
-          "a.state_province as state",
-          "a.zip_postal as postalCode",
-        ])
-        .where("be.bleacher_uuid", "=", workTracker.bleacher_uuid)
-        .compile(),
-      expect<FullBeRow>(),
-    );
-
-    const wtRows = await typedGetAll(
-      db
-        .selectFrom("WorkTrackers as wt")
-        .leftJoin("Addresses as ad", "ad.id", "wt.dropoff_address_uuid")
-        .leftJoin("Addresses as ap", "ap.id", "wt.pickup_address_uuid")
-        .select([
-          "wt.date as date",
-          "ad.street as dropoffAddress",
-          "wt.dropoff_address_uuid as dropoffAddressUuid",
-          "ad.city as dropoffCity",
-          "ad.state_province as dropoffState",
-          "ad.zip_postal as dropoffPostalCode",
-          "ap.street as pickupAddress",
-          "wt.pickup_address_uuid as pickupAddressUuid",
-          "ap.city as pickupCity",
-          "ap.state_province as pickupState",
-          "ap.zip_postal as pickupPostalCode",
-        ])
-        .where("wt.bleacher_uuid", "=", workTracker.bleacher_uuid)
-        .where("wt.id", "!=", workTracker.id)
-        .compile(),
-      expect<FullWtRow>(),
-    );
-
-    const resolvedPast = resolveAddressFull(
-      {
-        bleacherEvents: beRows
-          .filter((r) => r.eventStart != null)
-          .map((r) => ({
-            booked: r.eventStatus === "booked",
-            eventStart: r.eventStart!,
-            address: r.address ?? "",
-            addressUuid: r.addressUuid,
-            city: r.city,
-            state: r.state,
-            postalCode: r.postalCode,
-          })),
-        workTrackers: wtRows,
-      },
-      workTracker.date,
-      "past",
-    );
-
-    if (resolvedPast) {
+    if (resolved) {
       setPickUpAddress({
-        addressUuid: null,
-        address: resolvedPast.street,
-        city: resolvedPast.city,
-        state: resolvedPast.state,
-        postalCode: resolvedPast.postalCode,
+        addressUuid: resolved.addressUuid,
+        address: resolved.street,
+        city: resolved.city,
+        state: resolved.state,
+        postalCode: resolved.postalCode,
       });
     }
   };
@@ -287,98 +209,20 @@ export default function WorkTrackerModal({
   const handlePopulateDropoffFromNextAddress = async () => {
     if (!workTracker?.bleacher_uuid || !workTracker?.date) return;
 
-    type FullBeRow = {
-      eventStart: string | null;
-      address: string | null;
-      eventStatus: string | null;
-      addressUuid: string | null;
-      city: string | null;
-      state: string | null;
-      postalCode: string | null;
-    };
-    type FullWtRow = {
-      date: string | null;
-      dropoffAddress: string | null;
-      dropoffAddressUuid: string | null;
-      dropoffCity: string | null;
-      dropoffState: string | null;
-      dropoffPostalCode: string | null;
-      pickupAddress: string | null;
-      pickupAddressUuid: string | null;
-      pickupCity: string | null;
-      pickupState: string | null;
-      pickupPostalCode: string | null;
-    };
+    const resolved = await getExpectedAddressFullForWorkTracker({
+      bleacherUuid: workTracker.bleacher_uuid,
+      targetDate: workTracker.date,
+      excludeWorkTrackerUuid: workTracker.id,
+      direction: "future",
+    });
 
-    const beRows = await typedGetAll(
-      db
-        .selectFrom("BleacherEvents as be")
-        .innerJoin("Events as e", "e.id", "be.event_uuid")
-        .innerJoin("Addresses as a", "a.id", "e.address_uuid")
-        .select([
-          "e.event_start as eventStart",
-          "a.street as address",
-          "e.event_status as eventStatus",
-          "e.address_uuid as addressUuid",
-          "a.city as city",
-          "a.state_province as state",
-          "a.zip_postal as postalCode",
-        ])
-        .where("be.bleacher_uuid", "=", workTracker.bleacher_uuid)
-        .compile(),
-      expect<FullBeRow>(),
-    );
-
-    const wtRows = await typedGetAll(
-      db
-        .selectFrom("WorkTrackers as wt")
-        .leftJoin("Addresses as ad", "ad.id", "wt.dropoff_address_uuid")
-        .leftJoin("Addresses as ap", "ap.id", "wt.pickup_address_uuid")
-        .select([
-          "wt.date as date",
-          "ad.street as dropoffAddress",
-          "wt.dropoff_address_uuid as dropoffAddressUuid",
-          "ad.city as dropoffCity",
-          "ad.state_province as dropoffState",
-          "ad.zip_postal as dropoffPostalCode",
-          "ap.street as pickupAddress",
-          "wt.pickup_address_uuid as pickupAddressUuid",
-          "ap.city as pickupCity",
-          "ap.state_province as pickupState",
-          "ap.zip_postal as pickupPostalCode",
-        ])
-        .where("wt.bleacher_uuid", "=", workTracker.bleacher_uuid)
-        .where("wt.id", "!=", workTracker.id)
-        .compile(),
-      expect<FullWtRow>(),
-    );
-
-    const resolvedFuture = resolveAddressFull(
-      {
-        bleacherEvents: beRows
-          .filter((r) => r.eventStart != null)
-          .map((r) => ({
-            booked: r.eventStatus === "booked",
-            eventStart: r.eventStart!,
-            address: r.address ?? "",
-            addressUuid: r.addressUuid,
-            city: r.city,
-            state: r.state,
-            postalCode: r.postalCode,
-          })),
-        workTrackers: wtRows,
-      },
-      workTracker.date,
-      "future",
-    );
-
-    if (resolvedFuture) {
+    if (resolved) {
       setDropOffAddress({
-        addressUuid: null,
-        address: resolvedFuture.street,
-        city: resolvedFuture.city,
-        state: resolvedFuture.state,
-        postalCode: resolvedFuture.postalCode,
+        addressUuid: resolved.addressUuid,
+        address: resolved.street,
+        city: resolved.city,
+        state: resolved.state,
+        postalCode: resolved.postalCode,
       });
     }
   };
