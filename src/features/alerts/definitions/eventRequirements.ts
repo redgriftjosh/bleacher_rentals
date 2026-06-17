@@ -50,6 +50,7 @@ export const eventRequirements: AlertDefinition = {
           "e.created_by_user_uuid as created_by_user_uuid",
         ])
         .where("e.id", "=", eventUuid)
+        .where("e.deleted", "=", 0)
         .limit(1)
         .compile(),
       expect<EventRow>(),
@@ -209,6 +210,7 @@ export const eventRequirements: AlertDefinition = {
         .selectFrom("Events as e")
         .select(["e.created_by_user_uuid as created_by_user_uuid"])
         .where("e.id", "=", eventUuid)
+        .where("e.deleted", "=", 0)
         .limit(1)
         .compile(),
       expect<{ created_by_user_uuid: string | null }>(),
