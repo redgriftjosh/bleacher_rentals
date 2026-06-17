@@ -15,6 +15,7 @@ type Row = {
 
   summer_account_manager_uuid: string | null;
   winter_account_manager_uuid: string | null;
+  zone_uuid: string | null;
 
   summer: { home_base_name: string; id: string } | null; // HomeBases.id (uuid)
   winter: { home_base_name: string; id: string } | null;
@@ -102,6 +103,7 @@ export async function FetchDashboardBleachers(
     linxup_device_id,
     summer_account_manager_uuid,
     winter_account_manager_uuid,
+    zone_uuid,
 
     summer:HomeBases!bleachers_summer_home_base_uuid_fkey(
       home_base_name,
@@ -200,6 +202,7 @@ export async function FetchDashboardBleachers(
 
     summerAccountManagerUuid: r.summer_account_manager_uuid,
     winterAccountManagerUuid: r.winter_account_manager_uuid,
+    zoneUuid: r.zone_uuid,
 
     summerHomeBase: r.summer ? { name: r.summer.home_base_name, homeBaseUuid: r.summer.id } : null,
 

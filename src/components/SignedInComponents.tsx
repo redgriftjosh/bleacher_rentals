@@ -10,6 +10,8 @@ import { useUserAccess } from "@/features/userAccess/client";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { useAccessRedirect } from "@/features/userAccess/hooks/useAccessRedirect";
 import { mergeRoleConfigs } from "@/features/userAccess/accessConfig";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import LoadingSpinner from "./LoadingSpinner";
 import { CannotFindAccount } from "../features/userAccess/components/CannotFindAccount";
 import { NoRolesAssigned } from "../features/userAccess/components/NoRolesAssigned";
@@ -29,6 +31,21 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
 
   useAccessRedirect(config);
 
+  // Query AM zone assignments reactively
+  const amId = access.status === "active" ? access.accountManagerId : null;
+  const amZonesCompiled = useMemo(() => {
+    const effectiveId = amId ?? "__none__";
+    return db
+      .selectFrom("AccountManagerZones")
+      .select(["zone_uuid"])
+      .where("account_manager_uuid", "=", effectiveId)
+      .compile();
+  }, [amId]);
+  const { data: amZoneRows } = useTypedQuery(
+    amZonesCompiled,
+    expect<{ zone_uuid: string | null }>(),
+  );
+
   // Sync permissions to Zustand store so non-React code (Pixi renderers) can read them
   useEffect(() => {
     if (access.status === "active") {
@@ -36,10 +53,11 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
         isAdmin: access.roles.includes("admin"),
         isAccountManager: access.roles.includes("account_manager"),
         accountManagerId: access.accountManagerId,
+        accountManagerZoneIds: amZoneRows?.filter((r) => r.zone_uuid != null).map((r) => r.zone_uuid!) ?? [],
         userId: access.userId,
       });
     }
-  }, [access]);
+  }, [access, amZoneRows]);
 
   if (access.status === "loading") {
     return (

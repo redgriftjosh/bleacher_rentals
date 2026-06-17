@@ -258,42 +258,6 @@ export function getStateProvOptions() {
   }));
 }
 
-export function filterSortBleachers(
-  summerHomeBaseUuids: string[],
-  winterHomeBaseUuids: string[],
-  rows: number[],
-  bleachers: DashboardBleacher[],
-  bleacherUuids: string[],
-  isFormExpanded: boolean,
-): DashboardBleacher[] {
-  const matchesFilter = (b: DashboardBleacher) =>
-    summerHomeBaseUuids.includes(b.summerHomeBase.homeBaseUuid) &&
-    winterHomeBaseUuids.includes(b.winterHomeBase.homeBaseUuid) &&
-    rows.includes(b.bleacherRows);
-
-  const alwaysInclude = (b: DashboardBleacher) => bleacherUuids.includes(b.bleacherUuid);
-
-  // Keep all selected bleachers, even if they don't match the filters (when expanded)
-  const filteredBleachers = isFormExpanded
-    ? bleachers.filter((b) => matchesFilter(b) || alwaysInclude(b))
-    : bleachers.filter(matchesFilter);
-
-  const sortedBleachers = isFormExpanded
-    ? [
-        ...filteredBleachers
-          .filter(alwaysInclude)
-          .sort((a, b) => a.bleacherNumber - b.bleacherNumber),
-        ...filteredBleachers
-          .filter((b) => !alwaysInclude(b))
-          .sort((a, b) => a.bleacherNumber - b.bleacherNumber),
-      ]
-    : filteredBleachers.sort((a, b) => a.bleacherNumber - b.bleacherNumber);
-
-  // console.log("sortedBleachers", sortedBleachers);
-  // console.log("isFormExpanded", isFormExpanded);
-  return sortedBleachers;
-}
-
 export function getTodayLocation(bleacher: DashboardBleacher): AddressData | null {
   const today = new Date();
 

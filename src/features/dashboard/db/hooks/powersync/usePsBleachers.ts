@@ -12,6 +12,7 @@ export type PsBleacherRow = {
   winter_account_manager_uuid: string | null;
   summer_home_base_uuid: string | null;
   winter_home_base_uuid: string | null;
+  zone_uuid: string | null;
 };
 
 const compiled = db
@@ -26,6 +27,7 @@ const compiled = db
     "b.winter_account_manager_uuid",
     "b.summer_home_base_uuid",
     "b.winter_home_base_uuid",
+    "b.zone_uuid",
   ])
   .where("b.deleted", "=", 0)
   .orderBy("b.bleacher_number", "asc")
