@@ -38,6 +38,13 @@ export async function POST(req: NextRequest) {
     ? `#${event.invoice_number}`
     : event.id.slice(0, 8);
 
+  if (amountCents < 50) {
+    return NextResponse.json(
+      { error: "Payment amount must be at least $0.50." },
+      { status: 400 },
+    );
+  }
+
   const stripe = getStripe();
 
   const session = await stripe.checkout.sessions.create({
