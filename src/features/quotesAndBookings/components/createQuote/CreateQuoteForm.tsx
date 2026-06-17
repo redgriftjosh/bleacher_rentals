@@ -24,6 +24,7 @@ import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient"
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { useAutoTax } from "../../hooks/useAutoTax";
 import { useCurrentUserUuid } from "../../hooks/useCurrentUserUuid";
+import { triage } from "@/features/alerts/triage";
 
 export function CreateQuoteForm() {
   const router = useRouter();
@@ -53,11 +54,13 @@ export function CreateQuoteForm() {
       const state = useCreateQuoteStore.getState();
       if (isEditing) {
         await updateQuoteEvent(editingEventId, state, supabase, currentUserUuid);
+        void triage("Events", { id: editingEventId }, supabase);
         createSuccessToast(["Quote updated."]);
         resetForm();
         router.push(`/quotes-bookings/${editingEventId}`);
       } else {
         const eventId = await createQuoteEvent(state, supabase, currentUserUuid);
+        void triage("Events", { id: eventId }, supabase);
         createSuccessToast(["Quote draft saved."]);
         resetForm();
         router.push(`/quotes-bookings/${eventId}`);
@@ -80,6 +83,7 @@ export function CreateQuoteForm() {
       } else {
         eventId = await createQuoteEvent(state, supabase, currentUserUuid);
       }
+      void triage("Events", { id: eventId }, supabase);
       // Open preview in new tab, keep form open
       window.open(`/quotes-bookings/${eventId}/preview`, "_blank");
       if (!isEditing) {
@@ -106,6 +110,7 @@ export function CreateQuoteForm() {
       } else {
         eventId = await createQuoteEvent(state, supabase, currentUserUuid);
       }
+      void triage("Events", { id: eventId }, supabase);
 
       // Collect recipient emails (main + optional finance contact)
       const recipientEmails: string[] = [];
