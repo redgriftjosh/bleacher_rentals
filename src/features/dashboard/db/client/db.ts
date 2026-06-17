@@ -35,6 +35,7 @@ import {
 } from "@/features/workTrackers/db/notifications";
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute, typedGetAll, expect } from "@/lib/powersync/typedQuery";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -415,10 +416,12 @@ export async function saveWorkTracker(
     );
   } else {
     savedWorkTrackerUuid = crypto.randomUUID();
+    const createdByUserUuid =
+      workTracker.created_by_user_uuid ?? usePermissionsStore.getState().userId ?? null;
     await typedExecute(
       db
         .insertInto("WorkTrackers")
-        .values({ id: savedWorkTrackerUuid, ...wtFields })
+        .values({ id: savedWorkTrackerUuid, ...wtFields, created_by_user_uuid: createdByUserUuid })
         .compile(),
     );
   }
