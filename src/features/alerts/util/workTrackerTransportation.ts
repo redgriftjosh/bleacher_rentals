@@ -42,6 +42,7 @@ export async function getExpectedPickupStreetForWorkTracker(params: {
         "e.event_status as eventStatus",
       ])
       .where("be.bleacher_uuid", "=", bleacherUuid)
+      .where("e.deleted", "=", 0)
       .compile(),
     expect<BeRow>(),
   );

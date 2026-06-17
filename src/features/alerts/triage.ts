@@ -13,6 +13,7 @@ type TriageTable = "Events" | "Events_deleted" | "WorkTrackers" | "WorkTrackers_
 type BeRow = { id: string; bleacher_uuid: string | null };
 type RelatedBeRow = { id: string };
 type WtIdRow = { id: string };
+type EventDeletedRow = { deleted: number | null };
 type WtDbRow = {
   id: string;
   bleacher_uuid: string | null;
@@ -48,6 +49,23 @@ async function triageEventSaved(
   eventUuid: string,
   supabase: SupabaseClient<Database>,
 ): Promise<void> {
+  // Soft-delete path: if the event is flagged deleted, handle it as a delete triage.
+  const eventRows = await typedGetAll(
+    db
+      .selectFrom("Events as e")
+      .select(["e.deleted as deleted"])
+      .where("e.id", "=", eventUuid)
+      .limit(1)
+      .compile(),
+    expect<EventDeletedRow>(),
+  );
+  const event = eventRows[0];
+  if (!event) return;
+  if (event.deleted === 1) {
+    await triageEventDeleted(eventUuid, supabase);
+    return;
+  }
+
   // 1. Find all bleacher_events for this event
   const bes = await typedGetAll(
     db
@@ -84,6 +102,7 @@ async function triageEventSaved(
         .select(["be.id as id"])
         .where("be.bleacher_uuid", "in", bleacherUuids)
         .where("be.event_uuid", "!=", eventUuid)
+        .where("e.deleted", "=", 0)
         .where("e.event_start", ">=", todayStart())
         .compile(),
       expect<RelatedBeRow>(),
@@ -148,6 +167,7 @@ async function triageEventDeleted(
         .select(["be.id as id"])
         .where("be.bleacher_uuid", "in", bleacherUuids)
         .where("be.event_uuid", "!=", eventUuid)
+        .where("e.deleted", "=", 0)
         .where("e.event_start", ">=", todayStart())
         .compile(),
       expect<RelatedBeRow>(),
@@ -213,6 +233,7 @@ async function triageWorkTrackerSaved(
         .innerJoin("Events as e", "e.id", "be.event_uuid")
         .select(["be.id as id"])
         .where("be.bleacher_uuid", "in", bleacherUuids)
+        .where("e.deleted", "=", 0)
         .where("e.event_start", ">=", todayStart())
         .compile(),
       expect<RelatedBeRow>(),
@@ -241,6 +262,7 @@ async function triageWorkTrackerDeleted(
         .innerJoin("Events as e", "e.id", "be.event_uuid")
         .select(["be.id as id"])
         .where("be.bleacher_uuid", "=", bleacherUuid)
+        .where("e.deleted", "=", 0)
         .where("e.event_start", ">=", todayStart())
         .compile(),
       expect<RelatedBeRow>(),

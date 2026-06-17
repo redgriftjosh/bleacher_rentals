@@ -42,6 +42,7 @@ import {
   getExpectedPickupStreetForWorkTracker,
   isPickupTransportationMismatch,
 } from "@/features/alerts/util/workTrackerTransportation";
+import { getUpcomingWindowEnd } from "@/features/alerts/util/getUpcomingWindow";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -407,6 +408,11 @@ export default function WorkTrackerModal({
     Boolean(expectedPickupStreet) &&
     Boolean(pickUpAddress?.address) &&
     isPickupTransportationMismatch(expectedPickupStreet, pickUpAddress?.address);
+
+  const showDraftWarning =
+    workTracker?.status === "draft" &&
+    !!workTracker?.date &&
+    workTracker.date <= getUpcomingWindowEnd();
 
   const canEdit = permissions.canCreateUser
     ? canEditWorkTracker({
@@ -778,7 +784,16 @@ export default function WorkTrackerModal({
                     }
                   />
                   {/* Status Badge - Account Manager can toggle between draft and released */}
-                  <label className={labelClassName}>Status</label>
+                  <div className="flex items-center gap-2">
+                    <label className={labelClassName}>Status</label>
+                    {showDraftWarning && (
+                      <AppTooltip content="This work tracker is still in draft and should be released soon.">
+                        <span className="mt-1 inline-flex text-amber-600">
+                          <AlertTriangle className="h-4 w-4" />
+                        </span>
+                      </AppTooltip>
+                    )}
+                  </div>
                   <div className="flex items-center justify-center p-3 bg-gray-50 rounded border">
                     <WorkTrackerStatusBadge
                       status={workTracker?.status ?? "draft"}

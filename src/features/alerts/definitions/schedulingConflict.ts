@@ -46,6 +46,7 @@ export const schedulingConflict: AlertDefinition = {
           "e.created_by_user_uuid as created_by_user_uuid",
         ])
         .where("be.id", "=", bleacherEventUuid)
+        .where("e.deleted", "=", 0)
         .limit(1)
         .compile(),
       expect<BeRow>(),
@@ -75,6 +76,7 @@ export const schedulingConflict: AlertDefinition = {
         .where("be2.bleacher_uuid", "=", be.bleacher_uuid)
         .where("be2.id", "!=", bleacherEventUuid)
         .where("e2.event_status", "=", "booked")
+        .where("e2.deleted", "=", 0)
         .compile(),
       expect<OtherBeRow>(),
     );
@@ -149,6 +151,7 @@ export const schedulingConflict: AlertDefinition = {
         .innerJoin("Events as e", "e.id", "be.event_uuid")
         .select(["e.created_by_user_uuid as created_by_user_uuid"])
         .where("be.id", "=", bleacherEventUuid)
+        .where("e.deleted", "=", 0)
         .limit(1)
         .compile(),
       expect<{ created_by_user_uuid: string | null }>(),
