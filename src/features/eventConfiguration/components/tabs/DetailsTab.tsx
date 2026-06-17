@@ -6,8 +6,7 @@ import { useCurrentEventStore } from "../../state/useCurrentEventStore";
 import { EventStatus } from "@/features/dashboard/types";
 import CentsInput from "@/components/CentsInput";
 import { useBleacherTypesActive } from "@/features/pricingMatrix/hooks/useBleacherTypesActive";
-import { db } from "@/components/providers/SystemProvider";
-import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { useBleacherMismatch } from "../../hooks/useBleacherMismatch";
 
 export const DetailsTab = () => {
   const contractRevenueCents = useCurrentEventStore((s) => s.contractRevenueCents);
@@ -18,33 +17,8 @@ export const DetailsTab = () => {
   const bookedAt = useCurrentEventStore((s) => s.bookedAt);
   const createdAt = useCurrentEventStore((s) => s.createdAt);
   const bleacherRequirements = useCurrentEventStore((s) => s.bleacherRequirements);
-  const bleacherUuids = useCurrentEventStore((s) => s.bleacherUuids);
   const { bleacherTypes } = useBleacherTypesActive();
-
-  const assignedBleachersQuery = useMemo(
-    () =>
-      db
-        .selectFrom("Bleachers")
-        .select(["id", "bleacher_type_uuid"])
-        .where("deleted", "=", 0)
-        .compile(),
-    [],
-  );
-  const { data: allBleacherRows } = useTypedQuery(
-    assignedBleachersQuery,
-    expect<{ id: string; bleacher_type_uuid: string | null }>(),
-  );
-
-  // Count assigned bleachers by type for just this event's assigned bleacher UUIDs
-  const assignedCountByType = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const row of allBleacherRows ?? []) {
-      if (!bleacherUuids.includes(row.id)) continue;
-      if (!row.bleacher_type_uuid) continue;
-      counts[row.bleacher_type_uuid] = (counts[row.bleacher_type_uuid] ?? 0) + 1;
-    }
-    return counts;
-  }, [allBleacherRows, bleacherUuids]);
+  const { assignedCountByType } = useBleacherMismatch();
 
   const [revenueDisplay, setRevenueDisplay] = React.useState(
     contractRevenueCents !== null ? (contractRevenueCents / 100).toFixed(2) : "",
@@ -106,6 +80,27 @@ export const DetailsTab = () => {
                   </li>
                 );
               })}
+              {Object.entries(assignedCountByType)
+                .filter(([typeUuid]) =>
+                  !bleacherRequirements.some((r) => r.bleacherTypeUuid === typeUuid),
+                )
+                .map(([typeUuid, count]) => {
+                  const bt = bleacherTypes.find((t) => t.id === typeUuid);
+                  const name =
+                    bt?.name ?? (bt?.row_count ? `${bt.row_count}-Row` : typeUuid);
+                  return (
+                    <li
+                      key={typeUuid}
+                      className="flex items-center justify-between text-sm rounded border border-amber-200 bg-amber-50 px-3 py-1.5"
+                    >
+                      <span className="font-medium text-gray-700">{name}</span>
+                      <span className="flex items-center gap-1.5 tabular-nums text-sm font-medium">
+                        <span className="text-amber-600">{count} / 0</span>
+                        <TriangleAlert className="w-4 h-4 text-amber-500" />
+                      </span>
+                    </li>
+                  );
+                })}
             </ul>
           )}
         </div>

@@ -28,6 +28,7 @@ import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissio
 import { canEditOwnedEntity } from "@/features/userAccess/logic/canEditOwnedEntity";
 import { useCreateQuoteStore } from "@/features/quotesAndBookings/state/useCreateQuoteStore";
 import { useEventFormTransportationAlerts } from "../hooks/useEventFormTransportationAlerts";
+import { useBleacherMismatch } from "../hooks/useBleacherMismatch";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
@@ -59,6 +60,7 @@ export const EventConfigurationForm = ({
   const permissions = useTeamPermissions();
   const router = useRouter();
   useEventFormTransportationAlerts();
+  const { hasMismatch: hasDetailsMismatch } = useBleacherMismatch();
 
   const isEditing = !!currentEventStore.eventUuid;
   const canEdit = permissions.canCreateUser
@@ -168,26 +170,30 @@ export const EventConfigurationForm = ({
     >
       <div className="flex items-center gap-2">
         <div className="flex gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              className={`px-2.5 mb-2 rounded-t border-b-2 cursor-pointer ${
-                activeTab === tab ? "border-darkBlue font-semibold" : "border-transparent"
-              } ${
-                tab === "Alerts" && currentEventStore.alerts.length > 0
-                  ? "text-red-700"
-                  : activeTab === tab
-                    ? "text-darkBlue"
-                    : "text-black/50"
-              }`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab}
-              {tab === "Alerts" &&
-                currentEventStore.alerts.length > 0 &&
-                ` (${currentEventStore.alerts.length})`}
-            </button>
-          ))}
+          {tabs.map((tab) => {
+            const hasWarning =
+              (tab === "Alerts" && currentEventStore.alerts.length > 0) ||
+              (tab === "Details" && hasDetailsMismatch);
+            return (
+              <button
+                key={tab}
+                className={`px-2.5 mb-2 rounded-t border-b-2 cursor-pointer ${
+                  activeTab === tab ? "border-darkBlue font-semibold" : "border-transparent"
+                } ${
+                  hasWarning
+                    ? "text-red-700"
+                    : activeTab === tab
+                      ? "text-darkBlue"
+                      : "text-black/50"
+                }`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+                {tab === "Alerts" && currentEventStore.alerts.length > 0 && ` (${currentEventStore.alerts.length})`}
+                {tab === "Details" && hasDetailsMismatch && " !"}
+              </button>
+            );
+          })}
         </div>
 
         {/* Middle area for hue slider */}
