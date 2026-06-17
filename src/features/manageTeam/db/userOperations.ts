@@ -156,8 +156,7 @@ export async function createUser(
 
       if (amError) throw amError;
 
-      // 4. Update bleacher and driver assignments
-      await updateBleacherAssignments(supabase, userUuid, state);
+      // 4. Update driver assignments
       await updateDriverAssignments(supabase, userUuid, state);
     }
 
@@ -295,23 +294,10 @@ export async function updateUser(
         if (amUpdateError) throw amUpdateError;
       }
 
-      // Update bleacher and driver assignments
-      await updateBleacherAssignments(supabase, userUuid, state);
+      // Update driver assignments
       await updateDriverAssignments(supabase, userUuid, state);
     } else if (existingAM) {
       // Remove account manager role
-      // First clear bleacher assignments using the AccountManager's ID
-      const { error: bleacherClearError } = await supabase
-        .from("Bleachers")
-        .update({
-          summer_account_manager_uuid: null,
-          winter_account_manager_uuid: null,
-        })
-        .or(
-          `summer_account_manager_uuid.eq.${existingAM.id},winter_account_manager_uuid.eq.${existingAM.id}`,
-        );
-      if (bleacherClearError) throw bleacherClearError;
-
       // Clear driver assignments
       const { error: driverClearError } = await supabase
         .from("Drivers")
@@ -365,61 +351,6 @@ export async function updateUser(
   } catch (error) {
     console.error("Error updating user:", error);
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
-  }
-}
-
-async function updateBleacherAssignments(
-  supabase: TypedSupabaseClient,
-  userUuid: string,
-  state: CurrentUserState,
-): Promise<void> {
-  // First, get the account_manager_id for this user
-  const { data: amData, error: amError } = await supabase
-    .from("AccountManagers")
-    .select("id")
-    .eq("user_uuid", userUuid)
-    .single();
-
-  if (amError || !amData) {
-    console.error("Failed to get account manager ID:", amError);
-    return;
-  }
-
-  const accountManagerUuid = amData.id;
-
-  // Clear existing assignments for this account manager
-  await supabase
-    .from("Bleachers")
-    .update({
-      summer_account_manager_uuid: null,
-    })
-    .eq("summer_account_manager_uuid", accountManagerUuid);
-
-  await supabase
-    .from("Bleachers")
-    .update({
-      winter_account_manager_uuid: null,
-    })
-    .eq("winter_account_manager_uuid", accountManagerUuid);
-
-  // Set new summer assignments
-  if (state.summerBleacherUuids.length > 0) {
-    await supabase
-      .from("Bleachers")
-      .update({
-        summer_account_manager_uuid: accountManagerUuid,
-      })
-      .in("id", state.summerBleacherUuids);
-  }
-
-  // Set new winter assignments
-  if (state.winterBleacherUuids.length > 0) {
-    await supabase
-      .from("Bleachers")
-      .update({
-        winter_account_manager_uuid: accountManagerUuid,
-      })
-      .in("id", state.winterBleacherUuids);
   }
 }
 
@@ -576,22 +507,6 @@ export async function fetchUserById(
       }
 
       const accountManagerId = accountManager.id;
-
-      // Fetch bleacher assignments from Bleachers table
-      // Summer bleachers where this AM is assigned
-      const { data: summerBleachers } = await supabase
-        .from("Bleachers")
-        .select("id")
-        .eq("summer_account_manager_uuid", accountManagerId);
-
-      // Winter bleachers where this AM is assigned
-      const { data: winterBleachers } = await supabase
-        .from("Bleachers")
-        .select("id")
-        .eq("winter_account_manager_uuid", accountManagerId);
-
-      result.summerBleacherUuids = summerBleachers?.map((b) => b.id) || [];
-      result.winterBleacherUuids = winterBleachers?.map((b) => b.id) || [];
 
       // Fetch drivers assigned to this account manager
       const { data: assignedDrivers } = await supabase

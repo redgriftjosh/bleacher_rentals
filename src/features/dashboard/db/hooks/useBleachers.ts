@@ -51,6 +51,7 @@ type BleacherFlatRow = {
   linxup_device_id: string | null;
   summer_account_manager_uuid: string | null;
   winter_account_manager_uuid: string | null;
+  zone_uuid: string | null;
   event_end: string | null;
   event_name: string | null;
   event_start: string | null;
@@ -125,6 +126,7 @@ function reshapeBleachers(rows: BleacherFlatRow[]): Bleacher[] {
 
         summerAccountManagerUuid: r.summer_account_manager_uuid,
         winterAccountManagerUuid: r.winter_account_manager_uuid,
+        zoneUuid: r.zone_uuid,
 
         summerHomeBase: r.summer_home_base_uuid
           ? { homeBaseUuid: r.summer_home_base_uuid, name: r.summer_home_base_name ?? "" }
@@ -316,6 +318,7 @@ export function useBleachers() {
       "b.linxup_device_id",
       "b.summer_account_manager_uuid",
       "b.winter_account_manager_uuid",
+      "b.zone_uuid",
 
       "summer_hb.id as summer_home_base_uuid",
       "summer_hb.home_base_name as summer_home_base_name",

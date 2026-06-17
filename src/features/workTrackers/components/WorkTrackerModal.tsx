@@ -184,29 +184,6 @@ export default function WorkTrackerModal({
 
   const isNew = selectedWorkTracker?.id === "-1";
 
-  // Look up bleacher AM UUIDs via PowerSync for the canEdit check
-  const bleacherUuidForQuery = selectedWorkTracker?.bleacher_uuid ?? "__no_bleacher__";
-  type BleacherAmRow = {
-    summerAmUuid: string | null;
-    winterAmUuid: string | null;
-  };
-  const compiledBleacherAm = useMemo(
-    () =>
-      db
-        .selectFrom("Bleachers as b")
-        .select([
-          "b.summer_account_manager_uuid as summerAmUuid",
-          "b.winter_account_manager_uuid as winterAmUuid",
-        ])
-        .where("b.id", "=", bleacherUuidForQuery)
-        .limit(1)
-        .compile(),
-    [bleacherUuidForQuery],
-  );
-  const { data: bleacherAmData } = useTypedQuery(compiledBleacherAm, expect<BleacherAmRow>());
-  const bleacherAm = bleacherAmData?.[0] ?? null;
-
-  // Viewer can never edit — regardless of ownership
   // Populate pickup address from the bleacher's last known location in PS
   const handlePopulatePickupFromLastAddress = async () => {
     if (!workTracker?.bleacher_uuid || !workTracker?.date) return;
@@ -442,14 +419,10 @@ export default function WorkTrackerModal({
         isAdmin: permissions.isAdmin,
         isAccountManager: permissions.isAccountManager,
         isNew,
-        currentAccountManagerId: permissions.accountManagerId,
-        bleacherSummerAmUuid: bleacherAm?.summerAmUuid,
-        bleacherWinterAmUuid: bleacherAm?.winterAmUuid,
       })
     : false;
 
-  // Bleacher options for the dropdown (AM sees only own bleachers when editing; all when read-only)
-  const amFilterId = permissions.isAdmin || !canEdit ? null : permissions.accountManagerId;
+  const amFilterId: string | null = null;
   const {
     data: bleacherOptions,
     isLoading: isBleachersLoading,

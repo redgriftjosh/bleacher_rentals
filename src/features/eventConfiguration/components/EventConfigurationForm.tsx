@@ -61,13 +61,10 @@ export const EventConfigurationForm = ({
   useEventFormTransportationAlerts();
 
   const isEditing = !!currentEventStore.eventUuid;
-  // Viewer can never edit — regardless of ownership
   const canEdit = permissions.canCreateUser
     ? canEditOwnedEntity({
         isAdmin: permissions.isAdmin,
         isNew: !isEditing,
-        currentUserId: permissions.userId,
-        ownerUserUuid: currentEventStore.ownerUserUuid,
       })
     : false;
 

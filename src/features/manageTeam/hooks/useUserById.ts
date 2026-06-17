@@ -26,8 +26,6 @@ type UserRealtimeRow = {
   payPerUnit: string | null;
   accountManagerUuid: string | null;
 
-  summerBleacherUuids: string;
-  winterBleacherUuids: string;
   assignedDriverUuids: string;
 };
 
@@ -37,7 +35,6 @@ export function useRealtimeHydrateCurrentUserStore() {
   const userUuid = useCurrentUserStore((s) => s.existingUserUuid);
   const isOpen = useCurrentUserStore((s) => s.isOpen);
 
-  // Always compile a valid query
   const compiled = useMemo(() => {
     const effectiveUuid = isOpen && userUuid ? userUuid : ZERO_UUID;
 
@@ -46,76 +43,45 @@ export function useRealtimeHydrateCurrentUserStore() {
       .leftJoin("Drivers as d", "d.user_uuid", "u.id")
       .leftJoin("AccountManagers as am", "am.user_uuid", "u.id")
       .leftJoin("Developers as dev", "dev.user_uuid", "u.id")
-      .select((eb) => {
-        const summerDistinct = eb
-          .selectFrom("Bleachers as b")
-          .select(["b.id as bleacher_uuid"])
-          .whereRef("b.summer_account_manager_uuid", "=", "am.id")
-          .where("b.id", "is not", null)
-          .distinct()
-          .as("summer_rows");
+      .select([
+        "u.first_name as firstName",
+        "u.last_name as lastName",
+        "u.email as email",
+        "u.is_admin as isAdmin",
+        "u.status_uuid as statusUuid",
 
-        const winterDistinct = eb
-          .selectFrom("Bleachers as b")
-          .select(["b.id as bleacher_uuid"])
-          .whereRef("b.winter_account_manager_uuid", "=", "am.id")
-          .where("b.id", "is not", null)
-          .distinct()
-          .as("winter_rows");
+        sql<number>`case when ${sql.ref("d.id")} is not null and ${sql.ref("d.is_active")} = 1 then 1 else 0 end`.as(
+          "isDriver",
+        ),
+        sql<number>`case when ${sql.ref("am.id")} is not null and ${sql.ref("am.is_active")} = 1 then 1 else 0 end`.as(
+          "isAccountManager",
+        ),
+        sql<number>`case when ${sql.ref("dev.id")} is not null and ${sql.ref("dev.is_active")} = 1 then 1 else 0 end`.as(
+          "isDeveloper",
+        ),
+        sql<number | null>`${sql.ref("d.is_active")}`.as("driverIsActive"),
+        sql<number | null>`${sql.ref("am.is_active")}`.as("amIsActive"),
+        sql<number | null>`${sql.ref("dev.is_active")}`.as("devIsActive"),
+        sql<number | null>`${sql.ref("dev.auto_subscribe_to_new_tickets")}`.as(
+          "autoSubscribeToNewTickets",
+        ),
 
-        return [
-          "u.first_name as firstName",
-          "u.last_name as lastName",
-          "u.email as email",
-          "u.is_admin as isAdmin",
-          "u.status_uuid as statusUuid",
+        "d.tax as tax",
+        "d.pay_rate_cents as payRateCents",
+        "d.pay_currency as payCurrency",
+        "d.pay_per_unit as payPerUnit",
+        "d.account_manager_uuid as accountManagerUuid",
 
-          // type-safe flags: must exist AND be active
-          sql<number>`case when ${sql.ref("d.id")} is not null and ${sql.ref("d.is_active")} = 1 then 1 else 0 end`.as(
-            "isDriver",
-          ),
-          sql<number>`case when ${sql.ref("am.id")} is not null and ${sql.ref("am.is_active")} = 1 then 1 else 0 end`.as(
-            "isAccountManager",
-          ),
-          sql<number>`case when ${sql.ref("dev.id")} is not null and ${sql.ref("dev.is_active")} = 1 then 1 else 0 end`.as(
-            "isDeveloper",
-          ),
-          sql<number | null>`${sql.ref("d.is_active")}`.as("driverIsActive"),
-          sql<number | null>`${sql.ref("am.is_active")}`.as("amIsActive"),
-          sql<number | null>`${sql.ref("dev.is_active")}`.as("devIsActive"),
-          sql<number | null>`${sql.ref("dev.auto_subscribe_to_new_tickets")}`.as(
-            "autoSubscribeToNewTickets",
-          ),
-
-          "d.tax as tax",
-          "d.pay_rate_cents as payRateCents",
-          "d.pay_currency as payCurrency",
-          "d.pay_per_unit as payPerUnit",
-          "d.account_manager_uuid as accountManagerUuid",
-
-          sql<string>`coalesce((
-            select json_group_array(bleacher_uuid)
-            from (${summerDistinct})
-          ), '[]')`.as("summerBleacherUuids"),
-
-          sql<string>`coalesce((
-            select json_group_array(bleacher_uuid)
-            from (${winterDistinct})
-          ), '[]')`.as("winterBleacherUuids"),
-
-          sql<string>`'[]'`.as("assignedDriverUuids"),
-        ];
-      })
+        sql<string>`'[]'`.as("assignedDriverUuids"),
+      ])
       .where("u.id", "=", effectiveUuid)
       .limit(1)
       .compile();
   }, [isOpen, userUuid]);
 
-  // ✅ hook is always called
   const { data } = useTypedQuery(compiled, expect<UserRealtimeRow>());
 
   const row = isOpen && userUuid ? data?.[0] : undefined;
-  console.log("useRealtimeHydrateCurrentUserStore row:", row);
 
   useEffect(() => {
     if (!isOpen || !userUuid || !row) return;
@@ -138,8 +104,6 @@ export function useRealtimeHydrateCurrentUserStore() {
       payPerUnit: (row.payPerUnit as "KM" | "MI" | "HR") ?? "KM",
       accountManagerUuid: row.accountManagerUuid,
 
-      summerBleacherUuids: JSON.parse(row.summerBleacherUuids ?? "[]"),
-      winterBleacherUuids: JSON.parse(row.winterBleacherUuids ?? "[]"),
       assignedDriverUuids: JSON.parse(row.assignedDriverUuids ?? "[]"),
     }));
   }, [isOpen, userUuid, row]);

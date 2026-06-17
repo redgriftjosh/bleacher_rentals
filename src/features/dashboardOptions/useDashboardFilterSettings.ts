@@ -5,7 +5,7 @@ import { typedExecute, expect, useTypedQuery } from "@/lib/powersync/typedQuery"
 import { useUser } from "@clerk/nextjs";
 import { usePowerSync } from "@powersync/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DashboardFilterState, getDefaultSeason, type Season, type YAxis } from "./types";
+import { DashboardFilterState, type YAxis } from "./types";
 
 type UserContextRow = {
   userUuid: string;
@@ -14,15 +14,11 @@ type UserContextRow = {
 
 type SettingsRow = {
   yAxis: string | null;
-  summerHomeBaseUuids: string | null;
-  winterHomeBaseUuids: string | null;
   rows: string | null;
   stateProvinces: string | null;
   onlyShowMyEvents: number | null;
   optimizationMode: number | null;
   showAddressTooltip: number | null;
-  season: string | null;
-  accountManagerUuid: string | null;
   rowsQuickFilter: number | null;
 };
 
@@ -39,11 +35,6 @@ const parseJsonArray = <T>(value: string | null | undefined, fallback: T[]): T[]
 const toBool = (value: number | boolean | null | undefined): boolean => {
   if (typeof value === "boolean") return value;
   return Boolean(value);
-};
-
-const toSeason = (value: string | null): Season => {
-  if (value === "SUMMER" || value === "WINTER") return value;
-  return null;
 };
 
 const toYAxis = (value: string | null | undefined): YAxis => {
@@ -93,15 +84,11 @@ export function useDashboardFilterSettings(): {
       .selectFrom("DashboardFilterSettings as s")
       .select([
         "s.y_axis as yAxis",
-        "s.summer_home_base_uuids as summerHomeBaseUuids",
-        "s.winter_home_base_uuids as winterHomeBaseUuids",
         "s.rows as rows",
         "s.state_provinces as stateProvinces",
         "s.only_show_my_events as onlyShowMyEvents",
         "s.optimization_mode as optimizationMode",
         "s.show_address_tooltip as showAddressTooltip",
-        "s.season as season",
-        "s.account_manager_uuid as accountManagerUuid",
         "s.rows_quick_filter as rowsQuickFilter",
       ])
       .where("s.user_uuid", "=", userUuidForQuery)
@@ -126,16 +113,10 @@ export function useDashboardFilterSettings(): {
     if (settingsRow) return;
 
     const nowIso = new Date().toISOString();
-    const defaultSeason = getDefaultSeason();
 
-    // PowerSync exposes synced tables as views in SQLite; SQLite doesn't allow
-    // `INSERT ... ON CONFLICT DO ...` (UPSERT) against views.
-    // So we do a plain insert and ignore the unique constraint failure.
     const insert = db
       .insertInto("DashboardFilterSettings")
       .values({
-        // Use a stable primary key so remote upserts are idempotent.
-        // PowerSync's BackendConnector upserts on `id` by default.
         id: userContext.userUuid,
         created_at: nowIso,
         updated_at: nowIso,
@@ -148,8 +129,8 @@ export function useDashboardFilterSettings(): {
         only_show_my_events: 1,
         optimization_mode: 0,
         show_address_tooltip: 0,
-        season: defaultSeason,
-        account_manager_uuid: userContext.accountManagerUuid,
+        season: null,
+        account_manager_uuid: null,
         rows_quick_filter: null,
       })
       .compile();
@@ -175,15 +156,11 @@ export function useDashboardFilterSettings(): {
 
     return {
       yAxis: toYAxis(settingsRow.yAxis),
-      summerHomeBaseUuids: parseJsonArray<string>(settingsRow.summerHomeBaseUuids, []),
-      winterHomeBaseUuids: parseJsonArray<string>(settingsRow.winterHomeBaseUuids, []),
       rows: parseJsonArray<number>(settingsRow.rows, []),
       stateProvinces: parseJsonArray<number>(settingsRow.stateProvinces, []),
       onlyShowMyEvents: toBool(settingsRow.onlyShowMyEvents),
       optimizationMode: toBool(settingsRow.optimizationMode),
       showAddressTooltip: toBool(settingsRow.showAddressTooltip),
-      season: toSeason(settingsRow.season),
-      accountManagerUuid: settingsRow.accountManagerUuid,
       rowsQuickFilter:
         settingsRow.rowsQuickFilter === 10 || settingsRow.rowsQuickFilter === 15
           ? (settingsRow.rowsQuickFilter as 10 | 15)
@@ -216,12 +193,6 @@ export function useDashboardFilterSettings(): {
         case "yAxis":
           return updateDb({ y_axis: value as YAxis });
 
-        case "summerHomeBaseUuids":
-          return updateDb({ summer_home_base_uuids: JSON.stringify(value) });
-
-        case "winterHomeBaseUuids":
-          return updateDb({ winter_home_base_uuids: JSON.stringify(value) });
-
         case "rows":
           return updateDb({ rows: JSON.stringify(value) });
 
@@ -236,12 +207,6 @@ export function useDashboardFilterSettings(): {
 
         case "showAddressTooltip":
           return updateDb({ show_address_tooltip: value ? 1 : 0 });
-
-        case "season":
-          return updateDb({ season: value });
-
-        case "accountManagerUuid":
-          return updateDb({ account_manager_uuid: value });
 
         case "rowsQuickFilter":
           return updateDb({ rows_quick_filter: value });

@@ -22,12 +22,13 @@ import { AddressTooltip } from "@/features/dashboard/components/AddressTooltip";
 import { useDriverUnavailability } from "@/features/dashboard/db/hooks/useDriverUnavailability";
 import { useDriverUnavailabilityStore } from "@/features/dashboard/state/useDriverUnavailabilityStore";
 import { useDashboardPowerSync } from "@/features/dashboard/db/hooks/powersync/useDashboardPowerSync";
+import { ZoneSelector } from "@/features/dashboardOptions/ZoneSelector";
 
 export default function Page() {
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
     null,
   );
-  const { state: dashboardFilters } = useDashboardFilterSettings();
+  const { state: dashboardFilters, userContext } = useDashboardFilterSettings();
   const onlyShowMyEvents = dashboardFilters?.onlyShowMyEvents ?? true;
   const { isLoaded, userId } = useAuth();
   const supabase = useClerkSupabaseClient();
@@ -118,6 +119,7 @@ export default function Page() {
           <div className="flex items-center gap-3">
             <DashboardOptions />
             <SeasonToggle />
+            <ZoneSelector accountManagerId={userContext?.accountManagerUuid ?? null} />
           </div>
           <CreateEventButton />
         </div>

@@ -17,6 +17,7 @@ import { usePsBleacherMaintEvents } from "./usePsBleacherMaintEvents";
 import { usePsMaintenanceEvents } from "./usePsMaintenanceEvents";
 import { usePsDamageReports } from "./usePsDamageReports";
 import { usePsAlertCounts } from "./usePsAlertCounts";
+import { useZoneFilterStore } from "@/features/dashboardOptions/useZoneFilterStore";
 
 function toBool(v: number | null | boolean): boolean {
   if (typeof v === "boolean") return v;
@@ -29,7 +30,17 @@ export function useDashboardPowerSync(opts?: {
   clerkUserId?: string | null;
 }) {
   // ── Individual reactive queries ──────────────────────────────────────
-  const bleacherRows = usePsBleachers();
+  const allBleacherRows = usePsBleachers();
+  const { selectedZoneIds, showUnassigned } = useZoneFilterStore();
+  const bleacherRows = useMemo(() => {
+    if (selectedZoneIds.length === 0 && !showUnassigned) return allBleacherRows;
+    return allBleacherRows.filter((b) => {
+      if (showUnassigned && !b.zone_uuid) return true;
+      if (selectedZoneIds.length > 0 && b.zone_uuid && selectedZoneIds.includes(b.zone_uuid))
+        return true;
+      return false;
+    });
+  }, [allBleacherRows, selectedZoneIds, showUnassigned]);
   const homeBaseRows = usePsHomeBases();
   const bleacherEventRows = usePsBleacherEvents();
   const eventRows = usePsEvents();
@@ -259,6 +270,7 @@ export function useDashboardPowerSync(opts?: {
         linxupDeviceId: b.linxup_device_id,
         summerAccountManagerUuid: b.summer_account_manager_uuid,
         winterAccountManagerUuid: b.winter_account_manager_uuid,
+        zoneUuid: b.zone_uuid ?? null,
         summerHomeBase,
         winterHomeBase,
         bleacherEvents,

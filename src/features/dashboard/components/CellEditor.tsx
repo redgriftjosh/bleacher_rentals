@@ -38,14 +38,9 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
   const canEditCell = canEditCellFn({
     isAdmin: perms.isAdmin,
     isAccountManager: perms.isAccountManager,
-    accountManagerId: perms.accountManagerId,
+    accountManagerZoneIds: perms.accountManagerZoneIds,
     bleacherUuid,
-    bleacher: bl
-      ? {
-          summerAccountManagerUuid: bl.summerAccountManagerUuid,
-          winterAccountManagerUuid: bl.winterAccountManagerUuid,
-        }
-      : null,
+    bleacher: bl ? { zoneUuid: bl.zoneUuid } : null,
   });
 
   const [currentText, setCurrentText] = useState(text);
@@ -158,9 +153,8 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       if (
         bleacher &&
         !isBleacherOwnedByAM({
-          summerAccountManagerUuid: bleacher.summerAccountManagerUuid,
-          winterAccountManagerUuid: bleacher.winterAccountManagerUuid,
-          currentAccountManagerId: perms.accountManagerId,
+          bleacherZoneUuid: bleacher.zoneUuid,
+          accountManagerZoneIds: perms.accountManagerZoneIds,
         })
       ) {
         createErrorToast(["You can only create events with bleachers assigned to you."]);
@@ -212,9 +206,8 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       if (
         bleacher &&
         !isBleacherOwnedByAM({
-          summerAccountManagerUuid: bleacher.summerAccountManagerUuid,
-          winterAccountManagerUuid: bleacher.winterAccountManagerUuid,
-          currentAccountManagerId: perms.accountManagerId,
+          bleacherZoneUuid: bleacher.zoneUuid,
+          accountManagerZoneIds: perms.accountManagerZoneIds,
         })
       ) {
         createErrorToast([

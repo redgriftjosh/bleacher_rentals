@@ -43,18 +43,21 @@ export type Database = {
           account_manager_uuid: string
           created_at: string
           id: string
+          is_lead: boolean
           zone_uuid: string
         }
         Insert: {
           account_manager_uuid: string
           created_at?: string
           id?: string
+          is_lead?: boolean
           zone_uuid: string
         }
         Update: {
           account_manager_uuid?: string
           created_at?: string
           id?: string
+          is_lead?: boolean
           zone_uuid?: string
         }
         Relationships: [

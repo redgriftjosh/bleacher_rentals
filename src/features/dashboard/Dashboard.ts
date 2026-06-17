@@ -93,15 +93,11 @@ export class Dashboard {
       opts?.filters ??
       ({
         yAxis: "Bleachers",
-        summerHomeBaseUuids: [],
-        winterHomeBaseUuids: [],
         rows: [],
         stateProvinces: [],
         onlyShowMyEvents: true,
         optimizationMode: false,
         showAddressTooltip: false,
-        season: null,
-        accountManagerUuid: null,
         rowsQuickFilter: null,
       } satisfies DashboardFilterState);
 
@@ -113,11 +109,7 @@ export class Dashboard {
     const currentEvent = useCurrentEventStore.getState();
 
     const filteredBleachers = filterSortPixiBleachers(allBleachers, {
-      summerHomeBaseUuids: this.filters.summerHomeBaseUuids,
-      winterHomeBaseUuids: this.filters.winterHomeBaseUuids,
       rows: this.filters.rows,
-      season: this.filters.season,
-      accountManagerUuid: this.filters.accountManagerUuid,
       alwaysIncludeBleacherUuids: currentEvent.bleacherUuids ?? [],
       isFormExpanded: currentEvent.isFormExpanded,
       optimizationMode: this.filters.optimizationMode,
@@ -297,11 +289,7 @@ export class Dashboard {
     ];
 
     const filteredBleachers = filterSortPixiBleachers(allBleachers, {
-      summerHomeBaseUuids: filters.summerHomeBaseUuids,
-      winterHomeBaseUuids: filters.winterHomeBaseUuids,
       rows: filters.rows,
-      season: filters.season,
-      accountManagerUuid: filters.accountManagerUuid,
       alwaysIncludeBleacherUuids: alwaysInclude,
       isFormExpanded: currentEvent.isFormExpanded || maintenanceEvent.isFormExpanded,
       optimizationMode: filters.optimizationMode,

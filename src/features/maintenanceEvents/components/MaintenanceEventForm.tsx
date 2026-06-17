@@ -37,13 +37,10 @@ export const MaintenanceEventForm = ({ onCancel }: MaintenanceEventFormProps) =>
   const permissions = useTeamPermissions();
 
   const isEditing = !!store.maintenanceEventUuid;
-  // Viewer can never edit — regardless of ownership
   const canEdit = permissions.canCreateUser
     ? canEditOwnedEntity({
         isAdmin: permissions.isAdmin,
         isNew: !isEditing,
-        currentUserId: permissions.userId,
-        ownerUserUuid: store.ownerUserUuid,
       })
     : false;
 

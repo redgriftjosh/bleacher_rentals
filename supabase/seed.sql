@@ -3485,7 +3485,93 @@ INSERT INTO "public"."WorkTrackers" ("created_at", "date", "pickup_time", "picku
 -- Data for Name: Zones; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO public."Zones" (id, created_at, display_name, description, photo_path) VALUES
+  ('a1000000-0000-0000-0000-000000000001', now(), 'Ontario', 'Ontario region bleachers', NULL),
+  ('a1000000-0000-0000-0000-000000000002', now(), 'Florida', 'Florida region bleachers', NULL),
+  ('a1000000-0000-0000-0000-000000000003', now(), 'Southeast US', 'Georgia, Alabama, Carolinas', NULL),
+  ('a1000000-0000-0000-0000-000000000004', now(), 'Texas & Central', 'Texas, Oklahoma, Missouri, Kansas', NULL)
+ON CONFLICT (id) DO NOTHING;
 
+-- AccountManagerZones (link managers to zones)
+INSERT INTO public."AccountManagerZones" (id, created_at, account_manager_uuid, zone_uuid, is_lead) VALUES
+  ('b1000000-0000-0000-0000-000000000001', now(), 'eb5f9c43-4cf2-484b-91f0-28dbe23fa3c4', 'a1000000-0000-0000-0000-000000000001', true),
+  ('b1000000-0000-0000-0000-000000000002', now(), '3098970e-cee5-4e00-88c3-a07abd534577', 'a1000000-0000-0000-0000-000000000001', false),
+  ('b1000000-0000-0000-0000-000000000003', now(), '101e7341-ddaa-4e46-bf33-70eb8043e13b', 'a1000000-0000-0000-0000-000000000002', true),
+  ('b1000000-0000-0000-0000-000000000004', now(), '389fd7f2-ed45-4bc2-849c-2e5718659acd', 'a1000000-0000-0000-0000-000000000002', false),
+  ('b1000000-0000-0000-0000-000000000005', now(), 'b52ddf85-4d9b-4b3a-903d-3f147beb1919', 'a1000000-0000-0000-0000-000000000003', true),
+  ('b1000000-0000-0000-0000-000000000006', now(), 'da198889-1812-4771-9f5f-da5ec2c35cff', 'a1000000-0000-0000-0000-000000000004', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Assign bleachers to zones
+-- Ontario: bleachers 1-30
+UPDATE public."Bleachers" SET zone_uuid = 'a1000000-0000-0000-0000-000000000001'
+WHERE id IN (
+  '97ed85b1-f81a-42d2-b10a-7a95b409e915', '6bb82ab3-2966-4c44-b5a4-4c44e82ac5c7',
+  '48ce2777-25a0-4589-95c3-d0ea1859f779', '35360ffe-98a3-4949-9f5b-0b2d621a9069',
+  '6b08237f-676c-43a8-b39b-42935eb0349e', 'fc15e8b5-ead4-4e29-8a42-657b90c18996',
+  '3081abc1-5e93-4829-915a-136d4c4fc737', '077ce1d0-1744-44a4-b440-35c69e91c1bd',
+  '75576315-6178-4504-a4d7-ba4021ea4546', 'da91a534-47ef-4440-96f2-294046570ab7',
+  'cc5001f6-647b-4d72-b5c7-1605f7b3ece5', 'b785a5d8-f70f-409e-b3a5-406e326184db',
+  '4388f07e-cf3b-45cf-917c-c8285d4bcd2f', 'ab2cb533-379f-4496-a42f-6816f2f8e857',
+  '071c7c84-a6c7-48ea-a228-fc2de00b843b', 'ecf6c7b1-d5ee-4740-be5f-80d59e8af291',
+  '0555f575-62ef-493d-9912-d5e0fdd357d2', '42bfb3a0-53f1-4dbf-9e43-0f5a64b019a2',
+  'e655feb1-35ed-4736-9e7f-525fbbfe6ca4', '6084d1f0-46a1-4c6d-bd55-adda9c5f1960',
+  '39af0bb3-4e01-4eab-9d62-dc9db4af0622', '7e7bbd9c-ff72-4804-8f6a-295decc30f1c',
+  'e3857032-d890-4f74-9d42-0e4370eaf691', '058ec471-3ecd-46d5-84e0-8365cc6eda6d',
+  '9e89bfd5-d4c1-4a0b-a29c-63924c4d4ac4', '1bc49689-d3f4-48c3-b6b2-f965409e5c64',
+  '28c02f20-985c-4c11-ac45-397af334fb46', 'c4967e6b-faf6-4d39-9414-dc83d26f5c5f',
+  'd5aae83c-2624-421f-ae8c-50f869cf5d7c', 'dea81b72-0610-4010-8650-bf336f06efb7'
+);
+
+-- Florida: bleachers 31-60
+UPDATE public."Bleachers" SET zone_uuid = 'a1000000-0000-0000-0000-000000000002'
+WHERE id IN (
+  '09583168-f6a6-4c19-9e4a-a6929b8d2e4d', '815a5efd-4b61-4aeb-9fc4-35e68cea7595',
+  '63b2e4f6-fc21-45b5-872f-67288f4c0526', '5ff7ca5d-0e19-4eab-98a9-875a2cb803d4',
+  'bd6fbe90-1427-4078-92ab-9b21c62e9ce0', '58ddb610-a82f-4476-b9da-b65d028bb1b4',
+  '32d9ecec-f518-4c42-a92d-17f5aac93f20', 'e6523e7b-6f76-4140-b039-0ba08e1ee377',
+  'f0f85970-710f-44ff-b207-4204e4a4c242', '65547dd7-4399-4a5f-8826-65adf8232ce9',
+  '33647801-d285-4ca6-a5f1-6b2ba04cd5e3', '0ad99372-53f5-4b02-94bb-d544445570b7',
+  '909c27ae-ff54-4c36-8fff-bfacf260297e', '4aa70118-cd12-4e67-911c-1f9503ed41ed',
+  'c7dbb5b9-3619-45e8-8d84-6e14aea1c626', '5c90b7c6-dfa2-436d-b75a-f95ea45d514a',
+  '30c84bf4-596d-47ed-93f9-717869b89590', 'a7f1eff2-8343-46b9-8aa0-b99194bcf895',
+  '1460351d-40d2-437f-bb64-3820c6ad5377', '91fd342f-c538-4dd0-b0e9-4274b3fd24cd',
+  'eb350976-826c-4c4c-a88b-6401cc34c90a', '39a5cc2e-e233-45c5-a629-47fdc05431c8',
+  '7242d95e-b48b-4009-a2db-1ca650b2eef5', 'd06778b6-eafb-43c1-b375-48d6daba9d16',
+  '0c5dfa96-1f16-4192-b8d8-4120efaa072f', '376dc9e1-cc19-4e85-8896-fdafb43da440',
+  'a7a3468b-72c1-46b1-939a-8b2c4d9b65fb', '388a73e4-83e9-4935-bf70-23a0d0878ffb',
+  'ee9a37df-30bd-4e21-af05-8290beed9223', '37646f08-9113-4538-88bc-fb1ab8bf62d3'
+);
+
+-- Southeast US: bleachers 401-420
+UPDATE public."Bleachers" SET zone_uuid = 'a1000000-0000-0000-0000-000000000003'
+WHERE id IN (
+  '8e5ac603-d312-4f05-9c61-f8c1972e1b30', 'c9b120e8-79bf-4d53-a107-e42297581f02',
+  '973ec2b3-0d18-48f4-a44d-741ed1ed5440', 'a5221e53-34b7-456b-845c-394a7b7d809e',
+  'def06b87-5d0c-42f6-990f-2ce3d0bfe198', '034e96e9-64a0-4ee7-9a6e-2e9fe5f134c9',
+  'bd76e670-37fc-49f7-9692-e102d20b2bda', 'b559590d-ad40-44ae-8657-ecf8529dc221',
+  '13280ff5-db05-4ba1-86ec-e229723c328c', '596c64e1-fb4a-4e15-9d03-e8efe2914ff6',
+  '669d0cc2-c067-419a-b7c9-bc118d871290', '1d1b8758-66bc-4721-b115-6260bf6cae19',
+  'd8f662ca-57fc-4333-994b-9997365f16d5', '5a109b11-a2db-43e8-9f85-d24a501e9c07',
+  'cc623a5d-7209-4dd1-bbdd-ec1166984e88', 'f3d64a05-c77f-4907-bcfb-8a208d57be21',
+  'd934d182-e77e-4c2f-b398-be2bc4bbaf4c', 'c1f33da7-a25e-4810-8583-01d84c761366',
+  'acd6dced-5a62-4ded-b551-9ea4fdadceeb', '08188717-d57d-4a8f-a686-52b319899b1b'
+);
+
+-- Texas & Central: bleachers 441-460
+UPDATE public."Bleachers" SET zone_uuid = 'a1000000-0000-0000-0000-000000000004'
+WHERE id IN (
+  '62ebb816-32ae-48f8-854a-ee16021adc2f', 'be0ebeec-70bd-46f7-88e2-c6906230aa26',
+  '40c628b1-f252-40b6-aca9-8243ae07dad0', '6c2c249a-8f3f-45f6-bd71-1100ceb52d1b',
+  'c6db269a-0602-4d35-b0d4-38eebc281c81', 'f6ee02a7-95ef-49ab-a5b4-019b5fce8082',
+  'f1cfd328-55fc-41df-be8f-3eb9a06c36aa', 'ab8c26ce-d49a-4e74-8e07-b8268bfd26a1',
+  '11120f49-3ba0-4be8-97da-518d1ff902bf', '64c7fae8-4078-4fe5-ba4e-1524f1b2c018',
+  'a3097789-b846-4bc4-9978-6e58e09e702a', 'f758e607-2f55-4fa6-a04c-90ec314fd241',
+  'fac7a31f-fe7a-40f5-bb10-ba6bc9dcda86', 'a935559a-3021-4296-aaf2-6d9caccc376e',
+  '0f9a08a5-ffb0-411c-ba00-fd9cb219cc43', '6ee63369-de87-480d-ae55-9028ae786303',
+  '2141e4fd-9dd7-4ae8-88ed-050daaab805d', '6aa382b7-cbfc-428b-b34f-f58a62eab4df',
+  '19d0b494-b253-480c-9375-e63a6350c664', '7bdf2cd0-7b36-4c0d-89de-b8940f8312ae'
+);
 
 --
 -- Data for Name: ZoneQboClasses; Type: TABLE DATA; Schema: public; Owner: postgres

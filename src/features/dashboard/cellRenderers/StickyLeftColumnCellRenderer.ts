@@ -191,10 +191,9 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
           if (perms.isAccountManager && !perms.isAdmin) {
             const bleacher = this.bleachers.find((b) => b.bleacherUuid === id);
             if (bleacher) {
-              const amId = perms.accountManagerId;
               const isOwn =
-                bleacher.summerAccountManagerUuid === amId ||
-                bleacher.winterAccountManagerUuid === amId;
+                !!bleacher.zoneUuid &&
+                perms.accountManagerZoneIds.includes(bleacher.zoneUuid);
               if (!isOwn) {
                 createErrorToastNoThrow(["This bleacher is not assigned to you."]);
                 return;
@@ -211,14 +210,12 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
         const st = useCurrentEventStore.getState();
         if (!st.isFormExpanded) return;
 
-        // AM can only toggle own bleachers (summer OR winter assigned)
         if (perms.isAccountManager && !perms.isAdmin) {
           const bleacher = this.bleachers.find((b) => b.bleacherUuid === id);
           if (bleacher) {
-            const amId = perms.accountManagerId;
             const isOwn =
-              bleacher.summerAccountManagerUuid === amId ||
-              bleacher.winterAccountManagerUuid === amId;
+              !!bleacher.zoneUuid &&
+              perms.accountManagerZoneIds.includes(bleacher.zoneUuid);
             if (!isOwn) {
               createErrorToastNoThrow(["This bleacher is not assigned to you."]);
               return;

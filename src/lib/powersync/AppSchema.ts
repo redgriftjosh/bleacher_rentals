@@ -69,10 +69,19 @@ const Bleachers = new Table(BleachersCols, {
   },
 });
 
+const ZonesCols = {
+  created_at: column.text,
+  display_name: column.text,
+  description: column.text,
+  photo_path: column.text,
+} satisfies PowerSyncColsFor<"Zones">;
+const Zones = new Table(ZonesCols);
+
 const AccountManagerZonesCols = {
   created_at: column.text,
   account_manager_uuid: column.text,
   zone_uuid: column.text,
+  is_lead: column.integer,
 } satisfies PowerSyncColsFor<"AccountManagerZones">;
 const AccountManagerZones = new Table(AccountManagerZonesCols, {
   indexes: {
@@ -882,6 +891,7 @@ export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
   AccountManagerZones,
+  Zones,
   Developers,
   DashboardFilterSettings,
   DriverUnavailability,
@@ -946,6 +956,7 @@ export type BlocksRecord = PowerSyncDB["Blocks"];
 export type AddressRecord = PowerSyncDB["Addresses"];
 export type AccountManagerRecord = PowerSyncDB["AccountManagers"];
 export type AccountManagerZonesRecord = PowerSyncDB["AccountManagerZones"];
+export type ZonesRecord = PowerSyncDB["Zones"];
 export type DeveloperRecord = PowerSyncDB["Developers"];
 export type DashboardFilterSettingsRecord = PowerSyncDB["DashboardFilterSettings"];
 export type TaskRecord = PowerSyncDB["Tasks"];
