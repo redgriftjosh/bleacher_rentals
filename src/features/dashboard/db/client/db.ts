@@ -808,6 +808,7 @@ export async function createEvent(
         must_be_clean: state.mustBeClean ? 1 : 0,
         goodshuffle_url: state.goodshuffleUrl ?? null,
         created_by_user_uuid: state.ownerUserUuid ?? null,
+        deleted: 0,
         booked_at: state.bookedAt ? new Date(state.bookedAt).toISOString() : null,
         ...(state.createdAt ? { created_at: new Date(state.createdAt).toISOString() } : {}),
       })
