@@ -6,6 +6,7 @@ import { buildQuoteDocumentData } from "@/features/quotesAndBookings/pdf/quoteDo
 import { QuotePdfDocument } from "@/features/quotesAndBookings/pdf/QuotePdfDocument";
 import { buildQuoteEmailHtml } from "@/features/quotesAndBookings/pdf/quoteEmailHtml";
 import { logSingleChange } from "@/features/quotesAndBookings/db/logEventChanges";
+import { toSenderEmail } from "@/lib/senderEmail";
 import { createClient } from "@supabase/supabase-js";
 
 export async function POST(
@@ -50,11 +51,18 @@ export async function POST(
   // Send via Postmark
   const client = new postmark.ServerClient(apiKey);
 
+  const senderEmail = data.accountManagerEmail
+    ? toSenderEmail(data.accountManagerEmail)
+    : fromEmail;
+  const senderFrom = data.accountManager
+    ? `${data.accountManager} <${senderEmail}>`
+    : senderEmail;
+
   const toLine = [...new Set(recipientEmails)].join(",");
 
   try {
     await client.sendEmail({
-      From: fromEmail,
+      From: senderFrom,
       To: toLine,
       Subject: `Invoice ${data.quoteNumber} from ${data.company.name}`,
       HtmlBody: htmlBody,

@@ -86,6 +86,7 @@ export type QuoteDocumentData = {
 
   // Account manager
   accountManager: string;
+  accountManagerEmail: string | null;
 
   // Terms & Conditions
   termsAndConditionsUuid: string | null;
@@ -327,6 +328,7 @@ export async function buildQuoteDocumentData(
     internalNotes: event.internal_notes ?? "",
     publicUrl,
     accountManager: user ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() : "",
+    accountManagerEmail: user?.email ?? null,
 
     termsAndConditionsUuid: (event as any).terms_and_conditions_uuid ?? null,
     termsHtml: (termsResult.data as any)?.html_content ?? null,
