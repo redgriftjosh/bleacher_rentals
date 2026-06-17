@@ -1,15 +1,91 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { Database } from "../../../../../database.types";
-import { syncAlert } from "@/features/alerts/engine";
-import { getDefinitionsForEntity } from "@/features/alerts/registry";
 import { todayStart, getUpcomingWindowEnd } from "@/features/alerts/util/getUpcomingWindow";
+import { AlertEntityType } from "@/features/alerts/types";
+import { evaluateWorkTrackerDraft } from "@/features/alerts/evaluate/workTrackerDraft";
+import { evaluateWorkTrackerPending } from "@/features/alerts/evaluate/workTrackerPending";
 
 function getSupabaseAdmin() {
   return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
+}
+
+type AdminClient = ReturnType<typeof getSupabaseAdmin>;
+
+/**
+ * Upserts a single alert (and its UserAlerts) directly via Supabase.
+ * Pass message=null to clear the alert if it exists.
+ */
+async function syncServerAlert(
+  supabase: AdminClient,
+  entityUuid: string,
+  entityType: AlertEntityType,
+  title: string,
+  message: string | null,
+  entityDescription: string,
+  recipientUuids: string[],
+) {
+  const { data: existing } = await supabase
+    .from("Alerts")
+    .select("id, entity_description")
+    .eq("entity_uuid", entityUuid)
+    .eq("entity_type", entityType)
+    .eq("title", title);
+
+  if (!message) {
+    for (const row of existing ?? []) {
+      await supabase.from("UserAlerts").delete().eq("alert_uuid", row.id);
+      await supabase.from("Alerts").delete().eq("id", row.id);
+    }
+    return;
+  }
+
+  const uniqueRecipients = [...new Set(recipientUuids.filter(Boolean))];
+
+  if (existing && existing.length > 0) {
+    const row = existing[0];
+    if (row.entity_description !== entityDescription) {
+      await supabase
+        .from("Alerts")
+        .update({ entity_description: entityDescription })
+        .eq("id", row.id);
+    }
+    for (const userUuid of uniqueRecipients) {
+      const { data: ua } = await supabase
+        .from("UserAlerts")
+        .select("id")
+        .eq("alert_uuid", row.id)
+        .eq("user_uuid", userUuid)
+        .maybeSingle();
+      if (!ua) {
+        await supabase.from("UserAlerts").insert({
+          id: crypto.randomUUID(),
+          alert_uuid: row.id,
+          user_uuid: userUuid,
+        });
+      }
+    }
+  } else {
+    const alertId = crypto.randomUUID();
+    await supabase.from("Alerts").insert({
+      id: alertId,
+      entity_uuid: entityUuid,
+      entity_type: entityType,
+      title,
+      message,
+      entity_description: entityDescription,
+    });
+    for (const userUuid of uniqueRecipients) {
+      await supabase.from("UserAlerts").insert({
+        id: crypto.randomUUID(),
+        alert_uuid: alertId,
+        user_uuid: userUuid,
+      });
+    }
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -23,35 +99,54 @@ export async function GET(req: NextRequest) {
     const windowStart = todayStart();
     const windowEnd = getUpcomingWindowEnd();
 
-    // 1. Find all work trackers in the upcoming window → run WT alerts
+    // ── Work Tracker Alerts ──────────────────────────────────────────────────
     const { data: workTrackers } = await supabase
       .from("WorkTrackers")
-      .select("id")
+      .select(
+        "id, status, date, released_at, accepted_at, created_by_user_uuid, Bleachers(bleacher_number)",
+      )
       .gte("date", windowStart)
       .lte("date", windowEnd);
 
-    const wtDefs = getDefinitionsForEntity("work_tracker");
     for (const wt of workTrackers ?? []) {
-      for (const def of wtDefs) {
-        await syncAlert(def, wt.id, supabase);
-      }
+      const bleacherNum =
+        wt.Bleachers && !Array.isArray(wt.Bleachers) ? wt.Bleachers.bleacher_number : null;
+      const recipients = wt.created_by_user_uuid ? [wt.created_by_user_uuid] : [];
+
+      const wtRow = {
+        id: wt.id,
+        status: wt.status,
+        date: wt.date,
+        released_at: wt.released_at,
+        accepted_at: wt.accepted_at,
+        bleacher_number: bleacherNum,
+        created_by_user_uuid: wt.created_by_user_uuid,
+      };
+
+      const draftResult = evaluateWorkTrackerDraft(wtRow);
+      await syncServerAlert(
+        supabase,
+        wt.id,
+        "work_tracker",
+        "Work Tracker Still in Draft",
+        draftResult?.message ?? null,
+        draftResult?.entityDescription ?? "",
+        recipients,
+      );
+
+      const pendingResult = evaluateWorkTrackerPending(wtRow);
+      await syncServerAlert(
+        supabase,
+        wt.id,
+        "work_tracker",
+        "Work Tracker Pending Acceptance",
+        pendingResult?.message ?? null,
+        pendingResult?.entityDescription ?? "",
+        recipients,
+      );
     }
 
-    // 2. Find all bleacher_events in the upcoming window → run BE alerts
-    const { data: bleacherEvents } = await supabase
-      .from("BleacherEvents")
-      .select("id, Events!inner(event_start)")
-      .gte("Events.event_start", windowStart)
-      .lte("Events.event_start", windowEnd);
-
-    const beDefs = getDefinitionsForEntity("bleacher_event");
-    for (const be of bleacherEvents ?? []) {
-      for (const def of beDefs) {
-        await syncAlert(def, be.id, supabase);
-      }
-    }
-
-    // 3. Clean up alerts for past events/work trackers
+    // ── Clean up alerts for past entities ────────────────────────────────────
     const { data: staleAlerts } = await supabase
       .from("Alerts")
       .select("id, entity_uuid, entity_type");

@@ -3,17 +3,12 @@
 import { AlertDefinition } from "../types";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, typedGetAll } from "@/lib/powersync/typedQuery";
+import { evaluateWorkTrackerPending, WorkTrackerPendingRow } from "../evaluate/workTrackerPending";
 
-const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
-
-type WtRow = {
-  status: string | null;
-  released_at: string | null;
-  accepted_at: string | null;
-  date: string | null;
-  bleacher_number: number | null;
-  created_by_user_uuid: string | null;
-};
+export {
+  evaluateWorkTrackerPending,
+  type WorkTrackerPendingRow,
+} from "../evaluate/workTrackerPending";
 
 export const workTrackerPending: AlertDefinition = {
   title: "Work Tracker Pending Acceptance",
@@ -35,29 +30,12 @@ export const workTrackerPending: AlertDefinition = {
         .where("wt.id", "=", workTrackerUuid)
         .limit(1)
         .compile(),
-      expect<WtRow>(),
+      expect<WorkTrackerPendingRow>(),
     );
 
     const wt = rows[0];
     if (!wt) return null;
-    if (wt.status !== "released") return null;
-    if (wt.accepted_at) return null;
-    if (!wt.released_at) return null;
-
-    const releasedAt = new Date(wt.released_at).getTime();
-    if (Date.now() - releasedAt < TWENTY_FOUR_HOURS_MS) return null;
-
-    const desc = [
-      wt.bleacher_number != null ? `Bleacher #${wt.bleacher_number}` : null,
-      wt.date ? `Date: ${wt.date}` : null,
-    ]
-      .filter(Boolean)
-      .join(" — ");
-
-    return {
-      message: "Driver has not accepted this work tracker within 24 hours of release.",
-      entityDescription: desc || "Work Tracker",
-    };
+    return evaluateWorkTrackerPending(wt);
   },
 
   async recipients(workTrackerUuid, _supabase) {
