@@ -162,7 +162,6 @@ class _WorkTrackerDragManager {
           .compile(),
       );
     } catch (err) {
-      createErrorToast(["Failed to move work tracker.", String(err)]);
       // Revert: move back
       this.optimisticMove(
         { ...ctx.tracker, date: targetDate },
@@ -170,6 +169,7 @@ class _WorkTrackerDragManager {
         ctx.sourceBleacherUuid,
         ctx.sourceDate,
       );
+      createErrorToast(["Failed to move work tracker.", String(err)]);
       return;
     }
 
@@ -179,7 +179,14 @@ class _WorkTrackerDragManager {
     try {
       const supabase = supabaseClientRegistry.getClient();
       if (supabase) {
-        await triage("WorkTrackers", { id: ctx.tracker.workTrackerUuid }, supabase);
+        await triage(
+          "WorkTrackers",
+          {
+            id: ctx.tracker.workTrackerUuid,
+            previous_bleacher_uuid: ctx.sourceBleacherUuid,
+          },
+          supabase,
+        );
       }
     } catch (e) {
       console.error("[alerts] failed to triage after work tracker drag", e);

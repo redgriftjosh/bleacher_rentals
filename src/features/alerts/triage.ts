@@ -13,7 +13,15 @@ type TriageTable = "Events" | "Events_deleted" | "WorkTrackers" | "WorkTrackers_
 type BeRow = { id: string; bleacher_uuid: string | null };
 type RelatedBeRow = { id: string };
 type WtIdRow = { id: string };
-type WtRow = { id: string; bleacher_uuid: string | null; date: string | null };
+type WtDbRow = {
+  id: string;
+  bleacher_uuid: string | null;
+  date: string | null;
+};
+
+type WorkTrackerTriageRow = WtDbRow & {
+  previous_bleacher_uuid?: string | null;
+};
 
 export async function triage(
   table: TriageTable,
@@ -28,7 +36,7 @@ export async function triage(
       await triageEventDeleted(row.id, supabase);
       break;
     case "WorkTrackers":
-      await triageWorkTrackerSaved(row.id, supabase);
+      await triageWorkTrackerSaved(row.id, row.previous_bleacher_uuid ?? null, supabase);
       break;
     case "WorkTrackers_deleted":
       await triageWorkTrackerDeleted(row.id, row.bleacher_uuid, supabase);
@@ -174,6 +182,7 @@ async function triageEventDeleted(
 
 async function triageWorkTrackerSaved(
   workTrackerUuid: string,
+  previousBleacherUuid: string | null,
   supabase: SupabaseClient<Database>,
 ): Promise<void> {
   const rows = await typedGetAll(
@@ -183,7 +192,7 @@ async function triageWorkTrackerSaved(
       .where("wt.id", "=", workTrackerUuid)
       .limit(1)
       .compile(),
-    expect<WtRow>(),
+    expect<WtDbRow>(),
   );
   const wt = rows[0];
   if (!wt) return;
@@ -195,14 +204,15 @@ async function triageWorkTrackerSaved(
   }
 
   // 2. Find upcoming bleacher_events for this bleacher (ripple effect on transportation)
-  if (wt.bleacher_uuid) {
+  const bleacherUuids = [...new Set([previousBleacherUuid, wt.bleacher_uuid].filter(Boolean))] as string[];
+  if (bleacherUuids.length > 0) {
     const beDefs = getDefinitionsForEntity("bleacher_event");
     const relatedBEs = await typedGetAll(
       db
         .selectFrom("BleacherEvents as be")
         .innerJoin("Events as e", "e.id", "be.event_uuid")
         .select(["be.id as id"])
-        .where("be.bleacher_uuid", "=", wt.bleacher_uuid)
+        .where("be.bleacher_uuid", "in", bleacherUuids)
         .where("e.event_start", ">=", todayStart())
         .compile(),
       expect<RelatedBeRow>(),

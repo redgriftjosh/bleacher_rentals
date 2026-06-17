@@ -1,8 +1,6 @@
 "use client";
 
 import { AlertDefinition } from "../types";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "../../../../database.types";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, typedGetAll } from "@/lib/powersync/typedQuery";
 import { resolveAddress } from "@/utils/resolveAddress";
@@ -103,12 +101,17 @@ export const workTrackerTransportation: AlertDefinition = {
     };
   },
 
-  async recipients(workTrackerUuid, supabase) {
-    const { data } = await supabase
-      .from("WorkTrackers")
-      .select("created_by_user_uuid")
-      .eq("id", workTrackerUuid)
-      .single();
-    return data?.created_by_user_uuid ? [data.created_by_user_uuid] : [];
+  async recipients(workTrackerUuid, _supabase) {
+    const rows = await typedGetAll(
+      db
+        .selectFrom("WorkTrackers as wt")
+        .select(["wt.created_by_user_uuid as created_by_user_uuid"])
+        .where("wt.id", "=", workTrackerUuid)
+        .limit(1)
+        .compile(),
+      expect<{ created_by_user_uuid: string | null }>(),
+    );
+    const uuid = rows[0]?.created_by_user_uuid;
+    return uuid ? [uuid] : [];
   },
 };

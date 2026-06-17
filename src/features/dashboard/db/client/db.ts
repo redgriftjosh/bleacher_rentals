@@ -358,6 +358,20 @@ export async function saveWorkTracker(
 
   const wasInsert = workTracker.id === "-1";
   let savedWorkTrackerUuid = workTracker.id;
+  let previousBleacherUuid: string | null = null;
+
+  if (!wasInsert) {
+    const previousRows = await typedGetAll(
+      db
+        .selectFrom("WorkTrackers")
+        .select(["bleacher_uuid"])
+        .where("id", "=", workTracker.id)
+        .limit(1)
+        .compile(),
+      expect<{ bleacher_uuid: string | null }>(),
+    );
+    previousBleacherUuid = previousRows[0]?.bleacher_uuid ?? null;
+  }
   const previousStatus = options?.previousStatus ?? "draft";
   const nextStatus = workTracker.status;
   const pickupAddressText = toNotificationAddress(
@@ -431,7 +445,14 @@ export async function saveWorkTracker(
 
   try {
     const { triage } = await import("@/features/alerts/triage");
-    await triage("WorkTrackers", { id: savedWorkTrackerUuid }, supabase);
+    await triage(
+      "WorkTrackers",
+      {
+        id: savedWorkTrackerUuid,
+        previous_bleacher_uuid: previousBleacherUuid,
+      },
+      supabase,
+    );
   } catch (e) {
     console.error("[alerts] failed to triage after work tracker save", e);
   }
