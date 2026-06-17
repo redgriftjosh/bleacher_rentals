@@ -1,4 +1,4 @@
-import { LocateFixed, X, Trash2, Calculator, Pencil } from "lucide-react";
+import { LocateFixed, X, Trash2, Calculator, Pencil, AlertTriangle } from "lucide-react";
 import { AppTooltip } from "@/components/AppTooltip";
 import { Dropdown } from "@/components/DropDown";
 import { useEffect, useMemo, useState, useRef } from "react";
@@ -38,6 +38,10 @@ import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery, typedGetAll } from "@/lib/powersync/typedQuery";
 import { resolveAddressFull } from "@/utils/resolveAddress";
 import { WorkTrackerAlertsDropDown } from "@/features/alerts/components/WorkTrackerAlertsDropDown";
+import {
+  getExpectedPickupStreetForWorkTracker,
+  isPickupTransportationMismatch,
+} from "@/features/alerts/util/workTrackerTransportation";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -400,6 +404,32 @@ export default function WorkTrackerModal({
       });
     }
   };
+
+  // Pre-save in-memory transportation warning for pickup mismatch
+  const { data: expectedPickupStreet } = useQuery({
+    queryKey: [
+      "work-tracker-expected-pickup-street",
+      workTracker?.bleacher_uuid,
+      workTracker?.date,
+      workTracker?.id,
+    ],
+    enabled: Boolean(workTracker?.bleacher_uuid && workTracker?.date),
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      if (!workTracker?.bleacher_uuid || !workTracker?.date) return null;
+
+      return getExpectedPickupStreetForWorkTracker({
+        bleacherUuid: workTracker.bleacher_uuid,
+        targetDate: workTracker.date,
+        excludeWorkTrackerUuid: workTracker.id,
+      });
+    },
+  });
+
+  const showPickupTransportWarning =
+    Boolean(expectedPickupStreet) &&
+    Boolean(pickUpAddress?.address) &&
+    isPickupTransportationMismatch(expectedPickupStreet, pickUpAddress?.address);
 
   const canEdit = permissions.canCreateUser
     ? canEditWorkTracker({
@@ -860,7 +890,16 @@ export default function WorkTrackerModal({
                           setWorkTracker((prev) => ({ ...prev!, pickup_poc: e.target.value }))
                         }
                       />
-                      <label className={labelClassName}>Pickup Address</label>
+                      <div className="flex items-center gap-2">
+                        <label className={labelClassName}>Pickup Address</label>
+                        {showPickupTransportWarning && (
+                          <AppTooltip content="Pickup differs from last location. Use locate.">
+                            <span className="mt-1 inline-flex text-amber-600">
+                              <AlertTriangle className="h-4 w-4" />
+                            </span>
+                          </AppTooltip>
+                        )}
+                      </div>
                       <div className="flex flex-row gap-2 items-center">
                         <AddressAutocomplete
                           className="bg-white"
