@@ -62,6 +62,7 @@ export const bleacherTransportation: AlertDefinition = {
           "e2.event_status as eventStatus",
         ])
         .where("be2.bleacher_uuid", "=", be.bleacher_uuid)
+        .where("be2.id", "!=", bleacherEventUuid)
         .compile(),
       expect<SiblingBeRow>(),
     );
