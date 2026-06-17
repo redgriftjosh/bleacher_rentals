@@ -326,6 +326,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
       const cell = this.getOrCreateCell(row);
       // Ensure bleacher data is up to date (in case data changed externally)
       cell.setBleacher(bleacher);
+      cell.setGreyedOut(true);
       parent.addChild(cell);
     }
     return parent;

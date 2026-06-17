@@ -1,4 +1,4 @@
-import { Container, Sprite, Text } from "pixi.js";
+import { Container, Graphics, Sprite, Text } from "pixi.js";
 import { Baker } from "../util/Baker";
 import { BleacherCellToggle } from "./BleacherCellToggle";
 import { SwapButton, SwapButtonState } from "./SwapButton";
@@ -37,6 +37,7 @@ import { MapPinIcon } from "./event/MapPinIcon";
  */
 export class BleacherCell extends Container {
   private sprite: Sprite;
+  private bg: Graphics;
   private baker: Baker;
   private bleacherUuid?: string; // reuse-safe id
   private toggle: BleacherCellToggle; // added toggle
@@ -68,6 +69,11 @@ export class BleacherCell extends Container {
   constructor(baker: Baker) {
     super();
     this.baker = baker;
+
+    this.bg = new Graphics();
+    this.bg.rect(0, 0, BLEACHER_COLUMN_WIDTH, CELL_HEIGHT).fill({ color: 0xe8e8e8, alpha: 0.2 });
+    this.bg.visible = false;
+    this.addChild(this.bg);
 
     this.sprite = new Sprite();
     this.addChild(this.sprite);
@@ -174,6 +180,12 @@ export class BleacherCell extends Container {
     this.swapButton.setState(state);
   }
 
+  setGreyedOut(greyed: boolean) {
+    this.bg.visible = greyed;
+    this.sprite.tint = greyed ? 0x999999 : 0xffffff;
+    this.sprite.alpha = greyed ? 0.45 : 1;
+  }
+
   /**
    * Builds the offscreen display hierarchy used for baking this cell's texture.
    * This runs **only on cache miss**; the container is destroyed after rendering.
@@ -205,18 +217,18 @@ export class BleacherCell extends Container {
     bleacherSeats.position.set(40, 18);
 
     const summerHomeBase = new Text({
-      text: b.summerHomeBase?.name ?? "",
-      style: { fill: 0xfe9900, fontSize: 11 },
+      text: "Zone 1",
+      style: { fill: 0x6b6b6b, fontSize: 11 },
     });
-    summerHomeBase.position.set(3, 30);
+    summerHomeBase.position.set(3, 31);
 
-    const winterHomeBase = new Text({
-      text: b.winterHomeBase?.name ?? "",
-      style: { fill: 0x2b80ff, fontSize: 11 },
-    });
-    // place winter right after summer
-    winterHomeBase.position.set(3 + Math.ceil(summerHomeBase.width) + 5, 30);
+    // const winterHomeBase = new Text({
+    //   text: b.winterHomeBase?.name ?? "",
+    //   style: { fill: 0x2b80ff, fontSize: 11 },
+    // });
+    // // place winter right after summer
+    // winterHomeBase.position.set(3 + Math.ceil(summerHomeBase.width) + 5, 30);
 
-    c.addChild(bleacherNumber, bleacherRows, bleacherSeats, summerHomeBase, winterHomeBase);
+    c.addChild(bleacherNumber, bleacherRows, bleacherSeats, summerHomeBase);
   }
 }
