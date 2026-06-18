@@ -181,7 +181,9 @@ export async function syncAlert(
   entityUuid: string,
   supabase: SupabaseClient<Database>,
 ): Promise<void> {
+  console.log(`[QUOTE_TRIAGE] syncAlert: evaluating "${definition.title}" for ${entityUuid}`);
   const result = await definition.evaluate(entityUuid, supabase);
+  console.log(`[QUOTE_TRIAGE] syncAlert: "${definition.title}" result:`, result ? `message="${result.message}"` : "null (no alert)");
   const alerts: AlertPayload[] = result
     ? [
         {
@@ -194,6 +196,7 @@ export async function syncAlert(
       ]
     : [];
   const recipients = result ? await definition.recipients(entityUuid, supabase) : [];
+  console.log(`[QUOTE_TRIAGE] syncAlert: "${definition.title}" alerts=${alerts.length}, recipients=${recipients.length}`, recipients);
   await syncAlertsForEntity(
     definition.title,
     entityUuid,

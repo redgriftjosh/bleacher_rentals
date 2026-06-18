@@ -27,20 +27,38 @@ export async function updateEvent(
     throw new Error("Event form validation failed");
   }
 
-  // 1. Update Address (if address exists)
-  if (state.addressData && state.addressData.addressUuid) {
-    await typedExecute(
-      db
-        .updateTable("Addresses")
-        .set({
-          city: state.addressData.city ?? "",
-          state_province: state.addressData.state ?? "",
-          street: state.addressData.address ?? "",
-          zip_postal: state.addressData.postalCode ?? "",
-        })
-        .where("id", "=", state.addressData.addressUuid)
-        .compile(),
-    );
+  // 1. Handle Address
+  let addressUuid: string | null = null;
+  if (state.addressData) {
+    if (state.addressData.addressUuid) {
+      addressUuid = state.addressData.addressUuid;
+      await typedExecute(
+        db
+          .updateTable("Addresses")
+          .set({
+            city: state.addressData.city ?? "",
+            state_province: state.addressData.state ?? "",
+            street: state.addressData.address ?? "",
+            zip_postal: state.addressData.postalCode ?? "",
+          })
+          .where("id", "=", state.addressData.addressUuid)
+          .compile(),
+      );
+    } else {
+      addressUuid = crypto.randomUUID();
+      await typedExecute(
+        db
+          .insertInto("Addresses")
+          .values({
+            id: addressUuid,
+            city: state.addressData.city ?? "",
+            state_province: state.addressData.state ?? "",
+            street: state.addressData.address ?? "",
+            zip_postal: state.addressData.postalCode ?? "",
+          })
+          .compile(),
+      );
+    }
   }
 
   // 2. Update Event
@@ -67,6 +85,7 @@ export async function updateEvent(
         created_by_user_uuid: state.ownerUserUuid ?? null,
         booked_at: state.bookedAt ? new Date(state.bookedAt).toISOString() : null,
         ...(state.createdAt ? { created_at: new Date(state.createdAt).toISOString() } : {}),
+        ...(addressUuid ? { address_uuid: addressUuid } : {}),
       })
       .where("id", "=", state.eventUuid!)
       .compile(),

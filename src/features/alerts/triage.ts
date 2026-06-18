@@ -49,6 +49,7 @@ async function triageEventSaved(
   eventUuid: string,
   supabase: SupabaseClient<Database>,
 ): Promise<void> {
+  console.log("[QUOTE_TRIAGE] triageEventSaved called for", eventUuid);
   // Soft-delete path: if the event is flagged deleted, handle it as a delete triage.
   const eventRows = await typedGetAll(
     db
@@ -60,6 +61,7 @@ async function triageEventSaved(
     expect<EventDeletedRow>(),
   );
   const event = eventRows[0];
+  console.log("[QUOTE_TRIAGE] event lookup result:", event ? `deleted=${event.deleted}` : "NOT FOUND");
   if (!event) return;
   if (event.deleted === 1) {
     await triageEventDeleted(eventUuid, supabase);
@@ -76,9 +78,11 @@ async function triageEventSaved(
     expect<BeRow>(),
   );
   const bleacherUuids = [...new Set(bes.map((be) => be.bleacher_uuid).filter(Boolean))] as string[];
+  console.log("[QUOTE_TRIAGE] bleacherEvents found:", bes.length, "unique bleachers:", bleacherUuids.length);
 
   // 2. Run event-level alerts on this event
   const eventDefs = getDefinitionsForEntity("event");
+  console.log("[QUOTE_TRIAGE] running", eventDefs.length, "event-level defs:", eventDefs.map(d => d.title));
   for (const def of eventDefs) {
     await syncAlert(def, eventUuid, supabase);
   }

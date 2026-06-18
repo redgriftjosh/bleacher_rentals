@@ -1,5 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { Database, TablesUpdate } from "../../../../database.types";
+import { Database } from "../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { CreateQuoteState } from "../state/useCreateQuoteStore";
 import { syncPaymentInstallments } from "./paymentInstallments";
@@ -10,14 +10,38 @@ import {
   TRACKED_FIELDS,
   SimpleLineItem,
 } from "./logEventChanges";
-import { eventRequirements } from "@/features/alerts/definitions/eventRequirements";
-import { syncAlert } from "@/features/alerts/engine";
+import { db } from "@/components/providers/SystemProvider";
+import { typedExecute, typedGetAll, expect } from "@/lib/powersync/typedQuery";
 
-/**
- * Updates an existing quote/event.
- * 1. Upsert address if changed
- * 2. Update Event row
- */
+type OldEventRow = {
+  event_name: string | null;
+  event_start: string | null;
+  event_end: string | null;
+  event_status: string | null;
+  event_type_uuid: string | null;
+  contact_uuid: string | null;
+  finance_contact_uuid: string | null;
+  address_uuid: string | null;
+  sales_office_uuid: string | null;
+  terms_and_conditions_uuid: string | null;
+  quote_valid_till: string | null;
+  notes: string | null;
+  internal_notes: string | null;
+  external_notes: string | null;
+  tax_percent: number | null;
+  tax_amount_cents: number | null;
+  contract_revenue_cents: number | null;
+  po_number: string | null;
+  created_by_user_uuid: string | null;
+};
+type OldLineItemRow = {
+  header: string | null;
+  quantity: number | null;
+  value_cents: number | null;
+  currency: string | null;
+};
+type AddressUuidRow = { address_uuid: string | null };
+
 export async function updateQuoteEvent(
   eventId: string,
   state: CreateQuoteState,
@@ -28,57 +52,78 @@ export async function updateQuoteEvent(
   let addressUuid: string | null = null;
 
   if (state.eventAddressData) {
-    // Check if event already has an address
-    const { data: existing } = await supabase
-      .from("Events")
-      .select("address_uuid")
-      .eq("id", eventId)
-      .single();
+    const existingRows = await typedGetAll(
+      db
+        .selectFrom("Events")
+        .select(["address_uuid"])
+        .where("id", "=", eventId)
+        .limit(1)
+        .compile(),
+      expect<AddressUuidRow>(),
+    );
+    const existingAddressUuid = existingRows[0]?.address_uuid ?? null;
 
-    if (existing?.address_uuid) {
-      // Update existing address
-      await supabase
-        .from("Addresses")
-        .update({
-          street: state.eventAddressData.street,
-          city: state.eventAddressData.city,
-          state_province: state.eventAddressData.stateProvince,
-          zip_postal: state.eventAddressData.zipPostal || null,
-        })
-        .eq("id", existing.address_uuid);
-
-      addressUuid = existing.address_uuid;
+    if (existingAddressUuid) {
+      addressUuid = existingAddressUuid;
+      await typedExecute(
+        db
+          .updateTable("Addresses")
+          .set({
+            street: state.eventAddressData.street ?? "",
+            city: state.eventAddressData.city ?? "",
+            state_province: state.eventAddressData.stateProvince ?? "",
+            zip_postal: state.eventAddressData.zipPostal || null,
+          })
+          .where("id", "=", existingAddressUuid)
+          .compile(),
+      );
     } else {
-      // Insert new address
-      const { data: addrData, error: addrError } = await supabase
-        .from("Addresses")
-        .insert({
-          street: state.eventAddressData.street,
-          city: state.eventAddressData.city,
-          state_province: state.eventAddressData.stateProvince,
-          zip_postal: state.eventAddressData.zipPostal || null,
-        })
-        .select("id")
-        .single();
-
-      if (addrError || !addrData) {
-        createErrorToast(["Failed to insert event address.", addrError?.message ?? ""]);
-      }
-      addressUuid = addrData!.id;
+      addressUuid = crypto.randomUUID();
+      await typedExecute(
+        db
+          .insertInto("Addresses")
+          .values({
+            id: addressUuid,
+            street: state.eventAddressData.street ?? "",
+            city: state.eventAddressData.city ?? "",
+            state_province: state.eventAddressData.stateProvince ?? "",
+            zip_postal: state.eventAddressData.zipPostal || null,
+          })
+          .compile(),
+      );
     }
   }
 
-  // 2. Fetch old state for change logging
-  const [{ data: oldEvent }, { data: oldLineItemRows }] = await Promise.all([
-    supabase.from("Events").select(TRACKED_FIELDS.join(", ")).eq("id", eventId).single(),
-    supabase
-      .from("EventLineItems")
-      .select("header, quantity, value_cents, currency")
-      .eq("event_uuid", eventId)
-      .eq("deleted", false),
-  ]);
+  // 2. Fetch old state for change logging (from PowerSync)
+  const oldEventRows = await typedGetAll(
+    db
+      .selectFrom("Events")
+      .select([
+        "event_name", "event_start", "event_end", "event_status",
+        "event_type_uuid", "contact_uuid", "finance_contact_uuid",
+        "address_uuid", "sales_office_uuid", "terms_and_conditions_uuid",
+        "quote_valid_till", "notes", "internal_notes", "external_notes",
+        "tax_percent", "tax_amount_cents", "contract_revenue_cents",
+        "po_number", "created_by_user_uuid",
+      ])
+      .where("id", "=", eventId)
+      .limit(1)
+      .compile(),
+    expect<OldEventRow>(),
+  );
+  const oldEvent = oldEventRows[0] ?? null;
 
-  const oldLineItems: SimpleLineItem[] = (oldLineItemRows ?? []).map((r: any) => ({
+  const oldLineItemRows = await typedGetAll(
+    db
+      .selectFrom("EventLineItems")
+      .select(["header", "quantity", "value_cents", "currency"])
+      .where("event_uuid", "=", eventId)
+      .where("deleted", "=", 0)
+      .compile(),
+    expect<OldLineItemRow>(),
+  );
+
+  const oldLineItems: SimpleLineItem[] = oldLineItemRows.map((r) => ({
     label: r.header ?? "",
     qty: r.quantity ?? 1,
     unitPriceCents: r.value_cents ?? 0,
@@ -91,10 +136,10 @@ export async function updateQuoteEvent(
   const contractRevenueCents =
     state.lineItems.reduce((sum, li) => sum + li.lineTotalCents, 0) + effectiveTaxCents;
 
-  const updates: TablesUpdate<"Events"> = {
+  const updates: Record<string, any> = {
     event_name: state.eventName,
-    event_start: state.eventStart || undefined,
-    event_end: state.eventEnd || undefined,
+    event_start: state.eventStart || null,
+    event_end: state.eventEnd || null,
     event_status: state.status || "draft",
     event_type_uuid: state.eventTypeId || null,
     quote_valid_till: state.quoteValidTill || null,
@@ -104,7 +149,7 @@ export async function updateQuoteEvent(
     notes: state.clientFacingNotes || null,
     internal_notes: state.internalNotes || null,
     external_notes: state.clientFacingNotes || null,
-    created_by_user_uuid: state.ownerUserUuid ?? undefined,
+    created_by_user_uuid: state.ownerUserUuid ?? currentUserUuid ?? null,
     contact_uuid: state.contactId || null,
     finance_contact_uuid: state.financeContactId || null,
     sales_office_uuid: state.salesOfficeId || null,
@@ -115,18 +160,20 @@ export async function updateQuoteEvent(
     updates.address_uuid = addressUuid;
   }
 
-  const { error } = await supabase.from("Events").update(updates).eq("id", eventId);
-
-  if (error) {
-    createErrorToast(["Failed to update quote.", error.message ?? ""]);
-  }
+  await typedExecute(
+    db
+      .updateTable("Events")
+      .set(updates)
+      .where("id", "=", eventId)
+      .compile(),
+  );
 
   // 4. Log field changes + line item changes in parallel
   if (oldEvent) {
     const newState: Record<string, unknown> = {};
     for (const key of TRACKED_FIELDS) {
       if (key in updates) {
-        newState[key] = (updates as Record<string, unknown>)[key] ?? null;
+        newState[key] = updates[key] ?? null;
       }
     }
 
@@ -142,7 +189,7 @@ export async function updateQuoteEvent(
         supabase,
         eventId,
         currentUserUuid ?? null,
-        oldEvent as unknown as Record<string, unknown>,
+        oldEvent as Record<string, unknown>,
         newState,
         "update",
         state.currency,
@@ -160,29 +207,32 @@ export async function updateQuoteEvent(
 
   // 5. Sync line items (delete old, insert new)
   if (state.lineItems.length > 0) {
-    await supabase.from("EventLineItems").delete().eq("event_uuid", eventId);
+    await typedExecute(
+      db.deleteFrom("EventLineItems").where("event_uuid", "=", eventId).compile(),
+    );
 
-    const lineItemRows = state.lineItems.map((li) => ({
-      event_uuid: eventId,
-      header: li.label,
-      description: null as string | null,
-      bleacher_type_uuid: li.bleacherTypeUuid || null,
-      value_cents: li.category === "discounts" ? li.lineTotalCents : li.unitPriceCents,
-      quantity: li.qty,
-      currency: state.currency,
-      is_template: false,
-    }));
-
-    const { error: lineItemError } = await supabase.from("EventLineItems").insert(lineItemRows);
-    if (lineItemError) {
-      console.error("Line items sync failed (quote still saved):", lineItemError.message);
+    for (const li of state.lineItems) {
+      await typedExecute(
+        db
+          .insertInto("EventLineItems")
+          .values({
+            id: crypto.randomUUID(),
+            event_uuid: eventId,
+            header: li.label,
+            description: null,
+            bleacher_type_uuid: li.bleacherTypeUuid || null,
+            value_cents: li.category === "discounts" ? li.lineTotalCents : li.unitPriceCents,
+            quantity: li.qty,
+            currency: state.currency,
+            is_template: 0,
+            deleted: 0,
+          } as any)
+          .compile(),
+      );
     }
   }
 
-  // 6. Evaluate "requirements not met" alert
-  await syncAlert(eventRequirements, eventId, supabase);
-
-  // 7. Sync payment installments
+  // 6. Sync payment installments
   try {
     await syncPaymentInstallments(eventId, state.paymentInstallments, state.currency);
   } catch (e) {

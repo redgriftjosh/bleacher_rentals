@@ -1,19 +1,13 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { Database, TablesInsert } from "../../../../database.types";
+import { Database } from "../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { CreateQuoteState } from "../state/useCreateQuoteStore";
 import { syncPaymentInstallments } from "./paymentInstallments";
 import { calculateTotals } from "../utils/calculateTotals";
 import { logSingleChange } from "./logEventChanges";
-import { eventRequirements } from "@/features/alerts/definitions/eventRequirements";
-import { syncAlert } from "@/features/alerts/engine";
+import { db } from "@/components/providers/SystemProvider";
+import { typedExecute } from "@/lib/powersync/typedQuery";
 
-/**
- * Creates a full quote:
- * 1. Insert event address
- * 2. Insert Event row
- * 3. Sync payment installments
- */
 export async function createQuoteEvent(
   state: CreateQuoteState,
   supabase: SupabaseClient<Database>,
@@ -23,22 +17,19 @@ export async function createQuoteEvent(
   let addressUuid: string | null = null;
 
   if (state.eventAddressData) {
-    const { data: addressData, error: addressError } = await supabase
-      .from("Addresses")
-      .insert({
-        street: state.eventAddressData.street,
-        city: state.eventAddressData.city,
-        state_province: state.eventAddressData.stateProvince,
-        zip_postal: state.eventAddressData.zipPostal || null,
-      })
-      .select("id")
-      .single();
-
-    if (addressError || !addressData) {
-      createErrorToast(["Failed to insert event address.", addressError?.message ?? ""]);
-    }
-
-    addressUuid = addressData!.id;
+    addressUuid = crypto.randomUUID();
+    await typedExecute(
+      db
+        .insertInto("Addresses")
+        .values({
+          id: addressUuid,
+          street: state.eventAddressData.street ?? "",
+          city: state.eventAddressData.city ?? "",
+          state_province: state.eventAddressData.stateProvince ?? "",
+          zip_postal: state.eventAddressData.zipPostal || null,
+        })
+        .compile(),
+    );
   }
 
   // 2. Insert Event
@@ -47,71 +38,71 @@ export async function createQuoteEvent(
   const contractRevenueCents =
     state.lineItems.reduce((sum, li) => sum + li.lineTotalCents, 0) + effectiveTaxCents;
 
-  const newEvent: TablesInsert<"Events"> = {
-    event_name: state.eventName,
-    event_start: state.eventStart || null!,
-    event_end: state.eventEnd || null!,
-    address_uuid: addressUuid,
-    event_status: state.status || "draft",
-    event_type_uuid: state.eventTypeId || null,
-    quote_valid_till: state.quoteValidTill || null,
-    contract_revenue_cents: contractRevenueCents,
-    tax_percent: state.taxPercent,
-    tax_amount_cents: effectiveTaxCents,
-    lenient: false,
-    must_be_clean: false,
-    notes: state.clientFacingNotes || null,
-    internal_notes: state.internalNotes || null,
-    external_notes: state.clientFacingNotes || null,
-    created_by_user_uuid: state.ownerUserUuid ?? null,
-    contact_uuid: state.contactId || null,
-    finance_contact_uuid: state.financeContactId || null,
-    sales_office_uuid: state.salesOfficeId || null,
-    terms_and_conditions_uuid: state.termsDocumentId || null,
-  };
+  const eventUuid = crypto.randomUUID();
 
-  const { data: eventData, error: eventError } = await supabase
-    .from("Events")
-    .insert(newEvent)
-    .select("id")
-    .single();
+  await typedExecute(
+    db
+      .insertInto("Events")
+      .values({
+        id: eventUuid,
+        event_name: state.eventName,
+        event_start: state.eventStart || null,
+        event_end: state.eventEnd || null,
+        address_uuid: addressUuid,
+        event_status: state.status || "draft",
+        event_type_uuid: state.eventTypeId || null,
+        quote_valid_till: state.quoteValidTill || null,
+        contract_revenue_cents: contractRevenueCents,
+        tax_percent: state.taxPercent,
+        tax_amount_cents: effectiveTaxCents,
+        lenient: 0,
+        must_be_clean: 0,
+        deleted: 0,
+        notes: state.clientFacingNotes || null,
+        internal_notes: state.internalNotes || null,
+        external_notes: state.clientFacingNotes || null,
+        created_by_user_uuid: state.ownerUserUuid ?? currentUserUuid ?? null,
+        contact_uuid: state.contactId || null,
+        finance_contact_uuid: state.financeContactId || null,
+        sales_office_uuid: state.salesOfficeId || null,
+        terms_and_conditions_uuid: state.termsDocumentId || null,
+      } as any)
+      .compile(),
+  );
 
-  if (eventError || !eventData) {
-    if (addressUuid) {
-      await supabase.from("Addresses").delete().eq("id", addressUuid);
-    }
-    createErrorToast(["Failed to create quote.", eventError?.message ?? ""]);
-  }
-
-  const eventUuid = eventData!.id;
-
-  // Generate unique 9-digit invoice number
+  // Generate unique 9-digit invoice number (must use Supabase RPC)
   const { data: invoiceData } = await (supabase.rpc as any)("generate_invoice_number");
 
   if (invoiceData != null) {
-    await supabase
-      .from("Events")
-      .update({ invoice_number: Number(invoiceData) })
-      .eq("id", eventUuid);
+    await typedExecute(
+      db
+        .updateTable("Events")
+        .set({ invoice_number: Number(invoiceData) } as any)
+        .where("id", "=", eventUuid)
+        .compile(),
+    );
   }
 
   // 3. Insert line items
   if (state.lineItems.length > 0) {
-    const lineItemRows = state.lineItems.map((li) => ({
-      event_uuid: eventUuid,
-      header: li.label,
-      description: null as string | null,
-      bleacher_type_uuid: li.bleacherTypeUuid || null,
-      value_cents: li.category === "discounts" ? li.lineTotalCents : li.unitPriceCents,
-      quantity: li.qty,
-      currency: state.currency,
-      is_template: false,
-    }));
-
-    const { error: lineItemError } = await supabase.from("EventLineItems").insert(lineItemRows);
-
-    if (lineItemError) {
-      console.error("Line items insert failed (quote still saved):", lineItemError.message);
+    for (const li of state.lineItems) {
+      await typedExecute(
+        db
+          .insertInto("EventLineItems")
+          .values({
+            id: crypto.randomUUID(),
+            event_uuid: eventUuid,
+            header: li.label,
+            description: null,
+            bleacher_type_uuid: li.bleacherTypeUuid || null,
+            value_cents: li.category === "discounts" ? li.lineTotalCents : li.unitPriceCents,
+            quantity: li.qty,
+            currency: state.currency,
+            is_template: 0,
+            deleted: 0,
+          } as any)
+          .compile(),
+      );
     }
   }
 
@@ -124,10 +115,7 @@ export async function createQuoteEvent(
     }
   }
 
-  // 5. Evaluate "requirements not met" alert
-  await syncAlert(eventRequirements, eventUuid, supabase);
-
-  // 6. Log creation
+  // 5. Log creation
   await logSingleChange(
     supabase,
     eventUuid,
