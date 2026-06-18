@@ -37,13 +37,13 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
     const effectiveId = amId ?? "__none__";
     return db
       .selectFrom("AccountManagerZones")
-      .select(["zone_uuid"])
+      .select(["zone_uuid", "is_lead"])
       .where("account_manager_uuid", "=", effectiveId)
       .compile();
   }, [amId]);
   const { data: amZoneRows } = useTypedQuery(
     amZonesCompiled,
-    expect<{ zone_uuid: string | null }>(),
+    expect<{ zone_uuid: string | null; is_lead: number | null }>(),
   );
 
   // Sync permissions to Zustand store so non-React code (Pixi renderers) can read them
@@ -54,6 +54,7 @@ export function SignedInComponents({ children }: { children: React.ReactNode }) 
         isAccountManager: access.roles.includes("account_manager"),
         accountManagerId: access.accountManagerId,
         accountManagerZoneIds: amZoneRows?.filter((r) => r.zone_uuid != null).map((r) => r.zone_uuid!) ?? [],
+        leadZoneIds: amZoneRows?.filter((r) => r.zone_uuid != null && r.is_lead === 1).map((r) => r.zone_uuid!) ?? [],
         userId: access.userId,
       });
     }

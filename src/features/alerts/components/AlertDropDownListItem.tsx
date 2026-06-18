@@ -4,6 +4,7 @@ import { Trash2, Undo2, BellRing } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AlertRemindMeModal } from "./AlertRemindMeModal";
 import { loadEventForModal } from "@/features/eventConfiguration/functions/loadEventForModal";
+import { REVIEW_REQUESTED_TITLE } from "../requestReview";
 import type { UserAlertRow } from "../hooks/useUserAlerts";
 
 type Props = {
@@ -26,10 +27,14 @@ export function AlertDropDownListItem({ alert, onDismiss, onUndismiss, onRemindL
     alert.entityType === "bleacher_event" ||
     alert.entityType === "work_tracker";
 
+  const isReviewRequest = alert.title === REVIEW_REQUESTED_TITLE;
+
   const handleBodyClick = async () => {
     if (!alert.entityUuid) return;
 
-    if (alert.entityType === "event") {
+    if (alert.entityType === "event" && isReviewRequest) {
+      router.push(`/quotes-bookings/${alert.entityUuid}`);
+    } else if (alert.entityType === "event") {
       loadEventForModal(alert.entityUuid);
       router.push("/dashboard");
     } else if (alert.entityType === "bleacher_event") {

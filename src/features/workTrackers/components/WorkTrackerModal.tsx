@@ -33,7 +33,10 @@ import {
 import { buildTripStatusNotification } from "@/features/workTrackers/db/notifications";
 import BillOfLadingButton from "./billOfLading/BillOfLadingButton";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
-import { canEditWorkTracker } from "@/features/userAccess/logic/canEditWorkTracker";
+import { canEditWorkTracker, canReleaseWorkTracker } from "@/features/userAccess/logic/canEditWorkTracker";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { requestReview, REVIEW_REQUESTED_TITLE } from "@/features/alerts/requestReview";
+import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery, typedGetAll } from "@/lib/powersync/typedQuery";
 import { WorkTrackerAlertsDropDown } from "@/features/alerts/components/WorkTrackerAlertsDropDown";
@@ -258,13 +261,41 @@ export default function WorkTrackerModal({
     !!workTracker?.date &&
     workTracker.date <= getUpcomingWindowEnd();
 
+  const perms = usePermissionsStore();
+
+  const bleacherZoneCompiled = useMemo(() => {
+    const effectiveId = workTracker?.bleacher_uuid ?? "__none__";
+    return db
+      .selectFrom("Bleachers")
+      .select(["zone_uuid"])
+      .where("id", "=", effectiveId)
+      .compile();
+  }, [workTracker?.bleacher_uuid]);
+  const { data: bleacherZoneRows } = useTypedQuery(
+    bleacherZoneCompiled,
+    expect<{ zone_uuid: string | null }>(),
+  );
+  const bleacherZoneUuid = bleacherZoneRows?.[0]?.zone_uuid ?? null;
+
   const canEdit = permissions.canCreateUser
     ? canEditWorkTracker({
         isAdmin: permissions.isAdmin,
         isAccountManager: permissions.isAccountManager,
         isNew,
+        zoneUuid: bleacherZoneUuid,
+        leadZoneIds: perms.leadZoneIds,
+        accountManagerZoneIds: perms.accountManagerZoneIds,
+        createdByUserId: workTracker?.created_by_user_uuid,
+        userId: perms.userId,
       })
     : false;
+
+  const canRelease = canReleaseWorkTracker({
+    isAdmin: permissions.isAdmin,
+    zoneUuid: bleacherZoneUuid,
+    leadZoneIds: perms.leadZoneIds,
+    accountManagerZoneIds: perms.accountManagerZoneIds,
+  });
 
   const amFilterId: string | null = null;
   const {
@@ -404,6 +435,26 @@ export default function WorkTrackerModal({
       setSelectedBlock(null);
     } catch (error) {
       createErrorToast(["Failed to Delete Work Tracker:", String(error)]);
+    }
+  };
+
+  const handleRequestReview = async () => {
+    if (!workTracker?.id || workTracker.id === "-1" || !bleacherZoneUuid) return;
+
+    try {
+      const bleacherLabel =
+        bleacherOptions?.find((b) => b.uuid === workTracker.bleacher_uuid)?.label ?? "Unknown";
+
+      await requestReview({
+        entityUuid: workTracker.id,
+        entityType: "work_tracker",
+        bleacherZoneUuid,
+        message: `Review requested for Work Tracker on ${bleacherLabel} (${workTracker.date ?? "no date"})`,
+        entityDescription: `Work Tracker – ${bleacherLabel}`,
+      });
+      createSuccessToast(["Review request sent to Lead Account Manager"]);
+    } catch (error) {
+      createErrorToast(["Failed to request review:", String(error)]);
     }
   };
 
@@ -647,8 +698,13 @@ export default function WorkTrackerModal({
                           status: newStatus,
                         }));
                       }}
-                      canEdit={canEdit}
+                      canEdit={canEdit && canRelease}
                       workTrackerId={workTracker?.id !== "-1" ? workTracker?.id : undefined}
+                      onRequestReview={
+                        canEdit && !canRelease && !isNew
+                          ? () => handleRequestReview()
+                          : undefined
+                      }
                     />
                   </div>
                   <label className={labelClassName}>Driver Notes</label>

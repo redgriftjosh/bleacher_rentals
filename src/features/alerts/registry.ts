@@ -5,6 +5,8 @@ import { bleacherTransportation } from "./definitions/bleacherTransportation";
 import { workTrackerTransportation } from "./definitions/workTrackerTransportation";
 import { workTrackerPending } from "./definitions/workTrackerPending";
 import { workTrackerDraft } from "./definitions/workTrackerDraft";
+import { reviewRequestedWorkTracker } from "./definitions/reviewRequestedWorkTracker";
+import { reviewRequestedQuote } from "./definitions/reviewRequestedQuote";
 
 export const alertDefinitions: AlertDefinition[] = [
   schedulingConflict,
@@ -13,6 +15,8 @@ export const alertDefinitions: AlertDefinition[] = [
   workTrackerTransportation,
   workTrackerPending,
   workTrackerDraft,
+  reviewRequestedWorkTracker,
+  reviewRequestedQuote,
 ];
 
 export function getDefinitionsForEntity(entityType: string): AlertDefinition[] {

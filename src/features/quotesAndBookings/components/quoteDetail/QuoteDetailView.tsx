@@ -18,6 +18,14 @@ import { useEventCurrency } from "../../hooks/useEventCurrency";
 import { formatMoney } from "../../utils/formatMoney";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 import { loadEventForModal } from "@/features/eventConfiguration/functions/loadEventForModal";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { canSendQuote } from "@/features/userAccess/logic/canEditOwnedEntity";
+import { canEditOwnedEntity } from "@/features/userAccess/logic/canEditOwnedEntity";
+import { getAmRoleForZone } from "@/features/userAccess/logic/getAmRoleForZone";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { requestReview } from "@/features/alerts/requestReview";
+import { ClipboardCheck } from "lucide-react";
 
 export function QuoteDetailView({ eventId }: { eventId: string }) {
   const router = useRouter();
@@ -26,6 +34,26 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [sending, setSending] = useState(false);
+
+  const perms = usePermissionsStore();
+
+  // Get the bleacher zone for this event (via BleacherEvents → Bleachers)
+  const eventZoneCompiled = useMemo(
+    () =>
+      db
+        .selectFrom("BleacherEvents as be")
+        .innerJoin("Bleachers as b", "b.id", "be.bleacher_uuid")
+        .select(["b.zone_uuid as zone_uuid"])
+        .where("be.event_uuid", "=", eventId)
+        .limit(1)
+        .compile(),
+    [eventId],
+  );
+  const { data: eventZoneRows } = useTypedQuery(
+    eventZoneCompiled,
+    expect<{ zone_uuid: string | null }>(),
+  );
+  const eventZoneUuid = eventZoneRows?.[0]?.zone_uuid ?? null;
 
   // Line items from PowerSync (reactive)
   const { lineItems } = useEventLineItems(eventId);
@@ -90,6 +118,39 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
       createErrorToast(["Failed to send quote.", err.message ?? ""]);
     } finally {
       setSending(false);
+    }
+  };
+
+  const canSend = canSendQuote({
+    isAdmin: perms.isAdmin,
+    zoneUuid: eventZoneUuid,
+    leadZoneIds: perms.leadZoneIds,
+    accountManagerZoneIds: perms.accountManagerZoneIds,
+  });
+
+  const canEditQuote = canEditOwnedEntity({
+    isAdmin: perms.isAdmin,
+    isNew: false,
+    zoneUuid: eventZoneUuid,
+    leadZoneIds: perms.leadZoneIds,
+    accountManagerZoneIds: perms.accountManagerZoneIds,
+    createdByUserId: quote?.createdByUserUuid,
+    userId: perms.userId,
+  });
+
+  const handleRequestQuoteReview = async () => {
+    if (!quote || !eventZoneUuid) return;
+    try {
+      await requestReview({
+        entityUuid: eventId,
+        entityType: "event",
+        bleacherZoneUuid: eventZoneUuid,
+        message: `Review requested for Quote "${quote.eventName}"`,
+        entityDescription: `Quote – ${quote.eventName}`,
+      });
+      createSuccessToast(["Review request sent to Lead Account Manager"]);
+    } catch (error) {
+      createErrorToast(["Failed to request review:", String(error)]);
     }
   };
 
@@ -190,27 +251,41 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
               <LayoutDashboard className="w-4 h-4" />
               Open in Dashboard
             </button>
-            <button
-              onClick={() => router.push(`/quotes-bookings/${quote.id}/edit`)}
-              className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
-            >
-              Edit
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="px-3 py-1.5 text-sm font-medium text-red-600 border border-red-300 rounded-sm hover:bg-red-50 transition cursor-pointer disabled:opacity-50"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleSendToClient}
-              disabled={sending}
-              className="px-3 py-1.5 text-sm font-semibold text-white bg-darkBlue rounded-sm hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
-            >
-              <Send className="w-3.5 h-3.5" />
-              {sending ? "Sending..." : "Send To Client"}
-            </button>
+            {canEditQuote && (
+              <button
+                onClick={() => router.push(`/quotes-bookings/${quote.id}/edit`)}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
+              >
+                Edit
+              </button>
+            )}
+            {canEditQuote && (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-3 py-1.5 text-sm font-medium text-red-600 border border-red-300 rounded-sm hover:bg-red-50 transition cursor-pointer disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+            {canSend ? (
+              <button
+                onClick={handleSendToClient}
+                disabled={sending}
+                className="px-3 py-1.5 text-sm font-semibold text-white bg-darkBlue rounded-sm hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <Send className="w-3.5 h-3.5" />
+                {sending ? "Sending..." : "Send To Client"}
+              </button>
+            ) : perms.isAccountManager ? (
+              <button
+                onClick={handleRequestQuoteReview}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded-sm hover:bg-amber-100 transition cursor-pointer"
+              >
+                <ClipboardCheck className="w-3.5 h-3.5" />
+                Request Review
+              </button>
+            ) : null}
           </div>
         </div>
 
