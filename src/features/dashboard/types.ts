@@ -37,6 +37,7 @@ export type Bleacher = {
   summerAccountManagerUuid: string | null;
   winterAccountManagerUuid: string | null;
   zoneUuid: string | null;
+  zoneName: string | null;
 };
 
 export type BleacherEvent = {

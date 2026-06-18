@@ -12,7 +12,7 @@ export class LabelText extends Container {
   private addressLabel?: Text;
   private eventInfo: EventSpanType;
 
-  constructor(eventInfo: EventSpanType, availableWidth?: number) {
+  constructor(eventInfo: EventSpanType, availableWidth?: number, isAccessible: boolean = true) {
     super();
 
     this.eventInfo = eventInfo;
@@ -25,7 +25,9 @@ export class LabelText extends Container {
     // Determine text color based on booked status
     const isBooked = !!eventInfo.ev.booked;
     const eventColor =
-      eventInfo.ev.hslHue != null ? this.hslToRgbInt(eventInfo.ev.hslHue, 60, 60) : 0x808080;
+      eventInfo.ev.hslHue != null
+        ? this.hslToRgbInt(eventInfo.ev.hslHue, isAccessible ? 60 : 20, isAccessible ? 60 : 70)
+        : 0x808080;
     const textColor = isBooked ? 0x000000 : eventColor;
 
     // Event name (main label)

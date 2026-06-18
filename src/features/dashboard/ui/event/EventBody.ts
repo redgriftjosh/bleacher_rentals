@@ -21,6 +21,7 @@ export class EventBody extends Sprite {
     baker: Baker,
     dimensions: { width: number; height: number },
     topOffset: number = CELL_HEIGHT,
+    isAccessible: boolean = true,
   ) {
     super();
 
@@ -45,13 +46,17 @@ export class EventBody extends Sprite {
     const eventColor = isMaintenance
       ? 0xff0000
       : eventInfo.span && eventInfo.span.ev.hslHue != null
-        ? EventsUtil.hslToRgbInt(eventInfo.span.ev.hslHue, 60, 60)
+        ? EventsUtil.hslToRgbInt(
+            eventInfo.span.ev.hslHue,
+            isAccessible ? 60 : 20,
+            isAccessible ? 60 : 70,
+          )
         : 0x808080;
 
     const texture = baker.getTexture(
       `EventBody:${eventInfo.span?.ev.eventUuid}:${isMaintenance ? "maint" : isBooked ? "booked" : "quoted"}:${
         eventInfo.isStart ? "start" : eventInfo.isEnd ? "end" : "middle"
-      }:top${topOffset}`,
+      }:top${topOffset}:${isAccessible ? "acc" : "noacc"}`,
       { width: CELL_WIDTH + 2, height: CELL_HEIGHT + 2 },
       // null,
       (c) => {
@@ -121,6 +126,9 @@ export class EventBody extends Sprite {
           // Quoted events: white background with selective borders
           const T = Math.max(1, topOffset);
           fill.rect(L, T - 1, W, H).fill(0xffffff); // White background
+          if (!isAccessible) {
+            fill.rect(L, T - 1, W, H).fill({ color: 0x000000, alpha: 0.05 });
+          }
 
           // Draw borders based on position in span
           if (eventInfo.isStart) {

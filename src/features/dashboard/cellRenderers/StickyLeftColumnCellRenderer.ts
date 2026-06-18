@@ -12,6 +12,7 @@ import { useSwapStore } from "../state/useSwapStore";
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
 import { computeAffectedSwaps } from "../db/client/swapBleacherEvents";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { isBleacherAccessible } from "../ui/NoAccessFilter";
 import { createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
 
 /**
@@ -192,8 +193,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
             const bleacher = this.bleachers.find((b) => b.bleacherUuid === id);
             if (bleacher) {
               const isOwn =
-                !!bleacher.zoneUuid &&
-                perms.accountManagerZoneIds.includes(bleacher.zoneUuid);
+                !!bleacher.zoneUuid && perms.accountManagerZoneIds.includes(bleacher.zoneUuid);
               if (!isOwn) {
                 createErrorToastNoThrow(["This bleacher is not assigned to you."]);
                 return;
@@ -214,8 +214,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
           const bleacher = this.bleachers.find((b) => b.bleacherUuid === id);
           if (bleacher) {
             const isOwn =
-              !!bleacher.zoneUuid &&
-              perms.accountManagerZoneIds.includes(bleacher.zoneUuid);
+              !!bleacher.zoneUuid && perms.accountManagerZoneIds.includes(bleacher.zoneUuid);
             if (!isOwn) {
               createErrorToastNoThrow(["This bleacher is not assigned to you."]);
               return;
@@ -325,8 +324,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     if (bleacher) {
       const cell = this.getOrCreateCell(row);
       // Ensure bleacher data is up to date (in case data changed externally)
-      cell.setBleacher(bleacher);
-      cell.setGreyedOut(true);
+      cell.setBleacher(bleacher, isBleacherAccessible(bleacher));
       parent.addChild(cell);
     }
     return parent;

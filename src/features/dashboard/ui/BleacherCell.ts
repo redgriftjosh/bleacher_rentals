@@ -49,17 +49,24 @@ export class BleacherCell extends Container {
 
   // Map bleacherRows to Tailwind-like colors:
   // 7 -> green-700 (#15803d), 10 -> red-700 (#b91c1c), 15 -> yellow-500 (#eab308), else black
-  private getBleacherNumberColor(rows?: number): number {
-    switch (rows) {
-      case 7:
-        return 0x15803d; // green-700
-      case 10:
-        return 0xb91c1c; // red-700
-      case 15:
-        return 0xeab308; // yellow-500
-      default:
-        return 0x000000; // default black
-    }
+  private getBleacherNumberColor(rows?: number, isAccessible: boolean = true): number {
+    const colors: Record<number, number> = {
+      7: 0x15803d, // green-700
+      10: 0xb91c1c, // red-700
+      15: 0xeab308, // yellow-500
+    };
+    const color = rows != null && rows in colors ? colors[rows] : 0x000000;
+    return isAccessible ? color : this.desaturateColor(color, 0.4);
+  }
+
+  /** Desaturate a hex color by blending toward grey. amount: 0 = no change, 1 = full greyscale */
+  private desaturateColor(hex: number, amount: number = 0.75): number {
+    const r = (hex >> 16) & 0xff;
+    const g = (hex >> 8) & 0xff;
+    const b = hex & 0xff;
+    const grey = Math.round(r * 0.299 + g * 0.587 + b * 0.114);
+    const mix = (c: number) => Math.round(c * (1 - amount) + grey * amount);
+    return (mix(r) << 16) | (mix(g) << 8) | mix(b);
   }
 
   /**
@@ -71,7 +78,7 @@ export class BleacherCell extends Container {
     this.baker = baker;
 
     this.bg = new Graphics();
-    this.bg.rect(0, 0, BLEACHER_COLUMN_WIDTH, CELL_HEIGHT).fill({ color: 0xe8e8e8, alpha: 0.2 });
+    this.bg.rect(0, 0, BLEACHER_COLUMN_WIDTH, CELL_HEIGHT).fill({ color: 0x000000, alpha: 0.1 });
     this.bg.visible = false;
     this.addChild(this.bg);
 
@@ -124,9 +131,11 @@ export class BleacherCell extends Container {
    *
    * @param b - Bleacher data model for this row.
    */
-  setBleacher(b: Bleacher) {
+  setBleacher(b: Bleacher, isAccessible: boolean = true) {
     this.bleacherUuid = b.bleacherUuid;
-    const key = b.bleacherUuid.toString();
+    const key = `${b.bleacherUuid}:${isAccessible ? "acc" : "noacc"}`;
+
+    this.bg.visible = !isAccessible;
 
     // Show/hide map pin based on whether device is assigned
     this.mapPinIcon.visible = !!b.linxupDeviceId;
@@ -135,7 +144,7 @@ export class BleacherCell extends Container {
     const rt = this.baker.getTexture(
       key,
       { width: BLEACHER_COLUMN_WIDTH, height: CELL_HEIGHT },
-      (c) => this.buildBleacherContainer(c, b),
+      (c) => this.buildBleacherContainer(c, b, isAccessible),
     );
 
     this.sprite.texture = rt;
@@ -180,12 +189,6 @@ export class BleacherCell extends Container {
     this.swapButton.setState(state);
   }
 
-  setGreyedOut(greyed: boolean) {
-    this.bg.visible = greyed;
-    this.sprite.tint = greyed ? 0x999999 : 0xffffff;
-    this.sprite.alpha = greyed ? 0.45 : 1;
-  }
-
   /**
    * Builds the offscreen display hierarchy used for baking this cell's texture.
    * This runs **only on cache miss**; the container is destroyed after rendering.
@@ -193,11 +196,11 @@ export class BleacherCell extends Container {
    * @param b - Bleacher data to render.
    * @internal
    */
-  private buildBleacherContainer(c: Container, b: Bleacher) {
+  private buildBleacherContainer(c: Container, b: Bleacher, isAccessible: boolean = true) {
     const bleacherNumber = new Text({
       text: String(b.bleacherNumber),
       style: {
-        fill: this.getBleacherNumberColor(b.bleacherRows),
+        fill: this.getBleacherNumberColor(b.bleacherRows, isAccessible),
         fontSize: 16,
         fontWeight: "bold",
       },
@@ -217,7 +220,7 @@ export class BleacherCell extends Container {
     bleacherSeats.position.set(40, 18);
 
     const summerHomeBase = new Text({
-      text: "Zone 1",
+      text: b.zoneName ?? "",
       style: { fill: 0x6b6b6b, fontSize: 11 },
     });
     summerHomeBase.position.set(3, 31);

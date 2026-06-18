@@ -17,6 +17,7 @@ import { usePsBleacherMaintEvents } from "./usePsBleacherMaintEvents";
 import { usePsMaintenanceEvents } from "./usePsMaintenanceEvents";
 import { usePsDamageReports } from "./usePsDamageReports";
 import { usePsAlertCounts } from "./usePsAlertCounts";
+import { usePsZones } from "./usePsZones";
 import { useZoneFilterStore } from "@/features/dashboardOptions/useZoneFilterStore";
 
 function toBool(v: number | null | boolean): boolean {
@@ -52,6 +53,7 @@ export function useDashboardPowerSync(opts?: {
   const bleacherMaintEventRows = usePsBleacherMaintEvents();
   const maintenanceEventRows = usePsMaintenanceEvents();
   const damageReportRows = usePsDamageReports();
+  const zoneRows = usePsZones();
 
   // Alert counts → pushes into useAlertCountsStore reactively
   usePsAlertCounts();
@@ -62,6 +64,12 @@ export function useDashboardPowerSync(opts?: {
     for (const hb of homeBaseRows) m.set(hb.id, hb.home_base_name ?? "");
     return m;
   }, [homeBaseRows]);
+
+  const zoneMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const z of zoneRows) m.set(z.id, z.display_name ?? "");
+    return m;
+  }, [zoneRows]);
 
   const addressMap = useMemo(() => {
     const m = new Map<
@@ -271,6 +279,7 @@ export function useDashboardPowerSync(opts?: {
         summerAccountManagerUuid: b.summer_account_manager_uuid,
         winterAccountManagerUuid: b.winter_account_manager_uuid,
         zoneUuid: b.zone_uuid ?? null,
+        zoneName: b.zone_uuid ? (zoneMap.get(b.zone_uuid) ?? null) : null,
         summerHomeBase,
         winterHomeBase,
         bleacherEvents,
@@ -283,6 +292,7 @@ export function useDashboardPowerSync(opts?: {
   }, [
     bleacherRows,
     homeBaseMap,
+    zoneMap,
     bleacherEventRows,
     eventMap,
     addressMap,

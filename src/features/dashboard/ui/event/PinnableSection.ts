@@ -17,7 +17,13 @@ export class PinnableSection extends Container {
   private labelText: LabelText;
   private eventInfo: EventSpanType;
 
-  constructor(eventInfo: EventSpanType, app: Application, baker: Baker, availableWidth?: number) {
+  constructor(
+    eventInfo: EventSpanType,
+    app: Application,
+    baker: Baker,
+    availableWidth?: number,
+    isAccessible: boolean = true,
+  ) {
     super();
     this.position.set(4, 4);
 
@@ -29,7 +35,7 @@ export class PinnableSection extends Container {
     this.on("pointerdown", this.handleClick.bind(this));
 
     // Always create the static label
-    this.labelText = new LabelText(eventInfo, availableWidth);
+    this.labelText = new LabelText(eventInfo, availableWidth, isAccessible);
     const labelDimensions = this.labelText.getNameLabelDimensions();
     let nextX = labelDimensions.width + 4;
 

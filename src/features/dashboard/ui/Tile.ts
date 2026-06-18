@@ -11,6 +11,17 @@ export class Tile extends Container {
   private hoverOverlay: Graphics | null = null; // Create this on demand
   private row: number;
   private col: number;
+  private isAccessible: boolean;
+  private static readonly DAMAGE_TILE_COLORS = {
+    major: 0xdc2626, // red-600
+    minor: 0xeab308, // yellow-500
+  };
+
+  private static readonly BACKGROUND_COLORS = {
+    accessible: 0xffffff, // white
+    inaccessibleOverlay: 0x000000, // black at low alpha, layered over white
+    inaccessibleAlpha: 0.1,
+  };
 
   constructor(
     dimensions: { width: number; height: number },
@@ -19,16 +30,19 @@ export class Tile extends Container {
     col: number,
     isClickable?: boolean,
     damageSeverity?: DamageSeverity | null,
+    isAccessible?: boolean,
   ) {
     super();
     this.row = row;
     this.col = col;
+    this.isAccessible = isAccessible ?? true;
     this.dimensions = dimensions;
+    const accessSuffix = this.isAccessible ? "" : ":inaccessible";
     const textureKey = damageSeverity
       ? damageSeverity === "major"
-        ? "DamageTileMajor"
-        : "DamageTileMinor"
-      : "TestTile";
+        ? `DamageTileMajor${accessSuffix}`
+        : `DamageTileMinor${accessSuffix}`
+      : `TestTile${accessSuffix}`;
     const texture = baker.getTexture(textureKey, dimensions, (c) => {
       if (damageSeverity) {
         this.buildDamageTile(c, damageSeverity);
@@ -66,10 +80,16 @@ export class Tile extends Container {
       .lineTo(this.dimensions.width, this.dimensions.height - 1) // bottom line inside
       .stroke({ width: 1, color: 0x000000, alpha: 0.15, alignment: 0 });
 
-    // Draw tile background (light gray) - no reference needed
+    // Draw tile background — white base, with dark overlay if inaccessible
     const fill = new Graphics()
       .rect(0, 0, this.dimensions.width, this.dimensions.height)
-      .fill(0xffffff);
+      .fill(Tile.BACKGROUND_COLORS.accessible);
+    if (!this.isAccessible) {
+      fill.rect(0, 0, this.dimensions.width, this.dimensions.height).fill({
+        color: Tile.BACKGROUND_COLORS.inaccessibleOverlay,
+        alpha: Tile.BACKGROUND_COLORS.inaccessibleAlpha,
+      });
+    }
 
     c.addChild(fill, cellObj);
     // console.log("tile baked");
@@ -79,8 +99,14 @@ export class Tile extends Container {
     const w = this.dimensions.width;
     const h = this.dimensions.height;
 
-    // Same white background
-    const fill = new Graphics().rect(0, 0, w, h).fill(0xffffff);
+    // White base, with dark overlay if inaccessible
+    const fill = new Graphics().rect(0, 0, w, h).fill(Tile.BACKGROUND_COLORS.accessible);
+    if (!this.isAccessible) {
+      fill.rect(0, 0, w, h).fill({
+        color: Tile.BACKGROUND_COLORS.inaccessibleOverlay,
+        alpha: Tile.BACKGROUND_COLORS.inaccessibleAlpha,
+      });
+    }
 
     // Diagonal stripes — red for major damage, yellow for minor
     const stripeColor = severity === "major" ? 0xdc2626 : 0xeab308;

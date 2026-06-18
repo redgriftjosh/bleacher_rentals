@@ -8,7 +8,7 @@ import { FirstCellNotPinned } from "../ui/event/FirstCellNotPinned";
 import { PinnableSection } from "../ui/event/PinnableSection";
 import { CELL_WIDTH } from "../values/constants";
 import { CellEditor } from "../util/CellEditor";
-import { Graphics, Sprite } from "pixi.js";
+import { Graphics } from "pixi.js";
 import { WorkTrackerGroup } from "../ui/event/worktracker/WorkTrackerGroup";
 import { DateTime } from "luxon";
 import { Bleacher, DashboardEvent } from "../types";
@@ -17,6 +17,7 @@ import { useSelectedBlockStore } from "../state/useSelectedBlock";
 import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useWorkTrackerSelectionStore";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
+import { isBleacherAccessible } from "../ui/NoAccessFilter";
 
 /** Column range where the damage overlay should be drawn */
 type DamageOverlayRange = { startCol: number; endCol: number; severity: DamageSeverity };
@@ -425,6 +426,9 @@ export class MainGridCellRenderer implements ICellRenderer {
     const allEventInfos = EventsUtil.getAllCellEventInfos(row, col, this.spansByRow);
     const damageSeverity = this.yAxis === "Bleachers" ? this.getDamageSeverity(row, col) : null;
     const isDamageCell = damageSeverity !== null;
+    const isAccessible = isBleacherAccessible(
+      this.latestBleachersByUuid.get(this.rowBleacherUuids[row]),
+    );
 
     if (allEventInfos.length > 1) {
       // --- OVERLAPPING EVENTS ---
@@ -436,14 +440,28 @@ export class MainGridCellRenderer implements ICellRenderer {
 
       // Add damage tile behind events if applicable
       if (isDamageCell) {
-        const dmgTile = new Tile(dimensions, this.baker, row, col, false, damageSeverity);
+        const dmgTile = new Tile(
+          dimensions,
+          this.baker,
+          row,
+          col,
+          false,
+          damageSeverity,
+          isAccessible,
+        );
         dmgTile.zIndex = -1;
         parent.addChild(dmgTile);
       }
 
       for (const eventInfo of allEventInfos) {
         const ov = eventInfo.overlapInfo;
-        const eventSprite = new EventBody(eventInfo, this.baker, dimensions, ov.topOffset);
+        const eventSprite = new EventBody(
+          eventInfo,
+          this.baker,
+          dimensions,
+          ov.topOffset,
+          isAccessible,
+        );
         eventSprite.position.set(-1, -1);
         eventSprite.zIndex = ov.zIndex * 2;
         parent.addChild(eventSprite);
@@ -459,7 +477,13 @@ export class MainGridCellRenderer implements ICellRenderer {
             // Wrap label in a container masked to its event stripe
             // so it doesn't overflow on top of shorter overlapping events
             const labelWrapper = new Container();
-            const label = new PinnableSection(eventInfo.span, this.app, this.baker, spanWidth);
+            const label = new PinnableSection(
+              eventInfo.span,
+              this.app,
+              this.baker,
+              spanWidth,
+              isAccessible,
+            );
             label.position.set(4, ov.topOffset + 4);
             labelWrapper.addChild(label);
             const stripeMask = new Graphics()
@@ -494,7 +518,15 @@ export class MainGridCellRenderer implements ICellRenderer {
         // Add damage tile behind event if applicable
         if (isDamageCell) {
           parent.sortableChildren = true;
-          const dmgTile = new Tile(dimensions, this.baker, row, col, false, damageSeverity);
+          const dmgTile = new Tile(
+            dimensions,
+            this.baker,
+            row,
+            col,
+            false,
+            damageSeverity,
+            isAccessible,
+          );
           dmgTile.zIndex = -1;
           parent.addChild(dmgTile);
         }
@@ -508,6 +540,7 @@ export class MainGridCellRenderer implements ICellRenderer {
           dimensions,
           topOffset,
           eventInfo.overlapInfo.height,
+          isAccessible,
         );
         firstCell.position.set(-1, -1);
         parent.addChild(firstCell);
@@ -517,12 +550,26 @@ export class MainGridCellRenderer implements ICellRenderer {
         // Add damage tile behind event if applicable
         if (isDamageCell) {
           parent.sortableChildren = true;
-          const dmgTile = new Tile(dimensions, this.baker, row, col, false, damageSeverity);
+          const dmgTile = new Tile(
+            dimensions,
+            this.baker,
+            row,
+            col,
+            false,
+            damageSeverity,
+            isAccessible,
+          );
           dmgTile.zIndex = -1;
           parent.addChild(dmgTile);
         }
 
-        const eventSprite = new EventBody(eventInfo, this.baker, dimensions, topOffset);
+        const eventSprite = new EventBody(
+          eventInfo,
+          this.baker,
+          dimensions,
+          topOffset,
+          isAccessible,
+        );
         eventSprite.position.set(-1, -1);
         parent.addChild(eventSprite);
       }
@@ -534,6 +581,7 @@ export class MainGridCellRenderer implements ICellRenderer {
         col,
         this.yAxis === "Bleachers",
         damageSeverity,
+        isAccessible,
       );
       parent.addChild(tile);
 
@@ -611,6 +659,20 @@ export class MainGridCellRenderer implements ICellRenderer {
         }
       }
     }
+
+    // // No-access overlay: grey-tints cells for rows the user doesn't have zone access to
+    // if (this.yAxis === "Bleachers") {
+    //   const bleacherUuid = this.rowBleacherUuids[row];
+    //   const bleacher = this.latestBleachersByUuid.get(bleacherUuid) ?? this.bleachers[row];
+    //   const filter = new NoAccessFilter(
+    //     { width: cellWidth, height: cellHeight },
+    //     this.baker,
+    //     bleacher,
+    //   );
+    //   filter.zIndex = 999998;
+    //   parent.sortableChildren = true;
+    //   parent.addChild(filter);
+    // }
 
     return parent;
   }

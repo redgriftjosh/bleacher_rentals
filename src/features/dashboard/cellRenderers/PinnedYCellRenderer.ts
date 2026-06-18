@@ -6,6 +6,7 @@ import { LabelText } from "../ui/event/LabelText";
 import { PinnableSection } from "../ui/event/PinnableSection";
 import { Bleacher } from "../types";
 import { CELL_WIDTH } from "../values/constants";
+import { isBleacherAccessible } from "../ui/NoAccessFilter";
 
 export class PinnedYCellRenderer implements ICellRenderer {
   private app: Application;
@@ -101,11 +102,13 @@ export class PinnedYCellRenderer implements ICellRenderer {
         // Calculate minimum width: max(one cell width, longest word)
         const minWrapWidth = Math.max(CELL_WIDTH - 8, this.getLongestWordWidth(span.ev.eventName));
 
+        const isAccessible = isBleacherAccessible(this.bleachers[row]);
         const pinnableSection = new PinnableSection(
           span,
           this.app,
           this.baker,
           Math.max(availableWidth, minWrapWidth),
+          isAccessible,
         );
 
         if (availableWidth >= minWrapWidth) {
