@@ -110,6 +110,16 @@ export function TotalsDisplay() {
           currency={currency}
           onSave={(newCents) => setField("taxOverrideCents", newCents)}
         />
+        {taxOverrideCents !== null && (
+          <div className="flex justify-end">
+            <button
+              onClick={() => setField("taxOverrideCents", null)}
+              className="text-xs text-blue-600 hover:underline cursor-pointer"
+            >
+              Reset to calculated tax
+            </button>
+          </div>
+        )}
         {taxPercent === null && !taxOverrideCents && (
           <div className="flex justify-between text-sm">
             <span />
@@ -122,7 +132,7 @@ export function TotalsDisplay() {
           </div>
         )}
         <div className="flex justify-between text-base border-t pt-2 mt-1">
-          <span className="font-bold">TOTAL</span>
+          <span className="font-bold">TOTAL ({currency})</span>
           <span className="font-bold">{formatCurrency(effectiveTotal / 100, currency)}</span>
         </div>
       </div>

@@ -12,6 +12,7 @@ export type QuoteLineItem = {
 };
 
 export type QuotePaymentInstallment = {
+  id: string;
   dueDate: string;
   amountCents: number;
   status: string;
@@ -197,7 +198,7 @@ export async function buildQuoteDocumentData(
       // Payment installments
       supabase
         .from("PaymentInstallments")
-        .select("due_date, amount_cents, status")
+        .select("id, due_date, amount_cents, status")
         .eq("event_uuid", eventId)
         .order("due_date"),
 
@@ -248,6 +249,7 @@ export async function buildQuoteDocumentData(
 
   // Process installments
   const paymentSchedule: QuotePaymentInstallment[] = (installmentResult.data ?? []).map((pi: any) => ({
+    id: pi.id,
     dueDate: pi.due_date,
     amountCents: pi.amount_cents,
     status: pi.status,

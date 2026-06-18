@@ -5,7 +5,7 @@ import { QuoteDocumentData } from "./quoteDocumentData";
 import type { TrackEvent } from "./useQuoteActivityTracker";
 
 function formatMoney(cents: number, currency: "USD" | "CAD"): string {
-  const symbol = currency === "CAD" ? "C$" : "$";
+  const symbol = "$";
   const formatted = (Math.abs(cents) / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return cents < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
 }

@@ -2055,6 +2055,7 @@ export type Database = {
       }
       QboConnections: {
         Row: {
+          currency: string | null
           display_name: string
           encrypted_token_value: string
           id: string
@@ -2062,6 +2063,7 @@ export type Database = {
           realm_id: string | null
         }
         Insert: {
+          currency?: string | null
           display_name: string
           encrypted_token_value: string
           id?: string
@@ -2069,6 +2071,7 @@ export type Database = {
           realm_id?: string | null
         }
         Update: {
+          currency?: string | null
           display_name?: string
           encrypted_token_value?: string
           id?: string

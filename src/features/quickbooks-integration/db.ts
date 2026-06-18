@@ -170,13 +170,13 @@ export async function updateQboConnectionDisplayName(
  * Fetches all QBO connections (id, display_name, realm_id, qbo_tax_code_id — no tokens).
  */
 export async function getAllQboConnections(): Promise<
-  { id: string; display_name: string; realm_id: string | null; qbo_tax_code_id: string | null }[]
+  { id: string; display_name: string; realm_id: string | null; qbo_tax_code_id: string | null; currency: string | null }[]
 > {
   const supabase = createServerSupabaseClient();
 
   const { data, error } = await supabase
     .from("QboConnections")
-    .select("id, display_name, realm_id, qbo_tax_code_id")
+    .select("id, display_name, realm_id, qbo_tax_code_id, currency")
     .order("display_name");
 
   if (error) {
@@ -185,6 +185,26 @@ export async function getAllQboConnections(): Promise<
   }
 
   return data ?? [];
+}
+
+/**
+ * Sets the currency for a QBO connection (fetched from QBO CompanyInfo).
+ */
+export async function setQboConnectionCurrency(
+  connectionId: string,
+  currency: string,
+): Promise<void> {
+  const supabase = await createServiceRoleClient();
+
+  const { error } = await supabase
+    .from("QboConnections")
+    .update({ currency })
+    .eq("id", connectionId);
+
+  if (error) {
+    console.error("Failed to set QBO connection currency:", error);
+    throw new Error(`Failed to set currency: ${error.message}`);
+  }
 }
 
 /**

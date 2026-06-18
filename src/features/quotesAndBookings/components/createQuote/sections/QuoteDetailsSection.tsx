@@ -43,10 +43,10 @@ export function QuoteDetailsSection() {
     [accountManagers, setField],
   );
 
-  const salesOfficeOptions = salesOffices.map((o) => ({
-    label: o.name,
-    value: o.id,
-  }));
+  const salesOfficeOptions = salesOffices.map((o) => {
+    const cur = isCanadianProvince(o.stateProvince) ? "CAD" : "USD";
+    return { label: `${o.name} (${cur})`, value: o.id };
+  });
 
   const statusOptions = [
     { label: "Draft", value: "draft" as const },
