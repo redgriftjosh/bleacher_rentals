@@ -1,6 +1,5 @@
 "use client";
 
-import { SelectDriver } from "@/features/manageTeam/components/inputs/SelectDriver";
 import { useCurrentUserStore } from "@/features/manageTeam/state/useCurrentUserStore";
 import { useUserFormPaths } from "@/features/manageTeam/hooks/useUserFormPaths";
 import { useRouter, useParams } from "next/navigation";
@@ -13,8 +12,6 @@ export function AccountManagerPageContent() {
   const { basicUserInfo } = useUserFormPaths();
   const roleTabs = useCurrentUserStore((s) => s.roleTabs);
   const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
-  const assignedDriverUuids = useCurrentUserStore((s) => s.assignedDriverUuids);
-  const setField = useCurrentUserStore((s) => s.setField);
 
   useEffect(() => {
     const isLoading = (userUuidFromUrl || existingUserUuid) && roleTabs.length === 0;
@@ -26,15 +23,10 @@ export function AccountManagerPageContent() {
 
   return (
     <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-4">
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">Assigned Drivers</label>
-        <SelectDriver
-          selectedDriverUuids={assignedDriverUuids}
-          onChange={(ids) => setField("assignedDriverUuids", ids)}
-          placeholder="Select Drivers..."
-          currentUserUuid={existingUserUuid}
-        />
-      </div>
+      <p className="text-sm text-gray-500">
+        Drivers are assigned to zones. Manage driver assignments in the{" "}
+        <a href="/zones" className="text-blue-600 hover:underline">Zones</a> page.
+      </p>
     </section>
   );
 }

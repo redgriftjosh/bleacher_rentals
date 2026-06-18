@@ -99,6 +99,24 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       return;
     }
 
+    if (!workTrackerUuid) {
+      const perms = usePermissionsStore.getState();
+      if (perms.isAccountManager && !perms.isAdmin) {
+        const dashBleachers = useDashboardBleachersStore.getState().data;
+        const bleacher = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid);
+        if (
+          bleacher &&
+          !isBleacherOwnedByAM({
+            bleacherZoneUuid: bleacher.zoneUuid,
+            accountManagerZoneIds: perms.accountManagerZoneIds,
+          })
+        ) {
+          createErrorToast(["You can only create work trackers for bleachers assigned to you."]);
+          return;
+        }
+      }
+    }
+
     const workTracker: Tables<"WorkTrackers"> = {
       id: workTrackerUuid ?? "-1",
       bleacher_uuid: bleacherUuid,
