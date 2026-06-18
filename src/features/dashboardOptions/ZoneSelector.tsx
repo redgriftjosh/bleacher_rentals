@@ -6,7 +6,9 @@ import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { useZoneFilterStore } from "./useZoneFilterStore";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronDown, MapPin } from "lucide-react";
+import { ChevronDown, MapPin, ShieldCheck, UserCheck, Eye } from "lucide-react";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { AppTooltip } from "@/components/AppTooltip";
 
 type ZoneRow = { id: string; displayName: string | null };
 
@@ -16,6 +18,14 @@ export function ZoneSelector({ accountManagerId }: { accountManagerId: string | 
   const [open, setOpen] = useState(false);
   const { selectedZoneIds, toggleZone, setSelectedZoneIds, showUnassigned, setShowUnassigned } =
     useZoneFilterStore();
+
+  const isAdmin = usePermissionsStore((s) => s.isAdmin);
+  const isAccountManager = usePermissionsStore((s) => s.isAccountManager);
+  const accountManagerZoneIds = usePermissionsStore((s) => s.accountManagerZoneIds);
+  const leadZoneIds = usePermissionsStore((s) => s.leadZoneIds);
+
+  // Only show zone access icons for non-admin account managers
+  const showAccessIcons = isAccountManager && !isAdmin;
 
   const compiledZones = useMemo(
     () =>
@@ -55,20 +65,34 @@ export function ZoneSelector({ accountManagerId }: { accountManagerId: string | 
         </button>
       </PopoverTrigger>
 
-      <PopoverContent align="start" className="w-52 p-1">
+      <PopoverContent align="start" className="w-56 p-1">
         {zones.map((z) => {
           const checked = selectedZoneIds.includes(z.id);
+          const isAssigned = accountManagerZoneIds.includes(z.id);
+          const isLead = leadZoneIds.includes(z.id);
+
           return (
             <label
               key={z.id}
               className="flex items-center gap-2 rounded-[5px] px-2 py-1.5 text-sm
                          hover:bg-accent cursor-pointer select-none"
             >
-              <Checkbox
-                checked={checked}
-                onCheckedChange={() => toggleZone(z.id)}
-              />
-              <span className="truncate">{z.displayName ?? "Unnamed"}</span>
+              <Checkbox checked={checked} onCheckedChange={() => toggleZone(z.id)} />
+              <span className="truncate flex-1">{z.displayName ?? "Unnamed"}</span>
+              {showAccessIcons &&
+                (isLead ? (
+                  <AppTooltip content="You are a lead Account Manager for this zone">
+                    <ShieldCheck className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                  </AppTooltip>
+                ) : isAssigned ? (
+                  <AppTooltip content="You have access to this zone">
+                    <UserCheck className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                  </AppTooltip>
+                ) : (
+                  <AppTooltip content="View only — not assigned to this zone">
+                    <Eye className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  </AppTooltip>
+                ))}
             </label>
           );
         })}
