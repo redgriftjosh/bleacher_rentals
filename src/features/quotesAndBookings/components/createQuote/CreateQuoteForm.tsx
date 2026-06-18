@@ -25,6 +25,7 @@ import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { useAutoTax } from "../../hooks/useAutoTax";
 import { useCurrentUserUuid } from "../../hooks/useCurrentUserUuid";
 import { triage } from "@/features/alerts/triage";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 
 export function CreateQuoteForm() {
   const router = useRouter();
@@ -33,6 +34,8 @@ export function CreateQuoteForm() {
   const supabase = useClerkSupabaseClient();
   const currentUserUuid = useCurrentUserUuid();
   const [saving, setSaving] = useState(false);
+  const perms = usePermissionsStore();
+  const canSendDirectly = perms.isAdmin || perms.leadZoneIds.length > 0;
 
   // Auto-fetch tax from QBO when office + address are set
   useAutoTax();
@@ -196,13 +199,15 @@ export function CreateQuoteForm() {
           >
             Preview PDF
           </button>
-          <button
-            onClick={handleSendQuote}
-            disabled={saving}
-            className="px-4 py-2 text-sm font-semibold text-white bg-darkBlue rounded-sm shadow-md hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? "Saving..." : "Send Quote →"}
-          </button>
+          {canSendDirectly && (
+            <button
+              onClick={handleSendQuote}
+              disabled={saving}
+              className="px-4 py-2 text-sm font-semibold text-white bg-darkBlue rounded-sm shadow-md hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? "Saving..." : "Send Quote →"}
+            </button>
+          )}
         </div>
       </div>
 

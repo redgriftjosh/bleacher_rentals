@@ -11,6 +11,7 @@ export type ZoneWithRelations = Zone & {
   qbo_classes?: ZoneQboClass[];
   bleacher_uuids: string[];
   account_manager_uuids: string[];
+  lead_account_manager_uuids: string[];
   driver_uuids: string[];
 };
 

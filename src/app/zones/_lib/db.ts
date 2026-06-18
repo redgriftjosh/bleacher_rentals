@@ -12,7 +12,7 @@ export async function fetchZones(
       state_provinces:ZoneStateProvinces(*),
       qbo_classes:ZoneQboClasses(*),
       bleachers:Bleachers!Bleachers_zone_uuid_fkey(id),
-      account_managers:AccountManagerZones(account_manager_uuid),
+      account_managers:AccountManagerZones(account_manager_uuid, is_lead),
       drivers:DriverZones(driver_uuid)`,
     )
     .order("display_name");
@@ -23,6 +23,9 @@ export async function fetchZones(
     ...zone,
     bleacher_uuids: (zone.bleachers || []).map((b: any) => b.id),
     account_manager_uuids: (zone.account_managers || []).map((am: any) => am.account_manager_uuid),
+    lead_account_manager_uuids: (zone.account_managers || [])
+      .filter((am: any) => am.is_lead)
+      .map((am: any) => am.account_manager_uuid),
     driver_uuids: (zone.drivers || []).map((d: any) => d.driver_uuid),
     bleachers: undefined,
     account_managers: undefined,
@@ -41,7 +44,7 @@ export async function fetchZoneById(
       state_provinces:ZoneStateProvinces(*),
       qbo_classes:ZoneQboClasses(*),
       bleachers:Bleachers!Bleachers_zone_uuid_fkey(id),
-      account_managers:AccountManagerZones(account_manager_uuid),
+      account_managers:AccountManagerZones(account_manager_uuid, is_lead),
       drivers:DriverZones(driver_uuid)`,
     )
     .eq("id", zoneId)
@@ -54,6 +57,9 @@ export async function fetchZoneById(
     ...zone,
     bleacher_uuids: (zone.bleachers || []).map((b: any) => b.id),
     account_manager_uuids: (zone.account_managers || []).map((am: any) => am.account_manager_uuid),
+    lead_account_manager_uuids: (zone.account_managers || [])
+      .filter((am: any) => am.is_lead)
+      .map((am: any) => am.account_manager_uuid),
     driver_uuids: (zone.drivers || []).map((d: any) => d.driver_uuid),
     bleachers: undefined,
     account_managers: undefined,
@@ -70,6 +76,7 @@ export async function createZone(
   bleacherUuids: string[],
   accountManagerUuids: string[],
   driverUuids: string[],
+  leadAccountManagerUuids: string[] = [],
 ): Promise<string> {
   const { data: zone, error: zoneError } = await supabase
     .from("Zones")
@@ -107,9 +114,11 @@ export async function createZone(
   }
 
   if (accountManagerUuids.length > 0) {
+    const leadSet = new Set(leadAccountManagerUuids);
     const amRows = accountManagerUuids.map((amUuid) => ({
       account_manager_uuid: amUuid,
       zone_uuid: zone.id,
+      is_lead: leadSet.has(amUuid),
     }));
     const { error: amError } = await supabase.from("AccountManagerZones").insert(amRows);
     if (amError) throw new Error(amError.message);
@@ -137,6 +146,7 @@ export async function updateZone(
   bleacherUuids: string[],
   accountManagerUuids: string[],
   driverUuids: string[],
+  leadAccountManagerUuids: string[] = [],
 ): Promise<void> {
   const { error: zoneError } = await supabase
     .from("Zones")
@@ -201,9 +211,11 @@ export async function updateZone(
   if (deleteAmError) throw new Error(deleteAmError.message);
 
   if (accountManagerUuids.length > 0) {
+    const leadSet = new Set(leadAccountManagerUuids);
     const amRows = accountManagerUuids.map((amUuid) => ({
       account_manager_uuid: amUuid,
       zone_uuid: zoneId,
+      is_lead: leadSet.has(amUuid),
     }));
     const { error: amError } = await supabase.from("AccountManagerZones").insert(amRows);
     if (amError) throw new Error(amError.message);

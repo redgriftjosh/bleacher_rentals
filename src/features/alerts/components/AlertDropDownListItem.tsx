@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { AlertRemindMeModal } from "./AlertRemindMeModal";
 import { loadEventForModal } from "@/features/eventConfiguration/functions/loadEventForModal";
 import { REVIEW_REQUESTED_TITLE } from "../requestReview";
+import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useWorkTrackerSelectionStore";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, typedGetAll } from "@/lib/powersync/typedQuery";
 import type { UserAlertRow } from "../hooks/useUserAlerts";
 
 type Props = {
@@ -44,6 +47,23 @@ export function AlertDropDownListItem({ alert, onDismiss, onUndismiss, onRemindL
       await loadBleacherEventForModal(alert.entityUuid);
       router.push("/dashboard");
     } else if (alert.entityType === "work_tracker") {
+      const rows = await typedGetAll(
+        db
+          .selectFrom("WorkTrackers")
+          .select(["id", "bleacher_uuid", "date"])
+          .where("id", "=", alert.entityUuid)
+          .limit(1)
+          .compile(),
+        expect<{ id: string; bleacher_uuid: string | null; date: string | null }>(),
+      );
+      const wt = rows[0];
+      if (wt?.bleacher_uuid && wt.date) {
+        useWorkTrackerSelectionStore.getState().setSelected({
+          id: wt.id,
+          bleacher_uuid: wt.bleacher_uuid,
+          date: wt.date,
+        });
+      }
       router.push("/dashboard");
     }
   };

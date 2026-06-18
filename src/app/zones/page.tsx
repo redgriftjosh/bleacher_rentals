@@ -62,6 +62,7 @@ export default function ZonesPage() {
       bleacherUuids: string[],
       accountManagerUuids: string[],
       driverUuids: string[],
+      leadAccountManagerUuids: string[],
     ) => {
       try {
         setSaving(true);
@@ -74,6 +75,7 @@ export default function ZonesPage() {
           bleacherUuids,
           accountManagerUuids,
           driverUuids,
+          leadAccountManagerUuids,
         );
         if (mapImageBlob) {
           await uploadZonePhoto(supabase, zoneId, mapImageBlob);
@@ -100,6 +102,7 @@ export default function ZonesPage() {
       bleacherUuids: string[],
       accountManagerUuids: string[],
       driverUuids: string[],
+      leadAccountManagerUuids: string[],
     ) => {
       if (!editingZone) return;
       try {
@@ -114,6 +117,7 @@ export default function ZonesPage() {
           bleacherUuids,
           accountManagerUuids,
           driverUuids,
+          leadAccountManagerUuids,
         );
         if (mapImageBlob) {
           await uploadZonePhoto(supabase, editingZone.id, mapImageBlob, editingZone.photo_path);
