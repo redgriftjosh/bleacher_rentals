@@ -232,7 +232,7 @@ INSERT INTO "public"."Users" ("created_at", "first_name", "last_name", "email", 
 	('2026-06-02 17:22:02.670591+00', 'luke', 'vandenouweland', 'vdolivestock@hotmail.com', NULL, 'user_3Edf1MMhH1VXFH0i971ipI9OHpr', 1, NULL, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '92b491a2-fc16-4181-82d1-3359c20b2d30', NULL, false),
 	('2025-10-10 16:46:45.643587+00', 'Stu ', 'Graham', 'stugraham@stoneridgegroup.ca', NULL, 'user_3B7WL8FTxDB2a5g5i60O5oDIbvX', 3, NULL, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '76a29929-71ce-478c-a03e-772b110bddb0', NULL, false),
 	('2025-05-27 17:40:14.038612+00', 'Denver', 'Spearman', 'denver@bleacherrentals.com', NULL, 'user_2ygykK2j2Uu2MSSMDRMM9YiHqoC', 2, NULL, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '5847580c-471a-481e-92f7-582e7441eff4', NULL, false),
-	('2026-06-18 18:59:02.326814+00', 'Josh', 'AccountManager', 'redgriftjosh@gmail.com', NULL, 'user_35f2pOOvsfbnuYFRKDMmPKqcc5f', 1, NULL, false, '75dfeb9e-6c28-4839-a91c-a7333b0921c6', 'abb062c1-a182-4781-ad45-8447943281c9', NULL, false);
+	('2026-06-18 18:59:02.326814+00', 'Josh', 'AccountManager', 'redgriftjosh@gmail.com', NULL, 'user_35f2pOOvsfbnuYFRKDMmPKqcc5f', 1, NULL, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', 'abb062c1-a182-4781-ad45-8447943281c9', NULL, false);
 
 
 --
@@ -13490,3 +13490,27 @@ SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 1, false);
 --
 
 -- \unrestrict zjRjV0JcyqHadPDdp2nk3oBU9Y826tYfifsnmuMh08A3ffTfuntN6GleTsThhRw
+-- Create missing BleacherTypes for row counts that exist in Bleachers but have no type
+INSERT INTO public."BleacherTypes" (name, row_count, roof_type)
+SELECT
+  format('%s-Row, %s Seat', b.bleacher_rows, b.bleacher_seats),
+  b.bleacher_rows,
+  'none'::public.roof_type
+FROM (
+  SELECT DISTINCT bleacher_rows, bleacher_seats
+  FROM public."Bleachers"
+  WHERE deleted = false
+    AND bleacher_rows NOT IN (
+      SELECT row_count FROM public."BleacherTypes" WHERE deleted = false AND roof_type = 'none'
+    )
+) b;
+
+-- Link every bleacher to its BleacherType by row_count (using roof_type = 'none')
+UPDATE public."Bleachers" b
+SET bleacher_type_uuid = bt.id
+FROM public."BleacherTypes" bt
+WHERE bt.row_count = b.bleacher_rows
+  AND bt.roof_type = 'none'
+  AND bt.deleted = false
+  AND b.deleted = false
+  AND b.bleacher_type_uuid IS NULL;
