@@ -93,9 +93,6 @@ export default function Page() {
       </div>
     );
   }
-  if (bleachers.length === 0) {
-    return <div>No Bleachers!</div>;
-  }
 
   return (
     <div className="h-full grid grid-rows-[auto_1fr] gap-2 overflow-hidden min-w-0">
