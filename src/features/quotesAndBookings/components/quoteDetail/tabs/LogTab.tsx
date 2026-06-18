@@ -82,6 +82,7 @@ function getTitle(row: LogRow): string {
   if (row.action_type === "line_item_add") return `Line Item Added`;
   if (row.action_type === "line_item_remove") return `Line Item Removed`;
   if (row.action_type === "line_item_change") return `Line Item Changed`;
+  if (row.action_type === "status_change" && row.field_name === "deleted") return "Quote Deleted";
   return `${config.label}: ${fieldLabel}`;
 }
 

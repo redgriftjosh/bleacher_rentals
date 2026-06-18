@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { useEventTypes } from "../../../hooks/useEventTypes";
 import { Dropdown } from "@/components/DropDown";
@@ -18,13 +19,15 @@ export function EventDetailsSection() {
 
   const eventTypeOptions = eventTypes.map((et) => ({ label: et.name, value: et.id }));
 
+  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+
   return (
     <section>
       <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">
         Event Details
       </h2>
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Event Name</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Event Name <span className="text-red-500">*</span></label>
         <input
           type="text"
           value={eventName}
@@ -34,7 +37,7 @@ export function EventDetailsSection() {
         />
       </div>
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Event Type <span className="text-red-500">*</span></label>
         <Dropdown
           options={eventTypeOptions}
           selected={eventTypeId}
@@ -43,7 +46,7 @@ export function EventDetailsSection() {
         />
       </div>
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Event Address</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Event Address <span className="text-red-500">*</span></label>
         <AddressAutocomplete
           initialValue={eventAddress}
           onAddressSelect={(data) => {
@@ -67,19 +70,27 @@ export function EventDetailsSection() {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Event Start</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Event Start <span className="text-red-500">*</span></label>
           <input
             type="date"
             value={eventStart}
-            onChange={(e) => setField("eventStart", e.target.value)}
+            min={today}
+            onChange={(e) => {
+              const val = e.target.value;
+              setField("eventStart", val);
+              if (eventEnd && val && eventEnd < val) {
+                setField("eventEnd", val);
+              }
+            }}
             className="w-full h-[40px] px-3 border rounded text-sm"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Event End</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Event End <span className="text-red-500">*</span></label>
           <input
             type="date"
             value={eventEnd}
+            min={eventStart || today}
             onChange={(e) => setField("eventEnd", e.target.value)}
             className="w-full h-[40px] px-3 border rounded text-sm"
           />

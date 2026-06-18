@@ -2691,13 +2691,35 @@ INSERT INTO "public"."Bleachers" ("created_at", "bleacher_number", "bleacher_row
 -- Data for Name: Companies; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-
+INSERT INTO "public"."Companies" ("id", "company_name", "email", "phone", "notes", "billing_address_uuid", "shipping_address_uuid", "created_by_user_uuid", "deleted") VALUES
+	('c0a10001-0001-4000-8000-000000000001', 'Midwest Event Solutions', 'info@midwestevent.com', '555-100-2001', NULL, NULL, NULL, '5847580c-471a-481e-92f7-582e7441eff4', false),
+	('c0a10001-0001-4000-8000-000000000002', 'Sunrise Festivals Inc.', 'bookings@sunrisefest.com', '555-100-2002', NULL, NULL, NULL, '5847580c-471a-481e-92f7-582e7441eff4', false),
+	('c0a10001-0001-4000-8000-000000000003', 'Northern Expo Group', 'contact@northernexpo.ca', '555-100-2003', NULL, NULL, NULL, '5847580c-471a-481e-92f7-582e7441eff4', false);
 
 --
 -- Data for Name: Contacts; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO "public"."Contacts" ("id", "first_name", "last_name", "email", "phone", "company_uuid", "notes", "created_by_user_uuid", "deleted") VALUES
+	('d0a10001-0001-4000-8000-000000000001', 'Karen', 'Mitchell', 'karen.mitchell@midwestevent.com', '555-200-3001', 'c0a10001-0001-4000-8000-000000000001', NULL, '5847580c-471a-481e-92f7-582e7441eff4', false),
+	('d0a10001-0001-4000-8000-000000000002', 'Tom', 'Bradley', 'tom.bradley@sunrisefest.com', '555-200-3002', 'c0a10001-0001-4000-8000-000000000002', NULL, '5847580c-471a-481e-92f7-582e7441eff4', false),
+	('d0a10001-0001-4000-8000-000000000003', 'Sarah', 'Leblanc', 'sarah.leblanc@northernexpo.ca', '555-200-3003', 'c0a10001-0001-4000-8000-000000000003', NULL, '5847580c-471a-481e-92f7-582e7441eff4', false),
+	('d0a10001-0001-4000-8000-000000000004', 'Mike', 'Johnson', 'mike.j@midwestevent.com', '555-200-3004', 'c0a10001-0001-4000-8000-000000000001', 'Finance contact', '5847580c-471a-481e-92f7-582e7441eff4', false);
 
+--
+-- Data for Name: SalesOffices; Type: TABLE DATA; Schema: public; Owner: postgres
+-- (inserted after QboConnections due to FK dependency)
+--
+
+
+
+--
+-- Data for Name: TermsAndConditions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO "public"."TermsAndConditions" ("id", "name", "html_content", "created_by_user_uuid", "deleted") VALUES
+	('f0a10001-0001-4000-8000-000000000001', 'Standard Rental Terms', '<h2>Standard Terms &amp; Conditions</h2><p>1. <strong>Payment:</strong> A 50% deposit is required upon booking. The remaining balance is due 7 days before the event start date.</p><p>2. <strong>Cancellation:</strong> Cancellations made 30+ days before the event receive a full refund minus a $250 processing fee. Cancellations within 30 days forfeit the deposit.</p><p>3. <strong>Delivery &amp; Setup:</strong> Bleacher Rentals will deliver and set up equipment at the agreed-upon location. The client must ensure the site is accessible and level.</p><p>4. <strong>Liability:</strong> The client is responsible for any damage to equipment during the rental period beyond normal wear and tear.</p><p>5. <strong>Insurance:</strong> The client must provide proof of general liability insurance with a minimum of $1,000,000 coverage naming Bleacher Rentals as additionally insured.</p>', '5847580c-471a-481e-92f7-582e7441eff4', false),
+	('f0a10001-0001-4000-8000-000000000002', 'Short-Term Rental Terms', '<h2>Short-Term Rental Terms</h2><p>1. <strong>Payment:</strong> Full payment is due upon delivery for rentals under 3 days.</p><p>2. <strong>Cancellation:</strong> Cancellations made 14+ days before the event receive a full refund. No refunds within 14 days.</p><p>3. <strong>Delivery &amp; Pickup:</strong> Delivery and pickup times will be coordinated in advance. Additional charges apply for after-hours service.</p><p>4. <strong>Liability:</strong> The client assumes full responsibility for the equipment from delivery to pickup.</p>', '5847580c-471a-481e-92f7-582e7441eff4', false);
 
 --
 -- Data for Name: EventTypes; Type: TABLE DATA; Schema: public; Owner: postgres
@@ -2717,6 +2739,10 @@ INSERT INTO "public"."QboConnections" ("id", "display_name", "encrypted_token_va
 --
 -- Data for Name: SalesOffices; Type: TABLE DATA; Schema: public; Owner: postgres
 --
+
+INSERT INTO "public"."SalesOffices" ("id", "name", "phone", "quickbook_uuid", "address_uuid", "created_by_user_uuid", "deleted") VALUES
+	('e0a10001-0001-4000-8000-000000000001', 'Ontario Office', '555-300-4001', 'd035695c-f298-4a95-885f-5ff4982ce4a3', NULL, '5847580c-471a-481e-92f7-582e7441eff4', false),
+	('e0a10001-0001-4000-8000-000000000002', 'Florida Office', '555-300-4002', '01ee7d08-f79c-4c21-878a-e5f63990b465', NULL, '5847580c-471a-481e-92f7-582e7441eff4', false);
 
 
 

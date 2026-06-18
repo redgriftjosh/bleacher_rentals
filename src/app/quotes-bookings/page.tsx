@@ -78,7 +78,8 @@ export default function QuotesBookingsPage() {
     clearFilters,
   } = useQuotesAndBookingsFilters(initialOverrides);
 
-  const { data, isLoading, error } = useQuotesAndBookingsData(filters);
+  const [showDeleted, setShowDeleted] = useState(false);
+  const { data, isLoading, error } = useQuotesAndBookingsData(filters, showDeleted);
   const [searchQuery, setSearchQuery] = useState("");
 
   const searchedData = useMemo(() => {
@@ -109,11 +110,14 @@ export default function QuotesBookingsPage() {
     {
       key: "status",
       header: "Status",
-      render: (event) => (
-        <CellBadge variant={getStatusVariant(event.event_status)}>
-          {capitalizeStatus(event.event_status)}
-        </CellBadge>
-      ),
+      render: (event) =>
+        event.deleted === 1 ? (
+          <CellBadge variant="error">Deleted</CellBadge>
+        ) : (
+          <CellBadge variant={getStatusVariant(event.event_status)}>
+            {capitalizeStatus(event.event_status)}
+          </CellBadge>
+        ),
     },
     {
       key: "account_manager",
@@ -160,6 +164,26 @@ export default function QuotesBookingsPage() {
         subtitle="View all events ordered by most recent creation date"
         action={
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={showDeleted}
+              onClick={() => setShowDeleted((v) => !v)}
+              className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none"
+            >
+              <span>Show Deleted</span>
+              <span
+                className={`relative inline-flex h-[22px] w-[40px] shrink-0 rounded-full transition-colors duration-200 ${
+                  showDeleted ? "bg-darkBlue" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-[18px] w-[18px] rounded-full bg-white shadow-sm transform transition-transform duration-200 mt-[2px] ${
+                    showDeleted ? "translate-x-[20px]" : "translate-x-[2px]"
+                  }`}
+                />
+              </span>
+            </button>
             <FilterButton isOpen={filters.isOpen} onClick={toggleOpen} />
             <PrimaryButton onClick={() => router.push("/quotes-bookings/new")}>
               + Create Quote

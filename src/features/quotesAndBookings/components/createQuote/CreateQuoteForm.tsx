@@ -13,7 +13,6 @@ import { TotalsDisplay } from "./sections/TotalsDisplay";
 import { NotesSection } from "./sections/NotesSection";
 import { PaymentScheduleSection } from "./sections/PaymentScheduleSection";
 import { TermsSection } from "./sections/TermsSection";
-import { SendOptionsSection } from "./sections/SendOptionsSection";
 import { AddLineItemModal } from "./modals/AddLineItemModal";
 import { NewContactModal } from "./modals/NewContactModal";
 import { NewCompanyModal } from "./modals/NewCompanyModal";
@@ -22,6 +21,7 @@ import { createQuoteEvent } from "../../db/createQuoteEvent";
 import { updateQuoteEvent } from "../../db/updateQuoteEvent";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
+import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { useAutoTax } from "../../hooks/useAutoTax";
 import { useCurrentUserUuid } from "../../hooks/useCurrentUserUuid";
 import { triage } from "@/features/alerts/triage";
@@ -42,6 +42,44 @@ export function CreateQuoteForm() {
 
   const isEditing = !!editingEventId;
 
+  const validateRequiredFields = (): boolean => {
+    const state = useCreateQuoteStore.getState();
+    const missing: string[] = [];
+
+    if (!state.salesOfficeId) missing.push("Sales Office");
+    if (!state.contactId) missing.push("Contact");
+    if (!state.eventName.trim()) missing.push("Event Name");
+    if (!state.eventAddressData) missing.push("Event Address");
+    if (!state.eventTypeId) missing.push("Event Type");
+    if (!state.eventStart) missing.push("Event Start");
+    if (!state.eventEnd) missing.push("Event End");
+    if (state.lineItems.length === 0) missing.push("Line Items");
+    if (!state.termsDocumentId) missing.push("Terms and Conditions");
+
+    if (missing.length > 0) {
+      createErrorToast([`Required fields missing: ${missing.join(", ")}`]);
+      return false;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const dateErrors: string[] = [];
+    if (state.eventStart < today) dateErrors.push("Event Start cannot be in the past");
+    if (state.eventEnd < today) dateErrors.push("Event End cannot be in the past");
+    if (state.quoteValidTill && state.quoteValidTill < today)
+      dateErrors.push("Quote Valid Till cannot be in the past");
+    if (state.eventEnd < state.eventStart)
+      dateErrors.push("Event End cannot be before Event Start");
+    if (state.quoteValidTill && state.eventStart && state.quoteValidTill > state.eventStart)
+      dateErrors.push("Quote Valid Till cannot be after Event Start");
+
+    if (dateErrors.length > 0) {
+      createErrorToast(dateErrors);
+      return false;
+    }
+
+    return true;
+  };
+
   const handleCancel = () => {
     resetForm();
     if (isEditing) {
@@ -52,6 +90,7 @@ export function CreateQuoteForm() {
   };
 
   const handleSave = async () => {
+    if (!validateRequiredFields()) return;
     setSaving(true);
     try {
       const state = useCreateQuoteStore.getState();
@@ -76,6 +115,7 @@ export function CreateQuoteForm() {
   };
 
   const handlePreviewPdf = async () => {
+    if (!validateRequiredFields()) return;
     setSaving(true);
     try {
       const state = useCreateQuoteStore.getState();
@@ -101,6 +141,7 @@ export function CreateQuoteForm() {
   };
 
   const handleSendQuote = async () => {
+    if (!validateRequiredFields()) return;
     setSaving(true);
     try {
       // Override status to "quoted" when sending
@@ -175,7 +216,6 @@ export function CreateQuoteForm() {
         <PaymentScheduleSection />
         <NotesSection />
         <TermsSection />
-        <SendOptionsSection />
       </div>
 
       <div className="flex items-center justify-between pt-6 pb-4 mt-8 border-t border-gray-200">

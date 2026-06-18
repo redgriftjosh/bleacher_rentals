@@ -34,7 +34,7 @@ export function ClientInfoSection() {
       </h2>
       <div className="flex items-end gap-4">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Contact <span className="text-red-500">*</span></label>
           <Dropdown
             options={contactOptions}
             selected={contactId}

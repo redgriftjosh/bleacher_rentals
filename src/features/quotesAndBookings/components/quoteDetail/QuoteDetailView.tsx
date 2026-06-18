@@ -26,6 +26,7 @@ import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { requestReview } from "@/features/alerts/requestReview";
 import { ClipboardCheck } from "lucide-react";
+import { DateTime } from "luxon";
 
 export function QuoteDetailView({ eventId }: { eventId: string }) {
   const router = useRouter();
@@ -55,6 +56,30 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
   );
   const eventZoneUuid = eventZoneRows?.[0]?.zone_uuid ?? null;
 
+  // Deletion info from EventChangeLog
+  const deleteLogCompiled = useMemo(
+    () =>
+      db
+        .selectFrom("EventChangeLog as cl")
+        .leftJoin("Users as u", "cl.changed_by_user_uuid", "u.id")
+        .select([
+          "cl.changed_at as changed_at",
+          "u.first_name as first_name",
+          "u.last_name as last_name",
+        ])
+        .where("cl.event_uuid", "=", eventId)
+        .where("cl.field_name", "=", "deleted")
+        .where("cl.action_type", "=", "status_change")
+        .orderBy("cl.changed_at", "desc")
+        .limit(1)
+        .compile(),
+    [eventId],
+  );
+  const { data: deleteLogRows } = useTypedQuery(
+    deleteLogCompiled,
+    expect<{ changed_at: string | null; first_name: string | null; last_name: string | null }>(),
+  );
+
   // Line items from PowerSync (reactive)
   const { lineItems } = useEventLineItems(eventId);
   const currency = useEventCurrency(eventId);
@@ -76,7 +101,7 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
     )
       return;
     setDeleting(true);
-    const ok = await softDeleteEvent(eventId, supabase);
+    const ok = await softDeleteEvent(eventId, supabase, perms.userId);
     if (ok) {
       createSuccessToast(["Quote deleted."]);
       router.push("/quotes-bookings");
@@ -135,6 +160,7 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
     leadZoneIds: perms.leadZoneIds,
     accountManagerZoneIds: perms.accountManagerZoneIds,
     createdByUserId: quote?.createdByUserUuid,
+    assignedUserId: quote?.createdByUserUuid,
     userId: perms.userId,
   });
 
@@ -183,10 +209,28 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
     );
   }
 
+  const isDeleted = quote.deleted;
+  const deleteLog = deleteLogRows?.[0] ?? null;
+  const deletedAtFormatted = deleteLog?.changed_at
+    ? DateTime.fromISO(deleteLog.changed_at).toFormat("MMM d, yyyy 'at' h:mm a")
+    : null;
+  const deletedByName = [deleteLog?.first_name, deleteLog?.last_name].filter(Boolean).join(" ") || null;
+
   return (
     <div>
+      {isDeleted && (
+        <div className="bg-red-50 border border-red-200 rounded-t-lg px-6 py-3 text-sm text-red-800 flex items-center gap-2">
+          <Trash2 className="w-4 h-4 shrink-0" />
+          <span>
+            This quote was deleted
+            {deletedByName ? ` by ${deletedByName}` : ""}
+            {deletedAtFormatted ? ` on ${deletedAtFormatted}` : ""}
+          </span>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="bg-darkBlue text-white px-6 py-4 rounded-t-lg">
+      <div className={`bg-darkBlue text-white px-6 py-4 ${isDeleted ? "" : "rounded-t-lg"}`}>
         <div className="flex items-center gap-2 text-xs text-white/60 mb-1">
           <button
             onClick={() => router.push("/quotes-bookings")}
@@ -244,48 +288,52 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
           <div className="flex items-center gap-3 py-2">
             <span className="text-sm font-bold">{formatMoney(contractTotalCents, currency)}</span>
             <span className="text-xs text-gray-500">Contract Total</span>
-            <button
-              onClick={handleOpenInDashboard}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Open in Dashboard
-            </button>
-            {canEditQuote && (
-              <button
-                onClick={() => router.push(`/quotes-bookings/${quote.id}/edit`)}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
-              >
-                Edit
-              </button>
+            {!isDeleted && (
+              <>
+                <button
+                  onClick={handleOpenInDashboard}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Open in Dashboard
+                </button>
+                {canEditQuote && (
+                  <button
+                    onClick={() => router.push(`/quotes-bookings/${quote.id}/edit`)}
+                    className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                )}
+                {canEditQuote && (
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="px-3 py-1.5 text-sm font-medium text-red-600 border border-red-300 rounded-sm hover:bg-red-50 transition cursor-pointer disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+                {canSend ? (
+                  <button
+                    onClick={handleSendToClient}
+                    disabled={sending}
+                    className="px-3 py-1.5 text-sm font-semibold text-white bg-darkBlue rounded-sm hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    {sending ? "Sending..." : "Send To Client"}
+                  </button>
+                ) : perms.isAccountManager ? (
+                  <button
+                    onClick={handleRequestQuoteReview}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded-sm hover:bg-amber-100 transition cursor-pointer"
+                  >
+                    <ClipboardCheck className="w-3.5 h-3.5" />
+                    Request Review
+                  </button>
+                ) : null}
+              </>
             )}
-            {canEditQuote && (
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="px-3 py-1.5 text-sm font-medium text-red-600 border border-red-300 rounded-sm hover:bg-red-50 transition cursor-pointer disabled:opacity-50"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
-            {canSend ? (
-              <button
-                onClick={handleSendToClient}
-                disabled={sending}
-                className="px-3 py-1.5 text-sm font-semibold text-white bg-darkBlue rounded-sm hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
-              >
-                <Send className="w-3.5 h-3.5" />
-                {sending ? "Sending..." : "Send To Client"}
-              </button>
-            ) : perms.isAccountManager ? (
-              <button
-                onClick={handleRequestQuoteReview}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded-sm hover:bg-amber-100 transition cursor-pointer"
-              >
-                <ClipboardCheck className="w-3.5 h-3.5" />
-                Request Review
-              </button>
-            ) : null}
           </div>
         </div>
 

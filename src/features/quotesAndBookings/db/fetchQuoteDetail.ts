@@ -46,6 +46,7 @@ export type QuoteDetail = {
     firstName: string | null;
     lastName: string | null;
   } | null;
+  deleted: boolean;
 };
 
 type Row = {
@@ -86,6 +87,7 @@ type Row = {
   fc_phone: string | null;
   am_first_name: string | null;
   am_last_name: string | null;
+  deleted: number | null;
 };
 
 export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | null> {
@@ -133,6 +135,7 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
       "fc.phone as fc_phone",
       "u.first_name as am_first_name",
       "u.last_name as am_last_name",
+      "e.deleted as deleted",
     ])
     .where("e.id", "=", eventId)
     .compile();
@@ -195,5 +198,6 @@ export async function fetchQuoteDetail(eventId: string): Promise<QuoteDetail | n
       r.am_first_name || r.am_last_name
         ? { firstName: r.am_first_name, lastName: r.am_last_name }
         : null,
+    deleted: r.deleted === 1,
   };
 }

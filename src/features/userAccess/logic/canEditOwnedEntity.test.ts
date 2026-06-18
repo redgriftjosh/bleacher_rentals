@@ -53,14 +53,55 @@ describe("canEditOwnedEntity (Events / MaintenanceEvents)", () => {
       ).toBe(true);
     });
 
-    it("cannot edit entity created by someone else", () => {
+    it("cannot edit entity created by someone else and not assigned to them", () => {
       expect(
         canEditOwnedEntity({ ...base, createdByUserId: "other-user", userId: "me" }),
       ).toBe(false);
     });
+
+    it("can edit entity assigned to them even if created by someone else", () => {
+      expect(
+        canEditOwnedEntity({
+          ...base,
+          createdByUserId: "other-user",
+          assignedUserId: "me",
+          userId: "me",
+        }),
+      ).toBe(true);
+    });
   });
 
-  it("AM without zone info can edit (backwards compat)", () => {
+  describe("AM outside zone", () => {
+    it("AM cannot edit entity in a zone they are not assigned to", () => {
+      expect(
+        canEditOwnedEntity({
+          isAdmin: false,
+          isNew: false,
+          zoneUuid: "zone-c",
+          leadZoneIds: ["zone-a"],
+          accountManagerZoneIds: ["zone-a", "zone-b"],
+          createdByUserId: "other-user",
+          userId: "me",
+        }),
+      ).toBe(false);
+    });
+
+    it("AM cannot edit entity with no zone", () => {
+      expect(
+        canEditOwnedEntity({
+          isAdmin: false,
+          isNew: false,
+          zoneUuid: null,
+          leadZoneIds: ["zone-a"],
+          accountManagerZoneIds: ["zone-a", "zone-b"],
+          createdByUserId: "other-user",
+          userId: "me",
+        }),
+      ).toBe(false);
+    });
+  });
+
+  it("non-AM without zone info can edit (backwards compat)", () => {
     expect(canEditOwnedEntity({ isAdmin: false, isNew: false })).toBe(true);
   });
 });

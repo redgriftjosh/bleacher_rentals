@@ -8,6 +8,7 @@ export function canEditOwnedEntity(params: {
   leadZoneIds?: string[];
   accountManagerZoneIds?: string[];
   createdByUserId?: string | null;
+  assignedUserId?: string | null;
   userId?: string | null;
 }): boolean {
   const {
@@ -18,6 +19,7 @@ export function canEditOwnedEntity(params: {
     leadZoneIds = [],
     accountManagerZoneIds = [],
     createdByUserId,
+    assignedUserId,
     userId,
   } = params;
 
@@ -29,8 +31,12 @@ export function canEditOwnedEntity(params: {
 
   if (role === "lead") return true;
   if (role === "junior") {
-    return !!userId && !!createdByUserId && createdByUserId === userId;
+    if (!userId) return false;
+    return (!!createdByUserId && createdByUserId === userId) ||
+           (!!assignedUserId && assignedUserId === userId);
   }
+
+  if (accountManagerZoneIds.length > 0) return false;
 
   return true;
 }
