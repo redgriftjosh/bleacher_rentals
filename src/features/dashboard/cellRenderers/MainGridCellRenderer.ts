@@ -495,9 +495,9 @@ export class MainGridCellRenderer implements ICellRenderer {
     const allEventInfos = EventsUtil.getAllCellEventInfos(row, col, this.spansByRow);
     const damageSeverity = this.yAxis === "Bleachers" ? this.getDamageSeverity(row, col) : null;
     const isDamageCell = damageSeverity !== null;
-    const baseAccessible = isBleacherAccessible(
-      this.latestBleachersByUuid.get(this.rowBleacherUuids[row]),
-    );
+    // Use row-indexed bleachers array, NOT latestBleachersByUuid — ghost rows share the same
+    // bleacherUuid as their original row so the map would return whichever entry was inserted last.
+    const baseAccessible = isBleacherAccessible(this.bleachers[row]);
     // Cell-level access: blocked cols override everyone (subrented out);
     // access-only cols restrict ghost rows to their subrental window.
     const isBlocked = this.blockedColsByRow.get(row)?.has(col) ?? false;
