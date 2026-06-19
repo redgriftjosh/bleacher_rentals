@@ -189,7 +189,10 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
             className="bg-white w-full p-2 border rounded min-w-0"
             value={currentEventStore.eventStart}
             onChange={(e) => currentEventStore.setField("eventStart", e.target.value)}
-            min={laterDate(currentEventStore.subrentalConstraint?.eventStart || undefined, blockDerivedStartMin)}
+            min={laterDate(
+              currentEventStore.subrentalConstraint?.eventStart || undefined,
+              blockDerivedStartMin,
+            )}
             max={earlierDate(
               currentEventStore.subrentalConstraint
                 ? currentEventStore.subrentalConstraint.eventEnd
@@ -212,7 +215,10 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
                 : currentEventStore.eventStart || undefined,
               blockDerivedStartMin,
             )}
-            max={earlierDate(currentEventStore.subrentalConstraint?.eventEnd || undefined, blockDerivedEndMax)}
+            max={earlierDate(
+              currentEventStore.subrentalConstraint?.eventEnd || undefined,
+              blockDerivedEndMax,
+            )}
           />
           <ScrollToDateButton date={currentEventStore.eventEnd} />
         </div>

@@ -228,6 +228,26 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       if (clampedEnd < clampedStart) clampedEnd = clampedStart;
     }
 
+    // Cap end date at the day before the next accepted subrental block on this bleacher
+    // (e.g. if the bleacher is being lent out starting in 2 days, don't cross that boundary)
+    {
+      const allBleachers = useDashboardBleachersStore.getState().data;
+      const originalBleacher = allBleachers.find(
+        (b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow,
+      );
+      const nextBlockStart = (originalBleacher?.acceptedSubrentalBlocks ?? [])
+        .map((r) => r.eventStart.substring(0, 10))
+        .filter((s) => s > clampedStart)
+        .sort()[0];
+      if (nextBlockStart) {
+        const d = new Date(nextBlockStart + "T12:00:00Z");
+        d.setUTCDate(d.getUTCDate() - 1);
+        const dayBefore = d.toISOString().split("T")[0];
+        if (dayBefore < clampedEnd) clampedEnd = dayBefore;
+        if (clampedEnd < clampedStart) clampedEnd = clampedStart;
+      }
+    }
+
     // Set the event configuration
     eventStore.setField("isFormExpanded", true);
     eventStore.setField("isFormMinimized", false);
@@ -313,6 +333,25 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       if (clampedStart > srEnd) clampedStart = srStart;
       if (clampedEnd > srEnd) clampedEnd = srEnd;
       if (clampedEnd < clampedStart) clampedEnd = clampedStart;
+    }
+
+    // Cap end date at the day before the next accepted subrental block on this bleacher
+    {
+      const allBleachers = useDashboardBleachersStore.getState().data;
+      const originalBleacher = allBleachers.find(
+        (b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow,
+      );
+      const nextBlockStart = (originalBleacher?.acceptedSubrentalBlocks ?? [])
+        .map((r) => r.eventStart.substring(0, 10))
+        .filter((s) => s > clampedStart)
+        .sort()[0];
+      if (nextBlockStart) {
+        const d = new Date(nextBlockStart + "T12:00:00Z");
+        d.setUTCDate(d.getUTCDate() - 1);
+        const dayBefore = d.toISOString().split("T")[0];
+        if (dayBefore < clampedEnd) clampedEnd = dayBefore;
+        if (clampedEnd < clampedStart) clampedEnd = clampedStart;
+      }
     }
 
     // Open the maintenance form (resets to initial state) then prefill
