@@ -134,7 +134,7 @@ export class BleacherCell extends Container {
    */
   setBleacher(b: Bleacher, isAccessible: boolean = true) {
     this.bleacherUuid = b.bleacherUuid;
-    // Include zoneUuid in the key so ghost subrental rows (same bleacherUuid, different zone)
+    // Include zoneUuid in the key so subrental rows (same bleacherUuid, different zone)
     // get their own texture rather than reusing the normal row's cached texture.
     const key = `${b.bleacherUuid}:${b.zoneUuid ?? "nz"}:${isAccessible ? "acc" : "noacc"}`;
 
@@ -225,7 +225,7 @@ export class BleacherCell extends Container {
     bleacherSeats.position.set(40, 18);
 
     if (isSubrental) {
-      // For subrental ghost rows: show the handshake icon next to the bleacher number
+      // For subrental rows: show the handshake icon next to the bleacher number
       // and display "OriginalZone → TargetZone" in place of just the zone name.
       const hsTexture = PngManager.getTexture("handshake");
       if (hsTexture) {
@@ -238,9 +238,9 @@ export class BleacherCell extends Container {
       }
 
       // Determine original zone name: look it up from the bleacher's own zone
-      // The subrental ghost row's subrentalEvents carry requestedZoneUuid == b.zoneUuid
+      // The subrental row's subrentalEvents carry requestedZoneUuid == b.zoneUuid
       // The original zone is on the subrental event's bleacher (not stored here).
-      // We store the target zone on the ghost row as zoneUuid/zoneName.
+      // We store the target zone on the subrental row as zoneUuid/zoneName.
       // The original zone name is available via the first subrentalEvent's... we don't
       // have it directly, but we can show the target zone prominently with an arrow prefix.
       const zoneLabel = new Text({

@@ -54,7 +54,7 @@ export class MainGridCellRenderer implements ICellRenderer {
   private damageOverlaysByRow: Map<number, DamageOverlayRange[]> = new Map();
   // Columns blocked by accepted subrentals on original rows (subrented out — nobody has access)
   private blockedColsByRow: Map<number, Set<number>> = new Map();
-  // Columns accessible on ghost rows (only these are open; all others are inaccessible)
+  // Columns accessible on subrental rows (only these are open; all others are inaccessible)
   private accessOnlyColsByRow: Map<number, Set<number>> = new Map();
 
   // No external callback; selection is pushed to a zustand store
@@ -495,11 +495,11 @@ export class MainGridCellRenderer implements ICellRenderer {
     const allEventInfos = EventsUtil.getAllCellEventInfos(row, col, this.spansByRow);
     const damageSeverity = this.yAxis === "Bleachers" ? this.getDamageSeverity(row, col) : null;
     const isDamageCell = damageSeverity !== null;
-    // Use row-indexed bleachers array, NOT latestBleachersByUuid — ghost rows share the same
+    // Use row-indexed bleachers array, NOT latestBleachersByUuid — subrental rows share the same
     // bleacherUuid as their original row so the map would return whichever entry was inserted last.
     const baseAccessible = isBleacherAccessible(this.bleachers[row]);
     // Cell-level access: blocked cols override everyone (subrented out);
-    // access-only cols restrict ghost rows to their subrental window.
+    // access-only cols restrict subrental rows to their subrental window.
     const isBlocked = this.blockedColsByRow.get(row)?.has(col) ?? false;
     const accessOnlyCols = this.accessOnlyColsByRow.get(row);
     const isAccessible = isBlocked

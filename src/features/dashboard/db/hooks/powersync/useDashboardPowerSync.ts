@@ -328,8 +328,8 @@ export function useDashboardPowerSync(opts?: {
       };
     });
 
-    // ── Ghost rows: one virtual row per bleacher per borrowing zone ──────
-    const ghostRows: Bleacher[] = [];
+    // ── Subrental rows: one virtual row per bleacher per borrowing zone ──────
+    const subrentalRows: Bleacher[] = [];
     for (const b of allBleacherRows) {
       const relatedSRs = srsByBleacher.get(b.id) ?? [];
       if (!relatedSRs.length) continue;
@@ -351,7 +351,7 @@ export function useDashboardPowerSync(opts?: {
           selectedZoneIds.includes(targetZoneUuid);
         if (!passesFilter) continue;
 
-        const ghostSubrentalEvents = zoneSRs
+        const subrentalRowEvents = zoneSRs
           .filter((sr) => (sr.status ?? "pending") === "pending")
           .map((sr) => ({
             subrentalEventUuid: sr.id,
@@ -361,28 +361,28 @@ export function useDashboardPowerSync(opts?: {
             requestedZoneUuid: sr.requested_zone_uuid ?? null,
             notes: sr.notes ?? null,
           }));
-        // Accepted SRs become the accessible date ranges on this ghost row
+        // Accepted SRs become the accessible date ranges on this subrental row
         const acceptedSubrentalAccess = zoneSRs
           .filter((sr) => sr.status === "accepted")
           .map((sr) => ({ eventStart: sr.event_start ?? "", eventEnd: sr.event_end ?? "" }));
 
-        const ghostIsAccessible =
+        const subrentalRowIsAccessible =
           isAdmin || (isAccountManager && accountManagerZoneIds.includes(targetZoneUuid));
 
-        const ghostSummerHomeBase = b.summer_home_base_uuid
+        const subrentalRowSummerHomeBase = b.summer_home_base_uuid
           ? {
               homeBaseUuid: b.summer_home_base_uuid,
               name: homeBaseMap.get(b.summer_home_base_uuid) ?? "",
             }
           : null;
-        const ghostWinterHomeBase = b.winter_home_base_uuid
+        const subrentalRowWinterHomeBase = b.winter_home_base_uuid
           ? {
               homeBaseUuid: b.winter_home_base_uuid,
               name: homeBaseMap.get(b.winter_home_base_uuid) ?? "",
             }
           : null;
 
-        ghostRows.push({
+        subrentalRows.push({
           bleacherUuid: b.id,
           bleacherNumber: b.bleacher_number ?? 0,
           bleacherRows: b.bleacher_rows ?? 0,
@@ -393,22 +393,22 @@ export function useDashboardPowerSync(opts?: {
           zoneUuid: targetZoneUuid,
           zoneName: zoneMap.get(targetZoneUuid) ?? null,
           originalZoneName: b.zone_uuid ? (zoneMap.get(b.zone_uuid) ?? null) : null,
-          summerHomeBase: ghostSummerHomeBase,
-          winterHomeBase: ghostWinterHomeBase,
+          summerHomeBase: subrentalRowSummerHomeBase,
+          winterHomeBase: subrentalRowWinterHomeBase,
           bleacherEvents: [],
           blocks: [],
           workTrackers: [],
           maintenanceEvents: [],
-          subrentalEvents: ghostSubrentalEvents,
+          subrentalEvents: subrentalRowEvents,
           damageReports: [],
-          isAccessible: ghostIsAccessible,
+          isAccessible: subrentalRowIsAccessible,
           isSubrentalRow: true,
           acceptedSubrentalAccess,
         });
       }
     }
 
-    const allRows = [...normalRows, ...ghostRows];
+    const allRows = [...normalRows, ...subrentalRows];
     allRows.sort((a, b) => a.bleacherNumber - b.bleacherNumber);
     return allRows;
   }, [
