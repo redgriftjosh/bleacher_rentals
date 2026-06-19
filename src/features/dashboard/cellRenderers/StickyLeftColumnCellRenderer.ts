@@ -130,9 +130,12 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
       const mtExpanded = useMaintenanceEventStore.getState().isFormExpanded;
       const anyExpanded = eventExpanded || mtExpanded || s.isFormExpanded;
       const expandedChanged = anyExpanded !== this.isFormExpanded;
-      const newSelected =
-        s.isFormExpanded && s.bleacherUuid ? [s.bleacherUuid] : this.selectedBleacherUuids;
-      const selectedChanged = s.isFormExpanded && newSelected !== this.selectedBleacherUuids;
+      // Single-select: always derive from store, including null (deselect)
+      const newSelected = s.isFormExpanded ? (s.bleacherUuid ? [s.bleacherUuid] : []) : [];
+      const selectedChanged =
+        s.isFormExpanded &&
+        (newSelected.length !== this.selectedBleacherUuids.length ||
+          newSelected[0] !== this.selectedBleacherUuids[0]);
       if (!expandedChanged && !selectedChanged) return;
       if (expandedChanged) this.isFormExpanded = anyExpanded;
       if (selectedChanged) this.selectedBleacherUuids = newSelected;
@@ -212,6 +215,14 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
 
         // Viewer cannot toggle bleachers at all
         if (!perms.isAdmin && !perms.isAccountManager) return;
+
+        // Subrental form: single-select — last click wins, deselect others
+        const sr = useSubrentalEventStore.getState();
+        if (sr.isFormExpanded) {
+          const next = sr.bleacherUuid === id ? null : id;
+          sr.setField("bleacherUuid", next);
+          return;
+        }
 
         const mt = useMaintenanceEventStore.getState();
         if (mt.isFormExpanded) {
