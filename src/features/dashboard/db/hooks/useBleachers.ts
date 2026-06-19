@@ -22,9 +22,7 @@ export const useAlertCountsStore = create<AlertCountsState>(() => ({
 export async function fetchAlertCounts(
   supabase: import("@supabase/supabase-js").SupabaseClient<Database>,
 ) {
-  const { data, error } = await supabase
-    .from("Alerts")
-    .select("entity_uuid, entity_type");
+  const { data, error } = await supabase.from("Alerts").select("entity_uuid, entity_type");
 
   if (error || !data) {
     console.error("[fetchAlertCounts] failed:", error);
@@ -140,7 +138,9 @@ function reshapeBleachers(rows: BleacherFlatRow[]): Bleacher[] {
         blocks: [],
         workTrackers: [],
         maintenanceEvents: [],
+        subrentalEvents: [],
         damageReports: [],
+        zoneName: null,
       };
 
       byBleacher.set(r.bleacher_uuid, b);
@@ -260,11 +260,7 @@ type AlertCountRow = {
 function useAlertCountsSync() {
   const alertsCompiled = db
     .selectFrom("Alerts as a")
-    .select(({ fn }) => [
-      "a.entity_uuid",
-      "a.entity_type",
-      fn.count<string>("a.id").as("cnt"),
-    ])
+    .select(({ fn }) => ["a.entity_uuid", "a.entity_type", fn.count<string>("a.id").as("cnt")])
     .groupBy(["a.entity_uuid", "a.entity_type"])
     .compile();
 
