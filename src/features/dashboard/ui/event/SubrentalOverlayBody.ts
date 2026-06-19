@@ -1,9 +1,9 @@
 import { Graphics, Sprite } from "pixi.js";
 import { Baker } from "../../util/Baker";
-import { CELL_HEIGHT, CELL_WIDTH } from "../../values/constants";
+import { CELL_HEIGHT, CELL_WIDTH, SUBRENTAL_COLOR } from "../../values/constants";
 
-/** Same yellow used for quoted events. */
-const SUBRENTAL_OVERLAY_COLOR = 0xfffb00;
+/** Border color for accepted subrental overlays — shared with EventBody subrental fill. */
+const SUBRENTAL_OVERLAY_COLOR = SUBRENTAL_COLOR;
 
 /**
  * Border-only overlay rendered over accepted subrental date ranges.
@@ -29,11 +29,11 @@ export class SubrentalOverlayBody extends Sprite {
     const key = `SubrentalOverlay:${isStart ? "start" : isEnd ? "end" : "middle"}`;
 
     // Mirror the exact geometry used by EventBody for quoted events
-    const borderWidth = 1;
+    const borderWidth = 2;
     const alignment = 1;
     const L = 0;
     const R = CELL_WIDTH + 2;
-    const T = 1; // Math.max(1, topOffset) where topOffset = CELL_HEIGHT → always 1 for overlay
+    const T = 2; // Math.max(1, topOffset) where topOffset = CELL_HEIGHT → always 1 for overlay
     const B = CELL_HEIGHT + 1;
 
     const texture = baker.getTexture(

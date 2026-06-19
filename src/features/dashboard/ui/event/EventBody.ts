@@ -1,6 +1,6 @@
 import { Container, Graphics, Sprite } from "pixi.js";
 import { EventSpanType, EventsUtil } from "../../util/Events";
-import { CELL_HEIGHT, CELL_WIDTH } from "@/features/dashboard/values/constants";
+import { CELL_HEIGHT, CELL_WIDTH, SUBRENTAL_COLOR } from "@/features/dashboard/values/constants";
 import { Baker } from "../../util/Baker";
 import { BleacherEvent } from "../../types";
 import { loadEventById } from "../../db/client/loadEventById";
@@ -78,7 +78,7 @@ export class EventBody extends Sprite {
     const isMaintenance = !!eventInfo.span?.ev.isMaintenance;
     const isSubrental = !!eventInfo.span?.ev.isSubrental;
     const eventColor = isSubrental
-      ? 0xfffb00
+      ? SUBRENTAL_COLOR
       : isMaintenance
         ? 0xff0000
         : eventInfo.span && eventInfo.span.ev.hslHue != null

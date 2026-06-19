@@ -2,7 +2,7 @@ import { Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import { Baker } from "../util/Baker";
 import { BleacherCellToggle } from "./BleacherCellToggle";
 import { SwapButton, SwapButtonState } from "./SwapButton";
-import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT } from "../values/constants";
+import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT, SUBRENTAL_COLOR } from "../values/constants";
 import { Bleacher } from "../types";
 import { MapPinIcon } from "./event/MapPinIcon";
 import { PngManager } from "../util/PngManager";
@@ -245,7 +245,7 @@ export class BleacherCell extends Container {
       // have it directly, but we can show the target zone prominently with an arrow prefix.
       const zoneLabel = new Text({
         text: `${b.originalZoneName ?? ""} \u2192 ${b.zoneName ?? ""}`,
-        style: { fill: 0xf0d000, fontSize: 11, fontWeight: "600" },
+        style: { fill: SUBRENTAL_COLOR, fontSize: 11, fontWeight: "600" },
       });
       zoneLabel.position.set(3, 31);
       c.addChild(zoneLabel);

@@ -19,6 +19,7 @@ import { isBleacherOwnedByAM } from "@/features/userAccess/logic/isBleacherOwned
 import { hasSubrentalAccessForDate } from "@/features/userAccess/logic/hasSubrentalAccessForDate";
 import { canEditCell as canEditCellFn } from "@/features/userAccess/logic/canEditCell";
 import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
+import { SUBRENTAL_COLOR } from "@/features/dashboard/values/constants";
 
 type CellEditorProps = {
   onWorkTrackerOpen?: (workTracker: Tables<"WorkTrackers">) => void;
@@ -45,7 +46,9 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     bleacher: bl ? { zoneUuid: bl.zoneUuid } : null,
   });
 
+  const [handshakeHover, setHandshakeHover] = useState(false);
   const [currentText, setCurrentText] = useState(text);
+  const subrentalHexColor = `#${SUBRENTAL_COLOR.toString(16).padStart(6, "0")}`;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -574,7 +577,10 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
               <AppTooltip content="Create Sub-Rental">
                 <button
                   aria-label="Create Sub-Rental"
-                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-red-700 hover:bg-gray-100 transition-all duration-200"
+                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:bg-gray-100 transition-all duration-200"
+                  style={handshakeHover ? { color: subrentalHexColor } : undefined}
+                  onMouseEnter={() => setHandshakeHover(true)}
+                  onMouseLeave={() => setHandshakeHover(false)}
                   onClick={handleCreateSubRental}
                 >
                   <Handshake className="h-4 w-4" />
