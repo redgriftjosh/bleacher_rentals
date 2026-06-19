@@ -75,8 +75,7 @@ export function hasSubrentalAccessForRange(params: {
 }): boolean {
   const { bleacherUuid, eventStart, eventEnd, accountManagerZoneIds, allBleachers } = params;
 
-  if (!bleacherUuid || !eventStart || !eventEnd || accountManagerZoneIds.length === 0)
-    return false;
+  if (!bleacherUuid || !eventStart || !eventEnd || accountManagerZoneIds.length === 0) return false;
 
   const evStart = eventStart.substring(0, 10);
   const evEnd = eventEnd.substring(0, 10);
@@ -90,8 +89,7 @@ export function hasSubrentalAccessForRange(params: {
       b.isSubrentalRow &&
       accountManagerZoneIds.includes(b.zoneUuid ?? "") &&
       (b.acceptedSubrentalAccess ?? []).some(
-        (r) =>
-          evStart >= r.eventStart.substring(0, 10) && evEnd <= r.eventEnd.substring(0, 10),
+        (r) => evStart >= r.eventStart.substring(0, 10) && evEnd <= r.eventEnd.substring(0, 10),
       ),
   );
 }

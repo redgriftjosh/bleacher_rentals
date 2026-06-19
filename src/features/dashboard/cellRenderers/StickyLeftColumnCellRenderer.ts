@@ -20,6 +20,7 @@ import {
   isSubrentedOutDuringRange,
   hasSubrentalAccessForRange,
 } from "@/features/userAccess/logic/hasSubrentalAccessForDate";
+import { resolveSubrentalConstraint } from "../ui/event/EventBody";
 
 /**
  * CellRenderer for the sticky left column that displays bleacher information
@@ -247,6 +248,10 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
             ? selected.filter((n) => n !== id)
             : [...selected, id];
           mt.setField("bleacherUuids", updated);
+          mt.setField(
+            "subrentalConstraint",
+            resolveSubrentalConstraint(updated, mt.eventStart, mt.eventEnd),
+          );
           return;
         }
         const st = useCurrentEventStore.getState();
@@ -286,6 +291,10 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
           ? selected.filter((n) => n !== id)
           : [...selected, id];
         st.setField("bleacherUuids", updated);
+        st.setField(
+          "subrentalConstraint",
+          resolveSubrentalConstraint(updated, st.eventStart, st.eventEnd),
+        );
       });
 
       // Wire map pin click handler

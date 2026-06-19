@@ -16,7 +16,7 @@ import { useDashboardBleachersStore } from "../../state/useDashboardBleachersSto
  * by checking subrental rows in the dashboard bleachers store.
  * Returns null if the event is not on a subrental row or no matching range exists.
  */
-function resolveSubrentalConstraint(
+export function resolveSubrentalConstraint(
   bleacherUuids: string[],
   eventStart: string,
   eventEnd: string,
