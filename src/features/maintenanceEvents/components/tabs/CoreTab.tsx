@@ -90,6 +90,7 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
     allBleachers,
     store.eventStart,
     store.eventEnd,
+    store.subrentalConstraint,
   );
 
   type DamageReportRow = EditDamageReport & {

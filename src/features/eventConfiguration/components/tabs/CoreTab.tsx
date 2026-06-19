@@ -34,6 +34,7 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
     allBleachers,
     currentEventStore.eventStart,
     currentEventStore.eventEnd,
+    currentEventStore.subrentalConstraint,
   );
 
   const filteredUsers = filterOwnerOptions({

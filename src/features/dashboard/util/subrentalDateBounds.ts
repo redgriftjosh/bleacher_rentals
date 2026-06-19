@@ -33,17 +33,30 @@ export function useSubrentalBlockBounds(
   allBleachers: Bleacher[],
   eventStart: string | null | undefined,
   eventEnd: string | null | undefined,
+  subrentalConstraint?: { eventStart: string; eventEnd: string } | null,
 ): { blockDerivedStartMin: string | undefined; blockDerivedEndMax: string | undefined } {
   const subrentalBlocks = useMemo(() => {
     const uuids = new Set(bleacherUuids);
-    return allBleachers
-      .filter((b) => !b.isSubrentalRow && uuids.has(b.bleacherUuid))
-      .flatMap((b) => b.acceptedSubrentalBlocks ?? [])
-      .map((r) => ({
-        start: r.eventStart.substring(0, 10),
-        end: r.eventEnd.substring(0, 10),
-      }));
-  }, [allBleachers, bleacherUuids]);
+    return (
+      allBleachers
+        .filter((b) => !b.isSubrentalRow && uuids.has(b.bleacherUuid))
+        .flatMap((b) => b.acceptedSubrentalBlocks ?? [])
+        .map((r) => ({
+          start: r.eventStart.substring(0, 10),
+          end: r.eventEnd.substring(0, 10),
+        }))
+        // When inside a subrental window, exclude the block that IS that window —
+        // otherwise blockDerivedEndMax becomes day-before-block-start = day before
+        // the constraint start, making min > max and no dates selectable.
+        .filter((b) => {
+          if (!subrentalConstraint) return true;
+          const srStart = subrentalConstraint.eventStart.substring(0, 10);
+          const srEnd = subrentalConstraint.eventEnd.substring(0, 10);
+          // Exclude any block that overlaps the subrental constraint window
+          return b.end < srStart || b.start > srEnd;
+        })
+    );
+  }, [allBleachers, bleacherUuids, subrentalConstraint]);
 
   const blockDerivedStartMin = useMemo(() => {
     const end = eventEnd?.substring(0, 10);
