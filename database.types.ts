@@ -2619,6 +2619,63 @@ export type Database = {
           },
         ]
       }
+      SubrentalEvents: {
+        Row: {
+          bleacher_uuid: string | null
+          created_at: string
+          created_by_user_uuid: string | null
+          event_end: string
+          event_start: string
+          id: string
+          notes: string | null
+          requested_zone_uuid: string | null
+          reviewed_at: string | null
+          reviewed_by_user_uuid: string | null
+          status: Database["public"]["Enums"]["bleacher_subrental_status"]
+        }
+        Insert: {
+          bleacher_uuid?: string | null
+          created_at?: string
+          created_by_user_uuid?: string | null
+          event_end: string
+          event_start: string
+          id?: string
+          notes?: string | null
+          requested_zone_uuid?: string | null
+          reviewed_at?: string | null
+          reviewed_by_user_uuid?: string | null
+          status?: Database["public"]["Enums"]["bleacher_subrental_status"]
+        }
+        Update: {
+          bleacher_uuid?: string | null
+          created_at?: string
+          created_by_user_uuid?: string | null
+          event_end?: string
+          event_start?: string
+          id?: string
+          notes?: string | null
+          requested_zone_uuid?: string | null
+          reviewed_at?: string | null
+          reviewed_by_user_uuid?: string | null
+          status?: Database["public"]["Enums"]["bleacher_subrental_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subrental_events_bleacher_uuid_fkey"
+            columns: ["bleacher_uuid"]
+            isOneToOne: false
+            referencedRelation: "Bleachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subrental_events_requested_zone_uuid_fkey"
+            columns: ["requested_zone_uuid"]
+            isOneToOne: false
+            referencedRelation: "Zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Tasks: {
         Row: {
           created_at: string
@@ -3362,6 +3419,7 @@ export type Database = {
     Enums: {
       alert_entity_type: "event" | "bleacher_event" | "work_tracker"
       bleacher_opening_dir: "driver" | "passenger"
+      bleacher_subrental_status: "pending" | "accepted" | "denied"
       bluebook_region: "CAN" | "US" | "Both"
       contract_signature_status: "active" | "invalidated"
       currency: "USD" | "CAD"
@@ -3532,6 +3590,7 @@ export const Constants = {
     Enums: {
       alert_entity_type: ["event", "bleacher_event", "work_tracker"],
       bleacher_opening_dir: ["driver", "passenger"],
+      bleacher_subrental_status: ["pending", "accepted", "denied"],
       bluebook_region: ["CAN", "US", "Both"],
       contract_signature_status: ["active", "invalidated"],
       currency: ["USD", "CAD"],

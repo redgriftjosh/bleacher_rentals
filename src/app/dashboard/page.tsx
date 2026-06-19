@@ -23,6 +23,7 @@ import { useDriverUnavailability } from "@/features/dashboard/db/hooks/useDriver
 import { useDriverUnavailabilityStore } from "@/features/dashboard/state/useDriverUnavailabilityStore";
 import { useDashboardPowerSync } from "@/features/dashboard/db/hooks/powersync/useDashboardPowerSync";
 import { ZoneSelector } from "@/features/dashboardOptions/ZoneSelector";
+import { SubrentalEventPanel } from "@/features/subrentals/components/SubrentalEventPanel";
 
 export default function Page() {
   const [selectedWorkTracker, setSelectedWorkTracker] = useState<Tables<"WorkTrackers"> | null>(
@@ -122,6 +123,7 @@ export default function Page() {
         </div>
         <EventConfiguration showSetupTeardown={false} />
         <MaintenanceEventPanel />
+        <SubrentalEventPanel />
       </div>
       <div className="min-h-0 min-w-0 overflow-hidden">
         <DashboardApp />

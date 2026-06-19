@@ -1,4 +1,4 @@
-import { Minus, Plus, X, ChevronDown, Wrench } from "lucide-react";
+import { Minus, Plus, X, ChevronDown, Wrench, Handshake } from "lucide-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useUser } from "@clerk/nextjs";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
@@ -7,12 +7,14 @@ import { useCurrentEventStore } from "../state/useCurrentEventStore";
 import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
 import { useState, useRef, useEffect } from "react";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
+import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
 
 export const CreateEventButton = () => {
   const permissions = useTeamPermissions();
   const isViewer = !permissions.isAdmin && !permissions.isAccountManager;
   const currentEventStore = useCurrentEventStore();
   const maintenanceStore = useMaintenanceEventStore();
+  const subrentalsStore = useSubrentalEventStore();
   const { user } = useUser();
   const users = useUsersStore((s) => s.users);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -125,6 +127,46 @@ export const CreateEventButton = () => {
     );
   }
 
+  // Sub-rental form is expanded
+  if (subrentalsStore.isFormExpanded) {
+    return (
+      <div className="flex items-center justify-end gap-2">
+        <span className="text-xs font-semibold text-indigo-600 mb-2">SUB-RENTAL</span>
+        {!subrentalsStore.isFormMinimized ? (
+          <>
+            <button
+              onClick={() => subrentalsStore.setField("isFormMinimized", true)}
+              className="px-2 py-2 bg-transparent font-light rounded mb-2 hover:bg-gray-100 hover:border-indigo-600 border-transparent border transition text-gray-500 hover:text-indigo-600 text-3xl cursor-pointer"
+            >
+              <Minus />
+            </button>
+            <button
+              onClick={() => subrentalsStore.closeForm()}
+              className="px-2 py-2 bg-transparent font-light rounded mb-2 hover:bg-gray-100 hover:border-indigo-600 border-transparent border transition text-gray-500 hover:text-indigo-600 text-3xl cursor-pointer"
+            >
+              <X />
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => subrentalsStore.setField("isFormMinimized", false)}
+              className="px-2 py-2 bg-transparent font-light rounded mb-2 hover:bg-gray-100 hover:border-indigo-600 border-transparent border transition text-gray-500 hover:text-indigo-600 text-3xl cursor-pointer"
+            >
+              <Plus />
+            </button>
+            <button
+              onClick={() => subrentalsStore.closeForm()}
+              className="px-2 py-2 bg-transparent font-light rounded mb-2 hover:bg-gray-100 hover:border-indigo-600 border-transparent border transition text-gray-500 hover:text-indigo-600 text-3xl cursor-pointer"
+            >
+              <X />
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
+
   // Viewer cannot create events or maintenance
   if (isViewer) return null;
 
@@ -170,6 +212,20 @@ export const CreateEventButton = () => {
             >
               <Wrench className="h-3.5 w-3.5" />
               Maintenance Event
+            </button>
+            <button
+              onClick={() => {
+                setDropdownOpen(false);
+                subrentalsStore.openForm();
+                const resolved = resolveCurrentUserUuid();
+                if (resolved) {
+                  useSubrentalEventStore.getState().setField("createdByUserUuid", resolved);
+                }
+              }}
+              className="w-full cursor-pointer px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-2"
+            >
+              <Handshake className="h-3.5 w-3.5" />
+              Sub-Rental Request
             </button>
           </div>
         )}

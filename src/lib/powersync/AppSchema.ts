@@ -887,6 +887,27 @@ const SalesOffices = new Table(SalesOfficesCols, {
   indexes: { address_uuid: ["address_uuid"] },
 });
 
+const SubrentalEventsCols = {
+  created_at: column.text,
+  event_start: column.text,
+  event_end: column.text,
+  notes: column.text,
+  created_by_user_uuid: column.text,
+  status: column.text,
+  requested_zone_uuid: column.text,
+  bleacher_uuid: column.text,
+  reviewed_by_user_uuid: column.text,
+  reviewed_at: column.text,
+} satisfies PowerSyncColsFor<"SubrentalEvents">;
+const SubrentalEvents = new Table(SubrentalEventsCols, {
+  indexes: {
+    bleacher_uuid: ["bleacher_uuid"],
+    requested_zone_uuid: ["requested_zone_uuid"],
+    created_by_user_uuid: ["created_by_user_uuid"],
+    status: ["status"],
+  },
+});
+
 export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
@@ -949,6 +970,7 @@ export const AppSchema = new Schema({
   TermsAndConditions,
   ContractSignatures,
   EventFiles,
+  SubrentalEvents,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
@@ -978,6 +1000,7 @@ export type WorkTrackerInspectionsRecord = PowerSyncDB["WorkTrackerInspections"]
 export type InspectionQuestionsRecord = PowerSyncDB["InspectionQuestions"];
 export type DamageReportsRecord = PowerSyncDB["DamageReports"];
 export type MaintenanceEventsRecord = PowerSyncDB["MaintenanceEvents"];
+export type SubrentalEventsRecord = PowerSyncDB["SubrentalEvents"];
 export type BleacherMaintEventsRecord = PowerSyncDB["BleacherMaintEvents"];
 export type DriverScorecardStatsPerDriverRecord = PowerSyncDB["DriverScorecardStatsPerDriver"];
 export type DriverScoreCardStatsRecord = PowerSyncDB["DriverScoreCardStats"];

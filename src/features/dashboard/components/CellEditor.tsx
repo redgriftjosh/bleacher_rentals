@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Trash, Truck, X, CalendarPlus, Wrench } from "lucide-react";
+import { Check, Trash, Truck, X, CalendarPlus, Wrench, Handshake } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useSelectedBlockStore } from "../state/useSelectedBlock";
 import { Tables } from "../../../../database.types";
@@ -17,6 +17,7 @@ import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsS
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
 import { isBleacherOwnedByAM } from "@/features/userAccess/logic/isBleacherOwnedByAM";
 import { canEditCell as canEditCellFn } from "@/features/userAccess/logic/canEditCell";
+import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
 
 type CellEditorProps = {
   onWorkTrackerOpen?: (workTracker: Tables<"WorkTrackers">) => void;
@@ -263,6 +264,40 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     handleClose();
   };
 
+  const handleCreateSubRental = () => {
+    if (!date || !bleacherUuid) {
+      createErrorToast(["Failed to create sub-rental request. Missing date or bleacher id."]);
+      return;
+    }
+
+    const subrentalStore = useSubrentalEventStore.getState();
+
+    // Calculate end date (7 days after start date)
+    const startDate = new Date(date);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 7);
+
+    // Format dates as YYYY-MM-DD
+    const formatDate = (d: Date) => d.toISOString().split("T")[0];
+
+    // Open the subrental form (resets to initial state) then prefill
+    subrentalStore.openForm();
+    const ss = useSubrentalEventStore.getState();
+    ss.setField("eventStart", formatDate(startDate));
+    ss.setField("eventEnd", formatDate(endDate));
+    ss.setField("bleacherUuid", bleacherUuid);
+
+    // Set current user as creator
+    const clerkId = user?.id;
+    if (clerkId) {
+      const match = users.find((u) => u.clerk_user_id === clerkId);
+      if (match) ss.setField("createdByUserUuid", match.id);
+    }
+
+    // Close the cell editor
+    handleClose();
+  };
+
   // Track whether the initial mousedown began on the backdrop so we only close when both down & up occur there
   const mouseDownOnBackdrop = useRef(false);
 
@@ -360,6 +395,15 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
                   onClick={handleCreateMaintenance}
                 >
                   <Wrench className="h-4 w-4" />
+                </button>
+              </AppTooltip>
+              <AppTooltip content="Create Sub-Rental">
+                <button
+                  aria-label="Create Sub-Rental"
+                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-red-700 hover:bg-gray-100 transition-all duration-200"
+                  onClick={handleCreateSubRental}
+                >
+                  <Handshake className="h-4 w-4" />
                 </button>
               </AppTooltip>
             </div>
