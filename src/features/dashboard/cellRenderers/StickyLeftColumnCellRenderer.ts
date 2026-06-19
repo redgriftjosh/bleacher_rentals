@@ -15,6 +15,11 @@ import { computeAffectedSwaps } from "../db/client/swapBleacherEvents";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { isBleacherAccessible } from "../ui/NoAccessFilter";
 import { createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
+import { isBleacherOwnedByAM } from "@/features/userAccess/logic/isBleacherOwnedByAM";
+import {
+  isSubrentedOutDuringRange,
+  hasSubrentalAccessForRange,
+} from "@/features/userAccess/logic/hasSubrentalAccessForDate";
 
 /**
  * CellRenderer for the sticky left column that displays bleacher information
@@ -209,16 +214,32 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
 
         const mt = useMaintenanceEventStore.getState();
         if (mt.isFormExpanded) {
-          // AM can only toggle own bleachers for maintenance too
           if (perms.isAccountManager && !perms.isAdmin) {
-            const bleacher = this.bleachers.find((b) => b.bleacherUuid === id);
-            if (bleacher) {
-              const isOwn =
-                !!bleacher.zoneUuid && perms.accountManagerZoneIds.includes(bleacher.zoneUuid);
-              if (!isOwn) {
-                createErrorToastNoThrow(["This bleacher is not assigned to you."]);
-                return;
-              }
+            const allBleachers = useDashboardBleachersStore.getState().data;
+            const bleacher = allBleachers.find((b) => b.bleacherUuid === id && !b.isSubrentalRow);
+            const ownedByAM = isBleacherOwnedByAM({
+              bleacherZoneUuid: bleacher?.zoneUuid,
+              accountManagerZoneIds: perms.accountManagerZoneIds,
+            });
+            const subrented = isSubrentedOutDuringRange({
+              bleacher,
+              eventStart: mt.eventStart,
+              eventEnd: mt.eventEnd,
+            });
+            const hasBorrowedAccess = hasSubrentalAccessForRange({
+              bleacherUuid: id,
+              eventStart: mt.eventStart,
+              eventEnd: mt.eventEnd,
+              accountManagerZoneIds: perms.accountManagerZoneIds,
+              allBleachers,
+            });
+            if ((!ownedByAM || subrented) && !hasBorrowedAccess) {
+              createErrorToastNoThrow([
+                ownedByAM && subrented
+                  ? "This bleacher is subrented out during this date range."
+                  : "This bleacher is not assigned to you.",
+              ]);
+              return;
             }
           }
           const selected = mt.bleacherUuids;
@@ -232,14 +253,31 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
         if (!st.isFormExpanded) return;
 
         if (perms.isAccountManager && !perms.isAdmin) {
-          const bleacher = this.bleachers.find((b) => b.bleacherUuid === id);
-          if (bleacher) {
-            const isOwn =
-              !!bleacher.zoneUuid && perms.accountManagerZoneIds.includes(bleacher.zoneUuid);
-            if (!isOwn) {
-              createErrorToastNoThrow(["This bleacher is not assigned to you."]);
-              return;
-            }
+          const allBleachers = useDashboardBleachersStore.getState().data;
+          const bleacher = allBleachers.find((b) => b.bleacherUuid === id && !b.isSubrentalRow);
+          const ownedByAM = isBleacherOwnedByAM({
+            bleacherZoneUuid: bleacher?.zoneUuid,
+            accountManagerZoneIds: perms.accountManagerZoneIds,
+          });
+          const subrented = isSubrentedOutDuringRange({
+            bleacher,
+            eventStart: st.eventStart,
+            eventEnd: st.eventEnd,
+          });
+          const hasBorrowedAccess = hasSubrentalAccessForRange({
+            bleacherUuid: id,
+            eventStart: st.eventStart,
+            eventEnd: st.eventEnd,
+            accountManagerZoneIds: perms.accountManagerZoneIds,
+            allBleachers,
+          });
+          if ((!ownedByAM || subrented) && !hasBorrowedAccess) {
+            createErrorToastNoThrow([
+              ownedByAM && subrented
+                ? "This bleacher is subrented out during this date range."
+                : "This bleacher is not assigned to you.",
+            ]);
+            return;
           }
         }
 
