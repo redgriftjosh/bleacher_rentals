@@ -328,6 +328,9 @@ export function useDashboardPowerSync(opts?: {
       };
     });
 
+    // Build a lookup from bleacherId → assembled normal row so subrental rows can copy its data
+    const normalRowByBleacherId = new Map(normalRows.map((r) => [r.bleacherUuid, r]));
+
     // ── Subrental rows: one virtual row per bleacher per borrowing zone ──────
     const subrentalRows: Bleacher[] = [];
     for (const b of allBleacherRows) {
@@ -395,12 +398,14 @@ export function useDashboardPowerSync(opts?: {
           originalZoneName: b.zone_uuid ? (zoneMap.get(b.zone_uuid) ?? null) : null,
           summerHomeBase: subrentalRowSummerHomeBase,
           winterHomeBase: subrentalRowWinterHomeBase,
-          bleacherEvents: [],
-          blocks: [],
-          workTrackers: [],
-          maintenanceEvents: [],
+          // Copy all data from the normal row so the subrental row shows the same events,
+          // blocks, work trackers, maintenance events and damage reports
+          bleacherEvents: normalRowByBleacherId.get(b.id)?.bleacherEvents ?? [],
+          blocks: normalRowByBleacherId.get(b.id)?.blocks ?? [],
+          workTrackers: normalRowByBleacherId.get(b.id)?.workTrackers ?? [],
+          maintenanceEvents: normalRowByBleacherId.get(b.id)?.maintenanceEvents ?? [],
+          damageReports: normalRowByBleacherId.get(b.id)?.damageReports ?? [],
           subrentalEvents: subrentalRowEvents,
-          damageReports: [],
           isAccessible: subrentalRowIsAccessible,
           isSubrentalRow: true,
           acceptedSubrentalAccess,

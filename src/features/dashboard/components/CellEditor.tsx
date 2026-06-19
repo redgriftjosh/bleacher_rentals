@@ -276,8 +276,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
             b.isSubrentalRow &&
             perms.accountManagerZoneIds.includes(b.zoneUuid ?? "") &&
             (b.acceptedSubrentalAccess ?? []).some(
-              (r) =>
-                date >= r.eventStart.substring(0, 10) && date <= r.eventEnd.substring(0, 10),
+              (r) => date >= r.eventStart.substring(0, 10) && date <= r.eventEnd.substring(0, 10),
             ),
         );
         const matchingRange = subrentalRow?.acceptedSubrentalAccess?.find(
