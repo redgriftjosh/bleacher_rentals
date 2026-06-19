@@ -505,7 +505,7 @@ export class MainGridCellRenderer implements ICellRenderer {
     const isAccessible = isBlocked
       ? false
       : accessOnlyCols
-        ? accessOnlyCols.has(col)
+        ? baseAccessible && accessOnlyCols.has(col)
         : baseAccessible;
 
     if (allEventInfos.length > 1) {
