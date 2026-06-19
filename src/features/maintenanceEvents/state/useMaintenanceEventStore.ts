@@ -16,6 +16,11 @@ export type MaintenanceEventState = {
   isModalOpen: boolean;
   isFormExpanded: boolean;
   isFormMinimized: boolean;
+  /**
+   * When a maintenance event is initiated from a subrental row, constrains the
+   * date pickers to the accepted subrental window. Cleared on resetForm.
+   */
+  subrentalConstraint: { eventStart: string; eventEnd: string } | null;
 };
 
 type MaintenanceEventActions = {
@@ -45,6 +50,7 @@ const initialState: MaintenanceEventState = {
   isModalOpen: false,
   isFormExpanded: false,
   isFormMinimized: false,
+  subrentalConstraint: null,
 };
 
 export const useMaintenanceEventStore = create<MaintenanceEventStore>((set) => ({

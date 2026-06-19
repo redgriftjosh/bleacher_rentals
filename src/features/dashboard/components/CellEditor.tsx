@@ -259,6 +259,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
 
     // AM can only create maintenance events with own bleachers — OR within an accepted subrental date range
     const perms = usePermissionsStore.getState();
+    let subrentalConstraint: { eventStart: string; eventEnd: string } | null = null;
     if (perms.isAccountManager && !perms.isAdmin) {
       const dashBleachers = useDashboardBleachersStore.getState().data;
       const bleacher = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid);
@@ -268,23 +269,36 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
           bleacherZoneUuid: bleacher.zoneUuid,
           accountManagerZoneIds: perms.accountManagerZoneIds,
         });
-      const hasSubrentalAccess = hasSubrentalAccessForDate({
-        bleacherUuid,
-        date,
-        accountManagerZoneIds: perms.accountManagerZoneIds,
-        allBleachers: dashBleachers,
-      });
-      if (!ownedByAM && !hasSubrentalAccess) {
-        createErrorToast([
-          "You can only create maintenance events with bleachers assigned to you.",
-        ]);
-        return;
+      if (!ownedByAM) {
+        const subrentalRow = dashBleachers.find(
+          (b) =>
+            b.bleacherUuid === bleacherUuid &&
+            b.isSubrentalRow &&
+            perms.accountManagerZoneIds.includes(b.zoneUuid ?? "") &&
+            (b.acceptedSubrentalAccess ?? []).some(
+              (r) =>
+                date >= r.eventStart.substring(0, 10) && date <= r.eventEnd.substring(0, 10),
+            ),
+        );
+        const matchingRange = subrentalRow?.acceptedSubrentalAccess?.find(
+          (r) => date >= r.eventStart.substring(0, 10) && date <= r.eventEnd.substring(0, 10),
+        );
+        if (!matchingRange) {
+          createErrorToast([
+            "You can only create maintenance events with bleachers assigned to you.",
+          ]);
+          return;
+        }
+        subrentalConstraint = {
+          eventStart: matchingRange.eventStart.substring(0, 10),
+          eventEnd: matchingRange.eventEnd.substring(0, 10),
+        };
       }
     }
 
     const maintenanceStore = useMaintenanceEventStore.getState();
 
-    // Calculate end date (7 days after start date)
+    // Calculate end date (7 days after start date), clamped to subrental window if applicable
     const startDate = new Date(date);
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 7);
@@ -292,12 +306,25 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     // Format dates as YYYY-MM-DD
     const formatDate = (d: Date) => d.toISOString().split("T")[0];
 
+    let clampedStart = formatDate(startDate);
+    let clampedEnd = formatDate(endDate);
+    if (subrentalConstraint) {
+      const { eventStart: srStart, eventEnd: srEnd } = subrentalConstraint;
+      if (clampedStart < srStart) clampedStart = srStart;
+      if (clampedStart > srEnd) clampedStart = srStart;
+      if (clampedEnd > srEnd) clampedEnd = srEnd;
+      if (clampedEnd < clampedStart) clampedEnd = clampedStart;
+    }
+
     // Open the maintenance form (resets to initial state) then prefill
     maintenanceStore.openForm();
     const ms = useMaintenanceEventStore.getState();
-    ms.setField("eventStart", formatDate(startDate));
-    ms.setField("eventEnd", formatDate(endDate));
+    ms.setField("eventStart", clampedStart);
+    ms.setField("eventEnd", clampedEnd);
     ms.setField("bleacherUuids", [bleacherUuid]);
+    if (subrentalConstraint) {
+      ms.setField("subrentalConstraint", subrentalConstraint);
+    }
 
     // Set current user as owner
     const clerkId = user?.id;

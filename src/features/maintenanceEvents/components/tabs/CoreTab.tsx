@@ -248,7 +248,12 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
               className="bg-white w-full p-2 border rounded min-w-0"
               value={store.eventStart}
               onChange={(e) => store.setField("eventStart", e.target.value)}
-              max={store.eventEnd || undefined}
+              min={store.subrentalConstraint?.eventStart || undefined}
+              max={
+                store.subrentalConstraint
+                  ? store.subrentalConstraint.eventEnd
+                  : store.eventEnd || undefined
+              }
             />
             <ScrollToDateButton date={store.eventStart} />
           </div>
@@ -259,7 +264,12 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
               className="bg-white w-full p-2 border rounded min-w-0"
               value={store.eventEnd}
               onChange={(e) => store.setField("eventEnd", e.target.value)}
-              min={store.eventStart || undefined}
+              min={
+                store.subrentalConstraint
+                  ? store.subrentalConstraint.eventStart
+                  : store.eventStart || undefined
+              }
+              max={store.subrentalConstraint?.eventEnd || undefined}
             />
             <ScrollToDateButton date={store.eventEnd} />
           </div>
