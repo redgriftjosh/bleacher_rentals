@@ -13,6 +13,12 @@ import CentsInput from "@/components/CentsInput";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DamageReportModal, EditDamageReport } from "@/app/damage-reports/DamageReportModal";
+import { useDashboardBleachersStore } from "@/features/dashboard/state/useDashboardBleachersStore";
+import {
+  laterDate,
+  earlierDate,
+  useSubrentalBlockBounds,
+} from "@/features/dashboard/util/subrentalDateBounds";
 
 type Props = {
   disabled?: boolean;
@@ -77,6 +83,14 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
 
   const bleacherUuids = store.bleacherUuids;
   const eventStart = store.eventStart;
+
+  const allBleachers = useDashboardBleachersStore((s) => s.data);
+  const { blockDerivedStartMin, blockDerivedEndMax } = useSubrentalBlockBounds(
+    bleacherUuids,
+    allBleachers,
+    store.eventStart,
+    store.eventEnd,
+  );
 
   type DamageReportRow = EditDamageReport & {
     work_tracker_date: string | null;
@@ -250,12 +264,16 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
               className="bg-white w-full p-2 border rounded min-w-0"
               value={store.eventStart}
               onChange={(e) => store.setField("eventStart", e.target.value)}
-              min={store.subrentalConstraint?.eventStart || undefined}
-              max={
+              min={laterDate(
+                store.subrentalConstraint?.eventStart || undefined,
+                blockDerivedStartMin,
+              )}
+              max={earlierDate(
                 store.subrentalConstraint
                   ? store.subrentalConstraint.eventEnd
-                  : store.eventEnd || undefined
-              }
+                  : store.eventEnd || undefined,
+                blockDerivedEndMax,
+              )}
             />
             <ScrollToDateButton date={store.eventStart} />
           </div>
@@ -266,12 +284,16 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
               className="bg-white w-full p-2 border rounded min-w-0"
               value={store.eventEnd}
               onChange={(e) => store.setField("eventEnd", e.target.value)}
-              min={
+              min={laterDate(
                 store.subrentalConstraint
                   ? store.subrentalConstraint.eventStart
-                  : store.eventStart || undefined
-              }
-              max={store.subrentalConstraint?.eventEnd || undefined}
+                  : store.eventStart || undefined,
+                blockDerivedStartMin,
+              )}
+              max={earlierDate(
+                store.subrentalConstraint?.eventEnd || undefined,
+                blockDerivedEndMax,
+              )}
             />
             <ScrollToDateButton date={store.eventEnd} />
           </div>

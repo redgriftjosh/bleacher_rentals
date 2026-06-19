@@ -1,6 +1,6 @@
 "use client";
 import { Toggle } from "../../../../components/Toggle";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import { useUsersStore } from "@/state/userStore";
 import { Dropdown } from "@/components/DropDown";
@@ -11,20 +11,11 @@ import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissio
 import { filterOwnerOptions } from "@/features/userAccess/logic/filterOwnerOptions";
 import { useAccountManagerUserIds } from "@/features/userAccess/hooks/useAccountManagerUserIds";
 import { useDashboardBleachersStore } from "@/features/dashboard/state/useDashboardBleachersStore";
-
-/** Returns the later of two optional YYYY-MM-DD strings. */
-function laterDate(a: string | undefined, b: string | undefined): string | undefined {
-  if (!a) return b;
-  if (!b) return a;
-  return a > b ? a : b;
-}
-
-/** Returns the earlier of two optional YYYY-MM-DD strings. */
-function earlierDate(a: string | undefined, b: string | undefined): string | undefined {
-  if (!a) return b;
-  if (!b) return a;
-  return a < b ? a : b;
-}
+import {
+  laterDate,
+  earlierDate,
+  useSubrentalBlockBounds,
+} from "@/features/dashboard/util/subrentalDateBounds";
 
 type Props = {
   showSetupTeardown: boolean;
@@ -38,44 +29,12 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
   const accountManagerUserIds = useAccountManagerUserIds();
   const allBleachers = useDashboardBleachersStore((s) => s.data);
 
-  // Collect accepted subrental blocks from selected original (non-subrental) bleachers.
-  // These are periods when the bleacher is lent out to another zone and cannot be used.
-  const subrentalBlocks = useMemo(() => {
-    const uuids = new Set(currentEventStore.bleacherUuids);
-    return allBleachers
-      .filter((b) => !b.isSubrentalRow && uuids.has(b.bleacherUuid))
-      .flatMap((b) => b.acceptedSubrentalBlocks ?? [])
-      .map((r) => ({
-        start: r.eventStart.substring(0, 10),
-        end: r.eventEnd.substring(0, 10),
-      }));
-  }, [allBleachers, currentEventStore.bleacherUuids]);
-
-  // Day after the latest block whose start falls at or before eventEnd → min allowed eventStart.
-  const blockDerivedStartMin = useMemo(() => {
-    const end = currentEventStore.eventEnd?.substring(0, 10);
-    if (!end || !subrentalBlocks.length) return undefined;
-    const preceding = subrentalBlocks
-      .filter((b) => b.start <= end)
-      .sort((a, b) => b.end.localeCompare(a.end))[0];
-    if (!preceding) return undefined;
-    const d = new Date(preceding.end + "T12:00:00Z");
-    d.setUTCDate(d.getUTCDate() + 1);
-    return d.toISOString().split("T")[0];
-  }, [subrentalBlocks, currentEventStore.eventEnd]);
-
-  // Day before the earliest block whose start falls at or after eventStart → max allowed eventEnd.
-  const blockDerivedEndMax = useMemo(() => {
-    const start = currentEventStore.eventStart?.substring(0, 10);
-    if (!start || !subrentalBlocks.length) return undefined;
-    const upcoming = subrentalBlocks
-      .filter((b) => b.start >= start)
-      .sort((a, b) => a.start.localeCompare(b.start))[0];
-    if (!upcoming) return undefined;
-    const d = new Date(upcoming.start + "T12:00:00Z");
-    d.setUTCDate(d.getUTCDate() - 1);
-    return d.toISOString().split("T")[0];
-  }, [subrentalBlocks, currentEventStore.eventStart]);
+  const { blockDerivedStartMin, blockDerivedEndMax } = useSubrentalBlockBounds(
+    currentEventStore.bleacherUuids,
+    allBleachers,
+    currentEventStore.eventStart,
+    currentEventStore.eventEnd,
+  );
 
   const filteredUsers = filterOwnerOptions({
     users,
