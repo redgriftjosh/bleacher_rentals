@@ -16,6 +16,7 @@ import { AppTooltip } from "@/components/AppTooltip";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
 import { isBleacherOwnedByAM } from "@/features/userAccess/logic/isBleacherOwnedByAM";
+import { hasSubrentalAccessForDate } from "@/features/userAccess/logic/hasSubrentalAccessForDate";
 import { canEditCell as canEditCellFn } from "@/features/userAccess/logic/canEditCell";
 import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
 
@@ -105,13 +106,19 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       if (perms.isAccountManager && !perms.isAdmin) {
         const dashBleachers = useDashboardBleachersStore.getState().data;
         const bleacher = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid);
-        if (
+        const ownedByAM =
           bleacher &&
-          !isBleacherOwnedByAM({
+          isBleacherOwnedByAM({
             bleacherZoneUuid: bleacher.zoneUuid,
             accountManagerZoneIds: perms.accountManagerZoneIds,
-          })
-        ) {
+          });
+        const hasSubrentalAccess = hasSubrentalAccessForDate({
+          bleacherUuid,
+          date,
+          accountManagerZoneIds: perms.accountManagerZoneIds,
+          allBleachers: dashBleachers,
+        });
+        if (!ownedByAM && !hasSubrentalAccess) {
           createErrorToast(["You can only create work trackers for bleachers assigned to you."]);
           return;
         }
@@ -164,18 +171,24 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       return;
     }
 
-    // AM can only create events with own bleachers
+    // AM can only create events with own bleachers — OR within an accepted subrental date range
     const perms = usePermissionsStore.getState();
     if (perms.isAccountManager && !perms.isAdmin) {
       const dashBleachers = useDashboardBleachersStore.getState().data;
       const bleacher = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid);
-      if (
+      const ownedByAM =
         bleacher &&
-        !isBleacherOwnedByAM({
+        isBleacherOwnedByAM({
           bleacherZoneUuid: bleacher.zoneUuid,
           accountManagerZoneIds: perms.accountManagerZoneIds,
-        })
-      ) {
+        });
+      const hasSubrentalAccess = hasSubrentalAccessForDate({
+        bleacherUuid,
+        date,
+        accountManagerZoneIds: perms.accountManagerZoneIds,
+        allBleachers: dashBleachers,
+      });
+      if (!ownedByAM && !hasSubrentalAccess) {
         createErrorToast(["You can only create events with bleachers assigned to you."]);
         return;
       }
@@ -217,18 +230,24 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       return;
     }
 
-    // AM can only create maintenance events with own bleachers
+    // AM can only create maintenance events with own bleachers — OR within an accepted subrental date range
     const perms = usePermissionsStore.getState();
     if (perms.isAccountManager && !perms.isAdmin) {
       const dashBleachers = useDashboardBleachersStore.getState().data;
       const bleacher = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid);
-      if (
+      const ownedByAM =
         bleacher &&
-        !isBleacherOwnedByAM({
+        isBleacherOwnedByAM({
           bleacherZoneUuid: bleacher.zoneUuid,
           accountManagerZoneIds: perms.accountManagerZoneIds,
-        })
-      ) {
+        });
+      const hasSubrentalAccess = hasSubrentalAccessForDate({
+        bleacherUuid,
+        date,
+        accountManagerZoneIds: perms.accountManagerZoneIds,
+        allBleachers: dashBleachers,
+      });
+      if (!ownedByAM && !hasSubrentalAccess) {
         createErrorToast([
           "You can only create maintenance events with bleachers assigned to you.",
         ]);
