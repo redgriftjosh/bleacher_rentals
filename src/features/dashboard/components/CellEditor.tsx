@@ -327,6 +327,16 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
           bleacherZoneUuid: bleacher.zoneUuid,
           accountManagerZoneIds: perms.accountManagerZoneIds,
         });
+      // Block if owned but subrented out on the clicked date
+      if (ownedByAM) {
+        const subrented = (bleacher?.acceptedSubrentalBlocks ?? []).some(
+          (r) => date >= r.eventStart.substring(0, 10) && date <= r.eventEnd.substring(0, 10),
+        );
+        if (subrented) {
+          createErrorToast(["This bleacher is subrented out on this date."]);
+          return;
+        }
+      }
       if (!ownedByAM) {
         const subrentalRow = dashBleachers.find(
           (b) =>
