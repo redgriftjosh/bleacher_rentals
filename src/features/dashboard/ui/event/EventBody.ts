@@ -7,6 +7,38 @@ import { loadEventById } from "../../db/client/loadEventById";
 import { loadMaintenanceEventById } from "../../db/client/loadMaintenanceEventById";
 import { loadSubrentalEventById } from "../../db/client/loadSubrentalEventById";
 import { supabaseClientRegistry } from "../../util/supabaseClientRegistry";
+import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
+import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
+import { useDashboardBleachersStore } from "../../state/useDashboardBleachersStore";
+
+/**
+ * Looks up the accepted subrental date range that covers the given event window,
+ * by checking subrental rows in the dashboard bleachers store.
+ * Returns null if the event is not on a subrental row or no matching range exists.
+ */
+function resolveSubrentalConstraint(
+  bleacherUuids: string[],
+  eventStart: string,
+  eventEnd: string,
+): { eventStart: string; eventEnd: string } | null {
+  if (!bleacherUuids.length || !eventStart || !eventEnd) return null;
+  const allBleachers = useDashboardBleachersStore.getState().data;
+  for (const b of allBleachers) {
+    if (!b.isSubrentalRow || !bleacherUuids.includes(b.bleacherUuid)) continue;
+    const match = (b.acceptedSubrentalAccess ?? []).find(
+      (r) =>
+        r.eventStart.substring(0, 10) <= eventEnd.substring(0, 10) &&
+        r.eventEnd.substring(0, 10) >= eventStart.substring(0, 10),
+    );
+    if (match) {
+      return {
+        eventStart: match.eventStart.substring(0, 10),
+        eventEnd: match.eventEnd.substring(0, 10),
+      };
+    }
+  }
+  return null;
+}
 
 export class EventBody extends Sprite {
   private currentSpan?: EventSpanType;
@@ -206,8 +238,18 @@ export class EventBody extends Sprite {
       await loadSubrentalEventById(bleacherEvent.eventUuid);
     } else if (bleacherEvent.isMaintenance) {
       await loadMaintenanceEventById(bleacherEvent.eventUuid, supabase);
+      const ms = useMaintenanceEventStore.getState();
+      ms.setField(
+        "subrentalConstraint",
+        resolveSubrentalConstraint(ms.bleacherUuids, ms.eventStart, ms.eventEnd),
+      );
     } else {
       await loadEventById(bleacherEvent.eventUuid, supabase);
+      const es = useCurrentEventStore.getState();
+      es.setField(
+        "subrentalConstraint",
+        resolveSubrentalConstraint(es.bleacherUuids, es.eventStart, es.eventEnd),
+      );
     }
   }
 }
