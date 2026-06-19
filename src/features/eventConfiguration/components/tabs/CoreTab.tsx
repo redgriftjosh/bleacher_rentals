@@ -1,6 +1,6 @@
 "use client";
 import { Toggle } from "../../../../components/Toggle";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import { useUsersStore } from "@/state/userStore";
 import { Dropdown } from "@/components/DropDown";
@@ -10,6 +10,21 @@ import { LocateFixed } from "lucide-react";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { filterOwnerOptions } from "@/features/userAccess/logic/filterOwnerOptions";
 import { useAccountManagerUserIds } from "@/features/userAccess/hooks/useAccountManagerUserIds";
+import { useDashboardBleachersStore } from "@/features/dashboard/state/useDashboardBleachersStore";
+
+/** Returns the later of two optional YYYY-MM-DD strings. */
+function laterDate(a: string | undefined, b: string | undefined): string | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  return a > b ? a : b;
+}
+
+/** Returns the earlier of two optional YYYY-MM-DD strings. */
+function earlierDate(a: string | undefined, b: string | undefined): string | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  return a < b ? a : b;
+}
 
 type Props = {
   showSetupTeardown: boolean;
@@ -21,6 +36,47 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
   const users = useUsersStore((s) => s.users);
   const permissions = useTeamPermissions();
   const accountManagerUserIds = useAccountManagerUserIds();
+  const allBleachers = useDashboardBleachersStore((s) => s.data);
+
+  // Collect accepted subrental blocks from selected original (non-subrental) bleachers.
+  // These are periods when the bleacher is lent out to another zone and cannot be used.
+  const subrentalBlocks = useMemo(() => {
+    const uuids = new Set(currentEventStore.bleacherUuids);
+    return allBleachers
+      .filter((b) => !b.isSubrentalRow && uuids.has(b.bleacherUuid))
+      .flatMap((b) => b.acceptedSubrentalBlocks ?? [])
+      .map((r) => ({
+        start: r.eventStart.substring(0, 10),
+        end: r.eventEnd.substring(0, 10),
+      }));
+  }, [allBleachers, currentEventStore.bleacherUuids]);
+
+  // Day after the latest block whose start falls at or before eventEnd → min allowed eventStart.
+  const blockDerivedStartMin = useMemo(() => {
+    const end = currentEventStore.eventEnd?.substring(0, 10);
+    if (!end || !subrentalBlocks.length) return undefined;
+    const preceding = subrentalBlocks
+      .filter((b) => b.start <= end)
+      .sort((a, b) => b.end.localeCompare(a.end))[0];
+    if (!preceding) return undefined;
+    const d = new Date(preceding.end + "T12:00:00Z");
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString().split("T")[0];
+  }, [subrentalBlocks, currentEventStore.eventEnd]);
+
+  // Day before the earliest block whose start falls at or after eventStart → max allowed eventEnd.
+  const blockDerivedEndMax = useMemo(() => {
+    const start = currentEventStore.eventStart?.substring(0, 10);
+    if (!start || !subrentalBlocks.length) return undefined;
+    const upcoming = subrentalBlocks
+      .filter((b) => b.start >= start)
+      .sort((a, b) => a.start.localeCompare(b.start))[0];
+    if (!upcoming) return undefined;
+    const d = new Date(upcoming.start + "T12:00:00Z");
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().split("T")[0];
+  }, [subrentalBlocks, currentEventStore.eventStart]);
+
   const filteredUsers = filterOwnerOptions({
     users,
     isAdmin: permissions.isAdmin,
@@ -133,12 +189,13 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
             className="bg-white w-full p-2 border rounded min-w-0"
             value={currentEventStore.eventStart}
             onChange={(e) => currentEventStore.setField("eventStart", e.target.value)}
-            min={currentEventStore.subrentalConstraint?.eventStart || undefined}
-            max={
+            min={laterDate(currentEventStore.subrentalConstraint?.eventStart || undefined, blockDerivedStartMin)}
+            max={earlierDate(
               currentEventStore.subrentalConstraint
                 ? currentEventStore.subrentalConstraint.eventEnd
-                : currentEventStore.eventEnd || undefined
-            }
+                : currentEventStore.eventEnd || undefined,
+              blockDerivedEndMax,
+            )}
           />
           <ScrollToDateButton date={currentEventStore.eventStart} />
         </div>
@@ -149,12 +206,13 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
             className="bg-white w-full p-2 border rounded min-w-0"
             value={currentEventStore.eventEnd}
             onChange={(e) => currentEventStore.setField("eventEnd", e.target.value)}
-            min={
+            min={laterDate(
               currentEventStore.subrentalConstraint
                 ? currentEventStore.subrentalConstraint.eventStart
-                : currentEventStore.eventStart || undefined
-            }
-            max={currentEventStore.subrentalConstraint?.eventEnd || undefined}
+                : currentEventStore.eventStart || undefined,
+              blockDerivedStartMin,
+            )}
+            max={earlierDate(currentEventStore.subrentalConstraint?.eventEnd || undefined, blockDerivedEndMax)}
           />
           <ScrollToDateButton date={currentEventStore.eventEnd} />
         </div>
