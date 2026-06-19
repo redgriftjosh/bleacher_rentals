@@ -20,7 +20,7 @@ import { canEditOwnedEntity } from "@/features/userAccess/logic/canEditOwnedEnti
 import { updateSubrentalEvent } from "../db/updateSubrentalEvent";
 import { deleteSubrentalEvent } from "../db/deleteSubrentalEvent";
 
-const tabs = ["Core", "Files"] as const;
+const tabs = ["Core"] as const;
 type Tab = (typeof tabs)[number];
 
 type SubrentalEventFormProps = {

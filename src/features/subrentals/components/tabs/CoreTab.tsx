@@ -26,9 +26,10 @@ export const SubrentalCoreTab = ({ disabled = false }: Props = {}) => {
     value: z.id,
   }));
 
-  // Filter bleachers by selected zone (if any)
+  // Show all bleachers except those already owned by the requested zone
+  // (the point is to lend a bleacher FROM another zone TO the requested zone)
   const bleacherOptions = bleachers
-    .filter((b) => !store.requestedZoneUuid || b.zone_uuid === store.requestedZoneUuid)
+    .filter((b) => !store.requestedZoneUuid || b.zone_uuid !== store.requestedZoneUuid)
     .map((b) => ({
       label: `#${b.bleacher_number}`,
       value: b.id,
@@ -74,10 +75,10 @@ export const SubrentalCoreTab = ({ disabled = false }: Props = {}) => {
           selected={store.requestedZoneUuid ?? undefined}
           onSelect={(val) => {
             store.setField("requestedZoneUuid", val as string | null);
-            // Clear bleacher if it no longer belongs to the new zone
+            // Clear bleacher if it now belongs to the newly selected zone
             if (store.bleacherUuid) {
               const b = bleachers.find((b) => b.id === store.bleacherUuid);
-              if (b && b.zone_uuid !== val) store.setField("bleacherUuid", null);
+              if (b && b.zone_uuid === val) store.setField("bleacherUuid", null);
             }
           }}
           placeholder="Select zone"
