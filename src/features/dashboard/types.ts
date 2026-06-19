@@ -45,6 +45,16 @@ export type Bleacher = {
   isAccessible: boolean;
   /** True for virtual rows representing a bleacher borrowed into another zone via subrental */
   isSubrentalRow?: boolean;
+  /**
+   * Accepted subrental date ranges on the ORIGINAL row — these cols are fully blocked (subrented out).
+   * Stored as ISO date strings; renderer converts to column indices once.
+   */
+  acceptedSubrentalBlocks?: { eventStart: string; eventEnd: string }[];
+  /**
+   * Accepted subrental date ranges on the GHOST row — only these cols are accessible.
+   * All other cols on this row are inaccessible regardless of user role.
+   */
+  acceptedSubrentalAccess?: { eventStart: string; eventEnd: string }[];
 };
 
 export type BleacherEvent = {

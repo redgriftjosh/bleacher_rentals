@@ -282,16 +282,23 @@ export function useDashboardPowerSync(opts?: {
         };
       });
 
-      // Subrental events
+      // Subrental events — split by status
       const relatedSRs = srsByBleacher.get(b.id) ?? [];
-      const subrentalEvents = relatedSRs.map((sr) => ({
-        subrentalEventUuid: sr.id,
-        eventStart: sr.event_start ?? "",
-        eventEnd: sr.event_end ?? "",
-        status: sr.status ?? "pending",
-        requestedZoneUuid: sr.requested_zone_uuid ?? null,
-        notes: sr.notes ?? null,
-      }));
+      // Only pending SRs become visible spans on the grid
+      const subrentalEvents = relatedSRs
+        .filter((sr) => (sr.status ?? "pending") === "pending")
+        .map((sr) => ({
+          subrentalEventUuid: sr.id,
+          eventStart: sr.event_start ?? "",
+          eventEnd: sr.event_end ?? "",
+          status: sr.status ?? "pending",
+          requestedZoneUuid: sr.requested_zone_uuid ?? null,
+          notes: sr.notes ?? null,
+        }));
+      // Accepted SRs become blocked date ranges on this (original) row
+      const acceptedSubrentalBlocks = relatedSRs
+        .filter((sr) => sr.status === "accepted")
+        .map((sr) => ({ eventStart: sr.event_start ?? "", eventEnd: sr.event_end ?? "" }));
 
       const isAccessible =
         isAdmin ||
@@ -317,6 +324,7 @@ export function useDashboardPowerSync(opts?: {
         subrentalEvents,
         damageReports,
         isAccessible,
+        acceptedSubrentalBlocks,
       };
     });
 
@@ -343,14 +351,20 @@ export function useDashboardPowerSync(opts?: {
           selectedZoneIds.includes(targetZoneUuid);
         if (!passesFilter) continue;
 
-        const ghostSubrentalEvents = zoneSRs.map((sr) => ({
-          subrentalEventUuid: sr.id,
-          eventStart: sr.event_start ?? "",
-          eventEnd: sr.event_end ?? "",
-          status: sr.status ?? "pending",
-          requestedZoneUuid: sr.requested_zone_uuid ?? null,
-          notes: sr.notes ?? null,
-        }));
+        const ghostSubrentalEvents = zoneSRs
+          .filter((sr) => (sr.status ?? "pending") === "pending")
+          .map((sr) => ({
+            subrentalEventUuid: sr.id,
+            eventStart: sr.event_start ?? "",
+            eventEnd: sr.event_end ?? "",
+            status: sr.status ?? "pending",
+            requestedZoneUuid: sr.requested_zone_uuid ?? null,
+            notes: sr.notes ?? null,
+          }));
+        // Accepted SRs become the accessible date ranges on this ghost row
+        const acceptedSubrentalAccess = zoneSRs
+          .filter((sr) => sr.status === "accepted")
+          .map((sr) => ({ eventStart: sr.event_start ?? "", eventEnd: sr.event_end ?? "" }));
 
         const ghostIsAccessible =
           isAdmin || (isAccountManager && accountManagerZoneIds.includes(targetZoneUuid));
@@ -389,6 +403,7 @@ export function useDashboardPowerSync(opts?: {
           damageReports: [],
           isAccessible: ghostIsAccessible,
           isSubrentalRow: true,
+          acceptedSubrentalAccess,
         });
       }
     }

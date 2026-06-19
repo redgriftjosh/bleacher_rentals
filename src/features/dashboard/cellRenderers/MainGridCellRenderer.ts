@@ -52,6 +52,10 @@ export class MainGridCellRenderer implements ICellRenderer {
   private latestBleachersByUuid: Map<string, Bleacher>;
   // Pre-computed damage overlay column ranges per row
   private damageOverlaysByRow: Map<number, DamageOverlayRange[]> = new Map();
+  // Columns blocked by accepted subrentals on original rows (subrented out — nobody has access)
+  private blockedColsByRow: Map<number, Set<number>> = new Map();
+  // Columns accessible on ghost rows (only these are open; all others are inaccessible)
+  private accessOnlyColsByRow: Map<number, Set<number>> = new Map();
 
   // No external callback; selection is pushed to a zustand store
 
@@ -125,6 +129,7 @@ export class MainGridCellRenderer implements ICellRenderer {
     // Compute damage overlay ranges
     if (yAxis === "Bleachers") {
       this.damageOverlaysByRow = this.computeDamageOverlays(bleachers, dates);
+      this.computeSubrentalColSets(bleachers, dates);
     }
 
     // Subscribe to dashboard bleachers store to update block text dynamically
@@ -257,8 +262,11 @@ export class MainGridCellRenderer implements ICellRenderer {
     // Recompute damage overlays
     if (yAxis === "Bleachers") {
       this.damageOverlaysByRow = this.computeDamageOverlays(bleachers, this.dates);
+      this.computeSubrentalColSets(bleachers, this.dates);
     } else {
       this.damageOverlaysByRow.clear();
+      this.blockedColsByRow.clear();
+      this.accessOnlyColsByRow.clear();
     }
   }
 
@@ -295,6 +303,44 @@ export class MainGridCellRenderer implements ICellRenderer {
       spans.push({ start: startCol, end: endCol, ev: be, rowIndex });
       return spans;
     });
+  }
+
+  /**
+   * Pre-compute column sets for accepted subrental date ranges.
+   * Called once on construction/setData — O(rows * subrental_days), not per cell.
+   */
+  private computeSubrentalColSets(bleachers: Bleacher[], dates: string[]) {
+    this.blockedColsByRow.clear();
+    this.accessOnlyColsByRow.clear();
+    const dateToIndex = new Map(dates.map((d, i) => [d, i]));
+
+    const expandRanges = (
+      ranges: { eventStart: string; eventEnd: string }[] | undefined,
+    ): Set<number> => {
+      const cols = new Set<number>();
+      for (const r of ranges ?? []) {
+        const startISO = DateTime.fromISO(r.eventStart).toISODate();
+        const endISO = DateTime.fromISO(r.eventEnd).toISODate();
+        if (!startISO || !endISO) continue;
+        const startCol = dateToIndex.get(startISO);
+        const endCol = dateToIndex.get(endISO);
+        if (startCol === undefined || endCol === undefined) continue;
+        for (let c = startCol; c <= endCol; c++) cols.add(c);
+      }
+      return cols;
+    };
+
+    for (let row = 0; row < bleachers.length; row++) {
+      const b = bleachers[row];
+      if (b.acceptedSubrentalBlocks?.length) {
+        const cols = expandRanges(b.acceptedSubrentalBlocks);
+        if (cols.size) this.blockedColsByRow.set(row, cols);
+      }
+      if (b.acceptedSubrentalAccess?.length) {
+        const cols = expandRanges(b.acceptedSubrentalAccess);
+        if (cols.size) this.accessOnlyColsByRow.set(row, cols);
+      }
+    }
   }
 
   /**
@@ -449,9 +495,18 @@ export class MainGridCellRenderer implements ICellRenderer {
     const allEventInfos = EventsUtil.getAllCellEventInfos(row, col, this.spansByRow);
     const damageSeverity = this.yAxis === "Bleachers" ? this.getDamageSeverity(row, col) : null;
     const isDamageCell = damageSeverity !== null;
-    const isAccessible = isBleacherAccessible(
+    const baseAccessible = isBleacherAccessible(
       this.latestBleachersByUuid.get(this.rowBleacherUuids[row]),
     );
+    // Cell-level access: blocked cols override everyone (subrented out);
+    // access-only cols restrict ghost rows to their subrental window.
+    const isBlocked = this.blockedColsByRow.get(row)?.has(col) ?? false;
+    const accessOnlyCols = this.accessOnlyColsByRow.get(row);
+    const isAccessible = isBlocked
+      ? false
+      : accessOnlyCols
+        ? accessOnlyCols.has(col)
+        : baseAccessible;
 
     if (allEventInfos.length > 1) {
       // --- OVERLAPPING EVENTS ---
