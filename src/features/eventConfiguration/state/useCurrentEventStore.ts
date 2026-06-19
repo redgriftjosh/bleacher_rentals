@@ -49,6 +49,11 @@ export type CurrentEventState = {
   contractRevenueCents: number | null;
   bookedAt: string | null;
   createdAt: string | null;
+  /**
+   * When an event is initiated from a subrental row, constrains the date pickers
+   * to the accepted subrental window. Cleared on resetForm.
+   */
+  subrentalConstraint: { eventStart: string; eventEnd: string } | null;
   // Modal state for Create Quote modal
   isModalOpen: boolean;
 };
@@ -99,6 +104,7 @@ const initialState: CurrentEventState = {
   isModalOpen: false,
   bookedAt: null,
   createdAt: null,
+  subrentalConstraint: null,
 };
 
 // Me make magic state box. Inside: all starting data. Also tools to change data.
