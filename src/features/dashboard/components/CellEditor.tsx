@@ -176,7 +176,12 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     let subrentalConstraint: { eventStart: string; eventEnd: string } | null = null;
     if (perms.isAccountManager && !perms.isAdmin) {
       const dashBleachers = useDashboardBleachersStore.getState().data;
-      const bleacher = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid);
+      // Must find the original (non-subrental) row — when a zone filter hides the original zone,
+      // only the subrental row is in the store; treat that as "not owned" so we fall through
+      // to the subrental constraint check rather than bypassing it entirely.
+      const bleacher = dashBleachers.find(
+        (b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow,
+      );
       const ownedByAM =
         bleacher &&
         isBleacherOwnedByAM({
@@ -228,14 +233,29 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       if (clampedEnd < clampedStart) clampedEnd = clampedStart;
     }
 
-    // Cap end date at the day before the next accepted subrental block on this bleacher
-    // (e.g. if the bleacher is being lent out starting in 2 days, don't cross that boundary)
+    // Cap end date against accepted subrental blocks on this bleacher:
+    // 1. If clampedStart falls inside a block (e.g. we clicked a subrental row), cap at that block's end.
+    // 2. Also cap at the day before the next block that starts after clampedStart.
     {
       const allBleachers = useDashboardBleachersStore.getState().data;
       const originalBleacher = allBleachers.find(
         (b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow,
       );
-      const nextBlockStart = (originalBleacher?.acceptedSubrentalBlocks ?? [])
+      const blocks = originalBleacher?.acceptedSubrentalBlocks ?? [];
+
+      // Current block: a block that contains clampedStart
+      const currentBlock = blocks.find(
+        (r) =>
+          r.eventStart.substring(0, 10) <= clampedStart &&
+          r.eventEnd.substring(0, 10) >= clampedStart,
+      );
+      if (currentBlock) {
+        const blockEnd = currentBlock.eventEnd.substring(0, 10);
+        if (blockEnd < clampedEnd) clampedEnd = blockEnd;
+      }
+
+      // Next block: the earliest block starting strictly after clampedStart
+      const nextBlockStart = blocks
         .map((r) => r.eventStart.substring(0, 10))
         .filter((s) => s > clampedStart)
         .sort()[0];
@@ -244,8 +264,9 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         d.setUTCDate(d.getUTCDate() - 1);
         const dayBefore = d.toISOString().split("T")[0];
         if (dayBefore < clampedEnd) clampedEnd = dayBefore;
-        if (clampedEnd < clampedStart) clampedEnd = clampedStart;
       }
+
+      if (clampedEnd < clampedStart) clampedEnd = clampedStart;
     }
 
     // Set the event configuration
@@ -282,7 +303,12 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     let subrentalConstraint: { eventStart: string; eventEnd: string } | null = null;
     if (perms.isAccountManager && !perms.isAdmin) {
       const dashBleachers = useDashboardBleachersStore.getState().data;
-      const bleacher = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid);
+      // Must find the original (non-subrental) row — when a zone filter hides the original zone,
+      // only the subrental row is in the store; treat that as "not owned" so we fall through
+      // to the subrental constraint check rather than bypassing it entirely.
+      const bleacher = dashBleachers.find(
+        (b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow,
+      );
       const ownedByAM =
         bleacher &&
         isBleacherOwnedByAM({
@@ -341,7 +367,21 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       const originalBleacher = allBleachers.find(
         (b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow,
       );
-      const nextBlockStart = (originalBleacher?.acceptedSubrentalBlocks ?? [])
+      const blocks = originalBleacher?.acceptedSubrentalBlocks ?? [];
+
+      // Current block: a block that contains clampedStart
+      const currentBlock = blocks.find(
+        (r) =>
+          r.eventStart.substring(0, 10) <= clampedStart &&
+          r.eventEnd.substring(0, 10) >= clampedStart,
+      );
+      if (currentBlock) {
+        const blockEnd = currentBlock.eventEnd.substring(0, 10);
+        if (blockEnd < clampedEnd) clampedEnd = blockEnd;
+      }
+
+      // Next block: the earliest block starting strictly after clampedStart
+      const nextBlockStart = blocks
         .map((r) => r.eventStart.substring(0, 10))
         .filter((s) => s > clampedStart)
         .sort()[0];
@@ -350,8 +390,9 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         d.setUTCDate(d.getUTCDate() - 1);
         const dayBefore = d.toISOString().split("T")[0];
         if (dayBefore < clampedEnd) clampedEnd = dayBefore;
-        if (clampedEnd < clampedStart) clampedEnd = clampedStart;
       }
+
+      if (clampedEnd < clampedStart) clampedEnd = clampedStart;
     }
 
     // Open the maintenance form (resets to initial state) then prefill

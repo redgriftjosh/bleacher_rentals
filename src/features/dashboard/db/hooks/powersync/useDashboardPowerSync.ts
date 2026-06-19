@@ -328,8 +328,122 @@ export function useDashboardPowerSync(opts?: {
       };
     });
 
-    // Build a lookup from bleacherId → assembled normal row so subrental rows can copy its data
+    // Build a lookup from bleacherId → assembled normal row so subrental rows can copy its data.
+    // Must cover ALL bleachers (not just filtered ones) so subrental rows still get full data
+    // when the original zone is hidden by the zone filter.
     const normalRowByBleacherId = new Map(normalRows.map((r) => [r.bleacherUuid, r]));
+    for (const b of allBleacherRows) {
+      if (normalRowByBleacherId.has(b.id)) continue; // already assembled above
+      // Assemble data arrays for bleachers excluded by the zone filter
+      const relatedBEs = besByBleacher.get(b.id) ?? [];
+      const bleacherEventsForSR: BleacherEvent[] = relatedBEs
+        .map((be) => {
+          if (!be.event_uuid) return null;
+          const ev = eventMap.get(be.event_uuid);
+          if (!ev) return null;
+          const addr = ev.address_uuid ? addressMap.get(ev.address_uuid) : undefined;
+          return {
+            eventUuid: ev.id,
+            bleacherEventUuid: be.id,
+            eventName: ev.event_name ?? "",
+            eventStart: ev.event_start ?? "",
+            eventEnd: ev.event_end ?? "",
+            hslHue: ev.hsl_hue,
+            booked: ev.event_status === "booked",
+            goodshuffleUrl: ev.goodshuffle_url ?? null,
+            address: addr?.street ?? "",
+          };
+        })
+        .filter((x): x is BleacherEvent => x !== null);
+      const blocksForSR = (blocksByBleacher.get(b.id) ?? []).map((bl) => ({
+        blockUuid: bl.id,
+        text: bl.text ?? "",
+        date: bl.date ?? "",
+      }));
+      const relatedWTs = wtsByBleacher.get(b.id) ?? [];
+      const workTrackersForSR = relatedWTs.map((wt) => {
+        const driverUserUuid = wt.driver_uuid
+          ? driverUserMap.driverToUser.get(wt.driver_uuid)
+          : undefined;
+        const driverUser = driverUserUuid ? driverUserMap.userMap.get(driverUserUuid) : undefined;
+        const dropoffAddr = wt.dropoff_address_uuid
+          ? addressMap.get(wt.dropoff_address_uuid)
+          : undefined;
+        return {
+          workTrackerUuid: wt.id,
+          date: wt.date ?? "",
+          status: (wt.status ?? "draft") as Database["public"]["Enums"]["worktracker_status"],
+          pickupTime: wt.pickup_time ?? null,
+          dropoffTime: wt.dropoff_time ?? null,
+          driverUuid: wt.driver_uuid ?? null,
+          driverFirstName: driverUser?.first_name ?? null,
+          driverLastName: driverUser?.last_name ?? null,
+          dropoffAddress: dropoffAddr?.street ?? null,
+        };
+      });
+      const maintenanceEventsForSR = (bmesByBleacher.get(b.id) ?? [])
+        .map((bme) => {
+          if (!bme.maintenance_event_uuid) return null;
+          const me = maintEventMap.get(bme.maintenance_event_uuid);
+          if (!me) return null;
+          const addr = me.address_uuid ? addressMap.get(me.address_uuid) : undefined;
+          return {
+            maintenanceEventUuid: me.id,
+            bleacherMaintEventUuid: bme.id,
+            eventName: me.event_name ?? "Maintenance / Repair",
+            eventStart: me.event_start ?? "",
+            eventEnd: me.event_end ?? "",
+            costCents: me.cost_cents,
+            address: addr?.street ?? "",
+          };
+        })
+        .filter((x): x is NonNullable<typeof x> => x !== null);
+      const relatedDRs = drsByBleacher.get(b.id) ?? [];
+      const damageReportsForSR = relatedDRs.map((dr) => {
+        const linkedWt = relatedWTs.find(
+          (wt) =>
+            wt.pre_inspection_uuid === dr.inspection_uuid ||
+            wt.post_inspection_uuid === dr.inspection_uuid,
+        );
+        return {
+          damageReportUuid: dr.id,
+          bleacherUuid: dr.bleacher_uuid ?? b.id,
+          inspectionUuid: dr.inspection_uuid ?? null,
+          isSafeToSit: toBool(dr.is_safe_to_sit),
+          isSafeToHaul: toBool(dr.is_safe_to_haul),
+          seatDamage: (dr.seat_damage ?? "none") as DamageSeverity,
+          haulDamage: (dr.haul_damage ?? "none") as DamageSeverity,
+          note: dr.note,
+          createdAt: dr.created_at ?? "",
+          resolvedAt: dr.resolved_at,
+          maintenanceEventUuid: dr.maintenance_event_uuid,
+          workTrackerDate: linkedWt?.date ?? null,
+        };
+      });
+      // Store a minimal stub — only the fields subrental rows copy
+      normalRowByBleacherId.set(b.id, {
+        bleacherUuid: b.id,
+        bleacherNumber: b.bleacher_number ?? 0,
+        bleacherRows: b.bleacher_rows ?? 0,
+        bleacherSeats: b.bleacher_seats ?? 0,
+        linxupDeviceId: b.linxup_device_id,
+        summerAccountManagerUuid: b.summer_account_manager_uuid,
+        winterAccountManagerUuid: b.winter_account_manager_uuid,
+        zoneUuid: b.zone_uuid ?? null,
+        zoneName: b.zone_uuid ? (zoneMap.get(b.zone_uuid) ?? null) : null,
+        originalZoneName: null,
+        summerHomeBase: null,
+        winterHomeBase: null,
+        isAccessible: false,
+        bleacherEvents: bleacherEventsForSR,
+        blocks: blocksForSR,
+        workTrackers: workTrackersForSR,
+        maintenanceEvents: maintenanceEventsForSR,
+        damageReports: damageReportsForSR,
+        subrentalEvents: [],
+        acceptedSubrentalBlocks: [],
+      });
+    }
 
     // ── Subrental rows: one virtual row per bleacher per borrowing zone ──────
     const subrentalRows: Bleacher[] = [];
