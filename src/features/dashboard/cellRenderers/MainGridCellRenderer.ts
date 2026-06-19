@@ -19,6 +19,7 @@ import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCur
 import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
 import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
 import { isBleacherAccessible } from "../ui/NoAccessFilter";
+import { SubrentalOverlayBody } from "../ui/event/SubrentalOverlayBody";
 
 /** Column range where the damage overlay should be drawn */
 type DamageOverlayRange = { startCol: number; endCol: number; severity: DamageSeverity };
@@ -56,6 +57,8 @@ export class MainGridCellRenderer implements ICellRenderer {
   private blockedColsByRow: Map<number, Set<number>> = new Map();
   // Columns accessible on subrental rows (only these are open; all others are inaccessible)
   private accessOnlyColsByRow: Map<number, Set<number>> = new Map();
+  // Continuous accepted SR spans per row — used to render border-only overlays
+  private acceptedSRSpansByRow: { start: number; end: number }[][] = [];
 
   // No external callback; selection is pushed to a zustand store
 
@@ -312,6 +315,7 @@ export class MainGridCellRenderer implements ICellRenderer {
   private computeSubrentalColSets(bleachers: Bleacher[], dates: string[]) {
     this.blockedColsByRow.clear();
     this.accessOnlyColsByRow.clear();
+    this.acceptedSRSpansByRow = [];
     const dateToIndex = new Map(dates.map((d, i) => [d, i]));
 
     const expandRanges = (
@@ -330,6 +334,22 @@ export class MainGridCellRenderer implements ICellRenderer {
       return cols;
     };
 
+    const rangesToSpans = (
+      ranges: { eventStart: string; eventEnd: string }[] | undefined,
+    ): { start: number; end: number }[] => {
+      const spans: { start: number; end: number }[] = [];
+      for (const r of ranges ?? []) {
+        const startISO = DateTime.fromISO(r.eventStart).toISODate();
+        const endISO = DateTime.fromISO(r.eventEnd).toISODate();
+        if (!startISO || !endISO) continue;
+        const startCol = dateToIndex.get(startISO);
+        const endCol = dateToIndex.get(endISO);
+        if (startCol === undefined || endCol === undefined) continue;
+        spans.push({ start: startCol, end: endCol });
+      }
+      return spans;
+    };
+
     for (let row = 0; row < bleachers.length; row++) {
       const b = bleachers[row];
       if (b.acceptedSubrentalBlocks?.length) {
@@ -340,6 +360,11 @@ export class MainGridCellRenderer implements ICellRenderer {
         const cols = expandRanges(b.acceptedSubrentalAccess);
         if (cols.size) this.accessOnlyColsByRow.set(row, cols);
       }
+      // Overlay spans: original rows show blocked-out periods; subrental rows show access windows
+      const overlayRanges = b.isSubrentalRow
+        ? (b.acceptedSubrentalAccess ?? [])
+        : (b.acceptedSubrentalBlocks ?? []);
+      this.acceptedSRSpansByRow[row] = rangesToSpans(overlayRanges);
     }
   }
 
@@ -740,17 +765,38 @@ export class MainGridCellRenderer implements ICellRenderer {
 
     // // No-access overlay: grey-tints cells for rows the user doesn't have zone access to
     // if (this.yAxis === "Bleachers") {
-    //   const bleacherUuid = this.rowBleacherUuids[row];
-    //   const bleacher = this.latestBleachersByUuid.get(bleacherUuid) ?? this.bleachers[row];
-    //   const filter = new NoAccessFilter(
-    //     { width: cellWidth, height: cellHeight },
-    //     this.baker,
-    //     bleacher,
-    //   );
-    //   filter.zIndex = 999998;
-    //   parent.sortableChildren = true;
-    //   parent.addChild(filter);
+    //   ...
     // }
+
+    // Accepted subrental overlay — border-only, non-interactive, topmost layer
+    if (this.yAxis === "Bleachers") {
+      const srSpans = this.acceptedSRSpansByRow[row];
+      if (srSpans?.length) {
+        for (const span of srSpans) {
+          if (col < span.start || col > span.end) continue;
+          const isStart = col === span.start;
+          const isEnd = col === span.end;
+          const overlay = new SubrentalOverlayBody(
+            { isStart, isEnd, isMiddle: !isStart && !isEnd },
+            this.baker,
+            dimensions,
+          );
+          overlay.position.set(-1, -1);
+          overlay.zIndex = 100000;
+          // Boost the cell container's zIndex well above all event cells so the SR
+          // borders are never hidden behind a neighbouring container.
+          // Event cells use (row+1)*Z_ROW - col*2 (max ≈ rows*10000).
+          // Adding 10_000_000 guarantees SR overlay containers always win, while
+          // the same column-descending formula keeps earlier cols on top within the span.
+          const srContainerZ = (row + 1) * Z_ROW + 10_000_000 - col * 2 + (isStart ? 1 : 0);
+          if (parent.zIndex < srContainerZ) {
+            parent.zIndex = srContainerZ;
+          }
+          parent.sortableChildren = true;
+          parent.addChild(overlay);
+        }
+      }
+    }
 
     return parent;
   }
