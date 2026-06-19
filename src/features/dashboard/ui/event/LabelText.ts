@@ -1,6 +1,7 @@
 import { Container, Text } from "pixi.js";
 import { EventSpanType } from "../../util/Events";
 import { loadEventById } from "../../db/client/loadEventById";
+import { loadSubrentalEventById } from "../../db/client/loadSubrentalEventById";
 import { supabaseClientRegistry } from "../../util/supabaseClientRegistry";
 
 /**
@@ -24,15 +25,17 @@ export class LabelText extends Container {
 
     // Determine text color based on booked status
     const isBooked = !!eventInfo.ev.booked;
-    const eventColor =
-      eventInfo.ev.hslHue != null
+    const isSubrental = !!eventInfo.ev.isSubrental;
+    const eventColor = isSubrental
+      ? 0x6366f1 // indigo-500
+      : eventInfo.ev.hslHue != null
         ? this.hslToRgbInt(eventInfo.ev.hslHue, isAccessible ? 60 : 20, isAccessible ? 60 : 70)
         : 0x808080;
-    const textColor = isBooked ? 0x000000 : eventColor;
+    const textColor = isBooked && !isSubrental ? 0x000000 : isSubrental ? 0x000000 : eventColor;
 
     // Event name (main label)
     this.nameLabel = new Text({
-      text: `${eventInfo.ev.eventName}`,
+      text: isSubrental ? "SUB-RENTAL" : `${eventInfo.ev.eventName}`,
       style: {
         fontFamily: "Helvetica",
         fontSize: 13,
@@ -52,13 +55,16 @@ export class LabelText extends Container {
       return;
     }
 
-    const supabase = supabaseClientRegistry.getClient();
+    if (this.eventInfo.ev.isSubrental) {
+      await loadSubrentalEventById(this.eventInfo.ev.eventUuid);
+      return;
+    }
 
+    const supabase = supabaseClientRegistry.getClient();
     if (!supabase) {
       console.warn("No Supabase client available");
       return;
     }
-
     await loadEventById(this.eventInfo.ev.eventUuid, supabase);
   }
 

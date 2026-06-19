@@ -21,6 +21,7 @@ import type { DashboardFilterState } from "../dashboardOptions/types";
 import { filterEvents, filterSortPixiBleachers } from "../dashboardOptions/util";
 import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEventStore";
 import { useMaintenanceEventStore } from "../maintenanceEvents/state/useMaintenanceEventStore";
+import { useSubrentalEventStore } from "../subrentals/state/useSubrentalEventStore";
 import { WorkTrackerDragManager } from "./util/WorkTrackerDragManager";
 import { useAddressTooltipStore } from "./state/useAddressTooltipStore";
 import { resolveAddress } from "../../utils/resolveAddress";
@@ -55,6 +56,7 @@ export class Dashboard {
   private unsubEvents?: () => void;
   private unsubCurrentEvent?: () => void;
   private unsubMaintenance?: () => void;
+  private unsubSubrental?: () => void;
   private unsubAlertCounts?: () => void;
   private bleachers: Bleacher[] = [];
   private events: DashboardEvent[] = [];
@@ -167,6 +169,7 @@ export class Dashboard {
     // Subscribe once and coalesce recomputes
     this.unsubCurrentEvent = useCurrentEventStore.subscribe(() => scheduleRecompute());
     this.unsubMaintenance = useMaintenanceEventStore.subscribe(() => scheduleRecompute());
+    this.unsubSubrental = useSubrentalEventStore.subscribe(() => scheduleRecompute());
     this.unsubEvents = useDashboardEventsStore.subscribe(() => scheduleRecompute());
     this.unsubBleachers = useDashboardBleachersStore.subscribe(() => scheduleRecompute());
     this.unsubAlertCounts = useAlertCountsStore.subscribe(() => scheduleRecompute());
@@ -281,17 +284,24 @@ export class Dashboard {
     const allEvents = useDashboardEventsStore.getState().data;
     const currentEvent = useCurrentEventStore.getState();
     const maintenanceEvent = useMaintenanceEventStore.getState();
+    const subrentalEvent = useSubrentalEventStore.getState();
 
-    // Combine bleacher UUIDs from both event and maintenance forms so they stay visible
+    // Combine bleacher UUIDs from event, maintenance, and subrental forms so they stay visible
     const alwaysInclude = [
       ...(currentEvent.bleacherUuids ?? []),
       ...(maintenanceEvent.isFormExpanded ? maintenanceEvent.bleacherUuids : []),
+      ...(subrentalEvent.isFormExpanded && subrentalEvent.bleacherUuid
+        ? [subrentalEvent.bleacherUuid]
+        : []),
     ];
 
     const filteredBleachers = filterSortPixiBleachers(allBleachers, {
       rows: filters.rows,
       alwaysIncludeBleacherUuids: alwaysInclude,
-      isFormExpanded: currentEvent.isFormExpanded || maintenanceEvent.isFormExpanded,
+      isFormExpanded:
+        currentEvent.isFormExpanded ||
+        maintenanceEvent.isFormExpanded ||
+        subrentalEvent.isFormExpanded,
       optimizationMode: filters.optimizationMode,
     });
 
@@ -651,6 +661,9 @@ export class Dashboard {
     } catch {}
     try {
       this.unsubMaintenance?.();
+    } catch {}
+    try {
+      this.unsubSubrental?.();
     } catch {}
     try {
       this.unsubBleachers?.();

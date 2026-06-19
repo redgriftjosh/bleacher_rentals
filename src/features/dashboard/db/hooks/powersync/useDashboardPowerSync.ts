@@ -18,6 +18,7 @@ import { usePsMaintenanceEvents } from "./usePsMaintenanceEvents";
 import { usePsDamageReports } from "./usePsDamageReports";
 import { usePsAlertCounts } from "./usePsAlertCounts";
 import { usePsZones } from "./usePsZones";
+import { usePsSubrentalEvents } from "./usePsSubrentalEvents";
 import { useZoneFilterStore } from "@/features/dashboardOptions/useZoneFilterStore";
 
 function toBool(v: number | null | boolean): boolean {
@@ -54,6 +55,7 @@ export function useDashboardPowerSync(opts?: {
   const maintenanceEventRows = usePsMaintenanceEvents();
   const damageReportRows = usePsDamageReports();
   const zoneRows = usePsZones();
+  const subrentalEventRows = usePsSubrentalEvents();
 
   // Alert counts → pushes into useAlertCountsStore reactively
   usePsAlertCounts();
@@ -149,6 +151,14 @@ export function useDashboardPowerSync(opts?: {
       const arr = bmesByBleacher.get(bme.bleacher_uuid);
       if (arr) arr.push(bme);
       else bmesByBleacher.set(bme.bleacher_uuid, [bme]);
+    }
+
+    const srsByBleacher = new Map<string, typeof subrentalEventRows>();
+    for (const sr of subrentalEventRows) {
+      if (!sr.bleacher_uuid) continue;
+      const arr = srsByBleacher.get(sr.bleacher_uuid);
+      if (arr) arr.push(sr);
+      else srsByBleacher.set(sr.bleacher_uuid, [sr]);
     }
 
     const drsByBleacher = new Map<string, typeof damageReportRows>();
@@ -270,6 +280,17 @@ export function useDashboardPowerSync(opts?: {
         };
       });
 
+      // Subrental events
+      const relatedSRs = srsByBleacher.get(b.id) ?? [];
+      const subrentalEvents = relatedSRs.map((sr) => ({
+        subrentalEventUuid: sr.id,
+        eventStart: sr.event_start ?? "",
+        eventEnd: sr.event_end ?? "",
+        status: sr.status ?? "pending",
+        requestedZoneUuid: sr.requested_zone_uuid ?? null,
+        notes: sr.notes ?? null,
+      }));
+
       return {
         bleacherUuid: b.id,
         bleacherNumber: b.bleacher_number ?? 0,
@@ -286,6 +307,7 @@ export function useDashboardPowerSync(opts?: {
         blocks,
         workTrackers,
         maintenanceEvents,
+        subrentalEvents,
         damageReports,
       };
     });
@@ -301,6 +323,7 @@ export function useDashboardPowerSync(opts?: {
     driverUserMap,
     bleacherMaintEventRows,
     maintEventMap,
+    subrentalEventRows,
     damageReportRows,
   ]);
 

@@ -5,6 +5,7 @@ import { Baker } from "../../util/Baker";
 import { BleacherEvent } from "../../types";
 import { loadEventById } from "../../db/client/loadEventById";
 import { loadMaintenanceEventById } from "../../db/client/loadMaintenanceEventById";
+import { loadSubrentalEventById } from "../../db/client/loadSubrentalEventById";
 import { supabaseClientRegistry } from "../../util/supabaseClientRegistry";
 
 export class EventBody extends Sprite {
@@ -43,18 +44,21 @@ export class EventBody extends Sprite {
 
     const isBooked = !!eventInfo.span?.ev.booked;
     const isMaintenance = !!eventInfo.span?.ev.isMaintenance;
-    const eventColor = isMaintenance
-      ? 0xff0000
-      : eventInfo.span && eventInfo.span.ev.hslHue != null
-        ? EventsUtil.hslToRgbInt(
-            eventInfo.span.ev.hslHue,
-            isAccessible ? 60 : 20,
-            isAccessible ? 60 : 70,
-          )
-        : 0x808080;
+    const isSubrental = !!eventInfo.span?.ev.isSubrental;
+    const eventColor = isSubrental
+      ? 0xfffb00
+      : isMaintenance
+        ? 0xff0000
+        : eventInfo.span && eventInfo.span.ev.hslHue != null
+          ? EventsUtil.hslToRgbInt(
+              eventInfo.span.ev.hslHue,
+              isAccessible ? 60 : 20,
+              isAccessible ? 60 : 70,
+            )
+          : 0x808080;
 
     const texture = baker.getTexture(
-      `EventBody:${eventInfo.span?.ev.eventUuid}:${isMaintenance ? "maint" : isBooked ? "booked" : "quoted"}:${
+      `EventBody:${eventInfo.span?.ev.eventUuid}:${isSubrental ? "subrental" : isMaintenance ? "maint" : isBooked ? "booked" : "quoted"}:${
         eventInfo.isStart ? "start" : eventInfo.isEnd ? "end" : "middle"
       }:top${topOffset}:${isAccessible ? "acc" : "noacc"}`,
       { width: CELL_WIDTH + 2, height: CELL_HEIGHT + 2 },
@@ -198,7 +202,9 @@ export class EventBody extends Sprite {
       return;
     }
 
-    if (bleacherEvent.isMaintenance) {
+    if (bleacherEvent.isSubrental) {
+      await loadSubrentalEventById(bleacherEvent.eventUuid);
+    } else if (bleacherEvent.isMaintenance) {
       await loadMaintenanceEventById(bleacherEvent.eventUuid, supabase);
     } else {
       await loadEventById(bleacherEvent.eventUuid, supabase);

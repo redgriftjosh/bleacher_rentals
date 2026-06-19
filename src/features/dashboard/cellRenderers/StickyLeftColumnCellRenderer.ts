@@ -7,6 +7,7 @@ import { EventLeftColumnCell } from "../ui/EventLeftColumnCell";
 import { Bleacher, DashboardEvent } from "../types";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
+import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
 import { useBleacherLocationModalStore } from "../state/useBleacherLocationModalStore";
 import { useSwapStore } from "../state/useSwapStore";
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
@@ -32,6 +33,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
   private unsub?: () => void;
   private unsubSwap?: () => void;
   private unsubMaintenance?: () => void;
+  private unsubSubrental?: () => void;
   private isFormExpanded = false;
   private isMaintenanceFormExpanded = false;
   private selectedBleacherUuids: string[] = [];
@@ -56,11 +58,15 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
   private bootstrapStateSync() {
     const st = useCurrentEventStore.getState();
     const mt = useMaintenanceEventStore.getState();
-    this.isFormExpanded = !!st.isFormExpanded || !!mt.isFormExpanded;
+    const sr = useSubrentalEventStore.getState();
+    this.isFormExpanded = !!st.isFormExpanded || !!mt.isFormExpanded || !!sr.isFormExpanded;
     this.isMaintenanceFormExpanded = !!mt.isFormExpanded;
-    this.selectedBleacherUuids = mt.isFormExpanded
-      ? mt.bleacherUuids.slice()
-      : st.bleacherUuids.slice();
+    this.selectedBleacherUuids =
+      sr.isFormExpanded && sr.bleacherUuid
+        ? [sr.bleacherUuid]
+        : mt.isFormExpanded
+          ? mt.bleacherUuids.slice()
+          : st.bleacherUuids.slice();
 
     // Helper to apply expand/select changes to all cells
     const applyChanges = (expandedChanged: boolean, selectedChanged: boolean) => {
@@ -102,13 +108,28 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     this.unsubMaintenance = useMaintenanceEventStore.subscribe((s) => {
       this.isMaintenanceFormExpanded = !!s.isFormExpanded;
       const eventExpanded = useCurrentEventStore.getState().isFormExpanded;
-      const anyExpanded = eventExpanded || s.isFormExpanded;
+      const srExpanded = useSubrentalEventStore.getState().isFormExpanded;
+      const anyExpanded = eventExpanded || s.isFormExpanded || srExpanded;
       const expandedChanged = anyExpanded !== this.isFormExpanded;
       // Track maintenance bleacherUuids when maintenance form is active
       const selectedChanged = s.isFormExpanded && s.bleacherUuids !== this.selectedBleacherUuids;
       if (!expandedChanged && !selectedChanged) return;
       if (expandedChanged) this.isFormExpanded = anyExpanded;
       if (selectedChanged) this.selectedBleacherUuids = s.bleacherUuids.slice();
+      applyChanges(expandedChanged, selectedChanged);
+    });
+
+    this.unsubSubrental = useSubrentalEventStore.subscribe((s) => {
+      const eventExpanded = useCurrentEventStore.getState().isFormExpanded;
+      const mtExpanded = useMaintenanceEventStore.getState().isFormExpanded;
+      const anyExpanded = eventExpanded || mtExpanded || s.isFormExpanded;
+      const expandedChanged = anyExpanded !== this.isFormExpanded;
+      const newSelected =
+        s.isFormExpanded && s.bleacherUuid ? [s.bleacherUuid] : this.selectedBleacherUuids;
+      const selectedChanged = s.isFormExpanded && newSelected !== this.selectedBleacherUuids;
+      if (!expandedChanged && !selectedChanged) return;
+      if (expandedChanged) this.isFormExpanded = anyExpanded;
+      if (selectedChanged) this.selectedBleacherUuids = newSelected;
       applyChanges(expandedChanged, selectedChanged);
     });
 
@@ -343,9 +364,13 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     try {
       this.unsubMaintenance?.();
     } catch {}
+    try {
+      this.unsubSubrental?.();
+    } catch {}
     this.unsub = undefined;
     this.unsubSwap = undefined;
     this.unsubMaintenance = undefined;
+    this.unsubSubrental = undefined;
     this.cellPool.clear();
     this.baker.destroyAll();
   }

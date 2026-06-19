@@ -17,6 +17,7 @@ import { useSelectedBlockStore } from "../state/useSelectedBlock";
 import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useWorkTrackerSelectionStore";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
+import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
 import { isBleacherAccessible } from "../ui/NoAccessFilter";
 
 /** Column range where the damage overlay should be drawn */
@@ -101,9 +102,20 @@ export class MainGridCellRenderer implements ICellRenderer {
               address: mt.addressData?.address || undefined,
             }
           : undefined;
+      const sr = useSubrentalEventStore.getState();
+      const selectedSubrental =
+        sr.isFormExpanded && sr.eventStart && sr.eventEnd && sr.bleacherUuid
+          ? {
+              subrentalEventUuid: sr.subrentalEventUuid ?? null,
+              bleacherUuid: sr.bleacherUuid,
+              eventStart: sr.eventStart,
+              eventEnd: sr.eventEnd,
+            }
+          : undefined;
       const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, dates, {
         selected,
         selectedMaintenance,
+        selectedSubrental,
       });
       this.spansByRow = spansByRow;
     } else {
@@ -222,9 +234,20 @@ export class MainGridCellRenderer implements ICellRenderer {
               address: mt.addressData?.address || undefined,
             }
           : undefined;
+      const sr = useSubrentalEventStore.getState();
+      const selectedSubrental =
+        sr.isFormExpanded && sr.eventStart && sr.eventEnd && sr.bleacherUuid
+          ? {
+              subrentalEventUuid: sr.subrentalEventUuid ?? null,
+              bleacherUuid: sr.bleacherUuid,
+              eventStart: sr.eventStart,
+              eventEnd: sr.eventEnd,
+            }
+          : undefined;
       const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, this.dates, {
         selected,
         selectedMaintenance,
+        selectedSubrental,
       });
       this.spansByRow = spansByRow;
     } else {

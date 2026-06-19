@@ -31,6 +31,7 @@ export type Bleacher = {
   blocks: BleacherBlock[];
   workTrackers: BleacherWorkTracker[];
   maintenanceEvents: BleacherMaintenanceEvent[];
+  subrentalEvents: BleacherSubrentalEvent[];
   damageReports: BleacherDamageReport[];
   linxupDeviceId: string | null;
 
@@ -51,6 +52,7 @@ export type BleacherEvent = {
   booked: boolean;
   goodshuffleUrl: string | null;
   isMaintenance?: boolean;
+  isSubrental?: boolean;
   hasDamageAlert?: boolean;
   alertCount?: number;
   // Mark spans injected from current selection (not yet persisted)
@@ -141,6 +143,15 @@ export type BleacherMaintenanceEvent = {
   eventEnd: string;
   costCents: number | null;
   address: string;
+};
+
+export type BleacherSubrentalEvent = {
+  subrentalEventUuid: string;
+  eventStart: string;
+  eventEnd: string;
+  status: string;
+  requestedZoneUuid: string | null;
+  notes: string | null;
 };
 
 export type DamageSeverity = "none" | "minor" | "major";
