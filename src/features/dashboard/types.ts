@@ -39,6 +39,12 @@ export type Bleacher = {
   winterAccountManagerUuid: string | null;
   zoneUuid: string | null;
   zoneName: string | null;
+  /** For subrental ghost rows: the zone the bleacher normally belongs to */
+  originalZoneName?: string | null;
+  /** Pre-computed once during data assembly — avoids per-cell store lookups */
+  isAccessible: boolean;
+  /** True for virtual rows representing a bleacher borrowed into another zone via subrental */
+  isSubrentalRow?: boolean;
 };
 
 export type BleacherEvent = {

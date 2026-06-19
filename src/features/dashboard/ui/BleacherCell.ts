@@ -1,10 +1,11 @@
-import { Container, Graphics, Sprite, Text } from "pixi.js";
+import { Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import { Baker } from "../util/Baker";
 import { BleacherCellToggle } from "./BleacherCellToggle";
 import { SwapButton, SwapButtonState } from "./SwapButton";
 import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT } from "../values/constants";
 import { Bleacher } from "../types";
 import { MapPinIcon } from "./event/MapPinIcon";
+import { PngManager } from "../util/PngManager";
 
 /**
  * A lightweight, scroll-friendly **row widget** for the sticky left column.
@@ -133,7 +134,9 @@ export class BleacherCell extends Container {
    */
   setBleacher(b: Bleacher, isAccessible: boolean = true) {
     this.bleacherUuid = b.bleacherUuid;
-    const key = `${b.bleacherUuid}:${isAccessible ? "acc" : "noacc"}`;
+    // Include zoneUuid in the key so ghost subrental rows (same bleacherUuid, different zone)
+    // get their own texture rather than reusing the normal row's cached texture.
+    const key = `${b.bleacherUuid}:${b.zoneUuid ?? "nz"}:${isAccessible ? "acc" : "noacc"}`;
 
     this.bg.visible = !isAccessible;
 
@@ -197,6 +200,8 @@ export class BleacherCell extends Container {
    * @internal
    */
   private buildBleacherContainer(c: Container, b: Bleacher, isAccessible: boolean = true) {
+    const isSubrental = !!b.isSubrentalRow;
+
     const bleacherNumber = new Text({
       text: String(b.bleacherNumber),
       style: {
@@ -219,19 +224,40 @@ export class BleacherCell extends Container {
     });
     bleacherSeats.position.set(40, 18);
 
-    const summerHomeBase = new Text({
-      text: b.zoneName ?? "",
-      style: { fill: 0x6b6b6b, fontSize: 11 },
-    });
-    summerHomeBase.position.set(3, 31);
+    if (isSubrental) {
+      // For subrental ghost rows: show the handshake icon next to the bleacher number
+      // and display "OriginalZone → TargetZone" in place of just the zone name.
+      const hsTexture = PngManager.getTexture("handshake");
+      if (hsTexture) {
+        const hsSprite = new Sprite(hsTexture);
+        hsSprite.width = 14;
+        hsSprite.height = 14;
+        // Pin to the far right of the cell, vertically centered
+        hsSprite.position.set(BLEACHER_COLUMN_WIDTH - 25, (CELL_HEIGHT - 14) / 2);
+        c.addChild(hsSprite);
+      }
 
-    // const winterHomeBase = new Text({
-    //   text: b.winterHomeBase?.name ?? "",
-    //   style: { fill: 0x2b80ff, fontSize: 11 },
-    // });
-    // // place winter right after summer
-    // winterHomeBase.position.set(3 + Math.ceil(summerHomeBase.width) + 5, 30);
+      // Determine original zone name: look it up from the bleacher's own zone
+      // The subrental ghost row's subrentalEvents carry requestedZoneUuid == b.zoneUuid
+      // The original zone is on the subrental event's bleacher (not stored here).
+      // We store the target zone on the ghost row as zoneUuid/zoneName.
+      // The original zone name is available via the first subrentalEvent's... we don't
+      // have it directly, but we can show the target zone prominently with an arrow prefix.
+      const zoneLabel = new Text({
+        text: `${b.originalZoneName ?? ""} \u2192 ${b.zoneName ?? ""}`,
+        style: { fill: 0xf0d000, fontSize: 11, fontWeight: "600" },
+      });
+      zoneLabel.position.set(3, 31);
+      c.addChild(zoneLabel);
+    } else {
+      const zoneLabel = new Text({
+        text: b.zoneName ?? "",
+        style: { fill: 0x6b6b6b, fontSize: 11 },
+      });
+      zoneLabel.position.set(3, 31);
+      c.addChild(zoneLabel);
+    }
 
-    c.addChild(bleacherNumber, bleacherRows, bleacherSeats, summerHomeBase);
+    c.addChild(bleacherNumber, bleacherRows, bleacherSeats);
   }
 }

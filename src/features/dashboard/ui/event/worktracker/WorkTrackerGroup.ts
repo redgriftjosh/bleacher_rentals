@@ -7,7 +7,7 @@ import { WorkTrackerHalf } from "./WorkTrackerHalf";
 import { WorkTrackerSmall } from "./WorkTrackerSmall";
 import { WorkTrackerDragManager } from "../../../util/WorkTrackerDragManager";
 import { isDriverUnavailable } from "../../../state/useDriverUnavailabilityStore";
-import { useAlertCountsStore } from "../../../db/hooks/useBleachers";
+import { useAlertCountsStore } from "../../../state/useAlertCountsStore";
 
 const MAX_SMALL_THUMBNAILS = 4;
 const DRAG_THRESHOLD = 6; // px movement before drag starts

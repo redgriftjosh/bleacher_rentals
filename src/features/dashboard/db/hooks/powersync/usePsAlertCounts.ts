@@ -2,7 +2,7 @@
 import { useEffect, useRef } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
-import { useAlertCountsStore } from "../useBleachers";
+import { useAlertCountsStore } from "../../../state/useAlertCountsStore";
 
 type AlertCountRow = {
   entity_uuid: string | null;
@@ -12,11 +12,7 @@ type AlertCountRow = {
 
 const compiled = db
   .selectFrom("Alerts as a")
-  .select(({ fn }) => [
-    "a.entity_uuid",
-    "a.entity_type",
-    fn.count<string>("a.id").as("cnt"),
-  ])
+  .select(({ fn }) => ["a.entity_uuid", "a.entity_type", fn.count<string>("a.id").as("cnt")])
   .groupBy(["a.entity_uuid", "a.entity_type"])
   .compile();
 
@@ -44,6 +40,10 @@ export function usePsAlertCounts() {
         byWt.set(row.entity_uuid, (byWt.get(row.entity_uuid) ?? 0) + count);
       }
     }
-    useAlertCountsStore.setState({ byEventUuid: byEvent, byBleacherEventUuid: byBe, byWorkTrackerUuid: byWt });
+    useAlertCountsStore.setState({
+      byEventUuid: byEvent,
+      byBleacherEventUuid: byBe,
+      byWorkTrackerUuid: byWt,
+    });
   }, [alertRows]);
 }

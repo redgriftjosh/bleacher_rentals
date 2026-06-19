@@ -20,6 +20,7 @@ import { usePsAlertCounts } from "./usePsAlertCounts";
 import { usePsZones } from "./usePsZones";
 import { usePsSubrentalEvents } from "./usePsSubrentalEvents";
 import { useZoneFilterStore } from "@/features/dashboardOptions/useZoneFilterStore";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 
 function toBool(v: number | null | boolean): boolean {
   if (typeof v === "boolean") return v;
@@ -34,6 +35,7 @@ export function useDashboardPowerSync(opts?: {
   // ── Individual reactive queries ──────────────────────────────────────
   const allBleacherRows = usePsBleachers();
   const { selectedZoneIds, showUnassigned } = useZoneFilterStore();
+  const { isAdmin, isAccountManager, accountManagerZoneIds } = usePermissionsStore();
   const bleacherRows = useMemo(() => {
     if (selectedZoneIds.length === 0 && !showUnassigned) return allBleacherRows;
     return allBleacherRows.filter((b) => {
@@ -169,7 +171,7 @@ export function useDashboardPowerSync(opts?: {
       else drsByBleacher.set(dr.bleacher_uuid, [dr]);
     }
 
-    return bleacherRows.map((b) => {
+    const normalRows = bleacherRows.map((b) => {
       // Home bases
       const summerHomeBase = b.summer_home_base_uuid
         ? {
@@ -291,6 +293,10 @@ export function useDashboardPowerSync(opts?: {
         notes: sr.notes ?? null,
       }));
 
+      const isAccessible =
+        isAdmin ||
+        (isAccountManager && !!b.zone_uuid && accountManagerZoneIds.includes(b.zone_uuid));
+
       return {
         bleacherUuid: b.id,
         bleacherNumber: b.bleacher_number ?? 0,
@@ -301,6 +307,7 @@ export function useDashboardPowerSync(opts?: {
         winterAccountManagerUuid: b.winter_account_manager_uuid,
         zoneUuid: b.zone_uuid ?? null,
         zoneName: b.zone_uuid ? (zoneMap.get(b.zone_uuid) ?? null) : null,
+        originalZoneName: null,
         summerHomeBase,
         winterHomeBase,
         bleacherEvents,
@@ -309,10 +316,91 @@ export function useDashboardPowerSync(opts?: {
         maintenanceEvents,
         subrentalEvents,
         damageReports,
+        isAccessible,
       };
     });
+
+    // ── Ghost rows: one virtual row per bleacher per borrowing zone ──────
+    const ghostRows: Bleacher[] = [];
+    for (const b of allBleacherRows) {
+      const relatedSRs = srsByBleacher.get(b.id) ?? [];
+      if (!relatedSRs.length) continue;
+
+      // Group by requestedZoneUuid, skipping subrental events targeting the bleacher's own zone
+      const srsByZone = new Map<string, typeof relatedSRs>();
+      for (const sr of relatedSRs) {
+        const zoneId = sr.requested_zone_uuid;
+        if (!zoneId || zoneId === b.zone_uuid) continue;
+        const arr = srsByZone.get(zoneId);
+        if (arr) arr.push(sr);
+        else srsByZone.set(zoneId, [sr]);
+      }
+
+      for (const [targetZoneUuid, zoneSRs] of srsByZone) {
+        // Apply zone filter: show if no filter active, or if the target zone is selected
+        const passesFilter =
+          (selectedZoneIds.length === 0 && !showUnassigned) ||
+          selectedZoneIds.includes(targetZoneUuid);
+        if (!passesFilter) continue;
+
+        const ghostSubrentalEvents = zoneSRs.map((sr) => ({
+          subrentalEventUuid: sr.id,
+          eventStart: sr.event_start ?? "",
+          eventEnd: sr.event_end ?? "",
+          status: sr.status ?? "pending",
+          requestedZoneUuid: sr.requested_zone_uuid ?? null,
+          notes: sr.notes ?? null,
+        }));
+
+        const ghostIsAccessible =
+          isAdmin || (isAccountManager && accountManagerZoneIds.includes(targetZoneUuid));
+
+        const ghostSummerHomeBase = b.summer_home_base_uuid
+          ? {
+              homeBaseUuid: b.summer_home_base_uuid,
+              name: homeBaseMap.get(b.summer_home_base_uuid) ?? "",
+            }
+          : null;
+        const ghostWinterHomeBase = b.winter_home_base_uuid
+          ? {
+              homeBaseUuid: b.winter_home_base_uuid,
+              name: homeBaseMap.get(b.winter_home_base_uuid) ?? "",
+            }
+          : null;
+
+        ghostRows.push({
+          bleacherUuid: b.id,
+          bleacherNumber: b.bleacher_number ?? 0,
+          bleacherRows: b.bleacher_rows ?? 0,
+          bleacherSeats: b.bleacher_seats ?? 0,
+          linxupDeviceId: b.linxup_device_id,
+          summerAccountManagerUuid: b.summer_account_manager_uuid,
+          winterAccountManagerUuid: b.winter_account_manager_uuid,
+          zoneUuid: targetZoneUuid,
+          zoneName: zoneMap.get(targetZoneUuid) ?? null,
+          originalZoneName: b.zone_uuid ? (zoneMap.get(b.zone_uuid) ?? null) : null,
+          summerHomeBase: ghostSummerHomeBase,
+          winterHomeBase: ghostWinterHomeBase,
+          bleacherEvents: [],
+          blocks: [],
+          workTrackers: [],
+          maintenanceEvents: [],
+          subrentalEvents: ghostSubrentalEvents,
+          damageReports: [],
+          isAccessible: ghostIsAccessible,
+          isSubrentalRow: true,
+        });
+      }
+    }
+
+    const allRows = [...normalRows, ...ghostRows];
+    allRows.sort((a, b) => a.bleacherNumber - b.bleacherNumber);
+    return allRows;
   }, [
     bleacherRows,
+    allBleacherRows,
+    selectedZoneIds,
+    showUnassigned,
     homeBaseMap,
     zoneMap,
     bleacherEventRows,
@@ -325,6 +413,9 @@ export function useDashboardPowerSync(opts?: {
     maintEventMap,
     subrentalEventRows,
     damageReportRows,
+    isAdmin,
+    isAccountManager,
+    accountManagerZoneIds,
   ]);
 
   // ── Assemble DashboardEvent[] ────────────────────────────────────────

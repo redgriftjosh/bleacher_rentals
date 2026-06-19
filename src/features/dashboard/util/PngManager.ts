@@ -16,6 +16,11 @@ export class PngManager {
       "truck",
     );
     await PngManager.loadAndCachePng(app, "/map-pin.png", "map-pin");
+    await PngManager.loadAndCachePng(
+      app,
+      "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmMGQwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJtMTEgMTcgMiAyYTEgMSAwIDEgMCAzLTMiLz48cGF0aCBkPSJtMTQgMTQgMi41IDIuNWExIDEgMCAxIDAgMy0zbC0zLjg4LTMuODhhMyAzIDAgMCAwLTQuMjQgMGwtLjg4Ljg4YTEgMSAwIDEgMS0zLTNsMi44MS0yLjgxYTUuNzkgNS43OSAwIDAgMSA3LjA2LS44N2wuNDcuMjhhMiAyIDAgMCAwIDEuNDIuMjVMMjEgNCIvPjxwYXRoIGQ9Im0yMSAzIDEgMTFoLTIiLz48cGF0aCBkPSJNMyAzIDIgMTRsNi41IDYuNWExIDEgMCAxIDAgMy0zIi8+PHBhdGggZD0iTTMgNGg4Ii8+PC9zdmc+",
+      "handshake",
+    );
   }
 
   public static getSprite(key: string): Sprite {

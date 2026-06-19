@@ -26,7 +26,7 @@ import { WorkTrackerDragManager } from "./util/WorkTrackerDragManager";
 import { useAddressTooltipStore } from "./state/useAddressTooltipStore";
 import { resolveAddress } from "../../utils/resolveAddress";
 import { useScrollToDateStore } from "./state/useScrollToDateStore";
-import { useAlertCountsStore } from "./db/hooks/useBleachers";
+import { useAlertCountsStore } from "./state/useAlertCountsStore";
 
 export class Dashboard {
   // Grids

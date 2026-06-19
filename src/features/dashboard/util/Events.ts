@@ -1,7 +1,7 @@
 import { DateTime } from "luxon";
 import { Bleacher, BleacherEvent } from "../types";
 import { CELL_HEIGHT } from "../values/constants";
-import { useAlertCountsStore } from "../db/hooks/useBleachers";
+import { useAlertCountsStore } from "../state/useAlertCountsStore";
 
 export type EventSpanType = {
   start: number;
