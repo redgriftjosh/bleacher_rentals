@@ -105,19 +105,31 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       const perms = usePermissionsStore.getState();
       if (perms.isAccountManager && !perms.isAdmin) {
         const dashBleachers = useDashboardBleachersStore.getState().data;
-        const bleacher = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid);
+        const bleacher = dashBleachers.find(
+          (b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow,
+        );
         const ownedByAM =
           bleacher &&
           isBleacherOwnedByAM({
             bleacherZoneUuid: bleacher.zoneUuid,
             accountManagerZoneIds: perms.accountManagerZoneIds,
           });
+        // Block if the owned bleacher is subrented out on this date
+        const subrented =
+          ownedByAM &&
+          (bleacher?.acceptedSubrentalBlocks ?? []).some(
+            (r) => date >= r.eventStart.substring(0, 10) && date <= r.eventEnd.substring(0, 10),
+          );
         const hasSubrentalAccess = hasSubrentalAccessForDate({
           bleacherUuid,
           date,
           accountManagerZoneIds: perms.accountManagerZoneIds,
           allBleachers: dashBleachers,
         });
+        if (subrented) {
+          createErrorToast(["This bleacher is subrented out on this date."]);
+          return;
+        }
         if (!ownedByAM && !hasSubrentalAccess) {
           createErrorToast(["You can only create work trackers for bleachers assigned to you."]);
           return;

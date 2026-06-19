@@ -33,8 +33,13 @@ import {
 import { buildTripStatusNotification } from "@/features/workTrackers/db/notifications";
 import BillOfLadingButton from "./billOfLading/BillOfLadingButton";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
-import { canEditWorkTracker, canReleaseWorkTracker } from "@/features/userAccess/logic/canEditWorkTracker";
+import {
+  canEditWorkTracker,
+  canReleaseWorkTracker,
+} from "@/features/userAccess/logic/canEditWorkTracker";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { hasSubrentalAccessForDate } from "@/features/userAccess/logic/hasSubrentalAccessForDate";
+import { useDashboardBleachersStore } from "@/features/dashboard/state/useDashboardBleachersStore";
 import { requestReview, REVIEW_REQUESTED_TITLE } from "@/features/alerts/requestReview";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { db } from "@/components/providers/SystemProvider";
@@ -262,14 +267,11 @@ export default function WorkTrackerModal({
     workTracker.date <= getUpcomingWindowEnd();
 
   const perms = usePermissionsStore();
+  const allDashboardBleachers = useDashboardBleachersStore((s) => s.data);
 
   const bleacherZoneCompiled = useMemo(() => {
     const effectiveId = workTracker?.bleacher_uuid ?? "__none__";
-    return db
-      .selectFrom("Bleachers")
-      .select(["zone_uuid"])
-      .where("id", "=", effectiveId)
-      .compile();
+    return db.selectFrom("Bleachers").select(["zone_uuid"]).where("id", "=", effectiveId).compile();
   }, [workTracker?.bleacher_uuid]);
   const { data: bleacherZoneRows } = useTypedQuery(
     bleacherZoneCompiled,
@@ -287,7 +289,15 @@ export default function WorkTrackerModal({
         accountManagerZoneIds: perms.accountManagerZoneIds,
         createdByUserId: workTracker?.created_by_user_uuid,
         userId: perms.userId,
-      })
+      }) ||
+      // AM with subrental access to this bleacher on the work tracker date
+      (permissions.isAccountManager &&
+        hasSubrentalAccessForDate({
+          bleacherUuid: workTracker?.bleacher_uuid ?? null,
+          date: workTracker?.date ?? null,
+          accountManagerZoneIds: perms.accountManagerZoneIds,
+          allBleachers: allDashboardBleachers,
+        }))
     : false;
 
   const canRelease = canReleaseWorkTracker({
@@ -701,9 +711,7 @@ export default function WorkTrackerModal({
                       canEdit={canEdit && canRelease}
                       workTrackerId={workTracker?.id !== "-1" ? workTracker?.id : undefined}
                       onRequestReview={
-                        canEdit && !canRelease && !isNew
-                          ? () => handleRequestReview()
-                          : undefined
+                        canEdit && !canRelease && !isNew ? () => handleRequestReview() : undefined
                       }
                     />
                   </div>
