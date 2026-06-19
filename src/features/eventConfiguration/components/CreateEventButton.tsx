@@ -8,6 +8,9 @@ import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/use
 import { useState, useRef, useEffect } from "react";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
+import { SUBRENTAL_COLOR } from "@/features/dashboard/values/constants";
+
+const subrentalHex = `#${SUBRENTAL_COLOR.toString(16).padStart(6, "0")}`;
 
 export const CreateEventButton = () => {
   const permissions = useTeamPermissions();
@@ -131,7 +134,9 @@ export const CreateEventButton = () => {
   if (subrentalsStore.isFormExpanded) {
     return (
       <div className="flex items-center justify-end gap-2">
-        <span className="text-xs font-semibold text-indigo-600 mb-2">SUB-RENTAL</span>
+        <span className="text-xs font-semibold mb-2" style={{ color: subrentalHex }}>
+          SUB-RENTAL
+        </span>
         {!subrentalsStore.isFormMinimized ? (
           <>
             <button

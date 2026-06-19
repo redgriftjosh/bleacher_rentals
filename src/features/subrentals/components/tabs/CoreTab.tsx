@@ -84,14 +84,25 @@ export const SubrentalCoreTab = ({ disabled = false }: Props = {}) => {
           placeholder="Select zone"
           disabled={disabled}
         />
-        <label className="block text-sm font-medium text-black/70 mt-2">Bleacher</label>
-        <Dropdown
-          options={bleacherOptions}
-          selected={store.bleacherUuid ?? undefined}
-          onSelect={(val) => store.setField("bleacherUuid", val as string | null)}
-          placeholder={store.requestedZoneUuid ? "Select bleacher" : "Select a zone first"}
-          disabled={disabled || !store.requestedZoneUuid}
-        />
+        <label className="block text-sm font-medium text-black/70 mt-2">Status</label>
+        <select
+          className={`mt-1 w-full p-2 border rounded text-sm font-medium cursor-pointer disabled:opacity-60 disabled:cursor-default ${
+            store.status === "accepted"
+              ? "bg-green-50 text-green-800 border-green-300"
+              : store.status === "denied"
+                ? "bg-red-50 text-red-800 border-red-300"
+                : "bg-yellow-50 text-yellow-800 border-yellow-300"
+          }`}
+          value={store.status}
+          onChange={(e) =>
+            store.setField("status", e.target.value as "pending" | "accepted" | "denied")
+          }
+          disabled={disabled}
+        >
+          <option value="pending">Pending</option>
+          <option value="accepted">Accepted</option>
+          <option value="denied">Denied</option>
+        </select>
       </div>
 
       {/* Column 3: Notes + Status */}
@@ -105,22 +116,6 @@ export const SubrentalCoreTab = ({ disabled = false }: Props = {}) => {
           onChange={(e) => store.setField("notes", e.target.value)}
           disabled={disabled}
         />
-        {isEditing && (
-          <>
-            <label className="block text-sm font-medium text-black/70 mt-2">Status</label>
-            <span
-              className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${
-                store.status === "accepted"
-                  ? "bg-green-100 text-green-800"
-                  : store.status === "denied"
-                    ? "bg-red-100 text-red-800"
-                    : "bg-yellow-100 text-yellow-800"
-              }`}
-            >
-              {STATUS_LABELS[store.status] ?? store.status}
-            </span>
-          </>
-        )}
       </div>
     </div>
   );

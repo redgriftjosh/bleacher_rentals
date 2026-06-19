@@ -2,6 +2,9 @@
 
 import { useSubrentalEventStore } from "../state/useSubrentalEventStore";
 import { SubrentalEventForm } from "./SubrentalEventForm";
+import { SUBRENTAL_COLOR } from "@/features/dashboard/values/constants";
+
+const subrentalHex = `#${SUBRENTAL_COLOR.toString(16).padStart(6, "0")}`;
 
 export const SubrentalEventPanel = () => {
   const isFormExpanded = useSubrentalEventStore((s) => s.isFormExpanded);
@@ -16,7 +19,7 @@ export const SubrentalEventPanel = () => {
         showPanel ? "max-h-[500px] mt-2" : "-mt-2 max-h-0"
       }`}
     >
-      <div className="shadow-lg border border-red-400 bg-white">
+      <div className="shadow-lg border bg-white" style={{ borderColor: subrentalHex }}>
         <SubrentalEventForm onCancel={closeForm} />
       </div>
     </div>

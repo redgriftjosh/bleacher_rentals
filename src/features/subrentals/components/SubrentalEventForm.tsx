@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSubrentalEventStore } from "../state/useSubrentalEventStore";
 import { createSubrentalEvent } from "../db/createSubrentalEvent";
 import { SubrentalCoreTab } from "./tabs/CoreTab";
+import { SUBRENTAL_COLOR } from "@/features/dashboard/values/constants";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +31,11 @@ type SubrentalEventFormProps = {
 export const SubrentalEventForm = ({ onCancel }: SubrentalEventFormProps) => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("Core");
+  const [submitHover, setSubmitHover] = useState(false);
+  const subrentalHex = `#${SUBRENTAL_COLOR.toString(16).padStart(6, "0")}`;
+  const subrentalHexDark = `#${Math.max(0, SUBRENTAL_COLOR - 0x101000)
+    .toString(16)
+    .padStart(6, "0")}`;
   const store = useSubrentalEventStore();
   const permissions = useTeamPermissions();
 
@@ -136,7 +142,10 @@ export const SubrentalEventForm = ({ onCancel }: SubrentalEventFormProps) => {
           {canEdit &&
             (!loading ? (
               <button
-                className="px-4 py-2 bg-darkBlue text-white text-sm font-semibold rounded-sm shadow-md hover:bg-lightBlue transition cursor-pointer"
+                className="px-4 py-2 text-white text-sm font-semibold rounded-sm shadow-md transition cursor-pointer"
+                style={{ backgroundColor: submitHover ? subrentalHexDark : subrentalHex }}
+                onMouseEnter={() => setSubmitHover(true)}
+                onMouseLeave={() => setSubmitHover(false)}
                 onClick={isEditing ? handleUpdate : handleCreate}
                 disabled={loading}
               >
