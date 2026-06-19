@@ -133,7 +133,12 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
             className="bg-white w-full p-2 border rounded min-w-0"
             value={currentEventStore.eventStart}
             onChange={(e) => currentEventStore.setField("eventStart", e.target.value)}
-            max={currentEventStore.eventEnd || undefined}
+            min={currentEventStore.subrentalConstraint?.eventStart || undefined}
+            max={
+              currentEventStore.subrentalConstraint
+                ? currentEventStore.subrentalConstraint.eventEnd
+                : currentEventStore.eventEnd || undefined
+            }
           />
           <ScrollToDateButton date={currentEventStore.eventStart} />
         </div>
@@ -144,7 +149,12 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
             className="bg-white w-full p-2 border rounded min-w-0"
             value={currentEventStore.eventEnd}
             onChange={(e) => currentEventStore.setField("eventEnd", e.target.value)}
-            min={currentEventStore.eventStart || undefined}
+            min={
+              currentEventStore.subrentalConstraint
+                ? currentEventStore.subrentalConstraint.eventStart
+                : currentEventStore.eventStart || undefined
+            }
+            max={currentEventStore.subrentalConstraint?.eventEnd || undefined}
           />
           <ScrollToDateButton date={currentEventStore.eventEnd} />
         </div>
