@@ -4,7 +4,6 @@ import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { CreateQuoteState } from "../state/useCreateQuoteStore";
 import { syncPaymentInstallments } from "./paymentInstallments";
 import { calculateTotals } from "../utils/calculateTotals";
-import { logSingleChange } from "./logEventChanges";
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute } from "@/lib/powersync/typedQuery";
 
@@ -115,15 +114,22 @@ export async function createQuoteEvent(
     }
   }
 
-  // 5. Log creation
-  await logSingleChange(
-    supabase,
-    eventUuid,
-    currentUserUuid ?? null,
-    "event_name",
-    null,
-    state.eventName,
-    "create",
+  // 5. Log creation via PowerSync local (not Supabase) so it uploads
+  //    in the same batch as the Event — avoids FK violation on event_uuid.
+  await typedExecute(
+    db
+      .insertInto("EventChangeLog")
+      .values({
+        id: crypto.randomUUID(),
+        event_uuid: eventUuid,
+        changed_by_user_uuid: currentUserUuid ?? null,
+        field_name: "event_name",
+        prev_value: null,
+        next_value: state.eventName,
+        action_type: "create",
+        changed_at: new Date().toISOString(),
+      } as any)
+      .compile(),
   );
 
   return eventUuid;

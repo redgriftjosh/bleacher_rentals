@@ -205,31 +205,23 @@ export async function updateQuoteEvent(
     ]);
   }
 
-  // 5. Sync line items (delete old, insert new)
-  if (state.lineItems.length > 0) {
-    await typedExecute(
-      db.deleteFrom("EventLineItems").where("event_uuid", "=", eventId).compile(),
-    );
+  // 5. Sync line items via Supabase (not local PowerSync) to avoid duplication across clients
+  await supabase.from("EventLineItems").delete().eq("event_uuid", eventId);
 
-    for (const li of state.lineItems) {
-      await typedExecute(
-        db
-          .insertInto("EventLineItems")
-          .values({
-            id: crypto.randomUUID(),
-            event_uuid: eventId,
-            header: li.label,
-            description: null,
-            bleacher_type_uuid: li.bleacherTypeUuid || null,
-            value_cents: li.category === "discounts" ? li.lineTotalCents : li.unitPriceCents,
-            quantity: li.qty,
-            currency: state.currency,
-            is_template: 0,
-            deleted: 0,
-          } as any)
-          .compile(),
-      );
-    }
+  if (state.lineItems.length > 0) {
+    const rows = state.lineItems.map((li) => ({
+      id: crypto.randomUUID(),
+      event_uuid: eventId,
+      header: li.label,
+      description: null,
+      bleacher_type_uuid: li.bleacherTypeUuid || null,
+      value_cents: li.category === "discounts" ? li.lineTotalCents : li.unitPriceCents,
+      quantity: li.qty,
+      currency: state.currency,
+      is_template: false,
+      deleted: false,
+    }));
+    await supabase.from("EventLineItems").insert(rows);
   }
 
   // 6. Sync payment installments

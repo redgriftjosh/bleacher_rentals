@@ -80,15 +80,11 @@ export type CreateQuoteActions = {
   resetForm: () => void;
 };
 
-function freshValidTill(): string {
-  return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-}
-
 const initialState: CreateQuoteState = {
   editingEventId: null,
 
   quoteNumber: "",
-  quoteValidTill: freshValidTill(),
+  quoteValidTill: "",
   status: "draft",
   salesOfficeId: null,
   accountManagerId: null,
@@ -179,7 +175,7 @@ export const useCreateQuoteStore = create<CreateQuoteState & CreateQuoteActions>
 
       setPaymentInstallments: (installments) => set({ paymentInstallments: installments }),
 
-      resetForm: () => set({ ...initialState, quoteValidTill: freshValidTill() }),
+      resetForm: () => set(initialState),
     }),
     { name: "create-quote-draft", storage: throttledStorage(1000) },
   ),

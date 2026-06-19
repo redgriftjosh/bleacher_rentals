@@ -76,7 +76,10 @@ function getTitle(row: LogRow): string {
   const config = ACTION_CONFIG[row.action_type ?? "update"] ?? ACTION_CONFIG.update;
   const fieldLabel = FIELD_LABELS[row.field_name ?? ""] ?? row.field_name ?? "";
 
-  if (row.action_type === "create") return "Project Created";
+  if (row.action_type === "create") {
+    const name = [row.first_name, row.last_name].filter(Boolean).join(" ");
+    return name ? `Quote Created by ${name}` : "Quote Created";
+  }
   if (row.action_type === "sign") return "Contract Signed";
   if (row.action_type === "send") return `Quote Sent to ${row.next_value ?? "client"}`;
   if (row.action_type === "line_item_add") return `Line Item Added`;
@@ -232,7 +235,41 @@ export function LogTab({ quoteId }: { quoteId: string }) {
 
   const { data, isLoading } = useTypedQuery(compiled, expect<LogRow>());
 
-  const logs = data ?? [];
+  // Fallback: show a synthetic "Quote Created" entry for quotes created before logging was added
+  const createdAtCompiled = useMemo(
+    () =>
+      db
+        .selectFrom("Events")
+        .select(["created_at"])
+        .where("id", "=", quoteId)
+        .limit(1)
+        .compile(),
+    [quoteId],
+  );
+  const { data: createdAtRows } = useTypedQuery(
+    createdAtCompiled,
+    expect<{ created_at: string | null }>(),
+  );
+
+  const rawLogs = data ?? [];
+  const hasCreateEntry = rawLogs.some((l) => l.action_type === "create");
+
+  const logs = useMemo(() => {
+    if (hasCreateEntry || !createdAtRows?.[0]?.created_at) return rawLogs;
+    const synthetic: LogRow = {
+      id: `synthetic-create-${quoteId}`,
+      action_type: "create",
+      field_name: "event_name",
+      prev_value: null,
+      next_value: null,
+      changed_at: createdAtRows[0].created_at,
+      changed_by_user_uuid: null,
+      first_name: null,
+      last_name: null,
+    };
+    return [...rawLogs, synthetic];
+  }, [rawLogs, hasCreateEntry, createdAtRows, quoteId]);
+
   const clientLogs = logs.filter(isClientEvent);
   const internalLogs = logs.filter((l) => !isClientEvent(l));
 

@@ -148,15 +148,13 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
 
   const canSend = canSendQuote({
     isAdmin: perms.isAdmin,
-    zoneUuid: eventZoneUuid,
     leadZoneIds: perms.leadZoneIds,
-    accountManagerZoneIds: perms.accountManagerZoneIds,
   });
 
   const canEditQuote = canEditOwnedEntity({
     isAdmin: perms.isAdmin,
     isNew: false,
-    zoneUuid: eventZoneUuid,
+    isAccountManager: perms.isAccountManager,
     leadZoneIds: perms.leadZoneIds,
     accountManagerZoneIds: perms.accountManagerZoneIds,
     createdByUserId: quote?.createdByUserUuid,

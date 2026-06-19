@@ -23,27 +23,27 @@ describe("canEditOwnedEntity (Events / MaintenanceEvents)", () => {
   });
 
   describe("Lead AM", () => {
-    const base = {
-      isAdmin: false,
-      isNew: false,
-      zoneUuid: "zone-a",
-      leadZoneIds: ["zone-a"],
-      accountManagerZoneIds: ["zone-a", "zone-b"],
-    };
-
-    it("can edit any entity in their lead zone", () => {
+    it("can edit any entity (lead in any zone = full access)", () => {
       expect(
-        canEditOwnedEntity({ ...base, createdByUserId: "other-user", userId: "me" }),
+        canEditOwnedEntity({
+          isAdmin: false,
+          isNew: false,
+          isAccountManager: true,
+          leadZoneIds: ["zone-a"],
+          accountManagerZoneIds: ["zone-a", "zone-b"],
+          createdByUserId: "other-user",
+          userId: "me",
+        }),
       ).toBe(true);
     });
   });
 
-  describe("Junior AM", () => {
+  describe("Junior AM (no lead zones)", () => {
     const base = {
       isAdmin: false,
       isNew: false,
-      zoneUuid: "zone-b",
-      leadZoneIds: ["zone-a"],
+      isAccountManager: true,
+      leadZoneIds: [] as string[],
       accountManagerZoneIds: ["zone-a", "zone-b"],
     };
 
@@ -53,13 +53,7 @@ describe("canEditOwnedEntity (Events / MaintenanceEvents)", () => {
       ).toBe(true);
     });
 
-    it("cannot edit entity created by someone else and not assigned to them", () => {
-      expect(
-        canEditOwnedEntity({ ...base, createdByUserId: "other-user", userId: "me" }),
-      ).toBe(false);
-    });
-
-    it("can edit entity assigned to them even if created by someone else", () => {
+    it("can edit entity assigned to them", () => {
       expect(
         canEditOwnedEntity({
           ...base,
@@ -69,35 +63,57 @@ describe("canEditOwnedEntity (Events / MaintenanceEvents)", () => {
         }),
       ).toBe(true);
     });
+
+    it("cannot edit entity created by and assigned to someone else", () => {
+      expect(
+        canEditOwnedEntity({
+          ...base,
+          createdByUserId: "other-user",
+          assignedUserId: "other-user",
+          userId: "me",
+        }),
+      ).toBe(false);
+    });
+
+    it("cannot edit entity not assigned to them", () => {
+      expect(
+        canEditOwnedEntity({
+          ...base,
+          createdByUserId: "other-user",
+          userId: "me",
+        }),
+      ).toBe(false);
+    });
   });
 
-  describe("AM outside zone", () => {
-    it("AM cannot edit entity in a zone they are not assigned to", () => {
+  describe("AM without zones", () => {
+    it("cannot edit entity not assigned to them", () => {
       expect(
         canEditOwnedEntity({
           isAdmin: false,
           isNew: false,
-          zoneUuid: "zone-c",
-          leadZoneIds: ["zone-a"],
-          accountManagerZoneIds: ["zone-a", "zone-b"],
+          isAccountManager: true,
+          leadZoneIds: [],
+          accountManagerZoneIds: [],
           createdByUserId: "other-user",
           userId: "me",
         }),
       ).toBe(false);
     });
 
-    it("AM cannot edit entity with no zone", () => {
+    it("can edit entity assigned to them", () => {
       expect(
         canEditOwnedEntity({
           isAdmin: false,
           isNew: false,
-          zoneUuid: null,
-          leadZoneIds: ["zone-a"],
-          accountManagerZoneIds: ["zone-a", "zone-b"],
+          isAccountManager: true,
+          leadZoneIds: [],
+          accountManagerZoneIds: [],
           createdByUserId: "other-user",
+          assignedUserId: "me",
           userId: "me",
         }),
-      ).toBe(false);
+      ).toBe(true);
     });
   });
 
@@ -108,46 +124,18 @@ describe("canEditOwnedEntity (Events / MaintenanceEvents)", () => {
 
 describe("canSendQuote", () => {
   it("admin can always send", () => {
-    expect(
-      canSendQuote({
-        isAdmin: true,
-        zoneUuid: "zone-a",
-        leadZoneIds: [],
-        accountManagerZoneIds: [],
-      }),
-    ).toBe(true);
+    expect(canSendQuote({ isAdmin: true, leadZoneIds: [] })).toBe(true);
   });
 
-  it("lead AM can send in their lead zone", () => {
-    expect(
-      canSendQuote({
-        isAdmin: false,
-        zoneUuid: "zone-a",
-        leadZoneIds: ["zone-a"],
-        accountManagerZoneIds: ["zone-a", "zone-b"],
-      }),
-    ).toBe(true);
+  it("lead AM can send (not zone-dependent)", () => {
+    expect(canSendQuote({ isAdmin: false, leadZoneIds: ["zone-a"] })).toBe(true);
   });
 
   it("junior AM cannot send", () => {
-    expect(
-      canSendQuote({
-        isAdmin: false,
-        zoneUuid: "zone-b",
-        leadZoneIds: ["zone-a"],
-        accountManagerZoneIds: ["zone-a", "zone-b"],
-      }),
-    ).toBe(false);
+    expect(canSendQuote({ isAdmin: false, leadZoneIds: [] })).toBe(false);
   });
 
   it("non-AM cannot send", () => {
-    expect(
-      canSendQuote({
-        isAdmin: false,
-        zoneUuid: "zone-a",
-        leadZoneIds: [],
-        accountManagerZoneIds: [],
-      }),
-    ).toBe(false);
+    expect(canSendQuote({ isAdmin: false, leadZoneIds: [] })).toBe(false);
   });
 });

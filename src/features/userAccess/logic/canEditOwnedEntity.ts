@@ -1,10 +1,8 @@
-import { getAmRoleForZone } from "./getAmRoleForZone";
-
 export function canEditOwnedEntity(params: {
   isAdmin: boolean;
   isNew: boolean;
   canCreate?: boolean;
-  zoneUuid?: string | null;
+  isAccountManager?: boolean;
   leadZoneIds?: string[];
   accountManagerZoneIds?: string[];
   createdByUserId?: string | null;
@@ -15,7 +13,7 @@ export function canEditOwnedEntity(params: {
     isAdmin,
     isNew,
     canCreate = true,
-    zoneUuid,
+    isAccountManager = false,
     leadZoneIds = [],
     accountManagerZoneIds = [],
     createdByUserId,
@@ -27,33 +25,25 @@ export function canEditOwnedEntity(params: {
   if (isNew) return canCreate;
   if (!canCreate) return false;
 
-  const role = getAmRoleForZone({ zoneUuid, leadZoneIds, accountManagerZoneIds });
+  // Lead in any zone → full edit on all entities
+  if (leadZoneIds.length > 0) return true;
 
-  if (role === "lead") return true;
-  if (role === "junior") {
+  // Junior AM → own or assigned only
+  if (isAccountManager || accountManagerZoneIds.length > 0) {
     if (!userId) return false;
     return (!!createdByUserId && createdByUserId === userId) ||
            (!!assignedUserId && assignedUserId === userId);
   }
 
-  if (accountManagerZoneIds.length > 0) return false;
-
+  // Non-AM callers (backwards compat — EventConfigurationForm, MaintenanceEventForm)
   return true;
 }
 
 export function canSendQuote(params: {
   isAdmin: boolean;
-  zoneUuid: string | null | undefined;
   leadZoneIds: string[];
-  accountManagerZoneIds: string[];
 }): boolean {
   if (params.isAdmin) return true;
-
-  const role = getAmRoleForZone({
-    zoneUuid: params.zoneUuid,
-    leadZoneIds: params.leadZoneIds,
-    accountManagerZoneIds: params.accountManagerZoneIds,
-  });
-
-  return role === "lead";
+  // Lead in any zone can send quotes (quotes aren't zone-bound)
+  return params.leadZoneIds.length > 0;
 }

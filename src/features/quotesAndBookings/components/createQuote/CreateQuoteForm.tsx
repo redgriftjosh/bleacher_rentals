@@ -38,7 +38,7 @@ export function CreateQuoteForm() {
   const canSendDirectly = perms.isAdmin || perms.leadZoneIds.length > 0;
 
   // Auto-fetch tax from QBO when office + address are set
-  useAutoTax();
+  const { qboError } = useAutoTax();
 
   const isEditing = !!editingEventId;
 
@@ -95,13 +95,13 @@ export function CreateQuoteForm() {
     try {
       const state = useCreateQuoteStore.getState();
       if (isEditing) {
-        await updateQuoteEvent(editingEventId, state, supabase, currentUserUuid);
+        await updateQuoteEvent(editingEventId, state, supabase, currentUserUuid ?? perms.userId);
         void triage("Events", { id: editingEventId }, supabase);
         createSuccessToast(["Quote updated."]);
         resetForm();
         router.push(`/quotes-bookings/${editingEventId}`);
       } else {
-        const eventId = await createQuoteEvent(state, supabase, currentUserUuid);
+        const eventId = await createQuoteEvent(state, supabase, currentUserUuid ?? perms.userId);
         void triage("Events", { id: eventId }, supabase);
         createSuccessToast(["Quote draft saved."]);
         resetForm();
@@ -121,10 +121,10 @@ export function CreateQuoteForm() {
       const state = useCreateQuoteStore.getState();
       let eventId: string;
       if (isEditing) {
-        await updateQuoteEvent(editingEventId, state, supabase, currentUserUuid);
+        await updateQuoteEvent(editingEventId, state, supabase, currentUserUuid ?? perms.userId);
         eventId = editingEventId;
       } else {
-        eventId = await createQuoteEvent(state, supabase, currentUserUuid);
+        eventId = await createQuoteEvent(state, supabase, currentUserUuid ?? perms.userId);
       }
       void triage("Events", { id: eventId }, supabase);
       // Open preview in new tab, keep form open
@@ -149,10 +149,10 @@ export function CreateQuoteForm() {
       const state = useCreateQuoteStore.getState();
       let eventId: string;
       if (isEditing) {
-        await updateQuoteEvent(editingEventId, state, supabase, currentUserUuid);
+        await updateQuoteEvent(editingEventId, state, supabase, currentUserUuid ?? perms.userId);
         eventId = editingEventId;
       } else {
-        eventId = await createQuoteEvent(state, supabase, currentUserUuid);
+        eventId = await createQuoteEvent(state, supabase, currentUserUuid ?? perms.userId);
       }
       void triage("Events", { id: eventId }, supabase);
 
@@ -204,6 +204,16 @@ export function CreateQuoteForm() {
           <X className="w-5 h-5" />
         </button>
       </div>
+
+      {qboError && (
+        <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 mb-4">
+          Failed to load tax data from QuickBooks. Make sure QuickBooks is connected to this Sales Office. If you have access,{" "}
+          <a href="/quickbooks" className="underline font-semibold hover:text-red-800">
+            go to the QuickBooks page
+          </a>{" "}
+          to authenticate a connection.
+        </div>
+      )}
 
       <div className="space-y-8">
         <QuoteDetailsSection />

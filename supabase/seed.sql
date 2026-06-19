@@ -226,6 +226,7 @@ INSERT INTO "public"."Users" ("created_at", "first_name", "last_name", "email", 
 	('2025-11-14 21:22:47.851794+00', 'Josh', 'Testing', 'josh+testing@tpi-3.ca', NULL, 'user_35UDxedvANarvDC2SZqh9oC3GDk', 3, NULL, false, '7b65d5a1-8ee0-4b7a-816d-d3ec1ed123c5', '0ff1947c-4dc8-40a7-b16f-914eb3805bfb', NULL, false),
 	('2026-05-27 13:48:13.532909+00', 'Temporary', 'Driver', 'josh+1@bleacherrentals.com', NULL, NULL, 1, NULL, false, '75dfeb9e-6c28-4839-a91c-a7333b0921c6', '80e3d28b-ccb3-408d-8e40-37701c562f9d', NULL, false),
 	('2026-05-11 14:11:14.61267+00', 'Max', 'Gavryshkiv', 'max@bleacherrentals.com', NULL, 'user_3DaHLyQDyEFPb0yXDFKGhXYz4oq', 1, NULL, true, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '43f82f56-f6e2-4400-aeb2-7c5195c557ad', NULL, true),
+	('2026-06-19 14:53:32.276538+00', 'Max', 'SecondAccount', 'gavryshkiv.com@gmail.com', NULL, 'user_3FK05O2I2omJ7FYdpqQkLn9WryG', 1, NULL, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '92e2449d-b246-44a9-a117-f922bc093a66', NULL, false),
 	('2026-05-27 17:11:42.629152+00', 'Jason', 'Rowe', 'jason@flatoutfreestyle.com', NULL, NULL, 1, NULL, false, '75dfeb9e-6c28-4839-a91c-a7333b0921c6', '284bfe1e-8e61-417f-84d9-a7e41670f0ff', NULL, false),
 	('2026-06-01 17:28:20.424826+00', 'Jimmy', 'Johnson', 'jj232@gmail.com', NULL, NULL, 1, NULL, false, '75dfeb9e-6c28-4839-a91c-a7333b0921c6', '102edb99-5dde-406e-a3bd-9c38150e2749', NULL, false),
 	('2026-06-01 18:03:17.529323+00', 'Steve', 'Stevens', 'sstevens@gmail.com', NULL, NULL, 1, NULL, false, '75dfeb9e-6c28-4839-a91c-a7333b0921c6', '40fe9c2d-1ed8-4c54-95ea-119c4bcce7a2', NULL, false),
@@ -240,6 +241,7 @@ INSERT INTO "public"."Users" ("created_at", "first_name", "last_name", "email", 
 --
 
 INSERT INTO "public"."AccountManagers" ("created_at", "is_active", "id", "user_uuid") VALUES
+    ('2026-06-19 15:33:31.260933+00', true, '17885e57-1562-49d6-91d8-a9886b545863', '92e2449d-b246-44a9-a117-f922bc093a66'),
 	('2026-03-16 13:05:53.190401+00', true, 'd77dde2d-65dd-4771-9b0f-4f2cdb11217e', 'aa6313bb-ef67-45e1-be41-b3c70731c768'),
 	('2025-11-28 15:49:12.942723+00', true, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '5847580c-471a-481e-92f7-582e7441eff4'),
 	('2025-11-28 15:49:12.942723+00', true, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'fae8f510-96d3-4437-b184-45be5c4b7007'),
@@ -2495,13 +2497,13 @@ INSERT INTO "public"."Alerts" ("id", "entity_uuid", "entity_type", "title", "mes
 -- Data for Name: BleacherTypes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."BleacherTypes" ("id", "name", "row_count", "deleted", "created_by_user_uuid", "created_at", "roof_type") VALUES
-	('ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', '15-Row, 450 Seat', 15, false, NULL, '2026-06-18 22:21:41.32037+00', 'none'),
-	('0e956e2c-602c-4428-a9c1-1ba11187e0ec', '10-Row, 300 Seat', 10, false, NULL, '2026-06-18 22:21:41.32037+00', 'none'),
-	('e6ac8488-57fa-40d7-979f-a7d5c23bae7b', '7-Row, 100/150 Seat', 7, false, NULL, '2026-06-18 22:21:41.32037+00', 'none'),
-	('fc8cde03-3d35-4364-9372-43afc2a3f33f', '4-Row, 20 Seat', 4, false, NULL, '2026-06-18 22:21:41.32037+00', 'none'),
-	('5a50900f-e5d9-4fa4-9e23-029a40d75c9d', '8-Row, 123 Seat', 8, false, NULL, '2026-06-18 22:21:41.789948+00', 'none'),
-	('188b8157-1c05-4318-953b-ec3a2a4c7b7e', '9-Row, 180 Seat', 9, false, NULL, '2026-06-18 22:21:41.789948+00', 'none');
+-- INSERT INTO "public"."BleacherTypes" ("id", "name", "row_count", "deleted", "created_by_user_uuid", "created_at", "roof_type") VALUES
+-- 	('ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', '15-Row, 450 Seat', 15, false, NULL, '2026-06-18 22:21:41.32037+00', 'none'),
+-- 	('0e956e2c-602c-4428-a9c1-1ba11187e0ec', '10-Row, 300 Seat', 10, false, NULL, '2026-06-18 22:21:41.32037+00', 'none'),
+-- 	('e6ac8488-57fa-40d7-979f-a7d5c23bae7b', '7-Row, 100/150 Seat', 7, false, NULL, '2026-06-18 22:21:41.32037+00', 'none'),
+-- 	('fc8cde03-3d35-4364-9372-43afc2a3f33f', '4-Row, 20 Seat', 4, false, NULL, '2026-06-18 22:21:41.32037+00', 'none'),
+-- 	('5a50900f-e5d9-4fa4-9e23-029a40d75c9d', '8-Row, 123 Seat', 8, false, NULL, '2026-06-18 22:21:41.789948+00', 'none'),
+-- 	('188b8157-1c05-4318-953b-ec3a2a4c7b7e', '9-Row, 180 Seat', 9, false, NULL, '2026-06-18 22:21:41.789948+00', 'none');
 
 
 --
@@ -2752,10 +2754,10 @@ INSERT INTO "public"."Contacts" ("id", "company_uuid", "first_name", "last_name"
 -- Data for Name: EventTypes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."EventTypes" ("id", "name", "deleted", "created_by_user_uuid", "created_at") VALUES
-	('cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 'Rural', false, NULL, '2026-06-18 22:21:41.32037+00'),
-	('c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 'City', false, NULL, '2026-06-18 22:21:41.32037+00'),
-	('2bc9bf02-dc78-48a4-90f5-9a15a8246980', 'Corporate', false, NULL, '2026-06-18 22:21:41.32037+00');
+-- INSERT INTO "public"."EventTypes" ("id", "name", "deleted", "created_by_user_uuid", "created_at") VALUES
+-- 	('cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 'Rural', false, NULL, '2026-06-18 22:21:41.32037+00'),
+-- 	('c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 'City', false, NULL, '2026-06-18 22:21:41.32037+00'),
+-- 	('2bc9bf02-dc78-48a4-90f5-9a15a8246980', 'Corporate', false, NULL, '2026-06-18 22:21:41.32037+00');
 
 
 --
