@@ -221,6 +221,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
         if (sr.isFormExpanded) {
           const next = sr.bleacherUuid === id ? null : id;
           sr.setField("bleacherUuid", next);
+          sr.setField("status", "pending");
           return;
         }
 

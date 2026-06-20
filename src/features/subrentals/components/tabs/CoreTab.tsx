@@ -5,6 +5,7 @@ import { useScrollToDateStore } from "@/features/dashboard/state/useScrollToDate
 import { LocateFixed } from "lucide-react";
 import { usePsZones } from "@/features/dashboard/db/hooks/powersync/usePsZones";
 import { usePsBleachers } from "@/features/dashboard/db/hooks/powersync/usePsBleachers";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pending",
@@ -20,6 +21,18 @@ export const SubrentalCoreTab = ({ disabled = false }: Props = {}) => {
   const store = useSubrentalEventStore();
   const zones = usePsZones();
   const bleachers = usePsBleachers();
+  const perms = usePermissionsStore();
+
+  // Status editable only by admin OR AM assigned to the bleacher's zone,
+  // and only once both bleacher and zone are selected.
+  const bleacherZoneUuid = bleachers.find((b) => b.id === store.bleacherUuid)?.zone_uuid ?? null;
+  const hasSelection = !!store.bleacherUuid && !!store.requestedZoneUuid;
+  const canEditStatus =
+    hasSelection &&
+    (perms.isAdmin ||
+      (perms.isAccountManager &&
+        !!bleacherZoneUuid &&
+        perms.accountManagerZoneIds.includes(bleacherZoneUuid)));
 
   const zoneOptions = zones.map((z) => ({
     label: z.display_name ?? z.id,
@@ -75,6 +88,7 @@ export const SubrentalCoreTab = ({ disabled = false }: Props = {}) => {
           selected={store.requestedZoneUuid ?? undefined}
           onSelect={(val) => {
             store.setField("requestedZoneUuid", val as string | null);
+            store.setField("status", "pending");
             // Clear bleacher if it now belongs to the newly selected zone
             if (store.bleacherUuid) {
               const b = bleachers.find((b) => b.id === store.bleacherUuid);
@@ -97,7 +111,7 @@ export const SubrentalCoreTab = ({ disabled = false }: Props = {}) => {
           onChange={(e) =>
             store.setField("status", e.target.value as "pending" | "accepted" | "denied")
           }
-          disabled={disabled}
+          disabled={disabled || !canEditStatus}
         >
           <option value="pending">Pending</option>
           <option value="accepted">Accepted</option>

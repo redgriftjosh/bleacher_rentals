@@ -20,6 +20,7 @@ import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissio
 import { canEditOwnedEntity } from "@/features/userAccess/logic/canEditOwnedEntity";
 import { updateSubrentalEvent } from "../db/updateSubrentalEvent";
 import { deleteSubrentalEvent } from "../db/deleteSubrentalEvent";
+import { usePsBleachers } from "@/features/dashboard/db/hooks/powersync/usePsBleachers";
 
 const tabs = ["Core"] as const;
 type Tab = (typeof tabs)[number];
@@ -38,8 +39,21 @@ export const SubrentalEventForm = ({ onCancel }: SubrentalEventFormProps) => {
     .padStart(6, "0")}`;
   const store = useSubrentalEventStore();
   const permissions = useTeamPermissions();
+  const bleachers = usePsBleachers();
 
   const isEditing = !!store.subrentalEventUuid;
+  const selectedBleacherZone = bleachers.find((b) => b.id === store.bleacherUuid)?.zone_uuid;
+  const bleacherNotInSelectedZone =
+    !selectedBleacherZone || selectedBleacherZone !== store.requestedZoneUuid;
+  const canSave = !!store.bleacherUuid && !!store.requestedZoneUuid && bleacherNotInSelectedZone;
+
+  const canSaveReason = canSave
+    ? null
+    : !store.requestedZoneUuid
+      ? "Select a zone"
+      : !store.bleacherUuid
+        ? "Select a bleacher"
+        : "Bleacher must be from a different zone";
   const canEdit = permissions.canCreateUser
     ? canEditOwnedEntity({
         isAdmin: permissions.isAdmin,
@@ -139,15 +153,20 @@ export const SubrentalEventForm = ({ onCancel }: SubrentalEventFormProps) => {
           )}
 
           {/* Create/Update button — only when user can edit */}
+          {canEdit && canSaveReason && (
+            <span className="text-xs text-red-600">{canSaveReason}</span>
+          )}
           {canEdit &&
             (!loading ? (
               <button
-                className="px-4 py-2 text-white text-sm font-semibold rounded-sm shadow-md transition cursor-pointer"
-                style={{ backgroundColor: submitHover ? subrentalHexDark : subrentalHex }}
+                className="px-4 py-2 text-white text-sm font-semibold rounded-sm shadow-md transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: submitHover && canSave ? subrentalHexDark : subrentalHex,
+                }}
                 onMouseEnter={() => setSubmitHover(true)}
                 onMouseLeave={() => setSubmitHover(false)}
                 onClick={isEditing ? handleUpdate : handleCreate}
-                disabled={loading}
+                disabled={loading || !canSave}
               >
                 {isEditing ? "Update Subrental" : "Add Subrental"}
               </button>
