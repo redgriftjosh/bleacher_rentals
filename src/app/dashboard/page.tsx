@@ -23,6 +23,7 @@ import { useDriverUnavailability } from "@/features/dashboard/db/hooks/useDriver
 import { useDriverUnavailabilityStore } from "@/features/dashboard/state/useDriverUnavailabilityStore";
 import { useDashboardPowerSync } from "@/features/dashboard/db/hooks/powersync/useDashboardPowerSync";
 import { ZoneSelector } from "@/features/dashboardOptions/ZoneSelector";
+import { SubrentalSuggestions } from "@/features/dashboardOptions/SubrentalSuggestions";
 import { SubrentalEventPanel } from "@/features/subrentals/components/SubrentalEventPanel";
 
 export default function Page() {
@@ -118,6 +119,7 @@ export default function Page() {
             <DashboardOptions />
             <SeasonToggle />
             <ZoneSelector accountManagerId={userContext?.accountManagerUuid ?? null} />
+            <SubrentalSuggestions />
           </div>
           <CreateEventButton />
         </div>
