@@ -158,6 +158,16 @@ export async function createUser(
 
       // 4. Update driver assignments
       await updateDriverAssignments(supabase, userUuid, state);
+
+      // 5. Sync zone assignments
+      const { data: newAmData } = await supabase
+        .from("AccountManagers")
+        .select("id")
+        .eq("user_uuid", userUuid)
+        .single();
+      if (newAmData) {
+        await syncZoneAssignments(supabase, newAmData.id, state.assignedZoneEntries);
+      }
     }
 
     // 5. If developer, insert into Developers table
@@ -296,6 +306,16 @@ export async function updateUser(
 
       // Update driver assignments
       await updateDriverAssignments(supabase, userUuid, state);
+
+      // Sync zone assignments
+      const { data: currentAmData } = await supabase
+        .from("AccountManagers")
+        .select("id")
+        .eq("user_uuid", userUuid)
+        .single();
+      if (currentAmData) {
+        await syncZoneAssignments(supabase, currentAmData.id, state.assignedZoneEntries);
+      }
     } else if (existingAM) {
       // Remove account manager role
       // Clear driver assignments
@@ -386,6 +406,29 @@ async function updateDriverAssignments(
       .update({ account_manager_uuid: accountManagerUuid })
       .in("id", state.assignedDriverUuids);
   }
+}
+
+async function syncZoneAssignments(
+  supabase: TypedSupabaseClient,
+  accountManagerUuid: string,
+  entries: { zoneUuid: string; isLead: boolean }[],
+): Promise<void> {
+  // Delete all existing zone assignments for this AM
+  await supabase
+    .from("AccountManagerZones")
+    .delete()
+    .eq("account_manager_uuid", accountManagerUuid);
+
+  if (entries.length === 0) return;
+
+  const rows = entries.map((e) => ({
+    account_manager_uuid: accountManagerUuid,
+    zone_uuid: e.zoneUuid,
+    is_lead: e.isLead,
+  }));
+
+  const { error } = await supabase.from("AccountManagerZones").insert(rows);
+  if (error) throw new Error(error.message);
 }
 
 export async function sendUserInvite(email: string): Promise<{ success: boolean; error?: string }> {
@@ -516,6 +559,17 @@ export async function fetchUserById(
         .eq("is_active", true);
 
       result.assignedDriverUuids = assignedDrivers?.map((d) => d.id) || [];
+
+      // Fetch zone assignments for this account manager
+      const { data: zoneRows } = await supabase
+        .from("AccountManagerZones")
+        .select("zone_uuid, is_lead")
+        .eq("account_manager_uuid", accountManagerId);
+
+      result.assignedZoneEntries = (zoneRows || []).map((r) => ({
+        zoneUuid: r.zone_uuid,
+        isLead: r.is_lead ?? false,
+      }));
     }
 
     // 4. Check if user is a developer

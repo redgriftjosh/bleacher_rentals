@@ -47,6 +47,7 @@ export type CurrentUserState = {
 
   // Account Manager-specific fields
   assignedDriverUuids: string[];
+  assignedZoneEntries: { zoneUuid: string; isLead: boolean }[];
 
   // UI state
   existingUserUuid: string | null;
@@ -97,6 +98,7 @@ const initialState: CurrentUserState = {
   insurancePhotoPath: null,
   medicalCardPhotoPath: null,
   assignedDriverUuids: [],
+  assignedZoneEntries: [],
   existingUserUuid: null,
   isOpen: false,
   isSubmitting: false,
