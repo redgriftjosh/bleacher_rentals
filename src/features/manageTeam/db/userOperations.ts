@@ -167,6 +167,7 @@ export async function createUser(
         .single();
       if (newAmData) {
         await syncZoneAssignments(supabase, newAmData.id, state.assignedZoneEntries);
+        await syncDriverZonesForAm(supabase, state.zoneDriverMap);
       }
     }
 
@@ -315,6 +316,7 @@ export async function updateUser(
         .single();
       if (currentAmData) {
         await syncZoneAssignments(supabase, currentAmData.id, state.assignedZoneEntries);
+        await syncDriverZonesForAm(supabase, state.zoneDriverMap);
       }
     } else if (existingAM) {
       // Remove account manager role
@@ -405,6 +407,20 @@ async function updateDriverAssignments(
       .from("Drivers")
       .update({ account_manager_uuid: accountManagerUuid })
       .in("id", state.assignedDriverUuids);
+  }
+}
+
+async function syncDriverZonesForAm(
+  supabase: TypedSupabaseClient,
+  zoneDriverMap: Record<string, string[]>,
+): Promise<void> {
+  for (const [zoneId, driverUuids] of Object.entries(zoneDriverMap)) {
+    await supabase.from("DriverZones").delete().eq("zone_uuid", zoneId);
+    if (driverUuids.length > 0) {
+      const rows = driverUuids.map((d) => ({ driver_uuid: d, zone_uuid: zoneId }));
+      const { error } = await supabase.from("DriverZones").insert(rows);
+      if (error) throw new Error(error.message);
+    }
   }
 }
 
@@ -570,6 +586,21 @@ export async function fetchUserById(
         zoneUuid: r.zone_uuid,
         isLead: r.is_lead ?? false,
       }));
+
+      // Load driver assignments for each of this AM's zones
+      const zoneIds = (zoneRows || []).map((r) => r.zone_uuid);
+      const zoneDriverMap: Record<string, string[]> = {};
+      if (zoneIds.length > 0) {
+        const { data: driverZoneRows } = await supabase
+          .from("DriverZones")
+          .select("zone_uuid, driver_uuid")
+          .in("zone_uuid", zoneIds);
+        for (const row of driverZoneRows || []) {
+          if (!zoneDriverMap[row.zone_uuid]) zoneDriverMap[row.zone_uuid] = [];
+          zoneDriverMap[row.zone_uuid].push(row.driver_uuid);
+        }
+      }
+      result.zoneDriverMap = zoneDriverMap;
     }
 
     // 4. Check if user is a developer

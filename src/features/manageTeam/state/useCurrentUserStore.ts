@@ -48,6 +48,7 @@ export type CurrentUserState = {
   // Account Manager-specific fields
   assignedDriverUuids: string[];
   assignedZoneEntries: { zoneUuid: string; isLead: boolean }[];
+  zoneDriverMap: Record<string, string[]>;
 
   // UI state
   existingUserUuid: string | null;
@@ -99,6 +100,7 @@ const initialState: CurrentUserState = {
   medicalCardPhotoPath: null,
   assignedDriverUuids: [],
   assignedZoneEntries: [],
+  zoneDriverMap: {},
   existingUserUuid: null,
   isOpen: false,
   isSubmitting: false,

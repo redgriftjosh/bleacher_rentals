@@ -34,6 +34,9 @@ create index if not exists "SubrentalEvents_created_by_user_uuid_idx"
 create index if not exists "SubrentalEvents_status_idx"
   on public."SubrentalEvents" using btree (status) tablespace pg_default;
 
+-- Enable RLS
+alter table public."SubrentalEvents" enable row level security;
+
 create policy "subrental_events_select" on public."SubrentalEvents"
   as permissive for select to authenticated
   using (
