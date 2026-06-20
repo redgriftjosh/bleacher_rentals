@@ -10,6 +10,7 @@ import { usePsSubrentalEvents } from "@/features/dashboard/db/hooks/powersync/us
 import { usePsBleachers } from "@/features/dashboard/db/hooks/powersync/usePsBleachers";
 import { loadSubrentalEventById } from "@/features/dashboard/db/client/loadSubrentalEventById";
 import { SUBRENTAL_COLOR } from "@/features/dashboard/values/constants";
+import type { SubrentalStatus } from "@/features/subrentals/state/useSubrentalEventStore";
 
 type ZoneRow = { id: string; displayName: string | null };
 
@@ -20,6 +21,7 @@ const compiledZones = db
 
 export function SubrentalSuggestions() {
   const [open, setOpen] = useState(false);
+  const [activeStatus, setActiveStatus] = useState<SubrentalStatus>("pending");
 
   const isAdmin = usePermissionsStore((s) => s.isAdmin);
   const accountManagerZoneIds = usePermissionsStore((s) => s.accountManagerZoneIds);
@@ -31,19 +33,25 @@ export function SubrentalSuggestions() {
 
   const subrentalHex = `#${SUBRENTAL_COLOR.toString(16).padStart(6, "0")}`;
 
-  /** Pending subrentals relevant to this user */
-  const pendingSubrentals = useMemo(() => {
-    const pending = subrentalEvents.filter((sr) => sr.status === "pending");
-    if (isAdmin) return pending;
-    // AM: show subrentals where the bleacher belongs to one of their assigned zones
-    return pending.filter((sr) => {
+  /** All subrentals relevant to this user (across all statuses) */
+  const relevantSubrentals = useMemo(() => {
+    if (isAdmin) return subrentalEvents;
+    return subrentalEvents.filter((sr) => {
       if (!sr.bleacher_uuid) return false;
       const bleacher = bleachers.find((b) => b.id === sr.bleacher_uuid);
       return bleacher?.zone_uuid != null && accountManagerZoneIds.includes(bleacher.zone_uuid);
     });
   }, [subrentalEvents, bleachers, isAdmin, accountManagerZoneIds]);
 
-  const count = pendingSubrentals.length;
+  const pendingCount = useMemo(
+    () => relevantSubrentals.filter((sr) => sr.status === "pending").length,
+    [relevantSubrentals],
+  );
+
+  const filteredSubrentals = useMemo(
+    () => relevantSubrentals.filter((sr) => sr.status === activeStatus),
+    [relevantSubrentals, activeStatus],
+  );
 
   const getZoneName = (id: string | null | undefined) => {
     if (!id) return "Unknown Zone";
@@ -57,7 +65,7 @@ export function SubrentalSuggestions() {
 
   return (
     <>
-      {count > 0 && (
+      {pendingCount > 0 && (
         <style>
           {"@keyframes sr-flash { 0%, 100% { color: #ef4444; } 50% { color: " +
             subrentalHex +
@@ -73,23 +81,43 @@ export function SubrentalSuggestions() {
           >
             <Handshake
               className="h-3.5 w-3.5 shrink-0"
-              style={count > 0 ? { color: subrentalHex } : undefined}
+              style={pendingCount > 0 ? { color: subrentalHex } : undefined}
             />
             <span
-              className={count > 0 ? "sr-flash" : ""}
-              style={count > 0 ? undefined : { color: "hsl(var(--muted-foreground))" }}
+              className={pendingCount > 0 ? "sr-flash" : ""}
+              style={pendingCount > 0 ? undefined : { color: "hsl(var(--muted-foreground))" }}
             >
-              {count} Requested Sub-Rental{count !== 1 ? "s" : ""}
+              {pendingCount} Requested Sub-Rental{pendingCount !== 1 ? "s" : ""}
             </span>
             <ChevronDown className="h-3 w-3 text-muted-foreground" />
           </button>
         </PopoverTrigger>
 
         <PopoverContent align="start" className="w-80 p-1">
-          {count === 0 ? (
-            <p className="px-3 py-3 text-sm text-muted-foreground">No pending sub-rentals.</p>
+          {/* Status tabs */}
+          <div className="flex gap-1 px-1 pb-1 mb-1 border-b">
+            {(["pending", "accepted", "denied"] as SubrentalStatus[]).map((s) => {
+              const tabCount = relevantSubrentals.filter((sr) => sr.status === s).length;
+              const isActive = activeStatus === s;
+              return (
+                <button
+                  key={s}
+                  onClick={() => setActiveStatus(s)}
+                  className={`flex-1 rounded px-2 py-1 text-xs font-medium capitalize cursor-pointer transition-colors
+                    ${isActive ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50"}`}
+                >
+                  {s} ({tabCount})
+                </button>
+              );
+            })}
+          </div>
+
+          {filteredSubrentals.length === 0 ? (
+            <p className="px-3 py-3 text-sm text-muted-foreground">
+              No {activeStatus} sub-rentals.
+            </p>
           ) : (
-            pendingSubrentals.map((sr) => {
+            filteredSubrentals.map((sr) => {
               const bleacher = bleachers.find((b) => b.id === sr.bleacher_uuid);
               const bleacherLabel = bleacher
                 ? `Bleacher #${bleacher.bleacher_number}`
