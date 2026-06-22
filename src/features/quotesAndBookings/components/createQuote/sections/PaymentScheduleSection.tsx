@@ -4,25 +4,21 @@ import { useMemo } from "react";
 import { Pencil } from "lucide-react";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { formatCurrency } from "../../../utils/formatCurrency";
-import { DEFAULT_TAX_RATE } from "../../../data/mockData";
+import { calculateTotals } from "../../../utils/calculateTotals";
 
 export function PaymentScheduleSection() {
   const lineItems = useCreateQuoteStore((s) => s.lineItems);
   const currency = useCreateQuoteStore((s) => s.currency);
+  const taxPercent = useCreateQuoteStore((s) => s.taxPercent);
+  const taxOverrideCents = useCreateQuoteStore((s) => s.taxOverrideCents);
   const installments = useCreateQuoteStore((s) => s.paymentInstallments);
   const setField = useCreateQuoteStore((s) => s.setField);
 
   const totalCents = useMemo(() => {
-    const subtotal = lineItems
-      .filter((i) => i.category !== "discounts")
-      .reduce((sum, i) => sum + i.lineTotalCents, 0);
-    const discountTotal = lineItems
-      .filter((i) => i.category === "discounts")
-      .reduce((sum, i) => sum + i.lineTotalCents, 0);
-    const taxableAmount = subtotal + discountTotal;
-    const taxAmount = Math.round(taxableAmount * (DEFAULT_TAX_RATE / 100));
-    return taxableAmount + taxAmount;
-  }, [lineItems]);
+    const { subtotal, discountTotal, taxAmount } = calculateTotals(lineItems, taxPercent);
+    const effectiveTaxCents = taxOverrideCents ?? taxAmount;
+    return subtotal + discountTotal + effectiveTaxCents;
+  }, [lineItems, taxPercent, taxOverrideCents]);
   const scheduledCents = installments.reduce((sum, i) => sum + i.amountCents, 0);
   const isBalanced = scheduledCents === totalCents;
 

@@ -1,173 +1,131 @@
 import { describe, it, expect } from "vitest";
-import { canEditWorkTracker } from "./canEditWorkTracker";
+import { canEditWorkTracker, canReleaseWorkTracker } from "./canEditWorkTracker";
 
 describe("canEditWorkTracker", () => {
-  const AM_ID = "am-1";
-
-  // ═══ Admin ═══
-
-  it("admin can edit any work tracker", () => {
+  it("admin can always edit", () => {
     expect(
-      canEditWorkTracker({
+      canEditWorkTracker({ isAdmin: true, isAccountManager: false, isNew: false }),
+    ).toBe(true);
+  });
+
+  it("admin can create", () => {
+    expect(
+      canEditWorkTracker({ isAdmin: true, isAccountManager: false, isNew: true }),
+    ).toBe(true);
+  });
+
+  it("AM can create (canCreate defaults true)", () => {
+    expect(
+      canEditWorkTracker({ isAdmin: false, isAccountManager: true, isNew: true }),
+    ).toBe(true);
+  });
+
+  it("viewer cannot create (canCreate=false)", () => {
+    expect(
+      canEditWorkTracker({ isAdmin: false, isAccountManager: false, isNew: true, canCreate: false }),
+    ).toBe(false);
+  });
+
+  it("non-AM non-admin cannot edit existing", () => {
+    expect(
+      canEditWorkTracker({ isAdmin: false, isAccountManager: false, isNew: false }),
+    ).toBe(false);
+  });
+
+  describe("Lead AM", () => {
+    const base = {
+      isAdmin: false,
+      isAccountManager: true,
+      isNew: false,
+      zoneUuid: "zone-a",
+      leadZoneIds: ["zone-a"],
+      accountManagerZoneIds: ["zone-a", "zone-b"],
+    };
+
+    it("can edit any WT in their lead zone", () => {
+      expect(
+        canEditWorkTracker({ ...base, createdByUserId: "other-user", userId: "me" }),
+      ).toBe(true);
+    });
+
+    it("can edit own WT in lead zone", () => {
+      expect(
+        canEditWorkTracker({ ...base, createdByUserId: "me", userId: "me" }),
+      ).toBe(true);
+    });
+  });
+
+  describe("Junior AM", () => {
+    const base = {
+      isAdmin: false,
+      isAccountManager: true,
+      isNew: false,
+      zoneUuid: "zone-b",
+      leadZoneIds: ["zone-a"],
+      accountManagerZoneIds: ["zone-a", "zone-b"],
+    };
+
+    it("can edit own WT", () => {
+      expect(
+        canEditWorkTracker({ ...base, createdByUserId: "me", userId: "me" }),
+      ).toBe(true);
+    });
+
+    it("cannot edit WT created by someone else", () => {
+      expect(
+        canEditWorkTracker({ ...base, createdByUserId: "other-user", userId: "me" }),
+      ).toBe(false);
+    });
+
+    it("cannot edit when userId is null", () => {
+      expect(
+        canEditWorkTracker({ ...base, createdByUserId: "me", userId: null }),
+      ).toBe(false);
+    });
+  });
+});
+
+describe("canReleaseWorkTracker", () => {
+  it("admin can always release", () => {
+    expect(
+      canReleaseWorkTracker({
         isAdmin: true,
-        isAccountManager: false,
-        isNew: false,
-        currentAccountManagerId: null,
-        bleacherSummerAmUuid: null,
-        bleacherWinterAmUuid: null,
+        zoneUuid: "zone-a",
+        leadZoneIds: [],
+        accountManagerZoneIds: [],
       }),
     ).toBe(true);
   });
 
-  it("admin can create new work tracker", () => {
+  it("lead AM can release in their lead zone", () => {
     expect(
-      canEditWorkTracker({
-        isAdmin: true,
-        isAccountManager: false,
-        isNew: true,
-        currentAccountManagerId: null,
-        bleacherSummerAmUuid: null,
-        bleacherWinterAmUuid: null,
-      }),
-    ).toBe(true);
-  });
-
-  // ═══ AM: Creating ═══
-
-  it("AM can create new work tracker (canCreate=true)", () => {
-    expect(
-      canEditWorkTracker({
+      canReleaseWorkTracker({
         isAdmin: false,
-        isAccountManager: true,
-        isNew: true,
-        currentAccountManagerId: AM_ID,
-        bleacherSummerAmUuid: null,
-        bleacherWinterAmUuid: null,
-        canCreate: true,
+        zoneUuid: "zone-a",
+        leadZoneIds: ["zone-a"],
+        accountManagerZoneIds: ["zone-a", "zone-b"],
       }),
     ).toBe(true);
   });
 
-  // ═══ AM: Bleacher ownership ═══
-
-  it("AM can edit if summer AM matches", () => {
+  it("junior AM cannot release", () => {
     expect(
-      canEditWorkTracker({
+      canReleaseWorkTracker({
         isAdmin: false,
-        isAccountManager: true,
-        isNew: false,
-        currentAccountManagerId: AM_ID,
-        bleacherSummerAmUuid: AM_ID,
-        bleacherWinterAmUuid: "other-am",
-      }),
-    ).toBe(true);
-  });
-
-  it("AM can edit if winter AM matches", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isAccountManager: true,
-        isNew: false,
-        currentAccountManagerId: AM_ID,
-        bleacherSummerAmUuid: "other-am",
-        bleacherWinterAmUuid: AM_ID,
-      }),
-    ).toBe(true);
-  });
-
-  it("AM can edit if both AM fields match", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isAccountManager: true,
-        isNew: false,
-        currentAccountManagerId: AM_ID,
-        bleacherSummerAmUuid: AM_ID,
-        bleacherWinterAmUuid: AM_ID,
-      }),
-    ).toBe(true);
-  });
-
-  it("AM blocked if neither AM field matches", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isAccountManager: true,
-        isNew: false,
-        currentAccountManagerId: AM_ID,
-        bleacherSummerAmUuid: "other-am-1",
-        bleacherWinterAmUuid: "other-am-2",
+        zoneUuid: "zone-b",
+        leadZoneIds: ["zone-a"],
+        accountManagerZoneIds: ["zone-a", "zone-b"],
       }),
     ).toBe(false);
   });
 
-  it("AM blocked if bleacher has no AM assigned", () => {
+  it("non-AM cannot release", () => {
     expect(
-      canEditWorkTracker({
+      canReleaseWorkTracker({
         isAdmin: false,
-        isAccountManager: true,
-        isNew: false,
-        currentAccountManagerId: AM_ID,
-        bleacherSummerAmUuid: null,
-        bleacherWinterAmUuid: null,
-      }),
-    ).toBe(false);
-  });
-
-  // ═══ Viewer ═══
-
-  it("viewer cannot create new WT (canCreate=false)", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isAccountManager: false,
-        isNew: true,
-        currentAccountManagerId: null,
-        bleacherSummerAmUuid: null,
-        bleacherWinterAmUuid: null,
-        canCreate: false,
-      }),
-    ).toBe(false);
-  });
-
-  it("viewer always blocked on existing WT", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isAccountManager: false,
-        isNew: false,
-        currentAccountManagerId: null,
-        bleacherSummerAmUuid: null,
-        bleacherWinterAmUuid: null,
-      }),
-    ).toBe(false);
-  });
-
-  // ═══ Edge cases ═══
-
-  it("non-AM non-admin blocked even with matching bleacher", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isAccountManager: false,
-        isNew: false,
-        currentAccountManagerId: AM_ID,
-        bleacherSummerAmUuid: AM_ID,
-        bleacherWinterAmUuid: null,
-      }),
-    ).toBe(false);
-  });
-
-  it("AM with null accountManagerId blocked", () => {
-    expect(
-      canEditWorkTracker({
-        isAdmin: false,
-        isAccountManager: true,
-        isNew: false,
-        currentAccountManagerId: null,
-        bleacherSummerAmUuid: null,
-        bleacherWinterAmUuid: null,
+        zoneUuid: "zone-a",
+        leadZoneIds: [],
+        accountManagerZoneIds: [],
       }),
     ).toBe(false);
   });

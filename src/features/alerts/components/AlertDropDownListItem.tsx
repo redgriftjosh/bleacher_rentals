@@ -4,6 +4,10 @@ import { Trash2, Undo2, BellRing } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AlertRemindMeModal } from "./AlertRemindMeModal";
 import { loadEventForModal } from "@/features/eventConfiguration/functions/loadEventForModal";
+import { REVIEW_REQUESTED_TITLE } from "../requestReview";
+import { useWorkTrackerSelectionStore } from "@/features/workTrackers/state/useWorkTrackerSelectionStore";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, typedGetAll } from "@/lib/powersync/typedQuery";
 import type { UserAlertRow } from "../hooks/useUserAlerts";
 
 type Props = {
@@ -21,11 +25,45 @@ export function AlertDropDownListItem({ alert, onDismiss, onUndismiss, onRemindL
   const isDismissed =
     !!alert.dismissed && (alert.dismissedUntil === null || alert.dismissedUntil > today);
 
-  const isEventLink = alert.entityType === "event";
+  const isClickable =
+    alert.entityType === "event" ||
+    alert.entityType === "bleacher_event" ||
+    alert.entityType === "work_tracker";
 
-  const handleBodyClick = () => {
-    if (isEventLink && alert.entityUuid) {
+  const isReviewRequest = alert.title === REVIEW_REQUESTED_TITLE;
+
+  const handleBodyClick = async () => {
+    if (!alert.entityUuid) return;
+
+    if (alert.entityType === "event" && isReviewRequest) {
+      router.push(`/quotes-bookings/${alert.entityUuid}`);
+    } else if (alert.entityType === "event") {
       loadEventForModal(alert.entityUuid);
+      router.push("/dashboard");
+    } else if (alert.entityType === "bleacher_event") {
+      const { loadBleacherEventForModal } = await import(
+        "@/features/alerts/util/loadBleacherEventForModal"
+      );
+      await loadBleacherEventForModal(alert.entityUuid);
+      router.push("/dashboard");
+    } else if (alert.entityType === "work_tracker") {
+      const rows = await typedGetAll(
+        db
+          .selectFrom("WorkTrackers")
+          .select(["id", "bleacher_uuid", "date"])
+          .where("id", "=", alert.entityUuid)
+          .limit(1)
+          .compile(),
+        expect<{ id: string; bleacher_uuid: string | null; date: string | null }>(),
+      );
+      const wt = rows[0];
+      if (wt?.bleacher_uuid && wt.date) {
+        useWorkTrackerSelectionStore.getState().setSelected({
+          id: wt.id,
+          bleacher_uuid: wt.bleacher_uuid,
+          date: wt.date,
+        });
+      }
       router.push("/dashboard");
     }
   };
@@ -35,7 +73,7 @@ export function AlertDropDownListItem({ alert, onDismiss, onUndismiss, onRemindL
       <div className="flex flex-row items-center gap-1 px-3 py-2.5 border-b border-gray-100 last:border-b-0">
         {/* Column 1 - content */}
         <div
-          className={`flex-1 min-w-0 ${isEventLink ? "cursor-pointer hover:opacity-80" : ""}`}
+          className={`flex-1 min-w-0 ${isClickable ? "cursor-pointer hover:opacity-80" : ""}`}
           onClick={handleBodyClick}
         >
           {alert.title && (

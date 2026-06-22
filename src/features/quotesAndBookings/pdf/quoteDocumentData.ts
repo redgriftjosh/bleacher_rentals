@@ -12,6 +12,7 @@ export type QuoteLineItem = {
 };
 
 export type QuotePaymentInstallment = {
+  id: string;
   dueDate: string;
   amountCents: number;
   status: string;
@@ -86,6 +87,7 @@ export type QuoteDocumentData = {
 
   // Account manager
   accountManager: string;
+  accountManagerEmail: string | null;
 
   // Terms & Conditions
   termsAndConditionsUuid: string | null;
@@ -196,7 +198,7 @@ export async function buildQuoteDocumentData(
       // Payment installments
       supabase
         .from("PaymentInstallments")
-        .select("due_date, amount_cents, status")
+        .select("id, due_date, amount_cents, status")
         .eq("event_uuid", eventId)
         .order("due_date"),
 
@@ -247,6 +249,7 @@ export async function buildQuoteDocumentData(
 
   // Process installments
   const paymentSchedule: QuotePaymentInstallment[] = (installmentResult.data ?? []).map((pi: any) => ({
+    id: pi.id,
     dueDate: pi.due_date,
     amountCents: pi.amount_cents,
     status: pi.status,
@@ -327,6 +330,7 @@ export async function buildQuoteDocumentData(
     internalNotes: event.internal_notes ?? "",
     publicUrl,
     accountManager: user ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() : "",
+    accountManagerEmail: user?.email ?? null,
 
     termsAndConditionsUuid: (event as any).terms_and_conditions_uuid ?? null,
     termsHtml: (termsResult.data as any)?.html_content ?? null,

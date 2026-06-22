@@ -7,12 +7,20 @@ import { EventLeftColumnCell } from "../ui/EventLeftColumnCell";
 import { Bleacher, DashboardEvent } from "../types";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
+import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
 import { useBleacherLocationModalStore } from "../state/useBleacherLocationModalStore";
 import { useSwapStore } from "../state/useSwapStore";
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
 import { computeAffectedSwaps } from "../db/client/swapBleacherEvents";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { isBleacherAccessible } from "../ui/NoAccessFilter";
 import { createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
+import { isBleacherOwnedByAM } from "@/features/userAccess/logic/isBleacherOwnedByAM";
+import {
+  isSubrentedOutDuringRange,
+  hasSubrentalAccessForRange,
+} from "@/features/userAccess/logic/hasSubrentalAccessForDate";
+import { resolveSubrentalConstraint } from "../ui/event/EventBody";
 
 /**
  * CellRenderer for the sticky left column that displays bleacher information
@@ -31,6 +39,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
   private unsub?: () => void;
   private unsubSwap?: () => void;
   private unsubMaintenance?: () => void;
+  private unsubSubrental?: () => void;
   private isFormExpanded = false;
   private isMaintenanceFormExpanded = false;
   private selectedBleacherUuids: string[] = [];
@@ -55,11 +64,15 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
   private bootstrapStateSync() {
     const st = useCurrentEventStore.getState();
     const mt = useMaintenanceEventStore.getState();
-    this.isFormExpanded = !!st.isFormExpanded || !!mt.isFormExpanded;
+    const sr = useSubrentalEventStore.getState();
+    this.isFormExpanded = !!st.isFormExpanded || !!mt.isFormExpanded || !!sr.isFormExpanded;
     this.isMaintenanceFormExpanded = !!mt.isFormExpanded;
-    this.selectedBleacherUuids = mt.isFormExpanded
-      ? mt.bleacherUuids.slice()
-      : st.bleacherUuids.slice();
+    this.selectedBleacherUuids =
+      sr.isFormExpanded && sr.bleacherUuid
+        ? [sr.bleacherUuid]
+        : mt.isFormExpanded
+          ? mt.bleacherUuids.slice()
+          : st.bleacherUuids.slice();
 
     // Helper to apply expand/select changes to all cells
     const applyChanges = (expandedChanged: boolean, selectedChanged: boolean) => {
@@ -101,13 +114,31 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     this.unsubMaintenance = useMaintenanceEventStore.subscribe((s) => {
       this.isMaintenanceFormExpanded = !!s.isFormExpanded;
       const eventExpanded = useCurrentEventStore.getState().isFormExpanded;
-      const anyExpanded = eventExpanded || s.isFormExpanded;
+      const srExpanded = useSubrentalEventStore.getState().isFormExpanded;
+      const anyExpanded = eventExpanded || s.isFormExpanded || srExpanded;
       const expandedChanged = anyExpanded !== this.isFormExpanded;
       // Track maintenance bleacherUuids when maintenance form is active
       const selectedChanged = s.isFormExpanded && s.bleacherUuids !== this.selectedBleacherUuids;
       if (!expandedChanged && !selectedChanged) return;
       if (expandedChanged) this.isFormExpanded = anyExpanded;
       if (selectedChanged) this.selectedBleacherUuids = s.bleacherUuids.slice();
+      applyChanges(expandedChanged, selectedChanged);
+    });
+
+    this.unsubSubrental = useSubrentalEventStore.subscribe((s) => {
+      const eventExpanded = useCurrentEventStore.getState().isFormExpanded;
+      const mtExpanded = useMaintenanceEventStore.getState().isFormExpanded;
+      const anyExpanded = eventExpanded || mtExpanded || s.isFormExpanded;
+      const expandedChanged = anyExpanded !== this.isFormExpanded;
+      // Single-select: always derive from store, including null (deselect)
+      const newSelected = s.isFormExpanded ? (s.bleacherUuid ? [s.bleacherUuid] : []) : [];
+      const selectedChanged =
+        s.isFormExpanded &&
+        (newSelected.length !== this.selectedBleacherUuids.length ||
+          newSelected[0] !== this.selectedBleacherUuids[0]);
+      if (!expandedChanged && !selectedChanged) return;
+      if (expandedChanged) this.isFormExpanded = anyExpanded;
+      if (selectedChanged) this.selectedBleacherUuids = newSelected;
       applyChanges(expandedChanged, selectedChanged);
     });
 
@@ -185,20 +216,43 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
         // Viewer cannot toggle bleachers at all
         if (!perms.isAdmin && !perms.isAccountManager) return;
 
+        // Subrental form: single-select — last click wins, deselect others
+        const sr = useSubrentalEventStore.getState();
+        if (sr.isFormExpanded) {
+          const next = sr.bleacherUuid === id ? null : id;
+          sr.setField("bleacherUuid", next);
+          sr.setField("status", "pending");
+          return;
+        }
+
         const mt = useMaintenanceEventStore.getState();
         if (mt.isFormExpanded) {
-          // AM can only toggle own bleachers for maintenance too
           if (perms.isAccountManager && !perms.isAdmin) {
-            const bleacher = this.bleachers.find((b) => b.bleacherUuid === id);
-            if (bleacher) {
-              const amId = perms.accountManagerId;
-              const isOwn =
-                bleacher.summerAccountManagerUuid === amId ||
-                bleacher.winterAccountManagerUuid === amId;
-              if (!isOwn) {
-                createErrorToastNoThrow(["This bleacher is not assigned to you."]);
-                return;
-              }
+            const allBleachers = useDashboardBleachersStore.getState().data;
+            const bleacher = allBleachers.find((b) => b.bleacherUuid === id && !b.isSubrentalRow);
+            const ownedByAM = isBleacherOwnedByAM({
+              bleacherZoneUuid: bleacher?.zoneUuid,
+              accountManagerZoneIds: perms.accountManagerZoneIds,
+            });
+            const subrented = isSubrentedOutDuringRange({
+              bleacher,
+              eventStart: mt.eventStart,
+              eventEnd: mt.eventEnd,
+            });
+            const hasBorrowedAccess = hasSubrentalAccessForRange({
+              bleacherUuid: id,
+              eventStart: mt.eventStart,
+              eventEnd: mt.eventEnd,
+              accountManagerZoneIds: perms.accountManagerZoneIds,
+              allBleachers,
+            });
+            if ((!ownedByAM || subrented) && !hasBorrowedAccess) {
+              createErrorToastNoThrow([
+                ownedByAM && subrented
+                  ? "This bleacher is subrented out during this date range."
+                  : "This bleacher is not assigned to you.",
+              ]);
+              return;
             }
           }
           const selected = mt.bleacherUuids;
@@ -206,23 +260,41 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
             ? selected.filter((n) => n !== id)
             : [...selected, id];
           mt.setField("bleacherUuids", updated);
+          mt.setField(
+            "subrentalConstraint",
+            resolveSubrentalConstraint(updated, mt.eventStart, mt.eventEnd),
+          );
           return;
         }
         const st = useCurrentEventStore.getState();
         if (!st.isFormExpanded) return;
 
-        // AM can only toggle own bleachers (summer OR winter assigned)
         if (perms.isAccountManager && !perms.isAdmin) {
-          const bleacher = this.bleachers.find((b) => b.bleacherUuid === id);
-          if (bleacher) {
-            const amId = perms.accountManagerId;
-            const isOwn =
-              bleacher.summerAccountManagerUuid === amId ||
-              bleacher.winterAccountManagerUuid === amId;
-            if (!isOwn) {
-              createErrorToastNoThrow(["This bleacher is not assigned to you."]);
-              return;
-            }
+          const allBleachers = useDashboardBleachersStore.getState().data;
+          const bleacher = allBleachers.find((b) => b.bleacherUuid === id && !b.isSubrentalRow);
+          const ownedByAM = isBleacherOwnedByAM({
+            bleacherZoneUuid: bleacher?.zoneUuid,
+            accountManagerZoneIds: perms.accountManagerZoneIds,
+          });
+          const subrented = isSubrentedOutDuringRange({
+            bleacher,
+            eventStart: st.eventStart,
+            eventEnd: st.eventEnd,
+          });
+          const hasBorrowedAccess = hasSubrentalAccessForRange({
+            bleacherUuid: id,
+            eventStart: st.eventStart,
+            eventEnd: st.eventEnd,
+            accountManagerZoneIds: perms.accountManagerZoneIds,
+            allBleachers,
+          });
+          if ((!ownedByAM || subrented) && !hasBorrowedAccess) {
+            createErrorToastNoThrow([
+              ownedByAM && subrented
+                ? "This bleacher is subrented out during this date range."
+                : "This bleacher is not assigned to you.",
+            ]);
+            return;
           }
         }
 
@@ -231,6 +303,10 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
           ? selected.filter((n) => n !== id)
           : [...selected, id];
         st.setField("bleacherUuids", updated);
+        st.setField(
+          "subrentalConstraint",
+          resolveSubrentalConstraint(updated, st.eventStart, st.eventEnd),
+        );
       });
 
       // Wire map pin click handler
@@ -328,7 +404,7 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     if (bleacher) {
       const cell = this.getOrCreateCell(row);
       // Ensure bleacher data is up to date (in case data changed externally)
-      cell.setBleacher(bleacher);
+      cell.setBleacher(bleacher, isBleacherAccessible(bleacher));
       parent.addChild(cell);
     }
     return parent;
@@ -347,9 +423,13 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
     try {
       this.unsubMaintenance?.();
     } catch {}
+    try {
+      this.unsubSubrental?.();
+    } catch {}
     this.unsub = undefined;
     this.unsubSwap = undefined;
     this.unsubMaintenance = undefined;
+    this.unsubSubrental = undefined;
     this.cellPool.clear();
     this.baker.destroyAll();
   }

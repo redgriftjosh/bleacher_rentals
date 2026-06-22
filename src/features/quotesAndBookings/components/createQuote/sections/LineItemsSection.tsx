@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
-import { X, Lock, Unlock } from "lucide-react";
+import { useEffect, useMemo } from "react";
+import { X, Lock, Unlock, CheckCircle, TriangleAlert } from "lucide-react";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { usePriceLookup } from "../../../hooks/usePriceLookup";
 import { Dropdown } from "@/components/DropDown";
 import { LineItem, DiscountType } from "../../../types/quoteTypes";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { AppTooltip } from "@/components/AppTooltip";
 
 const discountTypeOptions = [
   { label: "%", value: "percentage" as DiscountType },
@@ -47,6 +50,34 @@ export function LineItemsSection() {
   const updateLineItem = useCreateQuoteStore((s) => s.updateLineItem);
   const removeLineItem = useCreateQuoteStore((s) => s.removeLineItem);
   const setField = useCreateQuoteStore((s) => s.setField);
+  const editingEventId = useCreateQuoteStore((s) => s.editingEventId);
+
+  const assignedBleachersQuery = useMemo(
+    () =>
+      editingEventId
+        ? db
+            .selectFrom("BleacherEvents as be")
+            .innerJoin("Bleachers as b", "b.id", "be.bleacher_uuid")
+            .select(["b.bleacher_type_uuid as bleacher_type_uuid"])
+            .where("be.event_uuid", "=", editingEventId)
+            .compile()
+        : null,
+    [editingEventId],
+  );
+  const { data: assignedRows } = useTypedQuery(
+    assignedBleachersQuery ?? db.selectFrom("Bleachers").select(["bleacher_type_uuid"]).where("id", "=", "").compile(),
+    expect<{ bleacher_type_uuid: string | null }>(),
+  );
+
+  const assignedCountByType = useMemo(() => {
+    if (!editingEventId) return {} as Record<string, number>;
+    const counts: Record<string, number> = {};
+    for (const row of assignedRows ?? []) {
+      if (!row.bleacher_type_uuid) continue;
+      counts[row.bleacher_type_uuid] = (counts[row.bleacher_type_uuid] ?? 0) + 1;
+    }
+    return counts;
+  }, [assignedRows, editingEventId]);
 
   const { lookupPrice } = usePriceLookup();
 
@@ -139,6 +170,9 @@ export function LineItemsSection() {
                       {cat === "bleachers" && (
                         <>
                           <th className="pb-2 font-medium w-16 text-center">Qty</th>
+                          {editingEventId && (
+                            <th className="pb-2 font-medium w-20 text-center">Assigned</th>
+                          )}
                           <th className="pb-2 font-medium w-28 text-right">Unit Price</th>
                           <th className="pb-2 w-8"></th>
                         </>
@@ -186,6 +220,34 @@ export function LineItemsSection() {
                                 className="w-full h-8 px-2 border rounded text-sm text-center"
                               />
                             </td>
+                            {editingEventId && (() => {
+                              const assigned = item.bleacherTypeUuid
+                                ? (assignedCountByType[item.bleacherTypeUuid] ?? 0)
+                                : 0;
+                              const met = assigned === item.qty;
+                              return (
+                                <td className="py-2 px-1 text-center">
+                                  <AppTooltip
+                                    content={
+                                      met
+                                        ? `${assigned} of ${item.qty} bleachers assigned — requirement met.`
+                                        : `${assigned} of ${item.qty} bleachers assigned — go to the dashboard to assign the rest.`
+                                    }
+                                  >
+                                    <span className="inline-flex items-center gap-1 tabular-nums text-sm font-medium cursor-default">
+                                      <span className={met ? "text-green-700" : "text-red-600"}>
+                                        {assigned}/{item.qty}
+                                      </span>
+                                      {met ? (
+                                        <CheckCircle className="w-4 h-4 text-green-600" />
+                                      ) : (
+                                        <TriangleAlert className="w-4 h-4 text-red-500" />
+                                      )}
+                                    </span>
+                                  </AppTooltip>
+                                </td>
+                              );
+                            })()}
                             <td className="py-2 px-1">
                               <input
                                 type="number"

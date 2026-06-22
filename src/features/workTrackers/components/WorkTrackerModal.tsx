@@ -1,4 +1,5 @@
-import { Link, X, Trash2, Calculator, Pencil } from "lucide-react";
+import { LocateFixed, X, Trash2, Calculator, Pencil, AlertTriangle } from "lucide-react";
+import { AppTooltip } from "@/components/AppTooltip";
 import { Dropdown } from "@/components/DropDown";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { EditWorkTrackerTypesModal } from "./EditWorkTrackerTypesModal";
@@ -32,9 +33,24 @@ import {
 import { buildTripStatusNotification } from "@/features/workTrackers/db/notifications";
 import BillOfLadingButton from "./billOfLading/BillOfLadingButton";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
-import { canEditWorkTracker } from "@/features/userAccess/logic/canEditWorkTracker";
+import {
+  canEditWorkTracker,
+  canReleaseWorkTracker,
+} from "@/features/userAccess/logic/canEditWorkTracker";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { hasSubrentalAccessForDate } from "@/features/userAccess/logic/hasSubrentalAccessForDate";
+import { useDashboardBleachersStore } from "@/features/dashboard/state/useDashboardBleachersStore";
+// import { requestReview, REVIEW_REQUESTED_TITLE } from "@/features/alerts/requestReview";
+import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { db } from "@/components/providers/SystemProvider";
-import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { expect, useTypedQuery, typedGetAll } from "@/lib/powersync/typedQuery";
+import { WorkTrackerAlertsDropDown } from "@/features/alerts/components/WorkTrackerAlertsDropDown";
+import {
+  getExpectedPickupStreetForWorkTracker,
+  getExpectedAddressFullForWorkTracker,
+  isPickupTransportationMismatch,
+} from "@/features/alerts/util/workTrackerTransportation";
+import { getUpcomingWindowEnd } from "@/features/alerts/util/getUpcomingWindow";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -176,42 +192,122 @@ export default function WorkTrackerModal({
 
   const isNew = selectedWorkTracker?.id === "-1";
 
-  // Look up bleacher AM UUIDs via PowerSync for the canEdit check
-  const bleacherUuidForQuery = selectedWorkTracker?.bleacher_uuid ?? "__no_bleacher__";
-  type BleacherAmRow = {
-    summerAmUuid: string | null;
-    winterAmUuid: string | null;
-  };
-  const compiledBleacherAm = useMemo(
-    () =>
-      db
-        .selectFrom("Bleachers as b")
-        .select([
-          "b.summer_account_manager_uuid as summerAmUuid",
-          "b.winter_account_manager_uuid as winterAmUuid",
-        ])
-        .where("b.id", "=", bleacherUuidForQuery)
-        .limit(1)
-        .compile(),
-    [bleacherUuidForQuery],
-  );
-  const { data: bleacherAmData } = useTypedQuery(compiledBleacherAm, expect<BleacherAmRow>());
-  const bleacherAm = bleacherAmData?.[0] ?? null;
+  // Populate pickup address from the bleacher's last known location in PS
+  const handlePopulatePickupFromLastAddress = async () => {
+    if (!workTracker?.bleacher_uuid || !workTracker?.date) return;
 
-  // Viewer can never edit — regardless of ownership
+    const resolved = await getExpectedAddressFullForWorkTracker({
+      bleacherUuid: workTracker.bleacher_uuid,
+      targetDate: workTracker.date,
+      excludeWorkTrackerUuid: workTracker.id,
+      direction: "past",
+    });
+
+    if (resolved) {
+      setPickUpAddress({
+        addressUuid: resolved.addressUuid,
+        address: resolved.street,
+        city: resolved.city,
+        state: resolved.state,
+        postalCode: resolved.postalCode,
+      });
+    }
+  };
+
+  const handlePopulateDropoffFromNextAddress = async () => {
+    if (!workTracker?.bleacher_uuid || !workTracker?.date) return;
+
+    const resolved = await getExpectedAddressFullForWorkTracker({
+      bleacherUuid: workTracker.bleacher_uuid,
+      targetDate: workTracker.date,
+      excludeWorkTrackerUuid: workTracker.id,
+      direction: "future",
+    });
+
+    if (resolved) {
+      setDropOffAddress({
+        addressUuid: resolved.addressUuid,
+        address: resolved.street,
+        city: resolved.city,
+        state: resolved.state,
+        postalCode: resolved.postalCode,
+      });
+    }
+  };
+
+  // Pre-save in-memory transportation warning for pickup mismatch
+  const { data: expectedPickupStreet } = useQuery({
+    queryKey: [
+      "work-tracker-expected-pickup-street",
+      workTracker?.bleacher_uuid,
+      workTracker?.date,
+      workTracker?.id,
+    ],
+    enabled: Boolean(workTracker?.bleacher_uuid && workTracker?.date),
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      if (!workTracker?.bleacher_uuid || !workTracker?.date) return null;
+
+      return getExpectedPickupStreetForWorkTracker({
+        bleacherUuid: workTracker.bleacher_uuid,
+        targetDate: workTracker.date,
+        excludeWorkTrackerUuid: workTracker.id,
+      });
+    },
+  });
+
+  const showPickupTransportWarning =
+    Boolean(expectedPickupStreet) &&
+    Boolean(pickUpAddress?.address) &&
+    isPickupTransportationMismatch(expectedPickupStreet, pickUpAddress?.address);
+
+  const showDraftWarning =
+    workTracker?.status === "draft" &&
+    !!workTracker?.date &&
+    workTracker.date <= getUpcomingWindowEnd();
+
+  const perms = usePermissionsStore();
+  const allDashboardBleachers = useDashboardBleachersStore((s) => s.data);
+
+  const bleacherZoneCompiled = useMemo(() => {
+    const effectiveId = workTracker?.bleacher_uuid ?? "__none__";
+    return db.selectFrom("Bleachers").select(["zone_uuid"]).where("id", "=", effectiveId).compile();
+  }, [workTracker?.bleacher_uuid]);
+  const { data: bleacherZoneRows } = useTypedQuery(
+    bleacherZoneCompiled,
+    expect<{ zone_uuid: string | null }>(),
+  );
+  const bleacherZoneUuid = bleacherZoneRows?.[0]?.zone_uuid ?? null;
+
   const canEdit = permissions.canCreateUser
     ? canEditWorkTracker({
         isAdmin: permissions.isAdmin,
         isAccountManager: permissions.isAccountManager,
         isNew,
-        currentAccountManagerId: permissions.accountManagerId,
-        bleacherSummerAmUuid: bleacherAm?.summerAmUuid,
-        bleacherWinterAmUuid: bleacherAm?.winterAmUuid,
-      })
+        zoneUuid: bleacherZoneUuid,
+        leadZoneIds: perms.leadZoneIds,
+        accountManagerZoneIds: perms.accountManagerZoneIds,
+        createdByUserId: workTracker?.created_by_user_uuid,
+        userId: perms.userId,
+      }) ||
+      // AM with subrental access to this bleacher on the work tracker date
+      (permissions.isAccountManager &&
+        hasSubrentalAccessForDate({
+          bleacherUuid: workTracker?.bleacher_uuid ?? null,
+          date: workTracker?.date ?? null,
+          accountManagerZoneIds: perms.accountManagerZoneIds,
+          allBleachers: allDashboardBleachers,
+        }))
     : false;
 
-  // Bleacher options for the dropdown (AM sees only own bleachers when editing; all when read-only)
-  const amFilterId = permissions.isAdmin || !canEdit ? null : permissions.accountManagerId;
+  const canRelease = canReleaseWorkTracker({
+    isAdmin: permissions.isAdmin,
+    zoneUuid: bleacherZoneUuid,
+    leadZoneIds: perms.leadZoneIds,
+    accountManagerZoneIds: perms.accountManagerZoneIds,
+  });
+
+  const amFilterId: string | null = null;
   const {
     data: bleacherOptions,
     isLoading: isBleachersLoading,
@@ -312,15 +408,8 @@ export default function WorkTrackerModal({
         previousDropoffCity: dropoffAddress?.city ?? "",
       });
       setShowSaveConfirmModal(false);
-      // Refresh bleachers directly into the zustand store so Pixi updates without remounting
-      try {
-        const { FetchDashboardBleachers } =
-          await import("@/features/dashboard/db/client/bleachers");
-        await FetchDashboardBleachers(supabase);
-      } catch {}
       // Invalidate this specific work tracker's cache so re-opening shows fresh data
       await queryClient.invalidateQueries({ queryKey: ["workTracker", workTracker?.id] });
-      // Optionally refresh any active work-tracker-specific queries used elsewhere
       await queryClient.invalidateQueries({ queryKey: ["work-trackers"], refetchType: "active" });
       setSelectedWorkTracker(null);
       setSelectedBlock(null);
@@ -351,13 +440,6 @@ export default function WorkTrackerModal({
         dropoffCity: dropOffAddress?.city ?? dropoffAddress?.city ?? "",
         date: workTracker.date,
       });
-      // Refresh bleachers directly into the zustand store so Pixi updates without remounting
-      try {
-        const { FetchDashboardBleachers } =
-          await import("@/features/dashboard/db/client/bleachers");
-        await FetchDashboardBleachers(supabase);
-      } catch {}
-      // Optionally refresh any active work-tracker-specific queries used elsewhere
       await queryClient.invalidateQueries({ queryKey: ["work-trackers"], refetchType: "active" });
       setSelectedWorkTracker(null);
       setSelectedBlock(null);
@@ -365,6 +447,25 @@ export default function WorkTrackerModal({
       createErrorToast(["Failed to Delete Work Tracker:", String(error)]);
     }
   };
+
+  // Review-request flow disabled per boss feedback — kept for future use
+  // const handleRequestReview = async () => {
+  //   if (!workTracker?.id || workTracker.id === "-1" || !bleacherZoneUuid) return;
+  //   try {
+  //     const bleacherLabel =
+  //       bleacherOptions?.find((b) => b.uuid === workTracker.bleacher_uuid)?.label ?? "Unknown";
+  //     await requestReview({
+  //       entityUuid: workTracker.id,
+  //       entityType: "work_tracker",
+  //       bleacherZoneUuid,
+  //       message: `Review requested for Work Tracker on ${bleacherLabel} (${workTracker.date ?? "no date"})`,
+  //       entityDescription: `Work Tracker – ${bleacherLabel}`,
+  //     });
+  //     createSuccessToast(["Review request sent to Lead Account Manager"]);
+  //   } catch (error) {
+  //     createErrorToast(["Failed to request review:", String(error)]);
+  //   }
+  // };
 
   function handlePayChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value;
@@ -468,9 +569,14 @@ export default function WorkTrackerModal({
             className=" p-4 rounded shadow w-[900px] transition-colors duration-200 bg-white"
           >
             <div className="flex flex-row justify-between items-start">
-              <h2 className="text-sm font-semibold mb-2">
-                {selectedWorkTracker.id === "-1" ? "Create Work Tracker" : "Edit Work Tracker"}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold mb-2">
+                  {selectedWorkTracker.id === "-1" ? "Create Work Tracker" : "Edit Work Tracker"}
+                </h2>
+                {selectedWorkTracker.id !== "-1" && (
+                  <WorkTrackerAlertsDropDown workTrackerUuid={selectedWorkTracker.id} />
+                )}
+              </div>
               <X
                 className="-mt-1 cursor-pointer text-black/30 hover:text-black hover:drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] transition-all duration-200"
                 onClick={() => setSelectedWorkTracker(null)}
@@ -582,7 +688,16 @@ export default function WorkTrackerModal({
                     }
                   />
                   {/* Status Badge - Account Manager can toggle between draft and released */}
-                  <label className={labelClassName}>Status</label>
+                  <div className="flex items-center gap-2">
+                    <label className={labelClassName}>Status</label>
+                    {showDraftWarning && (
+                      <AppTooltip content="This work tracker is still in draft and should be released soon.">
+                        <span className="mt-1 inline-flex text-amber-600">
+                          <AlertTriangle className="h-4 w-4" />
+                        </span>
+                      </AppTooltip>
+                    )}
+                  </div>
                   <div className="flex items-center justify-center p-3 bg-gray-50 rounded border">
                     <WorkTrackerStatusBadge
                       status={workTracker?.status ?? "draft"}
@@ -592,8 +707,12 @@ export default function WorkTrackerModal({
                           status: newStatus,
                         }));
                       }}
-                      canEdit={canEdit}
+                      canEdit={canEdit && canRelease}
                       workTrackerId={workTracker?.id !== "-1" ? workTracker?.id : undefined}
+                      // Review-request disabled per boss feedback
+                      // onRequestReview={
+                      //   canEdit && !canRelease && !isNew ? () => handleRequestReview() : undefined
+                      // }
                     />
                   </div>
                   <label className={labelClassName}>Driver Notes</label>
@@ -667,7 +786,16 @@ export default function WorkTrackerModal({
                           setWorkTracker((prev) => ({ ...prev!, pickup_poc: e.target.value }))
                         }
                       />
-                      <label className={labelClassName}>Pickup Address</label>
+                      <div className="flex items-center gap-2">
+                        <label className={labelClassName}>Pickup Address</label>
+                        {showPickupTransportWarning && (
+                          <AppTooltip content="Pickup differs from last location. Use locate.">
+                            <span className="mt-1 inline-flex text-amber-600">
+                              <AlertTriangle className="h-4 w-4" />
+                            </span>
+                          </AppTooltip>
+                        )}
+                      </div>
                       <div className="flex flex-row gap-2 items-center">
                         <AddressAutocomplete
                           className="bg-white"
@@ -680,7 +808,15 @@ export default function WorkTrackerModal({
                           initialValue={pickUpAddress?.address || ""}
                         />
                         {canEdit && (
-                          <Link className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer" />
+                          <AppTooltip content="Populate from last known bleacher location">
+                            <button
+                              type="button"
+                              onClick={handlePopulatePickupFromLastAddress}
+                              className="text-gray-400 hover:text-darkBlue transition-colors"
+                            >
+                              <LocateFixed className="h-5 w-5" />
+                            </button>
+                          </AppTooltip>
                         )}
                       </div>
                       <label className={labelClassName}>Pickup Instructions</label>
@@ -734,16 +870,29 @@ export default function WorkTrackerModal({
                         }
                       />
                       <label className={labelClassName}>Dropoff Address</label>
-                      <AddressAutocomplete
-                        className="bg-white"
-                        onAddressSelect={(data) =>
-                          setDropOffAddress({
-                            ...data,
-                            addressUuid: dropOffAddress?.addressUuid ?? null,
-                          })
-                        }
-                        initialValue={dropOffAddress?.address || ""}
-                      />
+                      <div className="flex flex-row gap-2 items-center">
+                        <AddressAutocomplete
+                          className="bg-white"
+                          onAddressSelect={(data) =>
+                            setDropOffAddress({
+                              ...data,
+                              addressUuid: dropOffAddress?.addressUuid ?? null,
+                            })
+                          }
+                          initialValue={dropOffAddress?.address || ""}
+                        />
+                        {canEdit && (
+                          <AppTooltip content="Populate from next known bleacher location">
+                            <button
+                              type="button"
+                              onClick={handlePopulateDropoffFromNextAddress}
+                              className="text-gray-400 hover:text-darkBlue transition-colors"
+                            >
+                              <LocateFixed className="h-5 w-5" />
+                            </button>
+                          </AppTooltip>
+                        )}
+                      </div>
                       <label className={labelClassName}>Dropoff Instructions</label>
                       <textarea
                         className="w-full text-sm border p-1 rounded bg-white"

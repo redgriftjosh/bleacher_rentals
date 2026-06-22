@@ -1,11 +1,44 @@
-import { Container, Graphics, Sprite, Text } from "pixi.js";
+import { Container, Graphics, Sprite } from "pixi.js";
 import { EventSpanType, EventsUtil } from "../../util/Events";
-import { CELL_HEIGHT, CELL_WIDTH } from "@/features/dashboard/values/constants";
+import { CELL_HEIGHT, CELL_WIDTH, SUBRENTAL_COLOR } from "@/features/dashboard/values/constants";
 import { Baker } from "../../util/Baker";
 import { BleacherEvent } from "../../types";
 import { loadEventById } from "../../db/client/loadEventById";
 import { loadMaintenanceEventById } from "../../db/client/loadMaintenanceEventById";
+import { loadSubrentalEventById } from "../../db/client/loadSubrentalEventById";
 import { supabaseClientRegistry } from "../../util/supabaseClientRegistry";
+import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
+import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
+import { useDashboardBleachersStore } from "../../state/useDashboardBleachersStore";
+
+/**
+ * Looks up the accepted subrental date range that covers the given event window,
+ * by checking subrental rows in the dashboard bleachers store.
+ * Returns null if the event is not on a subrental row or no matching range exists.
+ */
+export function resolveSubrentalConstraint(
+  bleacherUuids: string[],
+  eventStart: string,
+  eventEnd: string,
+): { eventStart: string; eventEnd: string } | null {
+  if (!bleacherUuids.length || !eventStart || !eventEnd) return null;
+  const allBleachers = useDashboardBleachersStore.getState().data;
+  for (const b of allBleachers) {
+    if (!b.isSubrentalRow || !bleacherUuids.includes(b.bleacherUuid)) continue;
+    const match = (b.acceptedSubrentalAccess ?? []).find(
+      (r) =>
+        r.eventStart.substring(0, 10) <= eventEnd.substring(0, 10) &&
+        r.eventEnd.substring(0, 10) >= eventStart.substring(0, 10),
+    );
+    if (match) {
+      return {
+        eventStart: match.eventStart.substring(0, 10),
+        eventEnd: match.eventEnd.substring(0, 10),
+      };
+    }
+  }
+  return null;
+}
 
 export class EventBody extends Sprite {
   private currentSpan?: EventSpanType;
@@ -21,6 +54,7 @@ export class EventBody extends Sprite {
     baker: Baker,
     dimensions: { width: number; height: number },
     topOffset: number = CELL_HEIGHT,
+    isAccessible: boolean = true,
   ) {
     super();
 
@@ -42,17 +76,23 @@ export class EventBody extends Sprite {
 
     const isBooked = !!eventInfo.span?.ev.booked;
     const isMaintenance = !!eventInfo.span?.ev.isMaintenance;
-    const hasDamageAlert = !!eventInfo.span?.ev.hasDamageAlert;
-    const eventColor = isMaintenance
-      ? 0xff0000
-      : eventInfo.span && eventInfo.span.ev.hslHue != null
-        ? EventsUtil.hslToRgbInt(eventInfo.span.ev.hslHue, 60, 60)
-        : 0x808080;
+    const isSubrental = !!eventInfo.span?.ev.isSubrental;
+    const eventColor = isSubrental
+      ? SUBRENTAL_COLOR
+      : isMaintenance
+        ? 0xff0000
+        : eventInfo.span && eventInfo.span.ev.hslHue != null
+          ? EventsUtil.hslToRgbInt(
+              eventInfo.span.ev.hslHue,
+              isAccessible ? 60 : 20,
+              isAccessible ? 60 : 70,
+            )
+          : 0x808080;
 
     const texture = baker.getTexture(
-      `EventBody:${eventInfo.span?.ev.eventUuid}:${isMaintenance ? "maint" : isBooked ? "booked" : "quoted"}:${
+      `EventBody:${eventInfo.span?.ev.eventUuid}:${isSubrental ? "subrental" : isMaintenance ? "maint" : isBooked ? "booked" : "quoted"}:${
         eventInfo.isStart ? "start" : eventInfo.isEnd ? "end" : "middle"
-      }:top${topOffset}${hasDamageAlert ? ":dmg" : ""}`,
+      }:top${topOffset}:${isAccessible ? "acc" : "noacc"}`,
       { width: CELL_WIDTH + 2, height: CELL_HEIGHT + 2 },
       // null,
       (c) => {
@@ -122,6 +162,9 @@ export class EventBody extends Sprite {
           // Quoted events: white background with selective borders
           const T = Math.max(1, topOffset);
           fill.rect(L, T - 1, W, H).fill(0xffffff); // White background
+          if (!isAccessible) {
+            fill.rect(L, T - 1, W, H).fill({ color: 0x000000, alpha: 0.05 });
+          }
 
           // Draw borders based on position in span
           if (eventInfo.isStart) {
@@ -166,20 +209,6 @@ export class EventBody extends Sprite {
         }
 
         c.addChild(fill, g);
-
-        // Damage alert indicator: small warning triangle on start cell
-        if (hasDamageAlert && eventInfo.isStart) {
-          const triSize = 8;
-          const tx = W - triSize - 2;
-          const ty = Math.max(2, topOffset + 2);
-          const tri = new Graphics();
-          tri.moveTo(tx + triSize / 2, ty);
-          tri.lineTo(tx + triSize, ty + triSize);
-          tri.lineTo(tx, ty + triSize);
-          tri.closePath();
-          tri.fill(0xdc2626); // red-600
-          c.addChild(tri);
-        }
         // console.log(
         //   "EventBody",
         //   isBooked ? "booked" : "quoted",
@@ -205,10 +234,22 @@ export class EventBody extends Sprite {
       return;
     }
 
-    if (bleacherEvent.isMaintenance) {
+    if (bleacherEvent.isSubrental) {
+      await loadSubrentalEventById(bleacherEvent.eventUuid);
+    } else if (bleacherEvent.isMaintenance) {
       await loadMaintenanceEventById(bleacherEvent.eventUuid, supabase);
+      const ms = useMaintenanceEventStore.getState();
+      ms.setField(
+        "subrentalConstraint",
+        resolveSubrentalConstraint(ms.bleacherUuids, ms.eventStart, ms.eventEnd),
+      );
     } else {
       await loadEventById(bleacherEvent.eventUuid, supabase);
+      const es = useCurrentEventStore.getState();
+      es.setField(
+        "subrentalConstraint",
+        resolveSubrentalConstraint(es.bleacherUuids, es.eventStart, es.eventEnd),
+      );
     }
   }
 }

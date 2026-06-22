@@ -6,6 +6,8 @@ import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database, Tables, TablesInsert } from "../../../../../database.types";
 import { checkEventFormRules } from "../../functions";
+import { db } from "@/components/providers/SystemProvider";
+import { typedExecute, typedGetAll, expect } from "@/lib/powersync/typedQuery";
 
 export async function updateEvent(
   state: CurrentEventStore,
@@ -25,117 +27,120 @@ export async function updateEvent(
     throw new Error("Event form validation failed");
   }
 
-  // 1. Update Address (if address exists)
-  if (state.addressData && state.addressData.addressUuid) {
-    const updatedAddress: Partial<TablesInsert<"Addresses">> = {
-      city: state.addressData.city ?? "",
-      state_province: state.addressData.state ?? "",
-      street: state.addressData.address ?? "",
-      zip_postal: state.addressData.postalCode ?? "",
-    };
-
-    const { error: addressError } = await supabase
-      .from("Addresses")
-      .update(updatedAddress)
-      .eq("id", state.addressData.addressUuid);
-
-    if (addressError) {
-      createErrorToast(["Failed to update address.", addressError?.message ?? ""]);
+  // 1. Handle Address
+  let addressUuid: string | null = null;
+  if (state.addressData) {
+    if (state.addressData.addressUuid) {
+      addressUuid = state.addressData.addressUuid;
+      await typedExecute(
+        db
+          .updateTable("Addresses")
+          .set({
+            city: state.addressData.city ?? "",
+            state_province: state.addressData.state ?? "",
+            street: state.addressData.address ?? "",
+            zip_postal: state.addressData.postalCode ?? "",
+          })
+          .where("id", "=", state.addressData.addressUuid)
+          .compile(),
+      );
+    } else {
+      addressUuid = crypto.randomUUID();
+      await typedExecute(
+        db
+          .insertInto("Addresses")
+          .values({
+            id: addressUuid,
+            city: state.addressData.city ?? "",
+            state_province: state.addressData.state ?? "",
+            street: state.addressData.address ?? "",
+            zip_postal: state.addressData.postalCode ?? "",
+          })
+          .compile(),
+      );
     }
   }
 
   // 2. Update Event
-  const updatedEvent: Partial<TablesInsert<"Events">> = {
-    event_name: state.eventName,
-    event_start: state.eventStart,
-    event_end: state.eventEnd,
-    setup_start: state.sameDaySetup ? null : state.setupStart,
-    teardown_end: state.sameDayTeardown ? null : state.teardownEnd,
-    lenient: state.lenient,
-    total_seats: state.seats,
-    seven_row: state.sevenRow,
-    ten_row: state.tenRow,
-    fifteen_row: state.fifteenRow,
-    event_status: state.selectedStatus,
-    contract_revenue_cents: state.contractRevenueCents,
-    notes: state.notes,
-    hsl_hue: state.hslHue,
-    must_be_clean: state.mustBeClean,
-    goodshuffle_url: state.goodshuffleUrl ?? null,
-    created_by_user_uuid: state.ownerUserUuid ?? null,
-    booked_at: state.bookedAt ? new Date(state.bookedAt).toISOString() : null,
-    ...(state.createdAt ? { created_at: new Date(state.createdAt).toISOString() } : {}),
-  };
+  await typedExecute(
+    db
+      .updateTable("Events")
+      .set({
+        event_name: state.eventName,
+        event_start: state.eventStart,
+        event_end: state.eventEnd,
+        setup_start: state.sameDaySetup ? null : state.setupStart,
+        teardown_end: state.sameDayTeardown ? null : state.teardownEnd,
+        lenient: state.lenient ? 1 : 0,
+        total_seats: state.seats,
+        seven_row: state.sevenRow,
+        ten_row: state.tenRow,
+        fifteen_row: state.fifteenRow,
+        event_status: state.selectedStatus,
+        contract_revenue_cents: state.contractRevenueCents,
+        notes: state.notes,
+        hsl_hue: state.hslHue,
+        must_be_clean: state.mustBeClean ? 1 : 0,
+        goodshuffle_url: state.goodshuffleUrl ?? null,
+        created_by_user_uuid: state.ownerUserUuid ?? null,
+        booked_at: state.bookedAt ? new Date(state.bookedAt).toISOString() : null,
+        ...(state.createdAt ? { created_at: new Date(state.createdAt).toISOString() } : {}),
+        ...(addressUuid ? { address_uuid: addressUuid } : {}),
+      })
+      .where("id", "=", state.eventUuid!)
+      .compile(),
+  );
 
-  const { error: eventError } = await supabase
-    .from("Events")
-    .update(updatedEvent)
-    .eq("id", state.eventUuid);
-
-  if (eventError) {
-    createErrorToast(["Failed to update event.", eventError?.message ?? ""]);
-  }
-
-  await updateBleacherEvents(state, supabase);
+  await updateBleacherEvents(state);
 
   createSuccessToast(["Event Updated"]);
   updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
 }
 
-async function updateBleacherEvents(state: CurrentEventStore, supabase: SupabaseClient<Database>) {
-  // IMPORTANT: Don't rely on the in-memory `bleacherEvents` store here.
-  // That store is populated via a background fetch that can be briefly empty or stale
-  // (e.g. during navigation/session refresh), which makes updates "hit or miss".
-  // Always diff against the source of truth.
-  const { data: existingLinks, error: existingError } = await supabase
-    .from("BleacherEvents")
-    .select("bleacher_uuid")
-    .eq("event_uuid", state.eventUuid!);
-
-  if (existingError) {
-    createErrorToast(["Failed to load existing bleacher links.", existingError?.message ?? ""]);
-    throw new Error(existingError?.message ?? "Failed to load existing bleacher links");
-  }
+async function updateBleacherEvents(state: CurrentEventStore) {
+  const existingLinks = await typedGetAll(
+    db
+      .selectFrom("BleacherEvents")
+      .select("bleacher_uuid")
+      .where("event_uuid", "=", state.eventUuid!)
+      .compile(),
+    expect<{ bleacher_uuid: string | null }>(),
+  );
 
   const existingBleacherUuids = new Set(
-    existingLinks?.map((b) => b.bleacher_uuid).filter((uuid): uuid is string => uuid !== null) ??
-      [],
+    existingLinks
+      .map((b) => b.bleacher_uuid)
+      .filter((uuid): uuid is string => uuid !== null),
   );
   const incomingBleacherUuids = new Set(state.bleacherUuids);
 
-  // Identify removals and additions
   const toDelete = [...existingBleacherUuids].filter((id) => !incomingBleacherUuids.has(id));
   const toAdd = [...incomingBleacherUuids].filter((id) => !existingBleacherUuids.has(id));
 
-  // Delete removed bleacher links
-  if (toDelete.length > 0) {
-    const { error: deleteError } = await supabase
-      .from("BleacherEvents")
-      .delete()
-      .eq("event_uuid", state.eventUuid!)
-      .in("bleacher_uuid", toDelete);
-
-    if (deleteError) {
-      createErrorToast(["Failed to delete removed bleacher links.", deleteError?.message ?? ""]);
-      throw new Error(deleteError?.message ?? "Failed to delete removed bleacher links");
-    }
+  for (const bleacherUuid of toDelete) {
+    await typedExecute(
+      db
+        .deleteFrom("BleacherEvents")
+        .where("event_uuid", "=", state.eventUuid!)
+        .where("bleacher_uuid", "=", bleacherUuid)
+        .compile(),
+    );
   }
 
-  // Insert new links
-  if (toAdd.length > 0) {
-    const newBleacherLinks = toAdd.map((bleacher_uuid) => ({
-      bleacher_uuid,
-      event_uuid: state.eventUuid!,
-      setup_text: "",
-      setup_confirmed: false,
-      teardown_text: "",
-      teardown_confirmed: false,
-    }));
-    const { error: insertError } = await supabase.from("BleacherEvents").insert(newBleacherLinks);
-
-    if (insertError) {
-      createErrorToast(["Failed to insert new bleacher links.", insertError?.message ?? ""]);
-      throw new Error(insertError?.message ?? "Failed to insert new bleacher links");
-    }
+  for (const bleacherUuid of toAdd) {
+    await typedExecute(
+      db
+        .insertInto("BleacherEvents")
+        .values({
+          id: crypto.randomUUID(),
+          bleacher_uuid: bleacherUuid,
+          event_uuid: state.eventUuid!,
+          setup_text: "",
+          setup_confirmed: 0,
+          teardown_text: "",
+          teardown_confirmed: 0,
+        })
+        .compile(),
+    );
   }
 }

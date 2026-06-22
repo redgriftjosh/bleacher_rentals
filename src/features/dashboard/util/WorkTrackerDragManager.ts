@@ -11,6 +11,9 @@ import { supabaseClientRegistry } from "./supabaseClientRegistry";
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
+import { db } from "@/components/providers/SystemProvider";
+import { typedExecute } from "@/lib/powersync/typedQuery";
+import { triage } from "@/features/alerts/triage";
 
 interface GridInfo {
   getCurrentScrollX: () => number;
@@ -149,20 +152,16 @@ class _WorkTrackerDragManager {
     // Optimistic local update
     this.optimisticMove(ctx.tracker, ctx.sourceBleacherUuid, targetBleacherUuid, targetDate);
 
-    // Persist to database
-    const supabase = supabaseClientRegistry.getClient();
-    if (!supabase) {
-      createErrorToast(["No Supabase client available for work tracker move."]);
-      return;
-    }
-
-    const { error } = await supabase
-      .from("WorkTrackers")
-      .update({ bleacher_uuid: targetBleacherUuid, date: targetDate })
-      .eq("id", ctx.tracker.workTrackerUuid);
-
-    if (error) {
-      createErrorToast(["Failed to move work tracker.", error.message]);
+    // Persist to PowerSync (replicates to Supabase automatically)
+    try {
+      await typedExecute(
+        db
+          .updateTable("WorkTrackers")
+          .set({ bleacher_uuid: targetBleacherUuid, date: targetDate } as any)
+          .where("id", "=", ctx.tracker.workTrackerUuid)
+          .compile(),
+      );
+    } catch (err) {
       // Revert: move back
       this.optimisticMove(
         { ...ctx.tracker, date: targetDate },
@@ -170,10 +169,28 @@ class _WorkTrackerDragManager {
         ctx.sourceBleacherUuid,
         ctx.sourceDate,
       );
+      createErrorToast(["Failed to move work tracker.", String(err)]);
       return;
     }
 
     createSuccessToast(["Work tracker moved successfully."]);
+
+    // Trigger alert triage now that the WT has moved
+    try {
+      const supabase = supabaseClientRegistry.getClient();
+      if (supabase) {
+        await triage(
+          "WorkTrackers",
+          {
+            id: ctx.tracker.workTrackerUuid,
+            previous_bleacher_uuid: ctx.sourceBleacherUuid,
+          },
+          supabase,
+        );
+      }
+    } catch (e) {
+      console.error("[alerts] failed to triage after work tracker drag", e);
+    }
   }
 
   /**

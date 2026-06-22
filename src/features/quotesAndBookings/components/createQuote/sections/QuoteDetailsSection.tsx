@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { Dropdown } from "@/components/DropDown";
 import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
@@ -20,6 +20,9 @@ export function QuoteDetailsSection() {
   const permissions = useTeamPermissions();
   const accountManagers = useAccountManagers(false);
   const { salesOffices, isLoading: loadingOffices } = useSalesOffices();
+
+  const eventStart = useCreateQuoteStore((s) => s.eventStart);
+  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
 
   useEffect(() => {
     if (!permissions.accountManagerId || accountManagerId) return;
@@ -43,10 +46,10 @@ export function QuoteDetailsSection() {
     [accountManagers, setField],
   );
 
-  const salesOfficeOptions = salesOffices.map((o) => ({
-    label: o.name,
-    value: o.id,
-  }));
+  const salesOfficeOptions = salesOffices.map((o) => {
+    const cur = isCanadianProvince(o.stateProvince) ? "CAD" : "USD";
+    return { label: `${o.name} (${cur})`, value: o.id };
+  });
 
   const statusOptions = [
     { label: "Draft", value: "draft" as const },
@@ -87,6 +90,8 @@ export function QuoteDetailsSection() {
           <input
             type="date"
             value={quoteValidTill}
+            min={today}
+            max={eventStart || undefined}
             onChange={(e) => setField("quoteValidTill", e.target.value)}
             className="w-full h-[40px] px-3 border rounded text-sm"
           />
@@ -102,7 +107,7 @@ export function QuoteDetailsSection() {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Sales Office</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Sales Office <span className="text-red-500">*</span></label>
           <Dropdown
             options={salesOfficeOptions}
             selected={salesOfficeId}

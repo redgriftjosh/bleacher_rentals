@@ -1,10 +1,11 @@
-import { Container, Sprite, Text } from "pixi.js";
+import { Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import { Baker } from "../util/Baker";
 import { BleacherCellToggle } from "./BleacherCellToggle";
 import { SwapButton, SwapButtonState } from "./SwapButton";
-import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT } from "../values/constants";
+import { BLEACHER_COLUMN_WIDTH, CELL_HEIGHT, SUBRENTAL_COLOR } from "../values/constants";
 import { Bleacher } from "../types";
 import { MapPinIcon } from "./event/MapPinIcon";
+import { PngManager } from "../util/PngManager";
 
 /**
  * A lightweight, scroll-friendly **row widget** for the sticky left column.
@@ -37,6 +38,7 @@ import { MapPinIcon } from "./event/MapPinIcon";
  */
 export class BleacherCell extends Container {
   private sprite: Sprite;
+  private bg: Graphics;
   private baker: Baker;
   private bleacherUuid?: string; // reuse-safe id
   private toggle: BleacherCellToggle; // added toggle
@@ -48,17 +50,24 @@ export class BleacherCell extends Container {
 
   // Map bleacherRows to Tailwind-like colors:
   // 7 -> green-700 (#15803d), 10 -> red-700 (#b91c1c), 15 -> yellow-500 (#eab308), else black
-  private getBleacherNumberColor(rows?: number): number {
-    switch (rows) {
-      case 7:
-        return 0x15803d; // green-700
-      case 10:
-        return 0xb91c1c; // red-700
-      case 15:
-        return 0xeab308; // yellow-500
-      default:
-        return 0x000000; // default black
-    }
+  private getBleacherNumberColor(rows?: number, isAccessible: boolean = true): number {
+    const colors: Record<number, number> = {
+      7: 0x15803d, // green-700
+      10: 0xb91c1c, // red-700
+      15: 0xeab308, // yellow-500
+    };
+    const color = rows != null && rows in colors ? colors[rows] : 0x000000;
+    return isAccessible ? color : this.desaturateColor(color, 0.4);
+  }
+
+  /** Desaturate a hex color by blending toward grey. amount: 0 = no change, 1 = full greyscale */
+  private desaturateColor(hex: number, amount: number = 0.75): number {
+    const r = (hex >> 16) & 0xff;
+    const g = (hex >> 8) & 0xff;
+    const b = hex & 0xff;
+    const grey = Math.round(r * 0.299 + g * 0.587 + b * 0.114);
+    const mix = (c: number) => Math.round(c * (1 - amount) + grey * amount);
+    return (mix(r) << 16) | (mix(g) << 8) | mix(b);
   }
 
   /**
@@ -68,6 +77,11 @@ export class BleacherCell extends Container {
   constructor(baker: Baker) {
     super();
     this.baker = baker;
+
+    this.bg = new Graphics();
+    this.bg.rect(0, 0, BLEACHER_COLUMN_WIDTH, CELL_HEIGHT).fill({ color: 0x000000, alpha: 0.1 });
+    this.bg.visible = false;
+    this.addChild(this.bg);
 
     this.sprite = new Sprite();
     this.addChild(this.sprite);
@@ -118,9 +132,13 @@ export class BleacherCell extends Container {
    *
    * @param b - Bleacher data model for this row.
    */
-  setBleacher(b: Bleacher) {
+  setBleacher(b: Bleacher, isAccessible: boolean = true) {
     this.bleacherUuid = b.bleacherUuid;
-    const key = b.bleacherUuid.toString();
+    // Include zoneUuid in the key so subrental rows (same bleacherUuid, different zone)
+    // get their own texture rather than reusing the normal row's cached texture.
+    const key = `${b.bleacherUuid}:${b.zoneUuid ?? "nz"}:${isAccessible ? "acc" : "noacc"}`;
+
+    this.bg.visible = !isAccessible;
 
     // Show/hide map pin based on whether device is assigned
     this.mapPinIcon.visible = !!b.linxupDeviceId;
@@ -129,7 +147,7 @@ export class BleacherCell extends Container {
     const rt = this.baker.getTexture(
       key,
       { width: BLEACHER_COLUMN_WIDTH, height: CELL_HEIGHT },
-      (c) => this.buildBleacherContainer(c, b),
+      (c) => this.buildBleacherContainer(c, b, isAccessible),
     );
 
     this.sprite.texture = rt;
@@ -181,11 +199,13 @@ export class BleacherCell extends Container {
    * @param b - Bleacher data to render.
    * @internal
    */
-  private buildBleacherContainer(c: Container, b: Bleacher) {
+  private buildBleacherContainer(c: Container, b: Bleacher, isAccessible: boolean = true) {
+    const isSubrental = !!b.isSubrentalRow;
+
     const bleacherNumber = new Text({
       text: String(b.bleacherNumber),
       style: {
-        fill: this.getBleacherNumberColor(b.bleacherRows),
+        fill: this.getBleacherNumberColor(b.bleacherRows, isAccessible),
         fontSize: 16,
         fontWeight: "bold",
       },
@@ -204,19 +224,40 @@ export class BleacherCell extends Container {
     });
     bleacherSeats.position.set(40, 18);
 
-    const summerHomeBase = new Text({
-      text: b.summerHomeBase?.name ?? "",
-      style: { fill: 0xfe9900, fontSize: 11 },
-    });
-    summerHomeBase.position.set(3, 30);
+    if (isSubrental) {
+      // For subrental rows: show the handshake icon next to the bleacher number
+      // and display "OriginalZone → TargetZone" in place of just the zone name.
+      const hsTexture = PngManager.getTexture("handshake");
+      if (hsTexture) {
+        const hsSprite = new Sprite(hsTexture);
+        hsSprite.width = 14;
+        hsSprite.height = 14;
+        // Pin to the far right of the cell, vertically centered
+        hsSprite.position.set(BLEACHER_COLUMN_WIDTH - 25, (CELL_HEIGHT - 14) / 2);
+        c.addChild(hsSprite);
+      }
 
-    const winterHomeBase = new Text({
-      text: b.winterHomeBase?.name ?? "",
-      style: { fill: 0x2b80ff, fontSize: 11 },
-    });
-    // place winter right after summer
-    winterHomeBase.position.set(3 + Math.ceil(summerHomeBase.width) + 5, 30);
+      // Determine original zone name: look it up from the bleacher's own zone
+      // The subrental row's subrentalEvents carry requestedZoneUuid == b.zoneUuid
+      // The original zone is on the subrental event's bleacher (not stored here).
+      // We store the target zone on the subrental row as zoneUuid/zoneName.
+      // The original zone name is available via the first subrentalEvent's... we don't
+      // have it directly, but we can show the target zone prominently with an arrow prefix.
+      const zoneLabel = new Text({
+        text: `${b.originalZoneName ?? ""} \u2192 ${b.zoneName ?? ""}`,
+        style: { fill: SUBRENTAL_COLOR, fontSize: 11, fontWeight: "600" },
+      });
+      zoneLabel.position.set(3, 31);
+      c.addChild(zoneLabel);
+    } else {
+      const zoneLabel = new Text({
+        text: b.zoneName ?? "",
+        style: { fill: 0x6b6b6b, fontSize: 11 },
+      });
+      zoneLabel.position.set(3, 31);
+      c.addChild(zoneLabel);
+    }
 
-    c.addChild(bleacherNumber, bleacherRows, bleacherSeats, summerHomeBase, winterHomeBase);
+    c.addChild(bleacherNumber, bleacherRows, bleacherSeats);
   }
 }

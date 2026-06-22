@@ -2,90 +2,50 @@ import { describe, it, expect } from "vitest";
 import { isBleacherOwnedByAM } from "./isBleacherOwnedByAM";
 
 describe("isBleacherOwnedByAM", () => {
-  const amId = "am-id-1";
+  const zoneA = "zone-a";
+  const zoneB = "zone-b";
 
-  // ═══ Positive — AM owns the bleacher ═══
-
-  it("true when AM is summer account manager", () => {
+  it("true when bleacher zone is in AM zones", () => {
     expect(
       isBleacherOwnedByAM({
-        summerAccountManagerUuid: amId,
-        winterAccountManagerUuid: "other-am",
-        currentAccountManagerId: amId,
+        bleacherZoneUuid: zoneA,
+        accountManagerZoneIds: [zoneA, zoneB],
       }),
     ).toBe(true);
   });
 
-  it("true when AM is winter account manager", () => {
+  it("false when bleacher zone is not in AM zones", () => {
     expect(
       isBleacherOwnedByAM({
-        summerAccountManagerUuid: "other-am",
-        winterAccountManagerUuid: amId,
-        currentAccountManagerId: amId,
-      }),
-    ).toBe(true);
-  });
-
-  it("true when AM is both summer and winter", () => {
-    expect(
-      isBleacherOwnedByAM({
-        summerAccountManagerUuid: amId,
-        winterAccountManagerUuid: amId,
-        currentAccountManagerId: amId,
-      }),
-    ).toBe(true);
-  });
-
-  // ═══ Negative — bleacher belongs to other AM ═══
-
-  it("false when both seasons assigned to other AM", () => {
-    expect(
-      isBleacherOwnedByAM({
-        summerAccountManagerUuid: "other-am",
-        winterAccountManagerUuid: "other-am-2",
-        currentAccountManagerId: amId,
+        bleacherZoneUuid: "zone-c",
+        accountManagerZoneIds: [zoneA, zoneB],
       }),
     ).toBe(false);
   });
 
-  it("false when bleacher has no AM assigned", () => {
+  it("false when bleacher has no zone", () => {
     expect(
       isBleacherOwnedByAM({
-        summerAccountManagerUuid: null,
-        winterAccountManagerUuid: null,
-        currentAccountManagerId: amId,
+        bleacherZoneUuid: null,
+        accountManagerZoneIds: [zoneA],
       }),
     ).toBe(false);
   });
 
-  // ═══ Edge cases ═══
-
-  it("false when currentAccountManagerId is null", () => {
+  it("false when AM has no zones", () => {
     expect(
       isBleacherOwnedByAM({
-        summerAccountManagerUuid: amId,
-        winterAccountManagerUuid: amId,
-        currentAccountManagerId: null,
+        bleacherZoneUuid: zoneA,
+        accountManagerZoneIds: [],
       }),
     ).toBe(false);
   });
 
-  it("false when all values are null", () => {
+  it("false when bleacher zone is undefined", () => {
     expect(
       isBleacherOwnedByAM({
-        summerAccountManagerUuid: null,
-        winterAccountManagerUuid: null,
-        currentAccountManagerId: null,
-      }),
-    ).toBe(false);
-  });
-
-  it("false when AM UUID fields are undefined", () => {
-    expect(
-      isBleacherOwnedByAM({
-        summerAccountManagerUuid: undefined,
-        winterAccountManagerUuid: undefined,
-        currentAccountManagerId: amId,
+        bleacherZoneUuid: undefined,
+        accountManagerZoneIds: [zoneA],
       }),
     ).toBe(false);
   });

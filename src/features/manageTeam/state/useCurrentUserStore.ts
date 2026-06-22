@@ -46,9 +46,9 @@ export type CurrentUserState = {
   medicalCardPhotoPath: string | null;
 
   // Account Manager-specific fields
-  summerBleacherUuids: string[];
-  winterBleacherUuids: string[];
   assignedDriverUuids: string[];
+  assignedZoneEntries: { zoneUuid: string; isLead: boolean }[];
+  zoneDriverMap: Record<string, string[]>;
 
   // UI state
   existingUserUuid: string | null;
@@ -98,9 +98,9 @@ const initialState: CurrentUserState = {
   licensePhotoPath: null,
   insurancePhotoPath: null,
   medicalCardPhotoPath: null,
-  summerBleacherUuids: [],
-  winterBleacherUuids: [],
   assignedDriverUuids: [],
+  assignedZoneEntries: [],
+  zoneDriverMap: {},
   existingUserUuid: null,
   isOpen: false,
   isSubmitting: false,
