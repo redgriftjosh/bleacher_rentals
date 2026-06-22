@@ -35,7 +35,9 @@ export function CreateQuoteForm() {
   const currentUserUuid = useCurrentUserUuid();
   const [saving, setSaving] = useState(false);
   const perms = usePermissionsStore();
-  const canSendDirectly = perms.isAdmin || perms.leadZoneIds.length > 0;
+  // Review-gating disabled per boss feedback — all AMs can send quotes
+  // const canSendDirectly = perms.isAdmin || perms.leadZoneIds.length > 0;
+  const canSendDirectly = perms.isAdmin || perms.isAccountManager;
 
   // Auto-fetch tax from QBO when office + address are set
   const { qboError } = useAutoTax();

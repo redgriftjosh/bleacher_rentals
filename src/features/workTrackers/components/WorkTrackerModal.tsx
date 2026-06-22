@@ -40,7 +40,7 @@ import {
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { hasSubrentalAccessForDate } from "@/features/userAccess/logic/hasSubrentalAccessForDate";
 import { useDashboardBleachersStore } from "@/features/dashboard/state/useDashboardBleachersStore";
-import { requestReview, REVIEW_REQUESTED_TITLE } from "@/features/alerts/requestReview";
+// import { requestReview, REVIEW_REQUESTED_TITLE } from "@/features/alerts/requestReview";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery, typedGetAll } from "@/lib/powersync/typedQuery";
@@ -448,25 +448,24 @@ export default function WorkTrackerModal({
     }
   };
 
-  const handleRequestReview = async () => {
-    if (!workTracker?.id || workTracker.id === "-1" || !bleacherZoneUuid) return;
-
-    try {
-      const bleacherLabel =
-        bleacherOptions?.find((b) => b.uuid === workTracker.bleacher_uuid)?.label ?? "Unknown";
-
-      await requestReview({
-        entityUuid: workTracker.id,
-        entityType: "work_tracker",
-        bleacherZoneUuid,
-        message: `Review requested for Work Tracker on ${bleacherLabel} (${workTracker.date ?? "no date"})`,
-        entityDescription: `Work Tracker – ${bleacherLabel}`,
-      });
-      createSuccessToast(["Review request sent to Lead Account Manager"]);
-    } catch (error) {
-      createErrorToast(["Failed to request review:", String(error)]);
-    }
-  };
+  // Review-request flow disabled per boss feedback — kept for future use
+  // const handleRequestReview = async () => {
+  //   if (!workTracker?.id || workTracker.id === "-1" || !bleacherZoneUuid) return;
+  //   try {
+  //     const bleacherLabel =
+  //       bleacherOptions?.find((b) => b.uuid === workTracker.bleacher_uuid)?.label ?? "Unknown";
+  //     await requestReview({
+  //       entityUuid: workTracker.id,
+  //       entityType: "work_tracker",
+  //       bleacherZoneUuid,
+  //       message: `Review requested for Work Tracker on ${bleacherLabel} (${workTracker.date ?? "no date"})`,
+  //       entityDescription: `Work Tracker – ${bleacherLabel}`,
+  //     });
+  //     createSuccessToast(["Review request sent to Lead Account Manager"]);
+  //   } catch (error) {
+  //     createErrorToast(["Failed to request review:", String(error)]);
+  //   }
+  // };
 
   function handlePayChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value;
@@ -710,9 +709,10 @@ export default function WorkTrackerModal({
                       }}
                       canEdit={canEdit && canRelease}
                       workTrackerId={workTracker?.id !== "-1" ? workTracker?.id : undefined}
-                      onRequestReview={
-                        canEdit && !canRelease && !isNew ? () => handleRequestReview() : undefined
-                      }
+                      // Review-request disabled per boss feedback
+                      // onRequestReview={
+                      //   canEdit && !canRelease && !isNew ? () => handleRequestReview() : undefined
+                      // }
                     />
                   </div>
                   <label className={labelClassName}>Driver Notes</label>

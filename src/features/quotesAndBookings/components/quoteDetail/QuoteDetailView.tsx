@@ -19,13 +19,13 @@ import { formatMoney } from "../../utils/formatMoney";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 import { loadEventForModal } from "@/features/eventConfiguration/functions/loadEventForModal";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
-import { canSendQuote } from "@/features/userAccess/logic/canEditOwnedEntity";
+// import { canSendQuote } from "@/features/userAccess/logic/canEditOwnedEntity";
 import { canEditOwnedEntity } from "@/features/userAccess/logic/canEditOwnedEntity";
 import { getAmRoleForZone } from "@/features/userAccess/logic/getAmRoleForZone";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
-import { requestReview } from "@/features/alerts/requestReview";
-import { ClipboardCheck } from "lucide-react";
+// import { requestReview } from "@/features/alerts/requestReview";
+// import { ClipboardCheck } from "lucide-react";
 import { DateTime } from "luxon";
 
 export function QuoteDetailView({ eventId }: { eventId: string }) {
@@ -146,10 +146,12 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
     }
   };
 
-  const canSend = canSendQuote({
-    isAdmin: perms.isAdmin,
-    leadZoneIds: perms.leadZoneIds,
-  });
+  // Review-gating disabled per boss feedback — all AMs can send quotes
+  // const canSend = canSendQuote({
+  //   isAdmin: perms.isAdmin,
+  //   leadZoneIds: perms.leadZoneIds,
+  // });
+  const canSend = perms.isAdmin || perms.isAccountManager;
 
   const canEditQuote = canEditOwnedEntity({
     isAdmin: perms.isAdmin,
@@ -162,21 +164,22 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
     userId: perms.userId,
   });
 
-  const handleRequestQuoteReview = async () => {
-    if (!quote || !eventZoneUuid) return;
-    try {
-      await requestReview({
-        entityUuid: eventId,
-        entityType: "event",
-        bleacherZoneUuid: eventZoneUuid,
-        message: `Review requested for Quote "${quote.eventName}"`,
-        entityDescription: `Quote – ${quote.eventName}`,
-      });
-      createSuccessToast(["Review request sent to Lead Account Manager"]);
-    } catch (error) {
-      createErrorToast(["Failed to request review:", String(error)]);
-    }
-  };
+  // Review-request flow disabled per boss feedback — kept for future use
+  // const handleRequestQuoteReview = async () => {
+  //   if (!quote || !eventZoneUuid) return;
+  //   try {
+  //     await requestReview({
+  //       entityUuid: eventId,
+  //       entityType: "event",
+  //       bleacherZoneUuid: eventZoneUuid,
+  //       message: `Review requested for Quote "${quote.eventName}"`,
+  //       entityDescription: `Quote – ${quote.eventName}`,
+  //     });
+  //     createSuccessToast(["Review request sent to Lead Account Manager"]);
+  //   } catch (error) {
+  //     createErrorToast(["Failed to request review:", String(error)]);
+  //   }
+  // };
 
   useEffect(() => {
     setLoading(true);
@@ -312,7 +315,7 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
                     <Trash2 className="w-4 h-4" />
                   </button>
                 )}
-                {canSend ? (
+                {canSend && (
                   <button
                     onClick={handleSendToClient}
                     disabled={sending}
@@ -321,7 +324,9 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
                     <Send className="w-3.5 h-3.5" />
                     {sending ? "Sending..." : "Send To Client"}
                   </button>
-                ) : perms.isAccountManager ? (
+                )}
+                {/* Review-request button disabled per boss feedback — kept for future use
+                {!canSend && perms.isAccountManager && (
                   <button
                     onClick={handleRequestQuoteReview}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded-sm hover:bg-amber-100 transition cursor-pointer"
@@ -329,7 +334,7 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
                     <ClipboardCheck className="w-3.5 h-3.5" />
                     Request Review
                   </button>
-                ) : null}
+                )} */}
               </>
             )}
           </div>

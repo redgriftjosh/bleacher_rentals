@@ -46,27 +46,27 @@ export default function WorkTrackerStatusBadge({
     );
   }
 
-  // Junior AM: show Request Review button for draft WTs
-  if (onRequestReview && status === "draft") {
-    return (
-      <div className="flex items-center gap-3">
-        <div
-          className={`flex items-center justify-center whitespace-nowrap gap-2 px-3 py-1.5 ${WORKTRACKER_STATUS_COLORS.draft.bg} border ${WORKTRACKER_STATUS_COLORS.draft.border} rounded-md`}
-        >
-          <FilePen className={`h-4 w-4 ${WORKTRACKER_STATUS_COLORS.draft.text}`} />
-          <span className={`text-sm font-medium ${WORKTRACKER_STATUS_COLORS.draft.text}`}>Draft</span>
-        </div>
-        <button
-          type="button"
-          onClick={onRequestReview}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded-md hover:bg-amber-100 transition cursor-pointer"
-        >
-          <ClipboardCheck className="h-4 w-4" />
-          Request Review
-        </button>
-      </div>
-    );
-  }
+  // Review-request button disabled per boss feedback — kept for future use
+  // if (onRequestReview && status === "draft") {
+  //   return (
+  //     <div className="flex items-center gap-3">
+  //       <div
+  //         className={`flex items-center justify-center whitespace-nowrap gap-2 px-3 py-1.5 ${WORKTRACKER_STATUS_COLORS.draft.bg} border ${WORKTRACKER_STATUS_COLORS.draft.border} rounded-md`}
+  //       >
+  //         <FilePen className={`h-4 w-4 ${WORKTRACKER_STATUS_COLORS.draft.text}`} />
+  //         <span className={`text-sm font-medium ${WORKTRACKER_STATUS_COLORS.draft.text}`}>Draft</span>
+  //       </div>
+  //       <button
+  //         type="button"
+  //         onClick={onRequestReview}
+  //         className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded-md hover:bg-amber-100 transition cursor-pointer"
+  //       >
+  //         <ClipboardCheck className="h-4 w-4" />
+  //         Request Review
+  //       </button>
+  //     </div>
+  //   );
+  // }
 
   // Read-only status badges for other states
   switch (status) {
