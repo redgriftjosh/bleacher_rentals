@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth, useUser } from "@clerk/nextjs";
 import { useMaintenanceEventStore } from "../state/useMaintenanceEventStore";
 import { createMaintenanceEvent } from "../db/createMaintenanceEvent";
 import { updateMaintenanceEvent } from "../db/updateMaintenanceEvent";
@@ -9,9 +8,6 @@ import { deleteMaintenanceEvent } from "../db/deleteMaintenanceEvent";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { MaintenanceCoreTab } from "./tabs/CoreTab";
 import { MaintenanceFilesTab } from "./tabs/FilesTab";
-import { FetchDashboardBleachers } from "@/features/dashboard/db/client/bleachers";
-import { FetchDashboardEvents } from "@/features/dashboard/db/client/events";
-import { useDashboardFilterSettings } from "@/features/dashboardOptions/useDashboardFilterSettings";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,42 +30,25 @@ type MaintenanceEventFormProps = {
 };
 
 export const MaintenanceEventForm = ({ onCancel }: MaintenanceEventFormProps) => {
-  const { user } = useUser();
-  const { userId, isLoaded } = useAuth();
   const supabase = useClerkSupabaseClient();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("Core");
-  const { state: dashboardFilters } = useDashboardFilterSettings();
-  const onlyShowMyEvents = dashboardFilters?.onlyShowMyEvents ?? true;
-
   const store = useMaintenanceEventStore();
   const permissions = useTeamPermissions();
 
   const isEditing = !!store.maintenanceEventUuid;
-  // Viewer can never edit — regardless of ownership
   const canEdit = permissions.canCreateUser
     ? canEditOwnedEntity({
         isAdmin: permissions.isAdmin,
         isNew: !isEditing,
-        currentUserId: permissions.userId,
-        ownerUserUuid: store.ownerUserUuid,
       })
     : false;
-
-  const refreshDashboardStores = async () => {
-    if (!supabase || !isLoaded || !userId) return;
-    await Promise.all([
-      FetchDashboardBleachers(supabase),
-      FetchDashboardEvents(supabase, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
-    ]);
-  };
 
   const handleCreate = async () => {
     setLoading(true);
     try {
       const state = useMaintenanceEventStore.getState();
       await createMaintenanceEvent(state, supabase);
-      await refreshDashboardStores();
       onCancel();
     } catch {
       // Error toasts handled inside createMaintenanceEvent
@@ -83,7 +62,6 @@ export const MaintenanceEventForm = ({ onCancel }: MaintenanceEventFormProps) =>
     try {
       const state = useMaintenanceEventStore.getState();
       await updateMaintenanceEvent(state, supabase);
-      await refreshDashboardStores();
       onCancel();
     } catch {
       // Error toasts handled inside updateMaintenanceEvent
@@ -98,7 +76,6 @@ export const MaintenanceEventForm = ({ onCancel }: MaintenanceEventFormProps) =>
       const state = useMaintenanceEventStore.getState();
       if (!state.maintenanceEventUuid) return;
       await deleteMaintenanceEvent(state.maintenanceEventUuid, supabase);
-      await refreshDashboardStores();
       onCancel();
     } catch {
       // Error toasts handled inside deleteMaintenanceEvent

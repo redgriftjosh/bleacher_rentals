@@ -10,7 +10,6 @@ import {
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { AddressFields } from "../../../types/quoteTypes";
 import { createCompany } from "../../../db/createCompany";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 
@@ -57,7 +56,6 @@ function AddressSection({
 export function NewCompanyModal() {
   const isOpen = useCreateQuoteStore((s) => s.isNewCompanyModalOpen);
   const setField = useCreateQuoteStore((s) => s.setField);
-  const supabase = useClerkSupabaseClient();
 
   const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
@@ -92,7 +90,6 @@ export function NewCompanyModal() {
           shippingAddress: shippingSameAsBilling ? billingAddress : shippingAddress,
           shippingSameAsBilling,
         },
-        supabase,
       );
 
       // Update parent form

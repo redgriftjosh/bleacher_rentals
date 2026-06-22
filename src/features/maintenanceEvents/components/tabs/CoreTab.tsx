@@ -13,6 +13,12 @@ import CentsInput from "@/components/CentsInput";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DamageReportModal, EditDamageReport } from "@/app/damage-reports/DamageReportModal";
+import { useDashboardBleachersStore } from "@/features/dashboard/state/useDashboardBleachersStore";
+import {
+  laterDate,
+  earlierDate,
+  useSubrentalBlockBounds,
+} from "@/features/dashboard/util/subrentalDateBounds";
 
 type Props = {
   disabled?: boolean;
@@ -77,6 +83,15 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
 
   const bleacherUuids = store.bleacherUuids;
   const eventStart = store.eventStart;
+
+  const allBleachers = useDashboardBleachersStore((s) => s.data);
+  const { blockDerivedStartMin, blockDerivedEndMax } = useSubrentalBlockBounds(
+    bleacherUuids,
+    allBleachers,
+    store.eventStart,
+    store.eventEnd,
+    store.subrentalConstraint,
+  );
 
   type DamageReportRow = EditDamageReport & {
     work_tracker_date: string | null;
@@ -173,7 +188,9 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
           .filter((dr) => dr.bleacher_uuid === bUuid)
           .map((dr) => ({
             ...dr,
-            work_tracker_date: dr.inspection_uuid ? wtDateMap.get(dr.inspection_uuid) ?? null : null,
+            work_tracker_date: dr.inspection_uuid
+              ? (wtDateMap.get(dr.inspection_uuid) ?? null)
+              : null,
           }))
           .filter((dr) => dr.work_tracker_date && dr.work_tracker_date < eventStart)
           .sort((a, b) => (b.work_tracker_date ?? "").localeCompare(a.work_tracker_date ?? ""));
@@ -248,7 +265,16 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
               className="bg-white w-full p-2 border rounded min-w-0"
               value={store.eventStart}
               onChange={(e) => store.setField("eventStart", e.target.value)}
-              max={store.eventEnd || undefined}
+              min={laterDate(
+                store.subrentalConstraint?.eventStart || undefined,
+                blockDerivedStartMin,
+              )}
+              max={earlierDate(
+                store.subrentalConstraint
+                  ? store.subrentalConstraint.eventEnd
+                  : store.eventEnd || undefined,
+                blockDerivedEndMax,
+              )}
             />
             <ScrollToDateButton date={store.eventStart} />
           </div>
@@ -259,7 +285,16 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
               className="bg-white w-full p-2 border rounded min-w-0"
               value={store.eventEnd}
               onChange={(e) => store.setField("eventEnd", e.target.value)}
-              min={store.eventStart || undefined}
+              min={laterDate(
+                store.subrentalConstraint
+                  ? store.subrentalConstraint.eventStart
+                  : store.eventStart || undefined,
+                blockDerivedStartMin,
+              )}
+              max={earlierDate(
+                store.subrentalConstraint?.eventEnd || undefined,
+                blockDerivedEndMax,
+              )}
             />
             <ScrollToDateButton date={store.eventEnd} />
           </div>

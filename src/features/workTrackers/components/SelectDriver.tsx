@@ -112,8 +112,7 @@ export function SelectDriver({
       >
         {!isAdmin && (
           <p className="text-xs text-gray-500 px-2 py-1 border-b">
-            You&apos;re only seeing drivers assigned to you. <br />
-            You need to be an Admin to see all Drivers.
+            Showing drivers assigned to your zones.
           </p>
         )}
       </SelectUserDropDown>

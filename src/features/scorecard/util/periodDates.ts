@@ -74,7 +74,7 @@ export function getPeriodOptions(timeRange: TimeRange, count: number = 12): Peri
     for (let i = 0; i < count; i++) {
       options.push({
         value: monday.toFormat("yyyy-MM-dd"),
-        label: monday.toFormat("MMM d"),
+        label: `${monday.toFormat("MMM d")} - ${monday.plus({ days: 6 }).toFormat("MMM d")}`,
       });
       monday = monday.minus({ weeks: 1 });
     }

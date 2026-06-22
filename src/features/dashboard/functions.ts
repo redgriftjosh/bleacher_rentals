@@ -14,8 +14,10 @@ import { UserResource } from "@clerk/types";
 import { PROVINCES, ROW_OPTIONS, STATES } from "@/types/Constants";
 import { Tables } from "../../../database.types";
 import { DashboardBleacher } from "../dashboard/types";
-import { eventRequirements } from "@/features/alerts/definitions/eventRequirements";
-import { schedulingConflicts } from "@/features/alerts/definitions/schedulingConflicts";
+import { alertDefinitions } from "@/features/alerts/registry";
+import { InMemoryAlertContext } from "@/features/alerts/types";
+import { useWorkTrackersStore } from "@/state/workTrackersStore";
+import { useAddressesStore } from "@/state/addressesStore";
 
 export function checkEventFormRules(
   createEventPayload: CurrentEventStore,
@@ -159,82 +161,33 @@ export function calculateBestHue(
   return Math.round(newHue);
 }
 
-export function calculateEventAlerts(
-  events: Tables<"Events">[],
-  bleacherEvents: Tables<"BleacherEvents">[],
-): Record<string, string[]> {
-  const alerts: Record<string, string[]> = {};
-
-  for (const event of events) {
-    const eventAlerts: string[] = [];
-
-    // Find all bleachers linked to this event
-    const bleachersInThisEvent = bleacherEvents
-      .filter((be) => be.event_uuid === event.id)
-      .map((be) => be.bleacher_uuid);
-
-    if (bleachersInThisEvent.length === 0) {
-      alerts[event.id] = eventAlerts;
-      continue;
-    }
-
-    // Find all bleacher events where the bleacher is shared
-    const overlappingBleacherEvents = bleacherEvents.filter(
-      (be) => bleachersInThisEvent.includes(be.bleacher_uuid) && be.event_uuid !== event.id,
-    );
-
-    const overlappingEventUuids = [
-      ...new Set(overlappingBleacherEvents.map((be) => be.event_uuid)),
-    ];
-
-    const overlappingEvents = events.filter((e) => overlappingEventUuids.includes(e.id));
-
-    const thisSetupStart = event.setup_start
-      ? new Date(event.setup_start)
-      : new Date(event.event_start);
-    const thisTeardownEnd = event.teardown_end
-      ? new Date(event.teardown_end)
-      : new Date(event.event_end);
-
-    for (const otherEvent of overlappingEvents) {
-      const otherSetupStart = otherEvent.setup_start
-        ? new Date(otherEvent.setup_start)
-        : new Date(otherEvent.event_start);
-      const otherTeardownEnd = otherEvent.teardown_end
-        ? new Date(otherEvent.teardown_end)
-        : new Date(otherEvent.event_end);
-
-      // Check if times overlap
-      if (thisSetupStart <= otherTeardownEnd && otherSetupStart <= thisTeardownEnd) {
-        eventAlerts.push("This event is overlapping with other events!");
-        break; // Only need to push once per event even if multiple overlaps
-      }
-    }
-
-    alerts[event.id] = eventAlerts;
-  }
-
-  return alerts;
-}
-
 export function updateCurrentEventAlerts() {
   const state = useCurrentEventStore.getState();
   const events = useEventsStore.getState().events;
   const bleacherEvents = useBleacherEventsStore.getState().bleacherEvents;
   const bleachers = useBleachersStore.getState().bleachers;
-  // console.log("updateCurrentEventAlerts");
 
   // Only calculate if necessary
   if (!state.eventStart || !state.eventEnd) return;
 
   const oldAlerts = state.alerts;
-  const conflictAlerts = schedulingConflicts.evaluate({
+  const workTrackers = useWorkTrackersStore.getState().workTrackers;
+  const addresses = useAddressesStore.getState().addresses;
+  const context: InMemoryAlertContext = {
     event: state,
     allEvents: events,
     allBleacherEvents: bleacherEvents,
-  });
-  const requirementAlerts = eventRequirements.evaluate({ event: state, bleachers });
-  const newAlerts = [...conflictAlerts, ...requirementAlerts];
+    allWorkTrackers: workTrackers,
+    allBleachers: bleachers,
+    allAddresses: addresses,
+  };
+  const computedAlerts = alertDefinitions
+    .filter((d) => d.evaluateInMemory)
+    .flatMap((d) => d.evaluateInMemory!(context));
+
+  // Preserve transportation alerts set by useEventFormTransportationAlerts (PS-driven hook)
+  const existingTransportAlerts = oldAlerts.filter((a) => a.title === "No Transportation");
+  const newAlerts = [...computedAlerts, ...existingTransportAlerts];
 
   const oldMessages = oldAlerts.map((a) => a.message);
   const newMessages = newAlerts.map((a) => a.message);
@@ -303,42 +256,6 @@ export function getStateProvOptions() {
     value: index,
     label: value,
   }));
-}
-
-export function filterSortBleachers(
-  summerHomeBaseUuids: string[],
-  winterHomeBaseUuids: string[],
-  rows: number[],
-  bleachers: DashboardBleacher[],
-  bleacherUuids: string[],
-  isFormExpanded: boolean,
-): DashboardBleacher[] {
-  const matchesFilter = (b: DashboardBleacher) =>
-    summerHomeBaseUuids.includes(b.summerHomeBase.homeBaseUuid) &&
-    winterHomeBaseUuids.includes(b.winterHomeBase.homeBaseUuid) &&
-    rows.includes(b.bleacherRows);
-
-  const alwaysInclude = (b: DashboardBleacher) => bleacherUuids.includes(b.bleacherUuid);
-
-  // Keep all selected bleachers, even if they don't match the filters (when expanded)
-  const filteredBleachers = isFormExpanded
-    ? bleachers.filter((b) => matchesFilter(b) || alwaysInclude(b))
-    : bleachers.filter(matchesFilter);
-
-  const sortedBleachers = isFormExpanded
-    ? [
-        ...filteredBleachers
-          .filter(alwaysInclude)
-          .sort((a, b) => a.bleacherNumber - b.bleacherNumber),
-        ...filteredBleachers
-          .filter((b) => !alwaysInclude(b))
-          .sort((a, b) => a.bleacherNumber - b.bleacherNumber),
-      ]
-    : filteredBleachers.sort((a, b) => a.bleacherNumber - b.bleacherNumber);
-
-  // console.log("sortedBleachers", sortedBleachers);
-  // console.log("isFormExpanded", isFormExpanded);
-  return sortedBleachers;
 }
 
 export function getTodayLocation(bleacher: DashboardBleacher): AddressData | null {

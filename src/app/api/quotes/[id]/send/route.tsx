@@ -19,10 +19,11 @@ export async function POST(
   }
 
   const { id } = await params;
-  const { recipientEmail } = await req.json();
+  const body = await req.json();
+  const recipientEmails: string[] = body.recipientEmails ?? (body.recipientEmail ? [body.recipientEmail] : []);
 
-  if (!recipientEmail) {
-    return NextResponse.json({ error: "recipientEmail is required" }, { status: 400 });
+  if (recipientEmails.length === 0) {
+    return NextResponse.json({ error: "At least one recipient email is required" }, { status: 400 });
   }
 
   // Check Postmark config
@@ -49,10 +50,17 @@ export async function POST(
   // Send via Postmark
   const client = new postmark.ServerClient(apiKey);
 
+  const senderEmail = data.accountManagerEmail ?? fromEmail;
+  const senderFrom = data.accountManager
+    ? `${data.accountManager} <${senderEmail}>`
+    : senderEmail;
+
+  const toLine = [...new Set(recipientEmails)].join(",");
+
   try {
     await client.sendEmail({
-      From: fromEmail,
-      To: recipientEmail,
+      From: senderFrom,
+      To: toLine,
       Subject: `Invoice ${data.quoteNumber} from ${data.company.name}`,
       HtmlBody: htmlBody,
       MessageStream: "outbound",
@@ -78,7 +86,7 @@ export async function POST(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
-  await logSingleChange(supabase, id, userId, "email_sent", null, recipientEmail, "send");
+  await logSingleChange(supabase, id, userId, "email_sent", null, toLine, "send");
 
   // Save sent quote PDF to event-files bucket
   try {
@@ -109,5 +117,5 @@ export async function POST(
     console.error("Failed to store sent quote PDF (email still sent):", e);
   }
 
-  return NextResponse.json({ success: true, sentTo: recipientEmail });
+  return NextResponse.json({ success: true, sentTo: toLine });
 }

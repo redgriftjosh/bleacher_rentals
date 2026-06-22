@@ -10,6 +10,12 @@ import { LocateFixed } from "lucide-react";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { filterOwnerOptions } from "@/features/userAccess/logic/filterOwnerOptions";
 import { useAccountManagerUserIds } from "@/features/userAccess/hooks/useAccountManagerUserIds";
+import { useDashboardBleachersStore } from "@/features/dashboard/state/useDashboardBleachersStore";
+import {
+  laterDate,
+  earlierDate,
+  useSubrentalBlockBounds,
+} from "@/features/dashboard/util/subrentalDateBounds";
 
 type Props = {
   showSetupTeardown: boolean;
@@ -21,6 +27,16 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
   const users = useUsersStore((s) => s.users);
   const permissions = useTeamPermissions();
   const accountManagerUserIds = useAccountManagerUserIds();
+  const allBleachers = useDashboardBleachersStore((s) => s.data);
+
+  const { blockDerivedStartMin, blockDerivedEndMax } = useSubrentalBlockBounds(
+    currentEventStore.bleacherUuids,
+    allBleachers,
+    currentEventStore.eventStart,
+    currentEventStore.eventEnd,
+    currentEventStore.subrentalConstraint,
+  );
+
   const filteredUsers = filterOwnerOptions({
     users,
     isAdmin: permissions.isAdmin,
@@ -133,7 +149,16 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
             className="bg-white w-full p-2 border rounded min-w-0"
             value={currentEventStore.eventStart}
             onChange={(e) => currentEventStore.setField("eventStart", e.target.value)}
-            max={currentEventStore.eventEnd || undefined}
+            min={laterDate(
+              currentEventStore.subrentalConstraint?.eventStart || undefined,
+              blockDerivedStartMin,
+            )}
+            max={earlierDate(
+              currentEventStore.subrentalConstraint
+                ? currentEventStore.subrentalConstraint.eventEnd
+                : currentEventStore.eventEnd || undefined,
+              blockDerivedEndMax,
+            )}
           />
           <ScrollToDateButton date={currentEventStore.eventStart} />
         </div>
@@ -144,7 +169,16 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
             className="bg-white w-full p-2 border rounded min-w-0"
             value={currentEventStore.eventEnd}
             onChange={(e) => currentEventStore.setField("eventEnd", e.target.value)}
-            min={currentEventStore.eventStart || undefined}
+            min={laterDate(
+              currentEventStore.subrentalConstraint
+                ? currentEventStore.subrentalConstraint.eventStart
+                : currentEventStore.eventStart || undefined,
+              blockDerivedStartMin,
+            )}
+            max={earlierDate(
+              currentEventStore.subrentalConstraint?.eventEnd || undefined,
+              blockDerivedEndMax,
+            )}
           />
           <ScrollToDateButton date={currentEventStore.eventEnd} />
         </div>

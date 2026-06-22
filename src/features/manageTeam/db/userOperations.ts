@@ -156,9 +156,19 @@ export async function createUser(
 
       if (amError) throw amError;
 
-      // 4. Update bleacher and driver assignments
-      await updateBleacherAssignments(supabase, userUuid, state);
+      // 4. Update driver assignments
       await updateDriverAssignments(supabase, userUuid, state);
+
+      // 5. Sync zone assignments
+      const { data: newAmData } = await supabase
+        .from("AccountManagers")
+        .select("id")
+        .eq("user_uuid", userUuid)
+        .single();
+      if (newAmData) {
+        await syncZoneAssignments(supabase, newAmData.id, state.assignedZoneEntries);
+        await syncDriverZonesForAm(supabase, state.zoneDriverMap);
+      }
     }
 
     // 5. If developer, insert into Developers table
@@ -295,23 +305,21 @@ export async function updateUser(
         if (amUpdateError) throw amUpdateError;
       }
 
-      // Update bleacher and driver assignments
-      await updateBleacherAssignments(supabase, userUuid, state);
+      // Update driver assignments
       await updateDriverAssignments(supabase, userUuid, state);
+
+      // Sync zone assignments
+      const { data: currentAmData } = await supabase
+        .from("AccountManagers")
+        .select("id")
+        .eq("user_uuid", userUuid)
+        .single();
+      if (currentAmData) {
+        await syncZoneAssignments(supabase, currentAmData.id, state.assignedZoneEntries);
+        await syncDriverZonesForAm(supabase, state.zoneDriverMap);
+      }
     } else if (existingAM) {
       // Remove account manager role
-      // First clear bleacher assignments using the AccountManager's ID
-      const { error: bleacherClearError } = await supabase
-        .from("Bleachers")
-        .update({
-          summer_account_manager_uuid: null,
-          winter_account_manager_uuid: null,
-        })
-        .or(
-          `summer_account_manager_uuid.eq.${existingAM.id},winter_account_manager_uuid.eq.${existingAM.id}`,
-        );
-      if (bleacherClearError) throw bleacherClearError;
-
       // Clear driver assignments
       const { error: driverClearError } = await supabase
         .from("Drivers")
@@ -368,61 +376,6 @@ export async function updateUser(
   }
 }
 
-async function updateBleacherAssignments(
-  supabase: TypedSupabaseClient,
-  userUuid: string,
-  state: CurrentUserState,
-): Promise<void> {
-  // First, get the account_manager_id for this user
-  const { data: amData, error: amError } = await supabase
-    .from("AccountManagers")
-    .select("id")
-    .eq("user_uuid", userUuid)
-    .single();
-
-  if (amError || !amData) {
-    console.error("Failed to get account manager ID:", amError);
-    return;
-  }
-
-  const accountManagerUuid = amData.id;
-
-  // Clear existing assignments for this account manager
-  await supabase
-    .from("Bleachers")
-    .update({
-      summer_account_manager_uuid: null,
-    })
-    .eq("summer_account_manager_uuid", accountManagerUuid);
-
-  await supabase
-    .from("Bleachers")
-    .update({
-      winter_account_manager_uuid: null,
-    })
-    .eq("winter_account_manager_uuid", accountManagerUuid);
-
-  // Set new summer assignments
-  if (state.summerBleacherUuids.length > 0) {
-    await supabase
-      .from("Bleachers")
-      .update({
-        summer_account_manager_uuid: accountManagerUuid,
-      })
-      .in("id", state.summerBleacherUuids);
-  }
-
-  // Set new winter assignments
-  if (state.winterBleacherUuids.length > 0) {
-    await supabase
-      .from("Bleachers")
-      .update({
-        winter_account_manager_uuid: accountManagerUuid,
-      })
-      .in("id", state.winterBleacherUuids);
-  }
-}
-
 async function updateDriverAssignments(
   supabase: TypedSupabaseClient,
   userUuid: string,
@@ -455,6 +408,43 @@ async function updateDriverAssignments(
       .update({ account_manager_uuid: accountManagerUuid })
       .in("id", state.assignedDriverUuids);
   }
+}
+
+async function syncDriverZonesForAm(
+  supabase: TypedSupabaseClient,
+  zoneDriverMap: Record<string, string[]>,
+): Promise<void> {
+  for (const [zoneId, driverUuids] of Object.entries(zoneDriverMap)) {
+    await supabase.from("DriverZones").delete().eq("zone_uuid", zoneId);
+    if (driverUuids.length > 0) {
+      const rows = driverUuids.map((d) => ({ driver_uuid: d, zone_uuid: zoneId }));
+      const { error } = await supabase.from("DriverZones").insert(rows);
+      if (error) throw new Error(error.message);
+    }
+  }
+}
+
+async function syncZoneAssignments(
+  supabase: TypedSupabaseClient,
+  accountManagerUuid: string,
+  entries: { zoneUuid: string; isLead: boolean }[],
+): Promise<void> {
+  // Delete all existing zone assignments for this AM
+  await supabase
+    .from("AccountManagerZones")
+    .delete()
+    .eq("account_manager_uuid", accountManagerUuid);
+
+  if (entries.length === 0) return;
+
+  const rows = entries.map((e) => ({
+    account_manager_uuid: accountManagerUuid,
+    zone_uuid: e.zoneUuid,
+    is_lead: e.isLead,
+  }));
+
+  const { error } = await supabase.from("AccountManagerZones").insert(rows);
+  if (error) throw new Error(error.message);
 }
 
 export async function sendUserInvite(email: string): Promise<{ success: boolean; error?: string }> {
@@ -577,22 +567,6 @@ export async function fetchUserById(
 
       const accountManagerId = accountManager.id;
 
-      // Fetch bleacher assignments from Bleachers table
-      // Summer bleachers where this AM is assigned
-      const { data: summerBleachers } = await supabase
-        .from("Bleachers")
-        .select("id")
-        .eq("summer_account_manager_uuid", accountManagerId);
-
-      // Winter bleachers where this AM is assigned
-      const { data: winterBleachers } = await supabase
-        .from("Bleachers")
-        .select("id")
-        .eq("winter_account_manager_uuid", accountManagerId);
-
-      result.summerBleacherUuids = summerBleachers?.map((b) => b.id) || [];
-      result.winterBleacherUuids = winterBleachers?.map((b) => b.id) || [];
-
       // Fetch drivers assigned to this account manager
       const { data: assignedDrivers } = await supabase
         .from("Drivers")
@@ -601,6 +575,32 @@ export async function fetchUserById(
         .eq("is_active", true);
 
       result.assignedDriverUuids = assignedDrivers?.map((d) => d.id) || [];
+
+      // Fetch zone assignments for this account manager
+      const { data: zoneRows } = await supabase
+        .from("AccountManagerZones")
+        .select("zone_uuid, is_lead")
+        .eq("account_manager_uuid", accountManagerId);
+
+      result.assignedZoneEntries = (zoneRows || []).map((r) => ({
+        zoneUuid: r.zone_uuid,
+        isLead: r.is_lead ?? false,
+      }));
+
+      // Load driver assignments for each of this AM's zones
+      const zoneIds = (zoneRows || []).map((r) => r.zone_uuid);
+      const zoneDriverMap: Record<string, string[]> = {};
+      if (zoneIds.length > 0) {
+        const { data: driverZoneRows } = await supabase
+          .from("DriverZones")
+          .select("zone_uuid, driver_uuid")
+          .in("zone_uuid", zoneIds);
+        for (const row of driverZoneRows || []) {
+          if (!zoneDriverMap[row.zone_uuid]) zoneDriverMap[row.zone_uuid] = [];
+          zoneDriverMap[row.zone_uuid].push(row.driver_uuid);
+        }
+      }
+      result.zoneDriverMap = zoneDriverMap;
     }
 
     // 4. Check if user is a developer

@@ -26,13 +26,16 @@ import {
   SetupTeardownBlock,
 } from "../../types";
 import { Database, Tables, TablesInsert } from "../../../../../database.types";
-import { calculateEventAlerts, calculateNumDays, checkEventFormRules } from "../../functions";
+import { calculateNumDays, checkEventFormRules } from "../../functions";
 import { useDashboardEventsStore } from "../../state/useDashboardEventsStore";
 import {
   buildTripDeletedNotification,
   buildTripStatusNotification,
   insertDriverNotification,
 } from "@/features/workTrackers/db/notifications";
+import { db } from "@/components/providers/SystemProvider";
+import { typedExecute, typedGetAll, expect } from "@/lib/powersync/typedQuery";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -48,9 +51,6 @@ export function fetchBleachers() {
   const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
   const blocks = useBlocksStore((s) => s.blocks);
   const workTrackers = useWorkTrackersStore((s) => s.workTrackers);
-
-  const eventAlerts = calculateEventAlerts(events, bleacherEvents);
-  // console.log("eventAlerts", eventAlerts);
 
   return useMemo(() => {
     // console.log("fetchBleachers (dashboard)");
@@ -85,8 +85,6 @@ export function fetchBleachers() {
 
             const address = addresses.find((a) => a.id === event.address_uuid);
 
-            const relatedAlerts = eventAlerts[event.id] || [];
-
             return {
               eventUuid: event.id,
               bleacherEventUuid: be.id,
@@ -104,6 +102,7 @@ export function fetchBleachers() {
               sevenRow: event.seven_row,
               tenRow: event.ten_row,
               fifteenRow: event.fifteen_row,
+              bleacherRequirements: [],
               setupStart: event.setup_start ?? "",
               setupText: be.setup_text,
               setupConfirmed: be.setup_confirmed,
@@ -121,11 +120,11 @@ export function fetchBleachers() {
               numDays: calculateNumDays(event.event_start, event.event_end),
               status: event.event_status,
               hslHue: event.hsl_hue,
-              alerts: relatedAlerts,
+              alerts: [],
               mustBeClean: event.must_be_clean,
               bleacherUuids: bleacherEvents
                 .filter((be) => be.event_uuid === event.id)
-                .map((be) => be.bleacher_uuid), // find all bleachers linked to this event
+                .map((be) => be.bleacher_uuid),
               goodshuffleUrl: event.goodshuffle_url ?? null,
               ownerUserUuid: event.created_by_user_uuid ?? null,
             };
@@ -164,8 +163,6 @@ export function fetchDashboardEvents() {
   const events = useEventsStore((s) => s.events);
   const addresses = useAddressesStore((s) => s.addresses);
   const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
-  const eventAlerts = calculateEventAlerts(events, bleacherEvents);
-
   return useMemo(() => {
     if (!events) return [];
 
@@ -173,7 +170,6 @@ export function fetchDashboardEvents() {
 
     const dashboardEvents: DashboardEvent[] = activeEvents.map((event) => {
       const address = addresses.find((a) => a.id === event.address_uuid);
-      const relatedAlerts = eventAlerts[event.id] || [];
 
       // ✅ Filter out null values from bleacher UUIDs
       const eventBleachers = bleacherEvents.filter((be) => be.event_uuid === event.id);
@@ -198,6 +194,7 @@ export function fetchDashboardEvents() {
         sevenRow: event.seven_row,
         tenRow: event.ten_row,
         fifteenRow: event.fifteen_row,
+        bleacherRequirements: [],
         setupStart: event.setup_start ?? "",
         setupText: null, // unused
         setupConfirmed: false, // unused
@@ -215,7 +212,7 @@ export function fetchDashboardEvents() {
         numDays: calculateNumDays(event.event_start, event.event_end),
         status: (event.event_status ?? "quoted") as Enums<"event_status">,
         hslHue: event.hsl_hue,
-        alerts: relatedAlerts,
+        alerts: [],
         mustBeClean: event.must_be_clean,
         bleacherUuids: bleacherUuids,
         goodshuffleUrl: event.goodshuffle_url ?? null,
@@ -237,44 +234,38 @@ export function fetchDashboardEvents() {
 async function saveAddress(
   address: AddressData | null,
   addressUuid: string | null,
-  supabase: SupabaseClient<Database>,
 ): Promise<string | null> {
   if (!address) return null;
 
   if (addressUuid) {
-    const { error: addressError } = await supabase
-      .from("Addresses")
-      .update({
-        city: address.city ?? "",
-        state_province: address.state ?? "",
-        street: address.address ?? "",
-        zip_postal: address.postalCode ?? "",
-      })
-      .eq("id", addressUuid);
-
-    if (addressError) {
-      createErrorToast(["Failed to update address.", addressError?.message ?? ""]);
-    }
+    await typedExecute(
+      db
+        .updateTable("Addresses")
+        .set({
+          city: address.city ?? "",
+          state_province: address.state ?? "",
+          street: address.address ?? "",
+          zip_postal: address.postalCode ?? "",
+        })
+        .where("id", "=", addressUuid)
+        .compile(),
+    );
     return addressUuid;
   } else {
-    const { data: addressData, error: addressError } = await supabase
-      .from("Addresses")
-      .insert({
-        city: address.city ?? "",
-        state_province: address.state ?? "",
-        street: address.address ?? "",
-        zip_postal: address.postalCode ?? "",
-      })
-      .select("id")
-      .single();
-
-    if (addressError || !addressData) {
-      createErrorToast(["Failed to insert address.", addressError?.message ?? ""]);
-    }
-    if (!addressData?.id) {
-      createErrorToast(["Inserted an address, but no address_id returned."]);
-    }
-    return addressData?.id;
+    const id = crypto.randomUUID();
+    await typedExecute(
+      db
+        .insertInto("Addresses")
+        .values({
+          id,
+          city: address.city ?? "",
+          state_province: address.state ?? "",
+          street: address.address ?? "",
+          zip_postal: address.postalCode ?? "",
+        })
+        .compile(),
+    );
+    return id;
   }
 }
 
@@ -363,10 +354,25 @@ export async function saveWorkTracker(
 
   let pickUpAddressUuid: string | null = workTracker.pickup_address_uuid;
   let dropOffAddressUuid: string | null = workTracker.dropoff_address_uuid;
-  pickUpAddressUuid = await saveAddress(pickUpAddress, pickUpAddressUuid, supabase);
-  dropOffAddressUuid = await saveAddress(dropOffAddress, dropOffAddressUuid, supabase);
+  pickUpAddressUuid = await saveAddress(pickUpAddress, pickUpAddressUuid);
+  dropOffAddressUuid = await saveAddress(dropOffAddress, dropOffAddressUuid);
 
   const wasInsert = workTracker.id === "-1";
+  let savedWorkTrackerUuid = workTracker.id;
+  let previousBleacherUuid: string | null = null;
+
+  if (!wasInsert) {
+    const previousRows = await typedGetAll(
+      db
+        .selectFrom("WorkTrackers")
+        .select(["bleacher_uuid"])
+        .where("id", "=", workTracker.id)
+        .limit(1)
+        .compile(),
+      expect<{ bleacher_uuid: string | null }>(),
+    );
+    previousBleacherUuid = previousRows[0]?.bleacher_uuid ?? null;
+  }
   const previousStatus = options?.previousStatus ?? "draft";
   const nextStatus = workTracker.status;
   const pickupAddressText = toNotificationAddress(
@@ -380,72 +386,44 @@ export async function saveWorkTracker(
   );
   const dropoffCityText = toNotificationCity(dropOffAddress, options?.previousDropoffCity);
 
+  const wtFields = {
+    date: workTracker.date,
+    pickup_address_uuid: pickUpAddressUuid,
+    pickup_poc: workTracker.pickup_poc,
+    pickup_time: workTracker.pickup_time,
+    pickup_instructions: workTracker.pickup_instructions,
+    teardown_required: workTracker.teardown_required ? 1 : 0,
+    dropoff_address_uuid: dropOffAddressUuid,
+    dropoff_poc: workTracker.dropoff_poc,
+    dropoff_time: workTracker.dropoff_time,
+    dropoff_instructions: workTracker.dropoff_instructions,
+    setup_required: workTracker.setup_required ? 1 : 0,
+    notes: workTracker.notes,
+    pay_cents: workTracker.pay_cents,
+    bleacher_uuid: workTracker.bleacher_uuid,
+    internal_notes: workTracker.internal_notes,
+    driver_uuid: workTracker.driver_uuid,
+    status: workTracker.status,
+    work_tracker_type_uuid: workTracker.work_tracker_type_uuid,
+    distance_meters: workTracker.distance_meters,
+    drive_minutes: workTracker.drive_minutes,
+    project_number: workTracker.project_number,
+  };
+
   if (!wasInsert) {
-    const { error: workTrackerError } = await supabase
-      .from("WorkTrackers")
-      .update({
-        date: workTracker.date,
-        pickup_address_uuid: pickUpAddressUuid,
-        pickup_poc: workTracker.pickup_poc,
-        pickup_time: workTracker.pickup_time,
-        pickup_instructions: workTracker.pickup_instructions,
-        teardown_required: workTracker.teardown_required,
-        dropoff_address_uuid: dropOffAddressUuid,
-        dropoff_poc: workTracker.dropoff_poc,
-        dropoff_time: workTracker.dropoff_time,
-        dropoff_instructions: workTracker.dropoff_instructions,
-        setup_required: workTracker.setup_required,
-        notes: workTracker.notes,
-        pay_cents: workTracker.pay_cents,
-        bleacher_uuid: workTracker.bleacher_uuid,
-        internal_notes: workTracker.internal_notes,
-        driver_uuid: workTracker.driver_uuid,
-        status: workTracker.status,
-        work_tracker_type_uuid: workTracker.work_tracker_type_uuid,
-        distance_meters: workTracker.distance_meters,
-        drive_minutes: workTracker.drive_minutes,
-        project_number: workTracker.project_number,
-      })
-      .eq("id", workTracker.id);
-
-    if (workTrackerError) {
-      createErrorToast(["Failed to update work tracker.", workTrackerError?.message ?? ""]);
-    }
+    await typedExecute(
+      db.updateTable("WorkTrackers").set(wtFields).where("id", "=", workTracker.id).compile(),
+    );
   } else {
-    const { data: workTrackerData, error: workTrackerError } = await supabase
-      .from("WorkTrackers")
-      .insert({
-        date: workTracker.date,
-        pickup_address_uuid: pickUpAddressUuid,
-        pickup_poc: workTracker.pickup_poc,
-        pickup_time: workTracker.pickup_time,
-        pickup_instructions: workTracker.pickup_instructions,
-        teardown_required: workTracker.teardown_required,
-        dropoff_address_uuid: dropOffAddressUuid,
-        dropoff_poc: workTracker.dropoff_poc,
-        dropoff_time: workTracker.dropoff_time,
-        dropoff_instructions: workTracker.dropoff_instructions,
-        setup_required: workTracker.setup_required,
-        notes: workTracker.notes,
-        pay_cents: workTracker.pay_cents,
-        bleacher_uuid: workTracker.bleacher_uuid,
-        internal_notes: workTracker.internal_notes,
-        driver_uuid: workTracker.driver_uuid,
-        status: workTracker.status,
-        work_tracker_type_uuid: workTracker.work_tracker_type_uuid,
-        distance_meters: workTracker.distance_meters,
-        drive_minutes: workTracker.drive_minutes,
-        project_number: workTracker.project_number,
-      })
-      .select("id")
-      .single();
-
-    if (workTrackerError || !workTrackerData) {
-      createErrorToast(["Failed to insert work tracker.", workTrackerError?.message ?? ""]);
-    }
-    if (!workTrackerData?.id) {
-      createErrorToast(["Inserted a work tracker, but no work_tracker_id returned."]);
-    }
+    savedWorkTrackerUuid = crypto.randomUUID();
+    const createdByUserUuid =
+      workTracker.created_by_user_uuid ?? usePermissionsStore.getState().userId ?? null;
+    await typedExecute(
+      db
+        .insertInto("WorkTrackers")
+        .values({ id: savedWorkTrackerUuid, ...wtFields, created_by_user_uuid: createdByUserUuid })
+        .compile(),
+    );
   }
 
   const notification = buildTripStatusNotification({
@@ -466,6 +444,20 @@ export async function saveWorkTracker(
     if (driverUserUuid) {
       await insertDriverNotification(supabase, driverUserUuid, notification);
     }
+  }
+
+  try {
+    const { triage } = await import("@/features/alerts/triage");
+    await triage(
+      "WorkTrackers",
+      {
+        id: savedWorkTrackerUuid,
+        previous_bleacher_uuid: previousBleacherUuid,
+      },
+      supabase,
+    );
+  } catch (e) {
+    console.error("[alerts] failed to triage after work tracker save", e);
   }
 
   updateDataBase(["WorkTrackers", "Addresses"]);
@@ -512,11 +504,26 @@ export async function deleteWorkTracker(
     );
   }
 
-  const { error } = await supabase.from("WorkTrackers").delete().eq("id", workTrackerUuid);
+  const selectQuery = db
+    .selectFrom("WorkTrackers")
+    .select("bleacher_uuid")
+    .where("id", "=", workTrackerUuid)
+    .compile();
+  const wtRows = await typedGetAll(selectQuery, expect<{ bleacher_uuid: string | null }>());
+  const bleacherUuid = wtRows[0]?.bleacher_uuid ?? null;
 
-  if (error) {
-    createErrorToast(["Failed to delete work tracker.", error?.message ?? ""]);
-    throw error;
+  const deleteQuery = db.deleteFrom("WorkTrackers").where("id", "=", workTrackerUuid).compile();
+  await typedExecute(deleteQuery);
+
+  try {
+    const { triage } = await import("@/features/alerts/triage");
+    await triage(
+      "WorkTrackers_deleted",
+      { id: workTrackerUuid, bleacher_uuid: bleacherUuid },
+      supabase,
+    );
+  } catch (e) {
+    console.error("[alerts] failed to triage after work tracker delete", e);
   }
 
   updateDataBase(["WorkTrackers"]);
@@ -762,123 +769,67 @@ export async function createEvent(
   }
 
   // 1. Insert Address
-  const newAddress: TablesInsert<"Addresses"> = {
-    city: state.addressData?.city ?? "",
-    state_province: state.addressData?.state ?? "",
-    street: state.addressData?.address ?? "",
-    zip_postal: state.addressData?.postalCode ?? "",
-  };
-  const { data: addressData, error: addressError } = await supabase
-    .from("Addresses")
-    .insert(newAddress)
-    .select("id")
-    .single();
-
-  if (addressError || !addressData) {
-    console.error("Failed to insert address:", addressError);
-    toast.custom(
-      (t) =>
-        React.createElement(ErrorToast, {
-          id: t,
-          lines: ["Failed to insert address.", addressError?.message ?? ""],
-        }),
-      { duration: 10000 },
-    );
-    throw new Error(`Failed to insert address: ${addressError?.message}`);
-  }
-
-  const address_uuid = addressData.id;
+  const address_uuid = crypto.randomUUID();
+  await typedExecute(
+    db
+      .insertInto("Addresses")
+      .values({
+        id: address_uuid,
+        city: state.addressData?.city ?? "",
+        state_province: state.addressData?.state ?? "",
+        street: state.addressData?.address ?? "",
+        zip_postal: state.addressData?.postalCode ?? "",
+      })
+      .compile(),
+  );
 
   // 2. Insert Event
-  const newEvent: TablesInsert<"Events"> = {
-    event_name: state.eventName,
-    event_start: state.eventStart,
-    event_end: state.eventEnd,
-    setup_start: state.sameDaySetup ? null : state.setupStart,
-    teardown_end: state.sameDayTeardown ? null : state.teardownEnd,
-    lenient: state.lenient,
-    total_seats: state.seats,
-    seven_row: state.sevenRow,
-    ten_row: state.tenRow,
-    fifteen_row: state.fifteenRow,
-    address_uuid: address_uuid,
-    event_status: state.selectedStatus,
-    contract_revenue_cents: state.contractRevenueCents,
-    notes: state.notes,
-    hsl_hue: state.hslHue,
-    must_be_clean: state.mustBeClean,
-    goodshuffle_url: state.goodshuffleUrl ?? null,
-    created_by_user_uuid: state.ownerUserUuid ?? null,
-    booked_at: state.bookedAt ? new Date(state.bookedAt).toISOString() : null,
-    ...(state.createdAt ? { created_at: new Date(state.createdAt).toISOString() } : {}),
-  };
-
-  const { data: eventData, error: eventError } = await supabase
-    .from("Events")
-    .insert(newEvent)
-    .select("id")
-    .single();
-
-  if (eventError || !eventData) {
-    console.error("Failed to insert event:", eventError);
-    toast.error("Failed to insert event. Rolling back...");
-
-    // 3. Rollback Address
-    const { error: rollbackError } = await supabase
-      .from("Addresses")
-      .delete()
-      .eq("id", address_uuid);
-
-    if (rollbackError) {
-      console.error("Failed to rollback address insert:", rollbackError);
-      toast.custom(
-        (t) =>
-          React.createElement(ErrorToast, {
-            id: t,
-            lines: [
-              "Rollback failed. Address entry may still exist.",
-              rollbackError?.message ?? "",
-            ],
-          }),
-        { duration: 10000 },
-      );
-    }
-    throw new Error(`Failed to insert event: ${eventError?.message}`);
-  }
-
-  const event_uuid = eventData.id;
-
-  // ✅ 4. Insert into BleacherEvents
-  const bleacherEventInserts = state.bleacherUuids.map((bleacher_uuid) => ({
-    event_uuid,
-    bleacher_uuid,
-  }));
-
-  const { error: bleacherEventError } = await supabase
-    .from("BleacherEvents")
-    .insert(bleacherEventInserts);
-
-  if (bleacherEventError) {
-    console.error("Failed to insert into BleacherEvents:", bleacherEventError);
-    toast.custom(
-      (t) =>
-        React.createElement(ErrorToast, {
-          id: t,
-          lines: ["Event created, but failed to link bleachers.", bleacherEventError.message],
-        }),
-      { duration: 10000 },
-    );
-    throw new Error(`Failed to link bleachers: ${bleacherEventError.message}`);
-  }
-
-  toast.custom(
-    (t) =>
-      React.createElement(SuccessToast, {
-        id: t,
-        lines: ["Event Created"],
-      }),
-    { duration: 10000 },
+  const event_uuid = crypto.randomUUID();
+  await typedExecute(
+    db
+      .insertInto("Events")
+      .values({
+        id: event_uuid,
+        event_name: state.eventName,
+        event_start: state.eventStart,
+        event_end: state.eventEnd,
+        setup_start: state.sameDaySetup ? null : state.setupStart,
+        teardown_end: state.sameDayTeardown ? null : state.teardownEnd,
+        lenient: state.lenient ? 1 : 0,
+        total_seats: state.seats,
+        seven_row: state.sevenRow,
+        ten_row: state.tenRow,
+        fifteen_row: state.fifteenRow,
+        address_uuid,
+        event_status: state.selectedStatus,
+        contract_revenue_cents: state.contractRevenueCents,
+        notes: state.notes,
+        hsl_hue: state.hslHue,
+        must_be_clean: state.mustBeClean ? 1 : 0,
+        goodshuffle_url: state.goodshuffleUrl ?? null,
+        created_by_user_uuid: state.ownerUserUuid ?? null,
+        deleted: 0,
+        booked_at: state.bookedAt ? new Date(state.bookedAt).toISOString() : null,
+        ...(state.createdAt ? { created_at: new Date(state.createdAt).toISOString() } : {}),
+      })
+      .compile(),
   );
+
+  // 3. Insert BleacherEvents
+  for (const bleacher_uuid of state.bleacherUuids) {
+    await typedExecute(
+      db
+        .insertInto("BleacherEvents")
+        .values({
+          id: crypto.randomUUID(),
+          event_uuid,
+          bleacher_uuid,
+        })
+        .compile(),
+    );
+  }
+
+  createSuccessToast(["Event Created"]);
   updateDataBase(["Bleachers", "BleacherEvents", "Addresses", "Events"]);
   return event_uuid;
 }
@@ -899,46 +850,17 @@ export async function deleteEvent(
     throw new Error("No event selected to delete.");
   }
 
-  // isUserPermitted(stateProv, user);
-
   // Soft delete — mark as deleted instead of removing rows
-  const { error: softDeleteError } = await supabase
-    .from("Events")
-    .update({ deleted: true })
-    .eq("id", eventUuid);
+  await typedExecute(
+    db.updateTable("Events").set({ deleted: 1 }).where("id", "=", eventUuid).compile(),
+  );
 
-  // Immediately update local stores so UI updates without waiting for Pusher
+  // Immediately update local stores so non-PowerSync consumers reflect the change
   const currentEvents = useEventsStore.getState().events;
-  useEventsStore.getState().setEvents(
-    currentEvents.map((e) => (e.id === eventUuid ? { ...e, deleted: true } : e)),
-  );
+  useEventsStore
+    .getState()
+    .setEvents(currentEvents.map((e) => (e.id === eventUuid ? { ...e, deleted: true } : e)));
 
-  // Remove from dashboard events store (Pixi grid)
-  const dashEvents = useDashboardEventsStore.getState().data;
-  useDashboardEventsStore.getState().setData(
-    dashEvents.filter((e) => e.eventUuid !== eventUuid),
-  );
-
-  if (softDeleteError) {
-    console.error("Failed to delete event:", softDeleteError);
-    toast.custom(
-      (t) =>
-        React.createElement(ErrorToast, {
-          id: t,
-          lines: ["Failed to delete event.", softDeleteError.message],
-        }),
-      { duration: 10000 },
-    );
-    throw new Error(`Failed to delete event: ${softDeleteError.message}`);
-  }
-
-  toast.custom(
-    (t) =>
-      React.createElement(SuccessToast, {
-        id: t,
-        lines: ["Event Deleted"],
-      }),
-    { duration: 10000 },
-  );
+  createSuccessToast(["Event Deleted"]);
   updateDataBase(["Events"]);
 }

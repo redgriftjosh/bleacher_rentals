@@ -1,21 +1,13 @@
 /**
- * Pure function: checks if a bleacher is assigned to the given account manager
- * (summer OR winter assignment).
- *
- * Used by CellEditor to block AM from creating events / maintenance on
- * bleachers that don't belong to them.
+ * Checks if a bleacher belongs to the given account manager via zone assignment.
  */
 export function isBleacherOwnedByAM(params: {
-  summerAccountManagerUuid: string | null | undefined;
-  winterAccountManagerUuid: string | null | undefined;
-  currentAccountManagerId: string | null;
+  bleacherZoneUuid: string | null | undefined;
+  accountManagerZoneIds: string[];
 }): boolean {
-  const { summerAccountManagerUuid, winterAccountManagerUuid, currentAccountManagerId } = params;
+  const { bleacherZoneUuid, accountManagerZoneIds } = params;
 
-  if (!currentAccountManagerId) return false;
+  if (!bleacherZoneUuid || accountManagerZoneIds.length === 0) return false;
 
-  return (
-    summerAccountManagerUuid === currentAccountManagerId ||
-    winterAccountManagerUuid === currentAccountManagerId
-  );
+  return accountManagerZoneIds.includes(bleacherZoneUuid);
 }

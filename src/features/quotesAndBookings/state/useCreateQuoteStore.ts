@@ -29,6 +29,9 @@ export type CreateQuoteState = {
   companyName: string;
   companyEmail: string;
   phone: string;
+  useFinanceContact: boolean;
+  financeContactId: string | null;
+  financeContactEmail: string;
 
   // Event Details
   eventName: string;
@@ -77,14 +80,11 @@ export type CreateQuoteActions = {
   resetForm: () => void;
 };
 
-const today = new Date().toISOString().split("T")[0];
-const validTill = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-
 const initialState: CreateQuoteState = {
   editingEventId: null,
 
   quoteNumber: "",
-  quoteValidTill: validTill,
+  quoteValidTill: "",
   status: "draft",
   salesOfficeId: null,
   accountManagerId: null,
@@ -95,6 +95,9 @@ const initialState: CreateQuoteState = {
   companyName: "",
   companyEmail: "",
   phone: "",
+  useFinanceContact: false,
+  financeContactId: null,
+  financeContactEmail: "",
 
   eventName: "",
   eventAddress: "",

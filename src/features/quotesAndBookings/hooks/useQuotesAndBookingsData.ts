@@ -7,11 +7,11 @@ import { filterQuotesBookingsEvents } from "../utils/filterEvents";
 import { QuotesBookingsEvent, QuotesBookingsFilters } from "../types";
 import { useTimezoneStore } from "@/lib/useTimezoneStore";
 
-export function useQuotesAndBookingsData(filters: QuotesBookingsFilters) {
+export function useQuotesAndBookingsData(filters: QuotesBookingsFilters, showDeleted = false) {
   const timezone = useTimezoneStore((s) => s.timezone);
 
   const compiled = useMemo(() => {
-    return db
+    let query = db
       .selectFrom("Events as e")
       .leftJoin("Users as u", "e.created_by_user_uuid", "u.id")
       .leftJoin("Addresses as a", "e.address_uuid", "a.id")
@@ -27,6 +27,7 @@ export function useQuotesAndBookingsData(filters: QuotesBookingsFilters) {
         "e.created_at as created_at",
         "e.booked_at as booked_at",
         "e.created_by_user_uuid as created_by_user_uuid",
+        "e.deleted as deleted",
         "u.first_name as account_manager_first_name",
         "u.last_name as account_manager_last_name",
         "u.email as account_manager_email",
@@ -37,11 +38,16 @@ export function useQuotesAndBookingsData(filters: QuotesBookingsFilters) {
         "ct.last_name as contact_last_name",
         "ct.email as contact_email",
         "co.company_name as company_name",
-      ])
-      .where("e.deleted", "=", 0)
-      .orderBy("e.created_at", "desc")
-      .compile();
-  }, []);
+      ]);
+
+    if (showDeleted) {
+      query = query.where("e.deleted", "=", 1);
+    } else {
+      query = query.where("e.deleted", "=", 0);
+    }
+
+    return query.orderBy("e.created_at", "desc").compile();
+  }, [showDeleted]);
 
   const { data, isLoading, error } = useTypedQuery(compiled, expect<QuotesBookingsEvent>());
 

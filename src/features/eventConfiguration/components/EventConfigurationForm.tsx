@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
-import { Palette, X } from "lucide-react";
+import { Palette, X, ExternalLink } from "lucide-react";
 import { useAuth, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,19 +18,17 @@ import { CoreTab } from "./tabs/CoreTab";
 import { DetailsTab } from "./tabs/DetailsTab";
 import { AlertsTab } from "./tabs/AlertsTab";
 import { useBleacherEventsStore } from "@/state/bleacherEventStore";
-import { useEventsStore } from "@/state/eventsStore";
 import { useCurrentEventStore } from "../state/useCurrentEventStore";
 import { createEvent, deleteEvent } from "@/features/dashboard/db/client/db";
 import { updateEvent } from "@/features/dashboard/db/client/updateEvent";
-import { FetchDashboardBleachers } from "@/features/dashboard/db/client/bleachers";
-import { FetchDashboardEvents } from "@/features/dashboard/db/client/events";
-import { useDashboardFilterSettings } from "@/features/dashboardOptions/useDashboardFilterSettings";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useUsersStore } from "@/state/userStore";
-import { eventRequirements } from "@/features/alerts/definitions/eventRequirements";
-import { schedulingConflicts } from "@/features/alerts/definitions/schedulingConflicts";
+import { triage } from "@/features/alerts/triage";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { canEditOwnedEntity } from "@/features/userAccess/logic/canEditOwnedEntity";
+import { useCreateQuoteStore } from "@/features/quotesAndBookings/state/useCreateQuoteStore";
+import { useEventFormTransportationAlerts } from "../hooks/useEventFormTransportationAlerts";
+import { useBleacherMismatch } from "../hooks/useBleacherMismatch";
 
 const tabs = ["Core", "Details", "Alerts"] as const;
 type Tab = (typeof tabs)[number];
@@ -56,21 +55,18 @@ export const EventConfigurationForm = ({
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const supabase = useClerkSupabaseClient();
-  const { state: dashboardFilters } = useDashboardFilterSettings();
-  const onlyShowMyEvents = dashboardFilters?.onlyShowMyEvents ?? true;
   const bleacherEvents = useBleacherEventsStore((s) => s.bleacherEvents);
-  const allEvents = useEventsStore((s) => s.events);
   const users = useUsersStore((s) => s.users);
   const permissions = useTeamPermissions();
+  const router = useRouter();
+  useEventFormTransportationAlerts();
+  const { hasMismatch: hasDetailsMismatch } = useBleacherMismatch();
 
   const isEditing = !!currentEventStore.eventUuid;
-  // Viewer can never edit — regardless of ownership
   const canEdit = permissions.canCreateUser
     ? canEditOwnedEntity({
         isAdmin: permissions.isAdmin,
         isNew: !isEditing,
-        currentUserId: permissions.userId,
-        ownerUserUuid: currentEventStore.ownerUserUuid,
       })
     : false;
 
@@ -79,16 +75,10 @@ export const EventConfigurationForm = ({
     return users.find((u) => u.clerk_user_id === userId)?.id ?? null;
   };
 
-  // Refresh zustand stores directly without invalidating the page query
-  const refreshDashboardStores = async () => {
-    if (!supabase || !isLoaded || !userId) return;
-    // Mark BleacherEvents stale so useFetchTable re-fetches fresh assignments;
-    // without this, client-side conflict detection stays stale until Pusher fires.
+  // Mark global zustand stores stale so useFetchTable re-fetches fresh data;
+  // dashboard data itself is now driven by PowerSync reactive queries.
+  const refreshDashboardStores = () => {
     useBleacherEventsStore.getState().setStale(true);
-    await Promise.all([
-      FetchDashboardBleachers(supabase),
-      FetchDashboardEvents(supabase, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
-    ]);
   };
 
   const handleCreateEvent = async () => {
@@ -96,22 +86,8 @@ export const EventConfigurationForm = ({
     const state = useCurrentEventStore.getState();
     try {
       const newEventUuid = await createEvent(state, supabase, user ?? null);
-      await eventRequirements.sync(
-        newEventUuid,
-        "event",
-        state.alerts,
-        resolveSaverUuid(),
-        state.ownerUserUuid,
-        supabase,
-      );
-      await schedulingConflicts.syncAll(
-        newEventUuid,
-        { event: state, allEvents, allBleacherEvents: bleacherEvents },
-        resolveSaverUuid(),
-        state.ownerUserUuid,
-        supabase,
-      );
-      await refreshDashboardStores();
+      await triage("Events", { id: newEventUuid }, supabase);
+      refreshDashboardStores();
       currentEventStore.resetForm();
       if (currentEventStore.isModalOpen) {
         currentEventStore.closeModal();
@@ -129,23 +105,9 @@ export const EventConfigurationForm = ({
     try {
       await updateEvent(state, supabase, user ?? null, bleacherEvents);
       if (state.eventUuid) {
-        await eventRequirements.sync(
-          state.eventUuid,
-          "event",
-          state.alerts,
-          resolveSaverUuid(),
-          state.ownerUserUuid,
-          supabase,
-        );
-        await schedulingConflicts.syncAll(
-          state.eventUuid,
-          { event: state, allEvents, allBleacherEvents: bleacherEvents },
-          resolveSaverUuid(),
-          state.ownerUserUuid,
-          supabase,
-        );
+        await triage("Events", { id: state.eventUuid }, supabase);
       }
-      await refreshDashboardStores();
+      refreshDashboardStores();
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to update event:", error);
@@ -159,16 +121,41 @@ export const EventConfigurationForm = ({
     const state = useCurrentEventStore.getState();
     try {
       if (state.eventUuid) {
-        await eventRequirements.delete(state.eventUuid, supabase);
-        await schedulingConflicts.delete(state.eventUuid, supabase);
+        await triage("Events_deleted", { id: state.eventUuid }, supabase);
       }
       await deleteEvent(state.eventUuid, state.addressData?.state ?? "", supabase, user ?? null);
-      await refreshDashboardStores();
+      refreshDashboardStores();
       currentEventStore.resetForm();
     } catch (error) {
       console.error("Failed to delete event:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenDetails = () => {
+    const state = useCurrentEventStore.getState();
+    if (state.eventUuid) {
+      // Existing event — go straight to its edit page
+      router.push(`/quotes-bookings/${state.eventUuid}/edit`);
+    } else {
+      // Unsaved event — pre-populate the quote store and open the new quote page
+      const store = useCreateQuoteStore.getState();
+      store.resetForm();
+      store.setField("eventName", state.eventName);
+      store.setField("eventStart", state.eventStart);
+      store.setField("eventEnd", state.eventEnd);
+      store.setField("ownerUserUuid", state.ownerUserUuid);
+      if (state.addressData) {
+        store.setField("eventAddress", state.addressData.address ?? "");
+        store.setField("eventAddressData", {
+          street: state.addressData.address ?? "",
+          city: state.addressData.city ?? "",
+          stateProvince: state.addressData.state ?? "",
+          zipPostal: state.addressData.postalCode ?? "",
+        });
+      }
+      router.push("/quotes-bookings/new");
     }
   };
 
@@ -183,26 +170,30 @@ export const EventConfigurationForm = ({
     >
       <div className="flex items-center gap-2">
         <div className="flex gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              className={`px-2.5 mb-2 rounded-t border-b-2 cursor-pointer ${
-                activeTab === tab ? "border-darkBlue font-semibold" : "border-transparent"
-              } ${
-                tab === "Alerts" && currentEventStore.alerts.length > 0
-                  ? "text-red-700"
-                  : activeTab === tab
-                    ? "text-darkBlue"
-                    : "text-black/50"
-              }`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab}
-              {tab === "Alerts" &&
-                currentEventStore.alerts.length > 0 &&
-                ` (${currentEventStore.alerts.length})`}
-            </button>
-          ))}
+          {tabs.map((tab) => {
+            const hasWarning =
+              (tab === "Alerts" && currentEventStore.alerts.length > 0) ||
+              (tab === "Details" && hasDetailsMismatch);
+            return (
+              <button
+                key={tab}
+                className={`px-2.5 mb-2 rounded-t border-b-2 cursor-pointer ${
+                  activeTab === tab ? "border-darkBlue font-semibold" : "border-transparent"
+                } ${
+                  hasWarning
+                    ? "text-red-700"
+                    : activeTab === tab
+                      ? "text-darkBlue"
+                      : "text-black/50"
+                }`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+                {tab === "Alerts" && currentEventStore.alerts.length > 0 && ` (${currentEventStore.alerts.length})`}
+                {tab === "Details" && hasDetailsMismatch && " !"}
+              </button>
+            );
+          })}
         </div>
 
         {/* Middle area for hue slider */}
@@ -247,6 +238,18 @@ export const EventConfigurationForm = ({
               ) : (
                 <Palette className="w-4 h-4" />
               )}
+            </button>
+          )}
+          {/* Details button — always visible when canEdit */}
+          {canEdit && (
+            <button
+              type="button"
+              title="Open in Quote Details"
+              className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-700 text-sm font-semibold border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
+              onClick={handleOpenDetails}
+            >
+              <ExternalLink className="w-4 h-4" />
+              Details
             </button>
           )}
           {/* Delete button - only for existing events the user can edit */}
@@ -353,7 +356,9 @@ export const EventConfigurationForm = ({
 
       {/* Tab content */}
       <fieldset disabled={!canEdit}>
-        {activeTab === "Core" && <CoreTab showSetupTeardown={showSetupTeardown} disabled={!canEdit} />}
+        {activeTab === "Core" && (
+          <CoreTab showSetupTeardown={showSetupTeardown} disabled={!canEdit} />
+        )}
         {activeTab === "Details" && <DetailsTab />}
         {activeTab === "Alerts" && <AlertsTab />}
       </fieldset>

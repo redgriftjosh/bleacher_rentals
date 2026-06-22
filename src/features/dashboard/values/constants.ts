@@ -17,3 +17,4 @@ export const DATE_RANGE = 1000;
 
 // event colors
 export const LOST_EVENT_COLOR = 0xd3d3d3; // light grey for lost events
+export const SUBRENTAL_COLOR = 0xf0d000; // yellow for subrental events and overlays

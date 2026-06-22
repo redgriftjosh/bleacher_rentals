@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import { useCreateQuoteStore } from "../state/useCreateQuoteStore";
 import { fetchTaxPercent } from "../db/fetchTaxPercent";
 import { useSalesOffices } from "./useSalesOffices";
@@ -10,6 +10,7 @@ export function useAutoTax() {
   const eventAddressData = useCreateQuoteStore((s) => s.eventAddressData);
   const lineItems = useCreateQuoteStore((s) => s.lineItems);
   const setField = useCreateQuoteStore((s) => s.setField);
+  const [qboError, setQboError] = useState(false);
 
   const { salesOffices } = useSalesOffices();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -28,6 +29,7 @@ export function useAutoTax() {
     if (!salesOfficeId || !eventAddressData) {
       setField("taxPercent", null);
       setField("taxLoading", false);
+      setQboError(false);
       return;
     }
 
@@ -35,12 +37,14 @@ export function useAutoTax() {
     if (!office?.quickbookUuid) {
       setField("taxPercent", null);
       setField("taxLoading", false);
+      setQboError(false);
       return;
     }
 
     if (!eventAddressData.street && !eventAddressData.city && !eventAddressData.stateProvince) {
       setField("taxPercent", null);
       setField("taxLoading", false);
+      setQboError(false);
       return;
     }
 
@@ -55,12 +59,15 @@ export function useAutoTax() {
 
         if (result) {
           setField("taxPercent", result.taxPercent);
+          setQboError(false);
         } else {
           setField("taxPercent", null);
+          setQboError(true);
         }
       } catch (e) {
         console.error("Auto-tax fetch failed:", e);
         setField("taxPercent", null);
+        setQboError(true);
       } finally {
         setField("taxLoading", false);
       }
@@ -70,4 +77,6 @@ export function useAutoTax() {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [salesOfficeId, eventAddressData, subtotal, salesOffices, setField]);
+
+  return { qboError };
 }

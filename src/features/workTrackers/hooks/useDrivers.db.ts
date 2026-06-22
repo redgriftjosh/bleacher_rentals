@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { useCurrentUser } from "@/hooks/db/useCurrentUser";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { STATUSES } from "@/features/manageTeam/constants";
 
 type Compiled = {
@@ -108,13 +109,15 @@ export function useDrivers(options?: { showAll?: boolean }): {
           eb("u.status_uuid", "=", STATUSES.invited),
         ]),
       );
-    // If not admin, filter by account manager
-    if (currentUser.is_admin !== 1) {
+    // If not admin, filter by drivers in the same zones as the current AM
+    if (currentUser.is_admin !== 1 && !showAll) {
       const accountManagerId = accountManagerData?.[0]?.id;
       if (accountManagerId) {
-        query = query.where("d.account_manager_uuid", "=", accountManagerId);
+        query = query
+          .innerJoin("DriverZones as dz", "dz.driver_uuid", "d.id")
+          .innerJoin("AccountManagerZones as amz", "amz.zone_uuid", "dz.zone_uuid")
+          .where("amz.account_manager_uuid", "=", accountManagerId);
       } else {
-        // Not an account manager, return no results
         query = query.where("d.id", "=", "__no_match__");
       }
     }
@@ -124,8 +127,18 @@ export function useDrivers(options?: { showAll?: boolean }): {
 
   const { data, isLoading, error } = useTypedQuery(compiled, expect<Compiled>());
 
+  const deduped = useMemo(() => {
+    if (!data) return null;
+    const seen = new Set<string>();
+    return (data as unknown as DriverWithUser[]).filter((d) => {
+      if (seen.has(d.driver_uuid)) return false;
+      seen.add(d.driver_uuid);
+      return true;
+    });
+  }, [data]);
+
   return {
-    data: data as unknown as DriverWithUser[] | null,
+    data: deduped,
     isLoading: isLoading || isCurrentUserLoading,
     error,
   };

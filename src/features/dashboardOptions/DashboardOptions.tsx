@@ -20,8 +20,6 @@ import { MultiSelect } from "@/components/MultiSelect";
 import { useDashboardFilterSettings } from "./useDashboardFilterSettings";
 import type { YAxis } from "./types";
 import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEventStore";
-import { getHomeBaseOptions } from "@/utils/utils";
-import { useCurrentEventStore as useTestDashboardStore } from "@/features/dashboard/state/useTestDashboardStore";
 import { getRowOptions, getStateProvOptions } from "../dashboard/functions";
 
 export function DashboardOptions() {
@@ -29,54 +27,33 @@ export function DashboardOptions() {
   const isFormExpanded = useCurrentEventStore((s) => s.isFormExpanded);
 
   const yAxis = state?.yAxis ?? "Bleachers";
-  const summerHomeBaseUuids = state?.summerHomeBaseUuids ?? [];
-  const winterHomeBaseUuids = state?.winterHomeBaseUuids ?? [];
   const rows = state?.rows ?? [];
   const stateProvinces = state?.stateProvinces ?? [];
   const onlyShowMyEvents = state?.onlyShowMyEvents ?? true;
   const optimizationMode = state?.optimizationMode ?? false;
   const showAddressTooltip = state?.showAddressTooltip ?? false;
-  const season = state?.season ?? null;
 
   // Options
-  const homeBaseOptions = getHomeBaseOptions();
   const rowOptions = getRowOptions();
   const stateProvOptions = getStateProvOptions();
 
   // Modals
-  const [openHomeBases, setOpenHomeBases] = React.useState(false);
   const [openRows, setOpenRows] = React.useState(false);
   const [openRegions, setOpenRegions] = React.useState(false);
 
-  // One-time defaults like original FilterDashboard
+  // One-time defaults
   const [initialized, setInitialized] = React.useState(false);
   React.useEffect(() => {
     if (initialized) return;
-    if (homeBaseOptions.length === 0 || rowOptions.length === 0 || stateProvOptions.length === 0)
-      return;
+    if (rowOptions.length === 0 || stateProvOptions.length === 0) return;
     setInitialized(true);
-    const allHomeUuids = homeBaseOptions.map((o) => o.value);
     const allRowVals = rowOptions.map((o) => o.value);
     const allStates = stateProvOptions.map((o) => o.value);
     if (!state) return;
 
-    // Only fill defaults once (and only when uninitialized)
-    if (summerHomeBaseUuids.length === 0) void setField("summerHomeBaseUuids", allHomeUuids);
-    if (winterHomeBaseUuids.length === 0) void setField("winterHomeBaseUuids", allHomeUuids);
     if (rows.length === 0) void setField("rows", allRowVals);
     if (stateProvinces.length === 0) void setField("stateProvinces", allStates);
-  }, [
-    initialized,
-    homeBaseOptions,
-    rowOptions,
-    stateProvOptions,
-    setField,
-    state,
-    rows.length,
-    stateProvinces.length,
-    summerHomeBaseUuids.length,
-    winterHomeBaseUuids.length,
-  ]);
+  }, [initialized, rowOptions, stateProvOptions, setField, state, rows.length, stateProvinces.length]);
 
   return (
     <>
@@ -100,42 +77,10 @@ export function DashboardOptions() {
               </MenubarSub>
             )}
 
-            {/* Season submenu */}
-            <MenubarSub>
-              <MenubarSubTrigger inset>
-                Season<MenubarShortcut>(Bleachers)</MenubarShortcut>
-              </MenubarSubTrigger>
-              <MenubarSubContent>
-                <MenubarRadioGroup value={season ?? "Don't Filter"}>
-                  <MenubarRadioItem
-                    value="SUMMER"
-                    onClick={() => void setField("season", "SUMMER")}
-                  >
-                    Summer
-                  </MenubarRadioItem>
-                  <MenubarRadioItem
-                    value="WINTER"
-                    onClick={() => void setField("season", "WINTER")}
-                  >
-                    Winter
-                  </MenubarRadioItem>
-                  <MenubarRadioItem
-                    value="Don't Filter"
-                    onClick={() => void setField("season", null)}
-                  >
-                    Don't Filter
-                  </MenubarRadioItem>
-                </MenubarRadioGroup>
-              </MenubarSubContent>
-            </MenubarSub>
-
             {/* Filter By submenu */}
             <MenubarSub>
               <MenubarSubTrigger inset>Filter By</MenubarSubTrigger>
               <MenubarSubContent>
-                <MenubarItem onClick={() => setOpenHomeBases(true)}>
-                  Home Bases<MenubarShortcut>(Bleachers)</MenubarShortcut>
-                </MenubarItem>
                 <MenubarItem onClick={() => setOpenRows(true)}>
                   Rows<MenubarShortcut>(Bleachers)</MenubarShortcut>
                 </MenubarItem>
@@ -165,56 +110,9 @@ export function DashboardOptions() {
             >
               Show Address Tooltip
             </MenubarCheckboxItem>
-            {/* <MenubarSeparator />
-            <MenubarItem
-              inset
-              // when clicked go to /old-dashboard
-              onClick={() => (window.location.href = "/old-dashboard")}
-            >
-              Old Dashboard
-            </MenubarItem> */}
           </MenubarContent>
         </MenubarMenu>
       </Menubar>
-
-      {/* Home Bases modal (summer & winter) */}
-      <Dialog open={openHomeBases} onOpenChange={setOpenHomeBases}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Home Bases</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 items-center gap-3">
-              <div className="col-span-1 text-sm text-muted-foreground">Summer</div>
-              <div className="col-span-2">
-                <MultiSelect
-                  options={homeBaseOptions}
-                  color="bg-amber-500"
-                  onValueChange={(value) => void setField("summerHomeBaseUuids", value)}
-                  forceSelectedValues={summerHomeBaseUuids}
-                  placeholder="Home Bases"
-                  variant="inverted"
-                  maxCount={1}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 items-center gap-3">
-              <div className="col-span-1 text-sm text-muted-foreground">Winter</div>
-              <div className="col-span-2">
-                <MultiSelect
-                  options={homeBaseOptions}
-                  color="bg-blue-500"
-                  onValueChange={(value) => void setField("winterHomeBaseUuids", value)}
-                  forceSelectedValues={winterHomeBaseUuids}
-                  placeholder="Home Bases"
-                  variant="inverted"
-                  maxCount={1}
-                />
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Rows modal */}
       <Dialog open={openRows} onOpenChange={setOpenRows}>
@@ -263,8 +161,6 @@ export function DashboardOptions() {
           />
         </DialogContent>
       </Dialog>
-
-      {/* Test Update Cell modal */}
     </>
   );
 }

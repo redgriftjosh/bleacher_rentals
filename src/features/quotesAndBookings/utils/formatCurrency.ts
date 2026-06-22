@@ -2,7 +2,7 @@ import { Currency } from "../types/quoteTypes";
 
 const CURRENCY_CONFIG: Record<Currency, { symbol: string; locale: string }> = {
   USD: { symbol: "$", locale: "en-US" },
-  CAD: { symbol: "C$", locale: "en-CA" },
+  CAD: { symbol: "$", locale: "en-CA" },
 };
 
 export function formatCurrency(amount: number, currency: Currency): string {

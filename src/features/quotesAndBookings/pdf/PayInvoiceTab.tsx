@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { CreditCard, FileText, Pencil, Check, X, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { QuoteDocumentData } from "./quoteDocumentData";
+import { TrackEvent } from "./useQuoteActivityTracker";
 
 function formatMoney(cents: number, currency: "USD" | "CAD"): string {
-  const symbol = currency === "CAD" ? "C$" : "$";
+  const symbol = "$";
   const formatted = (Math.abs(cents) / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return cents < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
 }
@@ -29,7 +30,17 @@ type PaymentHistoryRow = {
   created_at: string;
 };
 
-export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
+function todayDate(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
+export function PayInvoiceTab({
+  data,
+  track,
+}: {
+  data: QuoteDocumentData;
+  track: (e: TrackEvent) => void;
+}) {
   const { currency } = data;
   const [payerName, setPayerName] = useState(data.contact?.name ?? "");
   const [payerEmail, setPayerEmail] = useState(data.contact?.email ?? "");
@@ -39,6 +50,8 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
   const [poSaving, setPoSaving] = useState(false);
   const [payments, setPayments] = useState<PaymentHistoryRow[]>([]);
   const [paymentsLoading, setPaymentsLoading] = useState(true);
+  const [useCustomAmount, setUseCustomAmount] = useState(false);
+  const [customAmountInput, setCustomAmountInput] = useState("");
 
   const fetchPayments = useCallback(async () => {
     try {
@@ -63,15 +76,36 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
     .reduce((sum, p) => sum + p.amount_cents, 0);
 
   const totalDue = data.totalCents;
-  const remainingCents = totalDue - paidCents;
+  const remainingCents = Math.max(totalDue - paidCents, 0);
 
-  const nextInstallment = data.paymentSchedule.find((i) => i.status !== "paid");
+  // Smart calculation: sum overdue installments (due today or earlier), subtract paid
+  const today = todayDate();
+  const hasSchedule = data.paymentSchedule.length > 0;
 
-  const payAmount = nextInstallment ? nextInstallment.amountCents : remainingCents;
-  const payAmountPositive = Math.max(payAmount, 0);
+  const overdueCents = hasSchedule
+    ? data.paymentSchedule
+        .filter((i) => i.status !== "paid" && i.dueDate <= today)
+        .reduce((sum, i) => sum + i.amountCents, 0)
+    : 0;
+
+  const overdueOwedCents = Math.max(
+    hasSchedule ? overdueCents - paidCents : remainingCents,
+    0,
+  );
+
+  // Default pay amount: overdue balance, or full remaining if no schedule
+  const defaultPayCents = hasSchedule ? Math.min(overdueOwedCents, remainingCents) : remainingCents;
+
+  // Custom amount in cents
+  const customCents = Math.round((parseFloat(customAmountInput) || 0) * 100);
+  const payAmountCents = useCustomAmount ? customCents : defaultPayCents;
+  const payAmountValid = payAmountCents >= 50 && payAmountCents <= remainingCents;
+
+  // Find the next unpaid installment to pass as metadata
+  const nextUnpaidInstallment = data.paymentSchedule.find((i) => i.status !== "paid");
 
   async function handlePay() {
-    if (!payerName.trim()) return;
+    if (!payerName.trim() || !payAmountValid) return;
     setIsLoading(true);
     try {
       const res = await fetch("/api/payments/create-checkout", {
@@ -79,8 +113,8 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           eventId: data.eventId,
-          installmentId: nextInstallment ? undefined : undefined,
-          amountCents: payAmountPositive,
+          installmentId: nextUnpaidInstallment?.id ?? undefined,
+          amountCents: payAmountCents,
           currency,
           payerName: payerName.trim(),
           payerEmail: payerEmail.trim() || undefined,
@@ -88,6 +122,11 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
       });
       const json = await res.json();
       if (json.url) {
+        track({
+          action_type: "client_payment_started",
+          field_name: "payment",
+          next_value: formatMoney(payAmountCents, currency),
+        });
         window.location.href = json.url;
       }
     } catch (e) {
@@ -104,6 +143,12 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ poNumber }),
+      });
+      track({
+        action_type: "client_po_submitted",
+        field_name: "po_number",
+        prev_value: data.poNumber ?? null,
+        next_value: poNumber || null,
       });
       setEditingPo(false);
     } catch {
@@ -143,7 +188,7 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-lg">Amount Due</h3>
               <span className="text-2xl font-bold text-blue-600">
-                {formatMoney(Math.max(remainingCents, 0), currency)}
+                {formatMoney(remainingCents, currency)}
               </span>
             </div>
 
@@ -154,6 +199,13 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
               </div>
             ) : (
               <>
+                {/* Overdue summary */}
+                {hasSchedule && overdueOwedCents > 0 && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-800">
+                    <strong>{formatMoney(overdueOwedCents, currency)}</strong> is overdue based on your payment schedule.
+                  </div>
+                )}
+
                 <div className="space-y-3 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
@@ -177,13 +229,58 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
                   </div>
                 </div>
 
+                {/* Payment amount toggle */}
+                <div className="mb-4">
+                  <div className="flex items-center gap-4 mb-2">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={!useCustomAmount}
+                        onChange={() => setUseCustomAmount(false)}
+                      />
+                      {hasSchedule && overdueOwedCents > 0
+                        ? `Pay overdue balance (${formatMoney(defaultPayCents, currency)})`
+                        : `Pay ${formatMoney(defaultPayCents, currency)}`}
+                    </label>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={useCustomAmount}
+                        onChange={() => setUseCustomAmount(true)}
+                      />
+                      Custom amount
+                    </label>
+                  </div>
+
+                  {useCustomAmount && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700">{"$"}</span>
+                      <input
+                        type="number"
+                        min={0.5}
+                        step={0.01}
+                        value={customAmountInput}
+                        onChange={(e) => setCustomAmountInput(e.target.value)}
+                        className="w-40 border rounded-md px-3 py-2 text-sm"
+                        placeholder="0.00"
+                      />
+                      {customCents > 0 && customCents < 50 && (
+                        <span className="text-xs text-red-600">Minimum $0.50</span>
+                      )}
+                      {customCents > remainingCents && (
+                        <span className="text-xs text-red-600">Exceeds balance</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <button
                   onClick={handlePay}
-                  disabled={isLoading || !payerName.trim()}
+                  disabled={isLoading || !payerName.trim() || !payAmountValid}
                   className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
                   <CreditCard className="w-5 h-5" />
-                  {isLoading ? "Redirecting to Stripe..." : `Pay ${formatMoney(payAmountPositive, currency)} Online`}
+                  {isLoading ? "Redirecting to Stripe..." : `Pay ${formatMoney(payAmountCents, currency)} Online`}
                 </button>
               </>
             )}
@@ -196,6 +293,7 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
               <div className="space-y-3">
                 {data.paymentSchedule.map((inst, i) => {
                   const isPaid = inst.status === "paid";
+                  const isOverdue = !isPaid && inst.dueDate <= today;
                   const isFirst = i === 0;
                   const isLast = i === data.paymentSchedule.length - 1;
                   let label = `Due on ${formatDate(inst.dueDate)}`;
@@ -204,14 +302,20 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
 
                   return (
                     <div
-                      key={i}
+                      key={inst.id}
                       className={`flex items-center justify-between p-3 rounded-lg border ${
-                        isPaid ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
+                        isPaid
+                          ? "bg-green-50 border-green-200"
+                          : isOverdue
+                            ? "bg-red-50 border-red-200"
+                            : "bg-gray-50 border-gray-200"
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         {isPaid ? (
                           <CheckCircle className="w-5 h-5 text-green-600" />
+                        ) : isOverdue ? (
+                          <AlertCircle className="w-5 h-5 text-red-500" />
                         ) : (
                           <Clock className="w-5 h-5 text-gray-400" />
                         )}
@@ -220,9 +324,14 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
                           {isPaid && (
                             <p className="text-xs text-green-600">Paid</p>
                           )}
+                          {isOverdue && (
+                            <p className="text-xs text-red-600">Overdue</p>
+                          )}
                         </div>
                       </div>
-                      <span className={`font-semibold ${isPaid ? "text-green-700" : "text-gray-900"}`}>
+                      <span className={`font-semibold ${
+                        isPaid ? "text-green-700" : isOverdue ? "text-red-700" : "text-gray-900"
+                      }`}>
                         {formatMoney(inst.amountCents, currency)}
                       </span>
                     </div>
@@ -332,7 +441,7 @@ export function PayInvoiceTab({ data }: { data: QuoteDocumentData }) {
               <div className="flex justify-between border-t pt-2">
                 <span className="text-gray-800 font-medium">Remaining</span>
                 <span className="font-bold text-blue-600">
-                  {formatMoney(Math.max(remainingCents, 0), currency)}
+                  {formatMoney(remainingCents, currency)}
                 </span>
               </div>
             </div>

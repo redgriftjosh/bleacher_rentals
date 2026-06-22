@@ -11,13 +11,11 @@ import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { Dropdown } from "@/components/DropDown";
 import { createContact } from "../../../db/createContact";
 import { useCompanies } from "../../../hooks/useCompanies";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 
 export function NewContactModal() {
   const isOpen = useCreateQuoteStore((s) => s.isNewContactModalOpen);
   const setField = useCreateQuoteStore((s) => s.setField);
-  const supabase = useClerkSupabaseClient();
 
   // Reactive — auto-updates when PowerSync syncs new companies
   const { companies, isLoading: loadingCompanies } = useCompanies();
@@ -50,10 +48,7 @@ export function NewContactModal() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await createContact(
-        { firstName, lastName, phone, email, notes, companyUuid },
-        supabase,
-      );
+      await createContact({ firstName, lastName, phone, email, notes, companyUuid });
 
       setField("contactName", `${firstName} ${lastName}`.trim());
       setField("companyEmail", email);

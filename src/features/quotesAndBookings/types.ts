@@ -8,6 +8,7 @@ export type QuotesBookingsEvent = {
   created_at: string | null;
   booked_at: string | null;
   created_by_user_uuid: string | null;
+  deleted: number | null;
   account_manager_first_name: string | null;
   account_manager_last_name: string | null;
   account_manager_email: string | null;

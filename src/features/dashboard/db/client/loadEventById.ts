@@ -25,7 +25,8 @@ export async function loadEventById(
         `
         *,
         address:Addresses!Events_address_uuid_fkey(*),
-        bleacher_events:BleacherEvents!BleacherEvents_event_uuid_fkey(bleacher_uuid)
+        bleacher_events:BleacherEvents!BleacherEvents_event_uuid_fkey(bleacher_uuid),
+        line_items:EventLineItems!EventLineItems_event_uuid_fkey(bleacher_type_uuid, quantity)
       `,
       )
       .eq("id", eventUuid)
@@ -76,6 +77,13 @@ export async function loadEventById(
     setField("notes", eventData.notes ?? "");
     setField("mustBeClean", eventData.must_be_clean);
     setField("bleacherUuids", eventBleacherUuids);
+    const reqMap = new Map<string, number>();
+    for (const li of ((eventData as any).line_items ?? [])) {
+      if (li.bleacher_type_uuid && li.quantity) {
+        reqMap.set(li.bleacher_type_uuid, (reqMap.get(li.bleacher_type_uuid) ?? 0) + li.quantity);
+      }
+    }
+    setField("bleacherRequirements", [...reqMap.entries()].map(([bleacherTypeUuid, quantity]) => ({ bleacherTypeUuid, quantity })));
     setField("isFormExpanded", true); // Open the configuration panel
     setField("hslHue", eventData.hsl_hue);
     setField("goodshuffleUrl", eventData.goodshuffle_url);

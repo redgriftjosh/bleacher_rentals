@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Trash, Truck, X, CalendarPlus, Wrench } from "lucide-react";
+import { Check, Trash, Truck, X, CalendarPlus, Wrench, Handshake } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useSelectedBlockStore } from "../state/useSelectedBlock";
 import { Tables } from "../../../../database.types";
@@ -12,11 +12,14 @@ import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCur
 import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
 import { useUser } from "@clerk/nextjs";
 import { useUsersStore } from "@/state/userStore";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AppTooltip } from "@/components/AppTooltip";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
 import { isBleacherOwnedByAM } from "@/features/userAccess/logic/isBleacherOwnedByAM";
+import { hasSubrentalAccessForDate } from "@/features/userAccess/logic/hasSubrentalAccessForDate";
 import { canEditCell as canEditCellFn } from "@/features/userAccess/logic/canEditCell";
+import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
+import { SUBRENTAL_COLOR } from "@/features/dashboard/values/constants";
 
 type CellEditorProps = {
   onWorkTrackerOpen?: (workTracker: Tables<"WorkTrackers">) => void;
@@ -38,17 +41,14 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
   const canEditCell = canEditCellFn({
     isAdmin: perms.isAdmin,
     isAccountManager: perms.isAccountManager,
-    accountManagerId: perms.accountManagerId,
+    accountManagerZoneIds: perms.accountManagerZoneIds,
     bleacherUuid,
-    bleacher: bl
-      ? {
-          summerAccountManagerUuid: bl.summerAccountManagerUuid,
-          winterAccountManagerUuid: bl.winterAccountManagerUuid,
-        }
-      : null,
+    bleacher: bl ? { zoneUuid: bl.zoneUuid } : null,
   });
 
+  const [handshakeHover, setHandshakeHover] = useState(false);
   const [currentText, setCurrentText] = useState(text);
+  const subrentalHexColor = `#${SUBRENTAL_COLOR.toString(16).padStart(6, "0")}`;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -73,12 +73,6 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         workTrackerUuid,
       };
       await saveBlock(editBlock, supabase);
-      // Refresh bleachers store directly so Pixi updates without remounting
-      try {
-        const { FetchDashboardBleachers } =
-          await import("@/features/dashboard/db/client/bleachers");
-        await FetchDashboardBleachers(supabase);
-      } catch {}
       resetForm();
     } catch (error) {
       console.error("Failed to Save Block:", error);
@@ -98,12 +92,6 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         workTrackerUuid,
       };
       await deleteBlock(editBlock, supabase);
-      // Refresh bleachers store directly so Pixi updates without remounting
-      try {
-        const { FetchDashboardBleachers } =
-          await import("@/features/dashboard/db/client/bleachers");
-        await FetchDashboardBleachers(supabase);
-      } catch {}
       resetForm();
     } catch (error) {
       console.error("Failed to Delete Block:", error);
@@ -114,6 +102,42 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     if (!date || !bleacherUuid) {
       createErrorToast(["Failed to open work tracker. Missing date or bleacher id."]);
       return;
+    }
+
+    if (!workTrackerUuid) {
+      const perms = usePermissionsStore.getState();
+      if (perms.isAccountManager && !perms.isAdmin) {
+        const dashBleachers = useDashboardBleachersStore.getState().data;
+        const bleacher = dashBleachers.find(
+          (b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow,
+        );
+        const ownedByAM =
+          bleacher &&
+          isBleacherOwnedByAM({
+            bleacherZoneUuid: bleacher.zoneUuid,
+            accountManagerZoneIds: perms.accountManagerZoneIds,
+          });
+        // Block if the owned bleacher is subrented out on this date
+        const subrented =
+          ownedByAM &&
+          (bleacher?.acceptedSubrentalBlocks ?? []).some(
+            (r) => date >= r.eventStart.substring(0, 10) && date <= r.eventEnd.substring(0, 10),
+          );
+        const hasSubrentalAccess = hasSubrentalAccessForDate({
+          bleacherUuid,
+          date,
+          accountManagerZoneIds: perms.accountManagerZoneIds,
+          allBleachers: dashBleachers,
+        });
+        if (subrented) {
+          createErrorToast(["This bleacher is subrented out on this date."]);
+          return;
+        }
+        if (!ownedByAM && !hasSubrentalAccess) {
+          createErrorToast(["You can only create work trackers for bleachers assigned to you."]);
+          return;
+        }
+      }
     }
 
     const workTracker: Tables<"WorkTrackers"> = {
@@ -162,27 +186,51 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       return;
     }
 
-    // AM can only create events with own bleachers
+    // AM can only create events with own bleachers — OR within an accepted subrental date range
     const perms = usePermissionsStore.getState();
+    let subrentalConstraint: { eventStart: string; eventEnd: string } | null = null;
     if (perms.isAccountManager && !perms.isAdmin) {
       const dashBleachers = useDashboardBleachersStore.getState().data;
-      const bleacher = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid);
-      if (
+      // Must find the original (non-subrental) row — when a zone filter hides the original zone,
+      // only the subrental row is in the store; treat that as "not owned" so we fall through
+      // to the subrental constraint check rather than bypassing it entirely.
+      const bleacher = dashBleachers.find(
+        (b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow,
+      );
+      const ownedByAM =
         bleacher &&
-        !isBleacherOwnedByAM({
-          summerAccountManagerUuid: bleacher.summerAccountManagerUuid,
-          winterAccountManagerUuid: bleacher.winterAccountManagerUuid,
-          currentAccountManagerId: perms.accountManagerId,
-        })
-      ) {
-        createErrorToast(["You can only create events with bleachers assigned to you."]);
-        return;
+        isBleacherOwnedByAM({
+          bleacherZoneUuid: bleacher.zoneUuid,
+          accountManagerZoneIds: perms.accountManagerZoneIds,
+        });
+      if (!ownedByAM) {
+        // Find the specific accepted subrental range covering this date
+        const subrentalRow = dashBleachers.find(
+          (b) =>
+            b.bleacherUuid === bleacherUuid &&
+            b.isSubrentalRow &&
+            perms.accountManagerZoneIds.includes(b.zoneUuid ?? "") &&
+            (b.acceptedSubrentalAccess ?? []).some(
+              (r) => date >= r.eventStart.substring(0, 10) && date <= r.eventEnd.substring(0, 10),
+            ),
+        );
+        const matchingRange = subrentalRow?.acceptedSubrentalAccess?.find(
+          (r) => date >= r.eventStart.substring(0, 10) && date <= r.eventEnd.substring(0, 10),
+        );
+        if (!matchingRange) {
+          createErrorToast(["You can only create events with bleachers assigned to you."]);
+          return;
+        }
+        subrentalConstraint = {
+          eventStart: matchingRange.eventStart.substring(0, 10),
+          eventEnd: matchingRange.eventEnd.substring(0, 10),
+        };
       }
     }
 
     const eventStore = useCurrentEventStore.getState();
 
-    // Calculate end date (7 days after start date)
+    // Calculate end date (7 days after start date), clamped to subrental window if applicable
     const startDate = new Date(date);
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 7);
@@ -190,12 +238,61 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     // Format dates as YYYY-MM-DD
     const formatDate = (d: Date) => d.toISOString().split("T")[0];
 
+    let clampedStart = formatDate(startDate);
+    let clampedEnd = formatDate(endDate);
+    if (subrentalConstraint) {
+      const { eventStart: srStart, eventEnd: srEnd } = subrentalConstraint;
+      if (clampedStart < srStart) clampedStart = srStart;
+      if (clampedStart > srEnd) clampedStart = srStart;
+      if (clampedEnd > srEnd) clampedEnd = srEnd;
+      if (clampedEnd < clampedStart) clampedEnd = clampedStart;
+    }
+
+    // Cap end date against accepted subrental blocks on this bleacher:
+    // 1. If clampedStart falls inside a block (e.g. we clicked a subrental row), cap at that block's end.
+    // 2. Also cap at the day before the next block that starts after clampedStart.
+    {
+      const allBleachers = useDashboardBleachersStore.getState().data;
+      const originalBleacher = allBleachers.find(
+        (b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow,
+      );
+      const blocks = originalBleacher?.acceptedSubrentalBlocks ?? [];
+
+      // Current block: a block that contains clampedStart
+      const currentBlock = blocks.find(
+        (r) =>
+          r.eventStart.substring(0, 10) <= clampedStart &&
+          r.eventEnd.substring(0, 10) >= clampedStart,
+      );
+      if (currentBlock) {
+        const blockEnd = currentBlock.eventEnd.substring(0, 10);
+        if (blockEnd < clampedEnd) clampedEnd = blockEnd;
+      }
+
+      // Next block: the earliest block starting strictly after clampedStart
+      const nextBlockStart = blocks
+        .map((r) => r.eventStart.substring(0, 10))
+        .filter((s) => s > clampedStart)
+        .sort()[0];
+      if (nextBlockStart) {
+        const d = new Date(nextBlockStart + "T12:00:00Z");
+        d.setUTCDate(d.getUTCDate() - 1);
+        const dayBefore = d.toISOString().split("T")[0];
+        if (dayBefore < clampedEnd) clampedEnd = dayBefore;
+      }
+
+      if (clampedEnd < clampedStart) clampedEnd = clampedStart;
+    }
+
     // Set the event configuration
     eventStore.setField("isFormExpanded", true);
     eventStore.setField("isFormMinimized", false);
-    eventStore.setField("eventStart", formatDate(startDate));
-    eventStore.setField("eventEnd", formatDate(endDate));
+    eventStore.setField("eventStart", clampedStart);
+    eventStore.setField("eventEnd", clampedEnd);
     eventStore.setField("bleacherUuids", [bleacherUuid]);
+    if (subrentalConstraint) {
+      eventStore.setField("subrentalConstraint", subrentalConstraint);
+    }
 
     // Set current user as owner
     if (!eventStore.ownerUserUuid) {
@@ -216,27 +313,141 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       return;
     }
 
-    // AM can only create maintenance events with own bleachers
+    // AM can only create maintenance events with own bleachers — OR within an accepted subrental date range
     const perms = usePermissionsStore.getState();
+    let subrentalConstraint: { eventStart: string; eventEnd: string } | null = null;
     if (perms.isAccountManager && !perms.isAdmin) {
       const dashBleachers = useDashboardBleachersStore.getState().data;
-      const bleacher = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid);
-      if (
+      // Must find the original (non-subrental) row — when a zone filter hides the original zone,
+      // only the subrental row is in the store; treat that as "not owned" so we fall through
+      // to the subrental constraint check rather than bypassing it entirely.
+      const bleacher = dashBleachers.find(
+        (b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow,
+      );
+      const ownedByAM =
         bleacher &&
-        !isBleacherOwnedByAM({
-          summerAccountManagerUuid: bleacher.summerAccountManagerUuid,
-          winterAccountManagerUuid: bleacher.winterAccountManagerUuid,
-          currentAccountManagerId: perms.accountManagerId,
-        })
-      ) {
-        createErrorToast([
-          "You can only create maintenance events with bleachers assigned to you.",
-        ]);
-        return;
+        isBleacherOwnedByAM({
+          bleacherZoneUuid: bleacher.zoneUuid,
+          accountManagerZoneIds: perms.accountManagerZoneIds,
+        });
+      // Block if owned but subrented out on the clicked date
+      if (ownedByAM) {
+        const subrented = (bleacher?.acceptedSubrentalBlocks ?? []).some(
+          (r) => date >= r.eventStart.substring(0, 10) && date <= r.eventEnd.substring(0, 10),
+        );
+        if (subrented) {
+          createErrorToast(["This bleacher is subrented out on this date."]);
+          return;
+        }
+      }
+      if (!ownedByAM) {
+        const subrentalRow = dashBleachers.find(
+          (b) =>
+            b.bleacherUuid === bleacherUuid &&
+            b.isSubrentalRow &&
+            perms.accountManagerZoneIds.includes(b.zoneUuid ?? "") &&
+            (b.acceptedSubrentalAccess ?? []).some(
+              (r) => date >= r.eventStart.substring(0, 10) && date <= r.eventEnd.substring(0, 10),
+            ),
+        );
+        const matchingRange = subrentalRow?.acceptedSubrentalAccess?.find(
+          (r) => date >= r.eventStart.substring(0, 10) && date <= r.eventEnd.substring(0, 10),
+        );
+        if (!matchingRange) {
+          createErrorToast([
+            "You can only create maintenance events with bleachers assigned to you.",
+          ]);
+          return;
+        }
+        subrentalConstraint = {
+          eventStart: matchingRange.eventStart.substring(0, 10),
+          eventEnd: matchingRange.eventEnd.substring(0, 10),
+        };
       }
     }
 
     const maintenanceStore = useMaintenanceEventStore.getState();
+
+    // Calculate end date (7 days after start date), clamped to subrental window if applicable
+    const startDate = new Date(date);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 7);
+
+    // Format dates as YYYY-MM-DD
+    const formatDate = (d: Date) => d.toISOString().split("T")[0];
+
+    let clampedStart = formatDate(startDate);
+    let clampedEnd = formatDate(endDate);
+    if (subrentalConstraint) {
+      const { eventStart: srStart, eventEnd: srEnd } = subrentalConstraint;
+      if (clampedStart < srStart) clampedStart = srStart;
+      if (clampedStart > srEnd) clampedStart = srStart;
+      if (clampedEnd > srEnd) clampedEnd = srEnd;
+      if (clampedEnd < clampedStart) clampedEnd = clampedStart;
+    }
+
+    // Cap end date at the day before the next accepted subrental block on this bleacher
+    {
+      const allBleachers = useDashboardBleachersStore.getState().data;
+      const originalBleacher = allBleachers.find(
+        (b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow,
+      );
+      const blocks = originalBleacher?.acceptedSubrentalBlocks ?? [];
+
+      // Current block: a block that contains clampedStart
+      const currentBlock = blocks.find(
+        (r) =>
+          r.eventStart.substring(0, 10) <= clampedStart &&
+          r.eventEnd.substring(0, 10) >= clampedStart,
+      );
+      if (currentBlock) {
+        const blockEnd = currentBlock.eventEnd.substring(0, 10);
+        if (blockEnd < clampedEnd) clampedEnd = blockEnd;
+      }
+
+      // Next block: the earliest block starting strictly after clampedStart
+      const nextBlockStart = blocks
+        .map((r) => r.eventStart.substring(0, 10))
+        .filter((s) => s > clampedStart)
+        .sort()[0];
+      if (nextBlockStart) {
+        const d = new Date(nextBlockStart + "T12:00:00Z");
+        d.setUTCDate(d.getUTCDate() - 1);
+        const dayBefore = d.toISOString().split("T")[0];
+        if (dayBefore < clampedEnd) clampedEnd = dayBefore;
+      }
+
+      if (clampedEnd < clampedStart) clampedEnd = clampedStart;
+    }
+
+    // Open the maintenance form (resets to initial state) then prefill
+    maintenanceStore.openForm();
+    const ms = useMaintenanceEventStore.getState();
+    ms.setField("eventStart", clampedStart);
+    ms.setField("eventEnd", clampedEnd);
+    ms.setField("bleacherUuids", [bleacherUuid]);
+    if (subrentalConstraint) {
+      ms.setField("subrentalConstraint", subrentalConstraint);
+    }
+
+    // Set current user as owner
+    const clerkId = user?.id;
+    if (clerkId) {
+      const match = users.find((u) => u.clerk_user_id === clerkId);
+      if (match) ms.setField("ownerUserUuid", match.id);
+    }
+
+    // Close the cell editor
+    handleClose();
+  };
+
+  const handleCreateSubRental = () => {
+    if (!date || !bleacherUuid) {
+      createErrorToast(["Failed to create sub-rental request. Missing date or bleacher id."]);
+      return;
+    }
+
+    const subrentalStore = useSubrentalEventStore.getState();
 
     // Calculate end date (7 days after start date)
     const startDate = new Date(date);
@@ -246,18 +457,18 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     // Format dates as YYYY-MM-DD
     const formatDate = (d: Date) => d.toISOString().split("T")[0];
 
-    // Open the maintenance form (resets to initial state) then prefill
-    maintenanceStore.openForm();
-    const ms = useMaintenanceEventStore.getState();
-    ms.setField("eventStart", formatDate(startDate));
-    ms.setField("eventEnd", formatDate(endDate));
-    ms.setField("bleacherUuids", [bleacherUuid]);
+    // Open the subrental form (resets to initial state) then prefill
+    subrentalStore.openForm();
+    const ss = useSubrentalEventStore.getState();
+    ss.setField("eventStart", formatDate(startDate));
+    ss.setField("eventEnd", formatDate(endDate));
+    ss.setField("bleacherUuid", bleacherUuid);
 
-    // Set current user as owner
+    // Set current user as creator
     const clerkId = user?.id;
     if (clerkId) {
       const match = users.find((u) => u.clerk_user_id === clerkId);
-      if (match) ms.setField("ownerUserUuid", match.id);
+      if (match) ss.setField("createdByUserUuid", match.id);
     }
 
     // Close the cell editor
@@ -335,52 +546,47 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         <div className="flex justify-between gap-2">
           {/* Action buttons: hidden for viewer */}
           {!isViewer && (
-            <TooltipProvider delayDuration={0}>
-              <div className="flex gap-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      aria-label="Work Tracker"
-                      className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
-                      onClick={handleOpenWorkTracker}
-                    >
-                      <Truck className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="z-[1100]">
-                    Work Tracker
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      aria-label="Create Event"
-                      className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
-                      onClick={handleCreateEvent}
-                    >
-                      <CalendarPlus className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="z-[1100]">
-                    Create Event
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      aria-label="Maintenance"
-                      className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-red-700 hover:bg-gray-100 transition-all duration-200"
-                      onClick={handleCreateMaintenance}
-                    >
-                      <Wrench className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="z-[1100]">
-                    Maintenance
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </TooltipProvider>
+            <div className="flex gap-1">
+              <AppTooltip content="Work Tracker">
+                <button
+                  aria-label="Work Tracker"
+                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
+                  onClick={handleOpenWorkTracker}
+                >
+                  <Truck className="h-4 w-4" />
+                </button>
+              </AppTooltip>
+              <AppTooltip content="Create Event">
+                <button
+                  aria-label="Create Event"
+                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
+                  onClick={handleCreateEvent}
+                >
+                  <CalendarPlus className="h-4 w-4" />
+                </button>
+              </AppTooltip>
+              <AppTooltip content="Maintenance">
+                <button
+                  aria-label="Maintenance"
+                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-red-700 hover:bg-gray-100 transition-all duration-200"
+                  onClick={handleCreateMaintenance}
+                >
+                  <Wrench className="h-4 w-4" />
+                </button>
+              </AppTooltip>
+              <AppTooltip content="Create Sub-Rental">
+                <button
+                  aria-label="Create Sub-Rental"
+                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:bg-gray-100 transition-all duration-200"
+                  style={handshakeHover ? { color: subrentalHexColor } : undefined}
+                  onMouseEnter={() => setHandshakeHover(true)}
+                  onMouseLeave={() => setHandshakeHover(false)}
+                  onClick={handleCreateSubRental}
+                >
+                  <Handshake className="h-4 w-4" />
+                </button>
+              </AppTooltip>
+            </div>
           )}
           {isViewer && <div />}
 

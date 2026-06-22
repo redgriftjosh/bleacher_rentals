@@ -1,140 +1,141 @@
 import { describe, it, expect } from "vitest";
-import { canEditOwnedEntity } from "./canEditOwnedEntity";
+import { canEditOwnedEntity, canSendQuote } from "./canEditOwnedEntity";
 
 describe("canEditOwnedEntity (Events / MaintenanceEvents)", () => {
-  // ═══ Admin ═══
-
-  it("admin can edit any event", () => {
-    expect(
-      canEditOwnedEntity({
-        isAdmin: true,
-        isNew: false,
-        currentUserId: "admin-1",
-        ownerUserUuid: "other-user",
-      }),
-    ).toBe(true);
+  it("admin can always edit", () => {
+    expect(canEditOwnedEntity({ isAdmin: true, isNew: false })).toBe(true);
   });
 
-  it("admin can create new event", () => {
-    expect(
-      canEditOwnedEntity({
-        isAdmin: true,
-        isNew: true,
-        currentUserId: "admin-1",
-        ownerUserUuid: null,
-      }),
-    ).toBe(true);
+  it("admin can create", () => {
+    expect(canEditOwnedEntity({ isAdmin: true, isNew: true })).toBe(true);
   });
 
-  // ═══ AM: creating ═══
-
-  it("AM can create new event", () => {
-    expect(
-      canEditOwnedEntity({
-        isAdmin: false,
-        isNew: true,
-        currentUserId: "am-user-1",
-        ownerUserUuid: null,
-      }),
-    ).toBe(true);
+  it("AM can create (canCreate defaults true)", () => {
+    expect(canEditOwnedEntity({ isAdmin: false, isNew: true })).toBe(true);
   });
 
-  // ═══ AM: own event ═══
-
-  it("AM can edit own event (owner = self)", () => {
-    expect(
-      canEditOwnedEntity({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: "am-user-1",
-        ownerUserUuid: "am-user-1",
-      }),
-    ).toBe(true);
+  it("viewer cannot create (canCreate=false)", () => {
+    expect(canEditOwnedEntity({ isAdmin: false, isNew: true, canCreate: false })).toBe(false);
   });
 
-  // ═══ AM: someone else's event ═══
-
-  it("AM cannot edit event owned by another user", () => {
-    expect(
-      canEditOwnedEntity({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: "am-user-1",
-        ownerUserUuid: "am-user-2",
-      }),
-    ).toBe(false);
+  it("viewer cannot edit existing (canCreate=false)", () => {
+    expect(canEditOwnedEntity({ isAdmin: false, isNew: false, canCreate: false })).toBe(false);
   });
 
-  it("AM cannot edit event owned by admin", () => {
-    expect(
-      canEditOwnedEntity({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: "am-user-1",
-        ownerUserUuid: "admin-1",
-      }),
-    ).toBe(false);
+  describe("Lead AM", () => {
+    it("can edit any entity (lead in any zone = full access)", () => {
+      expect(
+        canEditOwnedEntity({
+          isAdmin: false,
+          isNew: false,
+          isAccountManager: true,
+          leadZoneIds: ["zone-a"],
+          accountManagerZoneIds: ["zone-a", "zone-b"],
+          createdByUserId: "other-user",
+          userId: "me",
+        }),
+      ).toBe(true);
+    });
   });
 
-  // ═══ Edge cases ═══
+  describe("Junior AM (no lead zones)", () => {
+    const base = {
+      isAdmin: false,
+      isNew: false,
+      isAccountManager: true,
+      leadZoneIds: [] as string[],
+      accountManagerZoneIds: ["zone-a", "zone-b"],
+    };
 
-  it("user with null userId cannot edit anything", () => {
-    expect(
-      canEditOwnedEntity({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: null,
-        ownerUserUuid: null,
-      }),
-    ).toBe(false);
+    it("can edit own entity", () => {
+      expect(
+        canEditOwnedEntity({ ...base, createdByUserId: "me", userId: "me" }),
+      ).toBe(true);
+    });
+
+    it("can edit entity assigned to them", () => {
+      expect(
+        canEditOwnedEntity({
+          ...base,
+          createdByUserId: "other-user",
+          assignedUserId: "me",
+          userId: "me",
+        }),
+      ).toBe(true);
+    });
+
+    it("cannot edit entity created by and assigned to someone else", () => {
+      expect(
+        canEditOwnedEntity({
+          ...base,
+          createdByUserId: "other-user",
+          assignedUserId: "other-user",
+          userId: "me",
+        }),
+      ).toBe(false);
+    });
+
+    it("cannot edit entity not assigned to them", () => {
+      expect(
+        canEditOwnedEntity({
+          ...base,
+          createdByUserId: "other-user",
+          userId: "me",
+        }),
+      ).toBe(false);
+    });
   });
 
-  it("new entity always editable even with null userId (canCreate defaults true)", () => {
-    expect(
-      canEditOwnedEntity({
-        isAdmin: false,
-        isNew: true,
-        currentUserId: null,
-        ownerUserUuid: null,
-      }),
-    ).toBe(true);
+  describe("AM without zones", () => {
+    it("cannot edit entity not assigned to them", () => {
+      expect(
+        canEditOwnedEntity({
+          isAdmin: false,
+          isNew: false,
+          isAccountManager: true,
+          leadZoneIds: [],
+          accountManagerZoneIds: [],
+          createdByUserId: "other-user",
+          userId: "me",
+        }),
+      ).toBe(false);
+    });
+
+    it("can edit entity assigned to them", () => {
+      expect(
+        canEditOwnedEntity({
+          isAdmin: false,
+          isNew: false,
+          isAccountManager: true,
+          leadZoneIds: [],
+          accountManagerZoneIds: [],
+          createdByUserId: "other-user",
+          assignedUserId: "me",
+          userId: "me",
+        }),
+      ).toBe(true);
+    });
   });
 
-  // ═══ Viewer (canCreate = false) ═══
+  it("non-AM without zone info can edit (backwards compat)", () => {
+    expect(canEditOwnedEntity({ isAdmin: false, isNew: false })).toBe(true);
+  });
+});
 
-  it("viewer cannot create new event (canCreate=false)", () => {
-    expect(
-      canEditOwnedEntity({
-        isAdmin: false,
-        isNew: true,
-        currentUserId: "viewer-1",
-        ownerUserUuid: null,
-        canCreate: false,
-      }),
-    ).toBe(false);
+describe("canSendQuote", () => {
+  it("admin can always send", () => {
+    expect(canSendQuote({ isAdmin: true, leadZoneIds: [] })).toBe(true);
   });
 
-  it("viewer cannot edit existing event owned by someone else", () => {
-    expect(
-      canEditOwnedEntity({
-        isAdmin: false,
-        isNew: false,
-        currentUserId: "viewer-1",
-        ownerUserUuid: "am-user-1",
-        canCreate: false,
-      }),
-    ).toBe(false);
+  it("lead AM can send (not zone-dependent)", () => {
+    expect(canSendQuote({ isAdmin: false, leadZoneIds: ["zone-a"] })).toBe(true);
   });
 
-  it("AM can create new event (canCreate=true)", () => {
-    expect(
-      canEditOwnedEntity({
-        isAdmin: false,
-        isNew: true,
-        currentUserId: "am-user-1",
-        ownerUserUuid: null,
-        canCreate: true,
-      }),
-    ).toBe(true);
+  it("junior AM cannot send", () => {
+    expect(canSendQuote({ isAdmin: false, leadZoneIds: [] })).toBe(false);
+  });
+
+  it("non-AM cannot send", () => {
+    expect(canSendQuote({ isAdmin: false, leadZoneIds: [] })).toBe(false);
   });
 });

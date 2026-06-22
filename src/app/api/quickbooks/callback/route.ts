@@ -1,5 +1,5 @@
-import { createOAuthClient, saveTokens } from "@/features/quickbooks-integration/util";
-import { setQboConnectionRealmId, deleteQboConnection } from "@/features/quickbooks-integration/db";
+import { createOAuthClient, saveTokens, getBaseUrl } from "@/features/quickbooks-integration/util";
+import { setQboConnectionRealmId, setQboConnectionCurrency, deleteQboConnection } from "@/features/quickbooks-integration/db";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -36,6 +36,36 @@ export async function GET(req: NextRequest) {
     }
 
     await saveTokens(connectionId, tokens);
+
+    // Fetch currency from QBO CompanyInfo
+    if (realmId && authResponse.token.access_token) {
+      try {
+        const baseUrl = getBaseUrl();
+        const url = `${baseUrl}/${realmId}/companyinfo/${realmId}?minorversion=40`;
+        const res = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${authResponse.token.access_token}`,
+            Accept: "application/json",
+          },
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const companyInfo = json?.CompanyInfo;
+          // QBO stores currency in Country or we can check the Currency preference
+          const currency =
+            companyInfo?.HomeCurrency?.value ??
+            companyInfo?.Currency?.value ??
+            (companyInfo?.Country === "CA" ? "CAD" :
+            companyInfo?.Country === "US" ? "USD" :
+            null);
+          if (currency) {
+            await setQboConnectionCurrency(connectionId, currency.toUpperCase());
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch QBO currency:", err);
+      }
+    }
 
     // Redirect back to the QuickBooks connections page
     return NextResponse.redirect(new URL("/quickbooks", req.url));

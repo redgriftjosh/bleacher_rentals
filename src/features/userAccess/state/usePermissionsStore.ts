@@ -8,6 +8,8 @@ type PermissionsState = {
   isAdmin: boolean;
   isAccountManager: boolean;
   accountManagerId: string | null;
+  accountManagerZoneIds: string[];
+  leadZoneIds: string[];
   userId: string | null;
 };
 
@@ -15,5 +17,7 @@ export const usePermissionsStore = create<PermissionsState>(() => ({
   isAdmin: false,
   isAccountManager: false,
   accountManagerId: null,
+  accountManagerZoneIds: [],
+  leadZoneIds: [],
   userId: null,
 }));
