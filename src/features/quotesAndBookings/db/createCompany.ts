@@ -1,5 +1,5 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database, TablesInsert } from "../../../../database.types";
+import { db } from "@/components/providers/SystemProvider";
+import { typedExecute } from "@/lib/powersync/typedQuery";
 import { AddressFields } from "../types/quoteTypes";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 
@@ -13,68 +13,50 @@ type CreateCompanyParams = {
   shippingSameAsBilling: boolean;
 };
 
-async function insertAddress(
-  address: AddressFields,
-  supabase: SupabaseClient<Database>,
-): Promise<string | null> {
-  if (!address.street && !address.city && !address.stateProvince) {
-    return null;
-  }
-
-  const newAddress: TablesInsert<"Addresses"> = {
-    street: address.street,
-    city: address.city,
-    state_province: address.stateProvince,
-    zip_postal: address.zipPostal || null,
-  };
-
-  const { data, error } = await supabase
-    .from("Addresses")
-    .insert(newAddress)
-    .select("id")
-    .single();
-
-  if (error || !data) {
-    createErrorToast(["Failed to insert address.", error?.message ?? ""]);
-  }
-
-  return data!.id;
+async function insertAddress(address: AddressFields): Promise<string | null> {
+  if (!address.street && !address.city && !address.stateProvince) return null;
+  const id = crypto.randomUUID();
+  await typedExecute(
+    db
+      .insertInto("Addresses")
+      .values({
+        id,
+        street: address.street || null,
+        city: address.city || null,
+        state_province: address.stateProvince || null,
+        zip_postal: address.zipPostal || null,
+      })
+      .compile(),
+  );
+  return id;
 }
 
-export async function createCompany(
-  params: CreateCompanyParams,
-  supabase: SupabaseClient<Database>,
-): Promise<string> {
-  // 1. Insert billing address
-  const billingAddressId = await insertAddress(params.billingAddress, supabase);
+export async function createCompany(params: CreateCompanyParams): Promise<string> {
+  try {
+    const billingAddressId = await insertAddress(params.billingAddress);
+    const shippingAddressId = params.shippingSameAsBilling
+      ? billingAddressId
+      : await insertAddress(params.shippingAddress);
 
-  // 2. Insert shipping address (or reuse billing)
-  let shippingAddressId: string | null = null;
-  if (params.shippingSameAsBilling) {
-    shippingAddressId = billingAddressId;
-  } else {
-    shippingAddressId = await insertAddress(params.shippingAddress, supabase);
+    const id = crypto.randomUUID();
+    await typedExecute(
+      db
+        .insertInto("Companies")
+        .values({
+          id,
+          company_name: params.companyName,
+          phone: params.phone || null,
+          email: params.email || null,
+          notes: params.notes || null,
+          billing_address_uuid: billingAddressId,
+          shipping_address_uuid: shippingAddressId,
+          deleted: 0,
+        })
+        .compile(),
+    );
+    return id;
+  } catch (e) {
+    createErrorToast(["Failed to create company.", e instanceof Error ? e.message : ""]);
+    throw e;
   }
-
-  // 3. Insert company
-  const newCompany: TablesInsert<"Companies"> = {
-    company_name: params.companyName,
-    phone: params.phone || null,
-    email: params.email || null,
-    notes: params.notes || null,
-    billing_address_uuid: billingAddressId,
-    shipping_address_uuid: shippingAddressId,
-  };
-
-  const { data, error } = await supabase
-    .from("Companies")
-    .insert(newCompany)
-    .select("id")
-    .single();
-
-  if (error || !data) {
-    createErrorToast(["Failed to create company.", error?.message ?? ""]);
-  }
-
-  return data!.id;
 }

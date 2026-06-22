@@ -29,6 +29,7 @@ import { TotalsMatch } from "@/features/workTrackers/components/TotalsMatch";
 import { DateTime } from "luxon";
 import { buildReleaseAllNotification } from "@/features/workTrackers/db/notifications";
 import { getDateRange } from "@/features/workTrackers/util";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 
 const getRandomLoadingMessage = () => {
   const messages = [
@@ -75,6 +76,8 @@ export default function WorkTrackersForUserPage() {
   });
 
   const dateRange = getDateRange(startDate);
+  const perms = usePermissionsStore();
+  const canReleaseAll = perms.isAdmin || perms.leadZoneIds.length > 0;
 
   const { data: draftTripCount = 0 } = useQuery({
     queryKey: ["draft-work-trackers-count", userUuid, startDate],
@@ -161,13 +164,15 @@ export default function WorkTrackersForUserPage() {
         >
           {isLoading ? getRandomLoadingMessage() : "Download PDF"}
         </button>
-        <button
-          onClick={() => setShowReleaseModal(true)}
-          className={`rounded px-4 py-2 flex items-center gap-2 ${WORKTRACKER_STATUS_COLORS.released.bg} border ${WORKTRACKER_STATUS_COLORS.released.border} ${WORKTRACKER_STATUS_COLORS.released.text} font-semibold shadow-md hover:opacity-80 transition cursor-pointer`}
-        >
-          <span className={`text-sm ${WORKTRACKER_STATUS_COLORS.released.text}`}>Release All</span>
-          <Send className={`h-4 w-4 ${WORKTRACKER_STATUS_COLORS.released.text}`} />
-        </button>
+        {canReleaseAll && (
+          <button
+            onClick={() => setShowReleaseModal(true)}
+            className={`rounded px-4 py-2 flex items-center gap-2 ${WORKTRACKER_STATUS_COLORS.released.bg} border ${WORKTRACKER_STATUS_COLORS.released.border} ${WORKTRACKER_STATUS_COLORS.released.text} font-semibold shadow-md hover:opacity-80 transition cursor-pointer`}
+          >
+            <span className={`text-sm ${WORKTRACKER_STATUS_COLORS.released.text}`}>Release All</span>
+            <Send className={`h-4 w-4 ${WORKTRACKER_STATUS_COLORS.released.text}`} />
+          </button>
+        )}
         {driverMeta && (
           <div className="flex items-center gap-2">
             <PaymentStatusButton driver={driverMeta} weekStart={startDate} weekEnd={weekEnd} />

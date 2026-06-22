@@ -20,6 +20,7 @@ export class FirstCellNotPinned extends HoverableBakedSprite {
     dimensions: { width: number; height: number },
     topOffset: number = 0,
     stripeHeight: number = dimensions.height,
+    isAccessible: boolean = true,
   ) {
     // Use the reusable HoverableBakedSprite with our content builder
     const spanCols = eventInfo.span ? eventInfo.span.end - eventInfo.span.start + 1 : 1;
@@ -27,16 +28,22 @@ export class FirstCellNotPinned extends HoverableBakedSprite {
 
     super(
       baker,
-      `FirstCellNotPinned:${eventInfo.span?.ev.eventUuid}:top${topOffset}:sh${stripeHeight}`,
+      `FirstCellNotPinned:${eventInfo.span?.ev.eventUuid}:top${topOffset}:sh${stripeHeight}:a${eventInfo.span?.ev.alertCount ?? 0}:${isAccessible ? "acc" : "noacc"}`,
       (container) => {
         // Build the event content (unmasked — full event body visible)
-        const eventCell = new EventBody(eventInfo, baker, dimensions, topOffset);
+        const eventCell = new EventBody(eventInfo, baker, dimensions, topOffset, isAccessible);
         container.addChild(eventCell);
 
         const spanWidth = eventInfo.span
           ? (eventInfo.span.end - eventInfo.span.start + 1) * CELL_WIDTH - 8
           : undefined;
-        const eventCellLabel = new PinnableSection(eventInfo.span!, app, baker, spanWidth);
+        const eventCellLabel = new PinnableSection(
+          eventInfo.span!,
+          app,
+          baker,
+          spanWidth,
+          isAccessible,
+        );
         eventCellLabel.position.y = topOffset + 4;
 
         // Mask only the label to its stripe so it doesn't bleed into shorter overlapping events

@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
+import { Dropdown } from "@/components/DropDown";
+import { useBleacherTypesActive } from "@/features/pricingMatrix/hooks/useBleacherTypesActive";
 import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
 import { fetchTakenBleacherNumbers, insertBleacher } from "../../db";
 import { checkInsertBleacherFormRules, feetAndInchesToInches } from "../../functions";
@@ -18,10 +20,12 @@ export function SheetAddBleacher() {
   const queryClient = useQueryClient();
 
   const homeBases = useHomeBases();
+  const { bleacherTypes } = useBleacherTypesActive();
 
   const [isOpen, setIsOpen] = useState(false);
   const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);
   const [rows, setRows] = useState<number | null>(null);
+  const [bleacherTypeUuid, setBleacherTypeUuid] = useState<string | null>(null);
   const [seats, setSeats] = useState<number | null>(null);
   const [hitchType, setHitchType] = useState<string | null>(null);
   const [vinNumber, setVinNumber] = useState<string | null>(null);
@@ -64,6 +68,7 @@ export function SheetAddBleacher() {
       setSummerAccountManagerUuid(null);
       setWinterAccountManagerUuid(null);
       setNvisPdfPath(null);
+      setBleacherTypeUuid(null);
     }
   }, [isOpen]);
 
@@ -111,6 +116,7 @@ export function SheetAddBleacher() {
           bleacher_number: bleacherNumber!,
           bleacher_rows: rows!,
           bleacher_seats: seats!,
+          bleacher_type_uuid: bleacherTypeUuid,
           hitch_type: hitchType,
           vin_number: vinNumber,
           tag_number: tagNumber,
@@ -212,6 +218,23 @@ export function SheetAddBleacher() {
                     onSelect={(e) => setRows(Number(e))}
                     value={rows ?? undefined}
                   />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Bleacher Type</label>
+                  <div className="col-span-3">
+                    <Dropdown
+                      options={[
+                        { label: "None", value: null },
+                        ...bleacherTypes.map((bt) => ({
+                          label: bt.name ?? `${bt.row_count}-Row`,
+                          value: bt.id,
+                        })),
+                      ]}
+                      selected={bleacherTypeUuid}
+                      onSelect={(v) => setBleacherTypeUuid(v)}
+                      placeholder="Select type (optional)"
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
                   <label htmlFor="name" className="text-right text-sm font-medium col-span-2">

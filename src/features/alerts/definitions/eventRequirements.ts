@@ -1,44 +1,161 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { AlertDefinition } from "../AlertDefinition";
-import { AlertEntityType, AlertPayload } from "../types";
-import { CurrentEventState } from "@/features/eventConfiguration/state/useCurrentEventStore";
-import { Database, Tables } from "../../../../database.types";
-import { eventEntityDescription } from "../util/eventEntityDescription";
-import { syncAlertsForEntity, deleteAlertsForEntity } from "../util/syncAlerts";
+"use client";
 
-type EventRequirementsContext = {
-  event: CurrentEventState;
-  bleachers: Tables<"Bleachers">[];
+import { AlertDefinition, AlertPayload, InMemoryAlertContext } from "../types";
+import { eventEntityDescription } from "../util/eventEntityDescription";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, typedGetAll } from "@/lib/powersync/typedQuery";
+
+const TITLE = "Event Requirements Not Met";
+
+type EventRow = {
+  event_name: string | null;
+  total_seats: number | null;
+  seven_row: number | null;
+  ten_row: number | null;
+  fifteen_row: number | null;
+  lenient: number | null;
+  street: string | null;
+  created_by_user_uuid: string | null;
 };
 
-/**
- * Fires when the bleachers assigned to an event don't satisfy the event's requirements.
- *
- * Two modes:
- *  - **Lenient** (`event.lenient = true`): the event specifies a total seat count.
- *    An alert is raised if the sum of seats across all assigned bleachers doesn't
- *    exactly equal `event.seats`.
- *
- *  - **Strict** (`event.lenient = false`): the event specifies exact counts of
- *    7-row, 10-row, and 15-row bleachers. An alert is raised for each row-type
- *    whose assigned count doesn't match the required count.
- *
- * One alert is produced per mismatch (lenient = at most one; strict = up to three).
- * The alert is scoped to the event and links back to it from the alerts dropdown.
- */
-class EventRequirementsDefinition extends AlertDefinition<EventRequirementsContext> {
-  readonly title = "Event Requirements Not Met";
+type AssignedBleacherRow = {
+  bleacher_seats: number | null;
+  bleacher_rows: number | null;
+  bleacher_type_uuid: string | null;
+};
 
-  evaluate({ event, bleachers }: EventRequirementsContext): AlertPayload[] {
+type LineItemRow = {
+  bleacher_type_uuid: string | null;
+  quantity: number | null;
+  type_name: string | null;
+};
+
+export const eventRequirements: AlertDefinition = {
+  title: TITLE,
+  entityType: "event",
+
+  async evaluate(eventUuid, _supabase) {
+    console.log("[QUOTE_TRIAGE] eventRequirements.evaluate called for", eventUuid);
+    const eventRows = await typedGetAll(
+      db
+        .selectFrom("Events as e")
+        .leftJoin("Addresses as a", "a.id", "e.address_uuid")
+        .select([
+          "e.event_name as event_name",
+          "e.total_seats as total_seats",
+          "e.seven_row as seven_row",
+          "e.ten_row as ten_row",
+          "e.fifteen_row as fifteen_row",
+          "e.lenient as lenient",
+          "a.street as street",
+          "e.created_by_user_uuid as created_by_user_uuid",
+        ])
+        .where("e.id", "=", eventUuid)
+        .where("e.deleted", "=", 0)
+        .limit(1)
+        .compile(),
+      expect<EventRow>(),
+    );
+
+    const event = eventRows[0];
+    console.log("[QUOTE_TRIAGE] eventRequirements event:", event ? JSON.stringify(event) : "NOT FOUND");
+    if (!event) return null;
+
+    const assignedRows = await typedGetAll(
+      db
+        .selectFrom("BleacherEvents as be")
+        .innerJoin("Bleachers as b", "b.id", "be.bleacher_uuid")
+        .select([
+          "b.bleacher_seats as bleacher_seats",
+          "b.bleacher_rows as bleacher_rows",
+          "b.bleacher_type_uuid as bleacher_type_uuid",
+        ])
+        .where("be.event_uuid", "=", eventUuid)
+        .compile(),
+      expect<AssignedBleacherRow>(),
+    );
+
+    const entityDescription = [event.event_name, event.street].filter(Boolean).join(" — ") || null;
+
+    let message: string | null = null;
+
+    if (event.lenient) {
+      if (!event.total_seats) return null;
+      const totalAssignedSeats = assignedRows.reduce((sum, b) => sum + (b.bleacher_seats ?? 0), 0);
+      if (totalAssignedSeats !== event.total_seats) {
+        message = `Seat mismatch: ${event.total_seats} required, ${totalAssignedSeats} assigned.`;
+      }
+    } else {
+      const lineItems = await typedGetAll(
+        db
+          .selectFrom("EventLineItems as li")
+          .leftJoin("BleacherTypes as bt", "bt.id", "li.bleacher_type_uuid")
+          .select([
+            "li.bleacher_type_uuid as bleacher_type_uuid",
+            "li.quantity as quantity",
+            "bt.name as type_name",
+          ])
+          .where("li.event_uuid", "=", eventUuid)
+          .where("li.deleted", "=", 0)
+          .compile(),
+        expect<LineItemRow>(),
+      );
+      console.log("[QUOTE_TRIAGE] eventRequirements lineItems:", lineItems.length, lineItems.map(li => `${li.type_name}:qty${li.quantity}:bt${li.bleacher_type_uuid}`));
+      console.log("[QUOTE_TRIAGE] eventRequirements assignedBleachers:", assignedRows.length, assignedRows.map(b => `type${b.bleacher_type_uuid}:rows${b.bleacher_rows}`));
+
+      if (lineItems.length > 0) {
+        const mismatches: string[] = [];
+        for (const item of lineItems) {
+          if (!item.bleacher_type_uuid || !item.quantity) continue;
+          const assigned = assignedRows.filter(
+            (b) => b.bleacher_type_uuid === item.bleacher_type_uuid,
+          ).length;
+          if (assigned !== item.quantity) {
+            mismatches.push(
+              `${item.type_name ?? "Unknown"}: ${item.quantity} needed, ${assigned} assigned`,
+            );
+          }
+        }
+        if (mismatches.length > 0) {
+          message = `Bleacher mismatch — ${mismatches.join(", ")}.`;
+        }
+      } else {
+        // Legacy fallback
+        const sevenRowRequired = event.seven_row ?? 0;
+        const tenRowRequired = event.ten_row ?? 0;
+        const fifteenRowRequired = event.fifteen_row ?? 0;
+
+        const sevenRowAssigned = assignedRows.filter((b) => b.bleacher_rows === 7).length;
+        const tenRowAssigned = assignedRows.filter((b) => b.bleacher_rows === 10).length;
+        const fifteenRowAssigned = assignedRows.filter((b) => b.bleacher_rows === 15).length;
+
+        const mismatches: string[] = [];
+        if (sevenRowAssigned !== sevenRowRequired)
+          mismatches.push(`7-row: ${sevenRowRequired} needed, ${sevenRowAssigned} assigned`);
+        if (tenRowAssigned !== tenRowRequired)
+          mismatches.push(`10-row: ${tenRowRequired} needed, ${tenRowAssigned} assigned`);
+        if (fifteenRowAssigned !== fifteenRowRequired)
+          mismatches.push(`15-row: ${fifteenRowRequired} needed, ${fifteenRowAssigned} assigned`);
+
+        if (mismatches.length > 0) {
+          message = `Bleacher mismatch — ${mismatches.join(", ")}.`;
+        }
+      }
+    }
+
+    if (!message) return null;
+    return { message, entityDescription };
+  },
+
+  evaluateInMemory({ event, allBleachers }: InMemoryAlertContext): AlertPayload[] {
     const alerts: AlertPayload[] = [];
-    const assignedBleachers = bleachers.filter((b) => event.bleacherUuids.includes(b.id));
-
+    const assignedBleachers = allBleachers.filter((b) => event.bleacherUuids.includes(b.id));
     const entityDescription = eventEntityDescription(event);
 
     const makeAlert = (message: string): AlertPayload => ({
       entity_uuid: event.eventUuid,
       entity_type: "event",
-      title: this.title,
+      title: TITLE,
       message,
       entity_description: entityDescription,
     });
@@ -52,52 +169,57 @@ class EventRequirementsDefinition extends AlertDefinition<EventRequirementsConte
         );
       }
     } else {
-      const sevenRowRequired = event.sevenRow ?? 0;
-      const tenRowRequired = event.tenRow ?? 0;
-      const fifteenRowRequired = event.fifteenRow ?? 0;
+      if (event.bleacherRequirements && event.bleacherRequirements.length > 0) {
+        const mismatches: string[] = [];
+        for (const req of event.bleacherRequirements) {
+          const assigned = assignedBleachers.filter(
+            (b) => b.bleacher_type_uuid === req.bleacherTypeUuid,
+          ).length;
+          if (assigned !== req.quantity) {
+            mismatches.push(`Type: ${req.quantity} needed, ${assigned} assigned`);
+          }
+        }
+        if (mismatches.length > 0) {
+          alerts.push(makeAlert(`Bleacher mismatch — ${mismatches.join(", ")}.`));
+        }
+      } else {
+        const sevenRowRequired = event.sevenRow ?? 0;
+        const tenRowRequired = event.tenRow ?? 0;
+        const fifteenRowRequired = event.fifteenRow ?? 0;
 
-      const sevenRowAssigned = assignedBleachers.filter((b) => b.bleacher_rows === 7).length;
-      const tenRowAssigned = assignedBleachers.filter((b) => b.bleacher_rows === 10).length;
-      const fifteenRowAssigned = assignedBleachers.filter((b) => b.bleacher_rows === 15).length;
+        const sevenRowAssigned = assignedBleachers.filter((b) => b.bleacher_rows === 7).length;
+        const tenRowAssigned = assignedBleachers.filter((b) => b.bleacher_rows === 10).length;
+        const fifteenRowAssigned = assignedBleachers.filter((b) => b.bleacher_rows === 15).length;
 
-      const mismatches: string[] = [];
-      if (sevenRowAssigned !== sevenRowRequired)
-        mismatches.push(`7-row: ${sevenRowRequired} needed, ${sevenRowAssigned} assigned`);
-      if (tenRowAssigned !== tenRowRequired)
-        mismatches.push(`10-row: ${tenRowRequired} needed, ${tenRowAssigned} assigned`);
-      if (fifteenRowAssigned !== fifteenRowRequired)
-        mismatches.push(`15-row: ${fifteenRowRequired} needed, ${fifteenRowAssigned} assigned`);
+        const mismatches: string[] = [];
+        if (sevenRowAssigned !== sevenRowRequired)
+          mismatches.push(`7-row: ${sevenRowRequired} needed, ${sevenRowAssigned} assigned`);
+        if (tenRowAssigned !== tenRowRequired)
+          mismatches.push(`10-row: ${tenRowRequired} needed, ${tenRowAssigned} assigned`);
+        if (fifteenRowAssigned !== fifteenRowRequired)
+          mismatches.push(`15-row: ${fifteenRowRequired} needed, ${fifteenRowAssigned} assigned`);
 
-      if (mismatches.length > 0) {
-        alerts.push(makeAlert(`Bleacher mismatch — ${mismatches.join(", ")}.`));
+        if (mismatches.length > 0) {
+          alerts.push(makeAlert(`Bleacher mismatch — ${mismatches.join(", ")}.`));
+        }
       }
     }
 
     return alerts;
-  }
+  },
 
-  async sync(
-    entityUuid: string,
-    entityType: AlertEntityType,
-    alerts: AlertPayload[],
-    saverUserUuid: string | null,
-    ownerUserUuid: string | null,
-    supabase: SupabaseClient<Database>,
-  ): Promise<void> {
-    await syncAlertsForEntity(
-      this.title,
-      entityUuid,
-      entityType,
-      alerts,
-      saverUserUuid,
-      ownerUserUuid,
-      supabase,
+  async recipients(eventUuid, _supabase) {
+    const rows = await typedGetAll(
+      db
+        .selectFrom("Events as e")
+        .select(["e.created_by_user_uuid as created_by_user_uuid"])
+        .where("e.id", "=", eventUuid)
+        .where("e.deleted", "=", 0)
+        .limit(1)
+        .compile(),
+      expect<{ created_by_user_uuid: string | null }>(),
     );
-  }
-
-  async delete(entityUuid: string, supabase: SupabaseClient<Database>): Promise<void> {
-    await deleteAlertsForEntity(this.title, entityUuid, supabase);
-  }
-}
-
-export const eventRequirements = new EventRequirementsDefinition();
+    const uuid = rows[0]?.created_by_user_uuid;
+    return uuid ? [uuid] : [];
+  },
+};

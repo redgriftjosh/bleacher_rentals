@@ -1,21 +1,24 @@
-import { Toggle } from "../../../../components/Toggle";
-import React from "react";
+import React, { useMemo } from "react";
+import { CheckCircle, TriangleAlert } from "lucide-react";
 import { Dropdown } from "@/components/DropDown";
 import { Textarea } from "@/components/TextArea";
 import { useCurrentEventStore } from "../../state/useCurrentEventStore";
-import { LenientSelections } from "../LenientSelections";
 import { EventStatus } from "@/features/dashboard/types";
 import CentsInput from "@/components/CentsInput";
+import { useBleacherTypesActive } from "@/features/pricingMatrix/hooks/useBleacherTypesActive";
+import { useBleacherMismatch } from "../../hooks/useBleacherMismatch";
 
 export const DetailsTab = () => {
   const contractRevenueCents = useCurrentEventStore((s) => s.contractRevenueCents);
   const setField = useCurrentEventStore((s) => s.setField);
   const selectedStatus = useCurrentEventStore((s) => s.selectedStatus);
-  const mustBeClean = useCurrentEventStore((s) => s.mustBeClean);
   const notes = useCurrentEventStore((s) => s.notes);
   const eventId = useCurrentEventStore((s) => s.eventUuid);
   const bookedAt = useCurrentEventStore((s) => s.bookedAt);
   const createdAt = useCurrentEventStore((s) => s.createdAt);
+  const bleacherRequirements = useCurrentEventStore((s) => s.bleacherRequirements);
+  const { bleacherTypes } = useBleacherTypesActive();
+  const { assignedCountByType } = useBleacherMismatch();
 
   const [revenueDisplay, setRevenueDisplay] = React.useState(
     contractRevenueCents !== null ? (contractRevenueCents / 100).toFixed(2) : "",
@@ -43,9 +46,67 @@ export const DetailsTab = () => {
   return (
     <div className="grid grid-cols-2 gap-4">
       <div>
-        <LenientSelections />
-        <div className="grid grid-cols-4 gap-4">
-          <div>
+        {/* Read-only bleacher requirements from line items */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-black/70 mb-1">
+            Bleacher Requirements
+          </label>
+          {bleacherRequirements.length === 0 ? (
+            <p className="text-sm text-black/40">No bleacher requirements set.</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {bleacherRequirements.map((req) => {
+                const bt = bleacherTypes.find((t) => t.id === req.bleacherTypeUuid);
+                const name =
+                  bt?.name ?? (bt?.row_count ? `${bt.row_count}-Row` : req.bleacherTypeUuid);
+                const assigned = assignedCountByType[req.bleacherTypeUuid] ?? 0;
+                const met = assigned === req.quantity;
+                return (
+                  <li
+                    key={req.bleacherTypeUuid}
+                    className="flex items-center justify-between text-sm rounded border border-gray-200 bg-gray-50 px-3 py-1.5"
+                  >
+                    <span className="font-medium text-gray-700">{name}</span>
+                    <span className="flex items-center gap-1.5 tabular-nums text-sm font-medium">
+                      <span className={met ? "text-green-700" : "text-red-600"}>
+                        {assigned} / {req.quantity}
+                      </span>
+                      {met ? (
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <TriangleAlert className="w-4 h-4 text-red-500" />
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
+              {Object.entries(assignedCountByType)
+                .filter(([typeUuid]) =>
+                  !bleacherRequirements.some((r) => r.bleacherTypeUuid === typeUuid),
+                )
+                .map(([typeUuid, count]) => {
+                  const bt = bleacherTypes.find((t) => t.id === typeUuid);
+                  const name =
+                    bt?.name ?? (bt?.row_count ? `${bt.row_count}-Row` : typeUuid);
+                  return (
+                    <li
+                      key={typeUuid}
+                      className="flex items-center justify-between text-sm rounded border border-amber-200 bg-amber-50 px-3 py-1.5"
+                    >
+                      <span className="font-medium text-gray-700">{name}</span>
+                      <span className="flex items-center gap-1.5 tabular-nums text-sm font-medium">
+                        <span className="text-amber-600">{count} / 0</span>
+                        <TriangleAlert className="w-4 h-4 text-amber-500" />
+                      </span>
+                    </li>
+                  );
+                })}
+            </ul>
+          )}
+        </div>
+
+        <div className="flex gap-4">
+          <div className="flex-1 min-w-0">
             <label className="block text-sm font-medium text-black/70">Status</label>
             <Dropdown
               options={[
@@ -59,7 +120,7 @@ export const DetailsTab = () => {
             />
           </div>
           {selectedStatus === "booked" && (
-            <div>
+            <div className="flex-1 min-w-0">
               <label className="block text-sm font-medium text-black/70">Booked At</label>
               <input
                 type="date"
@@ -71,7 +132,7 @@ export const DetailsTab = () => {
               />
             </div>
           )}
-          <div>
+          <div className="flex-1 min-w-0">
             <label className="block text-sm font-medium text-black/70">Created At</label>
             <input
               type="datetime-local"
@@ -82,7 +143,7 @@ export const DetailsTab = () => {
               }
             />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <label className="block text-sm font-medium text-black/70">Contract Revenue</label>
             <CentsInput
               value={revenueDisplay}
@@ -92,14 +153,6 @@ export const DetailsTab = () => {
               }}
               placeholder="0.00"
               className="w-full h-[40px] px-3 py-2 border bg-white rounded text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-            />
-          </div>
-          <div className="mt-2">
-            <Toggle
-              label="Must Be Clean"
-              tooltip={false}
-              checked={mustBeClean}
-              onChange={(e) => setField("mustBeClean", e)}
             />
           </div>
         </div>

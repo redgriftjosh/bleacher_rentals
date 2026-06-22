@@ -1,6 +1,7 @@
 import { DateTime } from "luxon";
 import { Bleacher, BleacherEvent } from "../types";
 import { CELL_HEIGHT } from "../values/constants";
+import { useAlertCountsStore } from "../state/useAlertCountsStore";
 
 export type EventSpanType = {
   start: number;
@@ -107,6 +108,13 @@ export class EventsUtil {
         eventName?: string;
         address?: string;
       } | null;
+      // Optional injection of a currently selected subrental event to preview
+      selectedSubrental?: {
+        subrentalEventUuid?: string | null;
+        bleacherUuid?: string | null;
+        eventStart: string;
+        eventEnd: string;
+      } | null;
     },
   ): { spansByRow: EventSpanType[][]; dateToIndex: Map<string, number> } {
     const dateToIndex = new Map(dates.map((d, i) => [d, i]));
@@ -131,6 +139,17 @@ export class EventsUtil {
     const selMaintStartCol =
       selMaintStartISO != null ? dateToIndex.get(selMaintStartISO) : undefined;
     const selMaintEndCol = selMaintEndISO != null ? dateToIndex.get(selMaintEndISO) : undefined;
+
+    const selRental = opts?.selectedSubrental;
+    const selRentalStartISO = selRental?.eventStart
+      ? DateTime.fromISO(selRental.eventStart).toISODate()
+      : null;
+    const selRentalEndISO = selRental?.eventEnd
+      ? DateTime.fromISO(selRental.eventEnd).toISODate()
+      : null;
+    const selRentalStartCol =
+      selRentalStartISO != null ? dateToIndex.get(selRentalStartISO) : undefined;
+    const selRentalEndCol = selRentalEndISO != null ? dateToIndex.get(selRentalEndISO) : undefined;
 
     const spansByRow = bleachers.map((bleacher, rowIndex) => {
       const spans: EventSpanType[] = [];
@@ -170,10 +189,19 @@ export class EventsUtil {
             // skip this original span; it will be injected below as selected
             continue;
           }
+          const alertState = useAlertCountsStore.getState();
+          const eventAlerts = alertState.byEventUuid.get(ev.eventUuid) ?? 0;
+          const beAlerts = alertState.byBleacherEventUuid.get(ev.bleacherEventUuid) ?? 0;
+          const totalAlerts = eventAlerts + beAlerts;
+          const enrichedEv = {
+            ...ev,
+            ...(hasDamage && { hasDamageAlert: true }),
+            ...(totalAlerts > 0 && { alertCount: totalAlerts }),
+          };
           spans.push({
             start: startCol,
             end: endCol,
-            ev: hasDamage ? { ...ev, hasDamageAlert: true } : ev,
+            ev: enrichedEv,
             rowIndex,
           });
         }
@@ -208,6 +236,41 @@ export class EventsUtil {
               booked: true,
               goodshuffleUrl: null,
               isMaintenance: true,
+            },
+            rowIndex,
+          });
+        }
+      }
+
+      // Add subrental events as spans
+      for (const sr of bleacher.subrentalEvents ?? []) {
+        // If editing this subrental, exclude its persisted span
+        if (
+          selRental?.subrentalEventUuid != null &&
+          sr.subrentalEventUuid === selRental.subrentalEventUuid
+        ) {
+          continue;
+        }
+        const startISO = DateTime.fromISO(sr.eventStart).toISODate();
+        const endISO = DateTime.fromISO(sr.eventEnd).toISODate();
+        if (!startISO || !endISO) continue;
+        const startCol = dateToIndex.get(startISO);
+        const endCol = dateToIndex.get(endISO);
+        if (startCol !== undefined && endCol !== undefined) {
+          spans.push({
+            start: startCol,
+            end: endCol,
+            ev: {
+              eventUuid: sr.subrentalEventUuid,
+              bleacherEventUuid: sr.subrentalEventUuid,
+              eventName: "Sub-Rental",
+              address: "",
+              eventStart: sr.eventStart,
+              eventEnd: sr.eventEnd,
+              hslHue: null,
+              booked: true,
+              goodshuffleUrl: null,
+              isSubrental: true,
             },
             rowIndex,
           });
@@ -259,6 +322,29 @@ export class EventsUtil {
           isSelected: true,
         } as any;
         spans.push({ start: selMaintStartCol, end: selMaintEndCol, ev, rowIndex });
+      }
+
+      // Inject a synthetic subrental preview span
+      if (
+        selRental &&
+        selRental.bleacherUuid === bleacher.bleacherUuid &&
+        selRentalStartCol !== undefined &&
+        selRentalEndCol !== undefined
+      ) {
+        const ev = {
+          eventUuid: selRental.subrentalEventUuid ?? "-1",
+          bleacherEventUuid: "-1",
+          eventName: "Sub-Rental",
+          address: "",
+          eventStart: selRental.eventStart,
+          eventEnd: selRental.eventEnd,
+          hslHue: null,
+          booked: true,
+          goodshuffleUrl: null,
+          isSubrental: true,
+          isSelected: true,
+        } as any;
+        spans.push({ start: selRentalStartCol, end: selRentalEndCol, ev, rowIndex });
       }
 
       // Sort spans by start column for consistent rendering

@@ -269,6 +269,28 @@ export function ContractTab({ quote }: { quote: QuoteDetail }) {
                 )}
               </>
             )}
+            {quote.financeContact && (
+              <>
+                <div className="mt-3">
+                  <span className="text-gray-500">Finance Contact:</span>{" "}
+                  <span className="font-medium text-darkBlue">
+                    {quote.financeContact.firstName} {quote.financeContact.lastName ?? ""}
+                  </span>
+                </div>
+                {quote.financeContact.email && (
+                  <div>
+                    <span className="text-gray-500">Email:</span>{" "}
+                    <span>{quote.financeContact.email}</span>
+                  </div>
+                )}
+                {quote.financeContact.phone && (
+                  <div>
+                    <span className="text-gray-500">Phone:</span>{" "}
+                    <span>{quote.financeContact.phone}</span>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

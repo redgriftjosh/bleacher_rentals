@@ -119,6 +119,100 @@ describe("getTitle", () => {
   });
 });
 
+// --- client event helpers (mirrored from LogTab.tsx) ---
+
+function isClientEvent(row: LogRow): boolean {
+  return row.action_type?.startsWith("client_") ?? false;
+}
+
+function getClientTitle(row: LogRow): string {
+  switch (row.action_type) {
+    case "client_page_view":
+      return `Viewed quote${row.next_value ? ` #${row.next_value}` : ""}`;
+    case "client_tab_change":
+      return `Navigated to "${row.next_value ?? ""}"`;
+    case "client_contract_signed":
+      return `Signed contract${row.next_value ? ` as "${row.next_value}"` : ""}`;
+    case "client_po_submitted":
+      return `Submitted PO #${row.next_value ?? ""}`;
+    case "client_payment_started":
+      return `Initiated payment${row.next_value ? ` of ${row.next_value}` : ""}`;
+    default:
+      return "Customer activity";
+  }
+}
+
+describe("isClientEvent", () => {
+  it("returns true for client_* action types", () => {
+    expect(isClientEvent(makeLog({ action_type: "client_page_view" }))).toBe(true);
+    expect(isClientEvent(makeLog({ action_type: "client_tab_change" }))).toBe(true);
+    expect(isClientEvent(makeLog({ action_type: "client_contract_signed" }))).toBe(true);
+    expect(isClientEvent(makeLog({ action_type: "client_po_submitted" }))).toBe(true);
+    expect(isClientEvent(makeLog({ action_type: "client_payment_started" }))).toBe(true);
+  });
+
+  it("returns false for internal action types", () => {
+    expect(isClientEvent(makeLog({ action_type: "create" }))).toBe(false);
+    expect(isClientEvent(makeLog({ action_type: "update" }))).toBe(false);
+    expect(isClientEvent(makeLog({ action_type: "sign" }))).toBe(false);
+    expect(isClientEvent(makeLog({ action_type: "send" }))).toBe(false);
+  });
+
+  it("returns false for null action_type", () => {
+    expect(isClientEvent(makeLog({ action_type: null }))).toBe(false);
+  });
+});
+
+describe("getClientTitle", () => {
+  it("shows invoice number in page_view", () => {
+    expect(getClientTitle(makeLog({ action_type: "client_page_view", next_value: "INV-2026-001" }))).toBe(
+      "Viewed quote #INV-2026-001",
+    );
+  });
+
+  it("omits invoice number when next_value is null", () => {
+    expect(getClientTitle(makeLog({ action_type: "client_page_view", next_value: null }))).toBe(
+      "Viewed quote",
+    );
+  });
+
+  it("shows destination tab in tab_change", () => {
+    expect(
+      getClientTitle(makeLog({ action_type: "client_tab_change", next_value: "Signed Contract" })),
+    ).toBe('Navigated to "Signed Contract"');
+  });
+
+  it("shows signer name in contract_signed", () => {
+    expect(
+      getClientTitle(makeLog({ action_type: "client_contract_signed", next_value: "Jane Smith" })),
+    ).toBe('Signed contract as "Jane Smith"');
+  });
+
+  it("contract_signed without name", () => {
+    expect(
+      getClientTitle(makeLog({ action_type: "client_contract_signed", next_value: null })),
+    ).toBe("Signed contract");
+  });
+
+  it("shows PO number in po_submitted", () => {
+    expect(
+      getClientTitle(makeLog({ action_type: "client_po_submitted", next_value: "PO-999" })),
+    ).toBe("Submitted PO #PO-999");
+  });
+
+  it("shows amount in payment_started", () => {
+    expect(
+      getClientTitle(makeLog({ action_type: "client_payment_started", next_value: "$1,500.00" })),
+    ).toBe("Initiated payment of $1,500.00");
+  });
+
+  it("returns 'Customer activity' for unknown client action type", () => {
+    expect(getClientTitle(makeLog({ action_type: "client_unknown_future_action" }))).toBe(
+      "Customer activity",
+    );
+  });
+});
+
 describe("formatValue", () => {
   it("returns '—' for null", () => {
     expect(formatValue(null)).toBe("—");

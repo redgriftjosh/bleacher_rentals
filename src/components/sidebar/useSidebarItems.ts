@@ -15,6 +15,8 @@ import {
   Settings,
   Building2,
   ScrollText,
+  DollarSign,
+  BookUser,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";
@@ -118,10 +120,10 @@ const ALL_ITEMS: SidebarItemConfig[] = [
   },
   {
     type: "button",
-    key: "sales-offices",
-    label: "Sales Offices",
-    href: "/sales-offices",
-    icon: Building2,
+    key: "companies-contacts",
+    label: "Companies & Contacts",
+    href: "/companies-contacts",
+    icon: BookUser,
   },
   {
     type: "section",
@@ -145,6 +147,20 @@ const ALL_ITEMS: SidebarItemConfig[] = [
       },
       {
         type: "button",
+        key: "quickbooks",
+        label: "QuickBooks",
+        href: "/quickbooks",
+        icon: QuickBooksIcon,
+      },
+      {
+        type: "button",
+        key: "pricing-matrix",
+        label: "Pricing Matrix",
+        href: "/pricing-matrix",
+        icon: DollarSign,
+      },
+      {
+        type: "button",
         key: "terms-and-conditions",
         label: "Terms & Conditions",
         href: "/terms-and-conditions",
@@ -152,10 +168,10 @@ const ALL_ITEMS: SidebarItemConfig[] = [
       },
       {
         type: "button",
-        key: "quickbooks",
-        label: "QuickBooks",
-        href: "/quickbooks",
-        icon: QuickBooksIcon,
+        key: "sales-offices",
+        label: "Sales Offices",
+        href: "/sales-offices",
+        icon: Building2,
       },
     ],
   },
@@ -181,6 +197,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
   admin: [
     "dashboard",
     "quotes-bookings",
+    "companies-contacts",
     "sales-offices",
     "team",
     "assets",
@@ -195,6 +212,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
   account_manager: [
     "dashboard",
     "quotes-bookings",
+    "companies-contacts",
     "sales-offices",
     "team",
     "assets",

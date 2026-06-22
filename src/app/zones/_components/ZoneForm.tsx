@@ -10,6 +10,7 @@ import { fetchQboConnections, QboConnection } from "@/features/quickbooks-integr
 import { useQuery } from "@tanstack/react-query";
 import { SelectZoneBleachers } from "./SelectZoneBleachers";
 import { SelectZoneAccountManagers } from "./SelectZoneAccountManagers";
+import { SelectLeadAccountManagers } from "./SelectLeadAccountManagers";
 import { SelectZoneDrivers } from "./SelectZoneDrivers";
 
 export type ZoneQboClassMapping = {
@@ -125,6 +126,7 @@ interface ZoneFormProps {
     bleacherUuids: string[],
     accountManagerUuids: string[],
     driverUuids: string[],
+    leadAccountManagerUuids: string[],
   ) => Promise<void>;
   onCancel: () => void;
   saving: boolean;
@@ -158,6 +160,9 @@ export function ZoneForm({ zone, unavailableRegions, onSave, onCancel, saving }:
   );
   const [accountManagerUuids, setAccountManagerUuids] = useState<string[]>(
     () => zone?.account_manager_uuids ?? [],
+  );
+  const [leadAccountManagerUuids, setLeadAccountManagerUuids] = useState<string[]>(
+    () => zone?.lead_account_manager_uuids ?? [],
   );
   const [driverUuids, setDriverUuids] = useState<string[]>(
     () => zone?.driver_uuids ?? [],
@@ -204,6 +209,7 @@ export function ZoneForm({ zone, unavailableRegions, onSave, onCancel, saving }:
       bleacherUuids,
       accountManagerUuids,
       driverUuids,
+      leadAccountManagerUuids.filter((id) => accountManagerUuids.includes(id)),
     );
   };
 
@@ -277,9 +283,23 @@ export function ZoneForm({ zone, unavailableRegions, onSave, onCancel, saving }:
             <p className="text-sm font-medium text-gray-700">Account Managers</p>
             <SelectZoneAccountManagers
               selectedAccountManagerUuids={accountManagerUuids}
-              onChange={setAccountManagerUuids}
+              onChange={(uuids) => {
+                setAccountManagerUuids(uuids);
+                setLeadAccountManagerUuids((prev) => prev.filter((id) => uuids.includes(id)));
+              }}
             />
           </div>
+
+          {accountManagerUuids.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-gray-700">Lead Account Managers</p>
+              <SelectLeadAccountManagers
+                accountManagerUuids={accountManagerUuids}
+                selectedLeadUuids={leadAccountManagerUuids}
+                onChange={setLeadAccountManagerUuids}
+              />
+            </div>
+          )}
 
           <div className="space-y-3">
             <p className="text-sm font-medium text-gray-700">Drivers</p>

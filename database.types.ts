@@ -43,18 +43,21 @@ export type Database = {
           account_manager_uuid: string
           created_at: string
           id: string
+          is_lead: boolean
           zone_uuid: string
         }
         Insert: {
           account_manager_uuid: string
           created_at?: string
           id?: string
+          is_lead?: boolean
           zone_uuid: string
         }
         Update: {
           account_manager_uuid?: string
           created_at?: string
           id?: string
+          is_lead?: boolean
           zone_uuid?: string
         }
         Relationships: [
@@ -361,6 +364,7 @@ export type Database = {
           deleted: boolean
           id: string
           name: string
+          roof_type: Database["public"]["Enums"]["roof_type"]
           row_count: number
         }
         Insert: {
@@ -369,6 +373,7 @@ export type Database = {
           deleted?: boolean
           id?: string
           name: string
+          roof_type?: Database["public"]["Enums"]["roof_type"]
           row_count: number
         }
         Update: {
@@ -377,6 +382,7 @@ export type Database = {
           deleted?: boolean
           id?: string
           name?: string
+          roof_type?: Database["public"]["Enums"]["roof_type"]
           row_count?: number
         }
         Relationships: [
@@ -1393,6 +1399,7 @@ export type Database = {
           event_type_uuid: string | null
           external_notes: string | null
           fifteen_row: number | null
+          finance_contact_uuid: string | null
           goodshuffle_url: string | null
           hsl_hue: number | null
           id: string
@@ -1428,6 +1435,7 @@ export type Database = {
           event_type_uuid?: string | null
           external_notes?: string | null
           fifteen_row?: number | null
+          finance_contact_uuid?: string | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
           id?: string
@@ -1463,6 +1471,7 @@ export type Database = {
           event_type_uuid?: string | null
           external_notes?: string | null
           fifteen_row?: number | null
+          finance_contact_uuid?: string | null
           goodshuffle_url?: string | null
           hsl_hue?: number | null
           id?: string
@@ -1510,6 +1519,13 @@ export type Database = {
             columns: ["event_type_uuid"]
             isOneToOne: false
             referencedRelation: "EventTypes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Events_finance_contact_uuid_fkey"
+            columns: ["finance_contact_uuid"]
+            isOneToOne: false
+            referencedRelation: "Contacts"
             referencedColumns: ["id"]
           },
           {
@@ -2039,6 +2055,7 @@ export type Database = {
       }
       QboConnections: {
         Row: {
+          currency: string | null
           display_name: string
           encrypted_token_value: string
           id: string
@@ -2046,6 +2063,7 @@ export type Database = {
           realm_id: string | null
         }
         Insert: {
+          currency?: string | null
           display_name: string
           encrypted_token_value: string
           id?: string
@@ -2053,6 +2071,7 @@ export type Database = {
           realm_id?: string | null
         }
         Update: {
+          currency?: string | null
           display_name?: string
           encrypted_token_value?: string
           id?: string
@@ -2596,6 +2615,63 @@ export type Database = {
             columns: ["account_manager_uuid"]
             isOneToOne: true
             referencedRelation: "AccountManagers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      SubrentalEvents: {
+        Row: {
+          bleacher_uuid: string | null
+          created_at: string
+          created_by_user_uuid: string | null
+          event_end: string
+          event_start: string
+          id: string
+          notes: string | null
+          requested_zone_uuid: string | null
+          reviewed_at: string | null
+          reviewed_by_user_uuid: string | null
+          status: Database["public"]["Enums"]["bleacher_subrental_status"]
+        }
+        Insert: {
+          bleacher_uuid?: string | null
+          created_at?: string
+          created_by_user_uuid?: string | null
+          event_end: string
+          event_start: string
+          id?: string
+          notes?: string | null
+          requested_zone_uuid?: string | null
+          reviewed_at?: string | null
+          reviewed_by_user_uuid?: string | null
+          status?: Database["public"]["Enums"]["bleacher_subrental_status"]
+        }
+        Update: {
+          bleacher_uuid?: string | null
+          created_at?: string
+          created_by_user_uuid?: string | null
+          event_end?: string
+          event_start?: string
+          id?: string
+          notes?: string | null
+          requested_zone_uuid?: string | null
+          reviewed_at?: string | null
+          reviewed_by_user_uuid?: string | null
+          status?: Database["public"]["Enums"]["bleacher_subrental_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subrental_events_bleacher_uuid_fkey"
+            columns: ["bleacher_uuid"]
+            isOneToOne: false
+            referencedRelation: "Bleachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subrental_events_requested_zone_uuid_fkey"
+            columns: ["requested_zone_uuid"]
+            isOneToOne: false
+            referencedRelation: "Zones"
             referencedColumns: ["id"]
           },
         ]
@@ -3341,8 +3417,9 @@ export type Database = {
       }
     }
     Enums: {
-      alert_entity_type: "event"
+      alert_entity_type: "event" | "bleacher_event" | "work_tracker"
       bleacher_opening_dir: "driver" | "passenger"
+      bleacher_subrental_status: "pending" | "accepted" | "denied"
       bluebook_region: "CAN" | "US" | "Both"
       contract_signature_status: "active" | "invalidated"
       currency: "USD" | "CAD"
@@ -3359,6 +3436,7 @@ export type Database = {
         | "in_progress"
         | "completed"
       roadmap_task_status: "to_do" | "in_progress" | "completed"
+      roof_type: "canopy" | "none"
       task_status:
         | "in_progress"
         | "backlog"
@@ -3510,8 +3588,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      alert_entity_type: ["event"],
+      alert_entity_type: ["event", "bleacher_event", "work_tracker"],
       bleacher_opening_dir: ["driver", "passenger"],
+      bleacher_subrental_status: ["pending", "accepted", "denied"],
       bluebook_region: ["CAN", "US", "Both"],
       contract_signature_status: ["active", "invalidated"],
       currency: ["USD", "CAD"],
@@ -3529,6 +3608,7 @@ export const Constants = {
         "completed",
       ],
       roadmap_task_status: ["to_do", "in_progress", "completed"],
+      roof_type: ["canopy", "none"],
       task_status: [
         "in_progress",
         "backlog",

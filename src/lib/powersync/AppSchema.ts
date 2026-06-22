@@ -69,10 +69,19 @@ const Bleachers = new Table(BleachersCols, {
   },
 });
 
+const ZonesCols = {
+  created_at: column.text,
+  display_name: column.text,
+  description: column.text,
+  photo_path: column.text,
+} satisfies PowerSyncColsFor<"Zones">;
+const Zones = new Table(ZonesCols);
+
 const AccountManagerZonesCols = {
   created_at: column.text,
   account_manager_uuid: column.text,
   zone_uuid: column.text,
+  is_lead: column.integer,
 } satisfies PowerSyncColsFor<"AccountManagerZones">;
 const AccountManagerZones = new Table(AccountManagerZonesCols, {
   indexes: {
@@ -150,6 +159,7 @@ const EventsCols = {
   terms_and_conditions_uuid: column.text,
   tax_percent: column.real,
   tax_amount_cents: column.integer,
+  finance_contact_uuid: column.text,
 } satisfies PowerSyncColsFor<"Events">;
 const Events = new Table(EventsCols, {
   indexes: {
@@ -640,6 +650,7 @@ const BleacherTypesCols = {
   created_by_user_uuid: column.text,
   deleted: column.integer,
   name: column.text,
+  roof_type: column.text,
   row_count: column.integer,
 } satisfies PowerSyncColsFor<"BleacherTypes">;
 const BleacherTypes = new Table(BleacherTypesCols);
@@ -876,10 +887,32 @@ const SalesOffices = new Table(SalesOfficesCols, {
   indexes: { address_uuid: ["address_uuid"] },
 });
 
+const SubrentalEventsCols = {
+  created_at: column.text,
+  event_start: column.text,
+  event_end: column.text,
+  notes: column.text,
+  created_by_user_uuid: column.text,
+  status: column.text,
+  requested_zone_uuid: column.text,
+  bleacher_uuid: column.text,
+  reviewed_by_user_uuid: column.text,
+  reviewed_at: column.text,
+} satisfies PowerSyncColsFor<"SubrentalEvents">;
+const SubrentalEvents = new Table(SubrentalEventsCols, {
+  indexes: {
+    bleacher_uuid: ["bleacher_uuid"],
+    requested_zone_uuid: ["requested_zone_uuid"],
+    created_by_user_uuid: ["created_by_user_uuid"],
+    status: ["status"],
+  },
+});
+
 export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
   AccountManagerZones,
+  Zones,
   Developers,
   DashboardFilterSettings,
   DriverUnavailability,
@@ -937,6 +970,7 @@ export const AppSchema = new Schema({
   TermsAndConditions,
   ContractSignatures,
   EventFiles,
+  SubrentalEvents,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
@@ -944,6 +978,7 @@ export type BlocksRecord = PowerSyncDB["Blocks"];
 export type AddressRecord = PowerSyncDB["Addresses"];
 export type AccountManagerRecord = PowerSyncDB["AccountManagers"];
 export type AccountManagerZonesRecord = PowerSyncDB["AccountManagerZones"];
+export type ZonesRecord = PowerSyncDB["Zones"];
 export type DeveloperRecord = PowerSyncDB["Developers"];
 export type DashboardFilterSettingsRecord = PowerSyncDB["DashboardFilterSettings"];
 export type TaskRecord = PowerSyncDB["Tasks"];
@@ -965,6 +1000,7 @@ export type WorkTrackerInspectionsRecord = PowerSyncDB["WorkTrackerInspections"]
 export type InspectionQuestionsRecord = PowerSyncDB["InspectionQuestions"];
 export type DamageReportsRecord = PowerSyncDB["DamageReports"];
 export type MaintenanceEventsRecord = PowerSyncDB["MaintenanceEvents"];
+export type SubrentalEventsRecord = PowerSyncDB["SubrentalEvents"];
 export type BleacherMaintEventsRecord = PowerSyncDB["BleacherMaintEvents"];
 export type DriverScorecardStatsPerDriverRecord = PowerSyncDB["DriverScorecardStatsPerDriver"];
 export type DriverScoreCardStatsRecord = PowerSyncDB["DriverScoreCardStats"];

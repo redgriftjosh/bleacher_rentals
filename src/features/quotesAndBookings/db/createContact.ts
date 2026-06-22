@@ -1,5 +1,5 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database, TablesInsert } from "../../../../database.types";
+import { db } from "@/components/providers/SystemProvider";
+import { typedExecute } from "@/lib/powersync/typedQuery";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 
 type CreateContactParams = {
@@ -11,28 +11,27 @@ type CreateContactParams = {
   companyUuid: string | null;
 };
 
-export async function createContact(
-  params: CreateContactParams,
-  supabase: SupabaseClient<Database>,
-): Promise<string> {
-  const newContact: TablesInsert<"Contacts"> = {
-    first_name: params.firstName,
-    last_name: params.lastName || null,
-    phone: params.phone || null,
-    email: params.email || null,
-    notes: params.notes || null,
-    company_uuid: params.companyUuid,
-  };
-
-  const { data, error } = await supabase
-    .from("Contacts")
-    .insert(newContact)
-    .select("id")
-    .single();
-
-  if (error || !data) {
-    createErrorToast(["Failed to create contact.", error?.message ?? ""]);
+export async function createContact(params: CreateContactParams): Promise<string> {
+  try {
+    const id = crypto.randomUUID();
+    await typedExecute(
+      db
+        .insertInto("Contacts")
+        .values({
+          id,
+          first_name: params.firstName,
+          last_name: params.lastName || null,
+          phone: params.phone || null,
+          email: params.email || null,
+          notes: params.notes || null,
+          company_uuid: params.companyUuid,
+          deleted: 0,
+        })
+        .compile(),
+    );
+    return id;
+  } catch (e) {
+    createErrorToast(["Failed to create contact.", e instanceof Error ? e.message : ""]);
+    throw e;
   }
-
-  return data!.id;
 }

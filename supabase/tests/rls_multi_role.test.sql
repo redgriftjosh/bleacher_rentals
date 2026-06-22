@@ -536,14 +536,10 @@ BEGIN
     VALUES ('AM New Event', '2026-08-01', '2026-08-01', false, false, user_am);
     RAISE NOTICE 'TEST G2 (AM → Events INSERT own) ✓';
 
-    -- TEST G3: AM CANNOT insert event with other user as owner
-    BEGIN
-      INSERT INTO public."Events" (event_name, event_start, event_end, lenient, must_be_clean, created_by_user_uuid)
-      VALUES ('Fake Event', '2026-09-01', '2026-09-01', false, false, user_admin);
-      ASSERT false, 'G3 AM insert event for other should have failed';
-    EXCEPTION WHEN insufficient_privilege THEN
-      RAISE NOTICE 'TEST G3 (AM → Events INSERT for other blocked) ✓';
-    END;
+    -- TEST G3: AM CAN insert event with other user as owner (RLS relaxed to allow AM full CRUD)
+    INSERT INTO public."Events" (event_name, event_start, event_end, lenient, must_be_clean, created_by_user_uuid)
+    VALUES ('Fake Event', '2026-09-01', '2026-09-01', false, false, user_admin);
+    RAISE NOTICE 'TEST G3 (AM → Events INSERT for other allowed) ✓';
 
     -- TEST G4: AM CAN update own event
     UPDATE public."Events" SET event_name = 'Updated Own Event' WHERE id = event_own;
@@ -552,12 +548,12 @@ BEGIN
       format('G4 AM update own event: expected 1, got %s', v_count);
     RAISE NOTICE 'TEST G4 (AM → Events UPDATE own) ✓';
 
-    -- TEST G5: AM CANNOT update other's event
+    -- TEST G5: AM CAN update other's event (RLS relaxed to allow AM full CRUD)
     UPDATE public."Events" SET event_name = 'Hacked' WHERE id = event_other;
     GET DIAGNOSTICS v_count = ROW_COUNT;
-    ASSERT v_count = 0,
-      format('G5 AM update other event: expected 0, got %s', v_count);
-    RAISE NOTICE 'TEST G5 (AM → Events UPDATE other blocked) ✓';
+    ASSERT v_count = 1,
+      format('G5 AM update other event: expected 1, got %s', v_count);
+    RAISE NOTICE 'TEST G5 (AM → Events UPDATE other allowed) ✓';
 
     -- TEST G6: AM CAN delete own event
     -- (create a throwaway event to delete)
@@ -575,12 +571,24 @@ BEGIN
       RAISE NOTICE 'TEST G6 (AM → Events DELETE own) ✓';
     END;
 
-    -- TEST G7: AM CANNOT delete other's event
-    DELETE FROM public."Events" WHERE id = event_other;
-    GET DIAGNOSTICS v_count = ROW_COUNT;
-    ASSERT v_count = 0,
-      format('G7 AM delete other event: expected 0, got %s', v_count);
-    RAISE NOTICE 'TEST G7 (AM → Events DELETE other blocked) ✓';
+    -- TEST G7: AM CAN delete other's event (RLS relaxed to allow AM full CRUD)
+    -- Create a separate event for G7 so we don't delete the one used in G8
+    DECLARE
+      event_to_delete_other UUID;
+    BEGIN
+      RESET ROLE;
+      INSERT INTO public."Events" (event_name, event_start, event_end, lenient, must_be_clean, created_by_user_uuid)
+      VALUES ('Delete Other', '2026-10-15', '2026-10-15', false, false, user_admin)
+      RETURNING id INTO event_to_delete_other;
+      SET LOCAL ROLE authenticated;
+      PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
+
+      DELETE FROM public."Events" WHERE id = event_to_delete_other;
+      GET DIAGNOSTICS v_count = ROW_COUNT;
+      ASSERT v_count = 1,
+        format('G7 AM delete other event: expected 1, got %s', v_count);
+      RAISE NOTICE 'TEST G7 (AM → Events DELETE other allowed) ✓';
+    END;
 
     -- TEST G8: Admin CAN update any event
     PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
@@ -668,32 +676,20 @@ BEGIN
         RETURNING id INTO be_id;
         RAISE NOTICE 'TEST H1 (AM → BleacherEvents INSERT own event + own bleacher) ✓';
 
-        -- TEST H2: AM CANNOT insert BleacherEvent for other's event
-        BEGIN
-          INSERT INTO public."BleacherEvents" (event_uuid, bleacher_uuid)
-          VALUES (event_other, bleacher_own);
-          ASSERT false, 'H2 AM insert BE for other event should have failed';
-        EXCEPTION WHEN insufficient_privilege THEN
-          RAISE NOTICE 'TEST H2 (AM → BleacherEvents INSERT other event blocked) ✓';
-        END;
+        -- TEST H2: AM CAN insert BleacherEvent for other's event (RLS relaxed to allow AM full CRUD)
+        INSERT INTO public."BleacherEvents" (event_uuid, bleacher_uuid)
+        VALUES (event_other, bleacher_own);
+        RAISE NOTICE 'TEST H2 (AM → BleacherEvents INSERT other event allowed) ✓';
 
-        -- TEST H3: AM CANNOT insert BleacherEvent for own event + other's bleacher
-        BEGIN
-          INSERT INTO public."BleacherEvents" (event_uuid, bleacher_uuid)
-          VALUES (event_own, bleacher_other);
-          ASSERT false, 'H3 AM insert BE for other bleacher should have failed';
-        EXCEPTION WHEN insufficient_privilege THEN
-          RAISE NOTICE 'TEST H3 (AM → BleacherEvents INSERT other bleacher blocked) ✓';
-        END;
+        -- TEST H3: AM CAN insert BleacherEvent for own event + other's bleacher (RLS relaxed)
+        INSERT INTO public."BleacherEvents" (event_uuid, bleacher_uuid)
+        VALUES (event_own, bleacher_other);
+        RAISE NOTICE 'TEST H3 (AM → BleacherEvents INSERT other bleacher allowed) ✓';
 
-        -- TEST H4: AM CANNOT insert BleacherEvent for own event + unassigned bleacher
-        BEGIN
-          INSERT INTO public."BleacherEvents" (event_uuid, bleacher_uuid)
-          VALUES (event_own, bleacher_none);
-          ASSERT false, 'H4 AM insert BE for unassigned bleacher should have failed';
-        EXCEPTION WHEN insufficient_privilege THEN
-          RAISE NOTICE 'TEST H4 (AM → BleacherEvents INSERT unassigned bleacher blocked) ✓';
-        END;
+        -- TEST H4: AM CAN insert BleacherEvent for own event + unassigned bleacher (RLS relaxed)
+        INSERT INTO public."BleacherEvents" (event_uuid, bleacher_uuid)
+        VALUES (event_own, bleacher_none);
+        RAISE NOTICE 'TEST H4 (AM → BleacherEvents INSERT unassigned bleacher allowed) ✓';
 
         -- TEST H5: AM CAN update BleacherEvent for own event + own bleacher
         UPDATE public."BleacherEvents" SET setup_confirmed = true WHERE id = be_id;
@@ -709,7 +705,7 @@ BEGIN
           format('H6 AM delete own BE: expected 1, got %s', v_count);
         RAISE NOTICE 'TEST H6 (AM → BleacherEvents DELETE own event) ✓';
 
-        -- TEST H7: AM CANNOT delete BleacherEvent from other's event
+        -- TEST H7: AM CAN delete BleacherEvent from other's event (RLS relaxed to allow AM full CRUD)
         RESET ROLE;
         DECLARE
           be_other UUID;
@@ -723,9 +719,9 @@ BEGIN
 
           DELETE FROM public."BleacherEvents" WHERE id = be_other;
           GET DIAGNOSTICS v_count = ROW_COUNT;
-          ASSERT v_count = 0,
-            format('H7 AM delete other BE: expected 0, got %s', v_count);
-          RAISE NOTICE 'TEST H7 (AM → BleacherEvents DELETE other event blocked) ✓';
+          ASSERT v_count = 1,
+            format('H7 AM delete other BE: expected 1, got %s', v_count);
+          RAISE NOTICE 'TEST H7 (AM → BleacherEvents DELETE other event allowed) ✓';
 
           -- TEST H8: Admin CAN insert BleacherEvent for any event + any bleacher
           PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
@@ -734,11 +730,23 @@ BEGIN
           RAISE NOTICE 'TEST H8 (admin → BleacherEvents INSERT any) ✓';
 
           -- TEST H9: Admin CAN delete any BleacherEvent
-          DELETE FROM public."BleacherEvents" WHERE id = be_other;
-          GET DIAGNOSTICS v_count = ROW_COUNT;
-          ASSERT v_count = 1,
-            format('H9 admin delete any BE: expected 1, got %s', v_count);
-          RAISE NOTICE 'TEST H9 (admin → BleacherEvents DELETE any) ✓';
+          -- Create a separate BE for admin to delete
+          DECLARE
+            be_admin_del UUID;
+          BEGIN
+            RESET ROLE;
+            INSERT INTO public."BleacherEvents" (event_uuid, bleacher_uuid)
+            VALUES (event_own, bleacher_none)
+            RETURNING id INTO be_admin_del;
+            SET LOCAL ROLE authenticated;
+            PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
+
+            DELETE FROM public."BleacherEvents" WHERE id = be_admin_del;
+            GET DIAGNOSTICS v_count = ROW_COUNT;
+            ASSERT v_count = 1,
+              format('H9 admin delete any BE: expected 1, got %s', v_count);
+            RAISE NOTICE 'TEST H9 (admin → BleacherEvents DELETE any) ✓';
+          END;
 
           -- TEST H10: Viewer CAN select BleacherEvents
           PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_viewer)::text, true);
@@ -861,14 +869,10 @@ BEGIN
     VALUES ('2026-08-04', user_am, driver_other_i, bleacher_own_i);
     RAISE NOTICE 'TEST I5 (AM → WorkTrackers INSERT other driver on own bleacher) ✓';
 
-    -- TEST I6: AM CANNOT insert WorkTracker with other AM's bleacher
-    BEGIN
-      INSERT INTO public."WorkTrackers" (date, created_by_user_uuid, driver_uuid, bleacher_uuid)
-      VALUES ('2026-08-05', user_am, driver_own_i, bleacher_other_i);
-      ASSERT false, 'I6 AM insert WT with other bleacher should have failed';
-    EXCEPTION WHEN insufficient_privilege THEN
-      RAISE NOTICE 'TEST I6 (AM → WorkTrackers INSERT other AM bleacher blocked) ✓';
-    END;
+    -- TEST I6: AM CAN insert WorkTracker with other AM's bleacher (role-only RLS)
+    INSERT INTO public."WorkTrackers" (date, created_by_user_uuid, driver_uuid, bleacher_uuid)
+    VALUES ('2026-08-05', user_am, driver_own_i, bleacher_other_i);
+    RAISE NOTICE 'TEST I6 (AM → WorkTrackers INSERT other AM bleacher) ✓';
 
     -- TEST I7: AM CAN update own WorkTracker (created_by = self)
     UPDATE public."WorkTrackers" SET notes = 'Updated' WHERE id = wt_own;
@@ -884,20 +888,19 @@ BEGIN
       format('I8 AM update WT no driver (created_by self): expected 1, got %s', v_count);
     RAISE NOTICE 'TEST I8 (AM → WorkTrackers UPDATE no-driver own) ✓';
 
-    -- TEST I9: AM CANNOT update other AM's WorkTracker
+    -- TEST I9: AM CAN update other AM's WorkTracker (role-only RLS)
     UPDATE public."WorkTrackers" SET notes = 'Hacked' WHERE id = wt_other;
     GET DIAGNOSTICS v_count = ROW_COUNT;
-    ASSERT v_count = 0,
-      format('I9 AM update other WT: expected 0, got %s', v_count);
-    RAISE NOTICE 'TEST I9 (AM → WorkTrackers UPDATE other blocked) ✓';
+    ASSERT v_count = 1,
+      format('I9 AM update other WT: expected 1, got %s', v_count);
+    RAISE NOTICE 'TEST I9 (AM → WorkTrackers UPDATE other) ✓';
 
-    -- TEST I10: AM CANNOT update own WT to use other AM's bleacher (WITH CHECK)
-    BEGIN
-      UPDATE public."WorkTrackers" SET bleacher_uuid = bleacher_other_i WHERE id = wt_own;
-      ASSERT false, 'I10 AM update WT bleacher to other should have failed';
-    EXCEPTION WHEN insufficient_privilege THEN
-      RAISE NOTICE 'TEST I10 (AM → WorkTrackers UPDATE bleacher to other blocked) ✓';
-    END;
+    -- TEST I10: AM CAN update own WT to use other AM's bleacher (role-only RLS)
+    UPDATE public."WorkTrackers" SET bleacher_uuid = bleacher_other_i WHERE id = wt_own;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    ASSERT v_count = 1,
+      format('I10 AM update WT bleacher to other: expected 1, got %s', v_count);
+    RAISE NOTICE 'TEST I10 (AM → WorkTrackers UPDATE bleacher to other) ✓';
 
     -- TEST I11: AM CAN update own WT to use other AM's driver (policy only checks bleacher)
     UPDATE public."WorkTrackers" SET driver_uuid = driver_other_i WHERE id = wt_own;
@@ -940,12 +943,23 @@ BEGIN
       format('I12 AM delete own WT: expected 1, got %s', v_count);
     RAISE NOTICE 'TEST I12 (AM → WorkTrackers DELETE own) ✓';
 
-    -- TEST I13: AM CANNOT delete other AM's WorkTracker
-    DELETE FROM public."WorkTrackers" WHERE id = wt_other;
-    GET DIAGNOSTICS v_count = ROW_COUNT;
-    ASSERT v_count = 0,
-      format('I13 AM delete other WT: expected 0, got %s', v_count);
-    RAISE NOTICE 'TEST I13 (AM → WorkTrackers DELETE other blocked) ✓';
+    -- TEST I13: AM CAN delete other AM's WorkTracker (role-only RLS)
+    RESET ROLE;
+    DECLARE
+      wt_other_del UUID;
+    BEGIN
+      INSERT INTO public."WorkTrackers" (date, created_by_user_uuid, driver_uuid, bleacher_uuid)
+      VALUES ('2026-09-02', user_admin_all, driver_other_i, bleacher_other_i)
+      RETURNING id INTO wt_other_del;
+      SET LOCAL ROLE authenticated;
+      PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
+
+      DELETE FROM public."WorkTrackers" WHERE id = wt_other_del;
+      GET DIAGNOSTICS v_count = ROW_COUNT;
+      ASSERT v_count = 1,
+        format('I13 AM delete other WT: expected 1, got %s', v_count);
+      RAISE NOTICE 'TEST I13 (AM → WorkTrackers DELETE other) ✓';
+    END;
 
     -- TEST I14: Admin CAN update any WorkTracker
     PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
@@ -1022,14 +1036,10 @@ BEGIN
     VALUES ('AM New Maint', '2026-08-01', '2026-08-10', user_am);
     RAISE NOTICE 'TEST J2 (AM → MaintenanceEvents INSERT own) ✓';
 
-    -- TEST J3: AM CANNOT insert maintenance event for other user
-    BEGIN
-      INSERT INTO public."MaintenanceEvents" (event_name, event_start, event_end, created_by_user_uuid)
-      VALUES ('Fake Maint', '2026-09-01', '2026-09-10', user_admin);
-      ASSERT false, 'J3 AM insert maint for other should have failed';
-    EXCEPTION WHEN insufficient_privilege THEN
-      RAISE NOTICE 'TEST J3 (AM → MaintenanceEvents INSERT for other blocked) ✓';
-    END;
+    -- TEST J3: AM CAN insert maintenance event for other user (role-only RLS)
+    INSERT INTO public."MaintenanceEvents" (event_name, event_start, event_end, created_by_user_uuid)
+    VALUES ('Fake Maint', '2026-09-01', '2026-09-10', user_admin);
+    RAISE NOTICE 'TEST J3 (AM → MaintenanceEvents INSERT for other) ✓';
 
     -- TEST J4: AM CAN update own maintenance event
     UPDATE public."MaintenanceEvents" SET event_name = 'Updated Maint' WHERE id = me_own;
@@ -1038,12 +1048,12 @@ BEGIN
       format('J4 AM update own maint: expected 1, got %s', v_count);
     RAISE NOTICE 'TEST J4 (AM → MaintenanceEvents UPDATE own) ✓';
 
-    -- TEST J5: AM CANNOT update other's maintenance event
+    -- TEST J5: AM CAN update other's maintenance event (role-only RLS)
     UPDATE public."MaintenanceEvents" SET event_name = 'Hacked' WHERE id = me_other;
     GET DIAGNOSTICS v_count = ROW_COUNT;
-    ASSERT v_count = 0,
-      format('J5 AM update other maint: expected 0, got %s', v_count);
-    RAISE NOTICE 'TEST J5 (AM → MaintenanceEvents UPDATE other blocked) ✓';
+    ASSERT v_count = 1,
+      format('J5 AM update other maint: expected 1, got %s', v_count);
+    RAISE NOTICE 'TEST J5 (AM → MaintenanceEvents UPDATE other) ✓';
 
     -- TEST J6: AM CAN delete own maintenance event
     RESET ROLE;
@@ -1063,12 +1073,23 @@ BEGIN
       RAISE NOTICE 'TEST J6 (AM → MaintenanceEvents DELETE own) ✓';
     END;
 
-    -- TEST J7: AM CANNOT delete other's maintenance event
-    DELETE FROM public."MaintenanceEvents" WHERE id = me_other;
-    GET DIAGNOSTICS v_count = ROW_COUNT;
-    ASSERT v_count = 0,
-      format('J7 AM delete other maint: expected 0, got %s', v_count);
-    RAISE NOTICE 'TEST J7 (AM → MaintenanceEvents DELETE other blocked) ✓';
+    -- TEST J7: AM CAN delete other's maintenance event (role-only RLS)
+    RESET ROLE;
+    DECLARE
+      me_other_del UUID;
+    BEGIN
+      INSERT INTO public."MaintenanceEvents" (event_name, event_start, event_end, created_by_user_uuid)
+      VALUES ('Other Del Maint', '2026-10-15', '2026-10-20', user_admin_all)
+      RETURNING id INTO me_other_del;
+      SET LOCAL ROLE authenticated;
+      PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
+
+      DELETE FROM public."MaintenanceEvents" WHERE id = me_other_del;
+      GET DIAGNOSTICS v_count = ROW_COUNT;
+      ASSERT v_count = 1,
+        format('J7 AM delete other maint: expected 1, got %s', v_count);
+      RAISE NOTICE 'TEST J7 (AM → MaintenanceEvents DELETE other) ✓';
+    END;
 
     -- TEST J8: Admin CAN update any maintenance event
     PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
@@ -1131,23 +1152,15 @@ BEGIN
       RETURNING id INTO bme_id;
       RAISE NOTICE 'TEST K1 (AM → BleacherMaintEvents INSERT own event + own bleacher) ✓';
 
-      -- TEST K2: AM CANNOT insert BleacherMaintEvent with other's event
-      BEGIN
-        INSERT INTO public."BleacherMaintEvents" (maintenance_event_uuid, bleacher_uuid)
-        VALUES (me_other, bleacher_own_k);
-        ASSERT false, 'K2 AM insert BME other event should have failed';
-      EXCEPTION WHEN insufficient_privilege THEN
-        RAISE NOTICE 'TEST K2 (AM → BleacherMaintEvents INSERT other event blocked) ✓';
-      END;
+      -- TEST K2: AM CAN insert BleacherMaintEvent with other's event (role-only RLS)
+      INSERT INTO public."BleacherMaintEvents" (maintenance_event_uuid, bleacher_uuid)
+      VALUES (me_other, bleacher_own_k);
+      RAISE NOTICE 'TEST K2 (AM → BleacherMaintEvents INSERT other event) ✓';
 
-      -- TEST K3: AM CANNOT insert BleacherMaintEvent with other's bleacher
-      BEGIN
-        INSERT INTO public."BleacherMaintEvents" (maintenance_event_uuid, bleacher_uuid)
-        VALUES (me_own, bleacher_other_k);
-        ASSERT false, 'K3 AM insert BME other bleacher should have failed';
-      EXCEPTION WHEN insufficient_privilege THEN
-        RAISE NOTICE 'TEST K3 (AM → BleacherMaintEvents INSERT other bleacher blocked) ✓';
-      END;
+      -- TEST K3: AM CAN insert BleacherMaintEvent with other's bleacher (role-only RLS)
+      INSERT INTO public."BleacherMaintEvents" (maintenance_event_uuid, bleacher_uuid)
+      VALUES (me_own, bleacher_other_k);
+      RAISE NOTICE 'TEST K3 (AM → BleacherMaintEvents INSERT other bleacher) ✓';
 
       -- TEST K4: AM CAN delete BleacherMaintEvent from own event
       DELETE FROM public."BleacherMaintEvents" WHERE id = bme_id;
@@ -1156,7 +1169,7 @@ BEGIN
         format('K4 AM delete own BME: expected 1, got %s', v_count);
       RAISE NOTICE 'TEST K4 (AM → BleacherMaintEvents DELETE own event) ✓';
 
-      -- TEST K5: AM CANNOT delete BleacherMaintEvent from other's event
+      -- TEST K5: AM CAN delete BleacherMaintEvent from other's event (role-only RLS)
       RESET ROLE;
       DECLARE
         bme_other UUID;
@@ -1169,9 +1182,9 @@ BEGIN
 
         DELETE FROM public."BleacherMaintEvents" WHERE id = bme_other;
         GET DIAGNOSTICS v_count = ROW_COUNT;
-        ASSERT v_count = 0,
-          format('K5 AM delete other BME: expected 0, got %s', v_count);
-        RAISE NOTICE 'TEST K5 (AM → BleacherMaintEvents DELETE other event blocked) ✓';
+        ASSERT v_count = 1,
+          format('K5 AM delete other BME: expected 1, got %s', v_count);
+        RAISE NOTICE 'TEST K5 (AM → BleacherMaintEvents DELETE other event) ✓';
       END;
 
       -- TEST K6: Admin CAN insert BleacherMaintEvent for any event/bleacher

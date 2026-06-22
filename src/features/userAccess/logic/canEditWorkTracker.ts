@@ -1,43 +1,59 @@
-/**
- * Pure function: determines if the current user can edit a work tracker.
- *
- * Admin — always.
- * AM — if the WT's bleacher has them as summer or winter account manager.
- * New WT — allowed for admin + AM (blocked for viewer via canCreate).
- * Everyone else — blocked.
- */
+import { getAmRoleForZone } from "./getAmRoleForZone";
+
 export function canEditWorkTracker(params: {
   isAdmin: boolean;
   isAccountManager: boolean;
   isNew: boolean;
-  /** The current user's AccountManagers.id */
-  currentAccountManagerId: string | null;
-  /** summer_account_manager_uuid from the WT's bleacher */
-  bleacherSummerAmUuid: string | null | undefined;
-  /** winter_account_manager_uuid from the WT's bleacher */
-  bleacherWinterAmUuid: string | null | undefined;
-  /** Whether the current user is allowed to create new entities (AM=true, Viewer=false). Defaults to true. */
   canCreate?: boolean;
+  zoneUuid?: string | null;
+  leadZoneIds?: string[];
+  accountManagerZoneIds?: string[];
+  createdByUserId?: string | null;
+  userId?: string | null;
 }): boolean {
   const {
     isAdmin,
     isAccountManager,
     isNew,
-    currentAccountManagerId,
-    bleacherSummerAmUuid,
-    bleacherWinterAmUuid,
     canCreate = true,
+    zoneUuid,
+    leadZoneIds = [],
+    accountManagerZoneIds = [],
+    createdByUserId,
+    userId,
   } = params;
 
   if (isAdmin) return true;
+
+  if (!isAccountManager) {
+    return isNew && canCreate;
+  }
+
   if (isNew) return canCreate;
 
-  if (isAccountManager && currentAccountManagerId) {
-    return (
-      bleacherSummerAmUuid === currentAccountManagerId ||
-      bleacherWinterAmUuid === currentAccountManagerId
-    );
+  const role = getAmRoleForZone({ zoneUuid, leadZoneIds, accountManagerZoneIds });
+
+  if (role === "lead") return true;
+  if (role === "junior") {
+    return !!userId && !!createdByUserId && createdByUserId === userId;
   }
 
   return false;
+}
+
+export function canReleaseWorkTracker(params: {
+  isAdmin: boolean;
+  zoneUuid: string | null | undefined;
+  leadZoneIds: string[];
+  accountManagerZoneIds: string[];
+}): boolean {
+  if (params.isAdmin) return true;
+
+  const role = getAmRoleForZone({
+    zoneUuid: params.zoneUuid,
+    leadZoneIds: params.leadZoneIds,
+    accountManagerZoneIds: params.accountManagerZoneIds,
+  });
+
+  return role === "lead";
 }

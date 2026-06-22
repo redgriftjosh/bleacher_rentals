@@ -21,7 +21,7 @@ export function TermsSection() {
         Terms and Conditions
       </h2>
       <p className="text-sm text-gray-500 mb-2">
-        Select a contract template to attach to this quote
+        Select a contract template to attach to this quote <span className="text-red-500">*</span>
       </p>
       <div className="max-w-sm">
         <Dropdown

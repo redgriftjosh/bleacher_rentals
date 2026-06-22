@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
 });
 
 function formatMoney(cents: number, currency: "USD" | "CAD"): string {
-  const symbol = currency === "CAD" ? "C$" : "$";
+  const symbol = "$";
   const abs = Math.abs(cents);
   const formatted = (abs / 100).toLocaleString("en-US", {
     minimumFractionDigits: 2,

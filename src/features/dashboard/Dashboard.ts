@@ -21,10 +21,12 @@ import type { DashboardFilterState } from "../dashboardOptions/types";
 import { filterEvents, filterSortPixiBleachers } from "../dashboardOptions/util";
 import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEventStore";
 import { useMaintenanceEventStore } from "../maintenanceEvents/state/useMaintenanceEventStore";
+import { useSubrentalEventStore } from "../subrentals/state/useSubrentalEventStore";
 import { WorkTrackerDragManager } from "./util/WorkTrackerDragManager";
 import { useAddressTooltipStore } from "./state/useAddressTooltipStore";
-import { resolveAddress } from "./util/resolveAddress";
+import { resolveAddress } from "../../utils/resolveAddress";
 import { useScrollToDateStore } from "./state/useScrollToDateStore";
+import { useAlertCountsStore } from "./state/useAlertCountsStore";
 
 export class Dashboard {
   // Grids
@@ -54,6 +56,8 @@ export class Dashboard {
   private unsubEvents?: () => void;
   private unsubCurrentEvent?: () => void;
   private unsubMaintenance?: () => void;
+  private unsubSubrental?: () => void;
+  private unsubAlertCounts?: () => void;
   private bleachers: Bleacher[] = [];
   private events: DashboardEvent[] = [];
   private dates: string[] = [];
@@ -91,15 +95,11 @@ export class Dashboard {
       opts?.filters ??
       ({
         yAxis: "Bleachers",
-        summerHomeBaseUuids: [],
-        winterHomeBaseUuids: [],
         rows: [],
         stateProvinces: [],
         onlyShowMyEvents: true,
         optimizationMode: false,
         showAddressTooltip: false,
-        season: null,
-        accountManagerUuid: null,
         rowsQuickFilter: null,
       } satisfies DashboardFilterState);
 
@@ -111,11 +111,7 @@ export class Dashboard {
     const currentEvent = useCurrentEventStore.getState();
 
     const filteredBleachers = filterSortPixiBleachers(allBleachers, {
-      summerHomeBaseUuids: this.filters.summerHomeBaseUuids,
-      winterHomeBaseUuids: this.filters.winterHomeBaseUuids,
       rows: this.filters.rows,
-      season: this.filters.season,
-      accountManagerUuid: this.filters.accountManagerUuid,
       alwaysIncludeBleacherUuids: currentEvent.bleacherUuids ?? [],
       isFormExpanded: currentEvent.isFormExpanded,
       optimizationMode: this.filters.optimizationMode,
@@ -173,8 +169,10 @@ export class Dashboard {
     // Subscribe once and coalesce recomputes
     this.unsubCurrentEvent = useCurrentEventStore.subscribe(() => scheduleRecompute());
     this.unsubMaintenance = useMaintenanceEventStore.subscribe(() => scheduleRecompute());
+    this.unsubSubrental = useSubrentalEventStore.subscribe(() => scheduleRecompute());
     this.unsubEvents = useDashboardEventsStore.subscribe(() => scheduleRecompute());
     this.unsubBleachers = useDashboardBleachersStore.subscribe(() => scheduleRecompute());
+    this.unsubAlertCounts = useAlertCountsStore.subscribe(() => scheduleRecompute());
 
     // Note: initial scroll handling is performed in initGrids using opts
 
@@ -286,21 +284,24 @@ export class Dashboard {
     const allEvents = useDashboardEventsStore.getState().data;
     const currentEvent = useCurrentEventStore.getState();
     const maintenanceEvent = useMaintenanceEventStore.getState();
+    const subrentalEvent = useSubrentalEventStore.getState();
 
-    // Combine bleacher UUIDs from both event and maintenance forms so they stay visible
+    // Combine bleacher UUIDs from event, maintenance, and subrental forms so they stay visible
     const alwaysInclude = [
       ...(currentEvent.bleacherUuids ?? []),
       ...(maintenanceEvent.isFormExpanded ? maintenanceEvent.bleacherUuids : []),
+      ...(subrentalEvent.isFormExpanded && subrentalEvent.bleacherUuid
+        ? [subrentalEvent.bleacherUuid]
+        : []),
     ];
 
     const filteredBleachers = filterSortPixiBleachers(allBleachers, {
-      summerHomeBaseUuids: filters.summerHomeBaseUuids,
-      winterHomeBaseUuids: filters.winterHomeBaseUuids,
       rows: filters.rows,
-      season: filters.season,
-      accountManagerUuid: filters.accountManagerUuid,
       alwaysIncludeBleacherUuids: alwaysInclude,
-      isFormExpanded: currentEvent.isFormExpanded || maintenanceEvent.isFormExpanded,
+      isFormExpanded:
+        currentEvent.isFormExpanded ||
+        maintenanceEvent.isFormExpanded ||
+        subrentalEvent.isFormExpanded,
       optimizationMode: filters.optimizationMode,
     });
 
@@ -662,10 +663,16 @@ export class Dashboard {
       this.unsubMaintenance?.();
     } catch {}
     try {
+      this.unsubSubrental?.();
+    } catch {}
+    try {
       this.unsubBleachers?.();
     } catch {}
     try {
       this.unsubEvents?.();
+    } catch {}
+    try {
+      this.unsubAlertCounts?.();
     } catch {}
     try {
       if (this.onCanvasMouseMove) {

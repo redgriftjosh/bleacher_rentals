@@ -6,6 +6,10 @@ import { LabelText } from "../ui/event/LabelText";
 import { PinnableSection } from "../ui/event/PinnableSection";
 import { Bleacher } from "../types";
 import { CELL_WIDTH } from "../values/constants";
+import { isBleacherAccessible } from "../ui/NoAccessFilter";
+import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
+import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/useMaintenanceEventStore";
+import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
 
 export class PinnedYCellRenderer implements ICellRenderer {
   private app: Application;
@@ -26,15 +30,65 @@ export class PinnedYCellRenderer implements ICellRenderer {
     this.dates = dates;
 
     // Calculate event spans once during construction
-    const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, dates);
+    const { spansByRow } = EventsUtil.calculateEventSpans(
+      bleachers,
+      dates,
+      this.buildCalcOpts(bleachers),
+    );
     this.spansByRow = spansByRow;
   }
 
   /** Update underlying bleacher array and recompute spans */
   public setData(bleachers: Bleacher[]) {
     this.bleachers = bleachers;
-    const { spansByRow } = EventsUtil.calculateEventSpans(bleachers, this.dates);
+    const { spansByRow } = EventsUtil.calculateEventSpans(
+      bleachers,
+      this.dates,
+      this.buildCalcOpts(bleachers),
+    );
     this.spansByRow = spansByRow;
+  }
+
+  /** Build calculateEventSpans opts from current store state */
+  private buildCalcOpts(bleachers: Bleacher[]) {
+    const sel = useCurrentEventStore.getState();
+    const selected =
+      sel.eventStart && sel.eventEnd
+        ? {
+            eventUuid: sel.eventUuid ?? null,
+            bleacherUuids: sel.bleacherUuids ?? [],
+            eventStart: sel.eventStart,
+            eventEnd: sel.eventEnd,
+            eventName: sel.eventName || undefined,
+            address: sel.addressData?.address || undefined,
+            hslHue: sel.hslHue ?? undefined,
+            selectedStatus: sel.selectedStatus,
+            goodshuffleUrl: sel.goodshuffleUrl ?? null,
+          }
+        : undefined;
+    const mt = useMaintenanceEventStore.getState();
+    const selectedMaintenance =
+      mt.isFormExpanded && mt.eventStart && mt.eventEnd
+        ? {
+            maintenanceEventUuid: mt.maintenanceEventUuid ?? null,
+            bleacherUuids: mt.bleacherUuids ?? [],
+            eventStart: mt.eventStart,
+            eventEnd: mt.eventEnd,
+            eventName: mt.eventName || undefined,
+            address: mt.addressData?.address || undefined,
+          }
+        : undefined;
+    const sr = useSubrentalEventStore.getState();
+    const selectedSubrental =
+      sr.isFormExpanded && sr.eventStart && sr.eventEnd && sr.bleacherUuid
+        ? {
+            subrentalEventUuid: sr.subrentalEventUuid ?? null,
+            bleacherUuid: sr.bleacherUuid,
+            eventStart: sr.eventStart,
+            eventEnd: sr.eventEnd,
+          }
+        : undefined;
+    return { selected, selectedMaintenance, selectedSubrental };
   }
 
   /**
@@ -101,11 +155,13 @@ export class PinnedYCellRenderer implements ICellRenderer {
         // Calculate minimum width: max(one cell width, longest word)
         const minWrapWidth = Math.max(CELL_WIDTH - 8, this.getLongestWordWidth(span.ev.eventName));
 
+        const isAccessible = isBleacherAccessible(this.bleachers[row]);
         const pinnableSection = new PinnableSection(
           span,
           this.app,
           this.baker,
           Math.max(availableWidth, minWrapWidth),
+          isAccessible,
         );
 
         if (availableWidth >= minWrapWidth) {

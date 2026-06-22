@@ -11,18 +11,11 @@ import {
 import { useSwapStore, SwapDetail } from "../state/useSwapStore";
 import { executeSwap } from "../db/client/swapBleacherEvents";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
-import { FetchDashboardBleachers } from "../db/client/bleachers";
-import { FetchDashboardEvents } from "../db/client/events";
-import { useAuth } from "@clerk/nextjs";
-import { useDashboardFilterSettings } from "@/features/dashboardOptions/useDashboardFilterSettings";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
 
 export default function SwapConfirmationModal() {
   const { mode, affectedSwaps, reset } = useSwapStore();
   const supabase = useClerkSupabaseClient();
-  const { userId } = useAuth();
-  const { state: dashboardFilters } = useDashboardFilterSettings();
-  const onlyShowMyEvents = dashboardFilters?.onlyShowMyEvents ?? true;
   const [loading, setLoading] = useState(false);
 
   const isOpen = mode === "confirming";
@@ -47,11 +40,6 @@ export default function SwapConfirmationModal() {
     setLoading(true);
     try {
       await executeSwap(affectedSwaps, supabase);
-      // Refresh dashboard data
-      await Promise.all([
-        FetchDashboardBleachers(supabase),
-        FetchDashboardEvents(supabase, { onlyMine: onlyShowMyEvents, clerkUserId: userId }),
-      ]);
       // Reset the current event form so dashboard rebuilds cleanly
       useCurrentEventStore.getState().resetForm();
       reset();

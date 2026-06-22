@@ -31,11 +31,30 @@ export type Bleacher = {
   blocks: BleacherBlock[];
   workTrackers: BleacherWorkTracker[];
   maintenanceEvents: BleacherMaintenanceEvent[];
+  subrentalEvents: BleacherSubrentalEvent[];
   damageReports: BleacherDamageReport[];
   linxupDeviceId: string | null;
 
   summerAccountManagerUuid: string | null;
   winterAccountManagerUuid: string | null;
+  zoneUuid: string | null;
+  zoneName: string | null;
+  /** For subrental rows: the zone the bleacher normally belongs to */
+  originalZoneName?: string | null;
+  /** Pre-computed once during data assembly — avoids per-cell store lookups */
+  isAccessible: boolean;
+  /** True for virtual rows representing a bleacher borrowed into another zone via subrental */
+  isSubrentalRow?: boolean;
+  /**
+   * Accepted subrental date ranges on the ORIGINAL row — these cols are fully blocked (subrented out).
+   * Stored as ISO date strings; renderer converts to column indices once.
+   */
+  acceptedSubrentalBlocks?: { eventStart: string; eventEnd: string }[];
+  /**
+   * Accepted subrental date ranges on the GHOST row — only these cols are accessible.
+   * All other cols on this row are inaccessible regardless of user role.
+   */
+  acceptedSubrentalAccess?: { eventStart: string; eventEnd: string }[];
 };
 
 export type BleacherEvent = {
@@ -49,7 +68,9 @@ export type BleacherEvent = {
   booked: boolean;
   goodshuffleUrl: string | null;
   isMaintenance?: boolean;
+  isSubrental?: boolean;
   hasDamageAlert?: boolean;
+  alertCount?: number;
   // Mark spans injected from current selection (not yet persisted)
   isSelected?: boolean;
 };
@@ -105,6 +126,7 @@ export type DashboardEvent = {
   sevenRow: number | null;
   tenRow: number | null;
   fifteenRow: number | null;
+  bleacherRequirements: { bleacherTypeUuid: string; quantity: number }[];
   setupStart: string;
   setupText: string | null;
   setupConfirmed: boolean;
@@ -137,6 +159,15 @@ export type BleacherMaintenanceEvent = {
   eventEnd: string;
   costCents: number | null;
   address: string;
+};
+
+export type BleacherSubrentalEvent = {
+  subrentalEventUuid: string;
+  eventStart: string;
+  eventEnd: string;
+  status: string;
+  requestedZoneUuid: string | null;
+  notes: string | null;
 };
 
 export type DamageSeverity = "none" | "minor" | "major";

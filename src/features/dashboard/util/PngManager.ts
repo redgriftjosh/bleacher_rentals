@@ -1,4 +1,5 @@
 import { Application, Assets, RenderTexture, Sprite, Texture } from "pixi.js";
+import { SUBRENTAL_COLOR } from "../values/constants";
 
 /**
  * This class is responsible for loading png's and caching them.
@@ -16,6 +17,13 @@ export class PngManager {
       "truck",
     );
     await PngManager.loadAndCachePng(app, "/map-pin.png", "map-pin");
+    // Build handshake SVG dynamically so stroke color stays in sync with SUBRENTAL_COLOR
+    const handshakeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${PngManager.toHexColor(SUBRENTAL_COLOR)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>`;
+    await PngManager.loadAndCachePng(
+      app,
+      `data:image/svg+xml;base64,${btoa(handshakeSvg)}`,
+      "handshake",
+    );
   }
 
   public static getSprite(key: string): Sprite {
@@ -102,6 +110,11 @@ export class PngManager {
   // Optional: Clear cache
   public static clearCache() {
     PngManager.cache.clear();
+  }
+
+  /** Convert a numeric hex color (e.g. 0xf0d000) to a CSS hex string (e.g. "#f0d000"). */
+  private static toHexColor(n: number): string {
+    return "#" + n.toString(16).padStart(6, "0");
   }
 
   // Optional: Check if image is cached

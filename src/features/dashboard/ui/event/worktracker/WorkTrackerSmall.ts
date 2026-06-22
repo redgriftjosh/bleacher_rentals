@@ -10,14 +10,14 @@ import { drawUnavailableOverlay } from "./unavailableOverlay";
  * Shows driver initials only (12pt). Used when events overlap or >2 trackers.
  */
 export class WorkTrackerSmall extends Sprite {
-  constructor(baker: Baker, tracker: BleacherWorkTracker, isUnavailable: boolean = false) {
+  constructor(baker: Baker, tracker: BleacherWorkTracker, isUnavailable: boolean = false, alertCount: number = 0) {
     super();
 
     const size = Math.floor(CELL_HEIGHT / 2);
     const bg = STATUS_TINT[tracker.status] ?? 0x808080;
     const initials = getInitials(tracker.driverFirstName, tracker.driverLastName);
 
-    const cacheKey = `WTSmall:${tracker.status}:${initials}:${isUnavailable ? "U" : ""}`;
+    const cacheKey = `WTSmall:${tracker.status}:${initials}:${isUnavailable ? "U" : ""}:a${alertCount}`;
 
     this.texture = baker.getTexture(cacheKey, { width: size, height: size }, (c) => {
       // Background
@@ -50,6 +50,13 @@ export class WorkTrackerSmall extends Sprite {
       // Unavailable driver overlay
       if (isUnavailable) {
         drawUnavailableOverlay(c, size, size);
+      }
+
+      // Alert dot (top-right) — too small for a numbered badge
+      if (alertCount > 0) {
+        const dot = new Graphics();
+        dot.circle(size - 5, 5, 4).fill(0xff0000);
+        c.addChild(dot);
       }
     });
   }

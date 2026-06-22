@@ -2,10 +2,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { fetchTakenBleacherNumbers, updateBleacher, useBleacherQuery, useBleacherTotalDistance } from "../../db";
+import {
+  fetchTakenBleacherNumbers,
+  updateBleacher,
+  useBleacherQuery,
+  useBleacherTotalDistance,
+} from "../../db";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
 import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
+import { Dropdown } from "@/components/DropDown";
+import { useBleacherTypesActive } from "@/features/pricingMatrix/hooks/useBleacherTypesActive";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle, Trash2, ShieldAlert } from "lucide-react";
@@ -36,6 +43,7 @@ export function SheetEditBleacher() {
   const searchParams = useSearchParams();
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
+  const { bleacherTypes } = useBleacherTypesActive();
   const searchParamsValue = searchParams.get("edit");
   const editBleacherNumber = searchParamsValue ? Number(searchParamsValue) : null;
 
@@ -43,6 +51,7 @@ export function SheetEditBleacher() {
   const [id, setId] = useState<string | null>(null);
   const [rows, setRows] = useState<number | null>(null);
   const [seats, setSeats] = useState<number | null>(null);
+  const [bleacherTypeUuid, setBleacherTypeUuid] = useState<string | null>(null);
   const [selectedSummerHomeBaseUuid, setSelectedSummerHomeBaseUuid] = useState<string | null>(null);
   const [selectedWinterHomeBaseUuid, setSelectedWinterHomeBaseUuid] = useState<string | null>(null);
   const [selectedLinxupDeviceId, setSelectedLinxupDeviceId] = useState<string | null>(null);
@@ -94,6 +103,7 @@ export function SheetEditBleacher() {
       setRows(bleacher.bleacher_rows);
       setSeats(bleacher.bleacher_seats);
       setIsDeleted(bleacher.deleted);
+      setBleacherTypeUuid(bleacher.bleacher_type_uuid ?? null);
       setSelectedSummerHomeBaseUuid(bleacher.summer_home_base_uuid);
       setSelectedWinterHomeBaseUuid(bleacher.winter_home_base_uuid);
       setSelectedLinxupDeviceId(bleacher.linxup_device_id ?? null);
@@ -140,6 +150,7 @@ export function SheetEditBleacher() {
       setTrailerLengthIn(null);
       setOpeningDirection(null);
       setNvisPdfPath(null);
+      setBleacherTypeUuid(null);
     }
   }, [editBleacherNumber]);
 
@@ -182,6 +193,7 @@ export function SheetEditBleacher() {
           bleacher_number: bleacherNumber!,
           bleacher_rows: rows!,
           bleacher_seats: seats!,
+          bleacher_type_uuid: bleacherTypeUuid,
           summer_home_base_uuid: selectedSummerHomeBaseUuid!,
           winter_home_base_uuid: selectedWinterHomeBaseUuid!,
           linxup_device_id: selectedLinxupDeviceId,
@@ -322,6 +334,23 @@ export function SheetEditBleacher() {
                     onSelect={(e) => setRows(Number(e))}
                     value={rows ?? undefined}
                   />
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">Bleacher Type</label>
+                  <div className="col-span-3">
+                    <Dropdown
+                      options={[
+                        { label: "None", value: null },
+                        ...bleacherTypes.map((bt) => ({
+                          label: bt.name ?? `${bt.row_count}-Row`,
+                          value: bt.id,
+                        })),
+                      ]}
+                      selected={bleacherTypeUuid}
+                      onSelect={(v) => setBleacherTypeUuid(v)}
+                      placeholder="Select type (optional)"
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
                   <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
@@ -521,7 +550,9 @@ export function SheetEditBleacher() {
                 </div>
 
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Total Distance</label>
+                  <label className="text-right text-sm font-medium col-span-2">
+                    Total Distance
+                  </label>
                   <span className="col-span-3 px-3 py-2 text-sm font-medium text-gray-700">
                     {(totalDistanceMeters / 1000).toLocaleString(undefined, {
                       minimumFractionDigits: 1,

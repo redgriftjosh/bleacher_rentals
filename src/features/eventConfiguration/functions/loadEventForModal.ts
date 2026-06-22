@@ -33,11 +33,20 @@ type BleacherEventRow = {
   bleacher_uuid: string | null;
 };
 
+type LineItemRow = {
+  bleacher_type_uuid: string | null;
+  quantity: number | null;
+};
+
 /**
  * Loads an event by ID using PowerSync and opens it in the modal
  * @param eventId - The event UUID to load
+ * @param target - "modal" (default) opens the modal; "dashboard" expands the dashboard form
  */
-export async function loadEventForModal(eventId: string): Promise<void> {
+export async function loadEventForModal(
+  eventId: string,
+  target: "modal" | "dashboard" = "modal",
+): Promise<void> {
   try {
     // Fetch the event with address join using PowerSync/Kysely
     const eventQuery = db
@@ -91,6 +100,26 @@ export async function loadEventForModal(eventId: string): Promise<void> {
 
     const bleacherUuids = bleacherEvents.map((be) => be.bleacher_uuid).filter(Boolean) as string[];
 
+    // Derive bleacher requirements from line items
+    const lineItemsQuery = db
+      .selectFrom("EventLineItems")
+      .select(["bleacher_type_uuid", "quantity"])
+      .where("event_uuid", "=", eventId)
+      .where("deleted", "=", 0)
+      .compile();
+
+    const lineItemRows = await typedGetAll(lineItemsQuery, expect<LineItemRow>());
+    const reqMap = new Map<string, number>();
+    for (const r of lineItemRows) {
+      if (r.bleacher_type_uuid && r.quantity) {
+        reqMap.set(r.bleacher_type_uuid, (reqMap.get(r.bleacher_type_uuid) ?? 0) + r.quantity);
+      }
+    }
+    const bleacherRequirements = [...reqMap.entries()].map(([bleacherTypeUuid, quantity]) => ({
+      bleacherTypeUuid,
+      quantity,
+    }));
+
     // Load all event data into the store and open modal
     const store = useCurrentEventStore.getState();
     const { setField } = store;
@@ -132,6 +161,7 @@ export async function loadEventForModal(eventId: string): Promise<void> {
     setField("notes", eventData.notes ?? "");
     setField("mustBeClean", !!eventData.must_be_clean);
     setField("bleacherUuids", bleacherUuids);
+    setField("bleacherRequirements", bleacherRequirements);
     setField("hslHue", eventData.hsl_hue);
     setField("goodshuffleUrl", eventData.goodshuffle_url ?? null);
     setField("ownerUserUuid", eventData.created_by_user_uuid ?? null);
@@ -140,8 +170,8 @@ export async function loadEventForModal(eventId: string): Promise<void> {
       eventData.booked_at ? new Date(eventData.booked_at).toLocaleDateString("en-CA") : null,
     );
     // Open the modal (not the dashboard form)
-    setField("isModalOpen", true);
-    setField("isFormExpanded", false);
+    setField("isModalOpen", target === "modal");
+    setField("isFormExpanded", target === "dashboard");
     setField("isFormMinimized", false);
   } catch (error) {
     console.error("Failed to load event for modal:", error);

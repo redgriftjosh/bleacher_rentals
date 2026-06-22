@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Send } from "lucide-react";
+import { LayoutDashboard, Trash2, Send } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { QuoteDetail, fetchQuoteDetail } from "../../db/fetchQuoteDetail";
 import { softDeleteEvent } from "../../db/softDeleteEvent";
@@ -16,6 +16,17 @@ import { FilesTab } from "./tabs/FilesTab";
 import { LogTab } from "./tabs/LogTab";
 import { useEventCurrency } from "../../hooks/useEventCurrency";
 import { formatMoney } from "../../utils/formatMoney";
+import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
+import { loadEventForModal } from "@/features/eventConfiguration/functions/loadEventForModal";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+// import { canSendQuote } from "@/features/userAccess/logic/canEditOwnedEntity";
+import { canEditOwnedEntity } from "@/features/userAccess/logic/canEditOwnedEntity";
+import { getAmRoleForZone } from "@/features/userAccess/logic/getAmRoleForZone";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+// import { requestReview } from "@/features/alerts/requestReview";
+// import { ClipboardCheck } from "lucide-react";
+import { DateTime } from "luxon";
 
 export function QuoteDetailView({ eventId }: { eventId: string }) {
   const router = useRouter();
@@ -24,6 +35,50 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [sending, setSending] = useState(false);
+
+  const perms = usePermissionsStore();
+
+  // Get the bleacher zone for this event (via BleacherEvents → Bleachers)
+  const eventZoneCompiled = useMemo(
+    () =>
+      db
+        .selectFrom("BleacherEvents as be")
+        .innerJoin("Bleachers as b", "b.id", "be.bleacher_uuid")
+        .select(["b.zone_uuid as zone_uuid"])
+        .where("be.event_uuid", "=", eventId)
+        .limit(1)
+        .compile(),
+    [eventId],
+  );
+  const { data: eventZoneRows } = useTypedQuery(
+    eventZoneCompiled,
+    expect<{ zone_uuid: string | null }>(),
+  );
+  const eventZoneUuid = eventZoneRows?.[0]?.zone_uuid ?? null;
+
+  // Deletion info from EventChangeLog
+  const deleteLogCompiled = useMemo(
+    () =>
+      db
+        .selectFrom("EventChangeLog as cl")
+        .leftJoin("Users as u", "cl.changed_by_user_uuid", "u.id")
+        .select([
+          "cl.changed_at as changed_at",
+          "u.first_name as first_name",
+          "u.last_name as last_name",
+        ])
+        .where("cl.event_uuid", "=", eventId)
+        .where("cl.field_name", "=", "deleted")
+        .where("cl.action_type", "=", "status_change")
+        .orderBy("cl.changed_at", "desc")
+        .limit(1)
+        .compile(),
+    [eventId],
+  );
+  const { data: deleteLogRows } = useTypedQuery(
+    deleteLogCompiled,
+    expect<{ changed_at: string | null; first_name: string | null; last_name: string | null }>(),
+  );
 
   // Line items from PowerSync (reactive)
   const { lineItems } = useEventLineItems(eventId);
@@ -35,10 +90,18 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
     return lineTotal + tax;
   }, [lineItems, quote?.taxAmountCents]);
 
+  const handleOpenInDashboard = async () => {
+    await loadEventForModal(eventId, "dashboard");
+    router.push("/dashboard");
+  };
+
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this quote? This action can be undone by an admin.")) return;
+    if (
+      !confirm("Are you sure you want to delete this quote? This action can be undone by an admin.")
+    )
+      return;
     setDeleting(true);
-    const ok = await softDeleteEvent(eventId, supabase);
+    const ok = await softDeleteEvent(eventId, supabase, perms.userId);
     if (ok) {
       createSuccessToast(["Quote deleted."]);
       router.push("/quotes-bookings");
@@ -49,20 +112,25 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
   const handleSendToClient = async () => {
     if (!quote) return;
 
-    const recipientEmail = quote.contact?.email;
-    if (!recipientEmail) {
-      createErrorToast(["No contact email found. Please add a contact with an email address first."]);
+    const recipientEmails: string[] = [];
+    if (quote.contact?.email) recipientEmails.push(quote.contact.email);
+    if (quote.financeContact?.email) recipientEmails.push(quote.financeContact.email);
+
+    if (recipientEmails.length === 0) {
+      createErrorToast([
+        "No contact email found. Please add a contact with an email address first.",
+      ]);
       return;
     }
 
-    if (!confirm(`Send quote to ${recipientEmail}?`)) return;
+    if (!confirm(`Send quote to ${recipientEmails.join(", ")}?`)) return;
 
     setSending(true);
     try {
       const res = await fetch(`/api/quotes/${eventId}/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipientEmail }),
+        body: JSON.stringify({ recipientEmails }),
       });
 
       if (!res.ok) {
@@ -70,13 +138,48 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
         throw new Error(body.error || `Failed (${res.status})`);
       }
 
-      createSuccessToast([`Quote sent to ${recipientEmail}`]);
+      createSuccessToast([`Quote sent to ${recipientEmails.join(", ")}`]);
     } catch (err: any) {
       createErrorToast(["Failed to send quote.", err.message ?? ""]);
     } finally {
       setSending(false);
     }
   };
+
+  // Review-gating disabled per boss feedback — all AMs can send quotes
+  // const canSend = canSendQuote({
+  //   isAdmin: perms.isAdmin,
+  //   leadZoneIds: perms.leadZoneIds,
+  // });
+  const canSend = perms.isAdmin || perms.isAccountManager;
+
+  const canEditQuote = canEditOwnedEntity({
+    isAdmin: perms.isAdmin,
+    isNew: false,
+    isAccountManager: perms.isAccountManager,
+    leadZoneIds: perms.leadZoneIds,
+    accountManagerZoneIds: perms.accountManagerZoneIds,
+    createdByUserId: quote?.createdByUserUuid,
+    assignedUserId: quote?.createdByUserUuid,
+    userId: perms.userId,
+  });
+
+  // Review-request flow disabled per boss feedback — kept for future use
+  // const handleRequestQuoteReview = async () => {
+  //   if (!quote || !eventZoneUuid) return;
+  //   try {
+  //     await requestReview({
+  //       entityUuid: eventId,
+  //       entityType: "event",
+  //       bleacherZoneUuid: eventZoneUuid,
+  //       message: `Review requested for Quote "${quote.eventName}"`,
+  //       entityDescription: `Quote – ${quote.eventName}`,
+  //     });
+  //     createSuccessToast(["Review request sent to Lead Account Manager"]);
+  //   } catch (error) {
+  //     createErrorToast(["Failed to request review:", String(error)]);
+  //   }
+  // };
 
   useEffect(() => {
     setLoading(true);
@@ -107,10 +210,28 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
     );
   }
 
+  const isDeleted = quote.deleted;
+  const deleteLog = deleteLogRows?.[0] ?? null;
+  const deletedAtFormatted = deleteLog?.changed_at
+    ? DateTime.fromISO(deleteLog.changed_at).toFormat("MMM d, yyyy 'at' h:mm a")
+    : null;
+  const deletedByName = [deleteLog?.first_name, deleteLog?.last_name].filter(Boolean).join(" ") || null;
+
   return (
     <div>
+      {isDeleted && (
+        <div className="bg-red-50 border border-red-200 rounded-t-lg px-6 py-3 text-sm text-red-800 flex items-center gap-2">
+          <Trash2 className="w-4 h-4 shrink-0" />
+          <span>
+            This quote was deleted
+            {deletedByName ? ` by ${deletedByName}` : ""}
+            {deletedAtFormatted ? ` on ${deletedAtFormatted}` : ""}
+          </span>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="bg-darkBlue text-white px-6 py-4 rounded-t-lg">
+      <div className={`bg-darkBlue text-white px-6 py-4 ${isDeleted ? "" : "rounded-t-lg"}`}>
         <div className="flex items-center gap-2 text-xs text-white/60 mb-1">
           <button
             onClick={() => router.push("/quotes-bookings")}
@@ -168,27 +289,54 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
           <div className="flex items-center gap-3 py-2">
             <span className="text-sm font-bold">{formatMoney(contractTotalCents, currency)}</span>
             <span className="text-xs text-gray-500">Contract Total</span>
-            <button
-              onClick={() => router.push(`/quotes-bookings/${quote.id}/edit`)}
-              className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
-            >
-              Edit
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="px-3 py-1.5 text-sm font-medium text-red-600 border border-red-300 rounded-sm hover:bg-red-50 transition cursor-pointer disabled:opacity-50"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleSendToClient}
-              disabled={sending}
-              className="px-3 py-1.5 text-sm font-semibold text-white bg-darkBlue rounded-sm hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
-            >
-              <Send className="w-3.5 h-3.5" />
-              {sending ? "Sending..." : "Send To Client"}
-            </button>
+            {!isDeleted && (
+              <>
+                <button
+                  onClick={handleOpenInDashboard}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Open in Dashboard
+                </button>
+                {canEditQuote && (
+                  <button
+                    onClick={() => router.push(`/quotes-bookings/${quote.id}/edit`)}
+                    className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-50 transition cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                )}
+                {canEditQuote && (
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="px-3 py-1.5 text-sm font-medium text-red-600 border border-red-300 rounded-sm hover:bg-red-50 transition cursor-pointer disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+                {canSend && (
+                  <button
+                    onClick={handleSendToClient}
+                    disabled={sending}
+                    className="px-3 py-1.5 text-sm font-semibold text-white bg-darkBlue rounded-sm hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    {sending ? "Sending..." : "Send To Client"}
+                  </button>
+                )}
+                {/* Review-request button disabled per boss feedback — kept for future use
+                {!canSend && perms.isAccountManager && (
+                  <button
+                    onClick={handleRequestQuoteReview}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded-sm hover:bg-amber-100 transition cursor-pointer"
+                  >
+                    <ClipboardCheck className="w-3.5 h-3.5" />
+                    Request Review
+                  </button>
+                )} */}
+              </>
+            )}
           </div>
         </div>
 

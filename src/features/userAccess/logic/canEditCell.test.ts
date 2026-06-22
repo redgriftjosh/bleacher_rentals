@@ -2,14 +2,10 @@ import { describe, it, expect } from "vitest";
 import { canEditCell } from "./canEditCell";
 
 describe("canEditCell (Dashboard cell editing)", () => {
-  const ownBleacher = {
-    summerAccountManagerUuid: "am-id-1",
-    winterAccountManagerUuid: null,
-  };
-  const otherBleacher = {
-    summerAccountManagerUuid: "am-id-other",
-    winterAccountManagerUuid: "am-id-other-2",
-  };
+  const zoneA = "zone-a";
+  const zoneB = "zone-b";
+  const ownBleacher = { zoneUuid: zoneA };
+  const otherBleacher = { zoneUuid: zoneB };
 
   // ═══ Admin ═══
 
@@ -18,7 +14,7 @@ describe("canEditCell (Dashboard cell editing)", () => {
       canEditCell({
         isAdmin: true,
         isAccountManager: false,
-        accountManagerId: null,
+        accountManagerZoneIds: [],
         bleacherUuid: "b-1",
         bleacher: otherBleacher,
       }),
@@ -30,7 +26,7 @@ describe("canEditCell (Dashboard cell editing)", () => {
       canEditCell({
         isAdmin: true,
         isAccountManager: false,
-        accountManagerId: null,
+        accountManagerZoneIds: [],
         bleacherUuid: null,
         bleacher: null,
       }),
@@ -44,64 +40,49 @@ describe("canEditCell (Dashboard cell editing)", () => {
       canEditCell({
         isAdmin: false,
         isAccountManager: false,
-        accountManagerId: null,
+        accountManagerZoneIds: [],
         bleacherUuid: "b-1",
         bleacher: ownBleacher,
       }),
     ).toBe(false);
   });
 
-  it("viewer cannot edit even with matching bleacher data", () => {
-    expect(
-      canEditCell({
-        isAdmin: false,
-        isAccountManager: false,
-        accountManagerId: "am-id-1",
-        bleacherUuid: "b-1",
-        bleacher: ownBleacher,
-      }),
-    ).toBe(false);
-  });
+  // ═══ AM: own zone ═══
 
-  // ═══ AM: own bleacher ═══
-
-  it("AM can edit cell of own bleacher (summer)", () => {
+  it("AM can edit cell of bleacher in their zone", () => {
     expect(
       canEditCell({
         isAdmin: false,
         isAccountManager: true,
-        accountManagerId: "am-id-1",
+        accountManagerZoneIds: [zoneA],
         bleacherUuid: "b-1",
         bleacher: ownBleacher,
       }),
     ).toBe(true);
   });
 
-  it("AM can edit cell of own bleacher (winter)", () => {
+  // ═══ AM: other zone ═══
+
+  it("AM cannot edit cell of bleacher in another zone", () => {
     expect(
       canEditCell({
         isAdmin: false,
         isAccountManager: true,
-        accountManagerId: "am-id-1",
-        bleacherUuid: "b-1",
-        bleacher: {
-          summerAccountManagerUuid: "other",
-          winterAccountManagerUuid: "am-id-1",
-        },
-      }),
-    ).toBe(true);
-  });
-
-  // ═══ AM: other's bleacher ═══
-
-  it("AM cannot edit cell of other AM's bleacher", () => {
-    expect(
-      canEditCell({
-        isAdmin: false,
-        isAccountManager: true,
-        accountManagerId: "am-id-1",
+        accountManagerZoneIds: [zoneA],
         bleacherUuid: "b-1",
         bleacher: otherBleacher,
+      }),
+    ).toBe(false);
+  });
+
+  it("AM cannot edit bleacher with no zone", () => {
+    expect(
+      canEditCell({
+        isAdmin: false,
+        isAccountManager: true,
+        accountManagerZoneIds: [zoneA],
+        bleacherUuid: "b-1",
+        bleacher: { zoneUuid: null },
       }),
     ).toBe(false);
   });
@@ -113,7 +94,7 @@ describe("canEditCell (Dashboard cell editing)", () => {
       canEditCell({
         isAdmin: false,
         isAccountManager: true,
-        accountManagerId: "am-id-1",
+        accountManagerZoneIds: [zoneA],
         bleacherUuid: null,
         bleacher: null,
       }),
@@ -125,19 +106,19 @@ describe("canEditCell (Dashboard cell editing)", () => {
       canEditCell({
         isAdmin: false,
         isAccountManager: true,
-        accountManagerId: "am-id-1",
+        accountManagerZoneIds: [zoneA],
         bleacherUuid: "b-unknown",
         bleacher: null,
       }),
     ).toBe(false);
   });
 
-  it("AM cannot edit when accountManagerId is null", () => {
+  it("AM cannot edit when they have no zones", () => {
     expect(
       canEditCell({
         isAdmin: false,
         isAccountManager: true,
-        accountManagerId: null,
+        accountManagerZoneIds: [],
         bleacherUuid: "b-1",
         bleacher: ownBleacher,
       }),
