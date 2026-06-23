@@ -85,6 +85,7 @@ export default function WorkTrackerModal({
     selectedWorkTracker?.status ?? "draft",
   );
   const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [showEditTypes, setShowEditTypes] = useState(false);
 
   // Fetch available work tracker types
@@ -384,6 +385,8 @@ export default function WorkTrackerModal({
   }, [selectedWorkTracker, fetchedWorkTracker]);
 
   const handleSaveWorkTracker = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
     try {
       // Merge distance/duration from the Google Maps leg into the tracker before saving
       const trackerToSave = workTracker
@@ -415,6 +418,8 @@ export default function WorkTrackerModal({
       setSelectedBlock(null);
     } catch (error) {
       createErrorToast(["Failed to Save Work Tracker:", String(error)]);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -956,10 +961,11 @@ export default function WorkTrackerModal({
               />
               {canEdit && (
                 <button
-                  className="text-sm px-3 py-1 rounded bg-darkBlue text-white cursor-pointer hover:bg-lightBlue transition-all duration-200"
+                  className="text-sm px-3 py-1 rounded bg-darkBlue text-white cursor-pointer hover:bg-lightBlue transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-darkBlue"
                   onClick={() => setShowSaveConfirmModal(true)}
+                  disabled={isSaving}
                 >
-                  Save
+                  {isSaving ? "Saving..." : "Save"}
                 </button>
               )}
             </div>
@@ -969,7 +975,13 @@ export default function WorkTrackerModal({
 
       <EditWorkTrackerTypesModal isOpen={showEditTypes} onClose={() => setShowEditTypes(false)} />
 
-      <Dialog open={showSaveConfirmModal} onOpenChange={setShowSaveConfirmModal}>
+      <Dialog
+        open={showSaveConfirmModal}
+        onOpenChange={(open) => {
+          if (isSaving) return;
+          setShowSaveConfirmModal(open);
+        }}
+      >
         <DialogContent className="max-w-md z-[2101]">
           <DialogHeader>
             <DialogTitle>Save Work Tracker</DialogTitle>
@@ -996,15 +1008,20 @@ export default function WorkTrackerModal({
           <DialogFooter className="gap-2 mt-4">
             <button
               onClick={() => setShowSaveConfirmModal(false)}
-              className="px-4 py-2 text-sm font-medium rounded border border-gray-300 hover:bg-gray-50 transition cursor-pointer"
+              disabled={isSaving}
+              className="px-4 py-2 text-sm font-medium rounded border border-gray-300 hover:bg-gray-50 transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveWorkTracker}
-              className="px-4 py-2 text-sm font-semibold rounded text-white bg-blue-600 hover:bg-blue-700 transition cursor-pointer"
+              disabled={isSaving}
+              className="px-4 py-2 text-sm font-semibold rounded text-white bg-blue-600 hover:bg-blue-700 transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-blue-600 flex items-center justify-center gap-2"
             >
-              Confirm Save
+              {isSaving && (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              )}
+              {isSaving ? "Saving..." : "Confirm Save"}
             </button>
           </DialogFooter>
         </DialogContent>
