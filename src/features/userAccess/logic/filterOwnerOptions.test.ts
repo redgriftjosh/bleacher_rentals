@@ -30,7 +30,7 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
 
   // ═══ AM (non-admin) ═══
 
-  it("AM sees only self when creating (not disabled)", () => {
+  it("AM sees all admins and account managers (can assign any AM as owner)", () => {
     const result = filterOwnerOptions({
       users: allUsers,
       isAdmin: false,
@@ -38,7 +38,11 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
       disabled: false,
       accountManagerUserIds,
     });
-    expect(result).toEqual([{ id: "user-am-1", name: "AM One", is_admin: false }]);
+    expect(result).toEqual([
+      { id: "user-admin", name: "Admin User", is_admin: true },
+      { id: "user-am-1", name: "AM One", is_admin: false },
+      { id: "user-am-2", name: "AM Two", is_admin: false },
+    ]);
   });
 
   // ═══ Read-only mode (disabled) ═══

@@ -2,8 +2,9 @@
  * Pure function: filters user list for the Owner dropdown.
  *
  * - When form is disabled (read-only): show all users so the owner name is visible
- * - Admin: show only admins and account managers
- * - AM (non-admin): show only the current user
+ * - Admin or Account Manager: show all admins and account managers, so any AM
+ *   can assign ownership to any other AM (or admin), not just themselves
+ * - Everyone else (e.g. viewer): show only the current user
  */
 export function filterOwnerOptions<T extends { id: string; is_admin?: boolean | number | null }>(params: {
   users: T[];
@@ -16,10 +17,10 @@ export function filterOwnerOptions<T extends { id: string; is_admin?: boolean | 
 
   if (disabled) return users;
 
-  if (isAdmin) {
-    return users.filter(
-      (u) => !!u.is_admin || accountManagerUserIds.has(u.id),
-    );
+  const isAccountManager = currentUserId != null && accountManagerUserIds.has(currentUserId);
+
+  if (isAdmin || isAccountManager) {
+    return users.filter((u) => !!u.is_admin || accountManagerUserIds.has(u.id));
   }
 
   return users.filter((u) => u.id === currentUserId);

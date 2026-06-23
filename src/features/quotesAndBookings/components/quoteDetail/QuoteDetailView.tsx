@@ -24,6 +24,7 @@ import { canEditOwnedEntity } from "@/features/userAccess/logic/canEditOwnedEnti
 import { getAmRoleForZone } from "@/features/userAccess/logic/getAmRoleForZone";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { logQuoteSentLocal } from "../../db/logQuoteSentLocal";
 // import { requestReview } from "@/features/alerts/requestReview";
 // import { ClipboardCheck } from "lucide-react";
 import { DateTime } from "luxon";
@@ -137,6 +138,13 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `Failed (${res.status})`);
       }
+
+      // Log the send via PowerSync so it records the current user (the sender).
+      await logQuoteSentLocal({
+        eventId,
+        recipientLine: recipientEmails.join(","),
+        currentUserUuid: perms.userId,
+      });
 
       createSuccessToast([`Quote sent to ${recipientEmails.join(", ")}`]);
     } catch (err: any) {
