@@ -1,419 +1,91 @@
 "use client";
-import { useEffect, useState } from "react";
-import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
-import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
-import { Dropdown } from "@/components/DropDown";
+import { useState } from "react";
+import { X, Plus } from "lucide-react";
 import { useBleacherTypesActive } from "@/features/pricingMatrix/hooks/useBleacherTypesActive";
 import { usePsZones } from "@/features/dashboard/db/hooks/powersync/usePsZones";
-import { fetchTakenBleacherNumbers, insertBleacher } from "../../db";
-import { checkInsertBleacherFormRules, feetAndInchesToInches } from "../../functions";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
-import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
+import { useBleacherForm, useStorageLocationOptions } from "../../hooks/useBleacherForm";
+import { BleacherFormFields } from "../BleacherFormFields";
 
 export function SheetAddBleacher() {
-  const supabase = useClerkSupabaseClient();
-  const queryClient = useQueryClient();
+  const [isOpen, setIsOpen] = useState(false);
 
   const { bleacherTypes } = useBleacherTypesActive();
   const zones = usePsZones();
+  const storageLocations = useStorageLocationOptions();
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);
-  const [rows, setRows] = useState<number | null>(null);
-  const [bleacherTypeUuid, setBleacherTypeUuid] = useState<string | null>(null);
-  const [seats, setSeats] = useState<number | null>(null);
-  const [hitchType, setHitchType] = useState<string | null>(null);
-  const [vinNumber, setVinNumber] = useState<string | null>(null);
-  const [tagNumber, setTagNumber] = useState<string | null>(null);
-  const [manufacturer, setManufacturer] = useState<string | null>(null);
-  const [gvwr, setGvwr] = useState<number | null>(null);
-  // Trailer length in feet, but we also want to store it in inches for more precise sorting and filtering
-  const [trailerHeightFt, setTrailerHeightFt] = useState<number | null>(null);
-  const [trailerLengthFt, setTrailerLengthFt] = useState<number | null>(null);
-  const [trailerHeightIn, setTrailerHeightIn] = useState<number | null>(null);
-  const [trailerLengthIn, setTrailerLengthIn] = useState<number | null>(null);
-
-  const [openingDirection, setOpeningDirection] = useState<"driver" | "passenger" | null>(null);
-  const [zoneUuid, setZoneUuid] = useState<string | null>(null);
-  const [selectedLinxupDeviceId, setSelectedLinxupDeviceId] = useState<string | null>(null);
-  const [nvisPdfPath, setNvisPdfPath] = useState<string | null>(null);
-  const [isTakenNumber, setIsTakenNumber] = useState(true);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setBleacherNumber(null);
-      setRows(null);
-      setSeats(null);
-      setHitchType(null);
-      setVinNumber(null);
-      setTagNumber(null);
-      setManufacturer(null);
-      setGvwr(null);
-      setTrailerHeightFt(null);
-      setTrailerHeightIn(null);
-      setTrailerLengthFt(null);
-      setTrailerLengthIn(null);
-      setOpeningDirection(null);
-      setZoneUuid(null);
-      setSelectedLinxupDeviceId(null);
-      setNvisPdfPath(null);
-      setBleacherTypeUuid(null);
-    }
-  }, [isOpen]);
-
-  const { data: takenNumbers = [], isLoading } = useQuery({
-    queryKey: ["taken-bleacher-numbers"],
-    queryFn: () => fetchTakenBleacherNumbers(supabase),
-    enabled: !!supabase,
+  const { state, setField, reset, isTakenNumber, isLoading, save } = useBleacherForm({
+    autoSuggestNumber: isOpen,
   });
 
-  useEffect(() => {
-    if (!isLoading && takenNumbers.length > 0 && !bleacherNumber) {
-      const highestNumber = Math.max(...takenNumbers);
-      setBleacherNumber(highestNumber + 1);
-    }
-  }, [takenNumbers, isLoading, bleacherNumber]);
-
-  useEffect(() => {
-    if (bleacherNumber) {
-      setIsTakenNumber(takenNumbers.includes(bleacherNumber));
-    }
-  }, [bleacherNumber, takenNumbers]);
+  const close = () => {
+    setIsOpen(false);
+    reset();
+  };
 
   const handleSave = async () => {
-    if (!supabase) {
-      console.warn("No supabase client found");
-      return;
-    }
-
-    if (
-      !checkInsertBleacherFormRules(
-        {
-          bleacher_number: bleacherNumber,
-          bleacher_rows: rows,
-          bleacher_seats: seats,
-        },
-        takenNumbers,
-      )
-    ) {
-      throw new Error("Event form validation failed");
-    } else {
-      await insertBleacher(
-        {
-          bleacher_number: bleacherNumber!,
-          bleacher_rows: rows!,
-          bleacher_seats: seats!,
-          bleacher_type_uuid: bleacherTypeUuid,
-          hitch_type: hitchType,
-          vin_number: vinNumber,
-          tag_number: tagNumber,
-          manufacturer: manufacturer,
-          gvwr: gvwr,
-          trailer_height_in: feetAndInchesToInches(trailerHeightFt, trailerHeightIn),
-          trailer_length_in: feetAndInchesToInches(trailerLengthFt, trailerLengthIn),
-          opening_direction: openingDirection,
-          zone_uuid: zoneUuid,
-          linxup_device_id: selectedLinxupDeviceId,
-          nvis_pdf_path: nvisPdfPath,
-        },
-        supabase,
-        queryClient,
-      );
-      setIsOpen(false);
-    }
+    const ok = await save();
+    if (ok) close();
   };
 
   return (
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="px-4 py-2 bg-darkBlue text-white text-sm font-semibold rounded-lg shadow-md hover:bg-lightBlue transition cursor-pointer"
+        className="inline-flex items-center gap-1.5 rounded-lg bg-darkBlue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-lightBlue cursor-pointer"
       >
-        + Add Bleacher
+        <Plus className="h-4 w-4" />
+        Add Bleacher
       </button>
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
-          {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/50 transition-opacity"
-            onClick={() => setIsOpen(false)}
+            className="fixed inset-0 bg-black/30 backdrop-blur-[2px] transition-opacity"
+            onClick={close}
           />
 
-          {/* Sheet */}
-          <div className="fixed inset-y-0 right-0 w-full sm:max-w-sm bg-white shadow-xl flex flex-col animate-in slide-in-from-right">
-            {/* Header */}
-            <div className="p-6 border-b">
-              <h2 className="text-lg font-semibold">Add A New Bleacher</h2>
-              <p className="text-sm text-gray-500">
-                Fill out the form and click 'Save Changes' to create a new bleacher.
-              </p>
+          <div className="fixed inset-y-0 right-0 flex w-full flex-col rounded-l-2xl bg-white shadow-2xl ring-1 ring-black/10 animate-in slide-in-from-right sm:max-w-md">
+            <div className="flex items-start justify-between border-b border-gray-100 px-6 py-4">
+              <div>
+                <h2 className="text-base font-semibold text-darkBlue">Add a New Bleacher</h2>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Fill out the form, then save to create a new bleacher.
+                </p>
+              </div>
+              <button
+                onClick={close}
+                className="-mr-1 rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="space-y-4">
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
-                    Bleacher Number
-                  </label>
-                  <div className="col-span-2">
-                    <div className="relative">
-                      <input
-                        id="name"
-                        type="number"
-                        value={bleacherNumber ?? ""}
-                        onChange={(e) => setBleacherNumber(Number(e.target.value))}
-                        className={`w-full px-3 py-2 border rounded-md text-sm font-medium ${
-                          isTakenNumber
-                            ? "border-red-700 focus:ring-red-700"
-                            : "text-gray-700 focus:ring-greenAccent focus:border-0"
-                        } focus:outline-none focus:ring-2`}
-                      />
-                      <div className="absolute -right-10 top-1/2 transform -translate-y-1/2">
-                        {isTakenNumber ? (
-                          <CircleAlert className="text-red-700" />
-                        ) : isLoading ? (
-                          <LoaderCircle className="text-blue-700 animate-spin" />
-                        ) : (
-                          <CheckCheck className="text-green-700" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
-                    Seats
-                  </label>
-                  <input
-                    id="name"
-                    type="number"
-                    value={seats ?? ""}
-                    onChange={(e) => setSeats(Number(e.target.value))}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
-                    Rows
-                  </label>
-                  <SelectRowsDropDown
-                    onSelect={(e) => setRows(Number(e))}
-                    value={rows ?? undefined}
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Bleacher Type</label>
-                  <div className="col-span-3">
-                    <Dropdown
-                      options={[
-                        { label: "None", value: null },
-                        ...bleacherTypes.map((bt) => ({
-                          label: bt.name ?? `${bt.row_count}-Row`,
-                          value: bt.id,
-                        })),
-                      ]}
-                      selected={bleacherTypeUuid}
-                      onSelect={(v) => setBleacherTypeUuid(v)}
-                      placeholder="Select type (optional)"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Zone</label>
-                  <div className="col-span-3">
-                    <Dropdown
-                      options={[
-                        { label: "None", value: null },
-                        ...zones.map((z) => ({
-                          label: z.display_name ?? z.id,
-                          value: z.id,
-                        })),
-                      ]}
-                      selected={zoneUuid}
-                      onSelect={(v) => setZoneUuid(v)}
-                      placeholder="Select zone (optional)"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
-                    Linxup Device
-                  </label>
-                  <SelectLinxupDeviceDropDown
-                    onSelect={(deviceId) => setSelectedLinxupDeviceId(deviceId)}
-                    placeholder="Select Device (Optional)"
-                    value={selectedLinxupDeviceId ?? null}
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Manufacturer</label>
-                  <input
-                    type="text"
-                    value={manufacturer ?? ""}
-                    onChange={(e) => setManufacturer(e.target.value || null)}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">VIN Number</label>
-                  <input
-                    type="text"
-                    value={vinNumber ?? ""}
-                    onChange={(e) => setVinNumber(e.target.value || null)}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Tag Number</label>
-                  <input
-                    type="text"
-                    value={tagNumber ?? ""}
-                    onChange={(e) => setTagNumber(e.target.value || null)}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Hitch Type</label>
-                  <input
-                    type="text"
-                    value={hitchType ?? ""}
-                    onChange={(e) => setHitchType(e.target.value || null)}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
-                </div>
-                {/* Trailer Height */}
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Trailer Height
-                  </label>
-                  <div className="col-span-3 flex gap-2">
-                    <div className="relative flex-1">
-                      <input
-                        type="number"
-                        min={0}
-                        placeholder="ft"
-                        value={trailerHeightFt ?? ""}
-                        onChange={(e) =>
-                          setTrailerHeightFt(e.target.value ? Number(e.target.value) : null)
-                        }
-                        className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                      />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
-                        ft
-                      </span>
-                    </div>
-                    <div className="relative flex-1">
-                      <input
-                        type="number"
-                        min={0}
-                        max={11}
-                        placeholder="in"
-                        value={trailerHeightIn ?? ""}
-                        onChange={(e) =>
-                          setTrailerHeightIn(e.target.value ? Number(e.target.value) : null)
-                        }
-                        className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                      />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
-                        in
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Trailer Length */}
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Trailer Length
-                  </label>
-                  <div className="col-span-3 flex gap-2">
-                    <div className="relative flex-1">
-                      <input
-                        type="number"
-                        min={0}
-                        placeholder="ft"
-                        value={trailerLengthFt ?? ""}
-                        onChange={(e) =>
-                          setTrailerLengthFt(e.target.value ? Number(e.target.value) : null)
-                        }
-                        className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                      />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
-                        ft
-                      </span>
-                    </div>
-                    <div className="relative flex-1">
-                      <input
-                        type="number"
-                        min={0}
-                        max={11}
-                        placeholder="in"
-                        value={trailerLengthIn ?? ""}
-                        onChange={(e) =>
-                          setTrailerLengthIn(e.target.value ? Number(e.target.value) : null)
-                        }
-                        className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                      />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
-                        in
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Opening Direction
-                  </label>
-                  <select
-                    value={openingDirection ?? ""}
-                    onChange={(e) =>
-                      setOpeningDirection((e.target.value || null) as "driver" | "passenger" | null)
-                    }
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  >
-                    <option value="">Select direction</option>
-                    <option value="driver">Driver</option>
-                    <option value="passenger">Passenger</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">GVWR (lbs)</label>
-                  <input
-                    type="number"
-                    value={gvwr ?? ""}
-                    onChange={(e) => setGvwr(e.target.value ? Number(e.target.value) : null)}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
-                </div>
-
-                {/* NVIS PDF Upload */}
-                <div className="grid grid-cols-5 items-start gap-4">
-                  <label className="text-right text-sm font-medium col-span-2 pt-2">NVIS PDF</label>
-                  <div className="col-span-3">
-                    <FileUploadInput
-                      label=""
-                      bucket="bleacher-nvis"
-                      storagePath={`bleacher-${bleacherNumber ?? "unknown"}/nvis-${Date.now()}`}
-                      value={nvisPdfPath}
-                      onChange={setNvisPdfPath}
-                      acceptedTypes={["application/pdf"]}
-                      maxSizeMB={10}
-                    />
-                  </div>
-                </div>
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              <div className="space-y-3.5">
+                <BleacherFormFields
+                  state={state}
+                  setField={setField}
+                  bleacherTypes={bleacherTypes}
+                  zones={zones}
+                  storageLocations={storageLocations}
+                  isTakenNumber={isTakenNumber}
+                  numberLoading={isLoading}
+                />
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-6 border-t flex justify-end">
+            <div className="flex justify-end gap-2 border-t border-gray-100 bg-gray-50/60 px-6 py-4">
+              <button
+                onClick={close}
+                className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 cursor-pointer"
+              >
+                Cancel
+              </button>
               <button
                 type="submit"
                 onClick={handleSave}
-                className="px-4 py-2 bg-darkBlue text-white rounded-md hover:bg-lightBlue transition-colors cursor-pointer"
+                className="rounded-lg bg-darkBlue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-lightBlue cursor-pointer"
               >
                 Save changes
               </button>

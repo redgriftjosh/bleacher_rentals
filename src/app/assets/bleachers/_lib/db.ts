@@ -4,13 +4,8 @@ import { toast } from "sonner";
 import React from "react";
 import { ErrorToast } from "@/components/toasts/ErrorToast";
 import { SuccessToast } from "@/components/toasts/SuccessToast";
-import { updateDataBase } from "@/app/actions/db.actions";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { useQuery } from "@tanstack/react-query";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
-import { Database } from "../../../../../database.types";
 import { db } from "@/components/providers/SystemProvider";
-import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { expect, typedExecute, typedGetAll, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { InsertBleacher, UpdateBleacher } from "@/types/tables/Bleachers";
 import { useMemo } from "react";
 
@@ -33,7 +28,8 @@ type Query = {
   zone_uuid: string | null;
   zone_name: string | null;
 };
-// Fetching the list of bleachers with their zone using React Query
+
+// ── List (reactive PowerSync read) ─────────────────────────────────────
 export function useBleachersQuery(showDeleted: boolean = false) {
   let query = db
     .selectFrom("Bleachers as b")
@@ -67,80 +63,106 @@ export function useBleachersQuery(showDeleted: boolean = false) {
   const compiled = query.orderBy("b.bleacher_number", "desc").compile();
 
   const { data } = useTypedQuery(compiled, expect<Query>());
-  const formattedBleachers: FormattedBleacher[] = (data || []).map((bleacher) => {
-    return {
-      bleacherNumber: bleacher.bleacher_number || 0,
-      bleacherRows: bleacher.bleacher_rows || 0,
-      bleacherSeats: bleacher.bleacher_seats || 0,
-      deleted: Boolean(bleacher.deleted),
-      hitchType: bleacher.hitch_type ?? null,
-      vinNumber: bleacher.vin_number ?? null,
-      tagNumber: bleacher.tag_number ?? null,
-      manufacturer: bleacher.manufacturer ?? null,
-      heightFoldedFt: bleacher.height_folded_ft ?? null,
-      gvwr: bleacher.gvwr ?? null,
-      trailerLength: bleacher.trailer_length ?? null,
-      trailerLengthIn: bleacher.trailer_length_in ?? null,
-      trailerHeightIn: bleacher.trailer_height_in ?? null,
-      openingDirection: bleacher.opening_direction ?? null,
-      nvisPdfPath: bleacher.nvis_pdf_path ?? null,
-      zone: {
-        zoneUuid: bleacher.zone_uuid ?? "",
-        zoneName: bleacher.zone_name ?? "",
-      },
-    };
-  });
+  const formattedBleachers: FormattedBleacher[] = (data || []).map((bleacher) => ({
+    bleacherNumber: bleacher.bleacher_number || 0,
+    bleacherRows: bleacher.bleacher_rows || 0,
+    bleacherSeats: bleacher.bleacher_seats || 0,
+    deleted: Boolean(bleacher.deleted),
+    hitchType: bleacher.hitch_type ?? null,
+    vinNumber: bleacher.vin_number ?? null,
+    tagNumber: bleacher.tag_number ?? null,
+    manufacturer: bleacher.manufacturer ?? null,
+    heightFoldedFt: bleacher.height_folded_ft ?? null,
+    gvwr: bleacher.gvwr ?? null,
+    trailerLength: bleacher.trailer_length ?? null,
+    trailerLengthIn: bleacher.trailer_length_in ?? null,
+    trailerHeightIn: bleacher.trailer_height_in ?? null,
+    openingDirection: bleacher.opening_direction ?? null,
+    nvisPdfPath: bleacher.nvis_pdf_path ?? null,
+    zone: {
+      zoneUuid: bleacher.zone_uuid ?? "",
+      zoneName: bleacher.zone_name ?? "",
+    },
+  }));
 
   return formattedBleachers;
 }
 
-// Fetch a single bleacher with all details for editing
-export function useBleacherQuery(bleacherNumber: number | null) {
-  const supabase = useClerkSupabaseClient();
+// ── Single bleacher for editing (reactive PowerSync read) ──────────────
+export type EditBleacherRow = {
+  id: string;
+  bleacher_number: number | null;
+  bleacher_rows: number | null;
+  bleacher_seats: number | null;
+  deleted: number | null;
+  hitch_type: string | null;
+  vin_number: string | null;
+  tag_number: string | null;
+  manufacturer: string | null;
+  gvwr: number | null;
+  opening_direction: string | null;
+  nvis_pdf_path: string | null;
+  trailer_length_in: number | null;
+  trailer_height_in: number | null;
+  zone_uuid: string | null;
+  linxup_device_id: string | null;
+  bleacher_type_uuid: string | null;
+  storage_location_uuid: string | null;
+};
 
-  return useQuery({
-    queryKey: ["bleacher", bleacherNumber],
-    queryFn: async () => {
-      console.log("queryFn firing with bleacherNumber:", bleacherNumber);
-      console.log("supabase exists:", !!supabase);
-      if (!bleacherNumber) return null;
+export function useBleacherByNumber(bleacherNumber: number | null): EditBleacherRow | null {
+  const compiled = useMemo(
+    () =>
+      db
+        .selectFrom("Bleachers as b")
+        .select([
+          "b.id",
+          "b.bleacher_number",
+          "b.bleacher_rows",
+          "b.bleacher_seats",
+          "b.deleted",
+          "b.hitch_type",
+          "b.vin_number",
+          "b.tag_number",
+          "b.manufacturer",
+          "b.gvwr",
+          "b.opening_direction",
+          "b.nvis_pdf_path",
+          "b.trailer_length_in",
+          "b.trailer_height_in",
+          "b.zone_uuid",
+          "b.linxup_device_id",
+          "b.bleacher_type_uuid",
+          "b.storage_location_uuid",
+        ])
+        .where("b.bleacher_number", "=", bleacherNumber ?? -1)
+        .limit(1)
+        .compile(),
+    [bleacherNumber],
+  );
 
-      const { data, error } = await supabase
-        .from("Bleachers")
-        .select(
-          `
-          id,
-          bleacher_number,
-          bleacher_rows,
-          bleacher_seats,
-          deleted,
-          hitch_type,
-          vin_number,
-          tag_number,
-          manufacturer,
-          height_folded_ft,
-          gvwr,
-          trailer_length,
-          opening_direction,
-          nvis_pdf_path,
-          trailer_length_in,
-          trailer_height_in,
-          zone_uuid,
-          linxup_device_id,
-          bleacher_type_uuid,
-          storage_location_uuid
-        `,
-        )
-        .eq("bleacher_number", bleacherNumber)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!supabase && bleacherNumber !== null,
-  });
+  const { data } = useTypedQuery(compiled, expect<EditBleacherRow>());
+  return data?.[0] ?? null;
 }
 
+// ── Taken bleacher numbers (reactive PowerSync read) ───────────────────
+export function useTakenBleacherNumbers(): { numbers: number[]; isLoading: boolean } {
+  const compiled = useMemo(
+    () => db.selectFrom("Bleachers").select(["bleacher_number"]).compile(),
+    [],
+  );
+  const { data } = useTypedQuery(compiled, expect<{ bleacher_number: number | null }>());
+  const numbers = useMemo(
+    () =>
+      (data ?? [])
+        .map((r) => r.bleacher_number)
+        .filter((n): n is number => typeof n === "number"),
+    [data],
+  );
+  return { numbers, isLoading: data === undefined };
+}
+
+// ── Total towed distance for a bleacher (reactive) ─────────────────────
 export function useBleacherTotalDistance(bleacherUuid: string | null): number {
   const compiled = useMemo(
     () =>
@@ -152,172 +174,98 @@ export function useBleacherTotalDistance(bleacherUuid: string | null): number {
     [bleacherUuid],
   );
 
-  const { data = [] } = useTypedQuery(
-    compiled,
-    expect<{ distance_meters: number | null }>(),
-  );
+  const { data = [] } = useTypedQuery(compiled, expect<{ distance_meters: number | null }>());
 
-  return useMemo(
-    () => data.reduce((sum, r) => sum + (r.distance_meters ?? 0), 0),
-    [data],
-  );
+  return useMemo(() => data.reduce((sum, r) => sum + (r.distance_meters ?? 0), 0), [data]);
 }
 
-async function findOrCreateBleacherType(
-  rowCount: number,
-  supabase: SupabaseClient<Database>,
-): Promise<string> {
-  const { data: existing } = await supabase
-    .from("BleacherTypes")
-    .select("id")
-    .eq("row_count", rowCount)
-    .eq("deleted", false)
-    .limit(1)
-    .single();
-
-  if (existing) return existing.id;
-
-  const { data: created, error } = await supabase
-    .from("BleacherTypes")
-    .insert({ name: `${rowCount} Row`, row_count: rowCount })
-    .select("id")
-    .single();
-
-  if (error || !created) throw new Error(`Failed to create BleacherType: ${error?.message}`);
-  return created.id;
-}
-
-export async function insertBleacher(
-  bleacher: InsertBleacher,
-  supabase: SupabaseClient<Database>,
-  queryClient?: any,
-) {
-  // Dual write: ensure BleacherType exists and link it
-  const bleacherTypeUuid = await findOrCreateBleacherType(bleacher.bleacher_rows, supabase);
-  const { error } = await supabase
-    .from("Bleachers")
-    .insert({ ...bleacher, bleacher_type_uuid: bleacherTypeUuid });
-  if (error) {
-    // console.log("Error inserting bleacher:", error);
-    let errorMessage = error.message;
-    if (error.code === "23505") {
-      // Check which constraint was violated
-      if (error.message.includes("Bleachers_linxup_device_id_key")) {
-        errorMessage = "Error: This Linxup device is already assigned to another bleacher!";
-      } else {
-        errorMessage = "Error: Bleacher number already exists!";
-      }
-    }
-    toast.custom(
-      (t) =>
-        React.createElement(ErrorToast, {
-          id: t,
-          lines: [
-            "Error inserting bleacher. Please refresh your page and try again.",
-            errorMessage,
-          ],
-        }),
-      {
-        duration: 10000, // 20 seconds
-      },
-    );
-    throw new Error(`Failed to insert bleacher: ${error.message}`);
-  }
-  toast.custom(
-    (t) =>
-      React.createElement(SuccessToast, {
-        id: t,
-        lines: ["Bleacher was Created"],
-      }),
-    { duration: 10000 },
-  );
-
-  // Invalidate React Query caches if queryClient is provided
-  if (queryClient) {
-    await queryClient.invalidateQueries({ queryKey: ["bleachers"] });
-    await queryClient.invalidateQueries({ queryKey: ["bleachers-with-assignments"] });
-    await queryClient.invalidateQueries({ queryKey: ["taken-bleacher-numbers"] });
-  }
-}
-
-export async function updateBleacher(
-  bleacher: UpdateBleacher,
-  supabase: SupabaseClient<Database>,
-  queryClient?: any,
-) {
-  // Dual write: ensure BleacherType exists and link it
-  const bleacherTypeUuid = await findOrCreateBleacherType(bleacher.bleacher_rows, supabase);
-
-  // Also update row_count in BleacherTypes
-  await supabase
-    .from("BleacherTypes")
-    .update({ row_count: bleacher.bleacher_rows })
-    .eq("id", bleacherTypeUuid);
-
-  const { error } = await supabase
-    .from("Bleachers")
-    .update({ ...bleacher, bleacher_type_uuid: bleacherTypeUuid })
-    .eq("id", bleacher.id);
-
-  if (error) {
-    // console.log("Error inserting bleacher:", error);
-    let errorMessage = error.message;
-    if (error.code === "23505") {
-      errorMessage = "Error: Bleacher number already exists!";
-    }
-    toast.custom(
-      (t) =>
-        React.createElement(ErrorToast, {
-          id: t,
-          lines: ["Error Updating bleacher. Please refresh your page and try again.", errorMessage],
-        }),
-      {
-        duration: 10000, // 20 seconds
-      },
-    );
-    throw new Error(`Failed to update bleacher: ${error.message}`);
-  }
-  toast.custom(
-    (t) =>
-      React.createElement(SuccessToast, {
-        id: t,
-        lines: ["Bleacher was Updated"],
-      }),
-    { duration: 10000 },
-  );
-
-  // Invalidate React Query caches if queryClient is provided
-  if (queryClient) {
-    await queryClient.invalidateQueries({ queryKey: ["bleachers"] });
-    await queryClient.invalidateQueries({ queryKey: ["bleachers-with-assignments"] });
-    await queryClient.invalidateQueries({ queryKey: ["bleacher"] });
-  }
-
-  updateDataBase(["Bleachers"]);
-}
+// ── Writes (PowerSync local-first) ─────────────────────────────────────
 
 /**
- * Fetch all taken bleacher numbers from the Supabase "Bleachers" table.
- * Requires a valid Supabase JWT token.
+ * Finds the BleacherType for a given row count (PowerSync local read), or
+ * creates one if none exists. Returns the type uuid.
  */
-export async function fetchTakenBleacherNumbers(
-  supabase: SupabaseClient<Database>,
-  editBleacherNumber?: number,
-): Promise<number[]> {
-  const { data, error } = await supabase.from("Bleachers").select("bleacher_number");
+async function findOrCreateBleacherType(rowCount: number): Promise<string> {
+  const existing = await typedGetAll(
+    db
+      .selectFrom("BleacherTypes")
+      .select(["id"])
+      .where("row_count", "=", rowCount)
+      .where("deleted", "=", 0)
+      .limit(1)
+      .compile(),
+    expect<{ id: string }>(),
+  );
 
-  if (error) {
-    console.error("Failed to fetch bleacher numbers:", error.message);
-    throw new Error("Could not fetch bleacher numbers");
+  if (existing[0]) return existing[0].id;
+
+  const id = crypto.randomUUID();
+  await typedExecute(
+    db
+      .insertInto("BleacherTypes")
+      .values({ id, name: `${rowCount} Row`, row_count: rowCount, deleted: 0 } as any)
+      .compile(),
+  );
+  return id;
+}
+
+function successToast(message: string) {
+  toast.custom((t) => React.createElement(SuccessToast, { id: t, lines: [message] }), {
+    duration: 10000,
+  });
+}
+
+function errorToast(lines: string[]) {
+  toast.custom((t) => React.createElement(ErrorToast, { id: t, lines }), { duration: 10000 });
+}
+
+export async function insertBleacher(bleacher: InsertBleacher): Promise<void> {
+  try {
+    const bleacherTypeUuid = await findOrCreateBleacherType(bleacher.bleacher_rows);
+    await typedExecute(
+      db
+        .insertInto("Bleachers")
+        .values({
+          id: crypto.randomUUID(),
+          created_at: new Date().toISOString(),
+          deleted: 0,
+          ...bleacher,
+          bleacher_type_uuid: bleacherTypeUuid,
+        } as any)
+        .compile(),
+    );
+    successToast("Bleacher was Created");
+  } catch (e) {
+    errorToast(["Error inserting bleacher. Please refresh your page and try again.", String(e)]);
+    throw e;
   }
+}
 
-  const numbers = data
-    .map((row) => row.bleacher_number)
-    .filter((n): n is number => typeof n === "number");
+export async function updateBleacher(bleacher: UpdateBleacher): Promise<void> {
+  try {
+    const bleacherTypeUuid = await findOrCreateBleacherType(bleacher.bleacher_rows);
+    const { id, ...rest } = bleacher;
+    await typedExecute(
+      db
+        .updateTable("Bleachers")
+        .set({ ...rest, bleacher_type_uuid: bleacherTypeUuid } as any)
+        .where("id", "=", id)
+        .compile(),
+    );
+    successToast("Bleacher was Updated");
+  } catch (e) {
+    errorToast(["Error updating bleacher. Please refresh your page and try again.", String(e)]);
+    throw e;
+  }
+}
 
-  // console.log("editBleacherNumber:", editBleacherNumber);
-  // console.log("numbers:", numbers);
-
-  // Filter out the editBleacherNumber if it exists
-  return editBleacherNumber ? numbers.filter((num) => num !== editBleacherNumber) : numbers;
+/** Soft delete / restore a bleacher (PowerSync local write). */
+export async function setBleacherDeleted(id: string, deleted: boolean): Promise<void> {
+  await typedExecute(
+    db
+      .updateTable("Bleachers")
+      .set({ deleted: deleted ? 1 : 0 } as any)
+      .where("id", "=", id)
+      .compile(),
+  );
 }

@@ -1,25 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  fetchTakenBleacherNumbers,
-  updateBleacher,
-  useBleacherQuery,
-  useBleacherTotalDistance,
-} from "../../db";
-import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
-import { usePsZones } from "@/features/dashboard/db/hooks/powersync/usePsZones";
-import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
-import { Dropdown } from "@/components/DropDown";
-import { useBleacherTypesActive } from "@/features/pricingMatrix/hooks/useBleacherTypesActive";
-import { fetchAllStorageLocations } from "@/features/storageLocations/db/storageLocationsDb";
 import { toast } from "sonner";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCheck, CircleAlert, LoaderCircle, Trash2, ShieldAlert } from "lucide-react";
-import { checkInsertBleacherFormRules, feetAndInchesToInches } from "../../functions";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
-import { inchesToFeetAndInches } from "../../functions";
+import { Trash2, ShieldAlert, X } from "lucide-react";
+import { useBleacherTypesActive } from "@/features/pricingMatrix/hooks/useBleacherTypesActive";
+import { usePsZones } from "@/features/dashboard/db/hooks/powersync/usePsZones";
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,574 +17,144 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-// https://www.loom.com/share/377b110fd24f4eebbc6e90394ac3a407?sid=c32cff10-c666-4386-9a09-85ed203e4cb5
-// Did a little explainer on how this works.
-import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
-import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
+import { setBleacherDeleted, useBleacherByNumber, useBleacherTotalDistance } from "../../db";
+import { useBleacherForm, useStorageLocationOptions } from "../../hooks/useBleacherForm";
+import { BleacherFormFields } from "../BleacherFormFields";
 
 export function SheetEditBleacher() {
   const router = useRouter();
   const { isAdmin } = useTeamPermissions();
   const searchParams = useSearchParams();
-  const supabase = useClerkSupabaseClient();
-  const queryClient = useQueryClient();
+
+  const editBleacherNumber = searchParams.get("edit") ? Number(searchParams.get("edit")) : null;
+
   const { bleacherTypes } = useBleacherTypesActive();
-  const { data: storageLocations = [] } = useQuery({
-    queryKey: ["storage-locations-options"],
-    queryFn: fetchAllStorageLocations,
-  });
-  const searchParamsValue = searchParams.get("edit");
-  const editBleacherNumber = searchParamsValue ? Number(searchParamsValue) : null;
-
-  const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);
-  const [id, setId] = useState<string | null>(null);
-  const [rows, setRows] = useState<number | null>(null);
-  const [seats, setSeats] = useState<number | null>(null);
-  const [bleacherTypeUuid, setBleacherTypeUuid] = useState<string | null>(null);
-  const [storageLocationUuid, setStorageLocationUuid] = useState<string | null>(null);
-  const [zoneUuid, setZoneUuid] = useState<string | null>(null);
-  const [selectedLinxupDeviceId, setSelectedLinxupDeviceId] = useState<string | null>(null);
-  const [hitchType, setHitchType] = useState<string | null>(null);
-  const [vinNumber, setVinNumber] = useState<string | null>(null);
-  const [tagNumber, setTagNumber] = useState<string | null>(null);
-  const [manufacturer, setManufacturer] = useState<string | null>(null);
-  const [gvwr, setGvwr] = useState<number | null>(null);
-  // Trailer length in feet, but we also want to store it in inches for more precise sorting and filtering
-  const [trailerHeightFt, setTrailerHeightFt] = useState<number | null>(null);
-  const [trailerLengthFt, setTrailerLengthFt] = useState<number | null>(null);
-  const [trailerHeightIn, setTrailerHeightIn] = useState<number | null>(null);
-  const [trailerLengthIn, setTrailerLengthIn] = useState<number | null>(null);
-
-  const [openingDirection, setOpeningDirection] = useState<"driver" | "passenger" | null>(null);
-  const [nvisPdfPath, setNvisPdfPath] = useState<string | null>(null);
-
-  const totalDistanceMeters = useBleacherTotalDistance(id);
-
-  const [isTakenNumber, setIsTakenNumber] = useState(true);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isDeleted, setIsDeleted] = useState(false);
-
-  const {
-    data: bleacher,
-    isLoading: bleacherLoading,
-    error: bleacherError,
-  } = useBleacherQuery(editBleacherNumber);
-
   const zones = usePsZones();
+  const storageLocations = useStorageLocationOptions();
 
-  useEffect(() => {
-    if (bleacher) {
-      setBleacherNumber(bleacher.bleacher_number);
-      setId(bleacher.id);
-      setRows(bleacher.bleacher_rows);
-      setSeats(bleacher.bleacher_seats);
-      setIsDeleted(bleacher.deleted);
-      setBleacherTypeUuid(bleacher.bleacher_type_uuid ?? null);
-      setStorageLocationUuid(bleacher.storage_location_uuid ?? null);
-      setZoneUuid(bleacher.zone_uuid ?? null);
-      setSelectedLinxupDeviceId(bleacher.linxup_device_id ?? null);
-      setHitchType(bleacher.hitch_type ?? null);
-      setVinNumber(bleacher.vin_number ?? null);
-      setTagNumber(bleacher.tag_number ?? null);
-      setManufacturer(bleacher.manufacturer ?? null);
-      setGvwr(bleacher.gvwr ?? null);
-      const h = inchesToFeetAndInches(bleacher.trailer_height_in ?? null);
-      setTrailerHeightFt(h.feet || null);
-      setTrailerHeightIn(h.inches || null);
+  const existing = useBleacherByNumber(editBleacherNumber);
+  const { state, setField, isTakenNumber, isLoading, save } = useBleacherForm({ existing });
+  const totalDistanceMeters = useBleacherTotalDistance(existing?.id ?? null);
 
-      const l = inchesToFeetAndInches(bleacher.trailer_length_in ?? null);
-      setTrailerLengthFt(l.feet || null);
-      setTrailerLengthIn(l.inches || null);
-      setOpeningDirection(bleacher.opening_direction ?? null);
-      setNvisPdfPath(bleacher.nvis_pdf_path ?? null);
-    } else if (bleacherError) {
-      toast.error("Bleacher not found");
-    }
-  }, [bleacher, bleacherError]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const isDeleted = Boolean(existing?.deleted);
 
-  useEffect(() => {
-    if (!editBleacherNumber) {
-      setBleacherNumber(null);
-      setId(null);
-      setRows(null);
-      setSeats(null);
-      setZoneUuid(null);
-      setSelectedLinxupDeviceId(null);
-      setHitchType(null);
-      setVinNumber(null);
-      setTagNumber(null);
-      setManufacturer(null);
-      setGvwr(null);
-      setTrailerHeightFt(null);
-      setTrailerHeightIn(null);
-      setTrailerLengthFt(null);
-      setTrailerLengthIn(null);
-      setOpeningDirection(null);
-      setNvisPdfPath(null);
-      setBleacherTypeUuid(null);
-      setStorageLocationUuid(null);
-    }
-  }, [editBleacherNumber]);
-
-  const { data: takenNumbers = [], isLoading } = useQuery({
-    queryKey: ["taken-bleacher-numbers", editBleacherNumber],
-    queryFn: () =>
-      fetchTakenBleacherNumbers(
-        supabase,
-        editBleacherNumber ? Number(editBleacherNumber) : undefined,
-      ),
-    enabled: !!supabase && !!editBleacherNumber,
-  });
-
-  useEffect(() => {
-    if (bleacherNumber) {
-      setIsTakenNumber(takenNumbers.includes(bleacherNumber));
-    }
-  }, [bleacherNumber, takenNumbers]);
+  const closeToList = () => router.push("/assets/bleachers");
 
   const handleSave = async () => {
-    console.log("nvisPdfPath at save time:", nvisPdfPath); // 👈 add this
-    console.log("id:", id);
-    if (
-      !checkInsertBleacherFormRules(
-        {
-          bleacher_number: bleacherNumber,
-          bleacher_rows: rows,
-          bleacher_seats: seats,
-        },
-        takenNumbers,
-      )
-    ) {
-      throw new Error("Event form validation failed");
-    } else {
-      await updateBleacher(
-        {
-          id: id!,
-          bleacher_number: bleacherNumber!,
-          bleacher_rows: rows!,
-          bleacher_seats: seats!,
-          bleacher_type_uuid: bleacherTypeUuid,
-          zone_uuid: zoneUuid,
-          linxup_device_id: selectedLinxupDeviceId,
-          hitch_type: hitchType,
-          vin_number: vinNumber,
-          tag_number: tagNumber,
-          manufacturer: manufacturer,
-          gvwr: gvwr,
-          trailer_height_in: feetAndInchesToInches(trailerHeightFt, trailerHeightIn),
-          trailer_length_in: feetAndInchesToInches(trailerLengthFt, trailerLengthIn),
-          opening_direction: openingDirection,
-          nvis_pdf_path: nvisPdfPath,
-          storage_location_uuid: storageLocationUuid,
-        },
-        supabase,
-        queryClient,
-      );
-      router.push("/assets/bleachers");
+    const ok = await save();
+    if (ok) closeToList();
+  };
+
+  const handleSetDeleted = async (deleted: boolean) => {
+    if (!existing?.id) return;
+    try {
+      await setBleacherDeleted(existing.id, deleted);
+      toast.success(deleted ? "Bleacher deleted" : "Bleacher restored");
+      closeToList();
+    } catch (e) {
+      toast.error(`Failed to ${deleted ? "delete" : "restore"} bleacher: ${String(e)}`);
     }
   };
 
-  const handleDelete = async () => {
-    if (!id) return;
-    const { error } = await supabase.from("Bleachers").update({ deleted: true }).eq("id", id);
-    if (error) {
-      toast.error("Failed to delete bleacher: " + error.message);
-      return;
-    }
-    toast.success("Bleacher deleted");
-    if (queryClient) {
-      await queryClient.invalidateQueries({ queryKey: ["bleachers"] });
-      await queryClient.invalidateQueries({ queryKey: ["bleachers-with-assignments"] });
-      await queryClient.invalidateQueries({ queryKey: ["bleacher"] });
-    }
-    router.push("/assets/bleachers");
-  };
-
-  const handleRestore = async () => {
-    if (!id) return;
-    const { error } = await supabase.from("Bleachers").update({ deleted: false }).eq("id", id);
-    if (error) {
-      toast.error("Failed to restore bleacher: " + error.message);
-      return;
-    }
-    toast.success("Bleacher restored");
-    if (queryClient) {
-      await queryClient.invalidateQueries({ queryKey: ["bleachers"] });
-      await queryClient.invalidateQueries({ queryKey: ["bleachers-with-assignments"] });
-      await queryClient.invalidateQueries({ queryKey: ["bleacher"] });
-    }
-    router.push("/assets/bleachers");
-  };
-
-  //   if (!bleachersLoaded) return <LoadingSpinner />;
+  if (!editBleacherNumber) return null;
 
   return (
     <>
-      {editBleacherNumber && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/50 transition-opacity"
-            onClick={() => router.push("/assets/bleachers")}
-          />
+      <div className="fixed inset-0 z-50 flex justify-end">
+        <div
+          className="fixed inset-0 bg-black/30 backdrop-blur-[2px] transition-opacity"
+          onClick={closeToList}
+        />
 
-          {/* Sheet */}
-          <div className="fixed inset-y-0 right-0 w-full sm:max-w-sm bg-white shadow-xl flex flex-col animate-in slide-in-from-right">
-            {/* Header */}
-            <div className="p-6 border-b">
-              <h2 className="text-lg font-semibold">Update a Bleacher</h2>
-              <p className="text-sm text-gray-500">
-                Fill out the form and click 'Save Changes' to lock in your changes bleacher.
-              </p>
+        <div className="fixed inset-y-0 right-0 flex w-full flex-col rounded-l-2xl bg-white shadow-2xl ring-1 ring-black/10 animate-in slide-in-from-right sm:max-w-md">
+          <div className="flex items-start justify-between border-b border-gray-100 px-6 py-4">
+            <div>
+              <h2 className="text-base font-semibold text-darkBlue">
+                Bleacher #{state.bleacherNumber ?? ""}
+              </h2>
+              <p className="mt-0.5 text-xs text-gray-500">Edit details, then save your changes.</p>
             </div>
+            <button
+              onClick={closeToList}
+              className="-mr-1 rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
-            {isDeleted && (
-              <div className="mx-6 mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 font-medium">
-                This bleacher has been deleted. Click &quot;Restore&quot; to recover it.
-              </div>
-            )}
-
-            {!isAdmin && (
-              <div className="mx-6 mt-4 rounded border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
-                You have read-only access to assets.
-              </div>
-            )}
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <fieldset disabled={!isAdmin} className="space-y-4">
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
-                    Bleacher Number
-                  </label>
-                  <div className="col-span-2">
-                    <div className="relative">
-                      <input
-                        id="name"
-                        type="number"
-                        value={bleacherNumber ?? ""}
-                        onChange={(e) => setBleacherNumber(Number(e.target.value))}
-                        className={`w-full px-3 py-2 border rounded-md text-sm font-medium ${
-                          isTakenNumber
-                            ? "border-red-700 focus:ring-red-700"
-                            : "text-gray-700 focus:ring-greenAccent focus:border-0"
-                        } focus:outline-none focus:ring-2`}
-                      />
-                      <div className="absolute -right-10 top-1/2 transform -translate-y-1/2">
-                        {isTakenNumber ? (
-                          <CircleAlert className="text-red-700" />
-                        ) : isLoading ? (
-                          <LoaderCircle className="text-blue-700 animate-spin" />
-                        ) : (
-                          <CheckCheck className="text-green-700" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
-                    Seats
-                  </label>
-                  <input
-                    id="name"
-                    type="number"
-                    value={seats ?? ""}
-                    onChange={(e) => setSeats(Number(e.target.value))}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
-                    Rows
-                  </label>
-                  <SelectRowsDropDown
-                    onSelect={(e) => setRows(Number(e))}
-                    value={rows ?? undefined}
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Bleacher Type</label>
-                  <div className="col-span-3">
-                    <Dropdown
-                      options={[
-                        { label: "None", value: null },
-                        ...bleacherTypes.map((bt) => ({
-                          label: bt.name ?? `${bt.row_count}-Row`,
-                          value: bt.id,
-                        })),
-                      ]}
-                      selected={bleacherTypeUuid}
-                      onSelect={(v) => setBleacherTypeUuid(v)}
-                      placeholder="Select type (optional)"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Storage Location
-                  </label>
-                  <div className="col-span-3">
-                    <Dropdown
-                      options={[
-                        { label: "None", value: null },
-                        ...storageLocations.map((sl) => ({
-                          label: sl.name ?? "Unnamed",
-                          value: sl.id,
-                        })),
-                      ]}
-                      selected={storageLocationUuid}
-                      onSelect={(v) => setStorageLocationUuid(v)}
-                      placeholder="Select location (optional)"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Zone</label>
-                  <div className="col-span-3">
-                    <Dropdown
-                      options={[
-                        { label: "None", value: null },
-                        ...zones.map((z) => ({
-                          label: z.display_name ?? z.id,
-                          value: z.id,
-                        })),
-                      ]}
-                      selected={zoneUuid}
-                      onSelect={(v) => setZoneUuid(v)}
-                      placeholder="Select zone (optional)"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
-                    Linxup Device
-                  </label>
-                  <SelectLinxupDeviceDropDown
-                    onSelect={(deviceId) => setSelectedLinxupDeviceId(deviceId)}
-                    placeholder="Select Device (Optional)"
-                    value={selectedLinxupDeviceId ?? null}
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Manufacturer</label>
-                  <input
-                    type="text"
-                    value={manufacturer ?? ""}
-                    onChange={(e) => setManufacturer(e.target.value || null)}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">VIN Number</label>
-                  <input
-                    type="text"
-                    value={vinNumber ?? ""}
-                    onChange={(e) => setVinNumber(e.target.value || null)}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Tag Number</label>
-                  <input
-                    type="text"
-                    value={tagNumber ?? ""}
-                    onChange={(e) => setTagNumber(e.target.value || null)}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">Hitch Type</label>
-                  <input
-                    type="text"
-                    value={hitchType ?? ""}
-                    onChange={(e) => setHitchType(e.target.value || null)}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
-                </div>
-                {/* Trailer Height */}
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Trailer Height
-                  </label>
-                  <div className="col-span-3 flex gap-2">
-                    <div className="relative flex-1">
-                      <input
-                        type="number"
-                        min={0}
-                        placeholder="ft"
-                        value={trailerHeightFt ?? ""}
-                        onChange={(e) =>
-                          setTrailerHeightFt(e.target.value ? Number(e.target.value) : null)
-                        }
-                        className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                      />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
-                        ft
-                      </span>
-                    </div>
-                    <div className="relative flex-1">
-                      <input
-                        type="number"
-                        min={0}
-                        max={11}
-                        placeholder="in"
-                        value={trailerHeightIn ?? ""}
-                        onChange={(e) =>
-                          setTrailerHeightIn(e.target.value ? Number(e.target.value) : null)
-                        }
-                        className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                      />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
-                        in
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Trailer Length */}
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Trailer Length
-                  </label>
-                  <div className="col-span-3 flex gap-2">
-                    <div className="relative flex-1">
-                      <input
-                        type="number"
-                        min={0}
-                        placeholder="ft"
-                        value={trailerLengthFt ?? ""}
-                        onChange={(e) =>
-                          setTrailerLengthFt(e.target.value ? Number(e.target.value) : null)
-                        }
-                        className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                      />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
-                        ft
-                      </span>
-                    </div>
-                    <div className="relative flex-1">
-                      <input
-                        type="number"
-                        min={0}
-                        max={11}
-                        placeholder="in"
-                        value={trailerLengthIn ?? ""}
-                        onChange={(e) =>
-                          setTrailerLengthIn(e.target.value ? Number(e.target.value) : null)
-                        }
-                        className="w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                      />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
-                        in
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Opening Direction
-                  </label>
-                  <select
-                    value={openingDirection ?? ""}
-                    onChange={(e) =>
-                      setOpeningDirection((e.target.value || null) as "driver" | "passenger" | null)
-                    }
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  >
-                    <option value="">Select direction</option>
-                    <option value="driver">Driver</option>
-                    <option value="passenger">Passenger</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">GVWR (lbs)</label>
-                  <input
-                    type="number"
-                    value={gvwr ?? ""}
-                    onChange={(e) => setGvwr(e.target.value ? Number(e.target.value) : null)}
-                    className="col-span-3 px-3 py-2 border rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                  />
-                </div>
-
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label className="text-right text-sm font-medium col-span-2">
-                    Total Distance
-                  </label>
-                  <span className="col-span-3 px-3 py-2 text-sm font-medium text-gray-700">
-                    {(totalDistanceMeters / 1000).toLocaleString(undefined, {
-                      minimumFractionDigits: 1,
-                      maximumFractionDigits: 1,
-                    })}{" "}
-                    km
-                  </span>
-                </div>
-
-                {/* NVIS PDF Upload */}
-                <div className="grid grid-cols-5 items-start gap-4">
-                  <label className="text-right text-sm font-medium col-span-2 pt-2">NVIS PDF</label>
-                  <div className="col-span-3">
-                    <FileUploadInput
-                      label=""
-                      bucket="bleacher-nvis"
-                      storagePath={`bleacher-${bleacherNumber ?? "unknown"}/nvis-${Date.now()}`}
-                      value={nvisPdfPath}
-                      onChange={setNvisPdfPath}
-                      acceptedTypes={["application/pdf"]}
-                      maxSizeMB={10}
-                    />
-                  </div>
-                </div>
-              </fieldset>
+          {isDeleted && (
+            <div className="mx-6 mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+              This bleacher has been deleted. Click &quot;Restore&quot; to recover it.
             </div>
+          )}
 
-            {/* Footer */}
-            <div className="p-6 border-t flex justify-between">
-              {isAdmin &&
-                (isDeleted ? (
-                  <button
-                    type="button"
-                    onClick={handleRestore}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors cursor-pointer flex items-center gap-2"
-                  >
-                    Restore
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors cursor-pointer flex items-center gap-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </button>
-                ))}
-              <Link
-                href={`/damage-reports?bleacher_uuid=${id}`}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-2 text-sm"
-              >
-                <ShieldAlert className="h-4 w-4" />
-                Damage Reports
-              </Link>
-              {isAdmin && (
+          {!isAdmin && (
+            <div className="mx-6 mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              You have read-only access to assets.
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            <fieldset disabled={!isAdmin} className="space-y-3.5 disabled:opacity-70">
+              <BleacherFormFields
+                state={state}
+                setField={setField}
+                bleacherTypes={bleacherTypes}
+                zones={zones}
+                storageLocations={storageLocations}
+                isTakenNumber={isTakenNumber}
+                numberLoading={isLoading}
+                totalDistanceMeters={totalDistanceMeters}
+              />
+            </fieldset>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 border-t border-gray-100 bg-gray-50/60 px-6 py-4">
+            {isAdmin &&
+              (isDeleted ? (
                 <button
-                  type="submit"
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-darkBlue text-white rounded-md hover:bg-lightBlue transition-colors cursor-pointer"
+                  type="button"
+                  onClick={() => handleSetDeleted(false)}
+                  className="flex items-center gap-2 rounded-lg bg-greenAccent px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:brightness-110 cursor-pointer"
                 >
-                  Save changes
+                  Restore
                 </button>
-              )}
-            </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </button>
+              ))}
+            <Link
+              href={`/damage-reports?bleacher_uuid=${existing?.id ?? ""}`}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 cursor-pointer"
+            >
+              <ShieldAlert className="h-4 w-4" />
+              Damage Reports
+            </Link>
+            {isAdmin && (
+              <button
+                type="submit"
+                onClick={handleSave}
+                className="rounded-lg bg-darkBlue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-lightBlue cursor-pointer"
+              >
+                Save changes
+              </button>
+            )}
           </div>
         </div>
-      )}
+      </div>
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Bleacher #{bleacherNumber}?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Bleacher #{state.bleacherNumber}?</AlertDialogTitle>
             <AlertDialogDescription>
               This will remove the bleacher from all lists and the dashboard. This action can be
               undone by a database administrator.
@@ -605,7 +162,10 @@ export function SheetEditBleacher() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction
+              onClick={() => handleSetDeleted(true)}
+              className="bg-red-600 hover:bg-red-700"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

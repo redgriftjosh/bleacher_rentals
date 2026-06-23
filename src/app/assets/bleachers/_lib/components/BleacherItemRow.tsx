@@ -54,37 +54,55 @@ export function BleacherItemRow({
 
   return (
     <tr
-      className={`border-b border-gray-200 hover:bg-gray-100 transition-all duration-100 ease-in-out cursor-pointer ${deleted ? "opacity-50 bg-red-50" : ""}`}
+      className={`group border-b border-gray-100 last:border-b-0 transition-colors duration-100 cursor-pointer ${
+        deleted ? "bg-red-50/60 text-gray-400 hover:bg-red-50" : "hover:bg-darkBlue/[0.04]"
+      }`}
       onClick={handleClick}
     >
-      <td className="p-3 text-left">{bleacherNumber}</td>
-      <td className="p-3 text-left">{bleacherRows}</td>
-      <td className="p-3 text-left">{bleacherSeats}</td>
-      <td className="p-3 text-left whitespace-nowrap">
+      <td className="px-4 py-2.5 text-left font-semibold text-darkBlue tabular-nums">
+        {bleacherNumber}
+      </td>
+      <td className="px-4 py-2.5 text-left tabular-nums">{bleacherRows}</td>
+      <td className="px-4 py-2.5 text-left tabular-nums">{bleacherSeats}</td>
+      <td className="px-4 py-2.5 text-left whitespace-nowrap text-gray-600">
         <div className="max-w-[150px] truncate" title={manufacturer ?? "—"}>
           {manufacturer ?? "—"}
         </div>
       </td>
-      <td className="p-3 text-left whitespace-nowrap">
+      <td className="px-4 py-2.5 text-left whitespace-nowrap text-gray-500">
         <div className="max-w-[120px] truncate font-mono text-xs" title={vinNumber ?? "—"}>
           {vinNumber ?? "—"}
         </div>
       </td>
-      <td className="p-3 text-left">{tagNumber ?? "—"}</td>
-      <td className="p-3 text-left">{hitchType ?? "—"}</td>
-      <td className="p-3 text-left">{formatInches(trailerHeightIn)}</td>
-      <td className="p-3 text-left">{formatInches(trailerLengthIn)}</td>
-      <td className="p-3 text-left">{openingDirection ?? "—"}</td>
-      <td className="p-3 text-left">{gvwr != null ? `${gvwr.toLocaleString()} lbs` : "—"}</td>
-      <td className="p-3 text-left">{zone.zoneName || "—"}</td>
-      <td className="p-3 text-left">
+      <td className="px-4 py-2.5 text-left text-gray-600">{tagNumber ?? "—"}</td>
+      <td className="px-4 py-2.5 text-left text-gray-600">{hitchType ?? "—"}</td>
+      <td className="px-4 py-2.5 text-left text-gray-600 tabular-nums">
+        {formatInches(trailerHeightIn)}
+      </td>
+      <td className="px-4 py-2.5 text-left text-gray-600 tabular-nums">
+        {formatInches(trailerLengthIn)}
+      </td>
+      <td className="px-4 py-2.5 text-left text-gray-600 capitalize">{openingDirection ?? "—"}</td>
+      <td className="px-4 py-2.5 text-left text-gray-600 tabular-nums">
+        {gvwr != null ? `${gvwr.toLocaleString()} lbs` : "—"}
+      </td>
+      <td className="px-4 py-2.5 text-left">
+        {zone.zoneName ? (
+          <span className="inline-flex items-center rounded-full bg-darkBlue/[0.06] px-2 py-0.5 text-xs font-medium text-darkBlue">
+            {zone.zoneName}
+          </span>
+        ) : (
+          <span className="text-gray-400">—</span>
+        )}
+      </td>
+      <td className="px-4 py-2.5 text-left">
         {nvisPdfPath ? (
           <button
             onClick={handlePdfClick}
-            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium text-lightBlue hover:bg-lightBlue/10 transition-colors"
             title="View NVIS PDF"
           >
-            <FileText className="h-4 w-4" />
+            <FileText className="h-3.5 w-3.5" />
             View
           </button>
         ) : (
