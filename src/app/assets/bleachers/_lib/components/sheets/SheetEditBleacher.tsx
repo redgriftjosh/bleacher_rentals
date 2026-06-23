@@ -370,7 +370,7 @@ export function SheetEditBleacher() {
                       options={[
                         { label: "None", value: null },
                         ...storageLocations.map((sl) => ({
-                          label: sl.name,
+                          label: sl.name ?? "Unnamed",
                           value: sl.id,
                         })),
                       ]}

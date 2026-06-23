@@ -10,7 +10,6 @@ import {
   softDeleteStorageLocation,
   StorageLocationRow,
 } from "@/features/storageLocations/db/storageLocationsDb";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import {
@@ -26,7 +25,6 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function StorageLocationsPage() {
-  const supabase = useClerkSupabaseClient();
   const permissions = useTeamPermissions();
   const isAdmin = permissions.isAdmin;
 
@@ -56,9 +54,9 @@ export default function StorageLocationsPage() {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string | null) => {
     try {
-      await softDeleteStorageLocation(id, supabase);
+      await softDeleteStorageLocation(id);
       createSuccessToast([`"${name}" deleted.`]);
       loadLocations();
     } catch {

@@ -14,8 +14,8 @@ import {
   StorageLocationRow,
   StorageLocationAddress,
 } from "../db/storageLocationsDb";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
+import { createErrorToast } from "@/components/toasts/ErrorToast";
 
 type Props = {
   open: boolean;
@@ -26,8 +26,6 @@ type Props = {
 };
 
 export function StorageLocationModal({ open, onClose, onSaved, editing }: Props) {
-  const supabase = useClerkSupabaseClient();
-
   const [name, setName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [gateCode, setGateCode] = useState("");
@@ -81,16 +79,16 @@ export function StorageLocationModal({ open, onClose, onSaved, editing }: Props)
       };
 
       if (isEditing && editing) {
-        await updateStorageLocation(editing.id, editing.address_uuid, payload, supabase);
+        await updateStorageLocation(editing.id, editing.address_uuid, payload);
         createSuccessToast([`Storage location "${name}" updated.`]);
       } else {
-        await createStorageLocation(payload, supabase);
+        await createStorageLocation(payload);
         createSuccessToast([`Storage location "${name}" created.`]);
       }
       resetAndClose();
       onSaved();
-    } catch {
-      // Error toast already shown
+    } catch (e) {
+      createErrorToast(["Failed to save storage location.", String(e)]);
     } finally {
       setSaving(false);
     }

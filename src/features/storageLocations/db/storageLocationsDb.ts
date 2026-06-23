@@ -1,18 +1,16 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database, TablesInsert } from "../../../../database.types";
-import { db, powerSyncDb } from "@/components/providers/SystemProvider";
-import { createErrorToast } from "@/components/toasts/ErrorToast";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, typedExecute, typedGetAll } from "@/lib/powersync/typedQuery";
 
 // ── Types ──
 
 export type StorageLocationRow = {
   id: string;
-  name: string;
+  name: string | null;
   address_uuid: string | null;
   contact_phone_number: string | null;
   gate_code: string | null;
   notes: string | null;
-  deleted: number;
+  deleted: number | null;
   address_street: string | null;
   address_city: string | null;
   address_state: string | null;
@@ -26,10 +24,18 @@ export type StorageLocationAddress = {
   zipPostal: string;
 };
 
-// ── Read (PowerSync) ──
+export type StorageLocationInput = {
+  name: string;
+  contactPhoneNumber: string | null;
+  gateCode: string | null;
+  notes: string | null;
+  address: StorageLocationAddress | null;
+};
 
-export async function fetchAllStorageLocations(): Promise<StorageLocationRow[]> {
-  const compiled = db
+// ── Read (PowerSync, non-reactive) ──
+
+export function buildFetchAllStorageLocationsQuery() {
+  return db
     .selectFrom("StorageLocations as sl")
     .leftJoin("Addresses as a", "sl.address_uuid", "a.id")
     .select([
@@ -48,28 +54,26 @@ export async function fetchAllStorageLocations(): Promise<StorageLocationRow[]> 
     .where("sl.deleted", "=", 0)
     .orderBy("sl.name")
     .compile();
-
-  return powerSyncDb.getAll<StorageLocationRow>(compiled.sql, compiled.parameters as any[]);
 }
 
-// ── Write (Supabase) ──
+export async function fetchAllStorageLocations(): Promise<StorageLocationRow[]> {
+  return typedGetAll(buildFetchAllStorageLocationsQuery(), expect<StorageLocationRow>());
+}
 
-type StorageLocationInput = {
-  name: string;
-  contactPhoneNumber: string | null;
-  gateCode: string | null;
-  notes: string | null;
-  address: StorageLocationAddress | null;
-};
+// ── Writes (PowerSync local-first) ──
 
-async function upsertAddress(
+/**
+ * Upserts the address row for a storage location into the local PowerSync DB.
+ * Returns the address uuid (existing or newly created), or null when there is
+ * no street to store.
+ */
+export async function upsertStorageLocationAddress(
   address: StorageLocationAddress | null,
   existingAddressUuid: string | null,
-  supabase: SupabaseClient<Database>,
 ): Promise<string | null> {
   if (!address || !address.street) return existingAddressUuid ?? null;
 
-  const payload = {
+  const values = {
     street: address.street,
     city: address.city,
     state_province: address.stateProvince,
@@ -77,90 +81,76 @@ async function upsertAddress(
   };
 
   if (existingAddressUuid) {
-    const { error } = await supabase
-      .from("Addresses")
-      .update(payload)
-      .eq("id", existingAddressUuid);
-    if (error) createErrorToast(["Failed to update address.", error.message ?? ""]);
+    await typedExecute(
+      db
+        .updateTable("Addresses")
+        .set(values as any)
+        .where("id", "=", existingAddressUuid)
+        .compile(),
+    );
     return existingAddressUuid;
   }
 
-  const { data, error } = await supabase
-    .from("Addresses")
-    .insert(payload)
-    .select("id")
-    .single();
-  if (error || !data) {
-    createErrorToast(["Failed to insert address.", error?.message ?? ""]);
-    return null;
-  }
-  return data.id;
+  const addressUuid = crypto.randomUUID();
+  await typedExecute(
+    db
+      .insertInto("Addresses")
+      .values({ id: addressUuid, ...values } as any)
+      .compile(),
+  );
+  return addressUuid;
 }
 
-export async function createStorageLocation(
-  params: StorageLocationInput,
-  supabase: SupabaseClient<Database>,
-): Promise<string> {
-  const addressUuid = await upsertAddress(params.address, null, supabase);
+export async function createStorageLocation(params: StorageLocationInput): Promise<string> {
+  const addressUuid = await upsertStorageLocationAddress(params.address, null);
 
-  const newRow: TablesInsert<"StorageLocations"> = {
-    name: params.name,
-    address_uuid: addressUuid,
-    contact_phone_number: params.contactPhoneNumber,
-    gate_code: params.gateCode,
-    notes: params.notes,
-  };
+  const id = crypto.randomUUID();
+  await typedExecute(
+    db
+      .insertInto("StorageLocations")
+      .values({
+        id,
+        name: params.name,
+        address_uuid: addressUuid,
+        contact_phone_number: params.contactPhoneNumber,
+        gate_code: params.gateCode,
+        notes: params.notes,
+        deleted: 0,
+      } as any)
+      .compile(),
+  );
 
-  const { data, error } = await supabase
-    .from("StorageLocations")
-    .insert(newRow)
-    .select("id")
-    .single();
-
-  if (error || !data) {
-    createErrorToast(["Failed to create storage location.", error?.message ?? ""]);
-    throw error;
-  }
-
-  return data.id;
+  return id;
 }
 
 export async function updateStorageLocation(
   id: string,
   existingAddressUuid: string | null,
   params: StorageLocationInput,
-  supabase: SupabaseClient<Database>,
 ): Promise<void> {
-  const addressUuid = await upsertAddress(params.address, existingAddressUuid, supabase);
+  const addressUuid = await upsertStorageLocationAddress(params.address, existingAddressUuid);
 
-  const { error } = await supabase
-    .from("StorageLocations")
-    .update({
-      name: params.name,
-      address_uuid: addressUuid,
-      contact_phone_number: params.contactPhoneNumber,
-      gate_code: params.gateCode,
-      notes: params.notes,
-    })
-    .eq("id", id);
-
-  if (error) {
-    createErrorToast(["Failed to update storage location.", error.message ?? ""]);
-    throw error;
-  }
+  await typedExecute(
+    db
+      .updateTable("StorageLocations")
+      .set({
+        name: params.name,
+        address_uuid: addressUuid,
+        contact_phone_number: params.contactPhoneNumber,
+        gate_code: params.gateCode,
+        notes: params.notes,
+      } as any)
+      .where("id", "=", id)
+      .compile(),
+  );
 }
 
-export async function softDeleteStorageLocation(
-  id: string,
-  supabase: SupabaseClient<Database>,
-): Promise<void> {
-  const { error } = await supabase
-    .from("StorageLocations")
-    .update({ deleted: true })
-    .eq("id", id);
-
-  if (error) {
-    createErrorToast(["Failed to delete storage location.", error.message ?? ""]);
-    throw error;
-  }
+export async function softDeleteStorageLocation(id: string): Promise<void> {
+  await typedExecute(
+    db
+      .updateTable("StorageLocations")
+      .set({ deleted: 1 } as any)
+      .where("id", "=", id)
+      .compile(),
+  );
 }
