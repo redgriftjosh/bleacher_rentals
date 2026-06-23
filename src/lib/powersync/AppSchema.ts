@@ -58,6 +58,7 @@ const BleachersCols = {
   deleted: column.integer,
   nvis_pdf_path: column.text,
   zone_uuid: column.text,
+  storage_location_uuid: column.text,
 } satisfies PowerSyncColsFor<"Bleachers">;
 const Bleachers = new Table(BleachersCols, {
   indexes: {
@@ -66,7 +67,21 @@ const Bleachers = new Table(BleachersCols, {
     summer_home_base_uuid: ["summer_home_base_uuid"],
     winter_home_base_uuid: ["winter_home_base_uuid"],
     zone_uuid: ["zone_uuid"],
+    storage_location_uuid: ["storage_location_uuid"],
   },
+});
+
+const StorageLocationsCols = {
+  created_at: column.text,
+  name: column.text,
+  address_uuid: column.text,
+  contact_phone_number: column.text,
+  gate_code: column.text,
+  notes: column.text,
+  deleted: column.integer,
+} satisfies PowerSyncColsFor<"StorageLocations">;
+const StorageLocations = new Table(StorageLocationsCols, {
+  indexes: { address_uuid: ["address_uuid"] },
 });
 
 const ZonesCols = {
@@ -971,6 +986,7 @@ export const AppSchema = new Schema({
   ContractSignatures,
   EventFiles,
   SubrentalEvents,
+  StorageLocations,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
@@ -1001,6 +1017,7 @@ export type InspectionQuestionsRecord = PowerSyncDB["InspectionQuestions"];
 export type DamageReportsRecord = PowerSyncDB["DamageReports"];
 export type MaintenanceEventsRecord = PowerSyncDB["MaintenanceEvents"];
 export type SubrentalEventsRecord = PowerSyncDB["SubrentalEvents"];
+export type StorageLocationsRecord = PowerSyncDB["StorageLocations"];
 export type BleacherMaintEventsRecord = PowerSyncDB["BleacherMaintEvents"];
 export type DriverScorecardStatsPerDriverRecord = PowerSyncDB["DriverScorecardStatsPerDriver"];
 export type DriverScoreCardStatsRecord = PowerSyncDB["DriverScoreCardStats"];

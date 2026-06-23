@@ -141,7 +141,8 @@ export function useBleacherQuery(bleacherNumber: number | null) {
           linxup_device_id,
           summer_account_manager_uuid,
           winter_account_manager_uuid,
-          bleacher_type_uuid
+          bleacher_type_uuid,
+          storage_location_uuid
         `,
         )
         .eq("bleacher_number", bleacherNumber)

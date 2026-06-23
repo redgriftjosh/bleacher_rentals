@@ -17,6 +17,7 @@ import {
   ScrollText,
   DollarSign,
   BookUser,
+  Warehouse,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";
@@ -172,6 +173,13 @@ const ALL_ITEMS: SidebarItemConfig[] = [
         label: "Sales Offices",
         href: "/sales-offices",
         icon: Building2,
+      },
+      {
+        type: "button",
+        key: "storage-locations",
+        label: "Storage Locations",
+        href: "/storage-locations",
+        icon: Warehouse,
       },
     ],
   },

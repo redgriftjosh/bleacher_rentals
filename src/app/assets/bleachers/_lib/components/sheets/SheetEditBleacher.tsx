@@ -13,6 +13,7 @@ import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
 import { Dropdown } from "@/components/DropDown";
 import { useBleacherTypesActive } from "@/features/pricingMatrix/hooks/useBleacherTypesActive";
+import { fetchAllStorageLocations } from "@/features/storageLocations/db/storageLocationsDb";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle, Trash2, ShieldAlert } from "lucide-react";
@@ -44,6 +45,10 @@ export function SheetEditBleacher() {
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
   const { bleacherTypes } = useBleacherTypesActive();
+  const { data: storageLocations = [] } = useQuery({
+    queryKey: ["storage-locations-options"],
+    queryFn: fetchAllStorageLocations,
+  });
   const searchParamsValue = searchParams.get("edit");
   const editBleacherNumber = searchParamsValue ? Number(searchParamsValue) : null;
 
@@ -52,6 +57,7 @@ export function SheetEditBleacher() {
   const [rows, setRows] = useState<number | null>(null);
   const [seats, setSeats] = useState<number | null>(null);
   const [bleacherTypeUuid, setBleacherTypeUuid] = useState<string | null>(null);
+  const [storageLocationUuid, setStorageLocationUuid] = useState<string | null>(null);
   const [selectedSummerHomeBaseUuid, setSelectedSummerHomeBaseUuid] = useState<string | null>(null);
   const [selectedWinterHomeBaseUuid, setSelectedWinterHomeBaseUuid] = useState<string | null>(null);
   const [selectedLinxupDeviceId, setSelectedLinxupDeviceId] = useState<string | null>(null);
@@ -104,6 +110,7 @@ export function SheetEditBleacher() {
       setSeats(bleacher.bleacher_seats);
       setIsDeleted(bleacher.deleted);
       setBleacherTypeUuid(bleacher.bleacher_type_uuid ?? null);
+      setStorageLocationUuid(bleacher.storage_location_uuid ?? null);
       setSelectedSummerHomeBaseUuid(bleacher.summer_home_base_uuid);
       setSelectedWinterHomeBaseUuid(bleacher.winter_home_base_uuid);
       setSelectedLinxupDeviceId(bleacher.linxup_device_id ?? null);
@@ -151,6 +158,7 @@ export function SheetEditBleacher() {
       setOpeningDirection(null);
       setNvisPdfPath(null);
       setBleacherTypeUuid(null);
+      setStorageLocationUuid(null);
     }
   }, [editBleacherNumber]);
 
@@ -208,6 +216,7 @@ export function SheetEditBleacher() {
           trailer_length_in: feetAndInchesToInches(trailerLengthFt, trailerLengthIn),
           opening_direction: openingDirection,
           nvis_pdf_path: nvisPdfPath,
+          storage_location_uuid: storageLocationUuid,
         },
         supabase,
         queryClient,
@@ -349,6 +358,25 @@ export function SheetEditBleacher() {
                       selected={bleacherTypeUuid}
                       onSelect={(v) => setBleacherTypeUuid(v)}
                       placeholder="Select type (optional)"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-5 items-center gap-4">
+                  <label className="text-right text-sm font-medium col-span-2">
+                    Storage Location
+                  </label>
+                  <div className="col-span-3">
+                    <Dropdown
+                      options={[
+                        { label: "None", value: null },
+                        ...storageLocations.map((sl) => ({
+                          label: sl.name,
+                          value: sl.id,
+                        })),
+                      ]}
+                      selected={storageLocationUuid}
+                      onSelect={(v) => setStorageLocationUuid(v)}
+                      placeholder="Select location (optional)"
                     />
                   </div>
                 </div>
