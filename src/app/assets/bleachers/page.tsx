@@ -37,8 +37,7 @@ export default function BleachersPage() {
             <th className="p-3 text-left font-semibold">Trailer Length</th>
             <th className="p-3 text-left font-semibold">Opening Direction</th>
             <th className="p-3 text-left font-semibold">GVWR</th>
-            <th className="p-3 text-left font-semibold">Home Base</th>
-            <th className="p-3 text-left font-semibold">Winter Home Base</th>
+            <th className="p-3 text-left font-semibold">Zone</th>
             <th className="p-3 text-left font-semibold">NVIS</th>
           </tr>
         </thead>

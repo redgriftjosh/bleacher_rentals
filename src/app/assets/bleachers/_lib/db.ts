@@ -30,17 +30,14 @@ type Query = {
   trailer_height_in: number | null;
   opening_direction: string | null;
   nvis_pdf_path: string | null;
-  summer_home_base_uuid: string | null;
-  summer_home_base_name: string | null;
-  winter_home_base_uuid: string | null;
-  winter_home_base_name: string | null;
+  zone_uuid: string | null;
+  zone_name: string | null;
 };
-// Fetching the list of bleachers with home bases using React Query
+// Fetching the list of bleachers with their zone using React Query
 export function useBleachersQuery(showDeleted: boolean = false) {
   let query = db
     .selectFrom("Bleachers as b")
-    .leftJoin("HomeBases as shb", "shb.id", "b.summer_home_base_uuid")
-    .leftJoin("HomeBases as whb", "whb.id", "b.winter_home_base_uuid")
+    .leftJoin("Zones as z", "z.id", "b.zone_uuid")
     .select([
       "b.bleacher_number",
       "b.bleacher_rows",
@@ -58,13 +55,9 @@ export function useBleachersQuery(showDeleted: boolean = false) {
       "b.trailer_length_in",
       "b.trailer_height_in",
 
-      // home_base fields
-      "shb.id as summer_home_base_uuid",
-      "shb.home_base_name as summer_home_base_name",
-
-      // winter_home_base fields
-      "whb.id as winter_home_base_uuid",
-      "whb.home_base_name as winter_home_base_name",
+      // zone fields
+      "z.id as zone_uuid",
+      "z.display_name as zone_name",
     ]);
 
   if (!showDeleted) {
@@ -91,13 +84,9 @@ export function useBleachersQuery(showDeleted: boolean = false) {
       trailerHeightIn: bleacher.trailer_height_in ?? null,
       openingDirection: bleacher.opening_direction ?? null,
       nvisPdfPath: bleacher.nvis_pdf_path ?? null,
-      summerHomeBase: {
-        homeBaseUuid: bleacher.summer_home_base_uuid ?? "",
-        homeBaseName: bleacher.summer_home_base_name ?? "",
-      },
-      winterHomeBase: {
-        homeBaseUuid: bleacher.winter_home_base_uuid ?? "",
-        homeBaseName: bleacher.winter_home_base_name ?? "",
+      zone: {
+        zoneUuid: bleacher.zone_uuid ?? "",
+        zoneName: bleacher.zone_name ?? "",
       },
     };
   });
@@ -136,11 +125,8 @@ export function useBleacherQuery(bleacherNumber: number | null) {
           nvis_pdf_path,
           trailer_length_in,
           trailer_height_in,
-          summer_home_base_uuid,
-          winter_home_base_uuid,
+          zone_uuid,
           linxup_device_id,
-          summer_account_manager_uuid,
-          winter_account_manager_uuid,
           bleacher_type_uuid,
           storage_location_uuid
         `,

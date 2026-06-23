@@ -1,26 +1,23 @@
 "use client";
 import { useEffect, useState } from "react";
 import SelectRowsDropDown from "../dropdowns/selectRowsDropDown";
-import SelectHomeBaseDropDown from "../dropdowns/selectHomeBaseDropDown";
 import SelectLinxupDeviceDropDown from "../dropdowns/selectLinxupDeviceDropDown";
 import { Dropdown } from "@/components/DropDown";
 import { useBleacherTypesActive } from "@/features/pricingMatrix/hooks/useBleacherTypesActive";
-import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
+import { usePsZones } from "@/features/dashboard/db/hooks/powersync/usePsZones";
 import { fetchTakenBleacherNumbers, insertBleacher } from "../../db";
 import { checkInsertBleacherFormRules, feetAndInchesToInches } from "../../functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCheck, CircleAlert, LoaderCircle } from "lucide-react";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
-import { Database } from "../../../../../../../database.types";
-import { useHomeBases } from "../../hooks/useHomeBases";
 import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
 
 export function SheetAddBleacher() {
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
 
-  const homeBases = useHomeBases();
   const { bleacherTypes } = useBleacherTypesActive();
+  const zones = usePsZones();
 
   const [isOpen, setIsOpen] = useState(false);
   const [bleacherNumber, setBleacherNumber] = useState<number | null>(null);
@@ -39,11 +36,8 @@ export function SheetAddBleacher() {
   const [trailerLengthIn, setTrailerLengthIn] = useState<number | null>(null);
 
   const [openingDirection, setOpeningDirection] = useState<"driver" | "passenger" | null>(null);
-  const [selectedSummerHomeBaseUuid, setSelectedSummerHomeBaseUuid] = useState<string | null>(null);
-  const [selectedWinterHomeBaseUuid, setSelectedWinterHomeBaseUuid] = useState<string | null>(null);
+  const [zoneUuid, setZoneUuid] = useState<string | null>(null);
   const [selectedLinxupDeviceId, setSelectedLinxupDeviceId] = useState<string | null>(null);
-  const [summerAccountManagerUuid, setSummerAccountManagerUuid] = useState<string | null>(null);
-  const [winterAccountManagerUuid, setWinterAccountManagerUuid] = useState<string | null>(null);
   const [nvisPdfPath, setNvisPdfPath] = useState<string | null>(null);
   const [isTakenNumber, setIsTakenNumber] = useState(true);
 
@@ -62,11 +56,8 @@ export function SheetAddBleacher() {
       setTrailerLengthFt(null);
       setTrailerLengthIn(null);
       setOpeningDirection(null);
-      setSelectedSummerHomeBaseUuid(null);
-      setSelectedWinterHomeBaseUuid(null);
+      setZoneUuid(null);
       setSelectedLinxupDeviceId(null);
-      setSummerAccountManagerUuid(null);
-      setWinterAccountManagerUuid(null);
       setNvisPdfPath(null);
       setBleacherTypeUuid(null);
     }
@@ -103,8 +94,6 @@ export function SheetAddBleacher() {
           bleacher_number: bleacherNumber,
           bleacher_rows: rows,
           bleacher_seats: seats,
-          summer_home_base_uuid: selectedSummerHomeBaseUuid,
-          winter_home_base_uuid: selectedWinterHomeBaseUuid,
         },
         takenNumbers,
       )
@@ -125,11 +114,8 @@ export function SheetAddBleacher() {
           trailer_height_in: feetAndInchesToInches(trailerHeightFt, trailerHeightIn),
           trailer_length_in: feetAndInchesToInches(trailerLengthFt, trailerLengthIn),
           opening_direction: openingDirection,
-          summer_home_base_uuid: selectedSummerHomeBaseUuid!,
-          winter_home_base_uuid: selectedWinterHomeBaseUuid!,
+          zone_uuid: zoneUuid,
           linxup_device_id: selectedLinxupDeviceId,
-          summer_account_manager_uuid: summerAccountManagerUuid,
-          winter_account_manager_uuid: winterAccountManagerUuid,
           nvis_pdf_path: nvisPdfPath,
         },
         supabase,
@@ -237,26 +223,21 @@ export function SheetAddBleacher() {
                   </div>
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
-                    Home Base
-                  </label>
-                  <SelectHomeBaseDropDown
-                    options={homeBases ?? []}
-                    onSelect={(e) => setSelectedSummerHomeBaseUuid(e.id)}
-                    placeholder="Select Home Base"
-                    value={selectedSummerHomeBaseUuid ?? undefined}
-                  />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
-                    Winter Home Base
-                  </label>
-                  <SelectHomeBaseDropDown
-                    options={homeBases ?? []}
-                    onSelect={(e) => setSelectedWinterHomeBaseUuid(e.id)}
-                    placeholder="Select Home Base"
-                    value={selectedWinterHomeBaseUuid ?? undefined}
-                  />
+                  <label className="text-right text-sm font-medium col-span-2">Zone</label>
+                  <div className="col-span-3">
+                    <Dropdown
+                      options={[
+                        { label: "None", value: null },
+                        ...zones.map((z) => ({
+                          label: z.display_name ?? z.id,
+                          value: z.id,
+                        })),
+                      ]}
+                      selected={zoneUuid}
+                      onSelect={(v) => setZoneUuid(v)}
+                      placeholder="Select zone (optional)"
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
                   <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
@@ -267,30 +248,6 @@ export function SheetAddBleacher() {
                     placeholder="Select Device (Optional)"
                     value={selectedLinxupDeviceId ?? null}
                   />
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
-                    Summer Account Manager
-                  </label>
-                  <div className="col-span-3">
-                    <SelectAccountManager
-                      value={summerAccountManagerUuid}
-                      onChange={setSummerAccountManagerUuid}
-                      placeholder="Select Account Manager (Optional)"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-5 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium col-span-2">
-                    Winter Account Manager
-                  </label>
-                  <div className="col-span-3">
-                    <SelectAccountManager
-                      value={winterAccountManagerUuid}
-                      onChange={setWinterAccountManagerUuid}
-                      placeholder="Select Account Manager (Optional)"
-                    />
-                  </div>
                 </div>
                 <div className="grid grid-cols-5 items-center gap-4">
                   <label className="text-right text-sm font-medium col-span-2">Manufacturer</label>

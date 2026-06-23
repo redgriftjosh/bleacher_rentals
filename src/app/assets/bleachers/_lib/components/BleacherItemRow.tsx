@@ -36,8 +36,7 @@ export function BleacherItemRow({
   trailerLengthIn,
   openingDirection,
   nvisPdfPath,
-  summerHomeBase,
-  winterHomeBase,
+  zone,
 }: FormattedBleacher) {
   const router = useRouter();
   const supabase = useClerkSupabaseClient();
@@ -77,8 +76,7 @@ export function BleacherItemRow({
       <td className="p-3 text-left">{formatInches(trailerLengthIn)}</td>
       <td className="p-3 text-left">{openingDirection ?? "—"}</td>
       <td className="p-3 text-left">{gvwr != null ? `${gvwr.toLocaleString()} lbs` : "—"}</td>
-      <td className="p-3 text-left">{summerHomeBase.homeBaseName}</td>
-      <td className="p-3 text-left">{winterHomeBase.homeBaseName}</td>
+      <td className="p-3 text-left">{zone.zoneName || "—"}</td>
       <td className="p-3 text-left">
         {nvisPdfPath ? (
           <button
