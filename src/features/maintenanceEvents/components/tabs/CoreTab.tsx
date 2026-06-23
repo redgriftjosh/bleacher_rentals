@@ -8,6 +8,7 @@ import { useScrollToDateStore } from "@/features/dashboard/state/useScrollToDate
 import { LocateFixed, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { filterOwnerOptions } from "@/features/userAccess/logic/filterOwnerOptions";
+import { STATUSES } from "@/features/manageTeam/constants";
 import { useAccountManagerUserIds } from "@/features/userAccess/hooks/useAccountManagerUserIds";
 import CentsInput from "@/components/CentsInput";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
@@ -37,6 +38,7 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
     currentUserId: permissions.userId,
     disabled,
     accountManagerUserIds,
+    inactiveStatusUuid: STATUSES.inactive,
   });
   const ownerOptions = filteredUsers.map((u) => ({
     label: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.email,

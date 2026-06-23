@@ -2,6 +2,7 @@
 
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { STATUSES } from "@/features/manageTeam/constants";
 import { useMemo } from "react";
 
 type Row = {
@@ -28,6 +29,7 @@ export function useRoadmapDevelopers(): DeveloperOption[] {
         .innerJoin("Users as u", "u.id", "d.user_uuid")
         .select(["u.id as userUuid", "u.first_name as firstName", "u.last_name as lastName"])
         .where("d.is_active", "=", 1)
+        .where("u.status_uuid", "!=", STATUSES.inactive)
         .orderBy("u.first_name", "asc")
         .orderBy("u.last_name", "asc")
         .compile(),

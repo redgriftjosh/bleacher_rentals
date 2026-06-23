@@ -82,6 +82,41 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
     expect(result).toEqual([{ id: "user-viewer", name: "Viewer User", is_admin: false }]);
   });
 
+  // ═══ Deactivated users ═══
+
+  it("excludes deactivated users from the selectable list when inactiveStatusUuid is set", () => {
+    const usersWithStatus = [
+      { id: "user-admin", is_admin: true, status_uuid: "active" },
+      { id: "user-am-1", is_admin: false, status_uuid: "active" },
+      { id: "user-am-2", is_admin: false, status_uuid: "inactive" },
+    ];
+    const result = filterOwnerOptions({
+      users: usersWithStatus,
+      isAdmin: false,
+      currentUserId: "user-am-1",
+      disabled: false,
+      accountManagerUserIds: new Set(["user-am-1", "user-am-2"]),
+      inactiveStatusUuid: "inactive",
+    });
+    expect(result.map((u) => u.id)).toEqual(["user-admin", "user-am-1"]);
+  });
+
+  it("still shows deactivated users in read-only mode (disabled=true) so the owner name renders", () => {
+    const usersWithStatus = [
+      { id: "user-am-1", is_admin: false, status_uuid: "active" },
+      { id: "user-am-2", is_admin: false, status_uuid: "inactive" },
+    ];
+    const result = filterOwnerOptions({
+      users: usersWithStatus,
+      isAdmin: false,
+      currentUserId: "user-am-1",
+      disabled: true,
+      accountManagerUserIds: new Set(["user-am-1", "user-am-2"]),
+      inactiveStatusUuid: "inactive",
+    });
+    expect(result).toEqual(usersWithStatus);
+  });
+
   // ═══ Edge cases ═══
 
   it("returns empty when currentUserId is null and not admin", () => {

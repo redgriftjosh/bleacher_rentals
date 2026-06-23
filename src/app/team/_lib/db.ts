@@ -138,6 +138,7 @@ export async function fetchBleachersForOptions(
   let query = supabase
     .from("Bleachers")
     .select("id, bleacher_number, summer_account_manager_uuid, winter_account_manager_uuid")
+    .eq("deleted", false)
     .order("bleacher_number", { ascending: true });
 
   const { data, error } = await query;
