@@ -1,20 +1,20 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { Database, TablesInsert } from "../../../../database.types";
-import { db, powerSyncDb } from "@/components/providers/SystemProvider";
-import { createErrorToast } from "@/components/toasts/ErrorToast";
+import { Database } from "../../../../database.types";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, typedExecute, typedGetAll } from "@/lib/powersync/typedQuery";
 
 // ── Types ──
 
 export type SalesOfficeRow = {
   id: string;
-  name: string;
+  name: string | null;
   address_uuid: string | null;
-  quickbook_uuid: string;
-  deleted: number;
+  quickbook_uuid: string | null;
+  deleted: number | null;
   address_street: string | null;
   address_city: string | null;
   address_state: string | null;
-  qbo_display_name: string | null;
+  address_zip: string | null;
 };
 
 export type QboConnectionOption = {
@@ -22,10 +22,23 @@ export type QboConnectionOption = {
   displayName: string;
 };
 
-// ── Read (PowerSync) ──
+export type SalesOfficeAddress = {
+  street: string;
+  city: string;
+  stateProvince: string;
+  zipPostal: string;
+};
 
-export async function fetchAllSalesOffices(): Promise<SalesOfficeRow[]> {
-  const compiled = db
+export type SalesOfficeInput = {
+  name: string;
+  quickbookUuid: string;
+  address: SalesOfficeAddress | null;
+};
+
+// ── Read (PowerSync, non-reactive) ──
+
+export function buildFetchAllSalesOfficesQuery() {
+  return db
     .selectFrom("SalesOffices as so")
     .leftJoin("Addresses as a", "so.address_uuid", "a.id")
     .select([
@@ -37,15 +50,18 @@ export async function fetchAllSalesOffices(): Promise<SalesOfficeRow[]> {
       "a.street as address_street",
       "a.city as address_city",
       "a.state_province as address_state",
+      "a.zip_postal as address_zip",
     ])
     .where("so.deleted", "=", 0)
     .orderBy("so.name")
     .compile();
-
-  return powerSyncDb.getAll<SalesOfficeRow>(compiled.sql, compiled.parameters as any[]);
 }
 
-// QboConnections not in PowerSync — fetch via Supabase
+export async function fetchAllSalesOffices(): Promise<SalesOfficeRow[]> {
+  return typedGetAll(buildFetchAllSalesOfficesQuery(), expect<SalesOfficeRow>());
+}
+
+// QboConnections is not synced to PowerSync — fetch via Supabase (online).
 export async function fetchQboConnections(
   supabase: SupabaseClient<Database>,
 ): Promise<QboConnectionOption[]> {
@@ -65,74 +81,88 @@ export async function fetchQboConnections(
   }));
 }
 
-// ── Write (Supabase) ──
+// ── Writes (PowerSync local-first / optimistic) ──
 
-type CreateSalesOfficeParams = {
-  name: string;
-  quickbookUuid: string;
-  address?: {
-    street: string;
-    city: string;
-    stateProvince: string;
-    zipPostal: string;
-  } | null;
-};
+export async function upsertSalesOfficeAddress(
+  address: SalesOfficeAddress | null,
+  existingAddressUuid: string | null,
+): Promise<string | null> {
+  if (!address || !address.street) return existingAddressUuid ?? null;
 
-export async function createSalesOffice(
-  params: CreateSalesOfficeParams,
-  supabase: SupabaseClient<Database>,
-): Promise<string> {
-  // 1. Insert address if provided
-  let addressUuid: string | null = null;
-
-  if (params.address && params.address.street) {
-    const { data, error } = await supabase
-      .from("Addresses")
-      .insert({
-        street: params.address.street,
-        city: params.address.city,
-        state_province: params.address.stateProvince,
-        zip_postal: params.address.zipPostal || null,
-      })
-      .select("id")
-      .single();
-
-    if (error || !data) {
-      createErrorToast(["Failed to insert address.", error?.message ?? ""]);
-    }
-    addressUuid = data!.id;
-  }
-
-  // 2. Insert sales office
-  const newOffice: TablesInsert<"SalesOffices"> = {
-    name: params.name,
-    quickbook_uuid: params.quickbookUuid,
-    address_uuid: addressUuid,
+  const values = {
+    street: address.street,
+    city: address.city,
+    state_province: address.stateProvince,
+    zip_postal: address.zipPostal || null,
   };
 
-  const { data, error } = await supabase
-    .from("SalesOffices")
-    .insert(newOffice)
-    .select("id")
-    .single();
-
-  if (error || !data) {
-    createErrorToast(["Failed to create sales office.", error?.message ?? ""]);
+  if (existingAddressUuid) {
+    await typedExecute(
+      db
+        .updateTable("Addresses")
+        .set(values as any)
+        .where("id", "=", existingAddressUuid)
+        .compile(),
+    );
+    return existingAddressUuid;
   }
 
-  return data!.id;
+  const addressUuid = crypto.randomUUID();
+  await typedExecute(
+    db
+      .insertInto("Addresses")
+      .values({ id: addressUuid, ...values } as any)
+      .compile(),
+  );
+  return addressUuid;
 }
 
-export async function softDeleteSalesOffice(
-  officeId: string,
-  supabase: SupabaseClient<Database>,
-): Promise<void> {
-  const { error } = await supabase
-    .from("SalesOffices")
-    .update({ deleted: true })
-    .eq("id", officeId);
+export async function createSalesOffice(params: SalesOfficeInput): Promise<string> {
+  const addressUuid = await upsertSalesOfficeAddress(params.address, null);
 
-  if (error) {
-    createErrorToast(["Failed to delete sales office.", error.message ?? ""]);
-  }
+  const id = crypto.randomUUID();
+  await typedExecute(
+    db
+      .insertInto("SalesOffices")
+      .values({
+        id,
+        name: params.name,
+        quickbook_uuid: params.quickbookUuid,
+        address_uuid: addressUuid,
+        deleted: 0,
+      } as any)
+      .compile(),
+  );
+
+  return id;
+}
+
+export async function updateSalesOffice(
+  id: string,
+  existingAddressUuid: string | null,
+  params: SalesOfficeInput,
+): Promise<void> {
+  const addressUuid = await upsertSalesOfficeAddress(params.address, existingAddressUuid);
+
+  await typedExecute(
+    db
+      .updateTable("SalesOffices")
+      .set({
+        name: params.name,
+        quickbook_uuid: params.quickbookUuid,
+        address_uuid: addressUuid,
+      } as any)
+      .where("id", "=", id)
+      .compile(),
+  );
+}
+
+export async function softDeleteSalesOffice(id: string): Promise<void> {
+  await typedExecute(
+    db
+      .updateTable("SalesOffices")
+      .set({ deleted: 1 } as any)
+      .where("id", "=", id)
+      .compile(),
+  );
 }
