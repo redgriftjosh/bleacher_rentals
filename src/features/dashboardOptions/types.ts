@@ -18,4 +18,9 @@ export type DashboardFilterState = {
 
   // convenience UI toggle (also persisted)
   rowsQuickFilter: RowsQuickFilter;
+
+  // selected Zone ids for the dashboard zone filter
+  zoneUuids: string[];
+  // whether the "Unassigned" pseudo-zone is selected
+  showUnassignedZone: boolean;
 };

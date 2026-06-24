@@ -230,6 +230,8 @@ const DashboardFilterSettingsCols = {
   season: column.text,
   account_manager_uuid: column.text,
   rows_quick_filter: column.integer,
+  zone_uuids: column.text,
+  show_unassigned_zone: column.integer,
 } satisfies PowerSyncColsFor<"DashboardFilterSettings">;
 const DashboardFilterSettings = new Table(DashboardFilterSettingsCols, {
   indexes: {

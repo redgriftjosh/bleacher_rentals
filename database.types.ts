@@ -804,12 +804,14 @@ export type Database = {
           rows_quick_filter: number | null
           season: string | null
           show_address_tooltip: boolean
+          show_unassigned_zone: boolean
           state_provinces: string
           summer_home_base_uuids: string
           updated_at: string
           user_uuid: string
           winter_home_base_uuids: string
           y_axis: string
+          zone_uuids: string
         }
         Insert: {
           account_manager_uuid?: string | null
@@ -821,12 +823,14 @@ export type Database = {
           rows_quick_filter?: number | null
           season?: string | null
           show_address_tooltip?: boolean
+          show_unassigned_zone?: boolean
           state_provinces?: string
           summer_home_base_uuids?: string
           updated_at?: string
           user_uuid: string
           winter_home_base_uuids?: string
           y_axis?: string
+          zone_uuids?: string
         }
         Update: {
           account_manager_uuid?: string | null
@@ -838,12 +842,14 @@ export type Database = {
           rows_quick_filter?: number | null
           season?: string | null
           show_address_tooltip?: boolean
+          show_unassigned_zone?: boolean
           state_provinces?: string
           summer_home_base_uuids?: string
           updated_at?: string
           user_uuid?: string
           winter_home_base_uuids?: string
           y_axis?: string
+          zone_uuids?: string
         }
         Relationships: [
           {

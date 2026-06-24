@@ -101,6 +101,8 @@ export class Dashboard {
         optimizationMode: false,
         showAddressTooltip: false,
         rowsQuickFilter: null,
+        zoneUuids: [],
+        showUnassignedZone: false,
       } satisfies DashboardFilterState);
 
     this.yAxis = this.filters.yAxis;
