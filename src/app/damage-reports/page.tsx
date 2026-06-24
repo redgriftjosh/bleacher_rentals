@@ -4,106 +4,54 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
-import { useUser } from "@clerk/nextjs";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, Plus, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Plus, X, Trash2, RotateCcw } from "lucide-react";
 import { DamageReportModal, EditDamageReport } from "./DamageReportModal";
-
-type DamageSeverity = "none" | "minor" | "major";
-
-type DamageReport = {
-  id: string;
-  bleacher_uuid: string;
-  inspection_uuid: string | null;
-  is_safe_to_sit: boolean;
-  is_safe_to_haul: boolean;
-  seat_damage: DamageSeverity;
-  haul_damage: DamageSeverity;
-  note: string | null;
-  created_at: string;
-  resolved_at: string | null;
-  maintenance_event_uuid: string | null;
-  created_by_user_uuid: string | null;
-  bleacher: { bleacher_number: number } | null;
-  maintenance_event: { event_name: string } | null;
-  created_by_user: { first_name: string; last_name: string } | null;
-  photos: { id: string; photo_path: string }[];
-};
+import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
+import { useCurrentUser } from "@/hooks/db/useCurrentUser";
+import { createSuccessToast } from "@/components/toasts/SuccessToast";
+import { createErrorToast } from "@/components/toasts/ErrorToast";
+import {
+  useDamageReports,
+  useBleacherFilterOptions,
+  setDamageReportDeleted,
+  type DamageReport,
+  type DamageSeverity,
+} from "./_lib/db";
 
 function DamageReportsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const supabase = useClerkSupabaseClient();
-  const { user: clerkUser } = useUser();
-  const queryClient = useQueryClient();
+  const { isAdmin } = useTeamPermissions();
   const [showResolved, setShowResolved] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingReport, setEditingReport] = useState<DamageReport | null>(null);
 
   const bleacherUuid = searchParams.get("bleacher_uuid");
 
-  const { data: currentUserUuid } = useQuery({
-    queryKey: ["current-user-uuid", clerkUser?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("Users")
-        .select("id")
-        .eq("clerk_user_id", clerkUser!.id)
-        .single();
-      return data?.id ?? null;
-    },
-    enabled: !!supabase && !!clerkUser?.id,
-  });
+  const { data: currentUser } = useCurrentUser();
+  const currentUserUuid = currentUser?.[0]?.id ?? null;
 
-  // Fetch all bleachers for the filter dropdown
-  const { data: bleachers = [] } = useQuery({
-    queryKey: ["bleachers-for-filter"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("Bleachers")
-        .select("id, bleacher_number")
-        .eq("deleted", false)
-        .order("bleacher_number", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!supabase,
-  });
+  // Reactive PowerSync reads (see docs/POWERSYNC_ARCHITECTURE.md)
+  const bleachers = useBleacherFilterOptions();
+  const { reports, isLoading } = useDamageReports({ bleacherUuid, showDeleted });
 
-  // Fetch damage reports
-  const { data: reports = [], isLoading } = useQuery({
-    queryKey: ["damage-reports", bleacherUuid],
-    queryFn: async () => {
-      let query = supabase
-        .from("DamageReports")
-        .select(
-          `
-          *,
-          bleacher:Bleachers!DamageReports_bleacher_uuid_fkey(bleacher_number),
-          maintenance_event:MaintenanceEvents!DamageReports_maintenance_event_uuid_fkey(event_name),
-          created_by_user:Users!DamageReports_created_by_user_uuid_fkey(first_name, last_name),
-          photos:DamageReportPhotos!DamageReportPhotos_damage_report_uuid_fkey(id, photo_path)
-        `,
-        )
-        .order("created_at", { ascending: false });
-
-      if (bleacherUuid) {
-        query = query.eq("bleacher_uuid", bleacherUuid);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as DamageReport[];
-    },
-    enabled: !!supabase,
-  });
+  const handleSetDeleted = async (reportId: string, deleted: boolean) => {
+    try {
+      await setDamageReportDeleted(reportId, deleted);
+      createSuccessToast([deleted ? "Damage report deleted." : "Damage report restored."]);
+    } catch (e) {
+      createErrorToast([`Failed to ${deleted ? "delete" : "restore"} report.`, String(e)]);
+    }
+  };
 
   const filteredReports = useMemo(
     () =>
-      reports.filter((r) =>
-        showResolved ? r.resolved_at !== null : r.resolved_at === null,
-      ),
-    [reports, showResolved],
+      // In the deleted view, show every deleted report regardless of resolved state.
+      showDeleted
+        ? reports
+        : reports.filter((r) => (showResolved ? r.resolved_at !== null : r.resolved_at === null)),
+    [reports, showResolved, showDeleted],
   );
 
   const selectedBleacherNumber = useMemo(() => {
@@ -166,26 +114,43 @@ function DamageReportsContent() {
           </button>
         )}
 
-        <button
-          onClick={() => setShowResolved((v) => !v)}
-          className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition cursor-pointer ${
-            showResolved
-              ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
-              : "border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
-          }`}
-        >
-          {showResolved ? (
-            <>
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Showing Resolved
-            </>
-          ) : (
-            <>
-              <AlertTriangle className="h-3.5 w-3.5" />
-              Showing Open
-            </>
+        <div className="ml-auto flex items-center gap-2">
+          {isAdmin && (
+            <button
+              onClick={() => setShowDeleted((v) => !v)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition cursor-pointer ${
+                showDeleted
+                  ? "border-gray-400 bg-gray-100 text-gray-800 hover:bg-gray-200"
+                  : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              {showDeleted ? "Showing Deleted" : "Show Deleted"}
+            </button>
           )}
-        </button>
+
+          <button
+            onClick={() => setShowResolved((v) => !v)}
+            disabled={showDeleted}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+              showResolved
+                ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
+                : "border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+            }`}
+          >
+            {showResolved ? (
+              <>
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Showing Resolved
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="h-3.5 w-3.5" />
+                Showing Open
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -196,7 +161,7 @@ function DamageReportsContent() {
         <div className="text-center py-12 text-gray-400">
           <AlertTriangle className="h-10 w-10 mx-auto mb-2 opacity-50" />
           <p className="text-sm">
-            No {showResolved ? "resolved" : "open"} damage reports found.
+            No {showDeleted ? "deleted" : showResolved ? "resolved" : "open"} damage reports found.
           </p>
         </div>
       ) : (
@@ -206,6 +171,10 @@ function DamageReportsContent() {
               key={report.id}
               report={report}
               onClick={() => setEditingReport(report)}
+              isAdmin={isAdmin}
+              showDeleted={showDeleted}
+              onDelete={() => handleSetDeleted(report.id, true)}
+              onRestore={() => handleSetDeleted(report.id, false)}
             />
           ))}
         </div>
@@ -217,10 +186,7 @@ function DamageReportsContent() {
           open={showCreateModal}
           onOpenChange={setShowCreateModal}
           currentUserUuid={currentUserUuid ?? null}
-          onSaved={() => {
-            setShowCreateModal(false);
-            queryClient.invalidateQueries({ queryKey: ["damage-reports"] });
-          }}
+          onSaved={() => setShowCreateModal(false)}
         />
       )}
 
@@ -231,10 +197,7 @@ function DamageReportsContent() {
           onOpenChange={(open) => {
             if (!open) setEditingReport(null);
           }}
-          onSaved={() => {
-            setEditingReport(null);
-            queryClient.invalidateQueries({ queryKey: ["damage-reports"] });
-          }}
+          onSaved={() => setEditingReport(null)}
           editReport={editingReport as EditDamageReport}
         />
       )}
@@ -260,14 +223,32 @@ function SeverityBadge({ label, severity }: { label: string; severity: DamageSev
 
 // ─── Damage Report Card ───────────────────────────────────────────────────────
 
-function DamageReportCard({ report, onClick }: { report: DamageReport; onClick: () => void }) {
+function DamageReportCard({
+  report,
+  onClick,
+  isAdmin,
+  showDeleted,
+  onDelete,
+  onRestore,
+}: {
+  report: DamageReport;
+  onClick: () => void;
+  isAdmin: boolean;
+  showDeleted: boolean;
+  onDelete: () => void;
+  onRestore: () => void;
+}) {
   const isResolved = !!report.resolved_at;
 
   return (
     <div
       onClick={onClick}
       className={`border rounded-lg p-4 bg-white shadow-sm cursor-pointer hover:shadow-md transition ${
-        isResolved ? "border-gray-200" : "border-red-300 bg-red-50/30"
+        showDeleted
+          ? "border-gray-200 bg-gray-50/50"
+          : isResolved
+            ? "border-gray-200"
+            : "border-red-300 bg-red-50/30"
       }`}
     >
       <div className="flex items-start justify-between gap-4">
@@ -310,18 +291,46 @@ function DamageReportCard({ report, onClick }: { report: DamageReport; onClick: 
           )}
         </div>
 
-        {report.photos.length > 0 && (
-          <div className="flex gap-2 flex-shrink-0">
-            {report.photos.slice(0, 3).map((photo) => (
-              <PhotoThumbnail key={photo.id} photoPath={photo.photo_path} />
+        <div className="flex items-start gap-3 flex-shrink-0">
+          {report.photos.length > 0 && (
+            <div className="flex gap-2">
+              {report.photos.slice(0, 3).map((photo) => (
+                <PhotoThumbnail key={photo.id} photoPath={photo.photo_path} />
+              ))}
+              {report.photos.length > 3 && (
+                <span className="text-xs text-gray-400 self-end">
+                  +{report.photos.length - 3} more
+                </span>
+              )}
+            </div>
+          )}
+
+          {isAdmin &&
+            (showDeleted ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRestore();
+                }}
+                className="flex items-center gap-1 rounded-md border border-green-300 bg-white px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-50 transition cursor-pointer"
+                title="Restore damage report"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Restore
+              </button>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition cursor-pointer"
+                title="Delete damage report"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
             ))}
-            {report.photos.length > 3 && (
-              <span className="text-xs text-gray-400 self-end">
-                +{report.photos.length - 3} more
-              </span>
-            )}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

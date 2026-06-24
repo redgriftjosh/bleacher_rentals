@@ -721,6 +721,7 @@ export type Database = {
           bleacher_uuid: string
           created_at: string
           created_by_user_uuid: string | null
+          deleted: boolean
           haul_damage: Database["public"]["Enums"]["damage_severity"]
           id: string
           inspection_uuid: string | null
@@ -735,6 +736,7 @@ export type Database = {
           bleacher_uuid: string
           created_at?: string
           created_by_user_uuid?: string | null
+          deleted?: boolean
           haul_damage?: Database["public"]["Enums"]["damage_severity"]
           id?: string
           inspection_uuid?: string | null
@@ -749,6 +751,7 @@ export type Database = {
           bleacher_uuid?: string
           created_at?: string
           created_by_user_uuid?: string | null
+          deleted?: boolean
           haul_damage?: Database["public"]["Enums"]["damage_severity"]
           id?: string
           inspection_uuid?: string | null

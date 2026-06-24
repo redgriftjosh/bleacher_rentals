@@ -124,7 +124,8 @@ export const MaintenanceCoreTab = ({ disabled = false }: Props = {}) => {
           photos:DamageReportPhotos!DamageReportPhotos_damage_report_uuid_fkey(id, photo_path)
         `,
         )
-        .in("bleacher_uuid", bleacherUuids);
+        .in("bleacher_uuid", bleacherUuids)
+        .eq("deleted", false);
 
       // 2. For each damage report, find the work tracker date via inspection UUID
       const inspectionUuids = (damageReports ?? []).map((dr) => dr.inspection_uuid);
