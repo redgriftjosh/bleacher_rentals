@@ -7,7 +7,6 @@ import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient"
 import { AlertTriangle, CheckCircle2, Plus, X, Trash2, RotateCcw } from "lucide-react";
 import { DamageReportModal, EditDamageReport } from "./DamageReportModal";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
-import { useCurrentUser } from "@/hooks/db/useCurrentUser";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import {
@@ -28,9 +27,6 @@ function DamageReportsContent() {
   const [editingReport, setEditingReport] = useState<DamageReport | null>(null);
 
   const bleacherUuid = searchParams.get("bleacher_uuid");
-
-  const { data: currentUser } = useCurrentUser();
-  const currentUserUuid = currentUser?.[0]?.id ?? null;
 
   // Reactive PowerSync reads (see docs/POWERSYNC_ARCHITECTURE.md)
   const bleachers = useBleacherFilterOptions();
@@ -185,7 +181,6 @@ function DamageReportsContent() {
         <DamageReportModal
           open={showCreateModal}
           onOpenChange={setShowCreateModal}
-          currentUserUuid={currentUserUuid ?? null}
           onSaved={() => setShowCreateModal(false)}
         />
       )}
@@ -272,6 +267,11 @@ function DamageReportCard({
 
           <div className="flex gap-4 text-xs text-gray-500 mb-2">
             <span>Created {new Date(report.created_at).toLocaleDateString()}</span>
+            {report.created_by_user && (
+              <span>
+                by {report.created_by_user.first_name} {report.created_by_user.last_name}
+              </span>
+            )}
             {isResolved && (
               <span>Resolved {new Date(report.resolved_at!).toLocaleDateString()}</span>
             )}
