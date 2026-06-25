@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { useZoneFilterStore } from "./useZoneFilterStore";
+import { useDashboardFilterSettings } from "./useDashboardFilterSettings";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown, MapPin, ShieldCheck, UserCheck, Eye } from "lucide-react";
@@ -16,8 +17,42 @@ const UNASSIGNED_VALUE = "__unassigned__";
 
 export function ZoneSelector({ accountManagerId }: { accountManagerId: string | null }) {
   const [open, setOpen] = useState(false);
-  const { selectedZoneIds, toggleZone, setSelectedZoneIds, showUnassigned, setShowUnassigned } =
+  const { selectedZoneIds, setSelectedZoneIds, showUnassigned, setShowUnassigned } =
     useZoneFilterStore();
+
+  // Persisted filter settings (survives refresh). The zustand store stays the
+  // live source for filtering; we hydrate it once from persisted settings and
+  // write changes back so the selection persists.
+  const { state: filterSettings, setField } = useDashboardFilterSettings();
+  const hydratedRef = useRef(false);
+
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    if (!filterSettings) return;
+    setSelectedZoneIds(filterSettings.zoneUuids);
+    setShowUnassigned(filterSettings.showUnassignedZone);
+    hydratedRef.current = true;
+  }, [filterSettings, setSelectedZoneIds, setShowUnassigned]);
+
+  const handleToggleZone = (id: string) => {
+    const next = selectedZoneIds.includes(id)
+      ? selectedZoneIds.filter((z) => z !== id)
+      : [...selectedZoneIds, id];
+    setSelectedZoneIds(next);
+    void setField("zoneUuids", next);
+  };
+
+  const handleSetShowUnassigned = (v: boolean) => {
+    setShowUnassigned(v);
+    void setField("showUnassignedZone", v);
+  };
+
+  const handleClearAll = () => {
+    setSelectedZoneIds([]);
+    setShowUnassigned(false);
+    void setField("zoneUuids", []);
+    void setField("showUnassignedZone", false);
+  };
 
   const isAdmin = usePermissionsStore((s) => s.isAdmin);
   const isAccountManager = usePermissionsStore((s) => s.isAccountManager);
@@ -77,7 +112,7 @@ export function ZoneSelector({ accountManagerId }: { accountManagerId: string | 
               className="flex items-center gap-2 rounded-[5px] px-2 py-1.5 text-sm
                          hover:bg-accent cursor-pointer select-none"
             >
-              <Checkbox checked={checked} onCheckedChange={() => toggleZone(z.id)} />
+              <Checkbox checked={checked} onCheckedChange={() => handleToggleZone(z.id)} />
               <span className="truncate flex-1">{z.displayName ?? "Unnamed"}</span>
               {showAccessIcons &&
                 (isLead ? (
@@ -105,7 +140,7 @@ export function ZoneSelector({ accountManagerId }: { accountManagerId: string | 
         >
           <Checkbox
             checked={showUnassigned}
-            onCheckedChange={(v) => setShowUnassigned(Boolean(v))}
+            onCheckedChange={(v) => handleSetShowUnassigned(Boolean(v))}
           />
           <span className="text-muted-foreground">Unassigned</span>
         </label>
@@ -114,10 +149,7 @@ export function ZoneSelector({ accountManagerId }: { accountManagerId: string | 
           <>
             <div className="mx-2 my-1 h-px bg-border" />
             <button
-              onClick={() => {
-                setSelectedZoneIds([]);
-                setShowUnassigned(false);
-              }}
+              onClick={handleClearAll}
               className="w-full rounded-[5px] px-2 py-1.5 text-sm text-muted-foreground
                          hover:bg-accent text-left cursor-pointer select-none"
             >

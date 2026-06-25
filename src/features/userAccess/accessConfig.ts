@@ -35,6 +35,7 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
       "/permissions",
       "/dev-tools",
       "/sales-offices",
+      "/storage-locations",
       "/terms-and-conditions",
       "/pricing-matrix",
       "/quote",

@@ -2,6 +2,7 @@
 
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useQuery } from "@tanstack/react-query";
+import { STATUSES } from "@/features/manageTeam/constants";
 
 export type ZoneDriverOption = {
   driverUuid: string;
@@ -23,7 +24,7 @@ export function useZoneDrivers() {
         .select(
           `
           id,
-          user:Users!Drivers_user_uuid_fkey(id, clerk_user_id, first_name, last_name),
+          user:Users!Drivers_user_uuid_fkey(id, clerk_user_id, first_name, last_name, status_uuid),
           zones:DriverZones(zone:Zones(display_name))
         `,
         )
@@ -31,7 +32,10 @@ export function useZoneDrivers() {
 
       if (error) throw error;
 
-      const drivers = (data || []).map((d): ZoneDriverOption => {
+      const drivers = (data || [])
+        // Exclude drivers whose user account has been deactivated.
+        .filter((d) => (d.user as any)?.status_uuid !== STATUSES.inactive)
+        .map((d): ZoneDriverOption => {
         const user = d.user as any;
         const zoneNames = ((d.zones as any[]) || [])
           .map((z: any) => z.zone?.display_name)

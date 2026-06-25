@@ -136,7 +136,7 @@ export class BleacherCell extends Container {
     this.bleacherUuid = b.bleacherUuid;
     // Include zoneUuid in the key so subrental rows (same bleacherUuid, different zone)
     // get their own texture rather than reusing the normal row's cached texture.
-    const key = `${b.bleacherUuid}:${b.zoneUuid ?? "nz"}:${isAccessible ? "acc" : "noacc"}`;
+    const key = `${b.bleacherUuid}:${b.zoneUuid ?? "nz"}:${(b.storageLocationName ?? "ns").slice(0, 15)}:${isAccessible ? "acc" : "noacc"}`;
 
     this.bg.visible = !isAccessible;
 
@@ -256,6 +256,17 @@ export class BleacherCell extends Container {
       });
       zoneLabel.position.set(3, 31);
       c.addChild(zoneLabel);
+    }
+
+    // Storage location — first 15 chars, beside the map pin icon on the top line.
+    // Kept off the bottom line so longer zone names have room there.
+    if (b.storageLocationName) {
+      const storageLabel = new Text({
+        text: b.storageLocationName.slice(0, 15),
+        style: { fill: 0x9a9a9a, fontSize: 10 },
+      });
+      storageLabel.position.set(46, 6);
+      c.addChild(storageLabel);
     }
 
     c.addChild(bleacherNumber, bleacherRows, bleacherSeats);

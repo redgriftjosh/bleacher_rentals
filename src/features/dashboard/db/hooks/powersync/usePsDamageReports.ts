@@ -31,6 +31,7 @@ const compiled = db
     "dr.resolved_at",
     "dr.maintenance_event_uuid",
   ])
+  .where("dr.deleted", "=", 0)
   .compile();
 
 export function usePsDamageReports() {

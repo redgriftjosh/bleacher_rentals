@@ -37,7 +37,7 @@ function formatDate(dateString: string | null) {
 }
 
 export function AccountManagerList({ showInactive = false }: { showInactive?: boolean }) {
-  const accountManagers = useAccountManagers();
+  const accountManagers = useAccountManagers(true, true);
   const router = useRouter();
 
   const handleClick = (userUuid: string) => {

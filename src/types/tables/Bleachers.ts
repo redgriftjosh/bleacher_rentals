@@ -19,12 +19,14 @@ export type SelectBleacher = {
   trailer_length_in: number | null;
   opening_direction: "driver" | "passenger" | null;
   nvis_pdf_path: string | null;
+  storage_location_uuid: string | null;
 };
 
 export type InsertBleacher = {
   bleacher_number: number;
-  summer_home_base_uuid: string;
-  winter_home_base_uuid: string;
+  summer_home_base_uuid?: string | null;
+  winter_home_base_uuid?: string | null;
+  zone_uuid?: string | null;
   bleacher_rows: number;
   bleacher_seats: number;
   bleacher_type_uuid?: string | null;
@@ -40,13 +42,15 @@ export type InsertBleacher = {
   trailer_length_in?: number | null;
   opening_direction?: "driver" | "passenger" | null;
   nvis_pdf_path: string | null;
+  storage_location_uuid?: string | null;
 };
 
 export type UpdateBleacher = {
   id: string;
   bleacher_number: number;
-  summer_home_base_uuid: string;
-  winter_home_base_uuid: string;
+  summer_home_base_uuid?: string | null;
+  winter_home_base_uuid?: string | null;
+  zone_uuid?: string | null;
   bleacher_rows: number;
   bleacher_seats: number;
   bleacher_type_uuid?: string | null;
@@ -62,4 +66,5 @@ export type UpdateBleacher = {
   trailer_length_in?: number | null;
   opening_direction?: "driver" | "passenger" | null;
   nvis_pdf_path: string | null;
+  storage_location_uuid?: string | null;
 };

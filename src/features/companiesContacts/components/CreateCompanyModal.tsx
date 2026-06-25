@@ -6,6 +6,9 @@ import { createCompany } from "../db/createCompany";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import { AddressFields } from "@/features/quotesAndBookings/types/quoteTypes";
+import { useCompaniesAll } from "../hooks/useCompaniesAll";
+import { DuplicateWarning } from "./DuplicateWarning";
+import { findCompanyContactDuplicates, findCompanyDuplicates } from "../utils/findDuplicates";
 
 const EMPTY_ADDR: AddressFields = { street: "", city: "", stateProvince: "", zipPostal: "" };
 
@@ -23,6 +26,17 @@ export function CreateCompanyModal({ isOpen, onClose }: Props) {
   const [shipping, setShipping] = useState<AddressFields>({ ...EMPTY_ADDR });
   const [sameAsBilling, setSameAsBilling] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const { companies } = useCompaniesAll();
+  const labelOf = (c: { companyName: string; email: string | null }) =>
+    c.companyName + (c.email ? ` (${c.email})` : "");
+
+  // Email/phone matches hard-block creation; a name-only match is just advisory.
+  const blockingCompanies = findCompanyContactDuplicates(companies, { email, phone });
+  const blockingLabels = blockingCompanies.map(labelOf);
+  const nameOnlyLabels = findCompanyDuplicates(companies, { companyName, email: "", phone: "" })
+    .filter((c) => !blockingCompanies.some((b) => b.id === c.id))
+    .map(labelOf);
 
   const reset = () => {
     setCompanyName(""); setEmail(""); setPhone(""); setNotes("");
@@ -75,6 +89,9 @@ export function CreateCompanyModal({ isOpen, onClose }: Props) {
             </div>
           </div>
 
+          <DuplicateWarning matches={blockingLabels} kind="company" severity="block" />
+          <DuplicateWarning matches={nameOnlyLabels} kind="company" severity="warn" />
+
           <div>
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Billing Address</p>
             <AddressAutocomplete
@@ -124,7 +141,7 @@ export function CreateCompanyModal({ isOpen, onClose }: Props) {
             className="px-4 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">
             Cancel
           </button>
-          <button onClick={handleSave} disabled={!companyName.trim() || saving}
+          <button onClick={handleSave} disabled={!companyName.trim() || saving || blockingCompanies.length > 0}
             className="px-4 py-1.5 text-sm font-medium text-white bg-darkBlue rounded-md hover:bg-lightBlue transition-colors cursor-pointer disabled:opacity-40">
             {saving ? "Saving…" : "Save Company"}
           </button>

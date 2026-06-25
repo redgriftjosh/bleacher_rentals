@@ -14,22 +14,8 @@ export type FormattedBleacher = {
   trailerHeightIn: number | null;
   openingDirection: string | null;
   nvisPdfPath: string | null;
-  summerHomeBase: {
-    homeBaseUuid: string;
-    homeBaseName: string;
+  zone: {
+    zoneUuid: string;
+    zoneName: string;
   };
-  winterHomeBase: {
-    homeBaseUuid: string;
-    homeBaseName: string;
-  };
-  summerAccountManager?: {
-    accountManagerUuid: string;
-    firstName: string | null;
-    lastName: string | null;
-  } | null;
-  winterAccountManager?: {
-    accountManagerUuid: string;
-    firstName: string | null;
-    lastName: string | null;
-  } | null;
 };
