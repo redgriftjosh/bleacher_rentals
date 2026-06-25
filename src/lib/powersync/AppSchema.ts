@@ -58,6 +58,7 @@ const BleachersCols = {
   deleted: column.integer,
   nvis_pdf_path: column.text,
   zone_uuid: column.text,
+  storage_location_uuid: column.text,
 } satisfies PowerSyncColsFor<"Bleachers">;
 const Bleachers = new Table(BleachersCols, {
   indexes: {
@@ -66,7 +67,21 @@ const Bleachers = new Table(BleachersCols, {
     summer_home_base_uuid: ["summer_home_base_uuid"],
     winter_home_base_uuid: ["winter_home_base_uuid"],
     zone_uuid: ["zone_uuid"],
+    storage_location_uuid: ["storage_location_uuid"],
   },
+});
+
+const StorageLocationsCols = {
+  created_at: column.text,
+  name: column.text,
+  address_uuid: column.text,
+  contact_phone_number: column.text,
+  gate_code: column.text,
+  notes: column.text,
+  deleted: column.integer,
+} satisfies PowerSyncColsFor<"StorageLocations">;
+const StorageLocations = new Table(StorageLocationsCols, {
+  indexes: { address_uuid: ["address_uuid"] },
 });
 
 const ZonesCols = {
@@ -215,6 +230,8 @@ const DashboardFilterSettingsCols = {
   season: column.text,
   account_manager_uuid: column.text,
   rows_quick_filter: column.integer,
+  zone_uuids: column.text,
+  show_unassigned_zone: column.integer,
 } satisfies PowerSyncColsFor<"DashboardFilterSettings">;
 const DashboardFilterSettings = new Table(DashboardFilterSettingsCols, {
   indexes: {
@@ -449,9 +466,21 @@ const DamageReportsCols = {
   resolved_at: column.text,
   maintenance_event_uuid: column.text,
   created_by_user_uuid: column.text,
+  deleted: column.integer,
 } satisfies PowerSyncColsFor<"DamageReports">;
 const DamageReports = new Table(DamageReportsCols, {
   indexes: { bleacher_uuid: ["bleacher_uuid"], maintenance_event_uuid: ["maintenance_event_uuid"] },
+});
+
+const DamageReportPhotosCols = {
+  created_at: column.text,
+  damage_report_uuid: column.text,
+  photo_path: column.text,
+  thumbnail: column.text,
+  upload_status: column.text,
+} satisfies PowerSyncColsFor<"DamageReportPhotos">;
+const DamageReportPhotos = new Table(DamageReportPhotosCols, {
+  indexes: { damage_report_uuid: ["damage_report_uuid"] },
 });
 
 const MaintenanceEventsCols = {
@@ -927,6 +956,7 @@ export const AppSchema = new Schema({
   Drivers,
   DriverZones,
   DamageReports,
+  DamageReportPhotos,
   InspectionQuestions,
   MaintenanceEvents,
   BleacherMaintEvents,
@@ -971,6 +1001,7 @@ export const AppSchema = new Schema({
   ContractSignatures,
   EventFiles,
   SubrentalEvents,
+  StorageLocations,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
@@ -999,8 +1030,10 @@ export type DriverUnavailabilityRecord = PowerSyncDB["DriverUnavailability"];
 export type WorkTrackerInspectionsRecord = PowerSyncDB["WorkTrackerInspections"];
 export type InspectionQuestionsRecord = PowerSyncDB["InspectionQuestions"];
 export type DamageReportsRecord = PowerSyncDB["DamageReports"];
+export type DamageReportPhotosRecord = PowerSyncDB["DamageReportPhotos"];
 export type MaintenanceEventsRecord = PowerSyncDB["MaintenanceEvents"];
 export type SubrentalEventsRecord = PowerSyncDB["SubrentalEvents"];
+export type StorageLocationsRecord = PowerSyncDB["StorageLocations"];
 export type BleacherMaintEventsRecord = PowerSyncDB["BleacherMaintEvents"];
 export type DriverScorecardStatsPerDriverRecord = PowerSyncDB["DriverScorecardStatsPerDriver"];
 export type DriverScoreCardStatsRecord = PowerSyncDB["DriverScoreCardStats"];

@@ -2,6 +2,7 @@
 
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useQuery } from "@tanstack/react-query";
+import { STATUSES } from "@/features/manageTeam/constants";
 
 export type ZoneAccountManagerOption = {
   accountManagerUuid: string;
@@ -23,7 +24,7 @@ export function useZoneAccountManagers() {
         .select(
           `
           id,
-          user:Users!AccountManagers_user_uuid_fkey(id, clerk_user_id, first_name, last_name),
+          user:Users!AccountManagers_user_uuid_fkey(id, clerk_user_id, first_name, last_name, status_uuid),
           zones:AccountManagerZones(zone:Zones(display_name))
         `,
         )
@@ -31,7 +32,10 @@ export function useZoneAccountManagers() {
 
       if (error) throw error;
 
-      return (data || []).map((am): ZoneAccountManagerOption => {
+      return (data || [])
+        // Exclude account managers whose user account has been deactivated.
+        .filter((am) => (am.user as any)?.status_uuid !== STATUSES.inactive)
+        .map((am): ZoneAccountManagerOption => {
         const user = am.user as any;
         const zoneNames = ((am.zones as any[]) || [])
           .map((z: any) => z.zone?.display_name)

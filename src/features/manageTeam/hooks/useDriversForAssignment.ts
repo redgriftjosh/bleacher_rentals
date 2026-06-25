@@ -2,6 +2,7 @@
 
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useQuery } from "@tanstack/react-query";
+import { STATUSES } from "../constants";
 
 export type DriverOption = {
   driverUuid: string;
@@ -34,7 +35,7 @@ export function useDriversForAssignment() {
           `
           id,
           account_manager_uuid,
-          user:Users!Drivers_user_uuid_fkey(id, clerk_user_id, first_name, last_name),
+          user:Users!Drivers_user_uuid_fkey(id, clerk_user_id, first_name, last_name, status_uuid),
           account_manager:AccountManagers!Drivers_account_manager_uuid_fkey(
             id,
             am_user:Users(id, clerk_user_id, first_name, last_name)
@@ -46,7 +47,10 @@ export function useDriversForAssignment() {
 
       if (error) throw error;
 
-      const driverList: DriverOption[] = (data || []).map((d) => {
+      const driverList: DriverOption[] = (data || [])
+        // Exclude drivers whose user account has been deactivated.
+        .filter((d) => (d.user as any)?.status_uuid !== STATUSES.inactive)
+        .map((d) => {
         const user = d.user as any;
         const am = d.account_manager as any;
         const amUser = am?.am_user;

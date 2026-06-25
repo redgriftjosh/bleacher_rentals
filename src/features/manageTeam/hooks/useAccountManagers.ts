@@ -22,8 +22,11 @@ export type AccountManagerOption = {
 /**
  * Hook to fetch all account managers with their account_manager_id from the database
  */
-export function useAccountManagers(filter: boolean = true): AccountManagerOption[] {
-  const compiled = db
+export function useAccountManagers(
+  filter: boolean = true,
+  includeInactive: boolean = false,
+): AccountManagerOption[] {
+  let query = db
     .selectFrom("AccountManagers as am")
     .innerJoin("Users as u", "u.id", "am.user_uuid")
     .leftJoin(
@@ -41,8 +44,15 @@ export function useAccountManagers(filter: boolean = true): AccountManagerOption
       "u.status_uuid as statusUuid",
       sql<number>`count(d.id)`.as("numDrivers"),
     ])
-    .where("am.is_active", "=", 1)
-    .where("u.status_uuid", "=", STATUSES.active)
+    .where("am.is_active", "=", 1);
+
+  // Dropdowns/scorecards want active AMs only; the team list opts in to
+  // deactivated users so the "Show Inactive" toggle can surface them.
+  if (!includeInactive) {
+    query = query.where("u.status_uuid", "=", STATUSES.active);
+  }
+
+  const compiled = query
     .groupBy(["am.id", "u.id", "u.first_name", "u.last_name", "u.email", "u.clerk_user_id"])
     .orderBy("u.first_name", "asc")
     .orderBy("u.last_name", "asc")

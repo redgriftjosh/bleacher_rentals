@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Dropdown } from "@/components/DropDown";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import { useCompaniesAll } from "../hooks/useCompaniesAll";
+import { useContactsAll } from "../hooks/useContactsAll";
 import { createContact } from "../db/createContact";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { CreateCompanyModal } from "./CreateCompanyModal";
+import { DuplicateWarning } from "./DuplicateWarning";
+import { findContactDuplicates } from "../utils/findDuplicates";
 
 type Props = {
   isOpen: boolean;
@@ -15,6 +18,7 @@ type Props = {
 
 export function CreateContactModal({ isOpen, onClose }: Props) {
   const { companies, isLoading } = useCompaniesAll();
+  const { contacts } = useContactsAll();
   const [createCompanyOpen, setCreateCompanyOpen] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -40,7 +44,16 @@ export function CreateContactModal({ isOpen, onClose }: Props) {
     } catch { /* error shown by createContact */ } finally { setSaving(false); }
   };
 
-  const companyOptions = companies.map((c) => ({ label: c.companyName, value: c.id }));
+  const companyOptions = companies.map((c) => ({
+    label: c.companyName,
+    value: c.id,
+    searchValue: `${c.email ?? ""} ${c.phone ?? ""} ${c.address}`,
+  }));
+
+  const duplicateContacts = findContactDuplicates(contacts, { email, phone });
+  const duplicateLabels = duplicateContacts.map((c) =>
+    `${c.firstName} ${c.lastName ?? ""}`.trim() + (c.email ? ` (${c.email})` : ""),
+  );
 
   return (
     <>
@@ -85,15 +98,19 @@ export function CreateContactModal({ isOpen, onClose }: Props) {
               </div>
             </div>
 
+            <DuplicateWarning matches={duplicateLabels} kind="contact" severity="block" />
+
             <div>
               <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Company</label>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <Dropdown
+                  <SearchableSelect
                     options={companyOptions}
                     selected={companyUuid}
                     onSelect={setCompanyUuid}
                     placeholder={isLoading ? "Loading..." : "Select company..."}
+                    searchPlaceholder="Search by name, email, phone or address..."
+                    emptyMessage="No companies found."
                     disabled={isLoading}
                   />
                 </div>
@@ -120,7 +137,7 @@ export function CreateContactModal({ isOpen, onClose }: Props) {
               className="px-4 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">
               Cancel
             </button>
-            <button onClick={handleSave} disabled={!firstName.trim() || saving}
+            <button onClick={handleSave} disabled={!firstName.trim() || saving || duplicateContacts.length > 0}
               className="px-4 py-1.5 text-sm font-medium text-white bg-darkBlue rounded-md hover:bg-lightBlue transition-colors cursor-pointer disabled:opacity-40">
               {saving ? "Saving…" : "Save Contact"}
             </button>

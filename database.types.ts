@@ -237,6 +237,7 @@ export type Database = {
           opening_direction:
             | Database["public"]["Enums"]["bleacher_opening_dir"]
             | null
+          storage_location_uuid: string | null
           summer_account_manager_uuid: string | null
           summer_home_base_uuid: string | null
           tag_number: string | null
@@ -268,6 +269,7 @@ export type Database = {
           opening_direction?:
             | Database["public"]["Enums"]["bleacher_opening_dir"]
             | null
+          storage_location_uuid?: string | null
           summer_account_manager_uuid?: string | null
           summer_home_base_uuid?: string | null
           tag_number?: string | null
@@ -299,6 +301,7 @@ export type Database = {
           opening_direction?:
             | Database["public"]["Enums"]["bleacher_opening_dir"]
             | null
+          storage_location_uuid?: string | null
           summer_account_manager_uuid?: string | null
           summer_home_base_uuid?: string | null
           tag_number?: string | null
@@ -318,6 +321,13 @@ export type Database = {
             columns: ["bleacher_type_uuid"]
             isOneToOne: false
             referencedRelation: "BleacherTypes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Bleachers_storage_location_uuid_fkey"
+            columns: ["storage_location_uuid"]
+            isOneToOne: false
+            referencedRelation: "StorageLocations"
             referencedColumns: ["id"]
           },
           {
@@ -711,6 +721,7 @@ export type Database = {
           bleacher_uuid: string
           created_at: string
           created_by_user_uuid: string | null
+          deleted: boolean
           haul_damage: Database["public"]["Enums"]["damage_severity"]
           id: string
           inspection_uuid: string | null
@@ -725,6 +736,7 @@ export type Database = {
           bleacher_uuid: string
           created_at?: string
           created_by_user_uuid?: string | null
+          deleted?: boolean
           haul_damage?: Database["public"]["Enums"]["damage_severity"]
           id?: string
           inspection_uuid?: string | null
@@ -739,6 +751,7 @@ export type Database = {
           bleacher_uuid?: string
           created_at?: string
           created_by_user_uuid?: string | null
+          deleted?: boolean
           haul_damage?: Database["public"]["Enums"]["damage_severity"]
           id?: string
           inspection_uuid?: string | null
@@ -791,12 +804,14 @@ export type Database = {
           rows_quick_filter: number | null
           season: string | null
           show_address_tooltip: boolean
+          show_unassigned_zone: boolean
           state_provinces: string
           summer_home_base_uuids: string
           updated_at: string
           user_uuid: string
           winter_home_base_uuids: string
           y_axis: string
+          zone_uuids: string
         }
         Insert: {
           account_manager_uuid?: string | null
@@ -808,12 +823,14 @@ export type Database = {
           rows_quick_filter?: number | null
           season?: string | null
           show_address_tooltip?: boolean
+          show_unassigned_zone?: boolean
           state_provinces?: string
           summer_home_base_uuids?: string
           updated_at?: string
           user_uuid: string
           winter_home_base_uuids?: string
           y_axis?: string
+          zone_uuids?: string
         }
         Update: {
           account_manager_uuid?: string | null
@@ -825,12 +842,14 @@ export type Database = {
           rows_quick_filter?: number | null
           season?: string | null
           show_address_tooltip?: boolean
+          show_unassigned_zone?: boolean
           state_provinces?: string
           summer_home_base_uuids?: string
           updated_at?: string
           user_uuid?: string
           winter_home_base_uuids?: string
           y_axis?: string
+          zone_uuids?: string
         }
         Relationships: [
           {
@@ -2615,6 +2634,47 @@ export type Database = {
             columns: ["account_manager_uuid"]
             isOneToOne: true
             referencedRelation: "AccountManagers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      StorageLocations: {
+        Row: {
+          address_uuid: string | null
+          contact_phone_number: string | null
+          created_at: string
+          deleted: boolean
+          gate_code: string | null
+          id: string
+          name: string
+          notes: string | null
+        }
+        Insert: {
+          address_uuid?: string | null
+          contact_phone_number?: string | null
+          created_at?: string
+          deleted?: boolean
+          gate_code?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+        }
+        Update: {
+          address_uuid?: string | null
+          contact_phone_number?: string | null
+          created_at?: string
+          deleted?: boolean
+          gate_code?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storage_locations_address_uuid_fkey"
+            columns: ["address_uuid"]
+            isOneToOne: false
+            referencedRelation: "Addresses"
             referencedColumns: ["id"]
           },
         ]

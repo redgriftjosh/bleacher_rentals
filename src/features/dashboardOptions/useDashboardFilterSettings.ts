@@ -20,6 +20,8 @@ type SettingsRow = {
   optimizationMode: number | null;
   showAddressTooltip: number | null;
   rowsQuickFilter: number | null;
+  zoneUuids: string | null;
+  showUnassignedZone: number | null;
 };
 
 const parseJsonArray = <T>(value: string | null | undefined, fallback: T[]): T[] => {
@@ -90,6 +92,8 @@ export function useDashboardFilterSettings(): {
         "s.optimization_mode as optimizationMode",
         "s.show_address_tooltip as showAddressTooltip",
         "s.rows_quick_filter as rowsQuickFilter",
+        "s.zone_uuids as zoneUuids",
+        "s.show_unassigned_zone as showUnassignedZone",
       ])
       .where("s.user_uuid", "=", userUuidForQuery)
       .limit(1)
@@ -132,6 +136,8 @@ export function useDashboardFilterSettings(): {
         season: null,
         account_manager_uuid: null,
         rows_quick_filter: null,
+        zone_uuids: "[]",
+        show_unassigned_zone: 0,
       })
       .compile();
 
@@ -165,6 +171,8 @@ export function useDashboardFilterSettings(): {
         settingsRow.rowsQuickFilter === 10 || settingsRow.rowsQuickFilter === 15
           ? (settingsRow.rowsQuickFilter as 10 | 15)
           : null,
+      zoneUuids: parseJsonArray<string>(settingsRow.zoneUuids, []),
+      showUnassignedZone: toBool(settingsRow.showUnassignedZone),
     };
   }, [settingsRow]);
 
@@ -210,6 +218,12 @@ export function useDashboardFilterSettings(): {
 
         case "rowsQuickFilter":
           return updateDb({ rows_quick_filter: value });
+
+        case "zoneUuids":
+          return updateDb({ zone_uuids: JSON.stringify(value) });
+
+        case "showUnassignedZone":
+          return updateDb({ show_unassigned_zone: value ? 1 : 0 });
 
         default:
           return;

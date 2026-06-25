@@ -18,6 +18,7 @@ import { usePsMaintenanceEvents } from "./usePsMaintenanceEvents";
 import { usePsDamageReports } from "./usePsDamageReports";
 import { usePsAlertCounts } from "./usePsAlertCounts";
 import { usePsZones } from "./usePsZones";
+import { usePsStorageLocations } from "./usePsStorageLocations";
 import { usePsSubrentalEvents } from "./usePsSubrentalEvents";
 import { useZoneFilterStore } from "@/features/dashboardOptions/useZoneFilterStore";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
@@ -57,6 +58,7 @@ export function useDashboardPowerSync(opts?: {
   const maintenanceEventRows = usePsMaintenanceEvents();
   const damageReportRows = usePsDamageReports();
   const zoneRows = usePsZones();
+  const storageLocationRows = usePsStorageLocations();
   const subrentalEventRows = usePsSubrentalEvents();
 
   // Alert counts → pushes into useAlertCountsStore reactively
@@ -74,6 +76,12 @@ export function useDashboardPowerSync(opts?: {
     for (const z of zoneRows) m.set(z.id, z.display_name ?? "");
     return m;
   }, [zoneRows]);
+
+  const storageLocationMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const s of storageLocationRows) m.set(s.id, s.name ?? "");
+    return m;
+  }, [storageLocationRows]);
 
   const addressMap = useMemo(() => {
     const m = new Map<
@@ -314,6 +322,9 @@ export function useDashboardPowerSync(opts?: {
         winterAccountManagerUuid: b.winter_account_manager_uuid,
         zoneUuid: b.zone_uuid ?? null,
         zoneName: b.zone_uuid ? (zoneMap.get(b.zone_uuid) ?? null) : null,
+        storageLocationName: b.storage_location_uuid
+          ? (storageLocationMap.get(b.storage_location_uuid) ?? null)
+          : null,
         originalZoneName: null,
         summerHomeBase,
         winterHomeBase,
@@ -431,6 +442,9 @@ export function useDashboardPowerSync(opts?: {
         winterAccountManagerUuid: b.winter_account_manager_uuid,
         zoneUuid: b.zone_uuid ?? null,
         zoneName: b.zone_uuid ? (zoneMap.get(b.zone_uuid) ?? null) : null,
+        storageLocationName: b.storage_location_uuid
+          ? (storageLocationMap.get(b.storage_location_uuid) ?? null)
+          : null,
         originalZoneName: null,
         summerHomeBase: null,
         winterHomeBase: null,
@@ -509,6 +523,9 @@ export function useDashboardPowerSync(opts?: {
           winterAccountManagerUuid: b.winter_account_manager_uuid,
           zoneUuid: targetZoneUuid,
           zoneName: zoneMap.get(targetZoneUuid) ?? null,
+          storageLocationName: b.storage_location_uuid
+            ? (storageLocationMap.get(b.storage_location_uuid) ?? null)
+            : null,
           originalZoneName: b.zone_uuid ? (zoneMap.get(b.zone_uuid) ?? null) : null,
           summerHomeBase: subrentalRowSummerHomeBase,
           winterHomeBase: subrentalRowWinterHomeBase,
@@ -537,6 +554,7 @@ export function useDashboardPowerSync(opts?: {
     showUnassigned,
     homeBaseMap,
     zoneMap,
+    storageLocationMap,
     bleacherEventRows,
     eventMap,
     addressMap,

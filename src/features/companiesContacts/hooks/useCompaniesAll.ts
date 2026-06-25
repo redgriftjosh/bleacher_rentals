@@ -10,6 +10,8 @@ export type CompanyFull = {
   email: string | null;
   phone: string | null;
   notes: string | null;
+  /** Flattened billing address, for search matching. */
+  address: string;
 };
 
 type Row = {
@@ -18,16 +20,31 @@ type Row = {
   email: string | null;
   phone: string | null;
   notes: string | null;
+  street: string | null;
+  city: string | null;
+  state_province: string | null;
+  zip_postal: string | null;
 };
 
 export function useCompaniesAll(): { companies: CompanyFull[]; isLoading: boolean } {
   const compiled = useMemo(
     () =>
       db
-        .selectFrom("Companies")
-        .select(["id", "company_name", "email", "phone", "notes"])
-        .where("deleted", "=", 0)
-        .orderBy("company_name")
+        .selectFrom("Companies as c")
+        .leftJoin("Addresses as a", "a.id", "c.billing_address_uuid")
+        .select([
+          "c.id as id",
+          "c.company_name as company_name",
+          "c.email as email",
+          "c.phone as phone",
+          "c.notes as notes",
+          "a.street as street",
+          "a.city as city",
+          "a.state_province as state_province",
+          "a.zip_postal as zip_postal",
+        ])
+        .where("c.deleted", "=", 0)
+        .orderBy("c.company_name")
         .compile(),
     [],
   );
@@ -42,6 +59,7 @@ export function useCompaniesAll(): { companies: CompanyFull[]; isLoading: boolea
         email: c.email,
         phone: c.phone,
         notes: c.notes,
+        address: [c.street, c.city, c.state_province, c.zip_postal].filter(Boolean).join(" "),
       })),
     [data],
   );

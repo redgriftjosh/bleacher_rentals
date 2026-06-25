@@ -8,10 +8,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
-import { Dropdown } from "@/components/DropDown";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import { createContact } from "../../../db/createContact";
 import { useCompanies } from "../../../hooks/useCompanies";
+import { useContacts } from "../../../hooks/useContacts";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
+import { DuplicateWarning } from "@/features/companiesContacts/components/DuplicateWarning";
+import { findContactDuplicates } from "@/features/companiesContacts/utils/findDuplicates";
 
 export function NewContactModal() {
   const isOpen = useCreateQuoteStore((s) => s.isNewContactModalOpen);
@@ -19,6 +22,7 @@ export function NewContactModal() {
 
   // Reactive — auto-updates when PowerSync syncs new companies
   const { companies, isLoading: loadingCompanies } = useCompanies();
+  const { contacts } = useContacts();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -31,9 +35,16 @@ export function NewContactModal() {
   const companyOptions = companies.map((c) => ({
     label: c.companyName,
     value: c.id,
+    // Findable by email, phone or address — not just the name.
+    searchValue: `${c.email ?? ""} ${c.phone ?? ""} ${c.address}`,
   }));
 
   const selectedCompanyName = companies.find((c) => c.id === companyUuid)?.companyName ?? "";
+
+  const duplicateContacts = findContactDuplicates(contacts, { email, phone });
+  const duplicateLabels = duplicateContacts.map((c) =>
+    `${c.firstName} ${c.lastName ?? ""}`.trim() + (c.email ? ` (${c.email})` : ""),
+  );
 
   const resetAndClose = () => {
     setFirstName("");
@@ -119,15 +130,19 @@ export function NewContactModal() {
             </div>
           </div>
 
+          <DuplicateWarning matches={duplicateLabels} kind="contact" severity="block" />
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
             <div className="flex gap-2">
               <div className="flex-1">
-                <Dropdown
+                <SearchableSelect
                   options={companyOptions}
                   selected={companyUuid}
                   onSelect={setCompanyUuid}
                   placeholder={loadingCompanies ? "Loading..." : "Select company..."}
+                  searchPlaceholder="Search companies..."
+                  emptyMessage="No companies found."
                   disabled={loadingCompanies}
                 />
               </div>
@@ -161,7 +176,7 @@ export function NewContactModal() {
           </button>
           <button
             onClick={handleSave}
-            disabled={!firstName.trim() || saving}
+            disabled={!firstName.trim() || saving || duplicateContacts.length > 0}
             className="px-4 py-2 text-sm font-semibold text-white bg-darkBlue rounded-sm shadow-md hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? "Saving..." : "Save Contact"}

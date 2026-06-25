@@ -92,4 +92,5 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   ContractSignatures: () => {},
   EventFiles: () => {},
   SubrentalEvents: () => {},
+  StorageLocations: () => {},
 };

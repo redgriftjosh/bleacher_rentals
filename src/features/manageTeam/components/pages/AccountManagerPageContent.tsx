@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronDown } from "lucide-react";
+import { STATUSES } from "@/features/manageTeam/constants";
 
 type ZoneRow = { id: string; displayName: string | null; photoPath: string | null };
 type DriverRow = { driverUuid: string; firstName: string | null; lastName: string | null };
@@ -24,6 +25,7 @@ const compiledDrivers = db
   .selectFrom("Drivers as d")
   .innerJoin("Users as u", "u.id", "d.user_uuid")
   .where("d.is_active", "=", 1)
+  .where("u.status_uuid", "!=", STATUSES.inactive)
   .select(["d.id as driverUuid", "u.first_name as firstName", "u.last_name as lastName"])
   .orderBy("u.first_name", "asc")
   .orderBy("u.last_name", "asc")

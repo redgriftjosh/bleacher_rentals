@@ -1,8 +1,9 @@
 "use client";
 
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
-import { Dropdown } from "@/components/DropDown";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import { useContacts } from "../../../hooks/useContacts";
+import { useCompanies } from "../../../hooks/useCompanies";
 
 export function ClientInfoSection() {
   const contactId = useCreateQuoteStore((s) => s.contactId);
@@ -10,10 +11,17 @@ export function ClientInfoSection() {
   const financeContactId = useCreateQuoteStore((s) => s.financeContactId);
   const setField = useCreateQuoteStore((s) => s.setField);
   const { contacts, isLoading } = useContacts();
+  const { companies } = useCompanies();
+
+  const companyNameById = new Map(companies.map((c) => [c.id, c.companyName]));
 
   const contactOptions = contacts.map((c) => ({
     label: `${c.firstName} ${c.lastName ?? ""}`.trim() + (c.email ? ` — ${c.email}` : ""),
     value: c.id,
+    // Findable by email, phone or company name — not just the visible label.
+    searchValue: `${c.email ?? ""} ${c.phone ?? ""} ${
+      c.companyUuid ? (companyNameById.get(c.companyUuid) ?? "") : ""
+    }`,
   }));
 
   const handleContactSelect = (cId: string | null) => {
@@ -35,11 +43,13 @@ export function ClientInfoSection() {
       <div className="flex items-end gap-4">
         <div className="flex-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">Contact <span className="text-red-500">*</span></label>
-          <Dropdown
+          <SearchableSelect
             options={contactOptions}
             selected={contactId}
             onSelect={handleContactSelect}
-            placeholder={isLoading ? "Loading contacts..." : "Search contacts..."}
+            placeholder={isLoading ? "Loading contacts..." : "Select contact..."}
+            searchPlaceholder="Search by name, email or phone..."
+            emptyMessage="No contacts found."
             disabled={isLoading}
           />
         </div>
@@ -72,7 +82,7 @@ export function ClientInfoSection() {
       {useFinanceContact && (
         <div className="mt-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Finance Contact</label>
-          <Dropdown
+          <SearchableSelect
             options={contactOptions}
             selected={financeContactId}
             onSelect={(id) => {
@@ -80,7 +90,9 @@ export function ClientInfoSection() {
               const fc = contacts.find((c) => c.id === id);
               setField("financeContactEmail", fc?.email ?? "");
             }}
-            placeholder={isLoading ? "Loading contacts..." : "Search finance contact..."}
+            placeholder={isLoading ? "Loading contacts..." : "Select finance contact..."}
+            searchPlaceholder="Search by name, email or phone..."
+            emptyMessage="No contacts found."
             disabled={isLoading}
           />
         </div>

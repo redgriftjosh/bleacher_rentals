@@ -19,6 +19,7 @@ import { NewCompanyModal } from "./modals/NewCompanyModal";
 import { EditPaymentScheduleModal } from "./modals/EditPaymentScheduleModal";
 import { createQuoteEvent } from "../../db/createQuoteEvent";
 import { updateQuoteEvent } from "../../db/updateQuoteEvent";
+import { logQuoteSentLocal } from "../../db/logQuoteSentLocal";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
@@ -179,6 +180,12 @@ export function CreateQuoteForm() {
       });
 
       if (res.ok) {
+        // Log the send via PowerSync so it records the current user (the sender).
+        await logQuoteSentLocal({
+          eventId,
+          recipientLine: recipientEmails.join(","),
+          currentUserUuid: currentUserUuid ?? perms.userId,
+        });
         createSuccessToast([`Quote sent to ${recipientEmails.join(", ")}`]);
       } else {
         const err = await res.json().catch(() => ({}));
