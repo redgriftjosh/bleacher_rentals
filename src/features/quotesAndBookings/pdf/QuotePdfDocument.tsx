@@ -220,7 +220,9 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
             <Text style={styles.companyName}>{data.company.name}</Text>
             {data.company.street ? (
               <Text style={styles.infoText}>
-                {data.company.street}{"\n"}{data.company.city}, {data.company.state} {data.company.zip}
+                {data.company.street}
+                {"\n"}
+                {data.company.city}, {data.company.state} {data.company.zip}
               </Text>
             ) : null}
           </View>
@@ -240,8 +242,12 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
             <View style={styles.infoBlock}>
               <Text style={styles.infoLabel}>Bill To</Text>
               <Text style={styles.infoBold}>{data.contact.name}</Text>
-              {data.contact.email ? <Text style={styles.infoText}>{data.contact.email}</Text> : null}
-              {data.contact.phone ? <Text style={styles.infoText}>{data.contact.phone}</Text> : null}
+              {data.contact.email ? (
+                <Text style={styles.infoText}>{data.contact.email}</Text>
+              ) : null}
+              {data.contact.phone ? (
+                <Text style={styles.infoText}>{data.contact.phone}</Text>
+              ) : null}
             </View>
           )}
           <View style={styles.infoBlock}>
@@ -305,16 +311,26 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
             <Text style={styles.totalsValue}>{formatMoney(data.subtotalCents, currency)}</Text>
           </View>
           {data.discountsCents !== 0 && (
-            <View style={styles.totalsRow}>
-              <Text style={styles.totalsLabel}>Discounts</Text>
-              <Text style={[styles.totalsValue, { color: "#dc2626" }]}>
-                {formatMoney(data.discountsCents, currency)}
-              </Text>
-            </View>
+            <>
+              <View style={styles.totalsRow}>
+                <Text style={styles.totalsLabel}>Discounts</Text>
+                <Text style={[styles.totalsValue, { color: "#dc2626" }]}>
+                  {formatMoney(data.discountsCents, currency)}
+                </Text>
+              </View>
+              <View style={styles.totalsRow}>
+                <Text style={styles.totalsLabel}>Subtotal After Discount</Text>
+                <Text style={styles.totalsValue}>
+                  {formatMoney(data.subtotalCents + data.discountsCents, currency)}
+                </Text>
+              </View>
+            </>
           )}
-          {data.taxPercent > 0 && (
+          {data.taxAmountCents !== 0 && (
             <View style={styles.totalsRow}>
-              <Text style={styles.totalsLabel}>Tax ({data.taxPercent}%)</Text>
+              <Text style={styles.totalsLabel}>
+                Tax{data.taxPercent ? ` (${data.taxPercent}%)` : ""}
+              </Text>
               <Text style={styles.totalsValue}>{formatMoney(data.taxAmountCents, currency)}</Text>
             </View>
           )}
@@ -335,7 +351,13 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
                 <Text style={{ width: 80, textAlign: "right" }}>
                   {formatMoney(p.amountCents, currency)}
                 </Text>
-                <Text style={{ width: 60, textAlign: "right", color: p.status === "paid" ? "#16a34a" : "#6b7280" }}>
+                <Text
+                  style={{
+                    width: 60,
+                    textAlign: "right",
+                    color: p.status === "paid" ? "#16a34a" : "#6b7280",
+                  }}
+                >
                   {p.status}
                 </Text>
               </View>

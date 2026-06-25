@@ -10,8 +10,14 @@ import {
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { AddressFields } from "../../../types/quoteTypes";
 import { createCompany } from "../../../db/createCompany";
+import { useCompanies } from "../../../hooks/useCompanies";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
+import { DuplicateWarning } from "@/features/companiesContacts/components/DuplicateWarning";
+import {
+  findCompanyContactDuplicates,
+  findCompanyDuplicates,
+} from "@/features/companiesContacts/utils/findDuplicates";
 
 const emptyAddress: AddressFields = {
   street: "",
@@ -65,6 +71,17 @@ export function NewCompanyModal() {
   const [shippingAddress, setShippingAddress] = useState<AddressFields>({ ...emptyAddress });
   const [shippingSameAsBilling, setShippingSameAsBilling] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const { companies } = useCompanies();
+  const labelOf = (c: { companyName: string; email: string | null }) =>
+    c.companyName + (c.email ? ` (${c.email})` : "");
+
+  // Email/phone matches hard-block creation; a name-only match is just advisory.
+  const blockingCompanies = findCompanyContactDuplicates(companies, { email, phone });
+  const blockingLabels = blockingCompanies.map(labelOf);
+  const nameOnlyLabels = findCompanyDuplicates(companies, { companyName, email: "", phone: "" })
+    .filter((c) => !blockingCompanies.some((b) => b.id === c.id))
+    .map(labelOf);
 
   const resetAndClose = () => {
     setCompanyName("");
@@ -147,6 +164,9 @@ export function NewCompanyModal() {
             </div>
           </div>
 
+          <DuplicateWarning matches={blockingLabels} kind="company" severity="block" />
+          <DuplicateWarning matches={nameOnlyLabels} kind="company" severity="warn" />
+
           <AddressSection
             label="Billing Address"
             value={billingAddress}
@@ -192,7 +212,7 @@ export function NewCompanyModal() {
           </button>
           <button
             onClick={handleSave}
-            disabled={!companyName.trim() || saving}
+            disabled={!companyName.trim() || saving || blockingCompanies.length > 0}
             className="px-4 py-2 text-sm font-semibold text-white bg-darkBlue rounded-sm shadow-md hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? "Saving..." : "Save Company"}

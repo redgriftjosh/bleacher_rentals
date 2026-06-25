@@ -5,7 +5,6 @@ import * as postmark from "postmark";
 import { buildQuoteDocumentData } from "@/features/quotesAndBookings/pdf/quoteDocumentData";
 import { QuotePdfDocument } from "@/features/quotesAndBookings/pdf/QuotePdfDocument";
 import { buildQuoteEmailHtml } from "@/features/quotesAndBookings/pdf/quoteEmailHtml";
-import { logSingleChange } from "@/features/quotesAndBookings/db/logEventChanges";
 import { createClient } from "@supabase/supabase-js";
 
 export async function POST(
@@ -86,7 +85,17 @@ export async function POST(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
-  await logSingleChange(supabase, id, userId, "email_sent", null, toLine, "send");
+
+  // Resolve the Clerk user id to the app Users.id uuid for EventFiles.uploaded_by.
+  // NOTE: the "quote sent" EventChangeLog entry is written client-side via
+  // PowerSync (logQuoteSentLocal) so it records the current logged-in sender and
+  // follows the PowerSync-first rule — see docs/POWERSYNC_ARCHITECTURE.md.
+  const { data: senderUser } = await supabase
+    .from("Users")
+    .select("id")
+    .eq("clerk_user_id", userId)
+    .maybeSingle();
+  const senderUserUuid = senderUser?.id ?? null;
 
   // Save sent quote PDF to event-files bucket
   try {
@@ -108,7 +117,7 @@ export async function POST(
         mime_type: "application/pdf",
         file_size_bytes: pdfBuffer.byteLength,
         source: "sent_quote",
-        uploaded_by: userId,
+        uploaded_by: senderUserUuid,
       });
     } else {
       console.error("Failed to store sent quote PDF:", uploadError);

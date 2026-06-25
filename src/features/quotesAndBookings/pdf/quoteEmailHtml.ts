@@ -97,12 +97,22 @@ export function buildQuoteEmailHtml(data: QuoteDocumentData): string {
                 <td style="padding:4px 0;font-size:14px;text-align:right;font-weight:bold;">${formatMoney(data.subtotalCents, currency)}</td>
               </tr>
               ${
-                data.taxPercent > 0
-                  ? `<tr>
-                <td style="padding:4px 0;font-size:14px;">Tax (${data.taxPercent}%)</td>
+                data.discountsCents !== 0 &&
+                `<tr>
+                <td style="padding:4px 0;font-size:14px;">Discounts</td>
+                <td style="padding:4px 0;font-size:14px;text-align:right;font-weight:bold;color:#dc2626;">${formatMoney(data.discountsCents, currency)}</td>
+              </tr>
+              <tr>
+                <td style="padding:4px 0;font-size:14px;">Subtotal After Discount</td>
+                <td style="padding:4px 0;font-size:14px;text-align:right;font-weight:bold;">${formatMoney(data.subtotalCents + data.discountsCents, currency)}</td>
+              </tr>`
+              }
+              ${
+                data.taxAmountCents !== 0 &&
+                `<tr>
+                <td style="padding:4px 0;font-size:14px;">Tax${data.taxPercent ? ` (${data.taxPercent}%)` : ""}</td>
                 <td style="padding:4px 0;font-size:14px;text-align:right;font-weight:bold;">${formatMoney(data.taxAmountCents, currency)}</td>
               </tr>`
-                  : ""
               }
               <tr>
                 <td colspan="2" style="border-top:2px solid #10365a;padding-top:8px;"></td>

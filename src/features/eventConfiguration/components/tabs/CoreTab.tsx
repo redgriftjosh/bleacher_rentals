@@ -9,6 +9,7 @@ import { useScrollToDateStore } from "@/features/dashboard/state/useScrollToDate
 import { LocateFixed } from "lucide-react";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { filterOwnerOptions } from "@/features/userAccess/logic/filterOwnerOptions";
+import { STATUSES } from "@/features/manageTeam/constants";
 import { useAccountManagerUserIds } from "@/features/userAccess/hooks/useAccountManagerUserIds";
 import { useDashboardBleachersStore } from "@/features/dashboard/state/useDashboardBleachersStore";
 import {
@@ -43,6 +44,7 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
     currentUserId: permissions.userId,
     disabled,
     accountManagerUserIds,
+    inactiveStatusUuid: STATUSES.inactive,
   });
   const ownerOptions = filteredUsers.map((u) => ({
     label: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.email,

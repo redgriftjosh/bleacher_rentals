@@ -14,6 +14,7 @@ import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { PaymentInstallment } from "../../../types/quoteTypes";
 import { formatCurrency, currencySymbol } from "../../../utils/formatCurrency";
 import { calculateTotals } from "../../../utils/calculateTotals";
+import { buildDefaultPaymentSchedule } from "../../../utils/buildDefaultPaymentSchedule";
 
 type DraftRow = PaymentInstallment & {
   /** Display string for the % input — kept separate so typing "33.3" doesn't jump. */
@@ -26,6 +27,7 @@ export function EditPaymentScheduleModal() {
   const isOpen = useCreateQuoteStore((s) => s.isEditPaymentScheduleModalOpen);
   const storeInstallments = useCreateQuoteStore((s) => s.paymentInstallments);
   const lineItems = useCreateQuoteStore((s) => s.lineItems);
+  const eventStart = useCreateQuoteStore((s) => s.eventStart);
   const currency = useCreateQuoteStore((s) => s.currency);
   const taxPercent = useCreateQuoteStore((s) => s.taxPercent);
   const taxOverrideCents = useCreateQuoteStore((s) => s.taxOverrideCents);
@@ -62,18 +64,17 @@ export function EditPaymentScheduleModal() {
         })),
       );
     } else {
-      setDraft([
-        {
-          id: crypto.randomUUID(),
-          dueDate: new Date().toISOString().split("T")[0],
-          amountCents: totalCents,
-          status: "unpaid",
-          pctDisplay: "100",
-          dollarDisplay: (totalCents / 100).toFixed(2),
-        },
-      ]);
+      // No schedule yet → seed the default (50% on signing, 50% 7 days
+      // before the event). Manager can still edit every value before saving.
+      setDraft(
+        buildDefaultPaymentSchedule(totalCents, eventStart).map((i) => ({
+          ...i,
+          pctDisplay: centsToPct(i.amountCents),
+          dollarDisplay: (i.amountCents / 100).toFixed(2),
+        })),
+      );
     }
-  }, [isOpen, storeInstallments, totalCents, centsToPct]);
+  }, [isOpen, storeInstallments, totalCents, eventStart, centsToPct]);
 
   const scheduledCents = draft.reduce((sum, i) => sum + i.amountCents, 0);
   const remaining = totalCents - scheduledCents;

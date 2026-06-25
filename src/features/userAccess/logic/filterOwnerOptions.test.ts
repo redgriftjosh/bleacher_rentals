@@ -30,7 +30,7 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
 
   // ═══ AM (non-admin) ═══
 
-  it("AM sees only self when creating (not disabled)", () => {
+  it("AM sees all admins and account managers (can assign any AM as owner)", () => {
     const result = filterOwnerOptions({
       users: allUsers,
       isAdmin: false,
@@ -38,7 +38,11 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
       disabled: false,
       accountManagerUserIds,
     });
-    expect(result).toEqual([{ id: "user-am-1", name: "AM One", is_admin: false }]);
+    expect(result).toEqual([
+      { id: "user-admin", name: "Admin User", is_admin: true },
+      { id: "user-am-1", name: "AM One", is_admin: false },
+      { id: "user-am-2", name: "AM Two", is_admin: false },
+    ]);
   });
 
   // ═══ Read-only mode (disabled) ═══
@@ -76,6 +80,41 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
       accountManagerUserIds,
     });
     expect(result).toEqual([{ id: "user-viewer", name: "Viewer User", is_admin: false }]);
+  });
+
+  // ═══ Deactivated users ═══
+
+  it("excludes deactivated users from the selectable list when inactiveStatusUuid is set", () => {
+    const usersWithStatus = [
+      { id: "user-admin", is_admin: true, status_uuid: "active" },
+      { id: "user-am-1", is_admin: false, status_uuid: "active" },
+      { id: "user-am-2", is_admin: false, status_uuid: "inactive" },
+    ];
+    const result = filterOwnerOptions({
+      users: usersWithStatus,
+      isAdmin: false,
+      currentUserId: "user-am-1",
+      disabled: false,
+      accountManagerUserIds: new Set(["user-am-1", "user-am-2"]),
+      inactiveStatusUuid: "inactive",
+    });
+    expect(result.map((u) => u.id)).toEqual(["user-admin", "user-am-1"]);
+  });
+
+  it("still shows deactivated users in read-only mode (disabled=true) so the owner name renders", () => {
+    const usersWithStatus = [
+      { id: "user-am-1", is_admin: false, status_uuid: "active" },
+      { id: "user-am-2", is_admin: false, status_uuid: "inactive" },
+    ];
+    const result = filterOwnerOptions({
+      users: usersWithStatus,
+      isAdmin: false,
+      currentUserId: "user-am-1",
+      disabled: true,
+      accountManagerUserIds: new Set(["user-am-1", "user-am-2"]),
+      inactiveStatusUuid: "inactive",
+    });
+    expect(result).toEqual(usersWithStatus);
   });
 
   // ═══ Edge cases ═══

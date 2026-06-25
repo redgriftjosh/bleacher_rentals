@@ -39,6 +39,8 @@ export type Bleacher = {
   winterAccountManagerUuid: string | null;
   zoneUuid: string | null;
   zoneName: string | null;
+  /** Storage location name (full); cell renders the first 15 chars. */
+  storageLocationName: string | null;
   /** For subrental rows: the zone the bleacher normally belongs to */
   originalZoneName?: string | null;
   /** Pre-computed once during data assembly — avoids per-cell store lookups */

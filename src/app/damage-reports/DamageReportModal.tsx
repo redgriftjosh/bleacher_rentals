@@ -103,7 +103,6 @@ type DamageReportModalProps = {
   onOpenChange: (open: boolean) => void;
   onSaved: () => void;
   editReport?: EditDamageReport | null;
-  currentUserUuid?: string | null;
 };
 
 export function DamageReportModal({
@@ -111,7 +110,6 @@ export function DamageReportModal({
   onOpenChange,
   onSaved,
   editReport,
-  currentUserUuid,
 }: DamageReportModalProps) {
   const supabase = useClerkSupabaseClient();
   const isEditing = !!editReport;
@@ -253,7 +251,9 @@ export function DamageReportModal({
           is_safe_to_sit: seatDamage === "none",
           is_safe_to_haul: haulDamage === "none",
           note: note || null,
-          created_by_user_uuid: currentUserUuid ?? null,
+          // created_by_user_uuid intentionally omitted — the DB DEFAULT
+          // public.get_current_user_uuid() autopopulates the creator. Sending
+          // it explicitly (even null) would override that default.
         })
         .select("id")
         .single();

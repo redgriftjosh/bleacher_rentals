@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Trash2 } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Trash2, Pencil } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { AddOfficeModal } from "@/features/salesOffices/components/AddOfficeModal";
 import {
   fetchAllSalesOffices,
+  fetchQboConnections,
   softDeleteSalesOffice,
   SalesOfficeRow,
+  QboConnectionOption,
 } from "@/features/salesOffices/db/salesOfficesDb";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
@@ -31,8 +33,10 @@ export default function SalesOfficesPage() {
   const isAdmin = permissions.isAdmin;
 
   const [offices, setOffices] = useState<SalesOfficeRow[]>([]);
+  const [qboConnections, setQboConnections] = useState<QboConnectionOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<SalesOfficeRow | null>(null);
 
   const loadOffices = useCallback(() => {
     setLoading(true);
@@ -45,10 +49,31 @@ export default function SalesOfficesPage() {
     loadOffices();
   }, [loadOffices]);
 
-  const handleDelete = async (officeId: string, officeName: string) => {
+  // QboConnections aren't synced to PowerSync — fetch once to resolve display names.
+  useEffect(() => {
+    fetchQboConnections(supabase).then(setQboConnections);
+  }, [supabase]);
+
+  const qboNameByUuid = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of qboConnections) m.set(c.id, c.displayName);
+    return m;
+  }, [qboConnections]);
+
+  const openCreate = () => {
+    setEditing(null);
+    setModalOpen(true);
+  };
+
+  const openEdit = (office: SalesOfficeRow) => {
+    setEditing(office);
+    setModalOpen(true);
+  };
+
+  const handleDelete = async (officeId: string, officeName: string | null) => {
     try {
-      await softDeleteSalesOffice(officeId, supabase);
-      createSuccessToast([`"${officeName}" deleted.`]);
+      await softDeleteSalesOffice(officeId);
+      createSuccessToast([`"${officeName ?? "Office"}" deleted.`]);
       loadOffices();
     } catch {
       // Error toast already shown
@@ -62,7 +87,7 @@ export default function SalesOfficesPage() {
         subtitle="Manage sales offices and their QuickBooks connections"
         action={
           isAdmin ? (
-            <PrimaryButton onClick={() => setModalOpen(true)}>+ Add Office</PrimaryButton>
+            <PrimaryButton onClick={openCreate}>+ Add Office</PrimaryButton>
           ) : undefined
         }
       />
@@ -90,7 +115,7 @@ export default function SalesOfficesPage() {
                   QuickBooks
                 </th>
                 {isAdmin && (
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-20">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-24">
                     Actions
                   </th>
                 )}
@@ -106,36 +131,50 @@ export default function SalesOfficesPage() {
                       : "—"}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
-                    {office.qbo_display_name ?? office.quickbook_uuid}
+                    {(office.quickbook_uuid && qboNameByUuid.get(office.quickbook_uuid)) ??
+                      office.quickbook_uuid ??
+                      "—"}
                   </td>
                   {isAdmin && (
                     <td className="px-4 py-3 text-right">
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <button className="text-gray-400 hover:text-red-600 transition cursor-pointer">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete "{office.name}"?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will soft-delete the sales office. It can be restored later.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="cursor-pointer rounded-sm">
-                              Cancel
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              className="cursor-pointer rounded-sm bg-red-800 text-white hover:bg-red-900"
-                              onClick={() => handleDelete(office.id, office.name)}
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => openEdit(office)}
+                          className="text-gray-400 hover:text-darkBlue transition cursor-pointer"
+                          title="Edit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button
+                              className="text-gray-400 hover:text-red-600 transition cursor-pointer"
+                              title="Delete"
                             >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete "{office.name}"?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will soft-delete the sales office. It can be restored later.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="cursor-pointer rounded-sm">
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                className="cursor-pointer rounded-sm bg-red-800 text-white hover:bg-red-900"
+                                onClick={() => handleDelete(office.id, office.name)}
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </td>
                   )}
                 </tr>
@@ -148,7 +187,8 @@ export default function SalesOfficesPage() {
       <AddOfficeModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onCreated={loadOffices}
+        onSaved={loadOffices}
+        editing={editing}
       />
     </main>
   );

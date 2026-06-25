@@ -6,9 +6,10 @@ import {
   type WebRole,
   type BlockedReason,
 } from "../logic/determineAccess";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import type { UserAccessData } from "../types";
 
 export type { UserAccessData } from "../types";
@@ -18,9 +19,16 @@ export type UserAccessState =
   | { status: "blocked"; reason: BlockedReason }
   | { status: "active"; roles: WebRole[]; userId: string; accountManagerId: string | null };
 
+// These blocked reasons can be a false negative when the signed-in user's own
+// role rows (e.g. their Drivers row) are not synced to this client by PowerSync.
+// A driver-only user, for instance, may have no role rows in the local DB and
+// would otherwise be told "no roles assigned" instead of seeing DriverWelcome.
+const FALLBACK_REASONS: BlockedReason[] = ["no-roles-assigned", "cannot-find-account"];
+
 export function useUserAccess(): UserAccessState {
   const { user } = useUser();
   const clerkUserId = user?.id ?? null;
+  const supabase = useClerkSupabaseClient();
 
   const clerkUserIdForQuery = clerkUserId ?? "__no_clerk_user__";
 
@@ -56,13 +64,81 @@ export function useUserAccess(): UserAccessState {
     console.warn("[useUserAccess] query error:", error);
   }
 
-  if (!clerkUserId || isLoading) {
-    return { status: "loading" };
-  }
+  const localState: UserAccessState = useMemo(() => {
+    if (!clerkUserId || isLoading) return { status: "loading" };
+    if (error || !data?.[0]) return { status: "blocked", reason: "cannot-find-account" };
+    return determineUserAccess(data[0]);
+  }, [clerkUserId, isLoading, error, data]);
 
-  if (error || !data?.[0]) {
-    return { status: "blocked", reason: "cannot-find-account" };
-  }
+  const needsFallback =
+    localState.status === "blocked" && FALLBACK_REASONS.includes(localState.reason);
 
-  return determineUserAccess(data[0]);
+  // Authoritative online re-check for the false-negative blocked cases above.
+  // Keyed by clerkUserId so a resolved fallback is never shown for another user.
+  const [fallback, setFallback] = useState<{ clerkUserId: string; result: AccessResult } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!clerkUserId || !needsFallback) {
+      setFallback(null);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      const { data: row, error: fetchError } = await supabase
+        .from("Users")
+        .select(
+          `
+          id,
+          status_uuid,
+          is_admin,
+          is_viewer,
+          AccountManagers!AccountManagers_user_uuid_fkey(id, is_active),
+          Drivers!Drivers_user_uuid_fkey(id, is_active),
+          Developers!Developers_user_uuid_fkey(id, is_active)
+        `,
+        )
+        .eq("clerk_user_id", clerkUserId)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (fetchError || !row) {
+        setFallback({
+          clerkUserId,
+          result: { status: "blocked", reason: "cannot-find-account" },
+        });
+        return;
+      }
+
+      const activeId = (rows: { id: string; is_active: boolean | null }[] | null) =>
+        rows?.find((r) => r.is_active)?.id ?? null;
+
+      const mapped: UserAccessData = {
+        id: row.id,
+        status_uuid: row.status_uuid,
+        is_admin: row.is_admin ? 1 : 0,
+        is_viewer: row.is_viewer ? 1 : 0,
+        account_manager_id: activeId(row.AccountManagers),
+        driver_id: activeId(row.Drivers),
+        developer_id: activeId(row.Developers),
+      };
+
+      setFallback({ clerkUserId, result: determineUserAccess(mapped) });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clerkUserId, needsFallback, supabase]);
+
+  if (!needsFallback) return localState;
+
+  // While the authoritative check is in flight, stay on the loading screen so we
+  // don't flash "No roles assigned" before resolving to e.g. DriverWelcome.
+  if (!fallback || fallback.clerkUserId !== clerkUserId) return { status: "loading" };
+
+  return fallback.result;
 }
