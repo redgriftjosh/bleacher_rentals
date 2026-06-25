@@ -1,5 +1,7 @@
 import { Database } from "../../../../database.types";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { db } from "@/components/providers/SystemProvider";
+import { typedExecute } from "@/lib/powersync/typedQuery";
 import { fetchWorkTrackersForUserUuidAndStartDate } from "./db";
 import { buildReleaseAllNotification, insertDriverNotification } from "./notifications";
 
@@ -27,14 +29,14 @@ export async function releaseAllDraftWorkTrackers(
 
   if (draftIds.length === 0) return 0;
 
-  const { error } = await supabase
-    .from("WorkTrackers")
-    .update({ status: "released" })
-    .in("id", draftIds);
-
-  if (error) {
-    throw new Error(error.message);
-  }
+  // Local-first write: mutate the PowerSync DB; BackendConnector syncs the
+  // PATCH back to Supabase. (Notifications stay on Supabase below.)
+  const compiled = db
+    .updateTable("WorkTrackers")
+    .set({ status: "released" })
+    .where("id", "in", draftIds)
+    .compile();
+  await typedExecute(compiled);
 
   await insertDriverNotification(
     supabase,

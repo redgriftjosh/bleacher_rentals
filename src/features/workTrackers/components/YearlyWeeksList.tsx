@@ -6,9 +6,7 @@ import { DateTime } from "luxon";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
-import { useQuery } from "@tanstack/react-query";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
-import { fetchCrossBorderWeekStarts } from "../db/db";
+import { useCrossBorderWeekStarts } from "../hooks/useCrossBorderWeekStarts";
 
 type WeekGroup = {
   week_start: string | null;
@@ -33,7 +31,6 @@ type Props = {
 
 export function YearlyWeeksList({ year }: Props) {
   const router = useRouter();
-  const supabase = useClerkSupabaseClient();
 
   // Calculate the date range for the year
   const dateRange = useMemo(() => {
@@ -46,11 +43,7 @@ export function YearlyWeeksList({ year }: Props) {
     };
   }, [year]);
 
-  const { data: crossBorderWeekStarts } = useQuery({
-    queryKey: ["cross-border-week-starts", dateRange.start, dateRange.end],
-    queryFn: () => fetchCrossBorderWeekStarts(supabase, dateRange.start, dateRange.end),
-    enabled: !!supabase,
-  });
+  const crossBorderWeekStarts = useCrossBorderWeekStarts(dateRange.start, dateRange.end);
 
   const query = useMemo(() => {
     return db
