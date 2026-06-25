@@ -23,6 +23,7 @@ import { EditBlock } from "@/features/dashboard/types";
 import { fetchWorkTrackerByUuid } from "@/features/dashboard/db/client/fetchWorkTracker";
 import { SelectDriver } from "./SelectDriver";
 import { useDrivers } from "../hooks/useDrivers.db";
+import { useWorkTrackerTypes } from "../hooks/useWorkTrackerTypes";
 import {
   Dialog,
   DialogContent,
@@ -88,19 +89,8 @@ export default function WorkTrackerModal({
   const [isSaving, setIsSaving] = useState(false);
   const [showEditTypes, setShowEditTypes] = useState(false);
 
-  // Fetch available work tracker types
-  const { data: workTrackerTypes = [] } = useQuery({
-    queryKey: ["work-tracker-types"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("WorkTrackerTypes")
-        .select("*")
-        .eq("is_deleted", false)
-        .order("sort_order", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Fetch available work tracker types (local-first via PowerSync)
+  const { types: workTrackerTypes } = useWorkTrackerTypes();
 
   // Helper to format address for Distance Matrix API
   const formatAddressString = (addr: AddressData | null): string => {
@@ -651,7 +641,7 @@ export default function WorkTrackerModal({
                     </div>
                     <Dropdown
                       options={workTrackerTypes.map((t) => ({
-                        label: t.display_name,
+                        label: t.display_name ?? "",
                         value: t.id,
                       }))}
                       selected={workTracker?.work_tracker_type_uuid ?? undefined}
