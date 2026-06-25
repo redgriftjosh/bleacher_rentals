@@ -115,16 +115,16 @@ export default function WorkTrackerModal({
 
   const distanceQueryEnabled = Boolean(origin && dest);
 
-  // Debug logging
-  console.log("Distance Query Debug:", {
-    origin,
-    dest,
-    pickUpPlaceId: pickUpAddress?.placeId,
-    dropOffPlaceId: dropOffAddress?.placeId,
-    distanceQueryEnabled,
-    pickUpAddress,
-    dropOffAddress,
-  });
+  // Debug logging (disabled — was noisy on every render)
+  // console.log("Distance Query Debug:", {
+  //   origin,
+  //   dest,
+  //   pickUpPlaceId: pickUpAddress?.placeId,
+  //   dropOffPlaceId: dropOffAddress?.placeId,
+  //   distanceQueryEnabled,
+  //   pickUpAddress,
+  //   dropOffAddress,
+  // });
 
   const {
     data: leg,
