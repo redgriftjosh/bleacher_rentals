@@ -258,13 +258,14 @@ export class BleacherCell extends Container {
       c.addChild(zoneLabel);
     }
 
-    // Storage location — first 15 chars, bottom line
+    // Storage location — first 15 chars, beside the map pin icon on the top line.
+    // Kept off the bottom line so longer zone names have room there.
     if (b.storageLocationName) {
       const storageLabel = new Text({
         text: b.storageLocationName.slice(0, 15),
         style: { fill: 0x9a9a9a, fontSize: 10 },
       });
-      storageLabel.position.set(40, 31);
+      storageLabel.position.set(46, 6);
       c.addChild(storageLabel);
     }
 
