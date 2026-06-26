@@ -37,7 +37,13 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
   const perms = usePermissionsStore();
   const dashBleachers = useDashboardBleachersStore((s) => s.data);
   const isViewer = !perms.isAdmin && !perms.isAccountManager;
-  const bl = dashBleachers.find((b) => b.bleacherUuid === bleacherUuid) ?? null;
+  // Prefer the original (non-subrental) row: a ghost subrental row shares the same
+  // bleacherUuid but carries the BORROWING zone's uuid, which would make canEditCell
+  // wrongly return false for the owning AM and lock the textarea (readOnly).
+  const bl =
+    dashBleachers.find((b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow) ??
+    dashBleachers.find((b) => b.bleacherUuid === bleacherUuid) ??
+    null;
   const canEditCell = canEditCellFn({
     isAdmin: perms.isAdmin,
     isAccountManager: perms.isAccountManager,

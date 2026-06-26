@@ -73,14 +73,25 @@ export function useUserAccess(): UserAccessState {
   const needsFallback =
     localState.status === "blocked" && FALLBACK_REASONS.includes(localState.reason);
 
-  // Authoritative online re-check for the false-negative blocked cases above.
-  // Keyed by clerkUserId so a resolved fallback is never shown for another user.
+  // A locally-active result that is NOT admin can be a false negative: this client's
+  // PowerSync copy of Users.is_admin may be stale or not yet synced, so a real admin
+  // resolves as viewer/account_manager and gets locked out of admin-only actions
+  // (e.g. typing in dashboard cells via canEditCell). Re-check online to confirm.
+  // Unlike the blocked cases, we keep showing the functional local state while the
+  // authoritative check is in flight — no loading flash for an already-working user.
+  const needsAdminRecheck =
+    localState.status === "active" && !localState.roles.includes("admin");
+
+  const needsOnlineCheck = needsFallback || needsAdminRecheck;
+
+  // Authoritative online re-check for the false-negative cases above.
+  // Keyed by clerkUserId so a resolved result is never shown for another user.
   const [fallback, setFallback] = useState<{ clerkUserId: string; result: AccessResult } | null>(
     null,
   );
 
   useEffect(() => {
-    if (!clerkUserId || !needsFallback) {
+    if (!clerkUserId || !needsOnlineCheck) {
       setFallback(null);
       return;
     }
@@ -132,13 +143,19 @@ export function useUserAccess(): UserAccessState {
     return () => {
       cancelled = true;
     };
-  }, [clerkUserId, needsFallback, supabase]);
+  }, [clerkUserId, needsOnlineCheck, supabase]);
 
-  if (!needsFallback) return localState;
+  if (!needsOnlineCheck) return localState;
 
-  // While the authoritative check is in flight, stay on the loading screen so we
-  // don't flash "No roles assigned" before resolving to e.g. DriverWelcome.
-  if (!fallback || fallback.clerkUserId !== clerkUserId) return { status: "loading" };
+  // Blocked false-negatives: stay on the loading screen until resolved so we don't
+  // flash "No roles assigned" before resolving to e.g. DriverWelcome.
+  if (needsFallback) {
+    if (!fallback || fallback.clerkUserId !== clerkUserId) return { status: "loading" };
+    return fallback.result;
+  }
 
-  return fallback.result;
+  // Admin re-check: keep the functional local state until the authoritative online
+  // result lands, then prefer it (promotes a stale non-admin to admin if warranted).
+  if (fallback && fallback.clerkUserId === clerkUserId) return fallback.result;
+  return localState;
 }
