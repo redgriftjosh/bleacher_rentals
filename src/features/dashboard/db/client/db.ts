@@ -283,20 +283,15 @@ export function getAddressFromUuid(addressUuid: string | null): AddressData | nu
   };
 }
 
-async function fetchDriverUserUuidByDriverUuid(
-  driverUuid: string | null,
-  supabase: SupabaseClient<Database>,
-): Promise<string | null> {
+async function fetchDriverUserUuidByDriverUuid(driverUuid: string | null): Promise<string | null> {
   if (!driverUuid) return null;
 
-  const { data, error } = await supabase
-    .from("Drivers")
-    .select("user_uuid")
-    .eq("id", driverUuid)
-    .single();
+  const rows = await typedGetAll(
+    db.selectFrom("Drivers").select(["user_uuid"]).where("id", "=", driverUuid).limit(1).compile(),
+    expect<{ user_uuid: string | null }>(),
+  );
 
-  if (error) return null;
-  return data?.user_uuid ?? null;
+  return rows[0]?.user_uuid ?? null;
 }
 
 function toNotificationAddress(address: AddressData | null, fallback: string): string {
@@ -334,7 +329,6 @@ export async function saveWorkTracker(
   workTracker: Tables<"WorkTrackers"> | null,
   pickUpAddress: AddressData | null,
   dropOffAddress: AddressData | null,
-  supabase: SupabaseClient<Database>,
   options?: {
     previousStatus?: Enums<"worktracker_status">;
     driverUserUuid?: string | null;
@@ -344,9 +338,6 @@ export async function saveWorkTracker(
     previousDropoffCity?: string;
   },
 ): Promise<void> {
-  if (!supabase) {
-    createErrorToast(["No Supabase Client found"]);
-  }
   if (!workTracker) {
     createErrorToast(["Failed to save work tracker. No work tracker provided."]);
   }
@@ -438,24 +429,19 @@ export async function saveWorkTracker(
 
   if (notification) {
     const driverUserUuid =
-      options?.driverUserUuid ??
-      (await fetchDriverUserUuidByDriverUuid(workTracker.driver_uuid, supabase));
+      options?.driverUserUuid ?? (await fetchDriverUserUuidByDriverUuid(workTracker.driver_uuid));
 
     if (driverUserUuid) {
-      await insertDriverNotification(supabase, driverUserUuid, notification);
+      await insertDriverNotification(driverUserUuid, notification);
     }
   }
 
   try {
     const { triage } = await import("@/features/alerts/triage");
-    await triage(
-      "WorkTrackers",
-      {
-        id: savedWorkTrackerUuid,
-        previous_bleacher_uuid: previousBleacherUuid,
-      },
-      supabase,
-    );
+    await triage("WorkTrackers", {
+      id: savedWorkTrackerUuid,
+      previous_bleacher_uuid: previousBleacherUuid,
+    });
   } catch (e) {
     console.error("[alerts] failed to triage after work tracker save", e);
   }
@@ -466,7 +452,6 @@ export async function saveWorkTracker(
 
 export async function deleteWorkTracker(
   workTrackerUuid: string | null,
-  supabase: SupabaseClient<Database>,
   options?: {
     driverUserUuid?: string | null;
     driverUuid?: string | null;
@@ -477,22 +462,16 @@ export async function deleteWorkTracker(
     date?: string | null;
   },
 ): Promise<void> {
-  if (!supabase) {
-    createErrorToast(["No Supabase Client found"]);
-  }
-
   if (!workTrackerUuid || workTrackerUuid === "-1") {
     createErrorToast(["Invalid work tracker ID"]);
     throw new Error("Invalid work tracker ID");
   }
 
   const driverUserUuid =
-    options?.driverUserUuid ??
-    (await fetchDriverUserUuidByDriverUuid(options?.driverUuid ?? null, supabase));
+    options?.driverUserUuid ?? (await fetchDriverUserUuidByDriverUuid(options?.driverUuid ?? null));
 
   if (driverUserUuid) {
     await insertDriverNotification(
-      supabase,
       driverUserUuid,
       buildTripDeletedNotification({
         pickupAddress: options?.pickupAddress ?? "an unknown pickup location",
@@ -517,11 +496,7 @@ export async function deleteWorkTracker(
 
   try {
     const { triage } = await import("@/features/alerts/triage");
-    await triage(
-      "WorkTrackers_deleted",
-      { id: workTrackerUuid, bleacher_uuid: bleacherUuid },
-      supabase,
-    );
+    await triage("WorkTrackers_deleted", { id: workTrackerUuid, bleacher_uuid: bleacherUuid });
   } catch (e) {
     console.error("[alerts] failed to triage after work tracker delete", e);
   }

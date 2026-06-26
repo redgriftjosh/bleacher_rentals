@@ -1,6 +1,7 @@
-import { Database, Enums } from "../../../../database.types";
-import { SupabaseClient } from "@supabase/supabase-js";
+import { Enums } from "../../../../database.types";
 import { DateTime } from "luxon";
+import { db } from "@/components/providers/SystemProvider";
+import { typedExecute } from "@/lib/powersync/typedQuery";
 
 type WorkTrackerStatus = Enums<"worktracker_status">;
 
@@ -128,18 +129,24 @@ export function buildReleaseAllNotification(
   };
 }
 
+/**
+ * Local-first notification insert. Writes to the PowerSync DB; BackendConnector
+ * uploads the row to Supabase, where a database trigger fires the push edge
+ * function. Works offline — the push is delivered once the row syncs upstream.
+ */
 export async function insertDriverNotification(
-  supabase: SupabaseClient<Database>,
   userUuid: string,
   preview: DriverNotificationPreview,
 ): Promise<void> {
-  const { error } = await supabase.from("Notifications").insert({
-    user_id: userUuid,
-    title: preview.title,
-    body: preview.body,
-  });
+  const compiled = db
+    .insertInto("Notifications")
+    .values({
+      id: crypto.randomUUID(),
+      user_id: userUuid,
+      title: preview.title,
+      body: preview.body,
+    })
+    .compile();
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  await typedExecute(compiled);
 }

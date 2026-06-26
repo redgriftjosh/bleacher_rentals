@@ -29,8 +29,8 @@ export async function releaseAllDraftWorkTrackers(
 
   if (draftIds.length === 0) return 0;
 
-  // Local-first write: mutate the PowerSync DB; BackendConnector syncs the
-  // PATCH back to Supabase. (Notifications stay on Supabase below.)
+  // Local-first writes: mutate the PowerSync DB; BackendConnector syncs both
+  // the status PATCH and the notification INSERT back to Supabase.
   const compiled = db
     .updateTable("WorkTrackers")
     .set({ status: "released" })
@@ -38,11 +38,7 @@ export async function releaseAllDraftWorkTrackers(
     .compile();
   await typedExecute(compiled);
 
-  await insertDriverNotification(
-    supabase,
-    userUuid,
-    buildReleaseAllNotification(draftIds.length, startDate),
-  );
+  await insertDriverNotification(userUuid, buildReleaseAllNotification(draftIds.length, startDate));
 
   return draftIds.length;
 }

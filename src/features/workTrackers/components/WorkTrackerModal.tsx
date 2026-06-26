@@ -392,7 +392,7 @@ export default function WorkTrackerModal({
                 : workTracker.drive_minutes,
           }
         : workTracker;
-      await saveWorkTracker(trackerToSave, pickUpAddress, dropOffAddress, supabase, {
+      await saveWorkTracker(trackerToSave, pickUpAddress, dropOffAddress, {
         previousStatus: initialStatus,
         driverUserUuid: selectedDriver?.user_uuid ?? null,
         previousPickupAddress: pickupAddress?.address ?? "an unknown pickup location",
@@ -424,7 +424,7 @@ export default function WorkTrackerModal({
     }
 
     try {
-      await deleteWorkTracker(workTracker.id, supabase, {
+      await deleteWorkTracker(workTracker.id, {
         driverUserUuid: selectedDriver?.user_uuid ?? null,
         driverUuid: workTracker.driver_uuid,
         pickupAddress:
