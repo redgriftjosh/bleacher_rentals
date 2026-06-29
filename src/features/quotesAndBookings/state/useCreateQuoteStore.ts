@@ -54,6 +54,8 @@ export type CreateQuoteState = {
 
   // Payment
   paymentMethod: PaymentMethod;
+  // Empty until the manager explicitly saves a schedule in the Edit Payment
+  // Schedule modal — the schedule is optional. Non-empty = a committed schedule.
   paymentInstallments: PaymentInstallment[];
 
   // Notes
