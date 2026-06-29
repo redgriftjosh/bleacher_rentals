@@ -154,3 +154,13 @@ export async function softDeleteStorageLocation(id: string): Promise<void> {
       .compile(),
   );
 }
+
+export async function restoreStorageLocation(id: string): Promise<void> {
+  await typedExecute(
+    db
+      .updateTable("StorageLocations")
+      .set({ deleted: 0 } as any)
+      .where("id", "=", id)
+      .compile(),
+  );
+}
