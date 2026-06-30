@@ -1753,6 +1753,7 @@ export type Database = {
           cost_cents: number | null
           created_at: string
           created_by_user_uuid: string | null
+          deleted: boolean
           event_end: string
           event_name: string
           event_start: string
@@ -1764,6 +1765,7 @@ export type Database = {
           cost_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null
+          deleted?: boolean
           event_end: string
           event_name?: string
           event_start: string
@@ -1775,6 +1777,7 @@ export type Database = {
           cost_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null
+          deleted?: boolean
           event_end?: string
           event_name?: string
           event_start?: string

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Trash, Truck, X, CalendarPlus, Wrench, Handshake } from "lucide-react";
+import { Check, Trash, Truck, X, CalendarPlus, Wrench, Handshake, ShieldAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useSelectedBlockStore } from "../state/useSelectedBlock";
 import { Tables } from "../../../../database.types";
@@ -20,6 +20,8 @@ import { hasSubrentalAccessForDate } from "@/features/userAccess/logic/hasSubren
 import { canEditCell as canEditCellFn } from "@/features/userAccess/logic/canEditCell";
 import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
 import { SUBRENTAL_COLOR } from "@/features/dashboard/values/constants";
+import { DamageReportModal, EditDamageReport } from "@/app/damage-reports/DamageReportModal";
+import { useDamageReports } from "@/app/damage-reports/_lib/db";
 
 type CellEditorProps = {
   onWorkTrackerOpen?: (workTracker: Tables<"WorkTrackers">) => void;
@@ -45,6 +47,19 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
     bleacherUuid,
     bleacher: bl ? { zoneUuid: bl.zoneUuid } : null,
   });
+
+  // Open (unresolved) damage report on the clicked bleacher, if any. Read
+  // reactively from PowerSync so it stays in sync and carries the photos +
+  // creator the modal needs — no online fetch required.
+  const { reports: bleacherDamageReports } = useDamageReports({ bleacherUuid, showDeleted: false });
+  const openDamageReport = bleacherUuid
+    ? (bleacherDamageReports.find((d) => d.resolved_at === null) ?? null)
+    : null;
+  const [viewingDamageReport, setViewingDamageReport] = useState<EditDamageReport | null>(null);
+
+  const handleViewDamageReport = () => {
+    if (openDamageReport) setViewingDamageReport(openDamageReport as EditDamageReport);
+  };
 
   const [handshakeHover, setHandshakeHover] = useState(false);
   const [currentText, setCurrentText] = useState(text);
@@ -490,6 +505,7 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
   };
 
   const handleClose = () => {
+    setViewingDamageReport(null);
     resetForm();
   };
 
@@ -544,51 +560,63 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
         />
 
         <div className="flex justify-between gap-2">
-          {/* Action buttons: hidden for viewer */}
-          {!isViewer && (
-            <div className="flex gap-1">
-              <AppTooltip content="Work Tracker">
+          {/* Left group: damage-report view (all roles) + edit actions (non-viewers) */}
+          <div className="flex gap-1">
+            {openDamageReport && (
+              <AppTooltip content="View Damage Report">
                 <button
-                  aria-label="Work Tracker"
-                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
-                  onClick={handleOpenWorkTracker}
+                  aria-label="View Damage Report"
+                  className="flex items-center justify-center h-8 w-8 rounded text-red-600 cursor-pointer hover:text-red-800 hover:bg-red-50 transition-all duration-200"
+                  onClick={handleViewDamageReport}
                 >
-                  <Truck className="h-4 w-4" />
+                  <ShieldAlert className="h-4 w-4" />
                 </button>
               </AppTooltip>
-              <AppTooltip content="Create Event">
-                <button
-                  aria-label="Create Event"
-                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
-                  onClick={handleCreateEvent}
-                >
-                  <CalendarPlus className="h-4 w-4" />
-                </button>
-              </AppTooltip>
-              <AppTooltip content="Maintenance">
-                <button
-                  aria-label="Maintenance"
-                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-red-700 hover:bg-gray-100 transition-all duration-200"
-                  onClick={handleCreateMaintenance}
-                >
-                  <Wrench className="h-4 w-4" />
-                </button>
-              </AppTooltip>
-              <AppTooltip content="Create Sub-Rental">
-                <button
-                  aria-label="Create Sub-Rental"
-                  className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:bg-gray-100 transition-all duration-200"
-                  style={handshakeHover ? { color: subrentalHexColor } : undefined}
-                  onMouseEnter={() => setHandshakeHover(true)}
-                  onMouseLeave={() => setHandshakeHover(false)}
-                  onClick={handleCreateSubRental}
-                >
-                  <Handshake className="h-4 w-4" />
-                </button>
-              </AppTooltip>
-            </div>
-          )}
-          {isViewer && <div />}
+            )}
+            {!isViewer && (
+              <>
+                <AppTooltip content="Work Tracker">
+                  <button
+                    aria-label="Work Tracker"
+                    className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
+                    onClick={handleOpenWorkTracker}
+                  >
+                    <Truck className="h-4 w-4" />
+                  </button>
+                </AppTooltip>
+                <AppTooltip content="Create Event">
+                  <button
+                    aria-label="Create Event"
+                    className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-black hover:bg-gray-100 transition-all duration-200"
+                    onClick={handleCreateEvent}
+                  >
+                    <CalendarPlus className="h-4 w-4" />
+                  </button>
+                </AppTooltip>
+                <AppTooltip content="Maintenance">
+                  <button
+                    aria-label="Maintenance"
+                    className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:text-red-700 hover:bg-gray-100 transition-all duration-200"
+                    onClick={handleCreateMaintenance}
+                  >
+                    <Wrench className="h-4 w-4" />
+                  </button>
+                </AppTooltip>
+                <AppTooltip content="Create Sub-Rental">
+                  <button
+                    aria-label="Create Sub-Rental"
+                    className="flex items-center justify-center h-8 w-8 rounded text-gray-500 cursor-pointer hover:bg-gray-100 transition-all duration-200"
+                    style={handshakeHover ? { color: subrentalHexColor } : undefined}
+                    onMouseEnter={() => setHandshakeHover(true)}
+                    onMouseLeave={() => setHandshakeHover(false)}
+                    onClick={handleCreateSubRental}
+                  >
+                    <Handshake className="h-4 w-4" />
+                  </button>
+                </AppTooltip>
+              </>
+            )}
+          </div>
 
           {canEditCell && (
             <div className="flex gap-2">
@@ -612,6 +640,17 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
           )}
         </div>
       </div>
+
+      {viewingDamageReport && (
+        <DamageReportModal
+          open={!!viewingDamageReport}
+          onOpenChange={(open) => {
+            if (!open) setViewingDamageReport(null);
+          }}
+          onSaved={() => setViewingDamageReport(null)}
+          editReport={viewingDamageReport}
+        />
+      )}
     </div>
   );
 }

@@ -75,7 +75,7 @@ export const MaintenanceEventForm = ({ onCancel }: MaintenanceEventFormProps) =>
     try {
       const state = useMaintenanceEventStore.getState();
       if (!state.maintenanceEventUuid) return;
-      await deleteMaintenanceEvent(state.maintenanceEventUuid, supabase);
+      await deleteMaintenanceEvent(state.maintenanceEventUuid);
       onCancel();
     } catch {
       // Error toasts handled inside deleteMaintenanceEvent
