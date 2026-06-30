@@ -360,7 +360,7 @@ export function DamageReportModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto z-[1100]">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Damage Report" : "Create Damage Report"}</DialogTitle>
           <DialogDescription>

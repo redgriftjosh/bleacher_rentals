@@ -52,8 +52,19 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
   // reactively from PowerSync so it stays in sync and carries the photos +
   // creator the modal needs — no online fetch required.
   const { reports: bleacherDamageReports } = useDamageReports({ bleacherUuid, showDeleted: false });
+  // Maintenance event covering the clicked date (its window is the "in-repair" stripe).
+  // Creating a maintenance event auto-resolves the bleacher's damage reports and links
+  // them via maintenance_event_uuid, so an unresolved-only lookup loses the button.
+  const maintEventAtDate = bl?.maintenanceEvents.find(
+    (m) => date >= m.eventStart.substring(0, 10) && date <= m.eventEnd.substring(0, 10),
+  );
   const openDamageReport = bleacherUuid
-    ? (bleacherDamageReports.find((d) => d.resolved_at === null) ?? null)
+    ? (bleacherDamageReports.find((d) => d.resolved_at === null) ??
+      (maintEventAtDate
+        ? (bleacherDamageReports.find(
+            (d) => d.maintenance_event_uuid === maintEventAtDate.maintenanceEventUuid,
+          ) ?? null)
+        : null))
     : null;
   const [viewingDamageReport, setViewingDamageReport] = useState<EditDamageReport | null>(null);
 
