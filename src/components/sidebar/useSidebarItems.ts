@@ -18,6 +18,7 @@ import {
   DollarSign,
   BookUser,
   Warehouse,
+  MessageSquare,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";
@@ -120,6 +121,16 @@ const ALL_ITEMS: SidebarItemConfig[] = [
     icon: CalendarDays,
   },
   {
+    type: "dropdown",
+    key: "messages",
+    label: "Messages",
+    icon: MessageSquare,
+    children: [
+      { label: "Internal", href: "/messages/internal" },
+      { label: "External", href: "/messages/external" },
+    ],
+  },
+  {
     type: "button",
     key: "companies-contacts",
     label: "Companies & Contacts",
@@ -205,6 +216,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
   admin: [
     "dashboard",
     "quotes-bookings",
+    "messages",
     "companies-contacts",
     "sales-offices",
     "team",
@@ -220,6 +232,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
   account_manager: [
     "dashboard",
     "quotes-bookings",
+    "messages",
     "companies-contacts",
     "sales-offices",
     "team",
@@ -235,6 +248,7 @@ const ROLE_SIDEBAR_KEYS: Record<WebRole, string[]> = {
   viewer: [
     "dashboard",
     "quotes-bookings",
+    "messages",
     "sales-offices",
     "team",
     "assets",

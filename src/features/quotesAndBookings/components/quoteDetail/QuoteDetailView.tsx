@@ -14,6 +14,7 @@ import { ContractTab } from "./tabs/ContractTab";
 import { BillingTab } from "./tabs/BillingTab";
 import { FilesTab } from "./tabs/FilesTab";
 import { LogTab } from "./tabs/LogTab";
+import { MessagesTab } from "./tabs/MessagesTab";
 import { useEventCurrency } from "../../hooks/useEventCurrency";
 import { formatMoney } from "../../utils/formatMoney";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
@@ -292,6 +293,12 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
             >
               Log
             </TabsTrigger>
+            <TabsTrigger
+              value="messages"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-darkBlue data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
+            >
+              Messages
+            </TabsTrigger>
           </TabsList>
 
           <div className="flex items-center gap-3 py-2">
@@ -360,6 +367,9 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
           </TabsContent>
           <TabsContent value="log">
             <LogTab quoteId={quote.id} />
+          </TabsContent>
+          <TabsContent value="messages">
+            <MessagesTab quoteId={quote.id} />
           </TabsContent>
         </div>
       </Tabs>
