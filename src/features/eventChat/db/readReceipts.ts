@@ -1,47 +1,77 @@
 import { db } from "@/components/providers/SystemProvider";
 import { expect, typedExecute, typedGetAll } from "@/lib/powersync/typedQuery";
 
+/** Prevents overlapping mark-read runs (e.g. scroll retry scheduling twice). */
+const markReadInFlight = new Set<string>();
+
 /**
  * Marks all messages in an event chat as read for the current user.
- * Called when the chat is open — powers the "Read by N" receipts on sent messages.
+ * Idempotent — safe to call multiple times; skips existing (message_id, user_uuid) pairs.
  */
 export async function markEventMessagesRead(eventUuid: string, userUuid: string) {
-  // All message ids for this event.
-  const messages = await typedGetAll(
-    db
-      .selectFrom("EventMessages")
-      .select(["id"])
-      .where("event_uuid", "=", eventUuid)
-      .compile(),
-    expect<{ id: string }>(),
-  );
+  const lockKey = `${eventUuid}:${userUuid}`;
+  if (markReadInFlight.has(lockKey)) return;
+  markReadInFlight.add(lockKey);
 
-  // Receipts this user already has (any event) — skip duplicates.
-  const existing = await typedGetAll(
-    db
-      .selectFrom("EventMessageReadReceipts")
-      .select(["message_id"])
-      .where("user_uuid", "=", userUuid)
-      .compile(),
-    expect<{ message_id: string | null }>(),
-  );
-  const existingSet = new Set(existing.map((r) => r.message_id));
-
-  const now = new Date().toISOString();
-  for (const msg of messages) {
-    if (existingSet.has(msg.id)) continue;
-
-    // Insert one read receipt per (message, user).
-    await typedExecute(
+  try {
+    const messages = await typedGetAll(
       db
-        .insertInto("EventMessageReadReceipts")
-        .values({
-          id: crypto.randomUUID(),
-          message_id: msg.id,
-          user_uuid: userUuid,
-          read_at: now,
-        })
+        .selectFrom("EventMessages")
+        .select(["id"])
+        .where("event_uuid", "=", eventUuid)
         .compile(),
+      expect<{ id: string }>(),
     );
+
+    if (messages.length === 0) return;
+
+    const messageIds = messages.map((m) => m.id);
+
+    const existing = await typedGetAll(
+      db
+        .selectFrom("EventMessageReadReceipts")
+        .select(["message_id"])
+        .where("user_uuid", "=", userUuid)
+        .where("message_id", "in", messageIds)
+        .compile(),
+      expect<{ message_id: string | null }>(),
+    );
+    const existingSet = new Set(existing.map((r) => r.message_id));
+
+    const now = new Date().toISOString();
+    for (const msg of messages) {
+      if (existingSet.has(msg.id)) continue;
+
+      // Re-check before insert — another concurrent call may have just written this row.
+      const justCreated = await typedGetAll(
+        db
+          .selectFrom("EventMessageReadReceipts")
+          .select(["id"])
+          .where("message_id", "=", msg.id)
+          .where("user_uuid", "=", userUuid)
+          .limit(1)
+          .compile(),
+        expect<{ id: string }>(),
+      );
+      if (justCreated.length > 0) {
+        existingSet.add(msg.id);
+        continue;
+      }
+
+      await typedExecute(
+        db
+          .insertInto("EventMessageReadReceipts")
+          .values({
+            id: crypto.randomUUID(),
+            message_id: msg.id,
+            user_uuid: userUuid,
+            read_at: now,
+          })
+          .compile(),
+      );
+      existingSet.add(msg.id);
+    }
+  } finally {
+    markReadInFlight.delete(lockKey);
   }
 }

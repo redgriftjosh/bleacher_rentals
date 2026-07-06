@@ -45,12 +45,13 @@ const Header = () => {
         <div className="flex justify-between items-center">
           {/* <p className="text-2xl font-bold ml-6">Bleacher Rentals</p> */}
           <Image
-            className="ml-2"
+            className="ml-2 h-10 w-auto"
+            style={{ height: "auto", width: "auto" }}
             src="/logo.png"
             alt="Bleacher Rentals Logo"
-            width={120} // Adjust width as needed
-            height={40} // Adjust height as needed
-            priority // Optimized for faster loading
+            width={120}
+            height={40}
+            priority
           />
           <div className="flex items-center mr-2 relative">
             <div className="flex items-center  mr-4">

@@ -35,7 +35,7 @@ export function useEventReadReceipts(eventUuid: string) {
     [eventUuid],
   );
 
-  const { data } = useTypedQuery(compiled, expect<Row>());
+  const { data, isLoading } = useTypedQuery(compiled, expect<Row>());
 
   // Group by message id for O(1) lookup when rendering each bubble.
   const receiptsByMessage = useMemo<EventReadReceiptMap>(() => {
@@ -49,5 +49,5 @@ export function useEventReadReceipts(eventUuid: string) {
     return map;
   }, [data]);
 
-  return { receiptsByMessage };
+  return { receiptsByMessage, isLoading };
 }
