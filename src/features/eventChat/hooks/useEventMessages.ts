@@ -5,6 +5,7 @@ import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { useMemo } from "react";
 import type { Tables } from "../../../../database.types";
 
+/** Raw row shape from PowerSync (booleans stored as 0/1 integers). */
 type Row = {
   id: string;
   event_uuid: string | null;
@@ -19,6 +20,7 @@ export type EventMessage = Pick<
   "id" | "event_uuid" | "user_uuid" | "body" | "created_at" | "is_system"
 >;
 
+/** Normalizes PowerSync integers/nulls into app-friendly types. */
 function toMessage(row: Row): EventMessage {
   return {
     id: row.id,
@@ -30,6 +32,10 @@ function toMessage(row: Row): EventMessage {
   };
 }
 
+/**
+ * Reactive hook: all messages for one event, oldest first.
+ * Re-runs when EventMessages changes locally or via sync.
+ */
 export function useEventMessages(eventUuid: string) {
   const compiled = useMemo(
     () =>

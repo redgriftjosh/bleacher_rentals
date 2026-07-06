@@ -4,6 +4,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EventInternalChat } from "@/features/eventChat/components/EventInternalChat";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 
+/**
+ * Messages tab on quote detail — split into Internal (team chat) and External (client email, future).
+ * quoteId is the event uuid; internal chat is scoped one thread per event.
+ */
 export function MessagesTab({ quoteId }: { quoteId: string }) {
   const { isAdmin, isAccountManager } = usePermissionsStore();
   const canUseInternalChat = isAdmin || isAccountManager;
@@ -25,6 +29,7 @@ export function MessagesTab({ quoteId }: { quoteId: string }) {
         </TabsTrigger>
       </TabsList>
 
+      {/* Internal: admin/AM team chat — not visible on public quote page */}
       <TabsContent value="internal">
         {canUseInternalChat ? (
           <EventInternalChat eventUuid={quoteId} />
@@ -34,6 +39,8 @@ export function MessagesTab({ quoteId }: { quoteId: string }) {
           </p>
         )}
       </TabsContent>
+
+      {/* External: client-facing messaging — placeholder until Gmail integration */}
       <TabsContent value="external">
         <p className="text-sm text-gray-400 py-8 text-center">External messaging coming soon.</p>
       </TabsContent>
