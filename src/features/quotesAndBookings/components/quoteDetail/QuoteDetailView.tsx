@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LayoutDashboard, Trash2, Send } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { QuoteDetail, fetchQuoteDetail } from "../../db/fetchQuoteDetail";
@@ -31,9 +31,15 @@ import { logQuoteSentLocal } from "../../db/logQuoteSentLocal";
 import { DateTime } from "luxon";
 
 const QUOTE_TABS = ["contract", "billing", "files", "log", "messages"] as const;
+type QuoteTab = (typeof QUOTE_TABS)[number];
+
+function isQuoteTab(tab: string | null): tab is QuoteTab {
+  return QUOTE_TABS.includes(tab as QuoteTab);
+}
 
 export function QuoteDetailView({ eventId }: { eventId: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const supabase = useClerkSupabaseClient();
   const [quote, setQuote] = useState<QuoteDetail | null>(null);
@@ -43,11 +49,28 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
 
   const perms = usePermissionsStore();
 
-  // Deep-link from chat notifications popover: /quotes-bookings/[id]?tab=messages
-  const initialTab = useMemo(() => {
+  // Active tab stays in sync with ?tab=… (deep links from chat notifications, shareable URLs).
+  const activeTab = useMemo(() => {
     const tab = searchParams.get("tab");
-    return QUOTE_TABS.includes(tab as (typeof QUOTE_TABS)[number]) ? tab! : "contract";
+    return isQuoteTab(tab) ? tab : "contract";
   }, [searchParams]);
+
+  const handleTabChange = useCallback(
+    (tab: string) => {
+      if (!isQuoteTab(tab)) return;
+
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "contract") {
+        params.delete("tab");
+      } else {
+        params.set("tab", tab);
+      }
+
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
   // Get the bleacher zone for this event (via BleacherEvents → Bleachers)
   const eventZoneCompiled = useMemo(
@@ -275,7 +298,7 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
       </div>
 
       {/* Tab bar + actions */}
-      <Tabs defaultValue={initialTab} key={initialTab} className="gap-0">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="gap-0">
         <div className="border-b bg-white px-6 flex items-center justify-between">
           <TabsList className="bg-transparent h-auto p-0 gap-0 rounded-none">
             <TabsTrigger
