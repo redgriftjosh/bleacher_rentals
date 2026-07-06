@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LayoutDashboard, Trash2, Send } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { QuoteDetail, fetchQuoteDetail } from "../../db/fetchQuoteDetail";
@@ -30,8 +30,11 @@ import { logQuoteSentLocal } from "../../db/logQuoteSentLocal";
 // import { ClipboardCheck } from "lucide-react";
 import { DateTime } from "luxon";
 
+const QUOTE_TABS = ["contract", "billing", "files", "log", "messages"] as const;
+
 export function QuoteDetailView({ eventId }: { eventId: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = useClerkSupabaseClient();
   const [quote, setQuote] = useState<QuoteDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,6 +42,12 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
   const [sending, setSending] = useState(false);
 
   const perms = usePermissionsStore();
+
+  // Deep-link from chat notifications popover: /quotes-bookings/[id]?tab=messages
+  const initialTab = useMemo(() => {
+    const tab = searchParams.get("tab");
+    return QUOTE_TABS.includes(tab as (typeof QUOTE_TABS)[number]) ? tab! : "contract";
+  }, [searchParams]);
 
   // Get the bleacher zone for this event (via BleacherEvents → Bleachers)
   const eventZoneCompiled = useMemo(
@@ -266,7 +275,7 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
       </div>
 
       {/* Tab bar + actions */}
-      <Tabs defaultValue="contract" className="gap-0">
+      <Tabs defaultValue={initialTab} key={initialTab} className="gap-0">
         <div className="border-b bg-white px-6 flex items-center justify-between">
           <TabsList className="bg-transparent h-auto p-0 gap-0 rounded-none">
             <TabsTrigger

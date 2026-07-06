@@ -2,12 +2,16 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Code, Laptop, Lightbulb, List } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 import { AlertsDropDown } from "@/features/alerts/components/AlertsDropDown";
+import { EventChatNotificationsDropDown } from "@/features/eventChat/components/EventChatNotificationsDropDown";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 
 const Header = () => {
   const router = useRouter();
   const environment = process.env.NEXT_PUBLIC_ENVIRONMENT;
+  const { isAdmin, isAccountManager } = usePermissionsStore();
+  const showChatNotifications = isAdmin || isAccountManager;
 
   const getEnvironmentConfig = () => {
     if (environment === "development") {
@@ -58,6 +62,11 @@ const Header = () => {
                 Request a Feature
               </button>
             </div>
+            {showChatNotifications && (
+              <div className="mr-3">
+                <EventChatNotificationsDropDown />
+              </div>
+            )}
             <div className="mr-3">
               <AlertsDropDown />
             </div>
