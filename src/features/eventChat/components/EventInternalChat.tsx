@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Check, CheckCheck, Send, Users } from "lucide-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
@@ -17,12 +17,16 @@ import { useEventReadReceipts } from "../hooks/useReadReceipts";
 import { useEventTypingEmitter, useEventTypingIndicators } from "../hooks/useTypingIndicators";
 import { useEventChatMemberAccess } from "../hooks/useEventChatMemberAccess";
 import {
+  countUnreadMessages,
   findFirstUnreadMessageId,
+  isContainerNearBottom,
+  scrollContainerToBottom,
   scrollContainerToElement,
   shouldShowNewMessagesDivider,
 } from "../utils/unreadMessages";
 import { EventChatMembersModal } from "./EventChatMembersModal";
 import { NewMessagesDivider } from "./NewMessagesDivider";
+import { ScrollToBottomButton } from "./ScrollToBottomButton";
 
 type Props = {
   eventUuid: string;
@@ -45,8 +49,12 @@ export function EventInternalChat({ eventUuid }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(0);
   const initialScrollDoneRef = useRef(false);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
   const markReadScheduledRef = useRef(false);
   const initialMessageCountRef = useRef<number | null>(null);
+
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const wasNearBottomRef = useRef(true);
 
   // Frozen on open — keeps divider visible for this session even after mark-as-read.
   const [openUnreadUi, setOpenUnreadUi] = useState<{
@@ -57,10 +65,20 @@ export function EventInternalChat({ eventUuid }: Props) {
   useEffect(() => {
     setOpenUnreadUi(null);
     initialScrollDoneRef.current = false;
+    setInitialScrollDone(false);
     markReadScheduledRef.current = false;
     initialMessageCountRef.current = null;
     prevCountRef.current = 0;
+    setIsNearBottom(true);
+    wasNearBottomRef.current = true;
   }, [eventUuid]);
+
+  const unreadCount = useMemo(
+    () => countUnreadMessages(messages, userUuid, receiptsByMessage),
+    [messages, receiptsByMessage, userUuid],
+  );
+
+  const showScrollToBottomButton = initialScrollDone && !isNearBottom;
 
   const unreadAnchorId = openUnreadUi?.anchorId ?? null;
   const showDividerBefore = openUnreadUi?.showDivider ?? false;
@@ -83,7 +101,7 @@ export function EventInternalChat({ eventUuid }: Props) {
       }
     }
 
-    container.scrollTop = container.scrollHeight;
+    container.scrollTo({ top: container.scrollHeight, behavior: "instant" });
     return true;
   }, [unreadAnchorId]);
 
@@ -106,6 +124,7 @@ export function EventInternalChat({ eventUuid }: Props) {
       if (!scrollToInitialPosition()) return;
 
       initialScrollDoneRef.current = true;
+      setInitialScrollDone(true);
 
       if (!markReadScheduledRef.current) {
         markReadScheduledRef.current = true;
@@ -132,21 +151,50 @@ export function EventInternalChat({ eventUuid }: Props) {
     unreadAnchorId,
   ]);
 
-  // Mark only newly arrived messages while chat stays open (initial batch uses delayed mark above).
+  // Track scroll position — auto-scroll only when pinned to bottom.
   useEffect(() => {
-    if (!initialScrollDoneRef.current || !eventUuid || !userUuid) return;
-    const baseline = initialMessageCountRef.current;
-    if (baseline === null || messages.length <= baseline) return;
-    void markEventMessagesRead(eventUuid, userUuid);
-  }, [eventUuid, messages.length, userUuid]);
+    const container = scrollContainerRef.current;
+    if (!container) return;
 
+    const updateNearBottom = () => {
+      const near = isContainerNearBottom(container);
+      const becameNearBottom = near && !wasNearBottomRef.current;
+      wasNearBottomRef.current = near;
+      setIsNearBottom(near);
+
+      if (becameNearBottom && initialScrollDoneRef.current && eventUuid && userUuid) {
+        void markEventMessagesRead(eventUuid, userUuid);
+      }
+    };
+
+    updateNearBottom();
+    container.addEventListener("scroll", updateNearBottom, { passive: true });
+    return () => container.removeEventListener("scroll", updateNearBottom);
+  }, [eventUuid, messages.length, openUnreadUi, userUuid]);
+
+  const handleScrollToBottom = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    scrollContainerToBottom(container);
+    setIsNearBottom(true);
+    if (eventUuid && userUuid) void markEventMessagesRead(eventUuid, userUuid);
+  }, [eventUuid, userUuid]);
+
+  // New messages: auto-scroll + mark read only when already at the bottom.
   useEffect(() => {
     if (!initialScrollDoneRef.current) return;
-    if (messages.length > prevCountRef.current) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    if (messages.length > prevCountRef.current && isNearBottom) {
+      scrollContainerToBottom(container);
+      if (eventUuid && userUuid) void markEventMessagesRead(eventUuid, userUuid);
     }
+
     prevCountRef.current = messages.length;
-  }, [messages.length]);
+  }, [eventUuid, isNearBottom, messages.length, userUuid]);
 
   const typingNames = typingUserUuids
     .map((uuid) => displayName(userMap.get(uuid)))
@@ -159,6 +207,10 @@ export function EventInternalChat({ eventUuid }: Props) {
     try {
       await sendEventMessage({ eventUuid, userUuid, body: body.trim() });
       setBody("");
+      requestAnimationFrame(() => {
+        const container = scrollContainerRef.current;
+        if (container) scrollContainerToBottom(container);
+      });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       createErrorToast(["Send failed", message]);
@@ -198,7 +250,8 @@ export function EventInternalChat({ eventUuid }: Props) {
         )}
       </div>
 
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
+      <div className="relative flex-1 min-h-0">
+        <div ref={scrollContainerRef} className="absolute inset-0 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 ? (
           <p className="text-sm text-gray-400 italic text-center py-8">
             No messages yet. Start the conversation.
@@ -301,6 +354,11 @@ export function EventInternalChat({ eventUuid }: Props) {
         )}
 
         <div ref={bottomRef} />
+        </div>
+
+        {showScrollToBottomButton && (
+          <ScrollToBottomButton unreadCount={unreadCount} onClick={handleScrollToBottom} />
+        )}
       </div>
 
       {canWrite ? (

@@ -30,6 +30,24 @@ export function findFirstUnreadMessageId(
   return null;
 }
 
+/** Count messages from others that the current user has not read yet. */
+export function countUnreadMessages(
+  messages: EventMessage[],
+  userUuid: string | null,
+  receiptsByMessage: EventReadReceiptMap,
+): number {
+  if (!userUuid) return 0;
+
+  let count = 0;
+  for (const msg of messages) {
+    if (msg.is_system || msg.user_uuid === userUuid) continue;
+
+    const readers = receiptsByMessage.get(msg.id) ?? [];
+    if (!readers.includes(userUuid)) count++;
+  }
+  return count;
+}
+
 /** True when there is at least one message before the unread anchor (for the divider line). */
 export function hasMessagesAbove(messages: EventMessage[], messageId: string): boolean {
   const index = messages.findIndex((m) => m.id === messageId);
@@ -45,16 +63,33 @@ export function shouldShowNewMessagesDivider(
   return hasMessagesAbove(messages, firstUnreadId);
 }
 
-/** Scroll the chat container so `target` sits near the top (Telegram-style). */
+/** True when the user is scrolled to (or near) the bottom of the chat. */
+export function isContainerNearBottom(container: HTMLElement, thresholdPx = 80): boolean {
+  const { scrollTop, scrollHeight, clientHeight } = container;
+  return scrollHeight - scrollTop - clientHeight <= thresholdPx;
+}
+
+type ScrollOptions = {
+  offsetPx?: number;
+  smooth?: boolean;
+};
+
+/** Scroll the chat container so `target` sits near the top. */
 export function scrollContainerToElement(
   container: HTMLElement,
   target: HTMLElement,
-  offsetPx = 8,
+  options: ScrollOptions = {},
 ) {
+  const { offsetPx = 8, smooth = false } = options;
   const top =
     target.getBoundingClientRect().top -
     container.getBoundingClientRect().top +
     container.scrollTop -
     offsetPx;
-  container.scrollTop = Math.max(0, top);
+  container.scrollTo({ top: Math.max(0, top), behavior: smooth ? "smooth" : "instant" });
+}
+
+/** Jump to the latest message at the bottom of the chat. */
+export function scrollContainerToBottom(container: HTMLElement, smooth = true) {
+  container.scrollTo({ top: container.scrollHeight, behavior: smooth ? "smooth" : "instant" });
 }

@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 
-/** Telegram-style separator between already-read and new messages. */
+/** separator between already-read and new messages. */
 export const NewMessagesDivider = forwardRef<HTMLDivElement>(function NewMessagesDivider(_, ref) {
   return (
     <div ref={ref} data-new-messages-divider className="flex items-center gap-3 py-1">
