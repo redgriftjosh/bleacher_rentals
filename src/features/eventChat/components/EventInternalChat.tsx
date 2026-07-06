@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, CheckCheck, Send } from "lucide-react";
+import { Check, CheckCheck, Send, Users } from "lucide-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import {
@@ -15,6 +15,8 @@ import { markEventMessagesRead } from "../db/readReceipts";
 import { useEventMessages } from "../hooks/useEventMessages";
 import { useEventReadReceipts } from "../hooks/useReadReceipts";
 import { useEventTypingEmitter, useEventTypingIndicators } from "../hooks/useTypingIndicators";
+import { useEventChatMemberAccess } from "../hooks/useEventChatMemberAccess";
+import { EventChatMembersModal } from "./EventChatMembersModal";
 
 type Props = {
   /** Event (quote) id — each event has its own isolated chat thread. */
@@ -31,10 +33,11 @@ export function EventInternalChat({ eventUuid }: Props) {
   const { receiptsByMessage } = useEventReadReceipts(eventUuid);
   const { userMap } = useRoadmapUsers(); // Reused for avatars / display names
   const userUuid = usePermissionsStore((s) => s.userId);
+  const { canManageMembers, canWrite } = useEventChatMemberAccess(eventUuid);
   const { typingUserUuids } = useEventTypingIndicators(eventUuid, userUuid);
   const { emitTyping, stopTyping } = useEventTypingEmitter(eventUuid, userUuid);
 
-  // --- Compose UI state ---
+  const [membersOpen, setMembersOpen] = useState(false);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -61,7 +64,7 @@ export function EventInternalChat({ eventUuid }: Props) {
   );
 
   const handleSend = useCallback(async () => {
-    if (!body.trim() || !userUuid) return;
+    if (!body.trim() || !userUuid || !canWrite) return;
     setSending(true);
     stopTyping(); // Clear typing indicator before message is sent.
     try {
@@ -77,7 +80,7 @@ export function EventInternalChat({ eventUuid }: Props) {
     } finally {
       setSending(false);
     }
-  }, [body, eventUuid, stopTyping, userUuid]);
+  }, [body, canWrite, eventUuid, stopTyping, userUuid]);
 
   // Enter sends; Shift+Enter inserts a newline.
   const handleKeyDown = useCallback(
@@ -92,10 +95,24 @@ export function EventInternalChat({ eventUuid }: Props) {
 
   return (
     <div className="flex flex-col h-[520px] min-h-0 border rounded-lg overflow-hidden bg-white">
-      {/* Header — clarifies this is internal-only */}
-      <div className="px-4 py-3 border-b bg-gray-50 flex-shrink-0">
-        <h3 className="text-sm font-semibold text-gray-800">Internal discussion</h3>
-        <p className="text-xs text-gray-500 mt-0.5">Team-only chat for this event. Not visible to clients.</p>
+      {/* Header — title + members button (only for users who can manage the group) */}
+      <div className="px-4 py-3 border-b bg-gray-50 flex-shrink-0 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-800">Internal discussion</h3>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Team-only chat for this event. Not visible to clients.
+          </p>
+        </div>
+        {canManageMembers && (
+          <button
+            type="button"
+            onClick={() => setMembersOpen(true)}
+            className="p-2 rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition cursor-pointer flex-shrink-0"
+            title="Manage chat members"
+          >
+            <Users className="size-4" />
+          </button>
+        )}
       </div>
 
       {/* Scrollable message list */}
@@ -200,23 +217,38 @@ export function EventInternalChat({ eventUuid }: Props) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Compose area */}
-      <div className="flex gap-2 p-4 border-t bg-white flex-shrink-0">
-        <textarea
-          value={body}
-          onChange={(e) => {
-            setBody(e.target.value);
-            emitTyping(); // Broadcast typing state to other participants.
-          }}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a message… (Enter to send, Shift+Enter for new line)"
-          rows={2}
-          className="flex-1 px-3 py-2 border rounded text-sm resize-none focus:outline-none focus:ring-2 focus:ring-greenAccent"
+      {/* Compose — hidden when user was kicked (AM) or never added; admins can always write */}
+      {canWrite ? (
+        <div className="flex gap-2 p-4 border-t bg-white flex-shrink-0">
+          <textarea
+            value={body}
+            onChange={(e) => {
+              setBody(e.target.value);
+              emitTyping(); // Broadcast typing state to other participants.
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message… (Enter to send, Shift+Enter for new line)"
+            rows={2}
+            className="flex-1 px-3 py-2 border rounded text-sm resize-none focus:outline-none focus:ring-2 focus:ring-greenAccent"
+          />
+          <PrimaryButton onClick={() => void handleSend()} loading={sending} disabled={!body.trim()}>
+            <Send className="size-4" />
+          </PrimaryButton>
+        </div>
+      ) : (
+        <div className="px-4 py-3 border-t bg-gray-50 text-xs text-gray-500 text-center flex-shrink-0">
+          You can read this chat but cannot send messages. Ask an admin or a member to add you.
+        </div>
+      )}
+
+      {/* Members modal — only mounted for users who can open it */}
+      {canManageMembers && (
+        <EventChatMembersModal
+          eventUuid={eventUuid}
+          open={membersOpen}
+          onOpenChange={setMembersOpen}
         />
-        <PrimaryButton onClick={() => void handleSend()} loading={sending} disabled={!body.trim()}>
-          <Send className="size-4" />
-        </PrimaryButton>
-      </div>
+      )}
     </div>
   );
 }

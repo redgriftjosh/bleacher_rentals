@@ -779,12 +779,12 @@ const EventMessages = new Table(EventMessagesCols, {
 });
 
 const EventSubscriptionsCols = {
-  account_manager_uuid: column.text,
   created_at: column.text,
   event_uuid: column.text,
+  user_uuid: column.text,
 } satisfies PowerSyncColsFor<"EventSubscriptions">;
 const EventSubscriptions = new Table(EventSubscriptionsCols, {
-  indexes: { event_uuid: ["event_uuid"], account_manager_uuid: ["account_manager_uuid"] },
+  indexes: { event_uuid: ["event_uuid"], user_uuid: ["user_uuid"] },
 });
 
 const EventTypesCols = {

@@ -1565,36 +1565,36 @@ export type Database = {
       }
       EventSubscriptions: {
         Row: {
-          account_manager_uuid: string
           created_at: string
           event_uuid: string
           id: string
+          user_uuid: string
         }
         Insert: {
-          account_manager_uuid: string
           created_at?: string
           event_uuid: string
           id?: string
+          user_uuid: string
         }
         Update: {
-          account_manager_uuid?: string
           created_at?: string
           event_uuid?: string
           id?: string
+          user_uuid?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "EventSubscriptions_account_manager_uuid_fkey"
-            columns: ["account_manager_uuid"]
-            isOneToOne: false
-            referencedRelation: "AccountManagers"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "EventSubscriptions_event_uuid_fkey"
             columns: ["event_uuid"]
             isOneToOne: false
             referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventSubscriptions_user_uuid_fkey"
+            columns: ["user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
             referencedColumns: ["id"]
           },
         ]
