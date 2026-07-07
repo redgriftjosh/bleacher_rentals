@@ -224,13 +224,28 @@ export function EventInternalChat({ eventUuid }: Props) {
         const container = scrollContainerRef.current;
         if (container) scrollContainerToBottom(container);
       });
+
+      // Fire-and-forget email notification for @mentioned users only.
+      if (mentionedUserUuids.length > 0) {
+        fetch("/api/events/event-message-mention-notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventUuid,
+            senderUserUuid: userUuid,
+            senderName: displayName(userMap.get(userUuid)),
+            messageBody: trimmedBody,
+            mentionedUserUuids,
+          }),
+        }).catch(() => {});
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       createErrorToast(["Send failed", message]);
     } finally {
       setSending(false);
     }
-  }, [body, canWrite, eventUuid, mentionableMembers, stopTyping, userUuid]);
+  }, [body, canWrite, eventUuid, mentionableMembers, stopTyping, userMap, userUuid]);
 
   return (
     <div className="flex flex-col h-[520px] min-h-0 border rounded-lg overflow-hidden bg-white">
