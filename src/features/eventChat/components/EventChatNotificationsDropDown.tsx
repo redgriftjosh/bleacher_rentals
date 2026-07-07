@@ -10,7 +10,7 @@ import { EventChatNotificationListItem } from "./EventChatNotificationListItem";
  * Similar to AlertsDropDown but one entry per chat and no dismissed toggle.
  */
 export function EventChatNotificationsDropDown() {
-  const { notifications, unreadChatCount } = useEventChatNotifications();
+  const { notifications, unreadChatCount, unreadMentionCount } = useEventChatNotifications();
   const hasUnread = unreadChatCount > 0;
 
   return (
@@ -36,7 +36,12 @@ export function EventChatNotificationsDropDown() {
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
           <span className="text-sm font-semibold text-gray-900">
             Chat messages{" "}
-            {hasUnread && <span className="text-amber-600">({unreadChatCount})</span>}
+            {hasUnread && (
+              <span className={unreadMentionCount > 0 ? "text-amber-600" : "text-gray-600"}>
+                ({unreadChatCount}
+                {unreadMentionCount > 0 ? ` · ${unreadMentionCount} mention${unreadMentionCount === 1 ? "" : "s"}` : ""})
+              </span>
+            )}
           </span>
         </div>
 

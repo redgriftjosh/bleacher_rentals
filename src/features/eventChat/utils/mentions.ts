@@ -11,6 +11,10 @@ export type ActiveMention = {
   atIndex: number;
 };
 
+export type MessageBodyPart =
+  | { type: "text"; value: string }
+  | { type: "mention"; name: string; userUuid: string; value: string };
+
 /**
  * Returns the in-progress @mention at `cursor`, or null when not in mention mode.
  * Mention ends at whitespace; @ must be at start or after whitespace.
@@ -62,16 +66,106 @@ export function filterUsersForMention(
   });
 }
 
-/** Replace the partial @query with a completed @DisplayName mention. */
+function membersByNameLength(members: ChatEligibleUser[]): ChatEligibleUser[] {
+  return [...members].sort(
+    (a, b) => chatUserDisplayName(b).length - chatUserDisplayName(a).length,
+  );
+}
+
+/** Match @Display Name at a position — longest member name wins. */
+function matchMentionAt(
+  body: string,
+  atIndex: number,
+  members: ChatEligibleUser[],
+): { user: ChatEligibleUser; endIndex: number } | null {
+  if (body[atIndex] !== "@") return null;
+  if (atIndex > 0 && !/\s/.test(body[atIndex - 1]!)) return null;
+
+  for (const user of membersByNameLength(members)) {
+    const name = chatUserDisplayName(user);
+    if (!name) continue;
+
+    const slice = body.slice(atIndex + 1, atIndex + 1 + name.length);
+    if (slice.toLowerCase() !== name.toLowerCase()) continue;
+
+    const nextChar = body[atIndex + 1 + name.length];
+    if (nextChar !== undefined && !/[\s.,!?;:]/.test(nextChar)) continue;
+
+    return { user, endIndex: atIndex + 1 + name.length };
+  }
+
+  return null;
+}
+
+/** Parse mention user ids from @Display Name substrings in the body. */
+export function parseMentionedUserIds(
+  body: string,
+  members: ChatEligibleUser[],
+): string[] {
+  const mentioned = new Set<string>();
+
+  let i = 0;
+  while (i < body.length) {
+    const hit = matchMentionAt(body, i, members);
+    if (!hit) {
+      i++;
+      continue;
+    }
+    mentioned.add(hit.user.userUuid);
+    i = hit.endIndex;
+  }
+
+  return [...mentioned];
+}
+
+/** Split message body into plain text + @mention highlights for chat rendering. */
+export function splitMessageBody(body: string, members: ChatEligibleUser[] = []): MessageBodyPart[] {
+  if (!body) return [{ type: "text", value: "" }];
+  if (members.length === 0) return [{ type: "text", value: body }];
+
+  const parts: MessageBodyPart[] = [];
+  let textStart = 0;
+  let i = 0;
+
+  while (i < body.length) {
+    const hit = matchMentionAt(body, i, members);
+    if (!hit) {
+      i++;
+      continue;
+    }
+
+    if (i > textStart) {
+      parts.push({ type: "text", value: body.slice(textStart, i) });
+    }
+
+    parts.push({
+      type: "mention",
+      name: chatUserDisplayName(hit.user),
+      userUuid: hit.user.userUuid,
+      value: body.slice(i, hit.endIndex),
+    });
+
+    i = hit.endIndex;
+    textStart = i;
+  }
+
+  if (textStart < body.length) {
+    parts.push({ type: "text", value: body.slice(textStart) });
+  }
+
+  return parts.length > 0 ? parts : [{ type: "text", value: body }];
+}
+
+/** Replace partial @query with plain @Display Name (what the user sees while typing). */
 export function insertMentionIntoText(
   text: string,
   mention: ActiveMention,
   cursor: number,
-  displayName: string,
+  user: ChatEligibleUser,
 ): { text: string; cursor: number } {
   const before = text.slice(0, mention.atIndex);
   const after = text.slice(cursor);
-  const mentionText = `@${displayName} `;
+  const mentionText = `@${chatUserDisplayName(user)} `;
   const nextText = before + mentionText + after;
   return { text: nextText, cursor: before.length + mentionText.length };
 }

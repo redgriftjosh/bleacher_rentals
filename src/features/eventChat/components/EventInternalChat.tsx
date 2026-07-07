@@ -15,6 +15,9 @@ import { useEventMessages } from "../hooks/useEventMessages";
 import { useEventReadReceipts } from "../hooks/useReadReceipts";
 import { useEventTypingEmitter, useEventTypingIndicators } from "../hooks/useTypingIndicators";
 import { useEventChatMemberAccess } from "../hooks/useEventChatMemberAccess";
+import { useMentionableChatMembers } from "../hooks/useMentionableChatMembers";
+import { useEventMessageMentions } from "../hooks/useEventMessageMentions";
+import { parseMentionedUserIds } from "../utils/mentions";
 import {
   countUnreadMessages,
   findFirstUnreadMessageId,
@@ -25,6 +28,7 @@ import {
 } from "../utils/unreadMessages";
 import { EventChatMembersModal } from "./EventChatMembersModal";
 import { EventChatComposer } from "./EventChatComposer";
+import { EventMessageBody } from "./EventMessageBody";
 import { NewMessagesDivider } from "./NewMessagesDivider";
 import { ScrollToBottomButton } from "./ScrollToBottomButton";
 
@@ -38,6 +42,8 @@ export function EventInternalChat({ eventUuid }: Props) {
   const { userMap } = useRoadmapUsers();
   const userUuid = usePermissionsStore((s) => s.userId);
   const { canManageMembers, canWrite } = useEventChatMemberAccess(eventUuid);
+  const { members: mentionableMembers } = useMentionableChatMembers(eventUuid, userUuid);
+  const { mentionsByMessage } = useEventMessageMentions(eventUuid);
   const { typingUserUuids } = useEventTypingIndicators(eventUuid, userUuid);
   const { emitTyping, stopTyping } = useEventTypingEmitter(eventUuid, userUuid);
 
@@ -205,7 +211,14 @@ export function EventInternalChat({ eventUuid }: Props) {
     setSending(true);
     stopTyping();
     try {
-      await sendEventMessage({ eventUuid, userUuid, body: body.trim() });
+      const trimmedBody = body.trim();
+      const mentionedUserUuids = parseMentionedUserIds(trimmedBody, mentionableMembers);
+      await sendEventMessage({
+        eventUuid,
+        userUuid,
+        body: trimmedBody,
+        mentionedUserUuids,
+      });
       setBody("");
       requestAnimationFrame(() => {
         const container = scrollContainerRef.current;
@@ -217,7 +230,7 @@ export function EventInternalChat({ eventUuid }: Props) {
     } finally {
       setSending(false);
     }
-  }, [body, canWrite, eventUuid, stopTyping, userUuid]);
+  }, [body, canWrite, eventUuid, mentionableMembers, stopTyping, userUuid]);
 
   return (
     <div className="flex flex-col h-[520px] min-h-0 border rounded-lg overflow-hidden bg-white">
@@ -266,6 +279,10 @@ export function EventInternalChat({ eventUuid }: Props) {
             const user = userMap.get(msg.user_uuid);
             const readers = receiptsByMessage.get(msg.id) ?? [];
             const readByOthers = readers.filter((uuid) => uuid !== msg.user_uuid);
+            const mentionsMe =
+              Boolean(userUuid) && (mentionsByMessage.get(msg.id)?.includes(userUuid!) ?? false);
+            const iHaveRead = Boolean(userUuid && readers.includes(userUuid));
+            const showMentionHighlight = mentionsMe && !isMe && !iHaveRead;
 
             return (
               <div key={msg.id} id={`event-msg-${msg.id}`}>
@@ -296,10 +313,16 @@ export function EventInternalChat({ eventUuid }: Props) {
                       className={`px-3 py-2 rounded-lg text-sm whitespace-pre-wrap ${
                         isMe
                           ? "bg-blue-100 text-gray-900 rounded-tr-none"
-                          : "bg-gray-100 text-gray-900 rounded-tl-none"
+                          : showMentionHighlight
+                            ? "bg-amber-50 text-gray-900 rounded-tl-none ring-2 ring-amber-300"
+                            : "bg-gray-100 text-gray-900 rounded-tl-none"
                       }`}
                     >
-                      {msg.body}
+                      <EventMessageBody
+                        body={msg.body}
+                        members={mentionableMembers}
+                        currentUserUuid={userUuid}
+                      />
                     </div>
                     {isMe && (
                       <div className="flex items-center gap-1 mt-0.5 justify-end">

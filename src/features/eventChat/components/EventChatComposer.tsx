@@ -4,7 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useMentionableChatMembers } from "../hooks/useMentionableChatMembers";
-import { chatUserDisplayName, type ChatEligibleUser } from "../hooks/useChatEligibleUsers";
+import { type ChatEligibleUser } from "../hooks/useChatEligibleUsers";
+import {
+  getSelectionOffset,
+  renderPlainTextToEditor,
+  serializeEditor,
+  setSelectionOffset,
+} from "../utils/composerEditor";
 import {
   filterUsersForMention,
   getActiveMention,
@@ -34,7 +40,8 @@ export function EventChatComposer({
   sending,
   disabled = false,
 }: Props) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const lastSyncedValue = useRef(value);
   const { members } = useMentionableChatMembers(eventUuid, userUuid);
 
   const [cursor, setCursor] = useState(0);
@@ -56,29 +63,47 @@ export function EventChatComposer({
     setHighlightIndex(0);
   }, [activeMention?.query, mentionCandidates.length]);
 
+  // Sync external value changes (e.g. clear after send) without fighting live typing.
+  useEffect(() => {
+    if (value === lastSyncedValue.current) return;
+
+    lastSyncedValue.current = value;
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    renderPlainTextToEditor(editor, value, members);
+  }, [value, members]);
+
   const syncCursor = useCallback(() => {
-    const el = textareaRef.current;
-    if (el) setCursor(el.selectionStart ?? 0);
+    const editor = editorRef.current;
+    if (editor) setCursor(getSelectionOffset(editor));
   }, []);
 
   const applyMention = useCallback(
     (user: ChatEligibleUser, mention: ActiveMention) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+
+      const plain = serializeEditor(editor);
+      const selection = getSelectionOffset(editor);
       const { text, cursor: nextCursor } = insertMentionIntoText(
-        value,
+        plain,
         mention,
-        cursor,
-        chatUserDisplayName(user),
+        selection,
+        user,
       );
+
+      renderPlainTextToEditor(editor, text, members);
+      lastSyncedValue.current = text;
       onChange(text);
+
       requestAnimationFrame(() => {
-        const el = textareaRef.current;
-        if (!el) return;
-        el.focus();
-        el.setSelectionRange(nextCursor, nextCursor);
+        editor.focus();
+        setSelectionOffset(editor, nextCursor);
         setCursor(nextCursor);
       });
     },
-    [cursor, onChange, value],
+    [members, onChange],
   );
 
   const selectHighlightedMention = useCallback(() => {
@@ -89,13 +114,18 @@ export function EventChatComposer({
     return true;
   }, [activeMention, applyMention, highlightIndex, mentionCandidates]);
 
-  const handleChange = (next: string) => {
-    onChange(next);
+  const handleInput = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const plain = serializeEditor(editor);
+    lastSyncedValue.current = plain;
+    onChange(plain);
     onTyping();
-    requestAnimationFrame(syncCursor);
+    setCursor(getSelectionOffset(editor));
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (mentionOpen) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -124,6 +154,8 @@ export function EventChatComposer({
     }
   };
 
+  const editorDisabled = disabled || sending;
+
   return (
     <div className="flex gap-2 p-4 border-t bg-white flex-shrink-0">
       <div className="relative flex-1 min-w-0">
@@ -138,19 +170,33 @@ export function EventChatComposer({
           />
         )}
 
-        <textarea
-          ref={textareaRef}
-          value={value}
-          disabled={disabled || sending}
-          onChange={(e) => handleChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onKeyUp={syncCursor}
-          onClick={syncCursor}
-          onSelect={syncCursor}
-          placeholder="Type a message… (@ to mention, Enter to send, Shift+Enter for new line)"
-          rows={2}
-          className="w-full px-3 py-2 border rounded text-sm resize-none focus:outline-none focus:ring-2 focus:ring-greenAccent"
-        />
+        <div className="relative rounded border border-gray-300 focus-within:ring-2 focus-within:ring-greenAccent focus-within:border-transparent">
+          <div
+            ref={editorRef}
+            contentEditable={!editorDisabled}
+            suppressContentEditableWarning
+            role="textbox"
+            aria-multiline="true"
+            aria-disabled={editorDisabled}
+            data-placeholder="Type a message… (@ to mention, Enter to send, Shift+Enter for new line)"
+            onInput={handleInput}
+            onKeyDown={handleKeyDown}
+            onKeyUp={syncCursor}
+            onClick={syncCursor}
+            onSelect={syncCursor}
+            onPaste={(e) => {
+              e.preventDefault();
+              const text = e.clipboardData.getData("text/plain");
+              document.execCommand("insertText", false, text);
+            }}
+            className={[
+              "block w-full min-h-[52px] max-h-40 overflow-y-auto px-3 py-2 text-sm leading-5",
+              "whitespace-pre-wrap break-words text-gray-900 focus:outline-none",
+              "empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400",
+              editorDisabled ? "cursor-not-allowed opacity-60" : "",
+            ].join(" ")}
+          />
+        </div>
       </div>
 
       <PrimaryButton

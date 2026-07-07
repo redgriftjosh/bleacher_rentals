@@ -78,6 +78,7 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   EventAttachments: () => {},
   EventChangeLog: () => {},
   EventLineItems: () => {},
+  EventMessageMentions: () => {},
   EventMessageReadReceipts: () => {},
   EventMessages: () => {},
   EventSubscriptions: () => {},

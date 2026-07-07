@@ -767,6 +767,15 @@ const EventMessageReadReceipts = new Table(EventMessageReadReceiptsCols, {
   indexes: { message_id: ["message_id"], user_uuid: ["user_uuid"] },
 });
 
+const EventMessageMentionsCols = {
+  created_at: column.text,
+  mentioned_user_uuid: column.text,
+  message_id: column.text,
+} satisfies PowerSyncColsFor<"EventMessageMentions">;
+const EventMessageMentions = new Table(EventMessageMentionsCols, {
+  indexes: { message_id: ["message_id"], mentioned_user_uuid: ["mentioned_user_uuid"] },
+});
+
 const EventMessagesCols = {
   body: column.text,
   created_at: column.text,
@@ -987,6 +996,7 @@ export const AppSchema = new Schema({
   EventAttachments,
   EventChangeLog,
   EventLineItems,
+  EventMessageMentions,
   EventMessageReadReceipts,
   EventMessages,
   EventSubscriptions,
@@ -1053,6 +1063,7 @@ export type ContactsRecord = PowerSyncDB["Contacts"];
 export type EventAttachmentsRecord = PowerSyncDB["EventAttachments"];
 export type EventChangeLogRecord = PowerSyncDB["EventChangeLog"];
 export type EventLineItemsRecord = PowerSyncDB["EventLineItems"];
+export type EventMessageMentionsRecord = PowerSyncDB["EventMessageMentions"];
 export type EventMessageReadReceiptsRecord = PowerSyncDB["EventMessageReadReceipts"];
 export type EventMessagesRecord = PowerSyncDB["EventMessages"];
 export type EventSubscriptionsRecord = PowerSyncDB["EventSubscriptions"];

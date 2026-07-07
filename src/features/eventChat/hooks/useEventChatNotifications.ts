@@ -12,12 +12,16 @@ type UnreadChatRow = {
   latestMessageAt: string;
 };
 
+type UnreadMentionRow = {
+  eventUuid: string | null;
+};
+
 /** One row per event in the notifications modal (not per message). */
 export type EventChatNotification = {
   eventUuid: string;
   eventName: string;
   latestMessageAt: string;
-  /** Reserved for @mention sorting/highlight — always false until mentions ship. */
+  /** True when an unread message @mentions the current user. */
   hasUnreadMention: boolean;
 };
 
@@ -28,13 +32,14 @@ export type EventChatNotification = {
  * - Only subscribed events (EventSubscriptions) can notify.
  * - One notification per chat, regardless of how many unread messages.
  * - Unread = message from someone else with no read receipt for this user.
+ * - hasUnreadMention = separate query on EventMessageMentions (reliable in PowerSync SQL).
  * - Clears reactively when the user opens the chat (markEventMessagesRead).
  */
 export function useEventChatNotifications() {
   const userUuid = usePermissionsStore((s) => s.userId);
   const safeUuid = userUuid ?? "__none__";
 
-  const compiled = useMemo(
+  const unreadCompiled = useMemo(
     () =>
       db
         .selectFrom("EventSubscriptions as es")
@@ -59,28 +64,66 @@ export function useEventChatNotifications() {
     [safeUuid],
   );
 
-  const { data } = useTypedQuery(compiled, expect<UnreadChatRow>());
+  const mentionCompiled = useMemo(
+    () =>
+      db
+        .selectFrom("EventMessageMentions as men")
+        .innerJoin("EventMessages as m", "m.id", "men.message_id")
+        .innerJoin("Events as e", "e.id", "m.event_uuid")
+        .innerJoin("EventSubscriptions as es", (join) =>
+          join
+            .onRef("es.event_uuid", "=", "m.event_uuid")
+            .onRef("es.user_uuid", "=", "men.mentioned_user_uuid"),
+        )
+        .leftJoin("EventMessageReadReceipts as rr", (join) =>
+          join
+            .onRef("rr.message_id", "=", "m.id")
+            .onRef("rr.user_uuid", "=", "men.mentioned_user_uuid"),
+        )
+        .select(["m.event_uuid as eventUuid"])
+        .where("men.mentioned_user_uuid", "=", safeUuid)
+        .where("e.deleted", "=", 0)
+        .where("m.user_uuid", "!=", safeUuid)
+        .where("rr.id", "is", null)
+        .groupBy("m.event_uuid")
+        .compile(),
+    [safeUuid],
+  );
+
+  const { data: unreadRows } = useTypedQuery(unreadCompiled, expect<UnreadChatRow>());
+  const { data: mentionRows } = useTypedQuery(mentionCompiled, expect<UnreadMentionRow>());
+
+  const unreadMentionEventIds = useMemo(
+    () =>
+      new Set(
+        (mentionRows ?? [])
+          .map((row) => row.eventUuid)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    [mentionRows],
+  );
 
   const notifications = useMemo<EventChatNotification[]>(() => {
-    const items = (data ?? [])
+    const items = (unreadRows ?? [])
       .filter((row) => row.eventUuid && row.latestMessageAt)
       .map((row) => ({
         eventUuid: row.eventUuid as string,
         eventName: row.eventName?.trim() || "Untitled event",
         latestMessageAt: row.latestMessageAt,
-        hasUnreadMention: false,
+        hasUnreadMention: unreadMentionEventIds.has(row.eventUuid as string),
       }));
 
-    // @mention chats first (future), then most recent activity.
+    // @mention chats first, then most recent activity.
     return items.sort((a, b) => {
       if (a.hasUnreadMention !== b.hasUnreadMention) {
         return a.hasUnreadMention ? -1 : 1;
       }
       return b.latestMessageAt.localeCompare(a.latestMessageAt);
     });
-  }, [data]);
+  }, [unreadMentionEventIds, unreadRows]);
 
   const unreadChatCount = notifications.length;
+  const unreadMentionCount = notifications.filter((n) => n.hasUnreadMention).length;
 
-  return { notifications, unreadChatCount };
+  return { notifications, unreadChatCount, unreadMentionCount };
 }

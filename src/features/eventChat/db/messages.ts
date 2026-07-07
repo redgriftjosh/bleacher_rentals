@@ -1,5 +1,6 @@
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute } from "@/lib/powersync/typedQuery";
+import { insertEventMessageMentions } from "./mentions";
 
 /** Payload for inserting a new row into EventMessages. */
 export type SendEventMessageInput = {
@@ -8,6 +9,8 @@ export type SendEventMessageInput = {
   body: string;
   /** System messages (e.g. "X joined") — rendered differently in the UI. */
   isSystem?: boolean;
+  /** Users @mentioned in this message (stored in EventMessageMentions). */
+  mentionedUserUuids?: string[];
 };
 
 /**
@@ -31,6 +34,13 @@ export async function sendEventMessage(input: SendEventMessageInput): Promise<st
       })
       .compile(),
   );
+
+  const mentionTargets = (input.mentionedUserUuids ?? []).filter(
+    (uuid) => uuid && uuid !== input.userUuid,
+  );
+  if (mentionTargets.length > 0) {
+    await insertEventMessageMentions(id, mentionTargets);
+  }
 
   return id;
 }

@@ -1360,6 +1360,42 @@ export type Database = {
           },
         ]
       }
+      EventMessageMentions: {
+        Row: {
+          created_at: string
+          id: string
+          mentioned_user_uuid: string
+          message_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mentioned_user_uuid: string
+          message_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mentioned_user_uuid?: string
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventMessageMentions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "EventMessages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventMessageMentions_mentioned_user_uuid_fkey"
+            columns: ["mentioned_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       EventMessages: {
         Row: {
           body: string
