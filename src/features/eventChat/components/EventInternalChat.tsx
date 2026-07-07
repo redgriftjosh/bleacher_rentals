@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Check, CheckCheck, Send, Users } from "lucide-react";
-import { PrimaryButton } from "@/components/PrimaryButton";
+import { Check, CheckCheck, Users } from "lucide-react";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import {
   displayName,
@@ -25,6 +24,7 @@ import {
   shouldShowNewMessagesDivider,
 } from "../utils/unreadMessages";
 import { EventChatMembersModal } from "./EventChatMembersModal";
+import { EventChatComposer } from "./EventChatComposer";
 import { NewMessagesDivider } from "./NewMessagesDivider";
 import { ScrollToBottomButton } from "./ScrollToBottomButton";
 
@@ -219,16 +219,6 @@ export function EventInternalChat({ eventUuid }: Props) {
     }
   }, [body, canWrite, eventUuid, stopTyping, userUuid]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        void handleSend();
-      }
-    },
-    [handleSend],
-  );
-
   return (
     <div className="flex flex-col h-[520px] min-h-0 border rounded-lg overflow-hidden bg-white">
       <div className="px-4 py-3 border-b bg-gray-50 flex-shrink-0 flex items-start justify-between gap-3">
@@ -362,22 +352,15 @@ export function EventInternalChat({ eventUuid }: Props) {
       </div>
 
       {canWrite ? (
-        <div className="flex gap-2 p-4 border-t bg-white flex-shrink-0">
-          <textarea
-            value={body}
-            onChange={(e) => {
-              setBody(e.target.value);
-              emitTyping();
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message… (Enter to send, Shift+Enter for new line)"
-            rows={2}
-            className="flex-1 px-3 py-2 border rounded text-sm resize-none focus:outline-none focus:ring-2 focus:ring-greenAccent"
-          />
-          <PrimaryButton onClick={() => void handleSend()} loading={sending} disabled={!body.trim()}>
-            <Send className="size-4" />
-          </PrimaryButton>
-        </div>
+        <EventChatComposer
+          eventUuid={eventUuid}
+          userUuid={userUuid}
+          value={body}
+          onChange={setBody}
+          onSend={() => void handleSend()}
+          onTyping={emitTyping}
+          sending={sending}
+        />
       ) : (
         <div className="px-4 py-3 border-t bg-gray-50 text-xs text-gray-500 text-center flex-shrink-0">
           You can read this chat but cannot send messages. Ask an admin or a member to add you.
