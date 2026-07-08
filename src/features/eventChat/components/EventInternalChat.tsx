@@ -325,7 +325,7 @@ export function EventInternalChat({ eventUuid }: Props) {
                         })}
                       </span>
                     </div>
-                    <EventMessageContextMenu isOwnMessage={isMe}>
+                    <EventMessageContextMenu isOwnMessage={isMe} messageBody={msg.body}>
                       <div
                         className={`px-3 py-2 rounded-lg text-sm whitespace-pre-wrap cursor-default ${
                           isMe

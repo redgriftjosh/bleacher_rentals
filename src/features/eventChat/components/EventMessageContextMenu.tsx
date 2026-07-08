@@ -1,6 +1,8 @@
 "use client";
 
 import { Copy, Eye, Pencil, Reply } from "lucide-react";
+import { createErrorToast } from "@/components/toasts/ErrorToast";
+import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -11,20 +13,32 @@ import {
 
 type Props = {
   children: React.ReactNode;
+  messageBody: string;
   /** Only the author can edit their message. */
   isOwnMessage: boolean;
 };
 
 /**
  * Right-click menu on a chat message bubble.
- * Actions are wired up in follow-up tasks — this step only opens the menu.
  */
-export function EventMessageContextMenu({ children, isOwnMessage }: Props) {
+export function EventMessageContextMenu({ children, messageBody, isOwnMessage }: Props) {
+  const handleCopy = async () => {
+    const text = messageBody.trim();
+    if (!text) return;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      createSuccessToast(["Message copied to clipboard."]);
+    } catch {
+      createErrorToast(["Failed to copy message."]);
+    }
+  };
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-52">
-        <ContextMenuItem onSelect={(e) => e.preventDefault()}>
+        <ContextMenuItem onSelect={() => void handleCopy()}>
           <Copy />
           Copy
         </ContextMenuItem>
