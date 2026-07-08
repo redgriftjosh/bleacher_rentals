@@ -46,7 +46,8 @@ export function EventChatComposer({
   onCancelEdit,
 }: Props) {
   const editorRef = useRef<HTMLDivElement>(null);
-  const lastSyncedValue = useRef(value);
+  // Empty on mount so the first external value (e.g. edit body) is always synced in.
+  const lastSyncedValue = useRef("");
   const { members } = useMentionableChatMembers(eventUuid, userUuid);
 
   const [cursor, setCursor] = useState(0);
