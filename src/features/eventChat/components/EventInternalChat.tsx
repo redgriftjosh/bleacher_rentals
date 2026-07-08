@@ -26,6 +26,7 @@ import {
   scrollContainerToElement,
   shouldShowNewMessagesDivider,
 } from "../utils/unreadMessages";
+import { EventMessageContextMenu } from "./EventMessageContextMenu";
 import { EventChatMembersModal } from "./EventChatMembersModal";
 import { EventChatComposer } from "./EventChatComposer";
 import { EventMessageBody } from "./EventMessageBody";
@@ -324,21 +325,23 @@ export function EventInternalChat({ eventUuid }: Props) {
                         })}
                       </span>
                     </div>
-                    <div
-                      className={`px-3 py-2 rounded-lg text-sm whitespace-pre-wrap ${
-                        isMe
-                          ? "bg-blue-100 text-gray-900 rounded-tr-none"
-                          : showMentionHighlight
-                            ? "bg-amber-50 text-gray-900 rounded-tl-none ring-2 ring-amber-300"
-                            : "bg-gray-100 text-gray-900 rounded-tl-none"
-                      }`}
-                    >
-                      <EventMessageBody
-                        body={msg.body}
-                        members={mentionableMembers}
-                        currentUserUuid={userUuid}
-                      />
-                    </div>
+                    <EventMessageContextMenu isOwnMessage={isMe}>
+                      <div
+                        className={`px-3 py-2 rounded-lg text-sm whitespace-pre-wrap cursor-default ${
+                          isMe
+                            ? "bg-blue-100 text-gray-900 rounded-tr-none"
+                            : showMentionHighlight
+                              ? "bg-amber-50 text-gray-900 rounded-tl-none ring-2 ring-amber-300"
+                              : "bg-gray-100 text-gray-900 rounded-tl-none"
+                        }`}
+                      >
+                        <EventMessageBody
+                          body={msg.body}
+                          members={mentionableMembers}
+                          currentUserUuid={userUuid}
+                        />
+                      </div>
+                    </EventMessageContextMenu>
                     {isMe && (
                       <div className="flex items-center gap-1 mt-0.5 justify-end">
                         {readByOthers.length > 0 ? (
