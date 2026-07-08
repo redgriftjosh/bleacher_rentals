@@ -18,6 +18,7 @@ type Props = {
   isOwnMessage: boolean;
   onViewReadReceipts?: () => void;
   onEdit?: () => void;
+  onReply?: () => void;
 };
 
 /**
@@ -30,6 +31,7 @@ export function EventMessageContextMenu({
   isOwnMessage,
   onViewReadReceipts,
   onEdit,
+  onReply,
 }: Props) {
   const handleCopy = async () => {
     const text = messageBody.trim();
@@ -52,6 +54,10 @@ export function EventMessageContextMenu({
     window.setTimeout(() => onEdit?.(), 0);
   };
 
+  const handleReply = () => {
+    window.setTimeout(() => onReply?.(), 0);
+  };
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
@@ -60,7 +66,7 @@ export function EventMessageContextMenu({
           <Copy />
           Copy
         </ContextMenuItem>
-        <ContextMenuItem onSelect={(e) => e.preventDefault()}>
+        <ContextMenuItem onSelect={handleReply}>
           <Reply />
           Reply
         </ContextMenuItem>

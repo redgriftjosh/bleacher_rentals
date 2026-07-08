@@ -1404,6 +1404,7 @@ export type Database = {
           event_uuid: string
           id: string
           is_system: boolean
+          reply_to_message_id: string | null
           user_uuid: string
         }
         Insert: {
@@ -1413,6 +1414,7 @@ export type Database = {
           event_uuid: string
           id?: string
           is_system?: boolean
+          reply_to_message_id?: string | null
           user_uuid: string
         }
         Update: {
@@ -1422,6 +1424,7 @@ export type Database = {
           event_uuid?: string
           id?: string
           is_system?: boolean
+          reply_to_message_id?: string | null
           user_uuid?: string
         }
         Relationships: [

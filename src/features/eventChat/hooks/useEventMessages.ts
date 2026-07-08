@@ -13,12 +13,20 @@ type Row = {
   body: string | null;
   created_at: string | null;
   edited_at: string | null;
+  reply_to_message_id: string | null;
   is_system: number | null;
 };
 
 export type EventMessage = Pick<
   Tables<"EventMessages">,
-  "id" | "event_uuid" | "user_uuid" | "body" | "created_at" | "edited_at" | "is_system"
+  | "id"
+  | "event_uuid"
+  | "user_uuid"
+  | "body"
+  | "created_at"
+  | "edited_at"
+  | "reply_to_message_id"
+  | "is_system"
 >;
 
 /** Normalizes PowerSync integers/nulls into app-friendly types. */
@@ -30,6 +38,7 @@ function toMessage(row: Row): EventMessage {
     body: row.body ?? "",
     created_at: row.created_at ?? "",
     edited_at: row.edited_at ?? null,
+    reply_to_message_id: row.reply_to_message_id ?? null,
     is_system: row.is_system === 1,
   };
 }
@@ -43,7 +52,16 @@ export function useEventMessages(eventUuid: string) {
     () =>
       db
         .selectFrom("EventMessages")
-        .select(["id", "event_uuid", "user_uuid", "body", "created_at", "edited_at", "is_system"])
+        .select([
+          "id",
+          "event_uuid",
+          "user_uuid",
+          "body",
+          "created_at",
+          "edited_at",
+          "reply_to_message_id",
+          "is_system",
+        ])
         .where("event_uuid", "=", eventUuid)
         .orderBy("created_at", "asc")
         .compile(),

@@ -20,6 +20,10 @@ import { useMentionableChatMembers } from "../hooks/useMentionableChatMembers";
 import { useEventMessageMentions } from "../hooks/useEventMessageMentions";
 import { parseMentionedUserIds } from "../utils/mentions";
 import {
+  truncateReplyPreview,
+  type EventChatReplyTarget,
+} from "../utils/replyPreview";
+import {
   countUnreadMessages,
   findFirstUnreadMessageId,
   isContainerNearBottom,
@@ -31,7 +35,9 @@ import { EventMessageContextMenu } from "./EventMessageContextMenu";
 import { EventMessageReadReceiptsDialog } from "./EventMessageReadReceiptsDialog";
 import { EventChatMembersModal } from "./EventChatMembersModal";
 import { EventChatComposer } from "./EventChatComposer";
+import { EventChatReplyPreview } from "./EventChatReplyPreview";
 import { EventMessageBody } from "./EventMessageBody";
+import { EventMessageReplyQuote, replyQuotePreview } from "./EventMessageReplyQuote";
 import { NewMessagesDivider } from "./NewMessagesDivider";
 import { ScrollToBottomButton } from "./ScrollToBottomButton";
 
@@ -55,9 +61,13 @@ export function EventInternalChat({ eventUuid }: Props) {
   const [readReceiptsDialog, setReadReceiptsDialog] = useState<EventReadReceipt[] | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
+  const [replyTarget, setReplyTarget] = useState<EventChatReplyTarget | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
+
+  const highlightTimeoutRef = useRef<number | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -88,7 +98,21 @@ export function EventInternalChat({ eventUuid }: Props) {
     setReadReceiptsDialog(null);
     setEditingMessageId(null);
     setEditBody("");
+    setReplyTarget(null);
+    setHighlightedMessageId(null);
+    if (highlightTimeoutRef.current !== null) {
+      window.clearTimeout(highlightTimeoutRef.current);
+      highlightTimeoutRef.current = null;
+    }
   }, [eventUuid]);
+
+  useEffect(() => {
+    return () => {
+      if (highlightTimeoutRef.current !== null) {
+        window.clearTimeout(highlightTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const unreadCount = useMemo(
     () => countUnreadMessages(messages, userUuid, receiptsByMessage),
@@ -96,6 +120,11 @@ export function EventInternalChat({ eventUuid }: Props) {
   );
 
   const showScrollToBottomButton = initialScrollDone && !isNearBottom;
+
+  const messagesById = useMemo(
+    () => new Map(messages.map((message) => [message.id, message])),
+    [messages],
+  );
 
   const unreadAnchorId = openUnreadUi?.anchorId ?? null;
   const showDividerBefore = openUnreadUi?.showDivider ?? false;
@@ -229,8 +258,10 @@ export function EventInternalChat({ eventUuid }: Props) {
         userUuid,
         body: trimmedBody,
         mentionedUserUuids,
+        replyToMessageId: replyTarget?.messageId ?? null,
       });
       setBody("");
+      setReplyTarget(null);
       requestAnimationFrame(() => {
         const container = scrollContainerRef.current;
         if (container) scrollContainerToBottom(container);
@@ -256,7 +287,26 @@ export function EventInternalChat({ eventUuid }: Props) {
     } finally {
       setSending(false);
     }
-  }, [body, canWrite, eventUuid, mentionableMembers, stopTyping, userMap, userUuid]);
+  }, [body, canWrite, eventUuid, mentionableMembers, replyTarget, stopTyping, userMap, userUuid]);
+
+  const jumpToMessage = useCallback((messageId: string) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const el = container.querySelector<HTMLElement>(`#event-msg-${messageId}`);
+    if (!el) return;
+
+    scrollContainerToElement(container, el, { smooth: true, offsetPx: 12 });
+    setHighlightedMessageId(messageId);
+
+    if (highlightTimeoutRef.current !== null) {
+      window.clearTimeout(highlightTimeoutRef.current);
+    }
+    highlightTimeoutRef.current = window.setTimeout(() => {
+      setHighlightedMessageId(null);
+      highlightTimeoutRef.current = null;
+    }, 1000);
+  }, []);
 
   const cancelEdit = useCallback(() => {
     setEditingMessageId(null);
@@ -264,9 +314,23 @@ export function EventInternalChat({ eventUuid }: Props) {
   }, []);
 
   const startEdit = useCallback((messageId: string, messageBody: string) => {
+    setReplyTarget(null);
     setEditingMessageId(messageId);
     setEditBody(messageBody);
   }, []);
+
+  const startReply = useCallback(
+    (messageId: string, authorUuid: string, messageBody: string) => {
+      cancelEdit();
+      setReplyTarget({
+        messageId,
+        authorName:
+          authorUuid === userUuid ? "You" : displayName(userMap.get(authorUuid)),
+        bodyPreview: truncateReplyPreview(messageBody),
+      });
+    },
+    [cancelEdit, userMap, userUuid],
+  );
 
   const handleSaveEdit = useCallback(async () => {
     if (!editingMessageId || !editBody.trim() || !userUuid || !canWrite) return;
@@ -376,6 +440,10 @@ export function EventInternalChat({ eventUuid }: Props) {
               Boolean(userUuid) && (mentionsByMessage.get(msg.id)?.includes(userUuid!) ?? false);
             const iHaveRead = Boolean(userUuid && readers.includes(userUuid));
             const showMentionHighlight = mentionsMe && !isMe && !iHaveRead;
+            const isHighlighted = highlightedMessageId === msg.id;
+            const parentMessage = msg.reply_to_message_id
+              ? messagesById.get(msg.reply_to_message_id)
+              : undefined;
 
             return (
               <div key={msg.id} id={`event-msg-${msg.id}`}>
@@ -408,6 +476,7 @@ export function EventInternalChat({ eventUuid }: Props) {
                     <EventMessageContextMenu
                       isOwnMessage={isMe}
                       messageBody={msg.body}
+                      onReply={() => startReply(msg.id, msg.user_uuid, msg.body)}
                       onEdit={isMe ? () => startEdit(msg.id, msg.body) : undefined}
                       onViewReadReceipts={
                         isMe ? () => setReadReceiptsDialog(readReceipts) : undefined
@@ -417,6 +486,8 @@ export function EventInternalChat({ eventUuid }: Props) {
                         className={`px-3 py-2 rounded-lg text-sm whitespace-pre-wrap cursor-default ${
                           editingMessageId === msg.id ? "ring-2 ring-blue-400" : ""
                         } ${
+                          isHighlighted ? "ring-2 ring-amber-400 transition-shadow duration-300" : ""
+                        } ${
                           isMe
                             ? "bg-blue-100 text-gray-900 rounded-tr-none"
                             : showMentionHighlight
@@ -424,6 +495,26 @@ export function EventInternalChat({ eventUuid }: Props) {
                               : "bg-gray-100 text-gray-900 rounded-tl-none"
                         }`}
                       >
+                        {msg.reply_to_message_id && (
+                          <EventMessageReplyQuote
+                            authorName={
+                              parentMessage
+                                ? parentMessage.user_uuid === userUuid
+                                  ? "You"
+                                  : displayName(userMap.get(parentMessage.user_uuid))
+                                : "Deleted message"
+                            }
+                            bodyPreview={
+                              parentMessage ? replyQuotePreview(parentMessage.body) : ""
+                            }
+                            isOwnBubble={isMe}
+                            onJump={() => {
+                              if (msg.reply_to_message_id) {
+                                jumpToMessage(msg.reply_to_message_id);
+                              }
+                            }}
+                          />
+                        )}
                         <EventMessageBody
                           body={msg.body}
                           members={mentionableMembers}
@@ -494,15 +585,24 @@ export function EventInternalChat({ eventUuid }: Props) {
           sending={savingEdit}
         />
       ) : canWrite ? (
-        <EventChatComposer
-          eventUuid={eventUuid}
-          userUuid={userUuid}
-          value={body}
-          onChange={setBody}
-          onSend={() => void handleSend()}
-          onTyping={emitTyping}
-          sending={sending}
-        />
+        <>
+          {replyTarget && (
+            <EventChatReplyPreview
+              authorName={replyTarget.authorName}
+              bodyPreview={replyTarget.bodyPreview}
+              onCancel={() => setReplyTarget(null)}
+            />
+          )}
+          <EventChatComposer
+            eventUuid={eventUuid}
+            userUuid={userUuid}
+            value={body}
+            onChange={setBody}
+            onSend={() => void handleSend()}
+            onTyping={emitTyping}
+            sending={sending}
+          />
+        </>
       ) : (
         <div className="px-4 py-3 border-t bg-gray-50 text-xs text-gray-500 text-center flex-shrink-0">
           You can read this chat but cannot send messages. Ask an admin or a member to add you.

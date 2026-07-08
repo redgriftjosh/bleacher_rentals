@@ -11,6 +11,8 @@ export type SendEventMessageInput = {
   isSystem?: boolean;
   /** Users @mentioned in this message (stored in EventMessageMentions). */
   mentionedUserUuids?: string[];
+  /** Parent message when this is a reply. */
+  replyToMessageId?: string | null;
 };
 
 /**
@@ -30,6 +32,7 @@ export async function sendEventMessage(input: SendEventMessageInput): Promise<st
         user_uuid: input.userUuid,
         body: input.body,
         is_system: input.isSystem ? 1 : 0,
+        reply_to_message_id: input.replyToMessageId ?? null,
         created_at: new Date().toISOString(),
       })
       .compile(),

@@ -782,6 +782,7 @@ const EventMessagesCols = {
   edited_at: column.text,
   event_uuid: column.text,
   is_system: column.integer,
+  reply_to_message_id: column.text,
   user_uuid: column.text,
 } satisfies PowerSyncColsFor<"EventMessages">;
 const EventMessages = new Table(EventMessagesCols, {
