@@ -14,14 +14,21 @@ import {
 type Props = {
   children: React.ReactNode;
   messageBody: string;
-  /** Only the author can edit their message. */
+  /** Only the author can edit their message or view read receipts. */
   isOwnMessage: boolean;
+  onViewReadReceipts?: () => void;
 };
 
 /**
  * Right-click menu on a chat message bubble.
+ * Dialogs open via parent callbacks so ContextMenu state is not corrupted.
  */
-export function EventMessageContextMenu({ children, messageBody, isOwnMessage }: Props) {
+export function EventMessageContextMenu({
+  children,
+  messageBody,
+  isOwnMessage,
+  onViewReadReceipts,
+}: Props) {
   const handleCopy = async () => {
     const text = messageBody.trim();
     if (!text) return;
@@ -32,6 +39,11 @@ export function EventMessageContextMenu({ children, messageBody, isOwnMessage }:
     } catch {
       createErrorToast(["Failed to copy message."]);
     }
+  };
+
+  const handleViewReadReceipts = () => {
+    // Defer until ContextMenu has fully closed — avoids Radix focus/pointer trap bugs.
+    window.setTimeout(() => onViewReadReceipts?.(), 0);
   };
 
   return (
@@ -52,11 +64,15 @@ export function EventMessageContextMenu({ children, messageBody, isOwnMessage }:
             Edit
           </ContextMenuItem>
         )}
-        <ContextMenuSeparator />
-        <ContextMenuItem onSelect={(e) => e.preventDefault()}>
-          <Eye />
-          View read receipts
-        </ContextMenuItem>
+        {isOwnMessage && onViewReadReceipts && (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem onSelect={handleViewReadReceipts}>
+              <Eye />
+              View read receipts
+            </ContextMenuItem>
+          </>
+        )}
       </ContextMenuContent>
     </ContextMenu>
   );

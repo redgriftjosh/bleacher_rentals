@@ -14,6 +14,14 @@ type Row = {
 /** messageId → list of user uuids who have read that message */
 export type EventReadReceiptMap = Map<string, string[]>;
 
+export type EventReadReceipt = {
+  userUuid: string;
+  readAt: string;
+};
+
+/** messageId → readers with timestamps, sorted oldest-first */
+export type EventReadReceiptDetailsMap = Map<string, EventReadReceipt[]>;
+
 /**
  * Reactive read receipts for all messages in one event chat.
  * Joins receipts to messages so we only get data for this event.
@@ -49,5 +57,20 @@ export function useEventReadReceipts(eventUuid: string) {
     return map;
   }, [data]);
 
-  return { receiptsByMessage, isLoading };
+  const receiptDetailsByMessage = useMemo<EventReadReceiptDetailsMap>(() => {
+    const map = new Map<string, EventReadReceipt[]>();
+    for (const r of data ?? []) {
+      if (!r.message_id || !r.user_uuid || !r.read_at) continue;
+      const existing = map.get(r.message_id) ?? [];
+      existing.push({ userUuid: r.user_uuid, readAt: r.read_at });
+      map.set(r.message_id, existing);
+    }
+    for (const [messageId, readers] of map) {
+      readers.sort((a, b) => a.readAt.localeCompare(b.readAt));
+      map.set(messageId, readers);
+    }
+    return map;
+  }, [data]);
+
+  return { receiptsByMessage, receiptDetailsByMessage, isLoading };
 }

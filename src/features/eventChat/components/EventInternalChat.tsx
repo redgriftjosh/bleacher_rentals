@@ -12,7 +12,7 @@ import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsS
 import { sendEventMessage } from "../db/messages";
 import { markEventMessagesRead } from "../db/readReceipts";
 import { useEventMessages } from "../hooks/useEventMessages";
-import { useEventReadReceipts } from "../hooks/useReadReceipts";
+import { useEventReadReceipts, type EventReadReceipt } from "../hooks/useReadReceipts";
 import { useEventTypingEmitter, useEventTypingIndicators } from "../hooks/useTypingIndicators";
 import { useEventChatMemberAccess } from "../hooks/useEventChatMemberAccess";
 import { useMentionableChatMembers } from "../hooks/useMentionableChatMembers";
@@ -27,6 +27,7 @@ import {
   shouldShowNewMessagesDivider,
 } from "../utils/unreadMessages";
 import { EventMessageContextMenu } from "./EventMessageContextMenu";
+import { EventMessageReadReceiptsDialog } from "./EventMessageReadReceiptsDialog";
 import { EventChatMembersModal } from "./EventChatMembersModal";
 import { EventChatComposer } from "./EventChatComposer";
 import { EventMessageBody } from "./EventMessageBody";
@@ -39,7 +40,8 @@ type Props = {
 
 export function EventInternalChat({ eventUuid }: Props) {
   const { messages, isLoading: messagesLoading } = useEventMessages(eventUuid);
-  const { receiptsByMessage, isLoading: receiptsLoading } = useEventReadReceipts(eventUuid);
+  const { receiptsByMessage, receiptDetailsByMessage, isLoading: receiptsLoading } =
+    useEventReadReceipts(eventUuid);
   const { userMap } = useRoadmapUsers();
   const userUuid = usePermissionsStore((s) => s.userId);
   const { canManageMembers, canWrite } = useEventChatMemberAccess(eventUuid);
@@ -49,6 +51,7 @@ export function EventInternalChat({ eventUuid }: Props) {
   const { emitTyping, stopTyping } = useEventTypingEmitter(eventUuid, userUuid);
 
   const [membersOpen, setMembersOpen] = useState(false);
+  const [readReceiptsDialog, setReadReceiptsDialog] = useState<EventReadReceipt[] | null>(null);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -78,6 +81,7 @@ export function EventInternalChat({ eventUuid }: Props) {
     prevCountRef.current = 0;
     setIsNearBottom(true);
     wasNearBottomRef.current = true;
+    setReadReceiptsDialog(null);
   }, [eventUuid]);
 
   const unreadCount = useMemo(
@@ -295,6 +299,9 @@ export function EventInternalChat({ eventUuid }: Props) {
             const user = userMap.get(msg.user_uuid);
             const readers = receiptsByMessage.get(msg.id) ?? [];
             const readByOthers = readers.filter((uuid) => uuid !== msg.user_uuid);
+            const readReceipts = (receiptDetailsByMessage.get(msg.id) ?? []).filter(
+              (r) => r.userUuid !== msg.user_uuid,
+            );
             const mentionsMe =
               Boolean(userUuid) && (mentionsByMessage.get(msg.id)?.includes(userUuid!) ?? false);
             const iHaveRead = Boolean(userUuid && readers.includes(userUuid));
@@ -325,7 +332,13 @@ export function EventInternalChat({ eventUuid }: Props) {
                         })}
                       </span>
                     </div>
-                    <EventMessageContextMenu isOwnMessage={isMe} messageBody={msg.body}>
+                    <EventMessageContextMenu
+                      isOwnMessage={isMe}
+                      messageBody={msg.body}
+                      onViewReadReceipts={
+                        isMe ? () => setReadReceiptsDialog(readReceipts) : undefined
+                      }
+                    >
                       <div
                         className={`px-3 py-2 rounded-lg text-sm whitespace-pre-wrap cursor-default ${
                           isMe
@@ -415,6 +428,14 @@ export function EventInternalChat({ eventUuid }: Props) {
           onOpenChange={setMembersOpen}
         />
       )}
+
+      <EventMessageReadReceiptsDialog
+        open={readReceiptsDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) setReadReceiptsDialog(null);
+        }}
+        readers={readReceiptsDialog ?? []}
+      />
     </div>
   );
 }
