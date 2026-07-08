@@ -28,6 +28,9 @@ type Props = {
   onTyping: () => void;
   sending: boolean;
   disabled?: boolean;
+  /** Edit mode — Save/Cancel instead of Send. */
+  editing?: boolean;
+  onCancelEdit?: () => void;
 };
 
 export function EventChatComposer({
@@ -39,6 +42,8 @@ export function EventChatComposer({
   onTyping,
   sending,
   disabled = false,
+  editing = false,
+  onCancelEdit,
 }: Props) {
   const editorRef = useRef<HTMLDivElement>(null);
   const lastSyncedValue = useRef(value);
@@ -157,7 +162,21 @@ export function EventChatComposer({
   const editorDisabled = disabled || sending;
 
   return (
-    <div className="flex gap-2 p-4 border-t bg-white flex-shrink-0">
+    <div className="flex flex-col gap-2 p-4 border-t bg-white flex-shrink-0">
+      {editing && (
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <span className="font-medium text-gray-700">Editing message</span>
+          <button
+            type="button"
+            onClick={onCancelEdit}
+            className="text-gray-500 hover:text-gray-800 transition cursor-pointer"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      <div className="flex gap-2">
       <div className="relative flex-1 min-w-0">
         {mentionOpen && (
           <MentionAutocomplete
@@ -178,7 +197,11 @@ export function EventChatComposer({
             role="textbox"
             aria-multiline="true"
             aria-disabled={editorDisabled}
-            data-placeholder="Type a message… (@ to mention, Enter to send, Shift+Enter for new line)"
+            data-placeholder={
+              editing
+                ? "Edit message… (@ to mention, Enter to save, Shift+Enter for new line)"
+                : "Type a message… (@ to mention, Enter to send, Shift+Enter for new line)"
+            }
             onInput={handleInput}
             onKeyDown={handleKeyDown}
             onKeyUp={syncCursor}
@@ -204,8 +227,9 @@ export function EventChatComposer({
         loading={sending}
         disabled={disabled || !value.trim()}
       >
-        <Send className="size-4" />
+        {editing ? "Save" : <Send className="size-4" />}
       </PrimaryButton>
+      </div>
     </div>
   );
 }

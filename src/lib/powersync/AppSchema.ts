@@ -779,6 +779,7 @@ const EventMessageMentions = new Table(EventMessageMentionsCols, {
 const EventMessagesCols = {
   body: column.text,
   created_at: column.text,
+  edited_at: column.text,
   event_uuid: column.text,
   is_system: column.integer,
   user_uuid: column.text,

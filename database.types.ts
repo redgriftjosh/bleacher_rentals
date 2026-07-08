@@ -1400,6 +1400,7 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          edited_at: string | null
           event_uuid: string
           id: string
           is_system: boolean
@@ -1408,6 +1409,7 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          edited_at?: string | null
           event_uuid: string
           id?: string
           is_system?: boolean
@@ -1416,6 +1418,7 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          edited_at?: string | null
           event_uuid?: string
           id?: string
           is_system?: boolean

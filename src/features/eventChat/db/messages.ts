@@ -1,6 +1,6 @@
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute } from "@/lib/powersync/typedQuery";
-import { insertEventMessageMentions } from "./mentions";
+import { insertEventMessageMentions, replaceEventMessageMentions } from "./mentions";
 
 /** Payload for inserting a new row into EventMessages. */
 export type SendEventMessageInput = {
@@ -43,4 +43,28 @@ export async function sendEventMessage(input: SendEventMessageInput): Promise<st
   }
 
   return id;
+}
+
+export type UpdateEventMessageInput = {
+  messageId: string;
+  body: string;
+  mentionedUserUuids?: string[];
+};
+
+/** Updates message body and sets edited_at. Replaces @mentions when provided. */
+export async function updateEventMessage(input: UpdateEventMessageInput): Promise<void> {
+  await typedExecute(
+    db
+      .updateTable("EventMessages")
+      .set({
+        body: input.body,
+        edited_at: new Date().toISOString(),
+      })
+      .where("id", "=", input.messageId)
+      .compile(),
+  );
+
+  if (input.mentionedUserUuids !== undefined) {
+    await replaceEventMessageMentions(input.messageId, input.mentionedUserUuids);
+  }
 }

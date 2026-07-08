@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Check, CheckCheck, Users } from "lucide-react";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
+import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import {
   displayName,
   initials,
   useRoadmapUsers,
 } from "@/app/roadmap/_lib/hooks/useRoadmapUsers";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
-import { sendEventMessage } from "../db/messages";
+import { sendEventMessage, updateEventMessage } from "../db/messages";
 import { markEventMessagesRead } from "../db/readReceipts";
 import { useEventMessages } from "../hooks/useEventMessages";
 import { useEventReadReceipts, type EventReadReceipt } from "../hooks/useReadReceipts";
@@ -52,8 +53,11 @@ export function EventInternalChat({ eventUuid }: Props) {
 
   const [membersOpen, setMembersOpen] = useState(false);
   const [readReceiptsDialog, setReadReceiptsDialog] = useState<EventReadReceipt[] | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editBody, setEditBody] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -82,6 +86,8 @@ export function EventInternalChat({ eventUuid }: Props) {
     setIsNearBottom(true);
     wasNearBottomRef.current = true;
     setReadReceiptsDialog(null);
+    setEditingMessageId(null);
+    setEditBody("");
   }, [eventUuid]);
 
   const unreadCount = useMemo(
@@ -252,6 +258,70 @@ export function EventInternalChat({ eventUuid }: Props) {
     }
   }, [body, canWrite, eventUuid, mentionableMembers, stopTyping, userMap, userUuid]);
 
+  const cancelEdit = useCallback(() => {
+    setEditingMessageId(null);
+    setEditBody("");
+  }, []);
+
+  const startEdit = useCallback((messageId: string, messageBody: string) => {
+    setEditingMessageId(messageId);
+    setEditBody(messageBody);
+  }, []);
+
+  const handleSaveEdit = useCallback(async () => {
+    if (!editingMessageId || !editBody.trim() || !userUuid || !canWrite) return;
+
+    setSavingEdit(true);
+    stopTyping();
+    try {
+      const trimmedBody = editBody.trim();
+      const previousMentions = mentionsByMessage.get(editingMessageId) ?? [];
+      const mentionedUserUuids = parseMentionedUserIds(trimmedBody, mentionableMembers);
+
+      await updateEventMessage({
+        messageId: editingMessageId,
+        body: trimmedBody,
+        mentionedUserUuids,
+      });
+
+      const newlyMentioned = mentionedUserUuids.filter(
+        (uuid) => uuid !== userUuid && !previousMentions.includes(uuid),
+      );
+      if (newlyMentioned.length > 0) {
+        fetch("/api/events/event-message-mention-notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventUuid,
+            senderUserUuid: userUuid,
+            senderName: displayName(userMap.get(userUuid)),
+            messageBody: trimmedBody,
+            mentionedUserUuids: newlyMentioned,
+          }),
+        }).catch(() => {});
+      }
+
+      cancelEdit();
+      createSuccessToast(["Message updated."]);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      createErrorToast(["Edit failed", message]);
+    } finally {
+      setSavingEdit(false);
+    }
+  }, [
+    cancelEdit,
+    canWrite,
+    editBody,
+    editingMessageId,
+    eventUuid,
+    mentionableMembers,
+    mentionsByMessage,
+    stopTyping,
+    userMap,
+    userUuid,
+  ]);
+
   return (
     <div className="flex flex-col h-[520px] min-h-0 border rounded-lg overflow-hidden bg-white">
       <div className="px-4 py-3 border-b bg-gray-50 flex-shrink-0 flex items-start justify-between gap-3">
@@ -331,16 +401,22 @@ export function EventInternalChat({ eventUuid }: Props) {
                           minute: "2-digit",
                         })}
                       </span>
+                      {msg.edited_at && (
+                        <span className="text-[10px] text-gray-400 italic">edited</span>
+                      )}
                     </div>
                     <EventMessageContextMenu
                       isOwnMessage={isMe}
                       messageBody={msg.body}
+                      onEdit={isMe ? () => startEdit(msg.id, msg.body) : undefined}
                       onViewReadReceipts={
                         isMe ? () => setReadReceiptsDialog(readReceipts) : undefined
                       }
                     >
                       <div
                         className={`px-3 py-2 rounded-lg text-sm whitespace-pre-wrap cursor-default ${
+                          editingMessageId === msg.id ? "ring-2 ring-blue-400" : ""
+                        } ${
                           isMe
                             ? "bg-blue-100 text-gray-900 rounded-tr-none"
                             : showMentionHighlight
@@ -405,7 +481,19 @@ export function EventInternalChat({ eventUuid }: Props) {
         )}
       </div>
 
-      {canWrite ? (
+      {canWrite && editingMessageId ? (
+        <EventChatComposer
+          editing
+          eventUuid={eventUuid}
+          userUuid={userUuid}
+          value={editBody}
+          onChange={setEditBody}
+          onSend={() => void handleSaveEdit()}
+          onCancelEdit={cancelEdit}
+          onTyping={emitTyping}
+          sending={savingEdit}
+        />
+      ) : canWrite ? (
         <EventChatComposer
           eventUuid={eventUuid}
           userUuid={userUuid}

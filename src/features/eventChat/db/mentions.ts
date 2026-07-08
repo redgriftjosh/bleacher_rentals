@@ -37,3 +37,17 @@ export async function insertEventMessageMentions(
     );
   }
 }
+
+/** Replace all @mentions on a message (used when editing). */
+export async function replaceEventMessageMentions(
+  messageId: string,
+  mentionedUserUuids: string[],
+): Promise<void> {
+  await typedExecute(
+    db
+      .deleteFrom("EventMessageMentions")
+      .where("message_id", "=", messageId)
+      .compile(),
+  );
+  await insertEventMessageMentions(messageId, mentionedUserUuids);
+}
