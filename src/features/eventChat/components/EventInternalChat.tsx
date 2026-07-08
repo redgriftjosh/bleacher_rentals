@@ -41,11 +41,14 @@ import { EventMessageReplyQuote, replyQuotePreview } from "./EventMessageReplyQu
 import { NewMessagesDivider } from "./NewMessagesDivider";
 import { ScrollToBottomButton } from "./ScrollToBottomButton";
 
+import { cn } from "@/lib/utils";
+
 type Props = {
   eventUuid: string;
+  className?: string;
 };
 
-export function EventInternalChat({ eventUuid }: Props) {
+export function EventInternalChat({ eventUuid, className }: Props) {
   const { messages, isLoading: messagesLoading } = useEventMessages(eventUuid);
   const { receiptsByMessage, receiptDetailsByMessage, isLoading: receiptsLoading } =
     useEventReadReceipts(eventUuid);
@@ -387,7 +390,12 @@ export function EventInternalChat({ eventUuid }: Props) {
   ]);
 
   return (
-    <div className="flex flex-col h-[520px] min-h-0 border rounded-lg overflow-hidden bg-white">
+    <div
+      className={cn(
+        "flex flex-col h-[520px] min-h-0 border rounded-lg overflow-hidden bg-white",
+        className,
+      )}
+    >
       <div className="px-4 py-3 border-b bg-gray-50 flex-shrink-0 flex items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-gray-800">Internal discussion</h3>

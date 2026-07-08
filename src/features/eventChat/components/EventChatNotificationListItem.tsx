@@ -15,7 +15,7 @@ export function EventChatNotificationListItem({ notification }: Props) {
   const timeLabel = DateTime.fromISO(notification.latestMessageAt).toRelative() ?? "";
 
   const handleClick = () => {
-    router.push(`/quotes-bookings/${notification.eventUuid}?tab=messages`);
+    router.push(`/messages/internal/${notification.eventUuid}`);
   };
 
   return (
