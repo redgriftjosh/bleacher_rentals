@@ -12,6 +12,7 @@ import {
 } from "./logEventChanges";
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute, typedGetAll, expect } from "@/lib/powersync/typedQuery";
+import { subscribeToEvent } from "@/features/eventChat/db/subscriptions";
 
 type OldEventRow = {
   event_name: string | null;
@@ -167,6 +168,11 @@ export async function updateQuoteEvent(
       .where("id", "=", eventId)
       .compile(),
   );
+
+  const newOwnerUuid = (state.ownerUserUuid ?? currentUserUuid ?? null) as string | null;
+  if (newOwnerUuid && newOwnerUuid !== oldEvent?.created_by_user_uuid) {
+    await subscribeToEvent(eventId, newOwnerUuid);
+  }
 
   // 4. Log field changes + line item changes in parallel
   if (oldEvent) {

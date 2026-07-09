@@ -40,6 +40,7 @@ import { EventMessageBody } from "./EventMessageBody";
 import { EventMessageReplyQuote, replyQuotePreview } from "./EventMessageReplyQuote";
 import { NewMessagesDivider } from "./NewMessagesDivider";
 import { ScrollToBottomButton } from "./ScrollToBottomButton";
+import { useAutoSubscribeEventOwner } from "../hooks/useAutoSubscribeEventOwner";
 
 import { cn } from "@/lib/utils";
 
@@ -59,6 +60,8 @@ export function EventInternalChat({ eventUuid, className }: Props) {
   const { mentionsByMessage } = useEventMessageMentions(eventUuid);
   const { typingUserUuids } = useEventTypingIndicators(eventUuid, userUuid);
   const { emitTyping, stopTyping } = useEventTypingEmitter(eventUuid, userUuid);
+
+  useAutoSubscribeEventOwner(eventUuid);
 
   const [membersOpen, setMembersOpen] = useState(false);
   const [readReceiptsDialog, setReadReceiptsDialog] = useState<EventReadReceipt[] | null>(null);

@@ -6,6 +6,7 @@ import { syncPaymentInstallments } from "./paymentInstallments";
 import { calculateTotals } from "../utils/calculateTotals";
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute } from "@/lib/powersync/typedQuery";
+import { subscribeToEvent } from "@/features/eventChat/db/subscriptions";
 
 export async function createQuoteEvent(
   state: CreateQuoteState,
@@ -39,6 +40,8 @@ export async function createQuoteEvent(
 
   const eventUuid = crypto.randomUUID();
 
+  const ownerUserUuid = state.ownerUserUuid ?? currentUserUuid ?? null;
+
   await typedExecute(
     db
       .insertInto("Events")
@@ -60,7 +63,7 @@ export async function createQuoteEvent(
         notes: state.clientFacingNotes || null,
         internal_notes: state.internalNotes || null,
         external_notes: state.clientFacingNotes || null,
-        created_by_user_uuid: state.ownerUserUuid ?? currentUserUuid ?? null,
+        created_by_user_uuid: ownerUserUuid,
         contact_uuid: state.contactId || null,
         finance_contact_uuid: state.financeContactId || null,
         sales_office_uuid: state.salesOfficeId || null,
@@ -68,6 +71,10 @@ export async function createQuoteEvent(
       } as any)
       .compile(),
   );
+
+  if (ownerUserUuid) {
+    await subscribeToEvent(eventUuid, ownerUserUuid);
+  }
 
   // Generate unique 9-digit invoice number (must use Supabase RPC)
   const { data: invoiceData } = await (supabase.rpc as any)("generate_invoice_number");
