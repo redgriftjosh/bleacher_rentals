@@ -14,6 +14,7 @@ export default function InternalMessagesChatPage({
     <EventInternalChat
       eventUuid={eventId}
       className="h-full border-0 rounded-none"
+      showConversationActions
     />
   );
 }

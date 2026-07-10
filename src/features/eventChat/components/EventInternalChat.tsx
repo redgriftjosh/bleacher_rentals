@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Check, CheckCheck, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Check, CheckCheck, UserPlus, X } from "lucide-react";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import {
@@ -12,6 +13,7 @@ import {
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { sendEventMessage, updateEventMessage } from "../db/messages";
 import { markEventMessagesRead } from "../db/readReceipts";
+import { subscribeToEvent } from "../db/subscriptions";
 import { useEventMessages } from "../hooks/useEventMessages";
 import { useEventReadReceipts, type EventReadReceipt } from "../hooks/useReadReceipts";
 import { useEventTypingEmitter, useEventTypingIndicators } from "../hooks/useTypingIndicators";
@@ -34,6 +36,7 @@ import {
 import { EventMessageContextMenu } from "./EventMessageContextMenu";
 import { EventMessageReadReceiptsDialog } from "./EventMessageReadReceiptsDialog";
 import { EventChatMembersModal } from "./EventChatMembersModal";
+import { EventChatMenuDropdown } from "./EventChatMenuDropdown";
 import { EventChatComposer } from "./EventChatComposer";
 import { EventChatReplyPreview } from "./EventChatReplyPreview";
 import { EventMessageBody } from "./EventMessageBody";
@@ -47,15 +50,22 @@ import { cn } from "@/lib/utils";
 type Props = {
   eventUuid: string;
   className?: string;
+  /** Close + menu actions for /messages/internal/[eventId] only. */
+  showConversationActions?: boolean;
 };
 
-export function EventInternalChat({ eventUuid, className }: Props) {
+export function EventInternalChat({
+  eventUuid,
+  className,
+  showConversationActions = false,
+}: Props) {
+  const router = useRouter();
   const { messages, isLoading: messagesLoading } = useEventMessages(eventUuid);
   const { receiptsByMessage, receiptDetailsByMessage, isLoading: receiptsLoading } =
     useEventReadReceipts(eventUuid);
   const { userMap } = useRoadmapUsers();
   const userUuid = usePermissionsStore((s) => s.userId);
-  const { canManageMembers, canWrite } = useEventChatMemberAccess(eventUuid);
+  const { canManageMembers, canWrite, isSubscribed } = useEventChatMemberAccess(eventUuid);
   const { members: mentionableMembers } = useMentionableChatMembers(eventUuid, userUuid);
   const { mentionsByMessage } = useEventMessageMentions(eventUuid);
   const { typingUserUuids } = useEventTypingIndicators(eventUuid, userUuid);
@@ -72,6 +82,7 @@ export function EventInternalChat({ eventUuid, className }: Props) {
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [joining, setJoining] = useState(false);
 
   const highlightTimeoutRef = useRef<number | null>(null);
 
@@ -392,6 +403,27 @@ export function EventInternalChat({ eventUuid, className }: Props) {
     userUuid,
   ]);
 
+  const handleJoinChat = useCallback(async () => {
+    if (!userUuid || joining) return;
+
+    setJoining(true);
+    try {
+      await subscribeToEvent(eventUuid, userUuid);
+      await sendEventMessage({
+        eventUuid,
+        userUuid,
+        body: `${displayName(userMap.get(userUuid))} joined the chat.`,
+        isSystem: true,
+      });
+      createSuccessToast(["You joined the chat."]);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      createErrorToast(["Failed to join chat", message]);
+    } finally {
+      setJoining(false);
+    }
+  }, [eventUuid, joining, userMap, userUuid]);
+
   return (
     <div
       className={cn(
@@ -406,16 +438,35 @@ export function EventInternalChat({ eventUuid, className }: Props) {
             Team-only chat for this event. Not visible to clients.
           </p>
         </div>
-        {canManageMembers && (
-          <button
-            type="button"
-            onClick={() => setMembersOpen(true)}
-            className="p-2 rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition cursor-pointer flex-shrink-0"
-            title="Manage chat members"
-          >
-            <Users className="size-4" />
-          </button>
-        )}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {isSubscribed ? (
+            <EventChatMenuDropdown
+              canManageMembers={canManageMembers}
+              onChatMembers={() => setMembersOpen(true)}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => void handleJoinChat()}
+              disabled={joining}
+              className="px-3 py-1.5 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+            >
+              <UserPlus className="size-4" />
+              {joining ? "Joining…" : "Join chat"}
+            </button>
+          )}
+          {showConversationActions && (
+            <button
+              type="button"
+              onClick={() => router.push("/messages/internal")}
+              className="p-2 rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition cursor-pointer"
+              title="Close chat"
+              aria-label="Close chat"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="relative flex-1 min-h-0">
@@ -616,7 +667,7 @@ export function EventInternalChat({ eventUuid, className }: Props) {
         </>
       ) : (
         <div className="px-4 py-3 border-t bg-gray-50 text-xs text-gray-500 text-center flex-shrink-0">
-          You can read this chat but cannot send messages. Ask an admin or a member to add you.
+          Join the chat to send messages.
         </div>
       )}
 
