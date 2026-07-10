@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircle, MessageCircleWarning } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useEventChatNotifications } from "../hooks/useEventChatNotifications";
 import { EventChatNotificationListItem } from "./EventChatNotificationListItem";
@@ -12,18 +12,39 @@ import { EventChatNotificationListItem } from "./EventChatNotificationListItem";
 export function EventChatNotificationsDropDown() {
   const { notifications, unreadChatCount, unreadMentionCount } = useEventChatNotifications();
   const hasUnread = unreadChatCount > 0;
+  const hasUnreadMention = unreadMentionCount > 0;
+  const badgeLabel = unreadChatCount > 99 ? "99+" : String(unreadChatCount);
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           className="relative flex items-center justify-center p-1.5 text-white/70 hover:text-white cursor-pointer transition-colors"
-          aria-label="Chat notifications"
+          aria-label={
+            hasUnread
+              ? `Chat notifications, ${unreadChatCount} unread${hasUnreadMention ? `, ${unreadMentionCount} mention${unreadMentionCount === 1 ? "" : "s"}` : ""}`
+              : "Chat notifications"
+          }
         >
-          {hasUnread ? (
-            <MessageCircleWarning className="size-5" />
-          ) : (
-            <MessageCircle className="size-5" />
+          <MessageCircle
+            className={`size-5 ${
+              hasUnreadMention
+                ? "text-red-400"
+                : hasUnread
+                  ? "text-yellow-400"
+                  : ""
+            }`}
+          />
+          {hasUnread && (
+            <span
+              className={`absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold leading-none ${
+                hasUnreadMention
+                  ? "bg-red-500 text-white"
+                  : "bg-yellow-400 text-yellow-950"
+              }`}
+            >
+              {badgeLabel}
+            </span>
           )}
         </button>
       </PopoverTrigger>
@@ -37,9 +58,11 @@ export function EventChatNotificationsDropDown() {
           <span className="text-sm font-semibold text-gray-900">
             Chat messages{" "}
             {hasUnread && (
-              <span className={unreadMentionCount > 0 ? "text-amber-600" : "text-gray-600"}>
+              <span className={hasUnreadMention ? "text-red-500" : "text-yellow-600"}>
                 ({unreadChatCount}
-                {unreadMentionCount > 0 ? ` · ${unreadMentionCount} mention${unreadMentionCount === 1 ? "" : "s"}` : ""})
+                {hasUnreadMention
+                  ? ` · ${unreadMentionCount} mention${unreadMentionCount === 1 ? "" : "s"}`
+                  : ""})
               </span>
             )}
           </span>
