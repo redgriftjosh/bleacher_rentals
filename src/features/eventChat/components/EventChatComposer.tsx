@@ -78,7 +78,15 @@ export function EventChatComposer({
     if (!editor) return;
 
     renderPlainTextToEditor(editor, value, members);
-  }, [value, members]);
+
+    if (value === "" && !disabled) {
+      requestAnimationFrame(() => {
+        editor.focus();
+        setSelectionOffset(editor, 0);
+        setCursor(0);
+      });
+    }
+  }, [value, members, disabled]);
 
   const syncCursor = useCallback(() => {
     const editor = editorRef.current;
@@ -156,11 +164,12 @@ export function EventChatComposer({
 
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      onSend();
+      if (!sending) onSend();
     }
   };
 
-  const editorDisabled = disabled || sending;
+  const inputDisabled = disabled;
+  const sendDisabled = disabled || sending;
 
   return (
     <div className="flex flex-col gap-2 p-4 border-t bg-white flex-shrink-0">
@@ -193,11 +202,11 @@ export function EventChatComposer({
         <div className="relative rounded border border-gray-300 focus-within:ring-2 focus-within:ring-greenAccent focus-within:border-transparent">
           <div
             ref={editorRef}
-            contentEditable={!editorDisabled}
+            contentEditable={!inputDisabled}
             suppressContentEditableWarning
             role="textbox"
             aria-multiline="true"
-            aria-disabled={editorDisabled}
+            aria-disabled={inputDisabled}
             data-placeholder={
               editing
                 ? "Edit message… (@ to mention, Enter to save, Shift+Enter for new line)"
@@ -217,7 +226,7 @@ export function EventChatComposer({
               "block w-full min-h-[52px] max-h-40 overflow-y-auto px-3 py-2 text-sm leading-5",
               "whitespace-pre-wrap break-words text-gray-900 focus:outline-none",
               "empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400",
-              editorDisabled ? "cursor-not-allowed opacity-60" : "",
+              inputDisabled ? "cursor-not-allowed opacity-60" : "",
             ].join(" ")}
           />
         </div>
@@ -226,7 +235,7 @@ export function EventChatComposer({
       <PrimaryButton
         onClick={onSend}
         loading={sending}
-        disabled={disabled || !value.trim()}
+        disabled={sendDisabled || !value.trim()}
       >
         {editing ? "Save" : <Send className="size-4" />}
       </PrimaryButton>

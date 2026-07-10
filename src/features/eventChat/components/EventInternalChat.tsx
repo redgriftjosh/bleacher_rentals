@@ -267,7 +267,7 @@ export function EventInternalChat({
     .filter(Boolean);
 
   const handleSend = useCallback(async () => {
-    if (!body.trim() || !userUuid || !canWrite) return;
+    if (!body.trim() || !userUuid || !canWrite || sending) return;
     setSending(true);
     stopTyping();
     try {
@@ -307,7 +307,7 @@ export function EventInternalChat({
     } finally {
       setSending(false);
     }
-  }, [body, canWrite, eventUuid, mentionableMembers, replyTarget, stopTyping, userMap, userUuid]);
+  }, [body, canWrite, eventUuid, mentionableMembers, replyTarget, sending, stopTyping, userMap, userUuid]);
 
   const jumpToMessage = useCallback((messageId: string) => {
     const container = scrollContainerRef.current;
