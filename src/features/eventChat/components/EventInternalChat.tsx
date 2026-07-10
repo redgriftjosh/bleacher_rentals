@@ -13,7 +13,7 @@ import {
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { sendEventMessage, updateEventMessage } from "../db/messages";
 import { markEventMessagesRead } from "../db/readReceipts";
-import { subscribeToEvent } from "../db/subscriptions";
+import { subscribeToEvent, unsubscribeFromEvent } from "../db/subscriptions";
 import { useEventMessages } from "../hooks/useEventMessages";
 import { useEventReadReceipts, type EventReadReceipt } from "../hooks/useReadReceipts";
 import { useEventTypingEmitter, useEventTypingIndicators } from "../hooks/useTypingIndicators";
@@ -83,6 +83,7 @@ export function EventInternalChat({
   const [sending, setSending] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [joining, setJoining] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const highlightTimeoutRef = useRef<number | null>(null);
 
@@ -424,6 +425,39 @@ export function EventInternalChat({
     }
   }, [eventUuid, joining, userMap, userUuid]);
 
+  const handleLeaveChat = useCallback(async () => {
+    if (!userUuid || leaving || !isSubscribed) return;
+
+    setLeaving(true);
+    try {
+      await unsubscribeFromEvent(eventUuid, userUuid);
+      await sendEventMessage({
+        eventUuid,
+        userUuid,
+        body: `${displayName(userMap.get(userUuid))} left the chat.`,
+        isSystem: true,
+      });
+      createSuccessToast(["You left the chat."]);
+      setMembersOpen(false);
+      if (showConversationActions) {
+        router.push("/messages/internal");
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      createErrorToast(["Failed to leave chat", message]);
+    } finally {
+      setLeaving(false);
+    }
+  }, [
+    eventUuid,
+    isSubscribed,
+    leaving,
+    router,
+    showConversationActions,
+    userMap,
+    userUuid,
+  ]);
+
   return (
     <div
       className={cn(
@@ -443,6 +477,8 @@ export function EventInternalChat({
             <EventChatMenuDropdown
               canManageMembers={canManageMembers}
               onChatMembers={() => setMembersOpen(true)}
+              onLeaveChat={() => void handleLeaveChat()}
+              leaveDisabled={leaving}
             />
           ) : (
             <button

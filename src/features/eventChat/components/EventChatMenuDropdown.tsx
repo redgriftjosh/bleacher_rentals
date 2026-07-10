@@ -14,6 +14,7 @@ type Props = {
   onChatMembers: () => void;
   onLeaveChat?: () => void;
   onMarkUnread?: () => void;
+  leaveDisabled?: boolean;
 };
 
 /**
@@ -24,9 +25,14 @@ export function EventChatMenuDropdown({
   onChatMembers,
   onLeaveChat,
   onMarkUnread,
+  leaveDisabled = false,
 }: Props) {
   const handleChatMembers = () => {
     window.setTimeout(() => onChatMembers(), 0);
+  };
+
+  const handleLeaveChat = () => {
+    window.setTimeout(() => onLeaveChat?.(), 0);
   };
 
   return (
@@ -43,9 +49,9 @@ export function EventChatMenuDropdown({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuItem onSelect={() => onLeaveChat?.()}>
+        <DropdownMenuItem onSelect={handleLeaveChat} disabled={leaveDisabled}>
           <LogOut />
-          Leave chat
+          {leaveDisabled ? "Leaving…" : "Leave chat"}
         </DropdownMenuItem>
         {canManageMembers && (
           <DropdownMenuItem onSelect={handleChatMembers}>
