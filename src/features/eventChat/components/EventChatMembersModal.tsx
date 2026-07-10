@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +38,14 @@ export function EventChatMembersModal({ eventUuid, open, onOpenChange }: Props) 
   const currentUserUuid = usePermissionsStore((s) => s.userId);
 
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const pendingScrollTopRef = useRef<number | null>(null);
+
+  const saveListScroll = () => {
+    if (listRef.current) {
+      pendingScrollTopRef.current = listRef.current.scrollTop;
+    }
+  };
 
   // Members first, then everyone else — both groups sorted by name.
   const sortedUsers = useMemo(() => {
@@ -55,6 +63,16 @@ export function EventChatMembersModal({ eventUuid, open, onOpenChange }: Props) 
     return [...members.sort(byName), ...nonMembers.sort(byName)];
   }, [users, subscribedUserIds]);
 
+  // Re-sorting moves added users to the members section — restore scroll position.
+  useLayoutEffect(() => {
+    const el = listRef.current;
+    const top = pendingScrollTopRef.current;
+    if (!el || top === null) return;
+
+    el.scrollTop = top;
+    pendingScrollTopRef.current = null;
+  }, [sortedUsers]);
+
   const postSystemMessage = async (text: string) => {
     if (!currentUserUuid) return;
     await sendEventMessage({
@@ -66,6 +84,7 @@ export function EventChatMembersModal({ eventUuid, open, onOpenChange }: Props) 
   };
 
   const handleAdd = async (target: ChatEligibleUser) => {
+    saveListScroll();
     setBusyUserId(target.userUuid);
     try {
       await subscribeToEvent(eventUuid, target.userUuid);
@@ -81,6 +100,7 @@ export function EventChatMembersModal({ eventUuid, open, onOpenChange }: Props) 
   };
 
   const handleKick = async (target: ChatEligibleUser) => {
+    saveListScroll();
     setBusyUserId(target.userUuid);
     try {
       await unsubscribeFromEvent(eventUuid, target.userUuid);
@@ -105,7 +125,7 @@ export function EventChatMembersModal({ eventUuid, open, onOpenChange }: Props) 
           </DialogDescription>
         </DialogHeader>
 
-        <ul className="max-h-80 overflow-y-auto divide-y border rounded-md">
+        <ul ref={listRef} className="max-h-80 overflow-y-auto divide-y border rounded-md">
           {sortedUsers.length === 0 ? (
             <li className="px-4 py-6 text-sm text-gray-400 text-center">No eligible users found.</li>
           ) : (
