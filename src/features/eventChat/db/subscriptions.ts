@@ -27,6 +27,7 @@ export async function subscribeToEvent(eventUuid: string, userUuid: string): Pro
         event_uuid: eventUuid,
         user_uuid: userUuid,
         created_at: new Date().toISOString(),
+        unread: 0,
       })
       .compile(),
   );
@@ -41,6 +42,30 @@ export async function unsubscribeFromEvent(eventUuid: string, userUuid: string) 
   await typedExecute(
     db
       .deleteFrom("EventSubscriptions")
+      .where("event_uuid", "=", eventUuid)
+      .where("user_uuid", "=", userUuid)
+      .compile(),
+  );
+}
+
+/** Marks the conversation unread for this user (does not clear read receipts). */
+export async function markEventChatUnread(eventUuid: string, userUuid: string) {
+  await typedExecute(
+    db
+      .updateTable("EventSubscriptions")
+      .set({ unread: 1 })
+      .where("event_uuid", "=", eventUuid)
+      .where("user_uuid", "=", userUuid)
+      .compile(),
+  );
+}
+
+/** Clears the conversation unread flag (e.g. when the user reads the chat). */
+export async function clearEventChatUnread(eventUuid: string, userUuid: string) {
+  await typedExecute(
+    db
+      .updateTable("EventSubscriptions")
+      .set({ unread: 0 })
       .where("event_uuid", "=", eventUuid)
       .where("user_uuid", "=", userUuid)
       .compile(),

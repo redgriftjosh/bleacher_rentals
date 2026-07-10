@@ -68,8 +68,12 @@ export function useEventChatConversations() {
         .select(["es.event_uuid as eventUuid"])
         .where("es.user_uuid", "=", safeUuid)
         .where("e.deleted", "=", 0)
-        .where("m.user_uuid", "!=", safeUuid)
-        .where("rr.id", "is", null)
+        .where((eb) =>
+          eb.or([
+            eb.and([eb("m.user_uuid", "!=", safeUuid), eb("rr.id", "is", null)]),
+            eb("es.unread", "=", 1),
+          ]),
+        )
         .groupBy("es.event_uuid")
         .compile(),
     [safeUuid],

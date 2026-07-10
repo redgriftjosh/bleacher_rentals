@@ -792,6 +792,7 @@ const EventMessages = new Table(EventMessagesCols, {
 const EventSubscriptionsCols = {
   created_at: column.text,
   event_uuid: column.text,
+  unread: column.integer,
   user_uuid: column.text,
 } satisfies PowerSyncColsFor<"EventSubscriptions">;
 const EventSubscriptions = new Table(EventSubscriptionsCols, {

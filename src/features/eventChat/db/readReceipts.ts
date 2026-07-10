@@ -1,5 +1,6 @@
 import { db } from "@/components/providers/SystemProvider";
 import { expect, typedExecute, typedGetAll } from "@/lib/powersync/typedQuery";
+import { clearEventChatUnread } from "./subscriptions";
 
 /** Prevents overlapping mark-read runs (e.g. scroll retry scheduling twice). */
 const markReadInFlight = new Set<string>();
@@ -7,6 +8,7 @@ const markReadInFlight = new Set<string>();
 /**
  * Marks all messages in an event chat as read for the current user.
  * Idempotent — safe to call multiple times; skips existing (message_id, user_uuid) pairs.
+ * Also clears the subscription-level unread flag.
  */
 export async function markEventMessagesRead(eventUuid: string, userUuid: string) {
   const lockKey = `${eventUuid}:${userUuid}`;
@@ -23,7 +25,10 @@ export async function markEventMessagesRead(eventUuid: string, userUuid: string)
       expect<{ id: string }>(),
     );
 
-    if (messages.length === 0) return;
+    if (messages.length === 0) {
+      await clearEventChatUnread(eventUuid, userUuid);
+      return;
+    }
 
     const messageIds = messages.map((m) => m.id);
 
@@ -71,6 +76,8 @@ export async function markEventMessagesRead(eventUuid: string, userUuid: string)
       );
       existingSet.add(msg.id);
     }
+
+    await clearEventChatUnread(eventUuid, userUuid);
   } finally {
     markReadInFlight.delete(lockKey);
   }

@@ -13,7 +13,8 @@ import {
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { sendEventMessage, updateEventMessage } from "../db/messages";
 import { markEventMessagesRead } from "../db/readReceipts";
-import { subscribeToEvent, unsubscribeFromEvent } from "../db/subscriptions";
+import { leaveEventChat, markEventConversationUnread } from "../db/conversationActions";
+import { subscribeToEvent } from "../db/subscriptions";
 import { useEventMessages } from "../hooks/useEventMessages";
 import { useEventReadReceipts, type EventReadReceipt } from "../hooks/useReadReceipts";
 import { useEventTypingEmitter, useEventTypingIndicators } from "../hooks/useTypingIndicators";
@@ -84,6 +85,7 @@ export function EventInternalChat({
   const [savingEdit, setSavingEdit] = useState(false);
   const [joining, setJoining] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [markingUnread, setMarkingUnread] = useState(false);
 
   const highlightTimeoutRef = useRef<number | null>(null);
 
@@ -404,6 +406,21 @@ export function EventInternalChat({
     userUuid,
   ]);
 
+  const handleMarkUnread = useCallback(async () => {
+    if (!userUuid || markingUnread) return;
+
+    setMarkingUnread(true);
+    try {
+      await markEventConversationUnread(eventUuid, userUuid);
+      createSuccessToast(["Chat marked as unread."]);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      createErrorToast(["Failed to mark chat as unread", message]);
+    } finally {
+      setMarkingUnread(false);
+    }
+  }, [eventUuid, markingUnread, userUuid]);
+
   const handleJoinChat = useCallback(async () => {
     if (!userUuid || joining) return;
 
@@ -430,13 +447,7 @@ export function EventInternalChat({
 
     setLeaving(true);
     try {
-      await unsubscribeFromEvent(eventUuid, userUuid);
-      await sendEventMessage({
-        eventUuid,
-        userUuid,
-        body: `${displayName(userMap.get(userUuid))} left the chat.`,
-        isSystem: true,
-      });
+      await leaveEventChat(eventUuid, userUuid, displayName(userMap.get(userUuid)));
       createSuccessToast(["You left the chat."]);
       setMembersOpen(false);
       if (showConversationActions) {
@@ -478,7 +489,9 @@ export function EventInternalChat({
               canManageMembers={canManageMembers}
               onChatMembers={() => setMembersOpen(true)}
               onLeaveChat={() => void handleLeaveChat()}
+              onMarkUnread={() => void handleMarkUnread()}
               leaveDisabled={leaving}
+              markUnreadDisabled={markingUnread}
             />
           ) : (
             <button

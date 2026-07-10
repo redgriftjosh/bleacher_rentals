@@ -15,6 +15,7 @@ type Props = {
   onLeaveChat?: () => void;
   onMarkUnread?: () => void;
   leaveDisabled?: boolean;
+  markUnreadDisabled?: boolean;
 };
 
 /**
@@ -26,6 +27,7 @@ export function EventChatMenuDropdown({
   onLeaveChat,
   onMarkUnread,
   leaveDisabled = false,
+  markUnreadDisabled = false,
 }: Props) {
   const handleChatMembers = () => {
     window.setTimeout(() => onChatMembers(), 0);
@@ -33,6 +35,10 @@ export function EventChatMenuDropdown({
 
   const handleLeaveChat = () => {
     window.setTimeout(() => onLeaveChat?.(), 0);
+  };
+
+  const handleMarkUnread = () => {
+    window.setTimeout(() => onMarkUnread?.(), 0);
   };
 
   return (
@@ -60,9 +66,9 @@ export function EventChatMenuDropdown({
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => onMarkUnread?.()}>
+        <DropdownMenuItem onSelect={handleMarkUnread} disabled={markUnreadDisabled}>
           <CircleDot />
-          Mark unread
+          {markUnreadDisabled ? "Marking…" : "Mark unread"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

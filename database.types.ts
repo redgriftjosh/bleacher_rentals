@@ -1610,18 +1610,21 @@ export type Database = {
           created_at: string
           event_uuid: string
           id: string
+          unread: boolean
           user_uuid: string
         }
         Insert: {
           created_at?: string
           event_uuid: string
           id?: string
+          unread?: boolean
           user_uuid: string
         }
         Update: {
           created_at?: string
           event_uuid?: string
           id?: string
+          unread?: boolean
           user_uuid?: string
         }
         Relationships: [
