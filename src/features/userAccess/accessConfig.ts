@@ -93,7 +93,6 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
       "/sales-offices",
       "/permissions",
       "/companies-contacts",
-      "/messages",
     ],
     showSidebar: true,
   },
