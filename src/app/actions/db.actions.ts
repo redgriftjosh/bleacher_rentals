@@ -1,6 +1,6 @@
 "use server";
 
-import { pusherServer } from "@/lib/pusher";
+import { pusherServer } from "@/lib/pusher.server";
 import { TableName } from "@/lib/zustandRegistery";
 
 export const updateDataBase = async (tables: TableName[]) => {

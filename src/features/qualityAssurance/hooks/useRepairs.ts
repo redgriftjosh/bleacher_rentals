@@ -37,8 +37,11 @@ type RawRepairRow = {
  * applied we still display all sibling bleachers attached to the matched
  * event by re-querying the full set of bleachers for the matching event ids.
  */
-export function useRepairs(filters: { bleacherUuid?: string | null }): RepairListRow[] {
-  const { bleacherUuid } = filters;
+export function useRepairs(filters: {
+  bleacherUuid?: string | null;
+  showDeleted?: boolean;
+}): RepairListRow[] {
+  const { bleacherUuid, showDeleted = false } = filters;
 
   // Step 1: get the event ids that match the filter (if any).
   const matchingEventsCompiled = useMemo(() => {
@@ -78,7 +81,8 @@ export function useRepairs(filters: { bleacherUuid?: string | null }): RepairLis
         "me.created_at as createdAt",
         "b.id as bleacherUuid",
         "b.bleacher_number as bleacherNumber",
-      ]);
+      ])
+      .where("me.deleted", "=", showDeleted ? 1 : 0);
 
     if (bleacherUuid) {
       if (matchingEventIds.length === 0) {
@@ -90,7 +94,7 @@ export function useRepairs(filters: { bleacherUuid?: string | null }): RepairLis
     }
 
     return q.orderBy("me.event_start", "desc").compile();
-  }, [bleacherUuid, matchingEventIds]);
+  }, [bleacherUuid, matchingEventIds, showDeleted]);
 
   const { data = [] } = useTypedQuery(detailCompiled, expect<RawRepairRow>());
 

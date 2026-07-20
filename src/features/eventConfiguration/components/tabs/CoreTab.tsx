@@ -45,6 +45,7 @@ export const CoreTab = ({ showSetupTeardown, disabled = false }: Props) => {
     disabled,
     accountManagerUserIds,
     inactiveStatusUuid: STATUSES.inactive,
+    existingOwnerId: currentEventStore.originalOwnerUserUuid,
   });
   const ownerOptions = filteredUsers.map((u) => ({
     label: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.email,

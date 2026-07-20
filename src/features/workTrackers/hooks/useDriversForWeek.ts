@@ -1,0 +1,254 @@
+"use client";
+
+import { useMemo } from "react";
+import { DateTime } from "luxon";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import type { DriverWithMeta } from "../db/db";
+
+const NONE = "__none__";
+
+// ---------------------------------------------------------------------------
+// Access (admin / account manager) — reactive replacement for checkUserAccess
+// ---------------------------------------------------------------------------
+
+type AccessRow = { is_admin: number | null; account_manager_id: string | null };
+
+export type WorkTrackerAccess = {
+  isAdmin: boolean;
+  isAccountManager: boolean;
+  accountManagerUuid: string | null;
+};
+
+export function useWorkTrackerAccess(currentUserUuid: string | null): {
+  access: WorkTrackerAccess | null;
+  isLoading: boolean;
+} {
+  const compiled = useMemo(() => {
+    return db
+      .selectFrom("Users as u")
+      .leftJoin("AccountManagers as am", (join) =>
+        join.onRef("am.user_uuid", "=", "u.id").on("am.is_active", "=", 1),
+      )
+      .select(["u.is_admin as is_admin", "am.id as account_manager_id"])
+      .where("u.id", "=", currentUserUuid ?? NONE)
+      .limit(1)
+      .compile();
+  }, [currentUserUuid]);
+
+  const { data, isLoading } = useTypedQuery(compiled, expect<AccessRow>());
+
+  const access = useMemo<WorkTrackerAccess | null>(() => {
+    if (!currentUserUuid) return null;
+    const row = data?.[0];
+    if (!row) return { isAdmin: false, isAccountManager: false, accountManagerUuid: null };
+    const isAccountManager = !!row.account_manager_id;
+    return {
+      isAdmin: !!row.is_admin,
+      isAccountManager,
+      accountManagerUuid: isAccountManager ? row.account_manager_id : null,
+    };
+  }, [currentUserUuid, data]);
+
+  return { access, isLoading };
+}
+
+// ---------------------------------------------------------------------------
+// Drivers for week — reactive replacement for fetchDriversForWeek
+// ---------------------------------------------------------------------------
+
+type DriverRow = {
+  driver_uuid: string;
+  pay_currency: string | null;
+  pay_per_unit: string | null;
+  tax: number | null;
+  driver_street: string | null;
+  qbo_connection_uuid: string | null;
+  user_id: string;
+  first_name: string | null;
+  last_name: string | null;
+};
+
+type TrackerAggRow = {
+  driver_uuid: string | null;
+  pay_cents: number | null;
+  distance_meters: number | null;
+  drive_minutes: number | null;
+  dropoff_street: string | null;
+};
+
+type GroupRow = {
+  id: string;
+  driver_uuid: string | null;
+  status: string | null;
+  qbo_bill_id: string | null;
+  week_start: string | null;
+  week_end: string | null;
+};
+
+function deriveRegion(street: string | null | undefined): "US" | "CAN" | null {
+  if (!street) return null;
+  const country = street.split(",").pop()?.trim();
+  return country === "USA" ? "US" : country === "Canada" ? "CAN" : null;
+}
+
+function isUsaAddress(street: string | null): boolean {
+  if (!street) return false;
+  return /usa|united states/i.test(street);
+}
+
+export function useDriversForWeek(
+  startDate: string,
+  showAllDrivers: boolean,
+  accountManagerUuid: string | null,
+  enabled: boolean,
+): { drivers: DriverWithMeta[]; isLoading: boolean } {
+  const driversCompiled = useMemo(() => {
+    let q = db
+      .selectFrom("Drivers as d")
+      .innerJoin("Users as u", "u.id", "d.user_uuid")
+      .leftJoin("Addresses as a", "a.id", "d.address_uuid")
+      .leftJoin("Vendors as v", "v.id", "d.vendor_uuid")
+      .select([
+        "d.id as driver_uuid",
+        "d.pay_currency as pay_currency",
+        "d.pay_per_unit as pay_per_unit",
+        "d.tax as tax",
+        "a.street as driver_street",
+        "v.qbo_connection_uuid as qbo_connection_uuid",
+        "u.id as user_id",
+        "u.first_name as first_name",
+        "u.last_name as last_name",
+      ])
+      .where("d.is_active", "=", 1);
+
+    if (!showAllDrivers) {
+      q = q.where("d.account_manager_uuid", "=", accountManagerUuid ?? NONE);
+    } else if (!enabled) {
+      // keep the query inert until access is resolved
+      q = q.where("d.id", "=", NONE);
+    }
+
+    return q.compile();
+  }, [showAllDrivers, accountManagerUuid, enabled]);
+
+  const { data: driverRows, isLoading: driversLoading } = useTypedQuery(
+    driversCompiled,
+    expect<DriverRow>(),
+  );
+
+  const trackersCompiled = useMemo(() => {
+    const endDate = DateTime.fromISO(startDate).plus({ days: 7 }).toISODate() ?? startDate;
+    return db
+      .selectFrom("WorkTrackers as wt")
+      .leftJoin("Addresses as dropoff", "dropoff.id", "wt.dropoff_address_uuid")
+      .select([
+        "wt.driver_uuid as driver_uuid",
+        "wt.pay_cents as pay_cents",
+        "wt.distance_meters as distance_meters",
+        "wt.drive_minutes as drive_minutes",
+        "dropoff.street as dropoff_street",
+      ])
+      .where("wt.date", ">=", startDate)
+      .where("wt.date", "<", endDate)
+      .compile();
+  }, [startDate]);
+
+  const { data: trackerRows, isLoading: trackersLoading } = useTypedQuery(
+    trackersCompiled,
+    expect<TrackerAggRow>(),
+  );
+
+  const groupsCompiled = useMemo(() => {
+    const weekEnd = DateTime.fromISO(startDate).plus({ days: 6 }).toISODate() ?? startDate;
+    return db
+      .selectFrom("WorkTrackerGroups as g")
+      .select([
+        "g.id as id",
+        "g.driver_uuid as driver_uuid",
+        "g.status as status",
+        "g.qbo_bill_id as qbo_bill_id",
+        "g.week_start as week_start",
+        "g.week_end as week_end",
+      ])
+      .where("g.week_start", "=", startDate)
+      .where("g.week_end", "=", weekEnd)
+      .compile();
+  }, [startDate]);
+
+  const { data: groupRows, isLoading: groupsLoading } = useTypedQuery(
+    groupsCompiled,
+    expect<GroupRow>(),
+  );
+
+  const drivers = useMemo<DriverWithMeta[]>(() => {
+    if (!enabled || !driverRows) return [];
+
+    const tripCounts = new Map<string, number>();
+    const payCents = new Map<string, number>();
+    const distanceMeters = new Map<string, number>();
+    const driveMinutes = new Map<string, number>();
+    const usaDropoffDriverIds = new Set<string>();
+    for (const wt of trackerRows ?? []) {
+      if (!wt.driver_uuid) continue;
+      tripCounts.set(wt.driver_uuid, (tripCounts.get(wt.driver_uuid) ?? 0) + 1);
+      payCents.set(wt.driver_uuid, (payCents.get(wt.driver_uuid) ?? 0) + (wt.pay_cents ?? 0));
+      distanceMeters.set(
+        wt.driver_uuid,
+        (distanceMeters.get(wt.driver_uuid) ?? 0) + (wt.distance_meters ?? 0),
+      );
+      driveMinutes.set(
+        wt.driver_uuid,
+        (driveMinutes.get(wt.driver_uuid) ?? 0) + (wt.drive_minutes ?? 0),
+      );
+      if (isUsaAddress(wt.dropoff_street)) usaDropoffDriverIds.add(wt.driver_uuid);
+    }
+
+    const groupsByDriver = new Map<string, GroupRow>();
+    for (const g of groupRows ?? []) {
+      if (g.driver_uuid) groupsByDriver.set(g.driver_uuid, g);
+    }
+
+    const result = driverRows.map((driver) => {
+      const region = deriveRegion(driver.driver_street);
+      const group = groupsByDriver.get(driver.driver_uuid);
+      return {
+        id: driver.user_id,
+        first_name: driver.first_name,
+        last_name: driver.last_name,
+        driver_uuid: driver.driver_uuid,
+        tripCount: tripCounts.get(driver.driver_uuid) ?? 0,
+        totalPayCents: payCents.get(driver.driver_uuid) ?? 0,
+        payCurrency: driver.pay_currency ?? "USD",
+        payPerUnit: driver.pay_per_unit ?? "KM",
+        totalDistanceMeters: distanceMeters.get(driver.driver_uuid) ?? 0,
+        totalDriveMinutes: driveMinutes.get(driver.driver_uuid) ?? 0,
+        hasCrossBorderTrips: region === "CAN" && usaDropoffDriverIds.has(driver.driver_uuid),
+        region,
+        tax: driver.tax ?? 0,
+        qbo_connection_uuid: driver.qbo_connection_uuid ?? null,
+        workTrackerGroup: group
+          ? {
+              id: group.id,
+              status: group.status,
+              qbo_bill_id: group.qbo_bill_id,
+              week_start: group.week_start,
+              week_end: group.week_end,
+            }
+          : null,
+      } as unknown as DriverWithMeta;
+    });
+
+    result.sort((a, b) => {
+      if (b.tripCount !== a.tripCount) return b.tripCount - a.tripCount;
+      return (a.first_name ?? "").localeCompare(b.first_name ?? "");
+    });
+
+    return result;
+  }, [enabled, driverRows, trackerRows, groupRows]);
+
+  return {
+    drivers,
+    isLoading: driversLoading || trackersLoading || groupsLoading,
+  };
+}

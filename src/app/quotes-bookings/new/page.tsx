@@ -2,8 +2,11 @@
 
 import { useEffect } from "react";
 import { CreateQuoteForm } from "@/features/quotesAndBookings/components/createQuote/CreateQuoteForm";
-import { useCreateQuoteStore } from "@/features/quotesAndBookings/state/useCreateQuoteStore";
-import { hasUnsavedChanges } from "@/features/quotesAndBookings/state/useCreateQuoteStore";
+import {
+  useCreateQuoteStore,
+  hasUnsavedChanges,
+  captureQuoteBaseline,
+} from "@/features/quotesAndBookings/state/useCreateQuoteStore";
 
 export default function NewQuotePage() {
   const resetForm = useCreateQuoteStore((s) => s.resetForm);
@@ -13,6 +16,9 @@ export default function NewQuotePage() {
     if (editingEventId) {
       resetForm();
     }
+    // Snapshot the starting state (fresh form or a restored draft) so the guard
+    // only fires on changes made after the page opened.
+    captureQuoteBaseline();
   }, []);
 
   useEffect(() => {

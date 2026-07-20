@@ -120,6 +120,58 @@ describe("canEditOwnedEntity (Events / MaintenanceEvents)", () => {
   it("non-AM without zone info can edit (backwards compat)", () => {
     expect(canEditOwnedEntity({ isAdmin: false, isNew: false })).toBe(true);
   });
+
+  describe("part 3 — event with bleacher in inaccessible zone", () => {
+    const base = {
+      isAdmin: false,
+      isNew: false,
+      isAccountManager: true,
+      accountManagerZoneIds: ["zone-a"],
+      leadZoneIds: ["zone-a"],
+      userId: "me",
+    };
+
+    it("admin can always edit despite inaccessible bleacher", () => {
+      expect(
+        canEditOwnedEntity({
+          ...base,
+          isAdmin: true,
+          createdByUserId: "other",
+          eventBleacherZoneIds: ["zone-z"],
+        }),
+      ).toBe(true);
+    });
+
+    it("non-owner blocked when a bleacher is in a zone they can't access", () => {
+      expect(
+        canEditOwnedEntity({
+          ...base,
+          createdByUserId: "other",
+          eventBleacherZoneIds: ["zone-a", "zone-z"],
+        }),
+      ).toBe(false);
+    });
+
+    it("owner can still edit even with inaccessible bleacher", () => {
+      expect(
+        canEditOwnedEntity({
+          ...base,
+          createdByUserId: "me",
+          eventBleacherZoneIds: ["zone-z"],
+        }),
+      ).toBe(true);
+    });
+
+    it("lead can edit when all bleachers are in accessible zones", () => {
+      expect(
+        canEditOwnedEntity({
+          ...base,
+          createdByUserId: "other",
+          eventBleacherZoneIds: ["zone-a"],
+        }),
+      ).toBe(true);
+    });
+  });
 });
 
 describe("canSendQuote", () => {

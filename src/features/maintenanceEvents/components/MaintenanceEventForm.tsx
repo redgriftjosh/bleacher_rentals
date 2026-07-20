@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { AlertTriangle } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { DamageReportModal, EditDamageReport } from "@/app/damage-reports/DamageReportModal";
 import { useMaintenanceEventStore } from "../state/useMaintenanceEventStore";
 import { createMaintenanceEvent } from "../db/createMaintenanceEvent";
 import { updateMaintenanceEvent } from "../db/updateMaintenanceEvent";
@@ -44,6 +47,156 @@ export const MaintenanceEventForm = ({ onCancel }: MaintenanceEventFormProps) =>
       })
     : false;
 
+  // ── Damage report lookup per bleacher (moved out of the Core tab) ─────────
+  // For each selected bleacher, look backwards from eventStart to find a damage
+  // report (via work tracker inspection) or a maintenance event. If a
+  // maintenance event is found first → no damage report. Otherwise show it.
+  const queryClient = useQueryClient();
+  const bleacherUuids = store.bleacherUuids;
+  const eventStart = store.eventStart;
+  const [viewingDamageReport, setViewingDamageReport] = useState<EditDamageReport | null>(null);
+
+  type DamageReportRow = EditDamageReport & {
+    work_tracker_date: string | null;
+  };
+
+  const { data: damageReportLookup = new Map() } = useQuery({
+    queryKey: ["maintenance-damage-lookup", bleacherUuids, eventStart],
+    queryFn: async () => {
+      if (!bleacherUuids.length || !eventStart) return new Map<string, DamageReportRow | "none">();
+
+      // 1. Fetch damage reports for selected bleachers (including resolved)
+      //    with work tracker date resolved through the inspection link
+      const { data: damageReports } = await supabase
+        .from("DamageReports")
+        .select(
+          `
+          id,
+          bleacher_uuid,
+          inspection_uuid,
+          is_safe_to_sit,
+          is_safe_to_haul,
+          seat_damage,
+          haul_damage,
+          note,
+          resolved_at,
+          maintenance_event_uuid,
+          bleacher:Bleachers!DamageReports_bleacher_uuid_fkey(bleacher_number),
+          photos:DamageReportPhotos!DamageReportPhotos_damage_report_uuid_fkey(id, photo_path)
+        `,
+        )
+        .in("bleacher_uuid", bleacherUuids)
+        .eq("deleted", false);
+
+      // 2. For each damage report, find the work tracker date via inspection UUID
+      const inspectionUuids = (damageReports ?? []).map((dr) => dr.inspection_uuid);
+      let wtDateMap = new Map<string, string | null>(); // inspection_uuid → date
+
+      if (inspectionUuids.length > 0) {
+        // Find work trackers whose pre or post inspection matches
+        const { data: workTrackers } = await supabase
+          .from("WorkTrackers")
+          .select("id, date, pre_inspection_uuid, post_inspection_uuid")
+          .or(
+            inspectionUuids
+              .map((uuid) => `pre_inspection_uuid.eq.${uuid},post_inspection_uuid.eq.${uuid}`)
+              .join(","),
+          );
+
+        for (const wt of workTrackers ?? []) {
+          if (wt.pre_inspection_uuid && inspectionUuids.includes(wt.pre_inspection_uuid)) {
+            wtDateMap.set(wt.pre_inspection_uuid, wt.date);
+          }
+          if (wt.post_inspection_uuid && inspectionUuids.includes(wt.post_inspection_uuid)) {
+            wtDateMap.set(wt.post_inspection_uuid, wt.date);
+          }
+        }
+      }
+
+      // 3. Fetch maintenance events for selected bleachers before eventStart
+      const { data: maintEvents } = await supabase
+        .from("BleacherMaintEvents")
+        .select(
+          `
+          bleacher_uuid,
+          maintenance_event:MaintenanceEvents!BleacherMaintEvents_maintenance_event_uuid_fkey(
+            id,
+            event_start,
+            event_end
+          )
+        `,
+        )
+        .in("bleacher_uuid", bleacherUuids);
+
+      // Build map: bleacher_uuid → most recent maintenance event end before eventStart
+      const maintEndByBleacher = new Map<string, string>();
+      for (const bme of maintEvents ?? []) {
+        const me = bme.maintenance_event as any;
+        if (!me?.event_end || me.event_end >= eventStart) continue;
+        // Exclude the current maintenance event being edited
+        if (store.maintenanceEventUuid && me.id === store.maintenanceEventUuid) continue;
+        const prev = maintEndByBleacher.get(bme.bleacher_uuid);
+        if (!prev || me.event_end > prev) {
+          maintEndByBleacher.set(bme.bleacher_uuid, me.event_end);
+        }
+      }
+
+      // 4. For each bleacher, determine damage report or "none"
+      const result = new Map<string, DamageReportRow | "none">();
+
+      for (const bUuid of bleacherUuids) {
+        const mostRecentMaintEnd = maintEndByBleacher.get(bUuid) ?? null;
+
+        // Find the most recent damage report (by work tracker date) before eventStart
+        const bleacherReports = (damageReports ?? [])
+          .filter((dr) => dr.bleacher_uuid === bUuid)
+          .map((dr) => ({
+            ...dr,
+            work_tracker_date: dr.inspection_uuid
+              ? (wtDateMap.get(dr.inspection_uuid) ?? null)
+              : null,
+          }))
+          .filter((dr) => dr.work_tracker_date && dr.work_tracker_date < eventStart)
+          .sort((a, b) => (b.work_tracker_date ?? "").localeCompare(a.work_tracker_date ?? ""));
+
+        const bestReport = bleacherReports[0] ?? null;
+
+        if (!bestReport) {
+          result.set(bUuid, "none");
+          continue;
+        }
+
+        // If the most recent maintenance event is after the damage report's
+        // work tracker date, the damage was already addressed
+        if (
+          mostRecentMaintEnd &&
+          bestReport.work_tracker_date &&
+          mostRecentMaintEnd > bestReport.work_tracker_date
+        ) {
+          result.set(bUuid, "none");
+        } else {
+          result.set(bUuid, bestReport as DamageReportRow);
+        }
+      }
+
+      return result;
+    },
+    enabled: !!supabase && bleacherUuids.length > 0 && !!eventStart,
+  });
+
+  // Build bleacher number map for display
+  const { data: bleacherNumbers = new Map() } = useQuery({
+    queryKey: ["bleacher-numbers-for-maintenance", bleacherUuids],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("Bleachers")
+        .select("id, bleacher_number")
+        .in("id", bleacherUuids);
+      return new Map((data ?? []).map((b) => [b.id, b.bleacher_number]));
+    },
+    enabled: !!supabase && bleacherUuids.length > 0,
+  });
+
   const handleCreate = async () => {
     setLoading(true);
     try {
@@ -75,7 +228,7 @@ export const MaintenanceEventForm = ({ onCancel }: MaintenanceEventFormProps) =>
     try {
       const state = useMaintenanceEventStore.getState();
       if (!state.maintenanceEventUuid) return;
-      await deleteMaintenanceEvent(state.maintenanceEventUuid, supabase);
+      await deleteMaintenanceEvent(state.maintenanceEventUuid);
       onCancel();
     } catch {
       // Error toasts handled inside deleteMaintenanceEvent
@@ -99,6 +252,27 @@ export const MaintenanceEventForm = ({ onCancel }: MaintenanceEventFormProps) =>
               {tab}
             </button>
           ))}
+        </div>
+
+        {/* Damage report links (moved here from the Core tab) */}
+        <div className="flex flex-wrap items-center gap-2">
+          {bleacherUuids.map((bUuid) => {
+            const lookup = damageReportLookup.get(bUuid);
+            if (!lookup || lookup === "none") return null;
+            const bNum = bleacherNumbers.get(bUuid);
+            const label = bNum != null ? `#${bNum}` : "Bleacher";
+            return (
+              <button
+                key={bUuid}
+                type="button"
+                onClick={() => setViewingDamageReport(lookup)}
+                className="mb-2 flex cursor-pointer items-center gap-1.5 text-xs font-medium text-red-700 hover:text-red-900 hover:underline"
+              >
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-500" />
+                <span>{label}: View Damage Report</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Spacer */}
@@ -212,6 +386,21 @@ export const MaintenanceEventForm = ({ onCancel }: MaintenanceEventFormProps) =>
         {activeTab === "Core" && <MaintenanceCoreTab disabled={!canEdit} />}
         {activeTab === "Files" && <MaintenanceFilesTab />}
       </fieldset>
+
+      {/* Damage report edit modal */}
+      {viewingDamageReport && (
+        <DamageReportModal
+          open={!!viewingDamageReport}
+          onOpenChange={(open) => {
+            if (!open) setViewingDamageReport(null);
+          }}
+          onSaved={() => {
+            setViewingDamageReport(null);
+            queryClient.invalidateQueries({ queryKey: ["maintenance-damage-lookup"] });
+          }}
+          editReport={viewingDamageReport}
+        />
+      )}
     </div>
   );
 };
