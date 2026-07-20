@@ -8,6 +8,9 @@
  * - Everyone else (e.g. viewer): show only the current user
  * - When `inactiveStatusUuid` is provided, deactivated users are excluded from
  *   the selectable list (but never in read-only mode, per above)
+ * - Part 2: a non-admin cannot reassign an event already owned by another
+ *   account manager to themselves. When `existingOwnerId` is set and is not the
+ *   current user, the current user is removed from the selectable options.
  */
 export function filterOwnerOptions<
   T extends { id: string; is_admin?: boolean | number | null; status_uuid?: string | null },
@@ -18,9 +21,18 @@ export function filterOwnerOptions<
   disabled: boolean;
   accountManagerUserIds: Set<string>;
   inactiveStatusUuid?: string | null;
+  /** Persisted owner of the event being edited (null for new events). */
+  existingOwnerId?: string | null;
 }): T[] {
-  const { users, isAdmin, currentUserId, disabled, accountManagerUserIds, inactiveStatusUuid } =
-    params;
+  const {
+    users,
+    isAdmin,
+    currentUserId,
+    disabled,
+    accountManagerUserIds,
+    inactiveStatusUuid,
+    existingOwnerId = null,
+  } = params;
 
   if (disabled) return users;
 
@@ -30,8 +42,19 @@ export function filterOwnerOptions<
 
   const isAccountManager = currentUserId != null && accountManagerUserIds.has(currentUserId);
 
+  // Part 2: non-admin cannot grab ownership of another AM's event.
+  const cannotReassignToSelf =
+    !isAdmin &&
+    currentUserId != null &&
+    existingOwnerId != null &&
+    existingOwnerId !== currentUserId;
+
   if (isAdmin || isAccountManager) {
-    return selectable.filter((u) => !!u.is_admin || accountManagerUserIds.has(u.id));
+    return selectable.filter(
+      (u) =>
+        (!!u.is_admin || accountManagerUserIds.has(u.id)) &&
+        !(cannotReassignToSelf && u.id === currentUserId),
+    );
   }
 
   return selectable.filter((u) => u.id === currentUserId);
