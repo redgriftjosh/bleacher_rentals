@@ -508,6 +508,7 @@ const MaintenanceEventsCols = {
   notes: column.text,
   created_by_user_uuid: column.text,
   created_at: column.text,
+  deleted: column.integer,
 } satisfies PowerSyncColsFor<"MaintenanceEvents">;
 const MaintenanceEvents = new Table(MaintenanceEventsCols, {
   indexes: { address_uuid: ["address_uuid"], created_by_user_uuid: ["created_by_user_uuid"] },
