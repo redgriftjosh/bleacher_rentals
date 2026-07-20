@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import {
   createStorageLocation,
@@ -20,7 +15,8 @@ import { createErrorToast } from "@/components/toasts/ErrorToast";
 type Props = {
   open: boolean;
   onClose: () => void;
-  onSaved: () => void;
+  /** Optional — the page list is reactive, so a manual refetch is not required. */
+  onSaved?: () => void;
   /** When set, the modal edits this location; otherwise it creates a new one. */
   editing?: StorageLocationRow | null;
 };
@@ -86,7 +82,7 @@ export function StorageLocationModal({ open, onClose, onSaved, editing }: Props)
         createSuccessToast([`Storage location "${name}" created.`]);
       }
       resetAndClose();
-      onSaved();
+      onSaved?.();
     } catch (e) {
       createErrorToast(["Failed to save storage location.", String(e)]);
     } finally {

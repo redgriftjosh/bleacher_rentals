@@ -165,6 +165,7 @@ export async function loadEventForModal(
     setField("hslHue", eventData.hsl_hue);
     setField("goodshuffleUrl", eventData.goodshuffle_url ?? null);
     setField("ownerUserUuid", eventData.created_by_user_uuid ?? null);
+    setField("originalOwnerUserUuid", eventData.created_by_user_uuid ?? null);
     setField(
       "bookedAt",
       eventData.booked_at ? new Date(eventData.booked_at).toLocaleDateString("en-CA") : null,

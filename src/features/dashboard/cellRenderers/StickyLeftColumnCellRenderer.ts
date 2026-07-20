@@ -269,7 +269,11 @@ export class StickyLeftColumnCellRenderer implements ICellRenderer {
         const st = useCurrentEventStore.getState();
         if (!st.isFormExpanded) return;
 
-        if (perms.isAccountManager && !perms.isAdmin) {
+        // Part 3: AM may unassign a bleacher they don't own, but may not assign
+        // one. Only gate the assign direction (bleacher not yet on the event).
+        const isAssigning = !st.bleacherUuids.includes(id);
+
+        if (perms.isAccountManager && !perms.isAdmin && isAssigning) {
           const allBleachers = useDashboardBleachersStore.getState().data;
           const bleacher = allBleachers.find((b) => b.bleacherUuid === id && !b.isSubrentalRow);
           const ownedByAM = isBleacherOwnedByAM({

@@ -27,7 +27,7 @@ type WorkTrackerTriageRow = WtDbRow & {
 export async function triage(
   table: TriageTable,
   row: { id: string; [key: string]: any },
-  supabase: SupabaseClient<Database>,
+  supabase?: SupabaseClient<Database>,
 ): Promise<void> {
   switch (table) {
     case "Events":
@@ -47,7 +47,7 @@ export async function triage(
 
 async function triageEventSaved(
   eventUuid: string,
-  supabase: SupabaseClient<Database>,
+  supabase?: SupabaseClient<Database>,
 ): Promise<void> {
   console.log("[QUOTE_TRIAGE] triageEventSaved called for", eventUuid);
   // Soft-delete path: if the event is flagged deleted, handle it as a delete triage.
@@ -61,7 +61,10 @@ async function triageEventSaved(
     expect<EventDeletedRow>(),
   );
   const event = eventRows[0];
-  console.log("[QUOTE_TRIAGE] event lookup result:", event ? `deleted=${event.deleted}` : "NOT FOUND");
+  console.log(
+    "[QUOTE_TRIAGE] event lookup result:",
+    event ? `deleted=${event.deleted}` : "NOT FOUND",
+  );
   if (!event) return;
   if (event.deleted === 1) {
     await triageEventDeleted(eventUuid, supabase);
@@ -78,11 +81,21 @@ async function triageEventSaved(
     expect<BeRow>(),
   );
   const bleacherUuids = [...new Set(bes.map((be) => be.bleacher_uuid).filter(Boolean))] as string[];
-  console.log("[QUOTE_TRIAGE] bleacherEvents found:", bes.length, "unique bleachers:", bleacherUuids.length);
+  console.log(
+    "[QUOTE_TRIAGE] bleacherEvents found:",
+    bes.length,
+    "unique bleachers:",
+    bleacherUuids.length,
+  );
 
   // 2. Run event-level alerts on this event
   const eventDefs = getDefinitionsForEntity("event");
-  console.log("[QUOTE_TRIAGE] running", eventDefs.length, "event-level defs:", eventDefs.map(d => d.title));
+  console.log(
+    "[QUOTE_TRIAGE] running",
+    eventDefs.length,
+    "event-level defs:",
+    eventDefs.map((d) => d.title),
+  );
   for (const def of eventDefs) {
     await syncAlert(def, eventUuid, supabase);
   }
@@ -142,7 +155,7 @@ async function triageEventSaved(
 
 async function triageEventDeleted(
   eventUuid: string,
-  supabase: SupabaseClient<Database>,
+  supabase?: SupabaseClient<Database>,
 ): Promise<void> {
   // Find bleacher_events for this event before they get cascade-deleted
   const bes = await typedGetAll(
@@ -207,7 +220,7 @@ async function triageEventDeleted(
 async function triageWorkTrackerSaved(
   workTrackerUuid: string,
   previousBleacherUuid: string | null,
-  supabase: SupabaseClient<Database>,
+  supabase?: SupabaseClient<Database>,
 ): Promise<void> {
   const rows = await typedGetAll(
     db
@@ -228,7 +241,9 @@ async function triageWorkTrackerSaved(
   }
 
   // 2. Find upcoming bleacher_events for this bleacher (ripple effect on transportation)
-  const bleacherUuids = [...new Set([previousBleacherUuid, wt.bleacher_uuid].filter(Boolean))] as string[];
+  const bleacherUuids = [
+    ...new Set([previousBleacherUuid, wt.bleacher_uuid].filter(Boolean)),
+  ] as string[];
   if (bleacherUuids.length > 0) {
     const beDefs = getDefinitionsForEntity("bleacher_event");
     const relatedBEs = await typedGetAll(
@@ -254,7 +269,7 @@ async function triageWorkTrackerSaved(
 async function triageWorkTrackerDeleted(
   workTrackerUuid: string,
   bleacherUuid: string | null,
-  supabase: SupabaseClient<Database>,
+  supabase?: SupabaseClient<Database>,
 ): Promise<void> {
   await deleteAllAlertsForEntity(workTrackerUuid);
 

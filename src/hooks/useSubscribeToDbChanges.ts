@@ -1,4 +1,4 @@
-import { pusherClient } from "@/lib/pusher";
+import { pusherClient } from "@/lib/pusher.client";
 import { setStaleByTable } from "@/lib/zustandRegistery";
 import { useEffect } from "react";
 

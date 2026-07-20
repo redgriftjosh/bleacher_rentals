@@ -54,6 +54,8 @@ export type CreateQuoteState = {
 
   // Payment
   paymentMethod: PaymentMethod;
+  // Empty until the manager explicitly saves a schedule in the Edit Payment
+  // Schedule modal — the schedule is optional. Non-empty = a committed schedule.
   paymentInstallments: PaymentInstallment[];
 
   // Notes
@@ -194,18 +196,25 @@ const TRACKED_KEYS: (keyof CreateQuoteState)[] = [
   "termsDocumentId",
 ];
 
+/** Deep-ish snapshot of just the tracked fields, used for dirty comparison. */
+function trackedSnapshot(state: CreateQuoteState): string {
+  const subset: Record<string, unknown> = {};
+  for (const key of TRACKED_KEYS) subset[key] = state[key];
+  return JSON.stringify(subset);
+}
+
+// Baseline the form is compared against to detect unsaved changes. Captured when
+// a page finishes initializing (new = fresh/restored draft, edit = loaded quote)
+// so an untouched edit page is not reported as dirty. Falls back to initialState.
+let savedBaseline: string | null = null;
+
+/** Record the current form state as the clean baseline. */
+export function captureQuoteBaseline(): void {
+  savedBaseline = trackedSnapshot(useCreateQuoteStore.getState());
+}
+
 export function hasUnsavedChanges(): boolean {
-  const state = useCreateQuoteStore.getState();
-  for (const key of TRACKED_KEYS) {
-    const current = state[key];
-    const initial = initialState[key];
-    if (typeof current === "string" && typeof initial === "string") {
-      if (current !== initial) return true;
-    } else if (Array.isArray(current) && Array.isArray(initial)) {
-      if (current.length !== initial.length) return true;
-    } else if (current !== initial) {
-      return true;
-    }
-  }
-  return false;
+  const current = trackedSnapshot(useCreateQuoteStore.getState());
+  const baseline = savedBaseline ?? trackedSnapshot(initialState);
+  return current !== baseline;
 }

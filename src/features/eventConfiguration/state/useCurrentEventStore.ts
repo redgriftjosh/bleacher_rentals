@@ -22,6 +22,10 @@ export type CurrentEventState = {
   eventUuid: string | null;
   // User who created/owns the event (will default to current logged in user on open)
   ownerUserUuid: string | null;
+  // Persisted owner (created_by_user_uuid) at load time. Null for new events.
+  // Used by permission gates so live edits to ownerUserUuid don't change who
+  // the event "belongs to". Set only by loaders, never by the Owner dropdown.
+  originalOwnerUserUuid: string | null;
   eventName: string;
   addressData: AddressData | null;
   seats: number | null;
@@ -76,6 +80,7 @@ export type CurrentEventStore = CurrentEventState & {
 const initialState: CurrentEventState = {
   eventUuid: null,
   ownerUserUuid: null,
+  originalOwnerUserUuid: null,
   eventName: "",
   addressData: null,
   seats: 0,

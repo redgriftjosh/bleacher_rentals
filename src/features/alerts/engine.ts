@@ -33,7 +33,11 @@ export async function syncAlertsForEntity(
     existing = await typedGetAll(
       db
         .selectFrom("Alerts as a")
-        .select(["a.id as id", "a.message as message", "a.entity_description as entity_description"])
+        .select([
+          "a.id as id",
+          "a.message as message",
+          "a.entity_description as entity_description",
+        ])
         .where("a.entity_uuid", "=", entityUuid)
         .where("a.entity_type", "=", entityType)
         .where("a.title", "=", title)
@@ -56,12 +60,8 @@ export async function syncAlertsForEntity(
   });
 
   for (const alert of toDelete) {
-    await typedExecute(
-      db.deleteFrom("UserAlerts").where("alert_uuid", "=", alert.id).compile(),
-    );
-    await typedExecute(
-      db.deleteFrom("Alerts").where("id", "=", alert.id).compile(),
-    );
+    await typedExecute(db.deleteFrom("UserAlerts").where("alert_uuid", "=", alert.id).compile());
+    await typedExecute(db.deleteFrom("Alerts").where("id", "=", alert.id).compile());
   }
 
   for (const alert of toUpdate) {
@@ -109,10 +109,7 @@ export async function syncAlertsForEntity(
 /**
  * Deletes all alerts (and their UserAlerts) for a specific entity+title.
  */
-export async function deleteAlertsForEntity(
-  title: string,
-  entityUuid: string,
-): Promise<void> {
+export async function deleteAlertsForEntity(title: string, entityUuid: string): Promise<void> {
   let rows: IdRow[];
   try {
     rows = await typedGetAll(
@@ -130,12 +127,8 @@ export async function deleteAlertsForEntity(
   }
 
   for (const row of rows) {
-    await typedExecute(
-      db.deleteFrom("UserAlerts").where("alert_uuid", "=", row.id).compile(),
-    );
-    await typedExecute(
-      db.deleteFrom("Alerts").where("id", "=", row.id).compile(),
-    );
+    await typedExecute(db.deleteFrom("UserAlerts").where("alert_uuid", "=", row.id).compile());
+    await typedExecute(db.deleteFrom("Alerts").where("id", "=", row.id).compile());
   }
 }
 
@@ -160,12 +153,8 @@ export async function deleteAllAlertsForEntity(entityUuid: string): Promise<void
   }
 
   for (const row of rows) {
-    await typedExecute(
-      db.deleteFrom("UserAlerts").where("alert_uuid", "=", row.id).compile(),
-    );
-    await typedExecute(
-      db.deleteFrom("Alerts").where("id", "=", row.id).compile(),
-    );
+    await typedExecute(db.deleteFrom("UserAlerts").where("alert_uuid", "=", row.id).compile());
+    await typedExecute(db.deleteFrom("Alerts").where("id", "=", row.id).compile());
   }
 }
 
@@ -179,11 +168,14 @@ export async function deleteAllAlertsForEntity(entityUuid: string): Promise<void
 export async function syncAlert(
   definition: AlertDefinition,
   entityUuid: string,
-  supabase: SupabaseClient<Database>,
+  supabase?: SupabaseClient<Database>,
 ): Promise<void> {
   console.log(`[QUOTE_TRIAGE] syncAlert: evaluating "${definition.title}" for ${entityUuid}`);
   const result = await definition.evaluate(entityUuid, supabase);
-  console.log(`[QUOTE_TRIAGE] syncAlert: "${definition.title}" result:`, result ? `message="${result.message}"` : "null (no alert)");
+  console.log(
+    `[QUOTE_TRIAGE] syncAlert: "${definition.title}" result:`,
+    result ? `message="${result.message}"` : "null (no alert)",
+  );
   const alerts: AlertPayload[] = result
     ? [
         {
@@ -196,7 +188,10 @@ export async function syncAlert(
       ]
     : [];
   const recipients = result ? await definition.recipients(entityUuid, supabase) : [];
-  console.log(`[QUOTE_TRIAGE] syncAlert: "${definition.title}" alerts=${alerts.length}, recipients=${recipients.length}`, recipients);
+  console.log(
+    `[QUOTE_TRIAGE] syncAlert: "${definition.title}" alerts=${alerts.length}, recipients=${recipients.length}`,
+    recipients,
+  );
   await syncAlertsForEntity(
     definition.title,
     entityUuid,

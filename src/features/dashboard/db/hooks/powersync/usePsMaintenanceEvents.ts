@@ -21,6 +21,7 @@ const compiled = db
     "me.cost_cents",
     "me.address_uuid",
   ])
+  .where("me.deleted", "=", 0)
   .compile();
 
 export function usePsMaintenanceEvents() {
