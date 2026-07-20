@@ -1,31 +1,13 @@
 "use client";
 
-import { fetchAllWorkTrackerWeeks } from "../db/db";
-import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { DateTime } from "luxon";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { useAllWorkTrackerWeeks } from "../hooks/useAllWorkTrackerWeeks";
 
 export function AllWeeksList() {
   const router = useRouter();
-  const supabase = useClerkSupabaseClient();
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["all-weeks"],
-    queryFn: async () => {
-      return fetchAllWorkTrackerWeeks(supabase);
-    },
-  });
-
-  if (error) {
-    return (
-      <tbody className="p-4">
-        <tr>
-          <td>Uh Oh, Something went wrong... 😬</td>
-        </tr>
-      </tbody>
-    );
-  }
+  const { weeks: data, isLoading } = useAllWorkTrackerWeeks();
 
   if (isLoading) {
     return (

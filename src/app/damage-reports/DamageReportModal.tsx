@@ -18,7 +18,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 const PHOTO_BUCKET = "damage-report-photos";
@@ -156,9 +163,7 @@ export function DamageReportModal({
     enabled: !!supabase && open,
   });
 
-  const resolvedBleacherUuid = isEditing
-    ? editReport.bleacher_uuid
-    : selectedBleacherUuid || null;
+  const resolvedBleacherUuid = isEditing ? editReport.bleacher_uuid : selectedBleacherUuid || null;
 
   const getPhotoUrl = (path: string) => {
     const { data } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path);
@@ -360,7 +365,7 @@ export function DamageReportModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto z-[1100]">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Damage Report" : "Create Damage Report"}</DialogTitle>
           <DialogDescription>
@@ -430,7 +435,10 @@ export function DamageReportModal({
               </span>
               {editReport.created_by_user && (
                 <span>
-                  Created by: <span className="font-medium">{editReport.created_by_user.first_name} {editReport.created_by_user.last_name}</span>
+                  Created by:{" "}
+                  <span className="font-medium">
+                    {editReport.created_by_user.first_name} {editReport.created_by_user.last_name}
+                  </span>
                 </span>
               )}
             </div>
@@ -605,7 +613,7 @@ export function DamageReportModal({
           if (!open) setLightboxUrl(null);
         }}
       >
-        <DialogContent className="max-w-[90vw] max-h-[90vh] p-2 flex items-center justify-center bg-black/90 border-none">
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-2 flex items-center justify-center bg-black/90 border-none z-[1200]">
           <VisuallyHidden>
             <DialogTitle>Photo preview</DialogTitle>
           </VisuallyHidden>

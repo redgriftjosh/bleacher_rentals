@@ -151,4 +151,42 @@ describe("filterOwnerOptions (Owner dropdown filtering)", () => {
     });
     expect(result).toEqual(allUsers);
   });
+
+  // ═══ Part 2 — cannot reassign another AM's event to self ═══
+
+  it("AM cannot pick self when event owned by another AM", () => {
+    const result = filterOwnerOptions({
+      users: allUsers,
+      isAdmin: false,
+      currentUserId: "user-am-1",
+      disabled: false,
+      accountManagerUserIds,
+      existingOwnerId: "user-am-2",
+    });
+    expect(result.map((u) => u.id)).toEqual(["user-admin", "user-am-2"]);
+  });
+
+  it("AM can still pick self when they already own the event", () => {
+    const result = filterOwnerOptions({
+      users: allUsers,
+      isAdmin: false,
+      currentUserId: "user-am-1",
+      disabled: false,
+      accountManagerUserIds,
+      existingOwnerId: "user-am-1",
+    });
+    expect(result.map((u) => u.id)).toContain("user-am-1");
+  });
+
+  it("admin can reassign another AM's event to anyone", () => {
+    const result = filterOwnerOptions({
+      users: allUsers,
+      isAdmin: true,
+      currentUserId: "user-admin",
+      disabled: false,
+      accountManagerUserIds,
+      existingOwnerId: "user-am-2",
+    });
+    expect(result.map((u) => u.id)).toEqual(["user-admin", "user-am-1", "user-am-2"]);
+  });
 });
