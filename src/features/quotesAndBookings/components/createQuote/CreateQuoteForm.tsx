@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCreateQuoteStore } from "../../state/useCreateQuoteStore";
+import {
+  useCreateQuoteStore,
+  hasUnsavedChanges,
+  captureQuoteBaseline,
+} from "../../state/useCreateQuoteStore";
 import { QuoteDetailsSection } from "./sections/QuoteDetailsSection";
 import { ClientInfoSection } from "./sections/ClientInfoSection";
 import { EventDetailsSection } from "./sections/EventDetailsSection";
@@ -27,6 +31,8 @@ import { useAutoTax } from "../../hooks/useAutoTax";
 import { useCurrentUserUuid } from "../../hooks/useCurrentUserUuid";
 import { triage } from "@/features/alerts/triage";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { useNavigationGuard } from "../../hooks/useNavigationGuard";
+import { UnsavedChangesDialog } from "./modals/UnsavedChangesDialog";
 
 export function CreateQuoteForm() {
   const router = useRouter();
@@ -85,6 +91,7 @@ export function CreateQuoteForm() {
 
   const handleCancel = () => {
     resetForm();
+    captureQuoteBaseline(); // explicit exit — don't trip the unsaved-changes guard
     if (isEditing) {
       router.push(`/quotes-bookings/${editingEventId}`);
     } else {
@@ -92,29 +99,54 @@ export function CreateQuoteForm() {
     }
   };
 
-  const handleSave = async () => {
-    if (!validateRequiredFields()) return;
+  /**
+   * Validate + persist the quote without navigating. Returns the event id on
+   * success (used by the Save button and the unsaved-changes guard), or null
+   * on validation failure / error.
+   */
+  const persistQuote = async (): Promise<string | null> => {
+    if (!validateRequiredFields()) return null;
     setSaving(true);
     try {
       const state = useCreateQuoteStore.getState();
+      let eventId: string;
       if (isEditing) {
         await updateQuoteEvent(editingEventId, state, supabase, currentUserUuid ?? perms.userId);
-        void triage("Events", { id: editingEventId }, supabase);
-        createSuccessToast(["Quote updated."]);
-        resetForm();
-        router.push(`/quotes-bookings/${editingEventId}`);
+        eventId = editingEventId;
       } else {
-        const eventId = await createQuoteEvent(state, supabase, currentUserUuid ?? perms.userId);
-        void triage("Events", { id: eventId }, supabase);
-        createSuccessToast(["Quote draft saved."]);
-        resetForm();
-        router.push(`/quotes-bookings/${eventId}`);
+        eventId = await createQuoteEvent(state, supabase, currentUserUuid ?? perms.userId);
       }
+      void triage("Events", { id: eventId }, supabase);
+      createSuccessToast([isEditing ? "Quote updated." : "Quote draft saved."]);
+      resetForm();
+      captureQuoteBaseline(); // form is clean again — no spurious leave prompt
+      return eventId;
     } catch {
       // Error toast already shown
+      return null;
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSave = async () => {
+    const eventId = await persistQuote();
+    if (eventId) router.push(`/quotes-bookings/${eventId}`);
+  };
+
+  // Unsaved-changes guard for in-app navigation (sidebar, links, back button).
+  const guard = useNavigationGuard(() => hasUnsavedChanges() && !saving);
+
+  const handleGuardSave = async () => {
+    const eventId = await persistQuote();
+    if (eventId) guard.confirm();
+    else guard.cancel(); // validation failed — stay so the user can fix it
+  };
+
+  const handleGuardDiscard = () => {
+    resetForm();
+    captureQuoteBaseline();
+    guard.confirm();
   };
 
   const handlePreviewPdf = async () => {
@@ -274,6 +306,13 @@ export function CreateQuoteForm() {
       <NewContactModal />
       <NewCompanyModal />
       <EditPaymentScheduleModal />
+      <UnsavedChangesDialog
+        open={guard.isBlocking}
+        saving={saving}
+        onSave={handleGuardSave}
+        onDiscard={handleGuardDiscard}
+        onCancel={guard.cancel}
+      />
     </div>
   );
 }
