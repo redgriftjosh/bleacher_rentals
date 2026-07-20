@@ -342,6 +342,22 @@ const WorkTrackerGroups = new Table(WorkTrackerGroupsCols, {
   },
 });
 
+const WorkTrackerTypesCols = {
+  created_at: column.text,
+  display_name: column.text,
+  is_deleted: column.integer,
+  sort_order: column.integer,
+} satisfies PowerSyncColsFor<"WorkTrackerTypes">;
+const WorkTrackerTypes = new Table(WorkTrackerTypesCols);
+
+const NotificationsCols = {
+  created_at: column.text,
+  user_id: column.text,
+  title: column.text,
+  body: column.text,
+} satisfies PowerSyncColsFor<"Notifications">;
+const Notifications = new Table(NotificationsCols, { indexes: { user_id: ["user_id"] } });
+
 const ScorecardTargetsCols = {
   created_at: column.text,
   updated_at: column.text,
@@ -966,6 +982,8 @@ export const AppSchema = new Schema({
   Vendors,
   WorkTrackers,
   WorkTrackerGroups,
+  WorkTrackerTypes,
+  Notifications,
   WorkTrackerInspections,
   DriverScorecardStatsPerDriver,
   DriverScoreCardStats,
@@ -1026,6 +1044,8 @@ export type ScorecardTargetsRecord = PowerSyncDB["ScorecardTargets"];
 export type VendorRecord = PowerSyncDB["Vendors"];
 export type WorkTrackerRecord = PowerSyncDB["WorkTrackers"];
 export type WorkTrackerGroupRecord = PowerSyncDB["WorkTrackerGroups"];
+export type WorkTrackerTypeRecord = PowerSyncDB["WorkTrackerTypes"];
+export type NotificationRecord = PowerSyncDB["Notifications"];
 export type DriverUnavailabilityRecord = PowerSyncDB["DriverUnavailability"];
 export type WorkTrackerInspectionsRecord = PowerSyncDB["WorkTrackerInspections"];
 export type InspectionQuestionsRecord = PowerSyncDB["InspectionQuestions"];
