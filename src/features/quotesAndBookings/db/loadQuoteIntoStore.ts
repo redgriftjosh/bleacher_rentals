@@ -87,7 +87,8 @@ export async function loadQuoteIntoStore(eventId: string): Promise<string | null
     console.error("Failed to load line items:", e);
   }
 
-  // Load payment installments from PowerSync
+  // Load payment installments from PowerSync. Empty when the quote was saved
+  // without a schedule — it stays optional.
   try {
     const installments = await fetchPaymentInstallments(data.id);
     store.setField("paymentInstallments", installments);

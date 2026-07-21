@@ -52,28 +52,24 @@ export function EditPaymentScheduleModal() {
     [totalCents],
   );
 
-  // Seed draft when modal opens
+  // Seed draft when modal opens. A saved schedule is shown as-is; otherwise we
+  // seed the default suggestion (50% on signing, 50% 7 days before the event),
+  // derived live from the current event start each time the modal opens. The
+  // suggestion is only persisted if the manager presses Save — the schedule is
+  // optional.
   useEffect(() => {
     if (!isOpen) return;
-    if (storeInstallments.length > 0) {
-      setDraft(
-        storeInstallments.map((i) => ({
-          ...i,
-          pctDisplay: centsToPct(i.amountCents),
-          dollarDisplay: (i.amountCents / 100).toFixed(2),
-        })),
-      );
-    } else {
-      // No schedule yet → seed the default (50% on signing, 50% 7 days
-      // before the event). Manager can still edit every value before saving.
-      setDraft(
-        buildDefaultPaymentSchedule(totalCents, eventStart).map((i) => ({
-          ...i,
-          pctDisplay: centsToPct(i.amountCents),
-          dollarDisplay: (i.amountCents / 100).toFixed(2),
-        })),
-      );
-    }
+    const seed =
+      storeInstallments.length > 0
+        ? storeInstallments
+        : buildDefaultPaymentSchedule(totalCents, eventStart);
+    setDraft(
+      seed.map((i) => ({
+        ...i,
+        pctDisplay: centsToPct(i.amountCents),
+        dollarDisplay: (i.amountCents / 100).toFixed(2),
+      })),
+    );
   }, [isOpen, storeInstallments, totalCents, eventStart, centsToPct]);
 
   const scheduledCents = draft.reduce((sum, i) => sum + i.amountCents, 0);
@@ -162,6 +158,14 @@ export function EditPaymentScheduleModal() {
     setPaymentInstallments(
       draft.map(({ pctDisplay, dollarDisplay, ...rest }) => rest),
     );
+    close();
+  };
+
+  // The schedule is optional — clearing it returns the quote to "no schedule".
+  // Only offered when a saved schedule exists.
+  const hasSavedSchedule = storeInstallments.length > 0;
+  const handleRemoveSchedule = () => {
+    setPaymentInstallments([]);
     close();
   };
 
@@ -281,6 +285,15 @@ export function EditPaymentScheduleModal() {
         </div>
 
         <DialogFooter>
+          {hasSavedSchedule && (
+            <Button
+              variant="outline"
+              onClick={handleRemoveSchedule}
+              className="mr-auto text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              Remove Schedule
+            </Button>
+          )}
           <Button variant="outline" onClick={close}>
             Cancel
           </Button>

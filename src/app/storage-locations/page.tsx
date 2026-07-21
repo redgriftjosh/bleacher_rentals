@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Trash2, Pencil } from "lucide-react";
+import { useState } from "react";
+import { Trash2, Pencil, RotateCcw } from "lucide-react";
+import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { PageHeader } from "@/components/PageHeader";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { StorageLocationModal } from "@/features/storageLocations/components/StorageLocationModal";
 import {
-  fetchAllStorageLocations,
   softDeleteStorageLocation,
+  restoreStorageLocation,
   StorageLocationRow,
 } from "@/features/storageLocations/db/storageLocationsDb";
+import { useStorageLocations } from "@/features/storageLocations/hooks/useStorageLocations";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import {
@@ -28,21 +30,11 @@ export default function StorageLocationsPage() {
   const permissions = useTeamPermissions();
   const isAdmin = permissions.isAdmin;
 
-  const [locations, setLocations] = useState<StorageLocationRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [showDeleted, setShowDeleted] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<StorageLocationRow | null>(null);
 
-  const loadLocations = useCallback(() => {
-    setLoading(true);
-    fetchAllStorageLocations()
-      .then(setLocations)
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    loadLocations();
-  }, [loadLocations]);
+  const { locations, isLoading } = useStorageLocations({ showDeleted });
 
   const openCreate = () => {
     setEditing(null);
@@ -54,13 +46,19 @@ export default function StorageLocationsPage() {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id: string, name: string | null) => {
+  const handleSetDeleted = async (id: string, name: string | null, deleted: boolean) => {
     try {
-      await softDeleteStorageLocation(id);
-      createSuccessToast([`"${name}" deleted.`]);
-      loadLocations();
-    } catch {
-      // Error toast already shown
+      if (deleted) {
+        await softDeleteStorageLocation(id);
+      } else {
+        await restoreStorageLocation(id);
+      }
+      createSuccessToast([deleted ? `"${name}" deleted.` : `"${name}" restored.`]);
+    } catch (e) {
+      createErrorToast([
+        `Failed to ${deleted ? "delete" : "restore"} storage location.`,
+        String(e),
+      ]);
     }
   };
 
@@ -74,13 +72,31 @@ export default function StorageLocationsPage() {
         }
       />
 
-      {loading ? (
+      {isAdmin && (
+        <div className="mb-4 flex justify-end">
+          <button
+            onClick={() => setShowDeleted((v) => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition cursor-pointer ${
+              showDeleted
+                ? "border-gray-400 bg-gray-100 text-gray-800 hover:bg-gray-200"
+                : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            {showDeleted ? "Showing Deleted" : "Show Deleted"}
+          </button>
+        </div>
+      )}
+
+      {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <p className="text-gray-500">Loading storage locations...</p>
         </div>
       ) : locations.length === 0 ? (
         <div className="flex items-center justify-center py-12">
-          <p className="text-gray-400">No storage locations yet</p>
+          <p className="text-gray-400">
+            {showDeleted ? "No deleted storage locations." : "No storage locations yet."}
+          </p>
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mt-4">
@@ -108,61 +124,79 @@ export default function StorageLocationsPage() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {locations.map((loc) => (
-                <tr key={loc.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-medium">{loc.name}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {loc.address_street
-                      ? `${loc.address_street}, ${loc.address_city ?? ""} ${loc.address_state ?? ""}`
-                      : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {loc.contact_phone_number ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{loc.gate_code ?? "—"}</td>
-                  {isAdmin && (
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-3">
-                        <button
-                          onClick={() => openEdit(loc)}
-                          className="text-gray-400 hover:text-darkBlue transition cursor-pointer"
-                          title="Edit"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <button
-                              className="text-gray-400 hover:text-red-600 transition cursor-pointer"
-                              title="Delete"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete "{loc.name}"?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will soft-delete the storage location. It can be restored
-                                later.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel className="cursor-pointer rounded-sm">
-                                Cancel
-                              </AlertDialogCancel>
-                              <AlertDialogAction
-                                className="cursor-pointer rounded-sm bg-red-800 text-white hover:bg-red-900"
-                                onClick={() => handleDelete(loc.id, loc.name)}
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
+                  <tr
+                    key={loc.id}
+                    className={showDeleted ? "bg-gray-50/50 text-gray-500" : "hover:bg-gray-50"}
+                  >
+                    <td className="px-4 py-3 text-sm font-medium">
+                      <span className={showDeleted ? "line-through" : ""}>{loc.name}</span>
                     </td>
-                  )}
-                </tr>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {loc.address_street
+                        ? `${loc.address_street}, ${loc.address_city ?? ""} ${loc.address_state ?? ""}`
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {loc.contact_phone_number ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{loc.gate_code ?? "—"}</td>
+                    {isAdmin && (
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-3">
+                          {showDeleted ? (
+                            <button
+                              onClick={() => handleSetDeleted(loc.id, loc.name, false)}
+                              className="flex items-center gap-1 rounded-md border border-green-300 bg-white px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-50 transition cursor-pointer"
+                              title="Restore storage location"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" />
+                              Restore
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => openEdit(loc)}
+                                className="text-gray-400 hover:text-darkBlue transition cursor-pointer"
+                                title="Edit"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <button
+                                    className="text-gray-400 hover:text-red-600 transition cursor-pointer"
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete "{loc.name}"?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This will soft-delete the storage location. It can be restored
+                                      later.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="cursor-pointer rounded-sm">
+                                      Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      className="cursor-pointer rounded-sm bg-red-800 text-white hover:bg-red-900"
+                                      onClick={() => handleSetDeleted(loc.id, loc.name, true)}
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    )}
+                  </tr>
               ))}
             </tbody>
           </table>
@@ -172,7 +206,6 @@ export default function StorageLocationsPage() {
       <StorageLocationModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSaved={loadLocations}
         editing={editing}
       />
     </main>

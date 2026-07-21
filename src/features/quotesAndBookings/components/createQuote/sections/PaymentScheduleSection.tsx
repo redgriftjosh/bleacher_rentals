@@ -1,22 +1,18 @@
 "use client";
 
-import { useMemo, useEffect, useRef } from "react";
+import { useMemo } from "react";
 import { Pencil } from "lucide-react";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { calculateTotals } from "../../../utils/calculateTotals";
-import { buildDefaultPaymentSchedule } from "../../../utils/buildDefaultPaymentSchedule";
 
 export function PaymentScheduleSection() {
   const lineItems = useCreateQuoteStore((s) => s.lineItems);
-  const eventStart = useCreateQuoteStore((s) => s.eventStart);
   const currency = useCreateQuoteStore((s) => s.currency);
   const taxPercent = useCreateQuoteStore((s) => s.taxPercent);
   const taxOverrideCents = useCreateQuoteStore((s) => s.taxOverrideCents);
   const installments = useCreateQuoteStore((s) => s.paymentInstallments);
-  const editingEventId = useCreateQuoteStore((s) => s.editingEventId);
   const setField = useCreateQuoteStore((s) => s.setField);
-  const setPaymentInstallments = useCreateQuoteStore((s) => s.setPaymentInstallments);
 
   const totalCents = useMemo(() => {
     const { subtotal, discountTotal, taxAmount } = calculateTotals(lineItems, taxPercent);
@@ -24,22 +20,9 @@ export function PaymentScheduleSection() {
     return subtotal + discountTotal + effectiveTaxCents;
   }, [lineItems, taxPercent, taxOverrideCents]);
 
-  // Seed the default schedule once for a NEW quote (50% on signing, 50% seven
-  // days before the event). Runs only when there's a real total and no schedule
-  // yet; the guard ref ensures we never re-apply after the manager edits/clears.
-  const seededRef = useRef(false);
-  useEffect(() => {
-    if (editingEventId) return; // editing an existing quote — never auto-seed
-    if (seededRef.current) return;
-    if (installments.length > 0) {
-      seededRef.current = true; // already has a schedule (e.g. restored) — don't seed
-      return;
-    }
-    if (totalCents > 0) {
-      setPaymentInstallments(buildDefaultPaymentSchedule(totalCents, eventStart || null));
-      seededRef.current = true;
-    }
-  }, [editingEventId, installments.length, totalCents, eventStart, setPaymentInstallments]);
+  // The schedule is optional: nothing is shown (or saved) until the manager
+  // explicitly saves one in the Edit modal. So we render the store value
+  // directly — empty means "no schedule set".
   const scheduledCents = installments.reduce((sum, i) => sum + i.amountCents, 0);
   const isBalanced = scheduledCents === totalCents;
 

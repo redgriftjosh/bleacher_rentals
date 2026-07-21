@@ -112,7 +112,8 @@ export async function createQuoteEvent(
     }
   }
 
-  // 4. Sync payment installments
+  // 4. Sync payment installments — optional; only persisted when the manager
+  // saved a schedule (non-empty). No schedule → nothing written.
   if (state.paymentInstallments.length > 0) {
     try {
       await syncPaymentInstallments(eventUuid, state.paymentInstallments, state.currency);

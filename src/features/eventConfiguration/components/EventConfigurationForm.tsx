@@ -26,6 +26,8 @@ import { useUsersStore } from "@/state/userStore";
 import { triage } from "@/features/alerts/triage";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { canEditOwnedEntity } from "@/features/userAccess/logic/canEditOwnedEntity";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { useDashboardBleachersStore } from "@/features/dashboard/state/useDashboardBleachersStore";
 import { useCreateQuoteStore } from "@/features/quotesAndBookings/state/useCreateQuoteStore";
 import { useEventFormTransportationAlerts } from "../hooks/useEventFormTransportationAlerts";
 import { useBleacherMismatch } from "../hooks/useBleacherMismatch";
@@ -62,11 +64,26 @@ export const EventConfigurationForm = ({
   useEventFormTransportationAlerts();
   const { hasMismatch: hasDetailsMismatch } = useBleacherMismatch();
 
+  const accountManagerZoneIds = usePermissionsStore((s) => s.accountManagerZoneIds);
+  const leadZoneIds = usePermissionsStore((s) => s.leadZoneIds);
+  const allBleachers = useDashboardBleachersStore((s) => s.data);
+
+  // Zones of every bleacher attached to this event (part 3 gate).
+  const eventBleacherZoneIds = currentEventStore.bleacherUuids
+    .map((id) => allBleachers.find((b) => b.bleacherUuid === id && !b.isSubrentalRow)?.zoneUuid)
+    .filter((z): z is string => !!z);
+
   const isEditing = !!currentEventStore.eventUuid;
   const canEdit = permissions.canCreateUser
     ? canEditOwnedEntity({
         isAdmin: permissions.isAdmin,
         isNew: !isEditing,
+        isAccountManager: permissions.isAccountManager,
+        accountManagerZoneIds,
+        leadZoneIds,
+        createdByUserId: currentEventStore.originalOwnerUserUuid,
+        userId: permissions.userId,
+        eventBleacherZoneIds,
       })
     : false;
 

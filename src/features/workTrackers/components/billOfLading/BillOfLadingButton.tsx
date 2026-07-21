@@ -4,7 +4,8 @@ import { useState } from "react";
 import { pdf } from "@react-pdf/renderer";
 import { FileText } from "lucide-react";
 import { Tables } from "../../../../../database.types";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { db } from "@/components/providers/SystemProvider";
+import { expect, typedGetAll, typedExecute } from "@/lib/powersync/typedQuery";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { BillOfLadingDocument, BOLBleacherData } from "./BillOfLadingDocument";
 import { AddressData } from "../../../eventConfiguration/state/useCurrentEventStore";
@@ -53,8 +54,43 @@ export default function BillOfLadingButton({
   pickUpAddress,
   dropOffAddress,
 }: BillOfLadingButtonProps) {
-  const supabase = useClerkSupabaseClient();
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Local-first read of an address row, shaped to the Document's expected type.
+  const fetchAddressRow = async (uuid: string): Promise<Tables<"Addresses"> | null> => {
+    const rows = await typedGetAll(
+      db
+        .selectFrom("Addresses as a")
+        .select([
+          "a.id as id",
+          "a.street as street",
+          "a.city as city",
+          "a.state_province as state_province",
+          "a.zip_postal as zip_postal",
+        ])
+        .where("a.id", "=", uuid)
+        .limit(1)
+        .compile(),
+      expect<{
+        id: string;
+        street: string | null;
+        city: string | null;
+        state_province: string | null;
+        zip_postal: string | null;
+      }>(),
+    );
+    const r = rows[0];
+    if (!r) return null;
+    return {
+      ...r,
+      country: null,
+      created_at: "",
+      updated_at: "",
+      latitude: null,
+      longitude: null,
+      place_id: null,
+    } as unknown as Tables<"Addresses">;
+  };
 
   const handleGenerateBOL = async () => {
     if (!workTracker || workTracker.id === "-1") {
@@ -64,54 +100,58 @@ export default function BillOfLadingButton({
 
     setIsGenerating(true);
     try {
-      // ── Fetch bleacher data ──────────────────────────────────────────────
+      // ── Fetch bleacher data (local-first) ────────────────────────────────
       let bleacher: BOLBleacherData | null = null;
       if (workTracker.bleacher_uuid) {
-        const { data, error } = await supabase
-          .from("Bleachers")
-          .select(
-            "bleacher_number, bleacher_rows, bleacher_seats, vin_number, hitch_type, manufacturer, gvwr, trailer_height_in, tag_number",
-          )
-          .eq("id", workTracker.bleacher_uuid)
-          .single();
-
-        if (!error && data) {
-          bleacher = data as BOLBleacherData;
-        }
+        const rows = await typedGetAll(
+          db
+            .selectFrom("Bleachers as b")
+            .select([
+              "b.bleacher_number as bleacher_number",
+              "b.bleacher_rows as bleacher_rows",
+              "b.bleacher_seats as bleacher_seats",
+              "b.vin_number as vin_number",
+              "b.hitch_type as hitch_type",
+              "b.manufacturer as manufacturer",
+              "b.gvwr as gvwr",
+              "b.trailer_height_in as trailer_height_in",
+              "b.tag_number as tag_number",
+            ])
+            .where("b.id", "=", workTracker.bleacher_uuid)
+            .limit(1)
+            .compile(),
+          expect<BOLBleacherData>(),
+        );
+        if (rows[0]) bleacher = rows[0];
       }
 
       // ── Fetch full address rows if we only have UUIDs ────────────────────
       let pickupRow: Tables<"Addresses"> | null = toAddressRow(pickUpAddress);
       let dropoffRow: Tables<"Addresses"> | null = toAddressRow(dropOffAddress);
 
-      // If street is blank, try fetching from DB by UUID
+      // If street is blank, try fetching from the local DB by UUID
       if (!pickupRow?.street && workTracker.pickup_address_uuid) {
-        const { data } = await supabase
-          .from("Addresses")
-          .select("*")
-          .eq("id", workTracker.pickup_address_uuid)
-          .single();
-        if (data) pickupRow = data;
+        const fetched = await fetchAddressRow(workTracker.pickup_address_uuid);
+        if (fetched) pickupRow = fetched;
       }
       if (!dropoffRow?.street && workTracker.dropoff_address_uuid) {
-        const { data } = await supabase
-          .from("Addresses")
-          .select("*")
-          .eq("id", workTracker.dropoff_address_uuid)
-          .single();
-        if (data) dropoffRow = data;
+        const fetched = await fetchAddressRow(workTracker.dropoff_address_uuid);
+        if (fetched) dropoffRow = fetched;
       }
 
-      // ── Persist BOL number to DB ─────────────────────────────────────────
+      // ── Persist BOL number (local-first; BackendConnector syncs upstream) ─
       const bolNumber = generateBolNumber(
         workTracker.id,
         bleacher?.bleacher_number,
         workTracker.date,
       );
-      await supabase
-        .from("WorkTrackers")
-        .update({ bol_number: bolNumber, updated_at: new Date().toISOString() })
-        .eq("id", workTracker.id);
+      await typedExecute(
+        db
+          .updateTable("WorkTrackers")
+          .set({ bol_number: bolNumber, updated_at: new Date().toISOString() })
+          .where("id", "=", workTracker.id)
+          .compile(),
+      );
 
       // ── Generate PDF blob and trigger download ───────────────────────────
       const blob = await pdf(

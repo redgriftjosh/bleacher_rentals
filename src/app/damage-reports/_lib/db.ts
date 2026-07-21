@@ -53,10 +53,10 @@ type PhotoRow = { id: string; damage_report_uuid: string | null; photo_path: str
  * event and creator; photos are read separately and grouped in JS since
  * PowerSync/SQLite can't aggregate a one-to-many into the row.
  */
-export function useDamageReports(params: {
-  bleacherUuid: string | null;
-  showDeleted: boolean;
-}): { reports: DamageReport[]; isLoading: boolean } {
+export function useDamageReports(params: { bleacherUuid: string | null; showDeleted: boolean }): {
+  reports: DamageReport[];
+  isLoading: boolean;
+} {
   const { bleacherUuid, showDeleted } = params;
 
   const compiled = useMemo(() => {
@@ -112,28 +112,30 @@ export function useDamageReports(params: {
       photosByReport.set(p.damage_report_uuid, list);
     }
 
-    return (rows ?? []).map((r): DamageReport => ({
-      id: r.id,
-      bleacher_uuid: r.bleacher_uuid ?? "",
-      inspection_uuid: r.inspection_uuid,
-      is_safe_to_sit: !!r.is_safe_to_sit,
-      is_safe_to_haul: !!r.is_safe_to_haul,
-      seat_damage: (r.seat_damage as DamageSeverity) ?? "none",
-      haul_damage: (r.haul_damage as DamageSeverity) ?? "none",
-      note: r.note,
-      created_at: r.created_at ?? "",
-      resolved_at: r.resolved_at,
-      maintenance_event_uuid: r.maintenance_event_uuid,
-      created_by_user_uuid: r.created_by_user_uuid,
-      deleted: !!r.deleted,
-      bleacher: r.bleacher_number != null ? { bleacher_number: r.bleacher_number } : null,
-      maintenance_event: r.event_name ? { event_name: r.event_name } : null,
-      created_by_user:
-        r.first_name || r.last_name
-          ? { first_name: r.first_name ?? "", last_name: r.last_name ?? "" }
-          : null,
-      photos: photosByReport.get(r.id) ?? [],
-    }));
+    return (rows ?? []).map(
+      (r): DamageReport => ({
+        id: r.id,
+        bleacher_uuid: r.bleacher_uuid ?? "",
+        inspection_uuid: r.inspection_uuid,
+        is_safe_to_sit: !!r.is_safe_to_sit,
+        is_safe_to_haul: !!r.is_safe_to_haul,
+        seat_damage: (r.seat_damage as DamageSeverity) ?? "none",
+        haul_damage: (r.haul_damage as DamageSeverity) ?? "none",
+        note: r.note,
+        created_at: r.created_at ?? "",
+        resolved_at: r.resolved_at,
+        maintenance_event_uuid: r.maintenance_event_uuid,
+        created_by_user_uuid: r.created_by_user_uuid,
+        deleted: !!r.deleted,
+        bleacher: r.bleacher_number != null ? { bleacher_number: r.bleacher_number } : null,
+        maintenance_event: r.event_name ? { event_name: r.event_name } : null,
+        created_by_user:
+          r.first_name || r.last_name
+            ? { first_name: r.first_name ?? "", last_name: r.last_name ?? "" }
+            : null,
+        photos: photosByReport.get(r.id) ?? [],
+      }),
+    );
   }, [rows, photoRows]);
 
   return { reports, isLoading: rows === undefined };
@@ -151,7 +153,10 @@ export function useBleacherFilterOptions(): { id: string; bleacher_number: numbe
         .compile(),
     [],
   );
-  const { data } = useTypedQuery(compiled, expect<{ id: string; bleacher_number: number | null }>());
+  const { data } = useTypedQuery(
+    compiled,
+    expect<{ id: string; bleacher_number: number | null }>(),
+  );
   return data ?? [];
 }
 

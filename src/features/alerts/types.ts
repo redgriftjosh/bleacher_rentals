@@ -19,15 +19,14 @@ export type AlertResult = {
 export type AlertDefinition = {
   title: string;
   entityType: AlertEntityType;
+  // `supabase` is optional and currently unused — every definition reads from
+  // the local PowerSync DB. Kept in the signature for backwards compatibility.
   evaluate: (
     entityUuid: string,
-    supabase: SupabaseClient<Database>,
+    supabase?: SupabaseClient<Database>,
   ) => Promise<AlertResult | null>;
   evaluateInMemory?: (context: InMemoryAlertContext) => AlertPayload[];
-  recipients: (
-    entityUuid: string,
-    supabase: SupabaseClient<Database>,
-  ) => Promise<string[]>;
+  recipients: (entityUuid: string, supabase?: SupabaseClient<Database>) => Promise<string[]>;
 };
 
 export type InMemoryAlertContext = {

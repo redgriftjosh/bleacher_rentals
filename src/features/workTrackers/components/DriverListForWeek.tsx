@@ -1,10 +1,8 @@
 "use client";
 
-import { fetchDriversForWeek, checkUserAccess, DriverWithMeta } from "../db/db";
-import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
+import { useWorkTrackerAccess, useDriversForWeek } from "../hooks/useDriversForWeek";
 import { useUser } from "@clerk/nextjs";
 import { useUsersStore } from "@/state/userStore";
 import { useState } from "react";
@@ -55,7 +53,6 @@ function formatUnitTotal(
 export function DriverListForWeek({ startDate }: Props) {
   const router = useRouter();
   ``;
-  const supabase = useClerkSupabaseClient();
   const { user } = useUser();
   const users = useUsersStore((s) => s.users);
   const [showAllDrivers, setShowAllDrivers] = useState(false);
@@ -74,24 +71,16 @@ export function DriverListForWeek({ startDate }: Props) {
 
   const currentUserUuid = getCurrentUserUuid();
 
-  const { data: accessData, isLoading: accessLoading } = useQuery({
-    queryKey: ["user-access", currentUserUuid],
-    queryFn: async () => {
-      if (!currentUserUuid) return null;
-      return checkUserAccess(supabase, currentUserUuid);
-    },
-    enabled: !!currentUserUuid && !!supabase,
-  });
+  const { access: accessData, isLoading: accessLoading } = useWorkTrackerAccess(currentUserUuid);
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["drivers-for-week", startDate, showAllDrivers, currentUserUuid],
-    queryFn: async () => {
-      return fetchDriversForWeek(supabase, startDate, showAllDrivers, currentUserUuid ?? undefined);
-    },
-    enabled: !!supabase && !!accessData && (accessData.isAdmin || accessData.isAccountManager),
-  });
+  const hasAccess = !!accessData && (accessData.isAdmin || accessData.isAccountManager);
 
-  const drivers = data?.drivers ?? [];
+  const { drivers, isLoading } = useDriversForWeek(
+    startDate,
+    showAllDrivers,
+    accessData?.accountManagerUuid ?? null,
+    hasAccess,
+  );
 
   if (accessLoading) {
     return (
@@ -115,16 +104,6 @@ export function DriverListForWeek({ startDate }: Props) {
               You must be an Account Manager or Admin to access this page.
             </div>
           </td>
-        </tr>
-      </tbody>
-    );
-  }
-
-  if (error) {
-    return (
-      <tbody className="p-4">
-        <tr>
-          <td>Uh Oh, Something went wrong... 😬</td>
         </tr>
       </tbody>
     );

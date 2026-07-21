@@ -230,7 +230,7 @@ export async function updateQuoteEvent(
     await supabase.from("EventLineItems").insert(rows);
   }
 
-  // 6. Sync payment installments
+  // 6. Sync payment installments — optional. Empty clears any existing schedule.
   try {
     await syncPaymentInstallments(eventId, state.paymentInstallments, state.currency);
   } catch (e) {

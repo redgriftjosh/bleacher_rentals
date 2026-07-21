@@ -3,7 +3,11 @@
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CreateQuoteForm } from "@/features/quotesAndBookings/components/createQuote/CreateQuoteForm";
-import { useCreateQuoteStore, hasUnsavedChanges } from "@/features/quotesAndBookings/state/useCreateQuoteStore";
+import {
+  useCreateQuoteStore,
+  hasUnsavedChanges,
+  captureQuoteBaseline,
+} from "@/features/quotesAndBookings/state/useCreateQuoteStore";
 import { loadQuoteIntoStore } from "@/features/quotesAndBookings/db/loadQuoteIntoStore";
 
 export default function EditQuotePage({ params }: { params: Promise<{ id: string }> }) {
@@ -22,6 +26,8 @@ export default function EditQuotePage({ params }: { params: Promise<{ id: string
         return;
       }
       setField("editingEventId", eventId);
+      // Baseline = the loaded quote, so an untouched edit page is not "dirty".
+      captureQuoteBaseline();
       setLoading(false);
     });
   }, [id]);
