@@ -1324,6 +1324,42 @@ export type Database = {
           },
         ]
       }
+      EventMessageMentions: {
+        Row: {
+          created_at: string
+          id: string
+          mentioned_user_uuid: string
+          message_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mentioned_user_uuid: string
+          message_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mentioned_user_uuid?: string
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventMessageMentions_mentioned_user_uuid_fkey"
+            columns: ["mentioned_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventMessageMentions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "EventMessages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       EventMessageReadReceipts: {
         Row: {
           id: string
@@ -1354,42 +1390,6 @@ export type Database = {
           {
             foreignKeyName: "EventMessageReadReceipts_user_uuid_fkey"
             columns: ["user_uuid"]
-            isOneToOne: false
-            referencedRelation: "Users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      EventMessageMentions: {
-        Row: {
-          created_at: string
-          id: string
-          mentioned_user_uuid: string
-          message_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          mentioned_user_uuid: string
-          message_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          mentioned_user_uuid?: string
-          message_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "EventMessageMentions_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "EventMessages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "EventMessageMentions_mentioned_user_uuid_fkey"
-            columns: ["mentioned_user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
             referencedColumns: ["id"]
@@ -1433,6 +1433,13 @@ export type Database = {
             columns: ["event_uuid"]
             isOneToOne: false
             referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventMessages_reply_to_message_id_fkey"
+            columns: ["reply_to_message_id"]
+            isOneToOne: false
+            referencedRelation: "EventMessages"
             referencedColumns: ["id"]
           },
           {
@@ -2727,6 +2734,42 @@ export type Database = {
           },
         ]
       }
+      StripeConnections: {
+        Row: {
+          charges_enabled: boolean
+          created_at: string
+          deleted_at: string | null
+          details_submitted: boolean
+          id: string
+          livemode: boolean
+          payouts_enabled: boolean
+          stripe_account_id: string | null
+          stripe_business_name: string | null
+        }
+        Insert: {
+          charges_enabled?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          details_submitted?: boolean
+          id?: string
+          livemode?: boolean
+          payouts_enabled?: boolean
+          stripe_account_id?: string | null
+          stripe_business_name?: string | null
+        }
+        Update: {
+          charges_enabled?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          details_submitted?: boolean
+          id?: string
+          livemode?: boolean
+          payouts_enabled?: boolean
+          stripe_account_id?: string | null
+          stripe_business_name?: string | null
+        }
+        Relationships: []
+      }
       SubrentalEvents: {
         Row: {
           bleacher_uuid: string | null
@@ -3515,6 +3558,10 @@ export type Database = {
       is_current_user_account_manager: { Args: never; Returns: boolean }
       is_current_user_active: { Args: never; Returns: boolean }
       is_current_user_admin: { Args: never; Returns: boolean }
+      is_subscribed_to_event: {
+        Args: { p_event_uuid: string }
+        Returns: boolean
+      }
       recompute_driver_scorecard_bucket: {
         Args: { p_driver: string; p_year: number }
         Returns: undefined

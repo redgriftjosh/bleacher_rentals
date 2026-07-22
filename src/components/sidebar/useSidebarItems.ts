@@ -15,6 +15,7 @@ import {
   Settings,
   Building2,
   ScrollText,
+  CreditCard,
   DollarSign,
   BookUser,
   Warehouse,
@@ -163,6 +164,13 @@ const ALL_ITEMS: SidebarItemConfig[] = [
         label: "QuickBooks",
         href: "/quickbooks",
         icon: QuickBooksIcon,
+      },
+      {
+        type: "button",
+        key: "stripe-connections",
+        label: "Stripe",
+        href: "/stripe-connections",
+        icon: CreditCard,
       },
       {
         type: "button",

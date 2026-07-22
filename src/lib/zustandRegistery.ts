@@ -43,6 +43,7 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   Notifications: () => {},
   BlueBook: () => {},
   QboConnections: () => {},
+  StripeConnections: () => {},
   Vendors: () => {},
   WorkTrackerGroups: () => {},
   Zones: () => {},

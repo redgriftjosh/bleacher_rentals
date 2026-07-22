@@ -84,6 +84,25 @@ const StorageLocations = new Table(StorageLocationsCols, {
   indexes: { address_uuid: ["address_uuid"] },
 });
 
+// Boolean status columns are declared as integer because PowerSync/SQLite has
+// no boolean type -- they arrive as 0/1. They are only ever WRITTEN server-side
+// (OAuth callback / status refresh) and read here, so the client never uploads
+// an int into a Postgres boolean. The only column the client writes is
+// `deleted_at` (soft delete), which is a nullable timestamp text.
+const StripeConnectionsCols = {
+  created_at: column.text,
+  deleted_at: column.text,
+  stripe_account_id: column.text,
+  details_submitted: column.integer,
+  charges_enabled: column.integer,
+  payouts_enabled: column.integer,
+  livemode: column.integer,
+  stripe_business_name: column.text,
+} satisfies PowerSyncColsFor<"StripeConnections">;
+const StripeConnections = new Table(StripeConnectionsCols, {
+  indexes: { stripe_account_id: ["stripe_account_id"] },
+});
+
 const ZonesCols = {
   created_at: column.text,
   display_name: column.text,
@@ -1034,6 +1053,7 @@ export const AppSchema = new Schema({
   EventFiles,
   SubrentalEvents,
   StorageLocations,
+  StripeConnections,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
