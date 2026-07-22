@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Dropdown } from "@/components/DropDown";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import {
@@ -17,6 +12,7 @@ import {
   SalesOfficeRow,
   SalesOfficeAddress,
 } from "../db/salesOfficesDb";
+import { useStripeConnections } from "@/features/stripe-integration/hooks/useStripeConnections";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
@@ -34,11 +30,18 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
 
   const [name, setName] = useState("");
   const [quickbookUuid, setQuickbookUuid] = useState<string | null>(null);
+  const [stripeConnectionUuid, setStripeConnectionUuid] = useState<string | null>(null);
   const [address, setAddress] = useState<SalesOfficeAddress | null>(null);
   const [saving, setSaving] = useState(false);
 
   const [qboOptions, setQboOptions] = useState<QboConnectionOption[]>([]);
   const [loadingQbo, setLoadingQbo] = useState(false);
+
+  // Active Stripe connections come reactively from PowerSync (unlike QBO, which
+  // isn't synced and is fetched above).
+  const { connections: stripeConnections, isLoading: loadingStripe } = useStripeConnections({
+    showDeleted: false,
+  });
 
   const isEditing = !!editing;
 
@@ -56,6 +59,7 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
     if (editing) {
       setName(editing.name ?? "");
       setQuickbookUuid(editing.quickbook_uuid ?? null);
+      setStripeConnectionUuid(editing.stripe_connection_uuid ?? null);
       setAddress(
         editing.address_street
           ? {
@@ -69,6 +73,7 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
     } else {
       setName("");
       setQuickbookUuid(null);
+      setStripeConnectionUuid(null);
       setAddress(null);
     }
   }, [open, editing]);
@@ -78,6 +83,16 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
     value: q.id,
   }));
 
+  // "" is the empty/None choice (Stripe connection is optional). Business name
+  // falls back to the account id, then a placeholder, when unnamed.
+  const stripeDropdownOptions = [
+    { label: "— None —", value: "" },
+    ...stripeConnections.map((c) => ({
+      label: c.businessName ?? c.stripeAccountId ?? "Unnamed connection",
+      value: c.id,
+    })),
+  ];
+
   const resetAndClose = () => {
     onClose();
   };
@@ -86,7 +101,7 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
     if (!name.trim() || !quickbookUuid) return;
     setSaving(true);
     try {
-      const payload = { name: name.trim(), quickbookUuid, address };
+      const payload = { name: name.trim(), quickbookUuid, stripeConnectionUuid, address };
       if (isEditing && editing) {
         await updateSalesOffice(editing.id, editing.address_uuid, payload);
         createSuccessToast([`Sales office "${name}" updated.`]);
@@ -159,6 +174,19 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
               onSelect={setQuickbookUuid}
               placeholder={loadingQbo ? "Loading..." : "Select QuickBooks..."}
               disabled={loadingQbo}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Stripe Connection
+            </label>
+            <Dropdown
+              options={stripeDropdownOptions}
+              selected={stripeConnectionUuid ?? ""}
+              onSelect={(v) => setStripeConnectionUuid(v || null)}
+              placeholder={loadingStripe ? "Loading..." : "Select Stripe (optional)..."}
+              disabled={loadingStripe}
             />
           </div>
         </div>

@@ -47,3 +47,13 @@ create policy "rbac_update" on public."StripeConnections"
 
 create index if not exists "StripeConnections_stripe_account_id_idx"
   on public."StripeConnections" using btree (stripe_account_id);
+
+-- Link a sales office to the Stripe connection its payments route through.
+-- Mirrors the existing quickbook_uuid link on SalesOffices. Nullable: offices
+-- without a Stripe connection fall back to the default account.
+alter table public."SalesOffices"
+  add column if not exists stripe_connection_uuid uuid
+  references public."StripeConnections"(id);
+
+create index if not exists "SalesOffices_stripe_connection_uuid_idx"
+  on public."SalesOffices" using btree (stripe_connection_uuid);

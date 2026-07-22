@@ -2574,6 +2574,7 @@ export type Database = {
           name: string
           phone: string | null
           quickbook_uuid: string
+          stripe_connection_uuid: string | null
         }
         Insert: {
           address_uuid?: string | null
@@ -2584,6 +2585,7 @@ export type Database = {
           name: string
           phone?: string | null
           quickbook_uuid: string
+          stripe_connection_uuid?: string | null
         }
         Update: {
           address_uuid?: string | null
@@ -2594,6 +2596,7 @@ export type Database = {
           name?: string
           phone?: string | null
           quickbook_uuid?: string
+          stripe_connection_uuid?: string | null
         }
         Relationships: [
           {
@@ -2615,6 +2618,13 @@ export type Database = {
             columns: ["quickbook_uuid"]
             isOneToOne: false
             referencedRelation: "QboConnections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "SalesOffices_stripe_connection_uuid_fkey"
+            columns: ["stripe_connection_uuid"]
+            isOneToOne: false
+            referencedRelation: "StripeConnections"
             referencedColumns: ["id"]
           },
         ]

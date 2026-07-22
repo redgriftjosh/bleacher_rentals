@@ -959,9 +959,13 @@ const SalesOfficesCols = {
   name: column.text,
   phone: column.text,
   quickbook_uuid: column.text,
+  stripe_connection_uuid: column.text,
 } satisfies PowerSyncColsFor<"SalesOffices">;
 const SalesOffices = new Table(SalesOfficesCols, {
-  indexes: { address_uuid: ["address_uuid"] },
+  indexes: {
+    address_uuid: ["address_uuid"],
+    stripe_connection_uuid: ["stripe_connection_uuid"],
+  },
 });
 
 const SubrentalEventsCols = {
