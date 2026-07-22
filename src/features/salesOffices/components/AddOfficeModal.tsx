@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertTriangle } from "lucide-react";
 import { Dropdown } from "@/components/DropDown";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import {
@@ -82,6 +83,18 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
     label: q.displayName,
     value: q.id,
   }));
+
+  // Currency is inherited from the chosen QuickBooks connection.
+  const selectedCurrency = quickbookUuid
+    ? (qboOptions.find((q) => q.id === quickbookUuid)?.currency ?? null)
+    : null;
+
+  // What's still missing for the office to be fully set up.
+  const missing = [
+    !address?.street && "address",
+    !quickbookUuid && "QuickBooks account",
+    !stripeConnectionUuid && "Stripe account",
+  ].filter(Boolean) as string[];
 
   // "" is the empty/None choice (Stripe connection is optional). Business name
   // falls back to the account id, then a placeholder, when unnamed.
@@ -175,6 +188,12 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
               placeholder={loadingQbo ? "Loading..." : "Select QuickBooks..."}
               disabled={loadingQbo}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Currency:{" "}
+              <span className="font-medium text-gray-700">
+                {selectedCurrency ?? "— (set once QuickBooks is connected)"}
+              </span>
+            </p>
           </div>
 
           <div>
@@ -190,6 +209,16 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
             />
           </div>
         </div>
+
+        {name.trim() && missing.length > 0 && (
+          <div className="mt-4 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+            <span>
+              Not fully set up — still needs: {missing.join(", ")}. The office can be saved now and
+              completed later.
+            </span>
+          </div>
+        )}
 
         <div className="flex justify-between mt-4">
           <button

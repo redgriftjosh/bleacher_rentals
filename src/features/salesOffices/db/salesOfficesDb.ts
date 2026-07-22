@@ -21,6 +21,8 @@ export type SalesOfficeRow = {
 export type QboConnectionOption = {
   id: string;
   displayName: string;
+  // The office's currency is inherited from its QuickBooks connection.
+  currency: string | null;
 };
 
 export type SalesOfficeAddress = {
@@ -71,7 +73,7 @@ export async function fetchQboConnections(
 ): Promise<QboConnectionOption[]> {
   const { data, error } = await supabase
     .from("QboConnections")
-    .select("id, display_name")
+    .select("id, display_name, currency")
     .order("display_name");
 
   if (error) {
@@ -82,7 +84,29 @@ export async function fetchQboConnections(
   return (data ?? []).map((q) => ({
     id: q.id,
     displayName: q.display_name,
+    currency: q.currency,
   }));
+}
+
+// ── Setup completeness ──
+
+export type SalesOfficeSetup = {
+  complete: boolean;
+  /** Human-readable names of the pieces still missing. */
+  missing: string[];
+};
+
+/**
+ * A sales office is "fully set up" only when it has everything needed to send a
+ * quote and take payment: an address, a QuickBooks connection (which also gives
+ * it a currency), and a Stripe connection. Name is always required to save.
+ */
+export function getSalesOfficeSetup(office: SalesOfficeRow): SalesOfficeSetup {
+  const missing: string[] = [];
+  if (!office.address_uuid) missing.push("address");
+  if (!office.quickbook_uuid) missing.push("QuickBooks account");
+  if (!office.stripe_connection_uuid) missing.push("Stripe account");
+  return { complete: missing.length === 0, missing };
 }
 
 // ── Writes (PowerSync local-first / optimistic) ──
