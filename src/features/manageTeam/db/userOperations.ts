@@ -128,6 +128,7 @@ export async function createUser(
       const vehicleUuid = await upsertVehicle(supabase, state, null);
 
       const { error: driverError } = await supabase.from("Drivers").insert({
+        id: state.driverId ?? undefined,
         user_uuid: userUuid,
         tax: state.tax ?? 0,
         pay_rate_cents: state.payRateCents ?? 0,
@@ -251,6 +252,7 @@ export async function updateUser(
       } else {
         // Create new driver record
         const { error: driverInsertError } = await supabase.from("Drivers").insert({
+          id: state.driverId ?? undefined,
           user_uuid: userUuid,
           tax: state.tax ?? 0,
           pay_rate_cents: state.payRateCents ?? 0,
@@ -529,6 +531,7 @@ export async function fetchUserById(
       result.licensePhotoPath = driver.license_photo_path;
       result.insurancePhotoPath = driver.insurance_photo_path;
       result.medicalCardPhotoPath = driver.medical_card_photo_path;
+      result.driverId = driver.id;
       result.phoneNumber = driver.phone_number;
 
       // Address info
