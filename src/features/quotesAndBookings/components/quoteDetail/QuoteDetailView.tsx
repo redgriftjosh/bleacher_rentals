@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LayoutDashboard, Trash2, Send } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { QuoteDetail, fetchQuoteDetail } from "../../db/fetchQuoteDetail";
@@ -14,6 +14,7 @@ import { ContractTab } from "./tabs/ContractTab";
 import { BillingTab } from "./tabs/BillingTab";
 import { FilesTab } from "./tabs/FilesTab";
 import { LogTab } from "./tabs/LogTab";
+import { MessagesTab } from "./tabs/MessagesTab";
 import { useEventCurrency } from "../../hooks/useEventCurrency";
 import { formatMoney } from "../../utils/formatMoney";
 import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCurrentEventStore";
@@ -29,8 +30,17 @@ import { logQuoteSentLocal } from "../../db/logQuoteSentLocal";
 // import { ClipboardCheck } from "lucide-react";
 import { DateTime } from "luxon";
 
+const QUOTE_TABS = ["contract", "billing", "files", "log", "messages"] as const;
+type QuoteTab = (typeof QUOTE_TABS)[number];
+
+function isQuoteTab(tab: string | null): tab is QuoteTab {
+  return QUOTE_TABS.includes(tab as QuoteTab);
+}
+
 export function QuoteDetailView({ eventId }: { eventId: string }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const supabase = useClerkSupabaseClient();
   const [quote, setQuote] = useState<QuoteDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,6 +48,29 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
   const [sending, setSending] = useState(false);
 
   const perms = usePermissionsStore();
+
+  // Active tab stays in sync with ?tab=… (deep links from chat notifications, shareable URLs).
+  const activeTab = useMemo(() => {
+    const tab = searchParams.get("tab");
+    return isQuoteTab(tab) ? tab : "contract";
+  }, [searchParams]);
+
+  const handleTabChange = useCallback(
+    (tab: string) => {
+      if (!isQuoteTab(tab)) return;
+
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "contract") {
+        params.delete("tab");
+      } else {
+        params.set("tab", tab);
+      }
+
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
   // Get the bleacher zone for this event (via BleacherEvents → Bleachers)
   const eventZoneCompiled = useMemo(
@@ -265,7 +298,7 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
       </div>
 
       {/* Tab bar + actions */}
-      <Tabs defaultValue="contract" className="gap-0">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="gap-0">
         <div className="border-b bg-white px-6 flex items-center justify-between">
           <TabsList className="bg-transparent h-auto p-0 gap-0 rounded-none">
             <TabsTrigger
@@ -291,6 +324,12 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-darkBlue data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
             >
               Log
+            </TabsTrigger>
+            <TabsTrigger
+              value="messages"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-darkBlue data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
+            >
+              Messages
             </TabsTrigger>
           </TabsList>
 
@@ -360,6 +399,9 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
           </TabsContent>
           <TabsContent value="log">
             <LogTab quoteId={quote.id} />
+          </TabsContent>
+          <TabsContent value="messages">
+            <MessagesTab quoteId={quote.id} />
           </TabsContent>
         </div>
       </Tabs>

@@ -58,6 +58,7 @@ const addr = {
 const baseInput = (over: Partial<SalesOfficeInput> = {}): SalesOfficeInput => ({
   name: "Main Office",
   quickbookUuid: "qbo-1",
+  stripeConnectionUuid: null,
   address: null,
   ...over,
 });

@@ -8,6 +8,7 @@ export type SalesOfficeRow = {
   id: string;
   name: string | null;
   quickbook_uuid: string | null;
+  stripe_connection_uuid: string | null;
   address_state_province: string | null;
 };
 
@@ -15,14 +16,37 @@ export type SalesOfficeOption = {
   id: string;
   name: string;
   quickbookUuid: string | null;
+  stripeConnectionUuid: string | null;
   stateProvince: string | null;
 };
 
 const CANADIAN_PROVINCES = new Set([
-  "AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT",
-  "Alberta", "British Columbia", "Manitoba", "New Brunswick",
-  "Newfoundland and Labrador", "Nova Scotia", "Northwest Territories",
-  "Nunavut", "Ontario", "Prince Edward Island", "Quebec", "Saskatchewan", "Yukon",
+  "AB",
+  "BC",
+  "MB",
+  "NB",
+  "NL",
+  "NS",
+  "NT",
+  "NU",
+  "ON",
+  "PE",
+  "QC",
+  "SK",
+  "YT",
+  "Alberta",
+  "British Columbia",
+  "Manitoba",
+  "New Brunswick",
+  "Newfoundland and Labrador",
+  "Nova Scotia",
+  "Northwest Territories",
+  "Nunavut",
+  "Ontario",
+  "Prince Edward Island",
+  "Quebec",
+  "Saskatchewan",
+  "Yukon",
 ]);
 
 export function isCanadianProvince(stateProvince: string | null): boolean {
@@ -40,6 +64,7 @@ export function useSalesOffices(): { salesOffices: SalesOfficeOption[]; isLoadin
           "so.id as id",
           "so.name as name",
           "so.quickbook_uuid as quickbook_uuid",
+          "so.stripe_connection_uuid as stripe_connection_uuid",
           "a.state_province as address_state_province",
         ])
         .where("so.deleted", "=", 0)
@@ -56,6 +81,7 @@ export function useSalesOffices(): { salesOffices: SalesOfficeOption[]; isLoadin
         id: o.id,
         name: o.name ?? "",
         quickbookUuid: o.quickbook_uuid,
+        stripeConnectionUuid: o.stripe_connection_uuid,
         stateProvince: o.address_state_province,
       })),
     [data],
