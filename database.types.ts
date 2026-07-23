@@ -1324,6 +1324,42 @@ export type Database = {
           },
         ]
       }
+      EventMessageMentions: {
+        Row: {
+          created_at: string
+          id: string
+          mentioned_user_uuid: string
+          message_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mentioned_user_uuid: string
+          message_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mentioned_user_uuid?: string
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventMessageMentions_mentioned_user_uuid_fkey"
+            columns: ["mentioned_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventMessageMentions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "EventMessages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       EventMessageReadReceipts: {
         Row: {
           id: string
@@ -1364,25 +1400,31 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          edited_at: string | null
           event_uuid: string
           id: string
           is_system: boolean
+          reply_to_message_id: string | null
           user_uuid: string
         }
         Insert: {
           body: string
           created_at?: string
+          edited_at?: string | null
           event_uuid: string
           id?: string
           is_system?: boolean
+          reply_to_message_id?: string | null
           user_uuid: string
         }
         Update: {
           body?: string
           created_at?: string
+          edited_at?: string | null
           event_uuid?: string
           id?: string
           is_system?: boolean
+          reply_to_message_id?: string | null
           user_uuid?: string
         }
         Relationships: [
@@ -1391,6 +1433,13 @@ export type Database = {
             columns: ["event_uuid"]
             isOneToOne: false
             referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventMessages_reply_to_message_id_fkey"
+            columns: ["reply_to_message_id"]
+            isOneToOne: false
+            referencedRelation: "EventMessages"
             referencedColumns: ["id"]
           },
           {
@@ -1565,36 +1614,39 @@ export type Database = {
       }
       EventSubscriptions: {
         Row: {
-          account_manager_uuid: string
           created_at: string
           event_uuid: string
           id: string
+          unread: boolean
+          user_uuid: string
         }
         Insert: {
-          account_manager_uuid: string
           created_at?: string
           event_uuid: string
           id?: string
+          unread?: boolean
+          user_uuid: string
         }
         Update: {
-          account_manager_uuid?: string
           created_at?: string
           event_uuid?: string
           id?: string
+          unread?: boolean
+          user_uuid?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "EventSubscriptions_account_manager_uuid_fkey"
-            columns: ["account_manager_uuid"]
-            isOneToOne: false
-            referencedRelation: "AccountManagers"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "EventSubscriptions_event_uuid_fkey"
             columns: ["event_uuid"]
             isOneToOne: false
             referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventSubscriptions_user_uuid_fkey"
+            columns: ["user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
             referencedColumns: ["id"]
           },
         ]
@@ -1877,6 +1929,7 @@ export type Database = {
           payment_method_type: string | null
           status: string
           stripe_checkout_session_id: string | null
+          stripe_connection_uuid: string | null
           stripe_payment_intent_id: string | null
           stripe_receipt_url: string | null
         }
@@ -1894,6 +1947,7 @@ export type Database = {
           payment_method_type?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
+          stripe_connection_uuid?: string | null
           stripe_payment_intent_id?: string | null
           stripe_receipt_url?: string | null
         }
@@ -1911,6 +1965,7 @@ export type Database = {
           payment_method_type?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
+          stripe_connection_uuid?: string | null
           stripe_payment_intent_id?: string | null
           stripe_receipt_url?: string | null
         }
@@ -1927,6 +1982,13 @@ export type Database = {
             columns: ["installment_id"]
             isOneToOne: false
             referencedRelation: "PaymentInstallments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "PaymentHistory_stripe_connection_uuid_fkey"
+            columns: ["stripe_connection_uuid"]
+            isOneToOne: false
+            referencedRelation: "StripeConnections"
             referencedColumns: ["id"]
           },
         ]
@@ -2522,6 +2584,7 @@ export type Database = {
           name: string
           phone: string | null
           quickbook_uuid: string
+          stripe_connection_uuid: string | null
         }
         Insert: {
           address_uuid?: string | null
@@ -2532,6 +2595,7 @@ export type Database = {
           name: string
           phone?: string | null
           quickbook_uuid: string
+          stripe_connection_uuid?: string | null
         }
         Update: {
           address_uuid?: string | null
@@ -2542,6 +2606,7 @@ export type Database = {
           name?: string
           phone?: string | null
           quickbook_uuid?: string
+          stripe_connection_uuid?: string | null
         }
         Relationships: [
           {
@@ -2563,6 +2628,13 @@ export type Database = {
             columns: ["quickbook_uuid"]
             isOneToOne: false
             referencedRelation: "QboConnections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "SalesOffices_stripe_connection_uuid_fkey"
+            columns: ["stripe_connection_uuid"]
+            isOneToOne: false
+            referencedRelation: "StripeConnections"
             referencedColumns: ["id"]
           },
         ]
@@ -2681,6 +2753,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      StripeConnections: {
+        Row: {
+          charges_enabled: boolean
+          created_at: string
+          deleted_at: string | null
+          details_submitted: boolean
+          id: string
+          livemode: boolean
+          payouts_enabled: boolean
+          stripe_account_id: string | null
+          stripe_business_name: string | null
+        }
+        Insert: {
+          charges_enabled?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          details_submitted?: boolean
+          id?: string
+          livemode?: boolean
+          payouts_enabled?: boolean
+          stripe_account_id?: string | null
+          stripe_business_name?: string | null
+        }
+        Update: {
+          charges_enabled?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          details_submitted?: boolean
+          id?: string
+          livemode?: boolean
+          payouts_enabled?: boolean
+          stripe_account_id?: string | null
+          stripe_business_name?: string | null
+        }
+        Relationships: []
       }
       SubrentalEvents: {
         Row: {
@@ -3470,6 +3578,10 @@ export type Database = {
       is_current_user_account_manager: { Args: never; Returns: boolean }
       is_current_user_active: { Args: never; Returns: boolean }
       is_current_user_admin: { Args: never; Returns: boolean }
+      is_subscribed_to_event: {
+        Args: { p_event_uuid: string }
+        Returns: boolean
+      }
       recompute_driver_scorecard_bucket: {
         Args: { p_driver: string; p_year: number }
         Returns: undefined
