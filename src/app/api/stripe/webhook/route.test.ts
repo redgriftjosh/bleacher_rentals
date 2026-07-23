@@ -1,14 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockConstructEvent, mockRetrieve, mockPiUpdate, mockInsert, mockUpdateEq } = vi.hoisted(
-  () => ({
-    mockConstructEvent: vi.fn(),
-    mockRetrieve: vi.fn(),
-    mockPiUpdate: vi.fn(),
-    mockInsert: vi.fn(),
-    mockUpdateEq: vi.fn(),
-  }),
-);
+const {
+  mockConstructEvent,
+  mockRetrieve,
+  mockPiUpdate,
+  mockInsert,
+  mockUpdateEq,
+  mockMaybeSingle,
+} = vi.hoisted(() => ({
+  mockConstructEvent: vi.fn(),
+  mockRetrieve: vi.fn(),
+  mockPiUpdate: vi.fn(),
+  mockInsert: vi.fn(),
+  mockUpdateEq: vi.fn(),
+  mockMaybeSingle: vi.fn(),
+}));
 
 vi.mock("stripe", () => ({
   default: class {
@@ -20,6 +26,8 @@ vi.mock("stripe", () => ({
 vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({
     from: () => ({
+      // Idempotency existence check: select(...).eq(...).maybeSingle()
+      select: () => ({ eq: () => ({ maybeSingle: mockMaybeSingle }) }),
       insert: mockInsert,
       update: () => ({ eq: mockUpdateEq }),
     }),
@@ -54,7 +62,12 @@ function checkoutEvent(over: { session?: object; account?: string; type?: string
         customer_email: null,
         customer_details: { email: "jane@test.com" },
         payment_method_types: ["card"],
-        metadata: { eventId: "evt-1", installmentId: "", payerName: "Jane" },
+        metadata: {
+          eventId: "evt-1",
+          installmentId: "",
+          payerName: "Jane",
+          stripeConnectionId: "conn-1",
+        },
         ...over.session,
       },
     },
@@ -67,6 +80,7 @@ describe("POST /api/stripe/webhook", () => {
     mockInsert.mockResolvedValue({ error: null });
     mockUpdateEq.mockResolvedValue({ error: null });
     mockPiUpdate.mockResolvedValue({});
+    mockMaybeSingle.mockResolvedValue({ data: null }); // no prior PaymentHistory row
     mockRetrieve.mockResolvedValue({
       latest_charge: { receipt_url: "https://receipt.stripe.com/r1" },
     });
@@ -135,6 +149,22 @@ describe("POST /api/stripe/webhook", () => {
     expect(insert.payer_email).toBe("jane@test.com");
     expect(insert.stripe_receipt_url).toBe("https://receipt.stripe.com/r1");
     expect(insert.stripe_checkout_session_id).toBe("cs_1");
+    // Traceability: which connected account processed the payment.
+    expect(insert.stripe_connection_uuid).toBe("conn-1");
+  });
+
+  it("does not double-insert when the same session is delivered twice", async () => {
+    mockConstructEvent.mockReturnValue(checkoutEvent());
+    // A PaymentHistory row for this session already exists (a prior delivery).
+    mockMaybeSingle.mockResolvedValue({ data: { id: "ph-existing" } });
+
+    const res = await POST(makeRequest("{}", { signature: "sig" }));
+
+    expect(res.status).toBe(200);
+    expect((await res.json()).received).toBe(true);
+    // No second row, and the installment isn't re-touched.
+    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockUpdateEq).not.toHaveBeenCalled();
   });
 
   it("records a connected-account payment with a Stripe-Account context", async () => {
@@ -175,12 +205,28 @@ describe("POST /api/stripe/webhook", () => {
     expect(mockUpdateEq).not.toHaveBeenCalled();
   });
 
-  it("still returns 200 when the PaymentHistory insert fails", async () => {
+  it("acknowledges with 200 when the insert races into a unique violation (23505)", async () => {
+    // Two identical deliveries both passed the existence check; this one lost
+    // the insert race and hit the partial unique index.
     mockConstructEvent.mockReturnValue(checkoutEvent());
-    mockInsert.mockResolvedValue({ error: { message: "db down" } });
+    mockInsert.mockResolvedValue({ error: { code: "23505", message: "duplicate key" } });
+
     const res = await POST(makeRequest("{}", { signature: "sig" }));
+
     expect(res.status).toBe(200);
     expect((await res.json()).received).toBe(true);
+    // The winning delivery handles the installment; the loser must not re-touch it.
+    expect(mockUpdateEq).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 on a non-duplicate insert error so Stripe retries", async () => {
+    mockConstructEvent.mockReturnValue(checkoutEvent());
+    mockInsert.mockResolvedValue({ error: { code: "08006", message: "connection failure" } });
+
+    const res = await POST(makeRequest("{}", { signature: "sig" }));
+
+    expect(res.status).toBe(500);
+    expect(mockUpdateEq).not.toHaveBeenCalled();
   });
 
   it("records the payment even when the receipt fetch fails", async () => {

@@ -1929,6 +1929,7 @@ export type Database = {
           payment_method_type: string | null
           status: string
           stripe_checkout_session_id: string | null
+          stripe_connection_uuid: string | null
           stripe_payment_intent_id: string | null
           stripe_receipt_url: string | null
         }
@@ -1946,6 +1947,7 @@ export type Database = {
           payment_method_type?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
+          stripe_connection_uuid?: string | null
           stripe_payment_intent_id?: string | null
           stripe_receipt_url?: string | null
         }
@@ -1963,6 +1965,7 @@ export type Database = {
           payment_method_type?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
+          stripe_connection_uuid?: string | null
           stripe_payment_intent_id?: string | null
           stripe_receipt_url?: string | null
         }
@@ -1979,6 +1982,13 @@ export type Database = {
             columns: ["installment_id"]
             isOneToOne: false
             referencedRelation: "PaymentInstallments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "PaymentHistory_stripe_connection_uuid_fkey"
+            columns: ["stripe_connection_uuid"]
+            isOneToOne: false
+            referencedRelation: "StripeConnections"
             referencedColumns: ["id"]
           },
         ]

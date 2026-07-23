@@ -911,6 +911,7 @@ const PaymentHistoryCols = {
   status: column.text,
   stripe_payment_intent_id: column.text,
   stripe_checkout_session_id: column.text,
+  stripe_connection_uuid: column.text,
   stripe_receipt_url: column.text,
   payment_method_type: column.text,
   payer_name: column.text,

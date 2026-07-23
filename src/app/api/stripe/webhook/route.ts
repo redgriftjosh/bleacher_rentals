@@ -48,13 +48,29 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const { eventId, installmentId, payerName } = session.metadata ?? {};
+    const { eventId, installmentId, payerName, stripeConnectionId } = session.metadata ?? {};
 
     if (!eventId) {
       return NextResponse.json({ error: "No eventId in metadata" }, { status: 400 });
     }
 
     const supabase = getSupabaseAdmin();
+
+    // Idempotency: Stripe retries webhook deliveries, so the same checkout
+    // session can arrive more than once. Recording it twice would double-count
+    // the payment, so bail if we already have a row for this session. The
+    // partial unique index on stripe_checkout_session_id is the hard guarantee
+    // under concurrent retries; this check keeps the happy path clean.
+    const { data: alreadyRecorded } = await supabase
+      .from("PaymentHistory")
+      .select("id")
+      .eq("stripe_checkout_session_id", session.id)
+      .maybeSingle();
+
+    if (alreadyRecorded) {
+      console.log("[Stripe Webhook] Duplicate delivery for session", session.id, "— skipping");
+      return NextResponse.json({ received: true });
+    }
 
     // The email the customer actually entered/edited on the Checkout page.
     const customerEmail = session.customer_details?.email ?? session.customer_email ?? null;
@@ -101,6 +117,7 @@ export async function POST(req: NextRequest) {
       stripe_payment_intent_id:
         typeof session.payment_intent === "string" ? session.payment_intent : null,
       stripe_checkout_session_id: session.id,
+      stripe_connection_uuid: stripeConnectionId || null,
       stripe_receipt_url: receiptUrl,
       payment_method_type: session.payment_method_types?.[0] ?? "card",
       payer_name: payerName ?? "Unknown",
@@ -109,15 +126,33 @@ export async function POST(req: NextRequest) {
     });
 
     if (insertError) {
+      // 23505 = unique_violation on stripe_checkout_session_id. This is the
+      // race the existence check above can't close: two identical deliveries
+      // both pass the check, then one insert wins and the other lands here. The
+      // payment is already recorded, so acknowledge with 200 and stop — do NOT
+      // let Stripe retry.
+      if (insertError.code === "23505") {
+        console.log(
+          "[Stripe Webhook] Concurrent duplicate for session",
+          session.id,
+          "— already recorded, skipping",
+        );
+        return NextResponse.json({ received: true });
+      }
+
+      // Any other failure is a genuine problem (transient DB error, etc.).
+      // Return 500 so Stripe retries the delivery rather than silently losing
+      // the payment record.
       console.error("[Stripe Webhook] PaymentHistory insert failed:", insertError);
-    } else {
-      console.log(
-        "[Stripe Webhook] PaymentHistory inserted for event:",
-        eventId,
-        "amount:",
-        session.amount_total,
-      );
+      return NextResponse.json({ error: "Failed to record payment" }, { status: 500 });
     }
+
+    console.log(
+      "[Stripe Webhook] PaymentHistory inserted for event:",
+      eventId,
+      "amount:",
+      session.amount_total,
+    );
 
     if (installmentId) {
       const { error: updateError } = await supabase
