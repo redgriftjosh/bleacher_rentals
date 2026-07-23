@@ -10,6 +10,7 @@ export type SalesOfficeRow = {
   name: string | null;
   address_uuid: string | null;
   quickbook_uuid: string | null;
+  stripe_connection_uuid: string | null;
   deleted: number | null;
   address_street: string | null;
   address_city: string | null;
@@ -20,6 +21,8 @@ export type SalesOfficeRow = {
 export type QboConnectionOption = {
   id: string;
   displayName: string;
+  // The office's currency is inherited from its QuickBooks connection.
+  currency: string | null;
 };
 
 export type SalesOfficeAddress = {
@@ -32,6 +35,8 @@ export type SalesOfficeAddress = {
 export type SalesOfficeInput = {
   name: string;
   quickbookUuid: string;
+  // Optional: office falls back to the default Stripe account when null.
+  stripeConnectionUuid: string | null;
   address: SalesOfficeAddress | null;
 };
 
@@ -46,6 +51,7 @@ export function buildFetchAllSalesOfficesQuery() {
       "so.name as name",
       "so.address_uuid as address_uuid",
       "so.quickbook_uuid as quickbook_uuid",
+      "so.stripe_connection_uuid as stripe_connection_uuid",
       "so.deleted as deleted",
       "a.street as address_street",
       "a.city as address_city",
@@ -67,7 +73,7 @@ export async function fetchQboConnections(
 ): Promise<QboConnectionOption[]> {
   const { data, error } = await supabase
     .from("QboConnections")
-    .select("id, display_name")
+    .select("id, display_name, currency")
     .order("display_name");
 
   if (error) {
@@ -78,7 +84,29 @@ export async function fetchQboConnections(
   return (data ?? []).map((q) => ({
     id: q.id,
     displayName: q.display_name,
+    currency: q.currency,
   }));
+}
+
+// ── Setup completeness ──
+
+export type SalesOfficeSetup = {
+  complete: boolean;
+  /** Human-readable names of the pieces still missing. */
+  missing: string[];
+};
+
+/**
+ * A sales office is "fully set up" only when it has everything needed to send a
+ * quote and take payment: an address, a QuickBooks connection (which also gives
+ * it a currency), and a Stripe connection. Name is always required to save.
+ */
+export function getSalesOfficeSetup(office: SalesOfficeRow): SalesOfficeSetup {
+  const missing: string[] = [];
+  if (!office.address_uuid) missing.push("address");
+  if (!office.quickbook_uuid) missing.push("QuickBooks account");
+  if (!office.stripe_connection_uuid) missing.push("Stripe account");
+  return { complete: missing.length === 0, missing };
 }
 
 // ── Writes (PowerSync local-first / optimistic) ──
@@ -128,6 +156,7 @@ export async function createSalesOffice(params: SalesOfficeInput): Promise<strin
         id,
         name: params.name,
         quickbook_uuid: params.quickbookUuid,
+        stripe_connection_uuid: params.stripeConnectionUuid,
         address_uuid: addressUuid,
         deleted: 0,
       } as any)
@@ -150,6 +179,7 @@ export async function updateSalesOffice(
       .set({
         name: params.name,
         quickbook_uuid: params.quickbookUuid,
+        stripe_connection_uuid: params.stripeConnectionUuid,
         address_uuid: addressUuid,
       } as any)
       .where("id", "=", id)

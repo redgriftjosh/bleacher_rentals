@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Trash2, Pencil } from "lucide-react";
+import { Trash2, Pencil, CheckCircle2, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { AddOfficeModal } from "@/features/salesOffices/components/AddOfficeModal";
@@ -9,6 +9,7 @@ import {
   fetchAllSalesOffices,
   fetchQboConnections,
   softDeleteSalesOffice,
+  getSalesOfficeSetup,
   SalesOfficeRow,
   QboConnectionOption,
 } from "@/features/salesOffices/db/salesOfficesDb";
@@ -60,6 +61,13 @@ export default function SalesOfficesPage() {
     return m;
   }, [qboConnections]);
 
+  // An office's currency is whatever its linked QuickBooks connection reports.
+  const currencyByOfficeQbo = useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const c of qboConnections) m.set(c.id, c.currency);
+    return m;
+  }, [qboConnections]);
+
   const openCreate = () => {
     setEditing(null);
     setModalOpen(true);
@@ -84,11 +92,9 @@ export default function SalesOfficesPage() {
     <main>
       <PageHeader
         title="Sales Offices"
-        subtitle="Manage sales offices and their QuickBooks connections"
+        subtitle="A sales office is where a quote comes from. Think of it as a franchise location. Each one acts as its own company with a single currency, QuickBooks account, and Stripe account. The currency is inherited from the QuickBooks connection. An office isn't ready to send quotes until all three are set."
         action={
-          isAdmin ? (
-            <PrimaryButton onClick={openCreate}>+ Add Office</PrimaryButton>
-          ) : undefined
+          isAdmin ? <PrimaryButton onClick={openCreate}>+ Add Office</PrimaryButton> : undefined
         }
       />
 
@@ -114,6 +120,12 @@ export default function SalesOfficesPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   QuickBooks
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Currency
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Status
+                </th>
                 {isAdmin && (
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-24">
                     Actions
@@ -134,6 +146,29 @@ export default function SalesOfficesPage() {
                     {(office.quickbook_uuid && qboNameByUuid.get(office.quickbook_uuid)) ??
                       office.quickbook_uuid ??
                       "—"}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {(office.quickbook_uuid && currencyByOfficeQbo.get(office.quickbook_uuid)) ??
+                      "—"}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {(() => {
+                      const setup = getSalesOfficeSetup(office);
+                      return setup.complete ? (
+                        <span className="inline-flex items-center gap-1 text-green-600">
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span className="text-xs">Ready</span>
+                        </span>
+                      ) : (
+                        <span
+                          className="inline-flex items-center gap-1 text-amber-600"
+                          title={`Missing: ${setup.missing.join(", ")}`}
+                        >
+                          <AlertTriangle className="h-4 w-4" />
+                          <span className="text-xs">Needs {setup.missing.join(", ")}</span>
+                        </span>
+                      );
+                    })()}
                   </td>
                   {isAdmin && (
                     <td className="px-4 py-3 text-right">

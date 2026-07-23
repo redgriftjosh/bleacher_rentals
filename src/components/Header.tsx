@@ -2,12 +2,16 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Code, Laptop, Lightbulb, List } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 import { AlertsDropDown } from "@/features/alerts/components/AlertsDropDown";
+import { EventChatNotificationsDropDown } from "@/features/eventChat/components/EventChatNotificationsDropDown";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 
 const Header = () => {
   const router = useRouter();
   const environment = process.env.NEXT_PUBLIC_ENVIRONMENT;
+  const { isAdmin, isAccountManager } = usePermissionsStore();
+  const showChatNotifications = isAdmin || isAccountManager;
 
   const getEnvironmentConfig = () => {
     if (environment === "development") {
@@ -41,12 +45,13 @@ const Header = () => {
         <div className="flex justify-between items-center">
           {/* <p className="text-2xl font-bold ml-6">Bleacher Rentals</p> */}
           <Image
-            className="ml-2"
+            className="ml-2 h-10 w-auto"
+            style={{ height: "auto", width: "auto" }}
             src="/logo.png"
             alt="Bleacher Rentals Logo"
-            width={120} // Adjust width as needed
-            height={40} // Adjust height as needed
-            priority // Optimized for faster loading
+            width={120}
+            height={40}
+            priority
           />
           <div className="flex items-center mr-2 relative">
             <div className="flex items-center  mr-4">
@@ -58,6 +63,11 @@ const Header = () => {
                 Request a Feature
               </button>
             </div>
+            {showChatNotifications && (
+              <div className="mr-3">
+                <EventChatNotificationsDropDown />
+              </div>
+            )}
             <div className="mr-3">
               <AlertsDropDown />
             </div>
