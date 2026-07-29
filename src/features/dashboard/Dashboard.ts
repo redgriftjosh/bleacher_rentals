@@ -114,6 +114,8 @@ export class Dashboard {
 
     const filteredBleachers = filterSortPixiBleachers(allBleachers, {
       rows: this.filters.rows,
+      zoneUuids: this.filters.zoneUuids,
+      showUnassignedZone: this.filters.showUnassignedZone,
       alwaysIncludeBleacherUuids: currentEvent.bleacherUuids ?? [],
       isFormExpanded: currentEvent.isFormExpanded,
       optimizationMode: this.filters.optimizationMode,
@@ -299,6 +301,8 @@ export class Dashboard {
 
     const filteredBleachers = filterSortPixiBleachers(allBleachers, {
       rows: filters.rows,
+      zoneUuids: filters.zoneUuids,
+      showUnassignedZone: filters.showUnassignedZone,
       alwaysIncludeBleacherUuids: alwaysInclude,
       isFormExpanded:
         currentEvent.isFormExpanded ||
