@@ -15,6 +15,7 @@ import { EventConfiguration } from "@/features/eventConfiguration/components/Eve
 import { MaintenanceEventPanel } from "@/features/maintenanceEvents/components/MaintenanceEventPanel";
 import BleacherLocationModal from "@/features/dashboard/components/BleacherLocationModal";
 import SwapConfirmationModal from "@/features/dashboard/components/SwapConfirmationModal";
+import WorkTrackerDragConfirmModal from "@/features/workTrackers/components/WorkTrackerDragConfirmModal";
 import { useBleacherLocationModalStore } from "@/features/dashboard/state/useBleacherLocationModalStore";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { supabaseClientRegistry } from "@/features/dashboard/util/supabaseClientRegistry";
@@ -113,6 +114,7 @@ export default function Page() {
         />
       )}
       <SwapConfirmationModal />
+      <WorkTrackerDragConfirmModal />
       <div className="min-w-0 mb-2.5">
         <div className="flex justify-between items-center pt-2 pl-2 pr-2">
           <div className="flex items-center gap-3">

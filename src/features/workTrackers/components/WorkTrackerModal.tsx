@@ -32,6 +32,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { buildTripStatusNotification } from "@/features/workTrackers/db/notifications";
+import {
+  buildWorkTrackerSnapshot,
+  classifyWorkTrackerChanges,
+  isWorkTrackerBlockedFromEdit,
+  requiresUnacceptWarning,
+  resolveEffectiveChangeType,
+  resolveStatusOnSave,
+  shouldSendDriverNotification,
+  type WorkTrackerChangeType,
+  type WorkTrackerSnapshot,
+} from "@/features/workTrackers/util/workTrackerEditPolicy";
 import BillOfLadingButton from "./billOfLading/BillOfLadingButton";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import {
@@ -88,6 +99,8 @@ export default function WorkTrackerModal({
   const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showEditTypes, setShowEditTypes] = useState(false);
+  const initialSnapshotRef = useRef<WorkTrackerSnapshot | null>(null);
+  const pendingChangeTypeRef = useRef<WorkTrackerChangeType>("none");
 
   // Fetch available work tracker types (local-first via PowerSync)
   const { types: workTrackerTypes } = useWorkTrackerTypes();
@@ -343,6 +356,7 @@ export default function WorkTrackerModal({
       setInitialStatus("draft");
       setPickUpAddress(null);
       setDropOffAddress(null);
+      initialSnapshotRef.current = buildWorkTrackerSnapshot(selectedWorkTracker, null, null);
       // Default to "Trip" type for new work trackers
       const tripType = workTrackerTypes.find((t) => t.display_name === "Trip");
       if (tripType) {
@@ -350,38 +364,52 @@ export default function WorkTrackerModal({
       }
     } else if (fetchedWorkTracker) {
       console.log("fetchedWorkTracker", fetchedWorkTracker);
-      setWorkTracker(fetchedWorkTracker.workTracker);
-      setInitialStatus(fetchedWorkTracker.workTracker?.status ?? "draft");
-      setPayInput(
-        fetchedWorkTracker.workTracker && fetchedWorkTracker.workTracker.pay_cents != null
-          ? (fetchedWorkTracker.workTracker.pay_cents / 100).toFixed(2)
-          : "",
-      );
-      setPickUpAddress({
+      const nextPickupAddress = {
         addressUuid: fetchedWorkTracker.pickupAddress?.id ?? null,
         address: fetchedWorkTracker.pickupAddress?.street ?? "",
         city: fetchedWorkTracker.pickupAddress?.city ?? "",
         state: fetchedWorkTracker.pickupAddress?.state_province ?? "",
         postalCode: fetchedWorkTracker.pickupAddress?.zip_postal ?? "",
-      });
-      setDropOffAddress({
+      };
+      const nextDropoffAddress = {
         addressUuid: fetchedWorkTracker.dropoffAddress?.id ?? null,
         address: fetchedWorkTracker.dropoffAddress?.street ?? "",
         city: fetchedWorkTracker.dropoffAddress?.city ?? "",
         state: fetchedWorkTracker.dropoffAddress?.state_province ?? "",
         postalCode: fetchedWorkTracker.dropoffAddress?.zip_postal ?? "",
-      });
+      };
+      setWorkTracker(fetchedWorkTracker.workTracker);
+      setInitialStatus(fetchedWorkTracker.workTracker?.status ?? "draft");
+      initialSnapshotRef.current = buildWorkTrackerSnapshot(
+        fetchedWorkTracker.workTracker,
+        nextPickupAddress,
+        nextDropoffAddress,
+      );
+      setPayInput(
+        fetchedWorkTracker.workTracker && fetchedWorkTracker.workTracker.pay_cents != null
+          ? (fetchedWorkTracker.workTracker.pay_cents / 100).toFixed(2)
+          : "",
+      );
+      setPickUpAddress(nextPickupAddress);
+      setDropOffAddress(nextDropoffAddress);
     }
-  }, [selectedWorkTracker, fetchedWorkTracker]);
+  }, [selectedWorkTracker, fetchedWorkTracker, workTrackerTypes]);
 
   const handleSaveWorkTracker = async () => {
     if (isSaving) return;
     setIsSaving(true);
     try {
+      const changeType = pendingChangeTypeRef.current;
+      const resolvedStatus = resolveStatusOnSave(
+        initialStatus,
+        changeType,
+        workTracker?.status ?? "draft",
+      );
       // Merge distance/duration from the Google Maps leg into the tracker before saving
       const trackerToSave = workTracker
         ? {
             ...workTracker,
+            status: resolvedStatus,
             distance_meters:
               leg?.distanceMeters != null
                 ? Math.round(leg.distanceMeters)
@@ -394,11 +422,14 @@ export default function WorkTrackerModal({
         : workTracker;
       await saveWorkTracker(trackerToSave, pickUpAddress, dropOffAddress, {
         previousStatus: initialStatus,
+        changeType,
         driverUserUuid: selectedDriver?.user_uuid ?? null,
-        previousPickupAddress: pickupAddress?.address ?? "an unknown pickup location",
-        previousPickupCity: pickupAddress?.city ?? "",
-        previousDropoffAddress: dropoffAddress?.address ?? "an unknown dropoff location",
-        previousDropoffCity: dropoffAddress?.city ?? "",
+        previousPickupAddress:
+          initialSnapshotRef.current?.pickupAddress?.address ?? "an unknown pickup location",
+        previousPickupCity: initialSnapshotRef.current?.pickupAddress?.city ?? "",
+        previousDropoffAddress:
+          initialSnapshotRef.current?.dropoffAddress?.address ?? "an unknown dropoff location",
+        previousDropoffCity: initialSnapshotRef.current?.dropoffAddress?.city ?? "",
       });
       setShowSaveConfirmModal(false);
       // Invalidate this specific work tracker's cache so re-opening shows fresh data
@@ -517,16 +548,101 @@ export default function WorkTrackerModal({
   const labelClassName = "block text-sm font-medium text-gray-700 mt-1";
   const inputClassName = "w-full p-2 border rounded bg-white";
 
-  const saveNotificationPreview = buildTripStatusNotification({
-    previousStatus: workTracker?.id === "-1" ? "draft" : initialStatus,
-    nextStatus: workTracker?.status ?? "draft",
-    pickupAddress: pickUpAddress?.address ?? pickupAddress?.address ?? "an unknown pickup location",
-    pickupCity: pickUpAddress?.city ?? pickupAddress?.city ?? "",
-    dropoffAddress:
-      dropOffAddress?.address ?? dropoffAddress?.address ?? "an unknown dropoff location",
-    dropoffCity: dropOffAddress?.city ?? dropoffAddress?.city ?? "",
-    date: workTracker?.date ?? null,
-  });
+  const currentSnapshot = buildWorkTrackerSnapshot(workTracker, pickUpAddress, dropOffAddress);
+  const statusChanged = (workTracker?.status ?? "draft") !== initialStatus;
+
+  const fieldChangeType = useMemo(() => {
+    const before = initialSnapshotRef.current;
+    const after = currentSnapshot;
+    if (!before || !after) return isNew ? ("un-accept" as const) : ("none" as const);
+    return classifyWorkTrackerChanges(before, after);
+  }, [currentSnapshot, isNew]);
+
+  const currentChangeType = useMemo(
+    () => resolveEffectiveChangeType(fieldChangeType, statusChanged, isNew),
+    [fieldChangeType, statusChanged, isNew],
+  );
+
+  const isBlockedFromEdit = !isNew && isWorkTrackerBlockedFromEdit(initialStatus);
+  const isReleasedLocked = !isNew && initialStatus === "released" && !canRelease;
+  const canEditFields = canEdit && !isBlockedFromEdit && !isReleasedLocked;
+  const showUnacceptWarning = requiresUnacceptWarning(initialStatus, currentChangeType);
+
+  const effectiveNextStatus = resolveStatusOnSave(
+    initialStatus,
+    currentChangeType === "none" ? "un-accept" : currentChangeType,
+    workTracker?.status ?? "draft",
+  );
+
+  const saveNotificationPreview =
+    shouldSendDriverNotification(
+      currentChangeType === "none" ? "un-accept" : currentChangeType,
+      workTracker?.id === "-1" ? "draft" : initialStatus,
+      workTracker?.id === "-1",
+      effectiveNextStatus,
+    )
+      ? buildTripStatusNotification({
+          previousStatus: workTracker?.id === "-1" ? "draft" : initialStatus,
+          nextStatus: effectiveNextStatus,
+          pickupAddress:
+            pickUpAddress?.address ?? pickupAddress?.address ?? "an unknown pickup location",
+          pickupCity: pickUpAddress?.city ?? pickupAddress?.city ?? "",
+          dropoffAddress:
+            dropOffAddress?.address ?? dropoffAddress?.address ?? "an unknown dropoff location",
+          dropoffCity: dropOffAddress?.city ?? dropoffAddress?.city ?? "",
+          date: workTracker?.date ?? null,
+        })
+      : null;
+
+  const handleSaveClick = () => {
+    if (isSaving) return;
+
+    if (isBlockedFromEdit) {
+      createErrorToast([
+        "This trip is in progress and cannot be edited. Contact a lead account manager if changes are needed.",
+      ]);
+      return;
+    }
+
+    if (isReleasedLocked) {
+      createErrorToast(["You do not have permission to edit a released work tracker."]);
+      return;
+    }
+
+    const before = initialSnapshotRef.current;
+    const after = buildWorkTrackerSnapshot(workTracker, pickUpAddress, dropOffAddress);
+    const fieldChangeType =
+      before && after ? classifyWorkTrackerChanges(before, after) : isNew ? "un-accept" : "none";
+
+    const hasStatusChange = (workTracker?.status ?? "draft") !== initialStatus;
+
+    if (fieldChangeType === "none" && !hasStatusChange) {
+      createErrorToast(["No changes to save."]);
+      return;
+    }
+
+    const changeType = resolveEffectiveChangeType(fieldChangeType, hasStatusChange, isNew);
+    pendingChangeTypeRef.current = changeType;
+
+    const resolvedStatus = resolveStatusOnSave(
+      initialStatus,
+      changeType,
+      workTracker?.status ?? "draft",
+    );
+    const willNotify = shouldSendDriverNotification(
+      changeType,
+      isNew ? "draft" : initialStatus,
+      isNew,
+      resolvedStatus,
+    );
+
+    if (!willNotify) {
+      void handleSaveWorkTracker();
+      return;
+    }
+
+    setShowSaveConfirmModal(true);
+  };
 
   // Track whether the initial mousedown began on the backdrop so we only close when both down & up occur there
   const mouseDownOnBackdrop = useRef(false);
@@ -583,7 +699,18 @@ export default function WorkTrackerModal({
                 You have read-only access to this work tracker.
               </div>
             )}
-            <fieldset disabled={!canEdit}>
+            {isBlockedFromEdit && (
+              <div className="mb-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                This trip is in progress and cannot be edited. Contact a lead account manager if
+                changes are needed.
+              </div>
+            )}
+            {isReleasedLocked && (
+              <div className="mb-2 rounded border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+                You do not have permission to edit a released work tracker.
+              </div>
+            )}
+            <fieldset disabled={!canEditFields}>
               <div className="flex flex-row gap-4">
                 {/* Column 1: Global Info */}
                 <div className="flex-1">
@@ -600,8 +727,8 @@ export default function WorkTrackerModal({
                         }
                         placeholder="Select Driver"
                         date={workTracker?.date ?? null}
-                        disabled={!canEdit}
-                        showAllDrivers={!canEdit}
+                        disabled={!canEditFields}
+                        showAllDrivers={!canEditFields}
                       />
                     </div>
                     <div className="flex-1">
@@ -619,7 +746,7 @@ export default function WorkTrackerModal({
                           }))
                         }
                         placeholder={isBleachersLoading ? "Loading..." : "Select Bleacher"}
-                        disabled={!canEdit}
+                        disabled={!canEditFields}
                       />
                     </div>
                   </div>
@@ -628,7 +755,7 @@ export default function WorkTrackerModal({
                   <div className="mt-1">
                     <div className="flex items-center justify-between">
                       <label className={labelClassName}>Type</label>
-                      {canEdit && (
+                      {canEditFields && (
                         <button
                           type="button"
                           onClick={() => setShowEditTypes(true)}
@@ -652,7 +779,7 @@ export default function WorkTrackerModal({
                         }))
                       }
                       placeholder="Select Type"
-                      disabled={!canEdit}
+                      disabled={!canEditFields}
                     />
                   </div>
 
@@ -747,7 +874,7 @@ export default function WorkTrackerModal({
                       onChange={handlePayChange}
                       placeholder="0.00"
                     />
-                    {canEdit && (
+                    {canEditFields && (
                       <Calculator
                         className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer text-darkBlue hover:text-lightBlue"
                         onClick={handleCalculatePay}
@@ -802,7 +929,7 @@ export default function WorkTrackerModal({
                           }
                           initialValue={pickUpAddress?.address || ""}
                         />
-                        {canEdit && (
+                        {canEditFields && (
                           <AppTooltip content="Populate from last known bleacher location">
                             <button
                               type="button"
@@ -876,7 +1003,7 @@ export default function WorkTrackerModal({
                           }
                           initialValue={dropOffAddress?.address || ""}
                         />
-                        {canEdit && (
+                        {canEditFields && (
                           <AppTooltip content="Populate from next known bleacher location">
                             <button
                               type="button"
@@ -934,7 +1061,7 @@ export default function WorkTrackerModal({
             </fieldset>
 
             <div className="mt-4 flex justify-between items-center gap-2">
-              {canEdit && workTracker?.id && workTracker.id !== "-1" && (
+              {canEditFields && workTracker?.id && workTracker.id !== "-1" && (
                 <button
                   className="text-sm px-3 py-1 rounded bg-red-600 text-white cursor-pointer hover:bg-red-700 transition-all duration-200 flex items-center gap-1"
                   onClick={handleDeleteWorkTracker}
@@ -949,10 +1076,10 @@ export default function WorkTrackerModal({
                 pickUpAddress={pickUpAddress}
                 dropOffAddress={dropOffAddress}
               />
-              {canEdit && (
+              {canEditFields && (
                 <button
                   className="text-sm px-3 py-1 rounded bg-darkBlue text-white cursor-pointer hover:bg-lightBlue transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-darkBlue"
-                  onClick={() => setShowSaveConfirmModal(true)}
+                  onClick={handleSaveClick}
                   disabled={isSaving}
                 >
                   {isSaving ? "Saving..." : "Save"}
@@ -980,6 +1107,16 @@ export default function WorkTrackerModal({
           <p className="text-sm text-gray-600">
             Saving this work tracker may notify the driver. This is the notification preview:
           </p>
+
+          {showUnacceptWarning && (
+            <div className="rounded border border-amber-300 bg-amber-50 p-3">
+              <p className="text-sm text-amber-900">
+                This trip has already been accepted by the driver. Saving these changes will move it
+                back to <span className="font-semibold">Released</span> status, and the driver will
+                need to accept it again.
+              </p>
+            </div>
+          )}
 
           {saveNotificationPreview ? (
             <div className="rounded border border-blue-200 bg-blue-50 p-3">
