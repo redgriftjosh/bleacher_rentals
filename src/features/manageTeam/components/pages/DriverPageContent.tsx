@@ -92,6 +92,7 @@ export function DriverPageContent() {
   const licensePhotoPath = useCurrentUserStore((s) => s.licensePhotoPath);
   const insurancePhotoPath = useCurrentUserStore((s) => s.insurancePhotoPath);
   const medicalCardPhotoPath = useCurrentUserStore((s) => s.medicalCardPhotoPath);
+  const driverId = useCurrentUserStore((s) => s.driverId);
 
   // Pay rate display state for CentsInput
   const [payRateDisplay, setPayRateDisplay] = useState(
@@ -189,8 +190,14 @@ export function DriverPageContent() {
     homeState?.toLowerCase().includes("canada") ||
     canadianProvinces.some((prov) => homeState?.toLowerCase() === prov);
 
-  // Generate storage path prefix for uploads (use temp ID if new user)
-  const driverStoragePath = existingUserUuid || "temp-driver";
+  // Storage path prefix matches driver app: `{driverId}/license_{ts}.ext`
+  useEffect(() => {
+    if (!driverId) {
+      setField("driverId", crypto.randomUUID());
+    }
+  }, [driverId, setField]);
+
+  const driverStoragePath = driverId || "temp-driver";
 
   return (
     <div className="space-y-6">
@@ -411,7 +418,7 @@ export function DriverPageContent() {
               <FileUploadInput
                 label="License Photo"
                 bucket="driver-documents"
-                storagePath={`driver-documents/${driverStoragePath}/license`}
+                storagePath={`${driverStoragePath}/license`}
                 value={licensePhotoPath}
                 onChange={(path) => setField("licensePhotoPath", path)}
               />
@@ -419,7 +426,7 @@ export function DriverPageContent() {
               <FileUploadInput
                 label="Insurance Photo"
                 bucket="driver-documents"
-                storagePath={`driver-documents/${driverStoragePath}/insurance`}
+                storagePath={`${driverStoragePath}/insurance`}
                 value={insurancePhotoPath}
                 onChange={(path) => setField("insurancePhotoPath", path)}
               />
@@ -428,7 +435,7 @@ export function DriverPageContent() {
                 <FileUploadInput
                   label="Medical Card Photo"
                   bucket="driver-documents"
-                  storagePath={`driver-documents/${driverStoragePath}/medical_card`}
+                  storagePath={`${driverStoragePath}/medical_card`}
                   value={medicalCardPhotoPath}
                   onChange={(path) => setField("medicalCardPhotoPath", path)}
                 />
