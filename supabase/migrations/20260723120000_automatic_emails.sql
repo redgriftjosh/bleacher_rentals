@@ -160,12 +160,6 @@ begin
     using (public.get_user_roles() && ARRAY['admin']::text[]);$p$;
 end $$;
 
--- ── Storage bucket: email-attachments ─────────────────────────────────────────
--- Private bucket for files attached to email templates (W9s, certs, etc.).
--- Admins may insert and read. No updates or deletes.
--- insert into storage.buckets (id, name, public)
---   values ('email-attachments', 'email-attachments', false)
---   on conflict (id) do nothing;
 
 create policy "email_attachments_insert"
   on storage.objects as permissive for insert to authenticated
