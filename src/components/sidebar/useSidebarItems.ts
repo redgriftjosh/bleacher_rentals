@@ -20,6 +20,7 @@ import {
   BookUser,
   Warehouse,
   MessageSquare,
+  Mails,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";

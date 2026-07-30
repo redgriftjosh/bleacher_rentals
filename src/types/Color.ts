@@ -1,7 +1,7 @@
 export enum Color {
-  GREEN_ACCENT = "#3A8B61",
+  GREEN_ACCENT = "#328C61",
   BACKGROUND_ACCENT = "#FFF6E7",
-  DARK_BLUE = "#10365A",
+  DARK_BLUE = "#405CAA",
   LIGHT_BLUE = "#1d62a3",
   LIGHT_BACKGROUND = "#f9f9f9",
   NORMAL_BLACK = "rgba(0,0,0,0.85)",

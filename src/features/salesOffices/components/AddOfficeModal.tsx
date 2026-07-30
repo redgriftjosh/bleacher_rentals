@@ -17,6 +17,7 @@ import { useStripeConnections } from "@/features/stripe-integration/hooks/useStr
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
+import { AutoEmailsForSalesOfficeBtn } from "./AutoEmailsForSalesOfficeBtn";
 
 type Props = {
   open: boolean;
@@ -207,6 +208,11 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
               placeholder={loadingStripe ? "Loading..." : "Select Stripe (optional)..."}
               disabled={loadingStripe}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Automated Emails</label>
+            <AutoEmailsForSalesOfficeBtn officeId={editing?.id ?? null} />
           </div>
         </div>
 
