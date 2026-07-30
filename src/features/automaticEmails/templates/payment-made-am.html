@@ -1,0 +1,107 @@
+<!--
+  "Customer Paid" — internal notification sent to the ACCOUNT MANAGER when their
+  client makes a payment (trigger: payment_made_am).
+
+  Same clean, table-based, inline-styled structure as contract-signed.html
+  (Gmail/Outlook safe). Deliberately plainer than the client-facing templates —
+  it's an internal heads-up. Uses only tokens defined in variables.ts:
+    {{customerName}} {{quoteLink}} {{quoteNumber}} {{eventName}}
+    {{eventStartDate}} {{total}} {{amountPaid}} {{amountDue}}
+    {{accountManager}} {{companyName}}
+-->
+<div style="background-color: #dbe5ea; padding: 0; margin: 0">
+  <!-- Header: brand + Open Invoice button -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff; border-bottom: 1px solid #d7dbe0"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-spacing: 0; max-width: 600px; margin: 0 auto">
+            <tbody>
+              <tr>
+                <td style="text-align: left; vertical-align: middle; font-family: Helvetica, Arial, sans-serif; font-size: 20px; font-weight: bold; color: #3e484d">
+                  Bleacher Rentals
+                </td>
+                <td style="text-align: right; vertical-align: middle">
+                  <a
+                    href="{{quoteLink}}"
+                    target="_blank"
+                    style="display: inline-block; background-color: #405daa; color: #ffffff; font-family: Helvetica, Arial, sans-serif; border-radius: 4px; font-weight: bold; font-size: 14px; padding: 8px 16px; text-decoration: none"
+                  >
+                    Open Invoice
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Title -->
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-spacing: 0; width: 100%; background-color: #ffffff">
+    <tbody>
+      <tr>
+        <td style="padding: 28px 16px 8px; text-align: center">
+          <h1 style="margin: 0; padding: 0; font-family: Helvetica, Arial, sans-serif; font-weight: bold; color: #3e484d; font-size: 28px; line-height: 36px">
+            💰 Customer Paid: {{amountPaid}}
+          </h1>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Body -->
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-spacing: 0; width: 100%; background-color: #ffffff">
+    <tbody>
+      <tr>
+        <td style="padding: 8px 16px 16px; text-align: center">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-spacing: 0; max-width: 600px; margin: 0 auto">
+            <tbody>
+              <tr>
+                <td style="padding: 0 16px; color: #616161; font-family: Helvetica, Arial, sans-serif; font-size: 16px; line-height: 23px; text-align: left">
+                  <div>
+                    Hi {{accountManager}}, <strong>{{customerName}}</strong> just made a payment
+                    of <strong>{{amountPaid}}</strong> on <strong>{{eventName}}</strong>
+                    (invoice #{{quoteNumber}}).
+                  </div>
+
+                  <br />
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-spacing: 0">
+                    <tbody>
+                      <tr>
+                        <td style="background-color: #f4f6f8; border-radius: 4px; padding: 8px 16px 16px; text-align: left; font-family: Helvetica, Arial, sans-serif">
+                          <h6 style="margin: 12px 0 8px; padding: 0; font-weight: bold; color: #3e484d; font-size: 13px; line-height: 20px">Payment Summary</h6>
+                          <p style="color: #616161; font-size: 14px; line-height: 20px; margin: 0">
+                            Invoice Number: {{quoteNumber}}<br />
+                            Event date: {{eventStartDate}}<br /><br />
+                            <b>
+                              <span style="color: #2e9e5b">Paid: {{amountPaid}}</span><br />
+                              Balance Remaining: {{amountDue}}<br />
+                              Total: {{total}}
+                            </b>
+                          </p>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <br />
+                  <div style="font-size: 14px; color: #9ca3af">
+                    This is an automated internal notification from {{companyName}}.
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
