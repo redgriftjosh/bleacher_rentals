@@ -33,9 +33,9 @@ export const QUOTE_SIGNED_CLIENT = "quote_signed_client";
 export const QUOTE_SIGNED_AM = "quote_signed_am";
 export const PAYMENT_MADE_CLIENT = "payment_made_client";
 export const PAYMENT_MADE_AM = "payment_made_am";
-export const PAYMENT_DUE_CLIENT = "payment_due_client";
-export const QUOTE_UNSIGNED_REMINDER = "quote_unsigned_reminder";
-export const PAYMENT_DUE_REMINDER = "payment_due_reminder";
+// export const PAYMENT_DUE_CLIENT = "payment_due_client";
+// export const QUOTE_UNSIGNED_REMINDER = "quote_unsigned_reminder";
+// export const PAYMENT_DUE_REMINDER = "payment_due_reminder";
 
 // Variable sets. Event-context tokens shared by all these triggers.
 const BASE_VARS = [
@@ -97,33 +97,33 @@ export const TRIGGERS: TriggerDef[] = [
     variables: PAYMENT_VARS,
     wired: true,
   },
-  {
-    key: PAYMENT_DUE_CLIENT,
-    label: "Payment due — notify client",
-    description: "Sent to the client when a payment becomes due.",
-    recipient: "client",
-    recurrence: null,
-    variables: PAYMENT_VARS,
-    wired: false, // time-based; wired with the phase-2 scheduler
-  },
-  {
-    key: QUOTE_UNSIGNED_REMINDER,
-    label: "Unsigned quote reminder",
-    description: "Reminds the client every 2 days to sign, until the quote expires.",
-    recipient: "client",
-    recurrence: "every_2d_until_expiry",
-    variables: BASE_VARS,
-    wired: false, // needs the phase-2 scheduler
-  },
-  {
-    key: PAYMENT_DUE_REMINDER,
-    label: "Payment due reminder",
-    description: "Reminds the client every 2 days while a payment is due.",
-    recipient: "client",
-    recurrence: "every_2d_until_paid",
-    variables: PAYMENT_VARS,
-    wired: false, // needs the phase-2 scheduler
-  },
+  // {
+  //   key: PAYMENT_DUE_CLIENT,
+  //   label: "Payment due — notify client",
+  //   description: "Sent to the client when a payment becomes due.",
+  //   recipient: "client",
+  //   recurrence: null,
+  //   variables: PAYMENT_VARS,
+  //   wired: false, // time-based; wired with the phase-2 scheduler
+  // },
+  // {
+  //   key: QUOTE_UNSIGNED_REMINDER,
+  //   label: "Unsigned quote reminder",
+  //   description: "Reminds the client every 2 days to sign, until the quote expires.",
+  //   recipient: "client",
+  //   recurrence: "every_2d_until_expiry",
+  //   variables: BASE_VARS,
+  //   wired: false, // needs the phase-2 scheduler
+  // },
+  // {
+  //   key: PAYMENT_DUE_REMINDER,
+  //   label: "Payment due reminder",
+  //   description: "Reminds the client every 2 days while a payment is due.",
+  //   recipient: "client",
+  //   recurrence: "every_2d_until_paid",
+  //   variables: PAYMENT_VARS,
+  //   wired: false, // needs the phase-2 scheduler
+  // },
 ];
 
 export function getTrigger(key: string): TriggerDef | undefined {
