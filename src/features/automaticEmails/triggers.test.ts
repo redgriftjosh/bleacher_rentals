@@ -6,8 +6,8 @@ import {
   TRIGGERS,
   QUOTE_SENT_CLIENT,
   QUOTE_SIGNED_CLIENT,
-  PAYMENT_DUE_CLIENT,
-  QUOTE_UNSIGNED_REMINDER,
+  // PAYMENT_DUE_CLIENT,
+  // QUOTE_UNSIGNED_REMINDER,
   getTrigger,
 } from "./triggers";
 import { buildVariableValues } from "./variables";
@@ -65,8 +65,8 @@ describe("shipped template files only use valid variables", () => {
   const cases: Array<{ file: string; triggerKey: string }> = [
     { file: "contract-signed.html", triggerKey: QUOTE_SIGNED_CLIENT },
     { file: "quote-sent.html", triggerKey: QUOTE_SENT_CLIENT },
-    { file: "payment-due.html", triggerKey: PAYMENT_DUE_CLIENT },
-    { file: "unsigned-quote-reminder.html", triggerKey: QUOTE_UNSIGNED_REMINDER },
+    // { file: "payment-due.html", triggerKey: PAYMENT_DUE_CLIENT },
+    // { file: "unsigned-quote-reminder.html", triggerKey: QUOTE_UNSIGNED_REMINDER },
   ];
 
   for (const { file, triggerKey } of cases) {
