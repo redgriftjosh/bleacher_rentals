@@ -1,6 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { stripeForAccount } from "@/features/stripe-integration/util";
+import { sendTriggerEmail } from "@/features/automaticEmails/server/sendTriggerEmail";
+import { PAYMENT_MADE_CLIENT, PAYMENT_MADE_AM } from "@/features/automaticEmails/triggers";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -25,21 +28,29 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(
-      rawBody,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!,
-    );
+    event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err: any) {
     console.error("Webhook signature verification failed:", err.message);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  console.log("[Stripe Webhook] Received event:", event.type, event.id);
+  // Direct charges settle on the office's connected account, so the event is
+  // generated there and carries its `account` id. Sub-resources (the
+  // PaymentIntent) live on that same connected account and must be read with a
+  // Stripe-Account context — a platform-scoped read would 404. Events from the
+  // platform account itself have no `account`, so we read without it.
+  const connectedAccountId = event.account ?? undefined;
+
+  console.log(
+    "[Stripe Webhook] Received event:",
+    event.type,
+    event.id,
+    connectedAccountId ? `(account ${connectedAccountId})` : "(platform)",
+  );
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const { eventId, installmentId, payerName } = session.metadata ?? {};
+    const { eventId, installmentId, payerName, stripeConnectionId } = session.metadata ?? {};
 
     if (!eventId) {
       return NextResponse.json({ error: "No eventId in metadata" }, { status: 400 });
@@ -47,19 +58,55 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabaseAdmin();
 
-    // Fetch receipt URL from the payment intent's latest charge
+    // Idempotency: Stripe retries webhook deliveries, so the same checkout
+    // session can arrive more than once. Recording it twice would double-count
+    // the payment, so bail if we already have a row for this session. The
+    // partial unique index on stripe_checkout_session_id is the hard guarantee
+    // under concurrent retries; this check keeps the happy path clean.
+    const { data: alreadyRecorded } = await supabase
+      .from("PaymentHistory")
+      .select("id")
+      .eq("stripe_checkout_session_id", session.id)
+      .maybeSingle();
+
+    if (alreadyRecorded) {
+      console.log("[Stripe Webhook] Duplicate delivery for session", session.id, "— skipping");
+      return NextResponse.json({ received: true });
+    }
+
+    // The email the customer actually entered/edited on the Checkout page.
+    const customerEmail = session.customer_details?.email ?? session.customer_email ?? null;
+
+    // Sub-resources live on the connected account for direct charges.
+    const accountOptions = connectedAccountId ? stripeForAccount(connectedAccountId) : undefined;
+
     let receiptUrl: string | null = null;
     if (typeof session.payment_intent === "string") {
       try {
-        const pi = await stripe.paymentIntents.retrieve(session.payment_intent, {
-          expand: ["latest_charge"],
-        });
+        // Set receipt_email to the submitted address so Stripe emails the
+        // customer their receipt (live mode). Doing it here — rather than at
+        // session creation — means the receipt goes to whatever they entered,
+        // even if they changed it on the Checkout page.
+        if (customerEmail) {
+          await stripe.paymentIntents.update(
+            session.payment_intent,
+            { receipt_email: customerEmail },
+            accountOptions,
+          );
+        }
+
+        // Read the hosted receipt URL from the latest charge.
+        const pi = await stripe.paymentIntents.retrieve(
+          session.payment_intent,
+          { expand: ["latest_charge"] },
+          accountOptions,
+        );
         const charge = pi.latest_charge;
         if (charge && typeof charge !== "string") {
           receiptUrl = charge.receipt_url ?? null;
         }
       } catch (err) {
-        console.error("Failed to fetch receipt URL:", err);
+        console.error("Failed to set receipt email / fetch receipt URL:", err);
       }
     }
 
@@ -69,20 +116,45 @@ export async function POST(req: NextRequest) {
       amount_cents: session.amount_total ?? 0,
       currency: (session.currency ?? "usd").toUpperCase(),
       status: "succeeded",
-      stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : null,
+      stripe_payment_intent_id:
+        typeof session.payment_intent === "string" ? session.payment_intent : null,
       stripe_checkout_session_id: session.id,
+      stripe_connection_uuid: stripeConnectionId || null,
       stripe_receipt_url: receiptUrl,
       payment_method_type: session.payment_method_types?.[0] ?? "card",
       payer_name: payerName ?? "Unknown",
-      payer_email: session.customer_email ?? null,
+      payer_email: customerEmail,
       paid_at: new Date().toISOString(),
     });
 
     if (insertError) {
+      // 23505 = unique_violation on stripe_checkout_session_id. This is the
+      // race the existence check above can't close: two identical deliveries
+      // both pass the check, then one insert wins and the other lands here. The
+      // payment is already recorded, so acknowledge with 200 and stop — do NOT
+      // let Stripe retry.
+      if (insertError.code === "23505") {
+        console.log(
+          "[Stripe Webhook] Concurrent duplicate for session",
+          session.id,
+          "— already recorded, skipping",
+        );
+        return NextResponse.json({ received: true });
+      }
+
+      // Any other failure is a genuine problem (transient DB error, etc.).
+      // Return 500 so Stripe retries the delivery rather than silently losing
+      // the payment record.
       console.error("[Stripe Webhook] PaymentHistory insert failed:", insertError);
-    } else {
-      console.log("[Stripe Webhook] PaymentHistory inserted for event:", eventId, "amount:", session.amount_total);
+      return NextResponse.json({ error: "Failed to record payment" }, { status: 500 });
     }
+
+    console.log(
+      "[Stripe Webhook] PaymentHistory inserted for event:",
+      eventId,
+      "amount:",
+      session.amount_total,
+    );
 
     if (installmentId) {
       const { error: updateError } = await supabase
@@ -94,6 +166,23 @@ export async function POST(req: NextRequest) {
         console.error("[Stripe Webhook] Installment update failed:", updateError);
       } else {
         console.log("[Stripe Webhook] Installment marked paid:", installmentId);
+      }
+    }
+
+    // Fire the "payment made" automatic emails to the client and account
+    // manager (best-effort — never fail the webhook on an email problem).
+    const payment = { amountPaidCents: session.amount_total ?? 0 };
+    for (const trigger of [PAYMENT_MADE_CLIENT, PAYMENT_MADE_AM]) {
+      try {
+        await sendTriggerEmail({
+          supabaseAdmin: supabase,
+          trigger,
+          eventId,
+          origin: req.nextUrl.origin,
+          payment,
+        });
+      } catch (e) {
+        console.error(`[automatic-emails] ${trigger} send failed:`, e);
       }
     }
   }

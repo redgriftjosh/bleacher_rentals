@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { renderToBuffer } from "@react-pdf/renderer";
-import * as postmark from "postmark";
+import { createClient } from "@supabase/supabase-js";
 import { buildQuoteDocumentData } from "@/features/quotesAndBookings/pdf/quoteDocumentData";
 import { QuotePdfDocument } from "@/features/quotesAndBookings/pdf/QuotePdfDocument";
-import { buildQuoteEmailHtml } from "@/features/quotesAndBookings/pdf/quoteEmailHtml";
-import { createClient } from "@supabase/supabase-js";
+import { sendTriggerEmail } from "@/features/automaticEmails/server/sendTriggerEmail";
+import { QUOTE_SENT_CLIENT } from "@/features/automaticEmails/triggers";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
+
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   // Auth check
   const { userId } = await auth();
   if (!userId) {
@@ -19,17 +23,14 @@ export async function POST(
 
   const { id } = await params;
   const body = await req.json();
-  const recipientEmails: string[] = body.recipientEmails ?? (body.recipientEmail ? [body.recipientEmail] : []);
+  const recipientEmails: string[] =
+    body.recipientEmails ?? (body.recipientEmail ? [body.recipientEmail] : []);
 
   if (recipientEmails.length === 0) {
-    return NextResponse.json({ error: "At least one recipient email is required" }, { status: 400 });
-  }
-
-  // Check Postmark config
-  const apiKey = process.env.POSTMARK_API_KEY;
-  const fromEmail = process.env.POSTMARK_FROM_EMAIL;
-  if (!apiKey || !fromEmail) {
-    return NextResponse.json({ error: "Postmark not configured" }, { status: 500 });
+    return NextResponse.json(
+      { error: "At least one recipient email is required" },
+      { status: 400 },
+    );
   }
 
   const origin = req.nextUrl.origin;
@@ -43,54 +44,35 @@ export async function POST(
   // Generate PDF
   const pdfBuffer = await renderToBuffer(<QuotePdfDocument data={data} />);
 
-  // Build email HTML
-  const htmlBody = buildQuoteEmailHtml(data);
-
-  // Send via Postmark
-  const client = new postmark.ServerClient(apiKey);
-
-  const senderEmail = data.accountManagerEmail ?? fromEmail;
-  const senderFrom = data.accountManager
-    ? `${data.accountManager} <${senderEmail}>`
-    : senderEmail;
-
+  // Send via the automatic-email template system.
+  const supabaseAdmin = getSupabaseAdmin();
   const toLine = [...new Set(recipientEmails)].join(",");
 
-  try {
-    await client.sendEmail({
-      From: senderFrom,
-      To: toLine,
-      Subject: `Invoice ${data.quoteNumber} from ${data.company.name}`,
-      HtmlBody: htmlBody,
-      MessageStream: "outbound",
-      Attachments: [
-        {
-          Name: `${data.quoteNumber}.pdf`,
-          Content: Buffer.from(pdfBuffer).toString("base64"),
-          ContentType: "application/pdf",
-          ContentID: "",
-        },
-      ],
-    });
-  } catch (e: any) {
-    console.error("Postmark send failed:", e);
-    return NextResponse.json(
-      { error: "Failed to send email", details: e.message },
-      { status: 500 },
-    );
-  }
+  const result = await sendTriggerEmail({
+    supabaseAdmin,
+    trigger: QUOTE_SENT_CLIENT,
+    eventId: id,
+    docData: data,
+    origin,
+    recipientOverride: toLine,
+    attachments: [
+      {
+        name: `${data.quoteNumber}.pdf`,
+        content: Buffer.from(pdfBuffer),
+        contentType: "application/pdf",
+      },
+    ],
+  });
 
-  // Log the send action and store PDF in EventFiles
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  if (!result.sent) {
+    return NextResponse.json({ error: result.reason }, { status: 500 });
+  }
 
   // Resolve the Clerk user id to the app Users.id uuid for EventFiles.uploaded_by.
   // NOTE: the "quote sent" EventChangeLog entry is written client-side via
   // PowerSync (logQuoteSentLocal) so it records the current logged-in sender and
   // follows the PowerSync-first rule — see docs/POWERSYNC_ARCHITECTURE.md.
-  const { data: senderUser } = await supabase
+  const { data: senderUser } = await supabaseAdmin
     .from("Users")
     .select("id")
     .eq("clerk_user_id", userId)
@@ -102,7 +84,7 @@ export async function POST(
     const pdfFileName = `${data.quoteNumber}.pdf`;
     const storagePath = `${id}/sent-quote-${Date.now()}.pdf`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabaseAdmin.storage
       .from("event-files")
       .upload(storagePath, pdfBuffer, {
         contentType: "application/pdf",
@@ -110,7 +92,7 @@ export async function POST(
       });
 
     if (!uploadError) {
-      await supabase.from("EventFiles").insert({
+      await supabaseAdmin.from("EventFiles").insert({
         event_uuid: id,
         file_name: pdfFileName,
         storage_path: storagePath,

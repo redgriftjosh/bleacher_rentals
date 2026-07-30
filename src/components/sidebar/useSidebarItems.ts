@@ -15,10 +15,12 @@ import {
   Settings,
   Building2,
   ScrollText,
+  CreditCard,
   DollarSign,
   BookUser,
   Warehouse,
   MessageSquare,
+  Mails,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";
@@ -163,6 +165,13 @@ const ALL_ITEMS: SidebarItemConfig[] = [
         label: "QuickBooks",
         href: "/quickbooks",
         icon: QuickBooksIcon,
+      },
+      {
+        type: "button",
+        key: "stripe-connections",
+        label: "Stripe",
+        href: "/stripe-connections",
+        icon: CreditCard,
       },
       {
         type: "button",
