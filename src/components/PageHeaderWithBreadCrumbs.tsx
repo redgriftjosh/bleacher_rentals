@@ -6,7 +6,7 @@ import { Color } from "@/types/Color";
 
 type Crumb = { label: string; href?: string };
 
-export function RoadmapHeader({
+export function PageHeaderWithBreadCrumbs({
   crumbs,
   description,
   rightSlot,
@@ -33,7 +33,7 @@ export function RoadmapHeader({
           ))}
         </nav>
         <h1 className="text-2xl font-bold" style={{ color: Color.DARK_BLUE }}>
-          {crumbs[crumbs.length - 1]?.label ?? "Roadmap"}
+          {crumbs[crumbs.length - 1]?.label ?? ""}
         </h1>
         {description && (
           <p className="text-sm mt-1" style={{ color: Color.GRAY }}>

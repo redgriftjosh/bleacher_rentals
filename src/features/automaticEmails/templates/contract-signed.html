@@ -1,0 +1,441 @@
+<!--
+  Contract-signed email template for Bleacher Rentals.
+
+  Cleaned of the original Goodshuffle export: removed their hosted logo/icon
+  images, "View Invoice" links to pro.goodshuffle.com, the "Powered by
+  Goodshuffle Pro" footer, and the tracking pixel.
+
+  Uses {{variable}} tokens that the app fills in at send time (see
+  src/features/salesOffices/email/templateVariables.ts). Available here:
+    {{firstName}} {{customerName}} {{eventName}} {{quoteNumber}}
+    {{quoteLink}} {{total}} {{eventStartDate}} {{accountManager}} {{companyName}}
+
+  Table-based layout + inline styles so it renders in Gmail/Outlook.
+-->
+<div style="background-color: #dbe5ea; padding: 0; margin: 0">
+  <!-- Header: brand + View Invoice button -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="
+      border-spacing: 0;
+      width: 100%;
+      background-color: #ffffff;
+      border-bottom: 1px solid #d7dbe0;
+    "
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  style="
+                    text-align: left;
+                    vertical-align: middle;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #3e484d;
+                  "
+                >
+                  Bleacher Rentals
+                </td>
+                <td style="text-align: right; vertical-align: middle">
+                  <a
+                    href="{{quoteLink}}"
+                    target="_blank"
+                    style="
+                      display: inline-block;
+                      background-color: #405daa;
+                      color: #ffffff;
+                      font-family: Helvetica, Arial, sans-serif;
+                      border-radius: 4px;
+                      font-weight: bold;
+                      font-size: 14px;
+                      padding: 8px 16px;
+                      text-decoration: none;
+                    "
+                  >
+                    View Invoice
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Title -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 32px 16px 16px; text-align: center">
+          <h1
+            style="
+              margin: 0;
+              padding: 0;
+              font-family: Helvetica, Arial, sans-serif;
+              font-weight: bold;
+              color: #3e484d;
+              font-size: 32px;
+              line-height: 42px;
+            "
+          >
+            Contract Signed Online
+          </h1>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Body copy -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  style="
+                    padding: 0 16px;
+                    color: #616161;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 16px;
+                    line-height: 23px;
+                    text-align: left;
+                  "
+                >
+                  <div>
+                    Hi {{firstName}}, thank you for signing your contract with {{companyName}}!
+                    We're excited to support your upcoming event and ensure a smooth rental
+                    experience.
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    <em style="background-color: #ffff00"
+                      >Please review the following important notes:</em
+                    >
+                  </div>
+                  <div><br /></div>
+                  <div><strong>Documentation:</strong></div>
+                  <div>~Review the attached W9 and General Liability Insurance Certificate.</div>
+                  <div>
+                    ~To be listed as an additional insured, email us at
+                    <a href="mailto:office@bleacherrentals.com" target="_blank"
+                      >office@bleacherrentals.com</a
+                    >
+                    with the required information.
+                  </div>
+                  <div><br /></div>
+                  <div><strong>Booking Confirmation:</strong></div>
+                  <div>
+                    ~Your booking is not finalized until we receive both the signed contract and
+                    deposit. <em>(Missing the deposit may result in cancellation.)</em>
+                  </div>
+                  <div>
+                    <em
+                      >~If not paying in full with a credit card, please fill out the attached
+                      Billing, Credit and AP Form.</em
+                    >
+                  </div>
+                  <div><br /></div>
+                  <div><strong>Questions or Concerns?</strong></div>
+                  <div>
+                    ~Contact us anytime - we're here to help and committed to excellent service.
+                  </div>
+                  <div>
+                    ~See attached document, "Now What?" to see some answers to common questions
+                    about the process of renting bleachers.
+                  </div>
+                  <div><br /></div>
+                  <div><strong>Payment Options:</strong>&nbsp;</div>
+                  <div>
+                    <strong>1) Online:&nbsp;</strong>Click the&nbsp;<strong style="color: #0066cc"
+                      >"View Invoice"</strong
+                    >&nbsp;button and follow the instructions.
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    <strong>2) Bank Transfer/ACH:&nbsp;</strong>Use the attached details and
+                    email&nbsp;<em>payments@bleacherrentals.com</em>&nbsp;in order to be credited
+                    properly.
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    <strong>3) Check:&nbsp;</strong>Make payable to&nbsp;<em
+                      >Bleacher Rentals Florida, LLC</em
+                    >&nbsp;and mail to: 7901 4th Street N #25767 St. Petersburg, FL 33702
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    <strong>4) Scanned Check:&nbsp;</strong>For faster processing, you may also scan
+                    the front and back of the check and email it
+                    to&nbsp;<em>payments@bleacherrentals.com</em>.
+                  </div>
+
+                  <br /><br />
+                  <div>Sincerely,<br /><br />{{accountManager}}<br />{{companyName}}</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- View Invoice button (centered) -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 0 16px 8px; text-align: center">
+          <a
+            href="{{quoteLink}}"
+            target="_blank"
+            style="
+              display: inline-block;
+              background-color: #405daa;
+              color: #ffffff;
+              font-family: Helvetica, Arial, sans-serif;
+              border-radius: 4px;
+              font-weight: bold;
+              font-size: 14px;
+              padding: 10px 20px;
+              text-decoration: none;
+            "
+          >
+            View Invoice
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Details: Event + Invoice summary -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  width="50%"
+                  style="
+                    vertical-align: top;
+                    padding: 0 16px;
+                    text-align: left;
+                    font-family: Helvetica, Arial, sans-serif;
+                  "
+                >
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Event
+                  </h6>
+                  <p style="color: #616161; font-size: 14px; line-height: 20px; margin: 0 0 16px">
+                    {{eventName}} - {{quoteNumber}}<br />
+                    {{eventStartDate}}
+                  </p>
+
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Contact
+                  </h6>
+                  <p style="color: #616161; font-size: 14px; line-height: 20px; margin: 0 0 16px">
+                    {{customerName}}
+                  </p>
+                </td>
+
+                <td
+                  width="50%"
+                  style="
+                    vertical-align: top;
+                    padding: 0 16px;
+                    text-align: left;
+                    font-family: Helvetica, Arial, sans-serif;
+                  "
+                >
+                  <table
+                    width="100%"
+                    border="0"
+                    cellspacing="0"
+                    cellpadding="0"
+                    style="border-spacing: 0"
+                  >
+                    <tbody>
+                      <tr>
+                        <td
+                          style="
+                            background-color: #f4f6f8;
+                            border-radius: 4px;
+                            padding: 0 16px 16px;
+                            text-align: left;
+                          "
+                        >
+                          <h6
+                            style="
+                              margin: 20px 0 8px;
+                              padding: 0;
+                              font-weight: bold;
+                              color: #3e484d;
+                              font-size: 13px;
+                              line-height: 20px;
+                            "
+                          >
+                            Invoice Details
+                          </h6>
+                          <p
+                            style="
+                              color: #616161;
+                              font-size: 14px;
+                              line-height: 20px;
+                              margin: 0 0 16px;
+                            "
+                          >
+                            Invoice Number: {{quoteNumber}}<br /><br />
+                            <b><span style="color: #e9573f">Total: {{total}}</span></b>
+                            <br />*Excludes processing fees
+                          </p>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Have questions -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center; font-family: Helvetica, Arial, sans-serif">
+          <h4
+            style="
+              margin: 20px 0 8px;
+              padding: 0;
+              font-weight: bold;
+              color: #3e484d;
+              font-size: 19px;
+              line-height: 25px;
+            "
+          >
+            Have Questions?
+          </h4>
+          <p style="color: #616161; font-size: 16px; line-height: 23px; margin: 0 0 16px">
+            Reply directly to this email and {{accountManager}} will be happy to help.
+          </p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Footer -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #dbe5ea"
+  >
+    <tbody>
+      <tr>
+        <td
+          style="
+            padding: 16px;
+            text-align: center;
+            font-family: Helvetica, Arial, sans-serif;
+            color: #a7b1b6;
+            font-size: 14px;
+            line-height: 20px;
+          "
+        >
+          <p style="margin: 0 0 4px; font-weight: bold; color: #7a8791">Bleacher Rentals</p>
+          <p style="margin: 0">7901 4th St N #25767</p>
+          <p style="margin: 0">St. Petersburg, FL 33702</p>
+          <p style="margin: 0">P: (800) 436-0416</p>
+          <p style="margin: 4px 0 0">
+            <a href="mailto:office@bleacherrentals.com" target="_blank" style="color: #448aff"
+              >office@bleacherrentals.com</a
+            >
+          </p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

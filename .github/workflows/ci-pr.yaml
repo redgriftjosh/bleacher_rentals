@@ -8,28 +8,6 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # prettier:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v5
-
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: "lts/*"
-  #         cache: "npm"
-
-  #     - name: Install dependencies
-  #       run: npm ci
-
-  #     - name: Check formatting
-  #       run: |
-  #         if ! npx prettier --check .; then
-  #           echo "--- Prettier diff ---"
-  #           npx prettier --write .
-  #           git diff
-  #           exit 1
-  #         fi
-
   test:
     runs-on: ubuntu-latest
 
