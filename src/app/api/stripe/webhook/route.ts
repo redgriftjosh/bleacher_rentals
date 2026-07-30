@@ -2,6 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { stripeForAccount } from "@/features/stripe-integration/util";
+import { sendTriggerEmail } from "@/features/automaticEmails/server/sendTriggerEmail";
+import { PAYMENT_MADE_CLIENT, PAYMENT_MADE_AM } from "@/features/automaticEmails/triggers";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -164,6 +166,23 @@ export async function POST(req: NextRequest) {
         console.error("[Stripe Webhook] Installment update failed:", updateError);
       } else {
         console.log("[Stripe Webhook] Installment marked paid:", installmentId);
+      }
+    }
+
+    // Fire the "payment made" automatic emails to the client and account
+    // manager (best-effort — never fail the webhook on an email problem).
+    const payment = { amountPaidCents: session.amount_total ?? 0 };
+    for (const trigger of [PAYMENT_MADE_CLIENT, PAYMENT_MADE_AM]) {
+      try {
+        await sendTriggerEmail({
+          supabaseAdmin: supabase,
+          trigger,
+          eventId,
+          origin: req.nextUrl.origin,
+          payment,
+        });
+      } catch (e) {
+        console.error(`[automatic-emails] ${trigger} send failed:`, e);
       }
     }
   }

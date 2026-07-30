@@ -1123,6 +1123,153 @@ export type Database = {
           },
         ]
       }
+      EmailTemplateAttachments: {
+        Row: {
+          created_at: string
+          created_by_user_uuid: string | null
+          file_name: string
+          file_size_bytes: number | null
+          id: string
+          mime_type: string | null
+          storage_path: string
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_user_uuid?: string | null
+          file_name: string
+          file_size_bytes?: number | null
+          id?: string
+          mime_type?: string | null
+          storage_path: string
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by_user_uuid?: string | null
+          file_name?: string
+          file_size_bytes?: number | null
+          id?: string
+          mime_type?: string | null
+          storage_path?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EmailTemplateAttachments_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EmailTemplateAttachments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "EmailTemplates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      EmailTemplates: {
+        Row: {
+          created_at: string
+          created_by_user_uuid: string | null
+          deleted_at: string | null
+          edited_by_user_uuid: string | null
+          error_message: string | null
+          html_body: string
+          id: string
+          is_active: boolean
+          name: string
+          subject: string
+          trigger_uuid: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted_at?: string | null
+          edited_by_user_uuid?: string | null
+          error_message?: string | null
+          html_body?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          subject?: string
+          trigger_uuid: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by_user_uuid?: string | null
+          deleted_at?: string | null
+          edited_by_user_uuid?: string | null
+          error_message?: string | null
+          html_body?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          subject?: string
+          trigger_uuid?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EmailTemplates_created_by_user_uuid_fkey"
+            columns: ["created_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EmailTemplates_edited_by_user_uuid_fkey"
+            columns: ["edited_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EmailTemplates_trigger_uuid_fkey"
+            columns: ["trigger_uuid"]
+            isOneToOne: false
+            referencedRelation: "EmailTriggerBindings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      EmailTriggerBindings: {
+        Row: {
+          created_at: string
+          id: string
+          sales_office_uuid: string
+          trigger: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sales_office_uuid: string
+          trigger: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sales_office_uuid?: string
+          trigger?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EmailTriggerBindings_sales_office_uuid_fkey"
+            columns: ["sales_office_uuid"]
+            isOneToOne: false
+            referencedRelation: "SalesOffices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       EventAttachments: {
         Row: {
           created_at: string
@@ -1209,6 +1356,54 @@ export type Database = {
             columns: ["event_uuid"]
             isOneToOne: false
             referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      EventEmailLog: {
+        Row: {
+          event_uuid: string
+          fired_at: string
+          id: string
+          reason: string | null
+          status: Database["public"]["Enums"]["email_send_status"]
+          template_id: string | null
+          to_email: string | null
+          trigger: string
+        }
+        Insert: {
+          event_uuid: string
+          fired_at?: string
+          id?: string
+          reason?: string | null
+          status: Database["public"]["Enums"]["email_send_status"]
+          template_id?: string | null
+          to_email?: string | null
+          trigger: string
+        }
+        Update: {
+          event_uuid?: string
+          fired_at?: string
+          id?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["email_send_status"]
+          template_id?: string | null
+          to_email?: string | null
+          trigger?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EventEmailLog_event_uuid_fkey"
+            columns: ["event_uuid"]
+            isOneToOne: false
+            referencedRelation: "Events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "EventEmailLog_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "EmailTemplates"
             referencedColumns: ["id"]
           },
         ]
@@ -3599,6 +3794,7 @@ export type Database = {
       contract_signature_status: "active" | "invalidated"
       currency: "USD" | "CAD"
       damage_severity: "none" | "minor" | "major"
+      email_send_status: "sent" | "failed"
       event_status: "quoted" | "booked" | "lost" | "draft"
       pay_currency_type: "CAD" | "USD"
       pay_per_unit_type: "KM" | "MI" | "HR"
@@ -3770,6 +3966,7 @@ export const Constants = {
       contract_signature_status: ["active", "invalidated"],
       currency: ["USD", "CAD"],
       damage_severity: ["none", "minor", "major"],
+      email_send_status: ["sent", "failed"],
       event_status: ["quoted", "booked", "lost", "draft"],
       pay_currency_type: ["CAD", "USD"],
       pay_per_unit_type: ["KM", "MI", "HR"],

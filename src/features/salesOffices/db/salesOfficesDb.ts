@@ -40,34 +40,36 @@ export type SalesOfficeInput = {
   address: SalesOfficeAddress | null;
 };
 
-// ── Read (PowerSync, non-reactive) ──
+// ── Read (PowerSync, reactive) ──
 
-export function buildFetchAllSalesOfficesQuery() {
-  return db
-    .selectFrom("SalesOffices as so")
-    .leftJoin("Addresses as a", "so.address_uuid", "a.id")
-    .select([
-      "so.id as id",
-      "so.name as name",
-      "so.address_uuid as address_uuid",
-      "so.quickbook_uuid as quickbook_uuid",
-      "so.stripe_connection_uuid as stripe_connection_uuid",
-      "so.deleted as deleted",
-      "a.street as address_street",
-      "a.city as address_city",
-      "a.state_province as address_state",
-      "a.zip_postal as address_zip",
-    ])
-    .where("so.deleted", "=", 0)
-    .orderBy("so.name")
-    .compile();
-}
+export const allSalesOfficesQuery = db
+  .selectFrom("SalesOffices as so")
+  .leftJoin("Addresses as a", "so.address_uuid", "a.id")
+  .select([
+    "so.id as id",
+    "so.name as name",
+    "so.address_uuid as address_uuid",
+    "so.quickbook_uuid as quickbook_uuid",
+    "so.stripe_connection_uuid as stripe_connection_uuid",
+    "so.deleted as deleted",
+    "a.street as address_street",
+    "a.city as address_city",
+    "a.state_province as address_state",
+    "a.zip_postal as address_zip",
+  ])
+  .where("so.deleted", "=", 0)
+  .orderBy("so.name")
+  .compile();
 
 export async function fetchAllSalesOffices(): Promise<SalesOfficeRow[]> {
-  return typedGetAll(buildFetchAllSalesOfficesQuery(), expect<SalesOfficeRow>());
+  return typedGetAll(allSalesOfficesQuery, expect<SalesOfficeRow>());
 }
 
-// QboConnections is not synced to PowerSync — fetch via Supabase (online).
+// QboConnections is intentionally NOT synced to PowerSync. The table contains
+// `encrypted_token_value` (QuickBooks OAuth credentials). Syncing it locally
+// would store payment credentials in every client's SQLite DB, expanding the
+// blast radius of a device compromise. The display_name and currency we need
+// here are a small, infrequent read — Supabase online fetch is fine.
 export async function fetchQboConnections(
   supabase: SupabaseClient<Database>,
 ): Promise<QboConnectionOption[]> {

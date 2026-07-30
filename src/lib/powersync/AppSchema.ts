@@ -969,6 +969,57 @@ const SalesOffices = new Table(SalesOfficesCols, {
   },
 });
 
+const EmailTemplatesCols = {
+  name: column.text,
+  subject: column.text,
+  html_body: column.text,
+  trigger_uuid: column.text,
+  is_active: column.integer,
+  created_at: column.text,
+  created_by_user_uuid: column.text,
+  updated_at: column.text,
+  edited_by_user_uuid: column.text,
+  deleted_at: column.text,
+  error_message: column.text,
+} satisfies PowerSyncColsFor<"EmailTemplates">;
+const EmailTemplates = new Table(EmailTemplatesCols);
+
+const EmailTemplateAttachmentsCols = {
+  template_id: column.text,
+  file_name: column.text,
+  storage_path: column.text,
+  mime_type: column.text,
+  file_size_bytes: column.integer,
+  created_at: column.text,
+  created_by_user_uuid: column.text,
+} satisfies PowerSyncColsFor<"EmailTemplateAttachments">;
+const EmailTemplateAttachments = new Table(EmailTemplateAttachmentsCols, {
+  indexes: { template_id: ["template_id"] },
+});
+
+const EmailTriggerBindingsCols = {
+  sales_office_uuid: column.text,
+  trigger: column.text,
+  created_at: column.text,
+  updated_at: column.text,
+} satisfies PowerSyncColsFor<"EmailTriggerBindings">;
+const EmailTriggerBindings = new Table(EmailTriggerBindingsCols, {
+  indexes: { sales_office_uuid: ["sales_office_uuid"] },
+});
+
+const EventEmailLogCols = {
+  event_uuid: column.text,
+  trigger: column.text,
+  status: column.text,
+  reason: column.text,
+  to_email: column.text,
+  template_id: column.text,
+  fired_at: column.text,
+} satisfies PowerSyncColsFor<"EventEmailLog">;
+const EventEmailLog = new Table(EventEmailLogCols, {
+  indexes: { event_uuid: ["event_uuid"] },
+});
+
 const SubrentalEventsCols = {
   created_at: column.text,
   event_start: column.text,
@@ -1059,6 +1110,10 @@ export const AppSchema = new Schema({
   SubrentalEvents,
   StorageLocations,
   StripeConnections,
+  EmailTemplateAttachments,
+  EmailTemplates,
+  EmailTriggerBindings,
+  EventEmailLog,
 });
 
 export type PowerSyncDB = (typeof AppSchema)["types"];
