@@ -5,13 +5,18 @@ const {
   mockRetrieve,
   mockPiUpdate,
   mockInsert,
+  mockEmailLogInsert,
   mockUpdateEq,
   mockMaybeSingle,
 } = vi.hoisted(() => ({
   mockConstructEvent: vi.fn(),
   mockRetrieve: vi.fn(),
   mockPiUpdate: vi.fn(),
+  // Only tracks PaymentHistory inserts — the subject of the idempotency test.
   mockInsert: vi.fn(),
+  // Automatic-email log rows (EventEmailLog) go here so they don't pollute the
+  // PaymentHistory insert count.
+  mockEmailLogInsert: vi.fn(),
   mockUpdateEq: vi.fn(),
   mockMaybeSingle: vi.fn(),
 }));
@@ -25,10 +30,12 @@ vi.mock("stripe", () => ({
 
 vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({
-    from: () => ({
+    from: (table: string) => ({
       // Idempotency existence check: select(...).eq(...).maybeSingle()
       select: () => ({ eq: () => ({ maybeSingle: mockMaybeSingle }) }),
-      insert: mockInsert,
+      // Route inserts by table so the automatic-email log rows don't inflate the
+      // PaymentHistory insert count that the idempotency test asserts on.
+      insert: table === "PaymentHistory" ? mockInsert : mockEmailLogInsert,
       update: () => ({ eq: mockUpdateEq }),
     }),
   }),
