@@ -4,6 +4,7 @@ import { Baker } from "../util/Baker";
 import { EventBody } from "../ui/event/EventBody";
 import { EventSpanType, EventsUtil } from "../util/Events";
 import { Tile, DamageSeverity } from "../ui/Tile";
+import { overlaySeverityFromEffective } from "@/lib/damageReportSeverity";
 import { FirstCellNotPinned } from "../ui/event/FirstCellNotPinned";
 import { PinnableSection } from "../ui/event/PinnableSection";
 import { CELL_WIDTH } from "../values/constants";
@@ -398,18 +399,13 @@ export class MainGridCellRenderer implements ICellRenderer {
       const ranges: DamageOverlayRange[] = [];
 
       for (const dr of damageReports) {
+        if (dr.resolvedAt) continue;
+
         const referenceDate = dr.workTrackerDate ?? dr.createdAt;
         if (!referenceDate) continue;
 
-        const hasMajor = dr.seatDamage === "major" || dr.haulDamage === "major";
-        const hasMinor = dr.seatDamage === "minor" || dr.haulDamage === "minor";
-        const severity: DamageSeverity = hasMajor
-          ? "major"
-          : hasMinor
-            ? "minor"
-            : !dr.isSafeToSit || !dr.isSafeToHaul
-              ? "major"
-              : "minor";
+        const severity = overlaySeverityFromEffective(dr.seatDamage, dr.haulDamage);
+        if (!severity) continue;
 
         const wtDateISO = DateTime.fromISO(referenceDate).toISODate();
         if (!wtDateISO) continue;

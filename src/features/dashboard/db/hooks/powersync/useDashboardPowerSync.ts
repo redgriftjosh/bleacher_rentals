@@ -2,6 +2,7 @@
 import { useEffect, useMemo } from "react";
 import { Database } from "../../../../../../database.types";
 import type { Bleacher, BleacherEvent, DamageSeverity, DashboardEvent } from "../../../types";
+import { effectiveColumnDamage } from "@/lib/damageReportSeverity";
 import { useDashboardBleachersStore } from "../../../state/useDashboardBleachersStore";
 import { useDashboardEventsStore } from "../../../state/useDashboardEventsStore";
 import { usePsBleachers } from "./usePsBleachers";
@@ -269,8 +270,8 @@ export function useDashboardPowerSync(opts?: {
           inspectionUuid: dr.inspection_uuid ?? null,
           isSafeToSit: toBool(dr.is_safe_to_sit),
           isSafeToHaul: toBool(dr.is_safe_to_haul),
-          seatDamage: (dr.seat_damage ?? "none") as DamageSeverity,
-          haulDamage: (dr.haul_damage ?? "none") as DamageSeverity,
+          seatDamage: effectiveColumnDamage(dr.seat_damage, dr.is_safe_to_sit) as DamageSeverity,
+          haulDamage: effectiveColumnDamage(dr.haul_damage, dr.is_safe_to_haul) as DamageSeverity,
           note: dr.note,
           createdAt: dr.created_at ?? "",
           resolvedAt: dr.resolved_at,

@@ -13768,3 +13768,26 @@ WHERE bt.row_count = b.bleacher_rows
   AND bt.deleted = false
   AND b.deleted = false
   AND b.bleacher_type_uuid IS NULL;
+
+
+--
+-- E2E test users (Playwright). Roles are driven by is_admin / is_viewer and by
+-- rows in AccountManagers / Drivers (see src/features/userAccess/logic/determineAccess.ts).
+-- Passwords live in Clerk, not here; emails/clerk ids must match .env.local E2E_* vars.
+--
+INSERT INTO "public"."Users"
+  ("first_name", "last_name", "email", "clerk_user_id", "role", "is_admin", "status_uuid", "id", "is_viewer")
+VALUES
+  ('E2E', 'Admin',  'max+6@bleacherrentals.com', 'user_3FrqAgc0dx7EDVJFmn1ihrie0Y3', 1, true,  '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '7caabedc-3b29-43da-9944-81fdd7d9eaca', false),
+  ('E2E', 'AM',     'max+5@bleacherrentals.com', 'user_3FrpC7dZBNKkfSnb2CjGACNrrGN', 1, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '28c7861e-ab61-4e3e-80df-68b2b4684aed', false),
+  ('E2E', 'Driver', 'max+4@bleacherrentals.com', 'user_3Frk1zjHtD39YB1ex73cgezrqf1', 1, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', 'cb6b755e-53b1-41ae-b4ea-aa412c1ce951', false),
+  ('E2E', 'Viewer', 'max+3@bleacherrentals.com', 'user_3Frgr1SbGGZiOzPVLE0n3EqriFW', 1, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '52b41509-56f9-4619-bd30-0764e495ed1d', true);
+
+-- AM user needs an active AccountManagers row to gain the account_manager role.
+INSERT INTO "public"."AccountManagers" ("is_active", "id", "user_uuid")
+VALUES (true, '8d5473b1-269a-4e28-9420-dc98e9442e1b', '28c7861e-ab61-4e3e-80df-68b2b4684aed');
+
+-- Driver user needs an active Drivers row to gain the driver role.
+INSERT INTO "public"."Drivers"
+  ("tax", "pay_rate_cents", "pay_currency", "pay_per_unit", "is_active", "id", "user_uuid")
+VALUES (0, 400, 'CAD', 'KM', true, '0fcf50a1-f0ae-4f98-8565-1fe0eb588017', 'cb6b755e-53b1-41ae-b4ea-aa412c1ce951');
