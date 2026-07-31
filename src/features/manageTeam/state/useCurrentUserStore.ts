@@ -44,6 +44,8 @@ export type CurrentUserState = {
   licensePhotoPath: string | null;
   insurancePhotoPath: string | null;
   medicalCardPhotoPath: string | null;
+  /** Drivers.id — used as storage path prefix `{driverId}/license_ts.ext` */
+  driverId: string | null;
 
   // Account Manager-specific fields
   assignedDriverUuids: string[];
@@ -98,6 +100,7 @@ const initialState: CurrentUserState = {
   licensePhotoPath: null,
   insurancePhotoPath: null,
   medicalCardPhotoPath: null,
+  driverId: null,
   assignedDriverUuids: [],
   assignedZoneEntries: [],
   zoneDriverMap: {},
@@ -125,6 +128,11 @@ export const useCurrentUserStore = create<CurrentUserStore>((set) => ({
         isViewer: role === "viewer" ? true : state.isViewer,
         // Default auto-subscribe to true when developer role is first added
         autoSubscribeToNewTickets: role === "developer" ? true : state.autoSubscribeToNewTickets,
+        // Pre-allocate Drivers.id so document uploads match the mobile app path convention
+        driverId:
+          role === "driver" && !state.driverId
+            ? crypto.randomUUID()
+            : state.driverId,
       };
     }),
 
