@@ -23,7 +23,7 @@ import { useCurrentEventStore } from "../eventConfiguration/state/useCurrentEven
 import { useMaintenanceEventStore } from "../maintenanceEvents/state/useMaintenanceEventStore";
 import { useSubrentalEventStore } from "../subrentals/state/useSubrentalEventStore";
 import { WorkTrackerDragManager } from "./util/WorkTrackerDragManager";
-import { useAddressTooltipStore } from "./state/useAddressTooltipStore";
+import { useTooltipStore } from "./state/useTooltipStore";
 import { resolveAddress } from "../../utils/resolveAddress";
 import { useScrollToDateStore } from "./state/useScrollToDateStore";
 import { useAlertCountsStore } from "./state/useAlertCountsStore";
@@ -100,6 +100,7 @@ export class Dashboard {
         onlyShowMyEvents: true,
         optimizationMode: false,
         showAddressTooltip: false,
+        showDistanceTooltip: false,
         rowsQuickFilter: null,
         zoneUuids: [],
         showUnassignedZone: false,
@@ -184,12 +185,12 @@ export class Dashboard {
     this.onCanvasMouseMove = (e: MouseEvent) => {
       this.lastMousePageX = e.clientX;
       this.lastMousePageY = e.clientY;
-      this.updateAddressTooltip();
+      this.updateTooltip();
     };
 
     app.canvas.addEventListener("mousemove", this.onCanvasMouseMove);
     app.canvas.addEventListener("mouseleave", () => {
-      useAddressTooltipStore.getState().hide();
+      useTooltipStore.getState().hide();
       this.lastTooltipRow = -1;
       this.lastTooltipCol = -1;
     });
@@ -206,13 +207,23 @@ export class Dashboard {
   // resize is managed by ResizeManager
 
   /**
-   * Resolve and update the address tooltip based on current mouse position and scroll
+   * Resolve and update the hover tooltip (address or distance) based on current mouse
+   * position and scroll. Address and distance modes are mutually exclusive.
    */
-  private updateAddressTooltip() {
-    if (!this.filters.showAddressTooltip || this.yAxis !== "Bleachers") {
-      if (useAddressTooltipStore.getState().text !== null) {
-        useAddressTooltipStore.getState().hide();
-      }
+  private updateTooltip() {
+    const mode: "address" | "distance" | null = this.filters.showAddressTooltip
+      ? "address"
+      : this.filters.showDistanceTooltip
+        ? "distance"
+        : null;
+
+    const store = useTooltipStore.getState();
+    const hideIfShown = () => {
+      if (store.content !== null) store.hide();
+    };
+
+    if (!mode || this.yAxis !== "Bleachers") {
+      hideIfShown();
       return;
     }
 
@@ -228,9 +239,7 @@ export class Dashboard {
     const gridX = pixiX - BLEACHER_COLUMN_WIDTH;
     const gridY = pixiY - HEADER_ROW_HEIGHT;
     if (gridX < 0 || gridY < 0) {
-      if (useAddressTooltipStore.getState().text !== null) {
-        useAddressTooltipStore.getState().hide();
-      }
+      hideIfShown();
       this.lastTooltipRow = -1;
       this.lastTooltipCol = -1;
       return;
@@ -243,37 +252,40 @@ export class Dashboard {
     const row = Math.floor((gridY + scrollY) / CELL_HEIGHT);
 
     if (row < 0 || row >= this.bleachers.length || col < 0 || col >= this.dates.length) {
-      if (useAddressTooltipStore.getState().text !== null) {
-        useAddressTooltipStore.getState().hide();
-      }
+      hideIfShown();
       this.lastTooltipRow = -1;
       this.lastTooltipCol = -1;
       return;
     }
 
-    // Only re-resolve address when cell changes
+    // Only re-resolve content when the cell changes (keeps distance query keys stable
+    // while the cursor moves within a single cell).
     if (row !== this.lastTooltipRow || col !== this.lastTooltipCol) {
       this.lastTooltipRow = row;
       this.lastTooltipCol = col;
 
       const bleacher = this.bleachers[row];
       const targetDate = this.dates[col];
-      const address = resolveAddress(bleacher, targetDate);
 
-      if (!address) {
-        useAddressTooltipStore.getState().hide();
-        return;
+      if (mode === "address") {
+        const address = resolveAddress(bleacher, targetDate);
+        if (!address) {
+          store.hide();
+          return;
+        }
+        store.show({ kind: "address", text: address }, this.lastMousePageX, this.lastMousePageY);
+      } else {
+        const origin = resolveAddress(bleacher, targetDate, "past");
+        const dest = resolveAddress(bleacher, targetDate, "future");
+        if (!origin || !dest) {
+          store.hide();
+          return;
+        }
+        store.show({ kind: "distance", origin, dest }, this.lastMousePageX, this.lastMousePageY);
       }
-
-      useAddressTooltipStore.getState().show(address, this.lastMousePageX, this.lastMousePageY);
-    } else {
+    } else if (store.content) {
       // Same cell — just update position
-      const current = useAddressTooltipStore.getState();
-      if (current.text) {
-        useAddressTooltipStore
-          .getState()
-          .show(current.text, this.lastMousePageX, this.lastMousePageY);
-      }
+      store.show(store.content, this.lastMousePageX, this.lastMousePageY);
     }
   }
 
@@ -609,7 +621,7 @@ export class Dashboard {
     this.mainGrid.on("grid:scroll-vertical", (scrollY: number) => {
       this.stickyLeftColumn.setVerticalScroll(scrollY);
       this.mainGridPinnedYAxis.setVerticalScroll(scrollY);
-      this.updateAddressTooltip();
+      this.updateTooltip();
     });
 
     // When main grid scrolls horizontally, sync the top row and update both renderers
@@ -625,8 +637,8 @@ export class Dashboard {
         this.mainGridPinnedYAxis.forceUpdate();
       }
 
-      // Update address tooltip on scroll so it resolves the new cell under cursor
-      this.updateAddressTooltip();
+      // Update tooltip on scroll so it resolves the new cell under cursor
+      this.updateTooltip();
     });
 
     // Horizontal centering moved to constructor after potential initialScrollX check
@@ -684,7 +696,7 @@ export class Dashboard {
       if (this.onCanvasMouseMove) {
         this.app.canvas.removeEventListener("mousemove", this.onCanvasMouseMove);
       }
-      useAddressTooltipStore.getState().hide();
+      useTooltipStore.getState().hide();
     } catch {}
     try {
       useScrollToDateStore.getState().setScrollToDate(null);

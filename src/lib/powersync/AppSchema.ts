@@ -227,6 +227,7 @@ const DashboardFilterSettingsCols = {
   only_show_my_events: column.integer,
   optimization_mode: column.integer,
   show_address_tooltip: column.integer,
+  show_distance_tooltip: column.integer,
   season: column.text,
   account_manager_uuid: column.text,
   rows_quick_filter: column.integer,

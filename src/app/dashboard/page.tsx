@@ -19,7 +19,7 @@ import WorkTrackerDragConfirmModal from "@/features/workTrackers/components/Work
 import { useBleacherLocationModalStore } from "@/features/dashboard/state/useBleacherLocationModalStore";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { supabaseClientRegistry } from "@/features/dashboard/util/supabaseClientRegistry";
-import { AddressTooltip } from "@/features/dashboard/components/AddressTooltip";
+import { DashboardTooltip } from "@/features/dashboard/components/DashboardTooltip";
 import { useDriverUnavailability } from "@/features/dashboard/db/hooks/useDriverUnavailability";
 import { useDriverUnavailabilityStore } from "@/features/dashboard/state/useDriverUnavailabilityStore";
 import { useDashboardPowerSync } from "@/features/dashboard/db/hooks/powersync/useDashboardPowerSync";
@@ -132,7 +132,7 @@ export default function Page() {
       <div className="min-h-0 min-w-0 overflow-hidden">
         <DashboardApp />
       </div>
-      <AddressTooltip />
+      <DashboardTooltip />
     </div>
   );
 }
