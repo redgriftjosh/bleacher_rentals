@@ -10,7 +10,7 @@ export function AuthFallback({ children }: { children: React.ReactNode }) {
   const isPublic = PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
   if (isPublic) {
-    return <div className="h-screen overflow-y-auto">{children}</div>;
+    return <div className="h-dvh overflow-y-auto overscroll-contain">{children}</div>;
   }
 
   return (

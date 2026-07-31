@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { CreditCard, FileText, Pencil, Check, X, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  CreditCard,
+  FileText,
+  Pencil,
+  Check,
+  X,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 import { QuoteDocumentData } from "./quoteDocumentData";
 import { TrackEvent } from "./useQuoteActivityTracker";
 
@@ -88,10 +97,7 @@ export function PayInvoiceTab({
         .reduce((sum, i) => sum + i.amountCents, 0)
     : 0;
 
-  const overdueOwedCents = Math.max(
-    hasSchedule ? overdueCents - paidCents : remainingCents,
-    0,
-  );
+  const overdueOwedCents = Math.max(hasSchedule ? overdueCents - paidCents : remainingCents, 0);
 
   // Default pay amount: overdue balance, or full remaining if no schedule
   const defaultPayCents = hasSchedule ? Math.min(overdueOwedCents, remainingCents) : remainingCents;
@@ -158,7 +164,8 @@ export function PayInvoiceTab({
     }
   }
 
-  const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const urlParams =
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
   const paymentStatus = urlParams?.get("payment");
 
   return (
@@ -169,14 +176,18 @@ export function PayInvoiceTab({
           <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
           <div>
             <p className="font-medium text-green-800">Payment Successful!</p>
-            <p className="text-sm text-green-700">Your payment has been processed. A receipt will be sent to your email.</p>
+            <p className="text-sm text-green-700">
+              Your payment has been processed. A receipt will be sent to your email.
+            </p>
           </div>
         </div>
       )}
       {paymentStatus === "cancelled" && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0" />
-          <p className="text-sm text-yellow-800">Payment was cancelled. You can try again when ready.</p>
+          <p className="text-sm text-yellow-800">
+            Payment was cancelled. You can try again when ready.
+          </p>
         </div>
       )}
 
@@ -187,7 +198,7 @@ export function PayInvoiceTab({
           <div className="bg-white border rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-lg">Amount Due</h3>
-              <span className="text-2xl font-bold text-blue-600">
+              <span className="text-2xl font-bold text-[#405daa]">
                 {formatMoney(remainingCents, currency)}
               </span>
             </div>
@@ -202,18 +213,21 @@ export function PayInvoiceTab({
                 {/* Overdue summary */}
                 {hasSchedule && overdueOwedCents > 0 && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-800">
-                    <strong>{formatMoney(overdueOwedCents, currency)}</strong> is overdue based on your payment schedule.
+                    <strong>{formatMoney(overdueOwedCents, currency)}</strong> is due based on your
+                    payment schedule.
                   </div>
                 )}
 
                 <div className="space-y-3 mb-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Your Name *
+                    </label>
                     <input
                       type="text"
                       value={payerName}
                       onChange={(e) => setPayerName(e.target.value)}
-                      className="w-full border rounded-md px-3 py-2 text-sm"
+                      className="w-full border rounded-md px-3 py-2 text-base sm:text-sm"
                       placeholder="Full name"
                     />
                   </div>
@@ -223,7 +237,7 @@ export function PayInvoiceTab({
                       type="email"
                       value={payerEmail}
                       onChange={(e) => setPayerEmail(e.target.value)}
-                      className="w-full border rounded-md px-3 py-2 text-sm"
+                      className="w-full border rounded-md px-3 py-2 text-base sm:text-sm"
                       placeholder="email@example.com"
                     />
                   </div>
@@ -239,7 +253,7 @@ export function PayInvoiceTab({
                         onChange={() => setUseCustomAmount(false)}
                       />
                       {hasSchedule && overdueOwedCents > 0
-                        ? `Pay overdue balance (${formatMoney(defaultPayCents, currency)})`
+                        ? `Pay due balance (${formatMoney(defaultPayCents, currency)})`
                         : `Pay ${formatMoney(defaultPayCents, currency)}`}
                     </label>
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -256,12 +270,14 @@ export function PayInvoiceTab({
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-gray-700">{"$"}</span>
                       <input
-                        type="number"
-                        min={0.5}
-                        step={0.01}
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*[.,]?[0-9]*"
                         value={customAmountInput}
-                        onChange={(e) => setCustomAmountInput(e.target.value)}
-                        className="w-40 border rounded-md px-3 py-2 text-sm"
+                        onChange={(e) =>
+                          setCustomAmountInput(e.target.value.replace(/[^0-9.]/g, ""))
+                        }
+                        className="w-40 border rounded-md px-3 py-2 text-base sm:text-sm"
                         placeholder="0.00"
                       />
                       {customCents > 0 && customCents < 50 && (
@@ -277,11 +293,18 @@ export function PayInvoiceTab({
                 <button
                   onClick={handlePay}
                   disabled={isLoading || !payerName.trim() || !payAmountValid}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  className="w-full bg-[#405daa] hover:bg-[#10365a] disabled:opacity-40 text-white font-semibold text-base py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
                   <CreditCard className="w-5 h-5" />
-                  {isLoading ? "Redirecting to Stripe..." : `Pay ${formatMoney(payAmountCents, currency)} Online`}
+                  {isLoading
+                    ? "Redirecting to Stripe..."
+                    : `Pay ${formatMoney(payAmountCents, currency)} Online`}
                 </button>
+
+                <p className="mt-3 text-xs text-gray-500 text-center">
+                  Alternatively you can pay by ACH or Check. View the confirmation email for
+                  details.
+                </p>
               </>
             )}
           </div>
@@ -321,17 +344,15 @@ export function PayInvoiceTab({
                         )}
                         <div>
                           <p className="text-sm font-medium">{label}</p>
-                          {isPaid && (
-                            <p className="text-xs text-green-600">Paid</p>
-                          )}
-                          {isOverdue && (
-                            <p className="text-xs text-red-600">Overdue</p>
-                          )}
+                          {isPaid && <p className="text-xs text-green-600">Paid</p>}
+                          {isOverdue && <p className="text-xs text-red-600">Due</p>}
                         </div>
                       </div>
-                      <span className={`font-semibold ${
-                        isPaid ? "text-green-700" : isOverdue ? "text-red-700" : "text-gray-900"
-                      }`}>
+                      <span
+                        className={`font-semibold ${
+                          isPaid ? "text-green-700" : isOverdue ? "text-red-700" : "text-gray-900"
+                        }`}
+                      >
                         {formatMoney(inst.amountCents, currency)}
                       </span>
                     </div>
@@ -428,7 +449,9 @@ export function PayInvoiceTab({
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Event</span>
-                <span className="font-medium text-right max-w-[160px] truncate">{data.venue.name}</span>
+                <span className="font-medium text-right max-w-[160px] truncate">
+                  {data.venue.name}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Total</span>
@@ -436,11 +459,13 @@ export function PayInvoiceTab({
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Paid</span>
-                <span className="font-medium text-green-600">{formatMoney(paidCents, currency)}</span>
+                <span className="font-medium text-green-600">
+                  {formatMoney(paidCents, currency)}
+                </span>
               </div>
               <div className="flex justify-between border-t pt-2">
                 <span className="text-gray-800 font-medium">Remaining</span>
-                <span className="font-bold text-blue-600">
+                <span className="font-bold text-[#405daa]">
                   {formatMoney(remainingCents, currency)}
                 </span>
               </div>
@@ -456,7 +481,7 @@ export function PayInvoiceTab({
                   type="text"
                   value={poNumber}
                   onChange={(e) => setPoNumber(e.target.value)}
-                  className="flex-1 border rounded-md px-3 py-1.5 text-sm"
+                  className="flex-1 border rounded-md px-3 py-1.5 text-base sm:text-sm"
                   placeholder="Enter PO number"
                   autoFocus
                 />
@@ -494,9 +519,7 @@ export function PayInvoiceTab({
           <div className="bg-gray-50 border rounded-lg p-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-2">Make Checks Payable To</h3>
             <p className="text-sm text-gray-600">{data.company.name}</p>
-            {data.company.street && (
-              <p className="text-sm text-gray-600">{data.company.street}</p>
-            )}
+            {data.company.street && <p className="text-sm text-gray-600">{data.company.street}</p>}
             {(data.company.city || data.company.state) && (
               <p className="text-sm text-gray-600">
                 {data.company.city}, {data.company.state} {data.company.zip}
@@ -508,9 +531,7 @@ export function PayInvoiceTab({
           <div className="bg-gray-50 border rounded-lg p-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-2">Questions?</h3>
             <p className="text-sm text-gray-600">{data.company.email}</p>
-            {data.company.phone && (
-              <p className="text-sm text-gray-600">{data.company.phone}</p>
-            )}
+            {data.company.phone && <p className="text-sm text-gray-600">{data.company.phone}</p>}
           </div>
         </div>
       </div>
