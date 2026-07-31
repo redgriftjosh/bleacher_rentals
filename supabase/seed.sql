@@ -13791,3 +13791,9 @@ VALUES (true, '8d5473b1-269a-4e28-9420-dc98e9442e1b', '28c7861e-ab61-4e3e-80df-6
 INSERT INTO "public"."Drivers"
   ("tax", "pay_rate_cents", "pay_currency", "pay_per_unit", "is_active", "id", "user_uuid")
 VALUES (0, 400, 'CAD', 'KM', true, '0fcf50a1-f0ae-4f98-8565-1fe0eb588017', 'cb6b755e-53b1-41ae-b4ea-aa412c1ce951');
+
+-- E2E: give the AM one zone (Zone 1) and deliberately leave the driver OUT of it, so the
+-- driver profile opens in "zones-only" mode for the AM. Used by driver-zones.am.spec.ts.
+INSERT INTO "public"."AccountManagerZones" ("id", "account_manager_uuid", "zone_uuid", "is_lead")
+VALUES
+  ('a1b2c3d4-0000-4000-8000-000000000001', '8d5473b1-269a-4e28-9420-dc98e9442e1b', '27633341-400b-4f18-a567-85e6de7ad65d', true);
