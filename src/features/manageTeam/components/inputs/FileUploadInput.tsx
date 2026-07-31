@@ -8,7 +8,8 @@ import { Loader2, Upload, X } from "lucide-react";
 type FileUploadInputProps = {
   label: string;
   bucket: string;
-  storagePath: string; // e.g., "driver-documents/{driverUuid}/license"
+  /** Object key prefix inside the bucket, e.g. "{driverId}/license" */
+  storagePath: string;
   value: string | null;
   onChange: (path: string | null) => void;
   acceptedTypes?: string[];
