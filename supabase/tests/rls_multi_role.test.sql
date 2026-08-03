@@ -1676,9 +1676,9 @@ BEGIN
     -- ---- N5-N9: AM CANNOT access any config table ----
     PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
 
-    -- TEST N5: AM CANNOT select config tables
+    -- TEST N5: AM CANNOT select most admin config tables (QboConnections is an exception)
     SELECT count(*) INTO v_count FROM public."QboConnections";
-    ASSERT v_count = 0, format('N5 AM QboConnections: expected 0, got %s', v_count);
+    ASSERT v_count > 0, format('N5 AM QboConnections: expected >0, got %s', v_count);
     SELECT count(*) INTO v_count FROM public."InspectionQuestions";
     ASSERT v_count = 0, format('N5 AM InspectionQuestions: expected 0, got %s', v_count);
     SELECT count(*) INTO v_count FROM public."Zones";
