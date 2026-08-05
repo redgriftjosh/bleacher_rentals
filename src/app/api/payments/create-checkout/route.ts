@@ -68,8 +68,8 @@ export async function POST(req: NextRequest) {
       installmentId: installmentId ?? "",
       payerName,
     },
-    success_url: `${origin}/quote/${event.invoice_number ?? eventId}?payment=success`,
-    cancel_url: `${origin}/quote/${event.invoice_number ?? eventId}?payment=cancelled`,
+    success_url: `${origin}/quote/${eventId}?payment=success`,
+    cancel_url: `${origin}/quote/${eventId}?payment=cancelled`,
   });
 
   return NextResponse.json({ url: session.url });

@@ -19,7 +19,7 @@ test.describe("Public quote — staleness & presence", () => {
     let quote: CreatedQuote | null = null;
     try {
       quote = await createQuote();
-      await page.goto(`/quote/${quote.invoiceNumber}?pollMs=400`);
+      await page.goto(`/quote/${quote.eventId}?pollMs=400`);
       await expect(page.getByText(loaded(quote.invoiceNumber)).first()).toBeVisible();
       await expect(page.getByText("This quote has been updated")).toHaveCount(0);
 
@@ -37,7 +37,7 @@ test.describe("Public quote — staleness & presence", () => {
     let quote: CreatedQuote | null = null;
     try {
       quote = await createQuote();
-      await page.goto(`/quote/${quote.invoiceNumber}?pollMs=400`);
+      await page.goto(`/quote/${quote.eventId}?pollMs=400`);
       await expect(page.getByText(loaded(quote.invoiceNumber)).first()).toBeVisible();
 
       await page.waitForTimeout(2500); // several real poll cycles, no DB change
@@ -51,7 +51,7 @@ test.describe("Public quote — staleness & presence", () => {
     let quote: CreatedQuote | null = null;
     try {
       quote = await createQuote();
-      await page.goto(`/quote/${quote.invoiceNumber}?idleMs=1500`);
+      await page.goto(`/quote/${quote.eventId}?idleMs=1500`);
       await expect(page.getByText(loaded(quote.invoiceNumber)).first()).toBeVisible();
       await expect(page.getByText("Are you still here?")).toHaveCount(0);
 
@@ -72,7 +72,7 @@ test.describe("Public quote — staleness & presence", () => {
         if (r.url().includes("/version")) versionCalls++;
       });
 
-      await page.goto(`/quote/${quote.invoiceNumber}?pollMs=400`);
+      await page.goto(`/quote/${quote.eventId}?pollMs=400`);
       await expect(page.getByText(loaded(quote.invoiceNumber)).first()).toBeVisible();
 
       // Active → polls fire.
@@ -101,7 +101,7 @@ test.describe("Public quote — staleness & presence", () => {
       quote = await createQuote();
       termsId = await assignTerms(quote.eventId);
 
-      await page.goto(`/quote/${quote.invoiceNumber}`);
+      await page.goto(`/quote/${quote.eventId}`);
       await page.getByRole("button", { name: "Signed Contract" }).click();
       // Tabs stay mounted (hidden), so scope to the visible signer input.
       await page.locator('input[placeholder="Full name"]:visible').fill("Jane Client");
@@ -116,6 +116,21 @@ test.describe("Public quote — staleness & presence", () => {
       expect(await activeSignatureCount(quote.eventId)).toBe(0);
     } finally {
       if (quote) await cleanupQuote(quote.eventId, termsId);
+    }
+  });
+
+  test("old invoice-number URL does not resolve a quote (404)", async ({ page }) => {
+    let quote: CreatedQuote | null = null;
+    try {
+      quote = await createQuote();
+
+      // Public quotes are addressed by event UUID only. The invoice number is no
+      // longer a route slug, so the old path must NOT render the quote.
+      const res = await page.goto(`/quote/${quote.invoiceNumber}`);
+      expect(res?.status()).toBe(404);
+      await expect(page.getByText(loaded(quote.invoiceNumber)).first()).toHaveCount(0);
+    } finally {
+      if (quote) await cleanupQuote(quote.eventId);
     }
   });
 });

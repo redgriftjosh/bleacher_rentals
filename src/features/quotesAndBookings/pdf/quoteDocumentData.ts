@@ -1,9 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import {
-  resolveInvoiceDisplay,
-  buildPublicQuoteUrl,
-  parseInvoiceParam,
-} from "../utils/invoiceNumber";
+import { resolveInvoiceDisplay, buildPublicQuoteUrl } from "../utils/invoiceNumber";
 
 // ── The single source of truth for rendering a quote ──
 
@@ -294,7 +290,7 @@ export async function buildQuoteDocumentData(
 
   const appOrigin = origin ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://app.bleacherrentals.com";
   const invoiceNum = resolveInvoiceDisplay(event.invoice_number, eventId);
-  const publicUrl = buildPublicQuoteUrl(appOrigin, event.invoice_number, eventId);
+  const publicUrl = buildPublicQuoteUrl(appOrigin, eventId);
 
   // Process terms & signature
   const sig = sigResult.data as any;
@@ -362,30 +358,4 @@ export async function buildQuoteDocumentData(
     contentHash: (event as any).content_hash ?? "",
     contractHash: (event as any).contract_hash ?? "",
   } satisfies QuoteDocumentData;
-}
-
-/**
- * Lookup by invoice_number (for public /quote/[invoiceNumber] route).
- * Falls back to UUID lookup for backward compatibility with old links.
- */
-export async function buildQuoteDocumentDataByInvoice(
-  invoiceNumberOrId: string,
-  origin?: string,
-): Promise<QuoteDocumentData | null> {
-  const supabase = getSupabaseAdmin();
-
-  const parsed = parseInvoiceParam(invoiceNumberOrId);
-
-  if (parsed.type === "invoice_number") {
-    const { data } = await supabase
-      .from("Events")
-      .select("id")
-      .eq("invoice_number", parsed.value as number)
-      .single();
-
-    if (data) return buildQuoteDocumentData(data.id, origin);
-  }
-
-  // Fallback: treat as UUID (backward compat for old bookmarked links)
-  return buildQuoteDocumentData(invoiceNumberOrId, origin);
 }

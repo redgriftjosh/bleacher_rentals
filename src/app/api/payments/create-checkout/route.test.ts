@@ -97,6 +97,11 @@ describe("POST /api/payments/create-checkout", () => {
     expect(sessionArgs.line_items[0].price_data.currency).toBe("usd");
     expect(sessionArgs.metadata.eventId).toBe("evt-1");
     expect(sessionArgs.metadata.payerName).toBe("Jane Doe");
+
+    // Redirect URLs use the event UUID slug, never the (enumerable) invoice number.
+    expect(sessionArgs.success_url).toContain("/quote/evt-1?payment=success");
+    expect(sessionArgs.cancel_url).toContain("/quote/evt-1?payment=cancelled");
+    expect(sessionArgs.success_url).not.toContain("12345");
   });
 
   it("uses CAD currency when specified", async () => {
@@ -132,9 +137,9 @@ describe("POST /api/payments/create-checkout", () => {
     expect(sessionArgs.line_items[0].price_data.currency).toBe("usd");
   });
 
-  it("falls back to eventId in success_url when invoice_number is null", async () => {
+  it("uses the event UUID in redirect URLs even when an invoice number exists", async () => {
     mockSingle.mockResolvedValue({
-      data: { id: "evt-uuid-123", event_name: "Game", invoice_number: null },
+      data: { id: "evt-uuid-123", event_name: "Game", invoice_number: 987654321 },
     });
     mockCheckoutCreate.mockResolvedValue({ url: "https://checkout.stripe.com/s" });
 
@@ -143,7 +148,8 @@ describe("POST /api/payments/create-checkout", () => {
     );
 
     const sessionArgs = mockCheckoutCreate.mock.calls[0][0];
-    expect(sessionArgs.success_url).toContain("evt-uuid-123");
-    expect(sessionArgs.cancel_url).toContain("evt-uuid-123");
+    expect(sessionArgs.success_url).toContain("/quote/evt-uuid-123");
+    expect(sessionArgs.cancel_url).toContain("/quote/evt-uuid-123");
+    expect(sessionArgs.success_url).not.toContain("987654321");
   });
 });

@@ -164,9 +164,12 @@ export function PayInvoiceTab({
     }
   }
 
-  const urlParams =
-    typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-  const paymentStatus = urlParams?.get("payment");
+  // Read the ?payment= flag only after mount so server and first client render match
+  // (reading window during render causes a hydration mismatch).
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
+  useEffect(() => {
+    setPaymentStatus(new URLSearchParams(window.location.search).get("payment"));
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
