@@ -1,5 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
-import { resolveInvoiceDisplay, buildPublicQuoteUrl, parseInvoiceParam } from "../utils/invoiceNumber";
+import {
+  resolveInvoiceDisplay,
+  buildPublicQuoteUrl,
+  parseInvoiceParam,
+} from "../utils/invoiceNumber";
 
 // ── The single source of truth for rendering a quote ──
 
@@ -98,6 +102,12 @@ export type QuoteDocumentData = {
     signerName: string;
     signedAt: string;
   } | null;
+
+  // Staleness fingerprints (trigger-maintained on Events). content_hash drives the
+  // "please refresh" modal; contract_hash drives the sign-time guard / future re-sign.
+  // See docs/specs/quote-staleness-detection.md.
+  contentHash: string;
+  contractHash: string;
 };
 
 // ── Helper ──
@@ -146,6 +156,8 @@ export async function buildQuoteDocumentData(
       terms_and_conditions_uuid,
       tax_percent,
       tax_amount_cents,
+      content_hash,
+      contract_hash,
       Addresses!Events_address_uuid_fkey (
         street, city, state_province, zip_postal
       ),
@@ -170,60 +182,68 @@ export async function buildQuoteDocumentData(
   const user = event.Users as any;
 
   // Parallel fetch: salesOffice, lineItems, installments, terms, signature
-  const [soResult, lineItemResult, installmentResult, termsResult, sigResult] =
-    await Promise.all([
-      // SalesOffice
-      event.sales_office_uuid
-        ? supabase
-            .from("SalesOffices")
-            .select(`
+  const [soResult, lineItemResult, installmentResult, termsResult, sigResult] = await Promise.all([
+    // SalesOffice
+    event.sales_office_uuid
+      ? supabase
+          .from("SalesOffices")
+          .select(
+            `
               name,
               phone,
               Addresses!SalesOffices_address_uuid_fkey (
                 street, city, state_province, zip_postal
               )
-            `)
-            .eq("id", event.sales_office_uuid)
-            .single()
-        : Promise.resolve({ data: null }),
+            `,
+          )
+          .eq("id", event.sales_office_uuid)
+          .single()
+      : Promise.resolve({ data: null }),
 
-      // Line items
-      supabase
-        .from("EventLineItems")
-        .select("header, description, quantity, value_cents, currency")
-        .eq("event_uuid", eventId)
-        .eq("deleted", false)
-        .order("created_at"),
+    // Line items
+    supabase
+      .from("EventLineItems")
+      .select("header, description, quantity, value_cents, currency")
+      .eq("event_uuid", eventId)
+      .eq("deleted", false)
+      .order("created_at"),
 
-      // Payment installments
-      supabase
-        .from("PaymentInstallments")
-        .select("id, due_date, amount_cents, status")
-        .eq("event_uuid", eventId)
-        .order("due_date"),
+    // Payment installments
+    supabase
+      .from("PaymentInstallments")
+      .select("id, due_date, amount_cents, status")
+      .eq("event_uuid", eventId)
+      .order("due_date"),
 
-      // Terms & Conditions
-      (event as any).terms_and_conditions_uuid
-        ? supabase
-            .from("TermsAndConditions")
-            .select("html_content")
-            .eq("id", (event as any).terms_and_conditions_uuid)
-            .single()
-        : Promise.resolve({ data: null }),
+    // Terms & Conditions
+    (event as any).terms_and_conditions_uuid
+      ? supabase
+          .from("TermsAndConditions")
+          .select("html_content")
+          .eq("id", (event as any).terms_and_conditions_uuid)
+          .single()
+      : Promise.resolve({ data: null }),
 
-      // Contract signature
-      (event as any).terms_and_conditions_uuid
-        ? supabase
-            .from("ContractSignatures")
-            .select("signer_name, signed_at")
-            .eq("event_uuid", eventId)
-            .eq("status", "active")
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-    ]);
+    // Contract signature
+    (event as any).terms_and_conditions_uuid
+      ? supabase
+          .from("ContractSignatures")
+          .select("signer_name, signed_at")
+          .eq("event_uuid", eventId)
+          .eq("status", "active")
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
 
   // Process SalesOffice
-  let salesOffice: { name: string; phone: string | null; street: string; city: string; state: string; zip: string } | null = null;
+  let salesOffice: {
+    name: string;
+    phone: string | null;
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+  } | null = null;
   if (soResult.data) {
     const so = soResult.data as any;
     const soAddr = so.Addresses;
@@ -248,12 +268,14 @@ export async function buildQuoteDocumentData(
   }));
 
   // Process installments
-  const paymentSchedule: QuotePaymentInstallment[] = (installmentResult.data ?? []).map((pi: any) => ({
-    id: pi.id,
-    dueDate: pi.due_date,
-    amountCents: pi.amount_cents,
-    status: pi.status,
-  }));
+  const paymentSchedule: QuotePaymentInstallment[] = (installmentResult.data ?? []).map(
+    (pi: any) => ({
+      id: pi.id,
+      dueDate: pi.due_date,
+      amountCents: pi.amount_cents,
+      status: pi.status,
+    }),
+  );
 
   // Calculate totals
   const subtotalCents = lineItems
@@ -264,7 +286,8 @@ export async function buildQuoteDocumentData(
     .reduce((sum, li) => sum + li.total, 0);
   const taxableAmount = subtotalCents + discountsCents;
   const taxPercent = (event as any).tax_percent ?? 0;
-  const taxAmountCents = (event as any).tax_amount_cents ?? Math.round(taxableAmount * (taxPercent / 100));
+  const taxAmountCents =
+    (event as any).tax_amount_cents ?? Math.round(taxableAmount * (taxPercent / 100));
   const totalCents = taxableAmount + taxAmountCents;
 
   const currency = (lineItemRows?.[0]?.currency as "USD" | "CAD") ?? "USD";
@@ -334,9 +357,10 @@ export async function buildQuoteDocumentData(
 
     termsAndConditionsUuid: (event as any).terms_and_conditions_uuid ?? null,
     termsHtml: (termsResult.data as any)?.html_content ?? null,
-    contractSignature: sig
-      ? { signerName: sig.signer_name, signedAt: sig.signed_at }
-      : null,
+    contractSignature: sig ? { signerName: sig.signer_name, signedAt: sig.signed_at } : null,
+
+    contentHash: (event as any).content_hash ?? "",
+    contractHash: (event as any).contract_hash ?? "",
   } satisfies QuoteDocumentData;
 }
 

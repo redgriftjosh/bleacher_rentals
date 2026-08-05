@@ -637,6 +637,7 @@ export type Database = {
           id: string
           invalidated_at: string | null
           signed_at: string
+          signed_contract_hash: string | null
           signed_pdf_path: string | null
           signer_name: string
           status: Database["public"]["Enums"]["contract_signature_status"]
@@ -648,6 +649,7 @@ export type Database = {
           id?: string
           invalidated_at?: string | null
           signed_at?: string
+          signed_contract_hash?: string | null
           signed_pdf_path?: string | null
           signer_name: string
           status?: Database["public"]["Enums"]["contract_signature_status"]
@@ -659,6 +661,7 @@ export type Database = {
           id?: string
           invalidated_at?: string | null
           signed_at?: string
+          signed_contract_hash?: string | null
           signed_pdf_path?: string | null
           signer_name?: string
           status?: Database["public"]["Enums"]["contract_signature_status"]
@@ -1459,6 +1462,8 @@ export type Database = {
           address_uuid: string | null
           booked_at: string | null
           contact_uuid: string | null
+          content_hash: string | null
+          contract_hash: string | null
           contract_revenue_cents: number | null
           created_at: string
           created_by_user_uuid: string | null
@@ -1495,6 +1500,8 @@ export type Database = {
           address_uuid?: string | null
           booked_at?: string | null
           contact_uuid?: string | null
+          content_hash?: string | null
+          contract_hash?: string | null
           contract_revenue_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null
@@ -1531,6 +1538,8 @@ export type Database = {
           address_uuid?: string | null
           booked_at?: string | null
           contact_uuid?: string | null
+          content_hash?: string | null
+          contract_hash?: string | null
           contract_revenue_cents?: number | null
           created_at?: string
           created_by_user_uuid?: string | null

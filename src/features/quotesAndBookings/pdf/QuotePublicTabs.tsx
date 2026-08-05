@@ -7,6 +7,10 @@ import { QuotePublicView } from "./QuotePublicView";
 import { SignContractTab } from "./SignContractTab";
 import { PayInvoiceTab } from "./PayInvoiceTab";
 import { useQuoteActivityTracker } from "./useQuoteActivityTracker";
+import { useQuoteFreshness } from "./useQuoteFreshness";
+import { usePresenceCheck } from "./usePresenceCheck";
+import { QuoteUpdatedModal } from "./QuoteUpdatedModal";
+import { StillHereModal } from "./StillHereModal";
 
 type Tab = "quote" | "contract" | "pay";
 
@@ -25,6 +29,11 @@ const TAB_LABELS: Record<Tab, string> = {
 export function QuotePublicTabs({ data }: { data: QuoteDocumentData }) {
   const [activeTab, setActiveTab] = useState<Tab>("quote");
   const track = useQuoteActivityTracker(data.eventId);
+  const { isStale, refresh } = useQuoteFreshness(data.eventId, data.contentHash);
+  const { promptPresence, confirmPresent } = usePresenceCheck();
+  // Set when the sign endpoint rejects with 409 (quote changed at sign time).
+  const [signConflict, setSignConflict] = useState(false);
+  const quoteChanged = isStale || signConflict;
 
   useEffect(() => {
     track({ action_type: "client_page_view", next_value: data.quoteNumber });
@@ -44,6 +53,10 @@ export function QuotePublicTabs({ data }: { data: QuoteDocumentData }) {
 
   return (
     <div>
+      {/* Staleness wins over presence: refreshing also proves the client is here. */}
+      <QuoteUpdatedModal open={quoteChanged} onRefresh={refresh} />
+      <StillHereModal open={promptPresence && !quoteChanged} onConfirm={confirmPresent} />
+
       {/* Tab bar — sticky on all sizes so the 3 steps stay reachable on mobile */}
       <div className="sticky top-0 z-40 bg-white border-b shadow-sm sm:shadow-none pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-0">
         <div className="max-w-4xl mx-auto px-2 sm:px-4 sm:pt-6">
@@ -84,7 +97,7 @@ export function QuotePublicTabs({ data }: { data: QuoteDocumentData }) {
         <QuotePublicView data={data} track={track} />
       </div>
       <div className={activeTab === "contract" ? undefined : "hidden"}>
-        <SignContractTab data={data} track={track} />
+        <SignContractTab data={data} track={track} onQuoteChanged={() => setSignConflict(true)} />
       </div>
       <div className={activeTab === "pay" ? undefined : "hidden"}>
         <PayInvoiceTab data={data} track={track} />

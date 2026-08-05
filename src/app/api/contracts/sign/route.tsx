@@ -14,14 +14,35 @@ function getSupabaseAdmin() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { eventId, termsAndConditionsUuid, signerName } = body;
+  const { eventId, termsAndConditionsUuid, signerName, expectedContractHash } = body;
 
   if (!eventId || !termsAndConditionsUuid || !signerName?.trim()) {
+    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+  if (typeof expectedContractHash !== "string") {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
   const supabase = getSupabaseAdmin();
   const signedAt = new Date().toISOString();
+
+  // Sign-time guard: never record a signature against changed contract terms. Compare the
+  // hash the client reviewed to the live one; on mismatch abort before any write.
+  // See docs/specs/quote-staleness-detection.md §9.
+  const { data: eventRow, error: eventErr } = await supabase
+    .from("Events")
+    .select("contract_hash")
+    .eq("id", eventId)
+    .maybeSingle();
+
+  if (eventErr || !eventRow) {
+    return NextResponse.json({ error: "Event not found" }, { status: 404 });
+  }
+
+  const currentContractHash = eventRow.contract_hash ?? "";
+  if (expectedContractHash !== currentContractHash) {
+    return NextResponse.json({ error: "quote_changed" }, { status: 409 });
+  }
 
   // Invalidate any existing active signature for this event
   await supabase
@@ -39,6 +60,7 @@ export async function POST(req: NextRequest) {
       signer_name: signerName.trim(),
       signed_at: signedAt,
       status: "active",
+      signed_contract_hash: currentContractHash,
     })
     .select("id, signed_at")
     .single();
@@ -61,7 +83,15 @@ export async function POST(req: NextRequest) {
     .eq("id", eventId);
 
   await logSingleChange(supabase, eventId, null, "signature", null, signerName.trim(), "sign");
-  await logSingleChange(supabase, eventId, null, "event_status", oldEvent?.event_status ?? null, "booked", "status_change");
+  await logSingleChange(
+    supabase,
+    eventId,
+    null,
+    "event_status",
+    oldEvent?.event_status ?? null,
+    "booked",
+    "status_change",
+  );
 
   // Generate and store the signed PDF
   try {

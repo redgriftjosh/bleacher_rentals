@@ -175,6 +175,8 @@ const EventsCols = {
   tax_percent: column.real,
   tax_amount_cents: column.integer,
   finance_contact_uuid: column.text,
+  content_hash: column.text,
+  contract_hash: column.text,
 } satisfies PowerSyncColsFor<"Events">;
 const Events = new Table(EventsCols, {
   indexes: {
@@ -914,6 +916,7 @@ const ContractSignaturesCols = {
   status: column.text,
   invalidated_at: column.text,
   created_at: column.text,
+  signed_contract_hash: column.text,
 } satisfies PowerSyncColsFor<"ContractSignatures">;
 const ContractSignatures = new Table(ContractSignaturesCols, {
   indexes: { event_uuid: ["event_uuid"] },

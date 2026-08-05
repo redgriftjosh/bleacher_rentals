@@ -56,6 +56,32 @@ export default defineConfig({
         storageState: `playwright/.auth/${role}.json`,
       },
     })),
+    // Anonymous public-page tests (no auth, no setup dependency). Isolated testDir so they
+    // don't collide with the authenticated manageTeam suite. See the public-quote spec.
+    {
+      name: "anon",
+      testDir: "src/features/quotesAndBookings/e2e",
+      testMatch: /\.public\.spec\.ts$/,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    // Cross-browser run for the visibility/pause behaviour. Opt-in because it needs
+    // `npx playwright install firefox webkit`. See docs/specs/quote-staleness-detection.md §7.
+    ...(process.env.E2E_CROSS_BROWSER
+      ? [
+          {
+            name: "anon-firefox",
+            testDir: "src/features/quotesAndBookings/e2e",
+            testMatch: /\.public\.spec\.ts$/,
+            use: { ...devices["Desktop Firefox"] },
+          },
+          {
+            name: "anon-webkit",
+            testDir: "src/features/quotesAndBookings/e2e",
+            testMatch: /\.public\.spec\.ts$/,
+            use: { ...devices["Desktop Safari"] },
+          },
+        ]
+      : []),
   ],
 
   webServer:

@@ -30,9 +30,11 @@ export function formatSignedAt(iso: string): string {
 export function SignContractTab({
   data,
   track,
+  onQuoteChanged,
 }: {
   data: QuoteDocumentData;
   track: (e: TrackEvent) => void;
+  onQuoteChanged?: () => void;
 }) {
   const [contract, setContract] = useState<ContractData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,8 +59,15 @@ export function SignContractTab({
           eventId: data.eventId,
           termsAndConditionsUuid: contract.termsAndConditionsUuid,
           signerName: signerName.trim(),
+          // Sign-time guard: the server rejects (409) if the quote changed since load.
+          expectedContractHash: data.contractHash,
         }),
       });
+      if (res.status === 409) {
+        // Quote changed underneath the client — do not record; prompt a refresh.
+        onQuoteChanged?.();
+        return;
+      }
       const result = await res.json();
       if (res.ok) {
         track({
