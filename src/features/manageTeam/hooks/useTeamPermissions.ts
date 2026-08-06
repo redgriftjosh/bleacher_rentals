@@ -58,6 +58,10 @@ export function getEditAccess(
     isDriver: boolean;
     accountManagerUuid: string | null;
     assignedDriverZoneUuids: string[];
+    /** True when the user has no role assigned yet (not admin/AM/driver/developer/viewer) —
+     * see useIncomplete.ts for the matching query. Any active AM may claim and configure
+     * these, same as an admin, so incomplete signups don't get stuck waiting on an admin. */
+    hasNoRoles?: boolean;
   },
   accountManagerZoneIds: string[] = [],
 ): EditAccess {
@@ -66,6 +70,8 @@ export function getEditAccess(
   if (permissions.isAccountManager) {
     // AM can edit own profile
     if (targetUserUuid && targetUserUuid === permissions.userId) return "full";
+
+    if (targetUser.hasNoRoles) return "full";
 
     if (targetUser.isDriver) {
       // A driver already in one of the AM's zones is fully editable (mirrors the

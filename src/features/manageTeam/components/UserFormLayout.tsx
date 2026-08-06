@@ -20,12 +20,19 @@ export function UserFormLayout({ children }: UserFormLayoutProps) {
   const accountManagerUuid = useCurrentUserStore((s) => s.accountManagerUuid);
   const assignedDriverZoneUuids = useCurrentUserStore((s) => s.assignedDriverZoneUuids);
   const accountManagerZoneIds = usePermissionsStore((s) => s.accountManagerZoneIds);
+  const isAdminFlag = useCurrentUserStore((s) => s.isAdmin);
+  const isViewer = useCurrentUserStore((s) => s.isViewer);
+  const isAccountManagerFlag = useCurrentUserStore((s) => s.isAccountManager);
+  const isDeveloper = useCurrentUserStore((s) => s.isDeveloper);
+  // Mirrors useIncomplete.ts's definition of an "incomplete" user (no role assigned yet).
+  const hasNoRoles =
+    !isAdminFlag && !isViewer && !isDriver && !isAccountManagerFlag && !isDeveloper;
 
   const editAccess = existingUserUuid
     ? getEditAccess(
         permissions,
         existingUserUuid,
-        { isDriver, accountManagerUuid, assignedDriverZoneUuids },
+        { isDriver, accountManagerUuid, assignedDriverZoneUuids, hasNoRoles },
         accountManagerZoneIds,
       )
     : permissions.canCreateUser

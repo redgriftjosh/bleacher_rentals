@@ -6,6 +6,11 @@ import {
   computeDriverZoneAssignmentChanges,
   reconcileZoneDriverMap,
 } from "../logic/driverZoneAssignments";
+import {
+  clerkInviteErrorMessage,
+  isDuplicateUserEmailError,
+  toErrorMessage,
+} from "../util/inviteErrorMessages";
 
 type TypedSupabaseClient = SupabaseClient<Database>;
 
@@ -155,7 +160,12 @@ export async function createUser(
       .select("id")
       .single();
 
-    if (userError) throw userError;
+    if (userError) {
+      if (isDuplicateUserEmailError(userError)) {
+        throw new Error(`A user with the email "${state.email}" already exists.`);
+      }
+      throw userError;
+    }
     const userUuid = userData.id;
 
     // 2. If driver, insert into Drivers table
@@ -229,7 +239,7 @@ export async function createUser(
     return { success: true, userUuid };
   } catch (error) {
     console.error("Error creating user:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    return { success: false, error: toErrorMessage(error) };
   }
 }
 
@@ -460,7 +470,7 @@ export async function updateUser(
     return { success: true };
   } catch (error) {
     console.error("Error updating user:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    return { success: false, error: toErrorMessage(error) };
   }
 }
 
@@ -614,15 +624,42 @@ export async function sendUserInvite(email: string): Promise<{ success: boolean;
       body: JSON.stringify({ email }),
     });
 
+    const data = await response.json();
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to send invite");
+      // The API route already resolves this to a human-readable message
+      // (see clerkInviteErrorMessage in inviteErrorMessages.ts); fall back
+      // to the generic Clerk-shaped mapper only if that field is missing.
+      throw new Error(data.error || clerkInviteErrorMessage(data, "Failed to send invite"));
     }
 
     return { success: true };
   } catch (error) {
     console.error("Error sending invite:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    return { success: false, error: toErrorMessage(error) };
+  }
+}
+
+export async function revokeUserInvite(
+  email: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch("/api/invite", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || clerkInviteErrorMessage(data, "Failed to revoke invite"));
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error revoking invite:", error);
+    return { success: false, error: toErrorMessage(error) };
   }
 }
 

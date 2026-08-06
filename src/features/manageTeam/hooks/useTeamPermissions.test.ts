@@ -156,6 +156,23 @@ describe("getEditAccess", () => {
     ).toBe("read-only");
   });
 
+  // --- Account Manager: incomplete users (no roles assigned yet) ---
+  it("AM: full access to an incomplete user so they can assign it a role", () => {
+    expect(
+      getEditAccess(
+        amPermissions,
+        "incomplete-user",
+        {
+          isDriver: false,
+          accountManagerUuid: null,
+          assignedDriverZoneUuids: [],
+          hasNoRoles: true,
+        },
+        amZones,
+      ),
+    ).toBe("full");
+  });
+
   it("AM: read-only for another AM user", () => {
     expect(
       getEditAccess(

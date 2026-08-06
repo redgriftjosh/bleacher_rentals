@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClerkClient } from "@clerk/nextjs/server";
-import { requireAdmin } from "@/features/userAccess/logic/requireAdmin";
+import { requireAdminOrAccountManager } from "@/features/userAccess/logic/requireAdminOrAccountManager";
+import {
+  clerkInviteErrorCode,
+  clerkInviteErrorMessage,
+} from "@/features/manageTeam/util/inviteErrorMessages";
 
 export async function POST(req: NextRequest) {
   try {
-    await requireAdmin();
+    await requireAdminOrAccountManager();
   } catch (error) {
     if (error instanceof Response) return error;
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -33,11 +37,10 @@ export async function POST(req: NextRequest) {
     console.error("❌ Error creating invitation:", error);
     console.error("Error details:", JSON.stringify(error?.errors || error, null, 2));
 
-    const clerkErrors = error?.errors ?? [];
-    const firstError = clerkErrors[0];
+    const errorCode = clerkInviteErrorCode(error);
 
     // If invitation already exists, revoke it and send a new one
-    if (firstError?.code === "duplicate_record") {
+    if (errorCode === "duplicate_record") {
       console.log("⚠️ Duplicate record detected, attempting to revoke and resend");
       try {
         // Look up the existing invitation by email
@@ -83,24 +86,29 @@ export async function POST(req: NextRequest) {
       } catch (resendError: any) {
         console.error("❌ Failed to revoke and resend invite:", resendError);
         return NextResponse.json(
-          { error: resendError?.message || "Failed to resend invitation" },
+          {
+            error: clerkInviteErrorMessage(
+              resendError,
+              "An invitation for this email already exists, and resending it failed. Please try again shortly.",
+            ),
+            code: clerkInviteErrorCode(resendError),
+          },
           { status: 500 },
         );
       }
     }
 
     // All other Clerk errors
-    const detailedErrorMessage =
-      firstError?.longMessage || firstError?.message || error?.message || "Failed to invite user";
+    const detailedErrorMessage = clerkInviteErrorMessage(error);
 
     console.error("❌ Returning error to client:", detailedErrorMessage);
-    return NextResponse.json({ error: detailedErrorMessage }, { status: 400 });
+    return NextResponse.json({ error: detailedErrorMessage, code: errorCode }, { status: 400 });
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
-    await requireAdmin();
+    await requireAdminOrAccountManager();
   } catch (error) {
     if (error instanceof Response) return error;
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -155,8 +163,7 @@ export async function DELETE(req: NextRequest) {
     console.error("❌ Error revoking invitation:", error);
     console.error("Error details:", JSON.stringify(error?.errors || error, null, 2));
 
-    const message =
-      error?.errors?.[0]?.longMessage || error?.message || "Failed to revoke invitation";
+    const message = clerkInviteErrorMessage(error, "Failed to revoke invitation");
 
     console.error("❌ Returning error to client:", message);
     return NextResponse.json({ error: message }, { status: 500 });
