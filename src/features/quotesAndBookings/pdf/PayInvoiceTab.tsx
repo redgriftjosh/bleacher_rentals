@@ -54,6 +54,7 @@ export function PayInvoiceTab({
   const [payerName, setPayerName] = useState(data.contact?.name ?? "");
   const [payerEmail, setPayerEmail] = useState(data.contact?.email ?? "");
   const [isLoading, setIsLoading] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
   const [poNumber, setPoNumber] = useState(data.poNumber ?? "");
   const [editingPo, setEditingPo] = useState(false);
   const [poSaving, setPoSaving] = useState(false);
@@ -113,6 +114,7 @@ export function PayInvoiceTab({
   async function handlePay() {
     if (!payerName.trim() || !payAmountValid) return;
     setIsLoading(true);
+    setPayError(null);
     try {
       const res = await fetch("/api/payments/create-checkout", {
         method: "POST",
@@ -134,9 +136,12 @@ export function PayInvoiceTab({
           next_value: formatMoney(payAmountCents, currency),
         });
         window.location.href = json.url;
+      } else {
+        setPayError(json.error ?? "Unable to start payment. Please try again.");
       }
     } catch (e) {
       console.error("Checkout error:", e);
+      setPayError("Unable to start payment. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -216,8 +221,8 @@ export function PayInvoiceTab({
                 {/* Overdue summary */}
                 {hasSchedule && overdueOwedCents > 0 && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-800">
-                    <strong>{formatMoney(overdueOwedCents, currency)}</strong> is due based on your
-                    payment schedule.
+                    <strong>{formatMoney(overdueOwedCents, currency)}</strong> is overdue based on
+                    your payment schedule.
                   </div>
                 )}
 
@@ -304,6 +309,13 @@ export function PayInvoiceTab({
                     : `Pay ${formatMoney(payAmountCents, currency)} Online`}
                 </button>
 
+                {payError && (
+                  <div className="mt-3 flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                    <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
+                    <span>{payError}</span>
+                  </div>
+                )}
+
                 <p className="mt-3 text-xs text-gray-500 text-center">
                   Alternatively you can pay by ACH or Check. View the confirmation email for
                   details.
@@ -348,7 +360,7 @@ export function PayInvoiceTab({
                         <div>
                           <p className="text-sm font-medium">{label}</p>
                           {isPaid && <p className="text-xs text-green-600">Paid</p>}
-                          {isOverdue && <p className="text-xs text-red-600">Due</p>}
+                          {isOverdue && <p className="text-xs text-red-600">Overdue</p>}
                         </div>
                       </div>
                       <span

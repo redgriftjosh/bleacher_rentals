@@ -4,6 +4,8 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { buildQuoteDocumentData } from "@/features/quotesAndBookings/pdf/quoteDocumentData";
 import { QuotePdfDocument } from "@/features/quotesAndBookings/pdf/QuotePdfDocument";
 import { logSingleChange } from "@/features/quotesAndBookings/db/logEventChanges";
+import { sendTriggerEmail } from "@/features/automaticEmails/server/sendTriggerEmail";
+import { QUOTE_SIGNED_CLIENT, QUOTE_SIGNED_AM } from "@/features/automaticEmails/triggers";
 
 function getSupabaseAdmin() {
   return createClient(
@@ -93,13 +95,17 @@ export async function POST(req: NextRequest) {
     "status_change",
   );
 
-  // Generate and store the signed PDF
+  // Generate and store the signed PDF. Keep the rendered doc + buffer around so
+  // the automated email can reuse them without re-rendering.
+  let docData: Awaited<ReturnType<typeof buildQuoteDocumentData>> | null = null;
+  let signedPdfBuffer: Buffer | null = null;
   try {
     const origin = req.nextUrl.origin;
-    const docData = await buildQuoteDocumentData(eventId, origin);
+    docData = await buildQuoteDocumentData(eventId, origin);
 
     if (docData) {
       const buffer = await renderToBuffer(<QuotePdfDocument data={docData} />);
+      signedPdfBuffer = Buffer.from(buffer);
 
       const storagePath = `${eventId}/${data.id}.pdf`;
       const { error: uploadError } = await supabase.storage
@@ -131,6 +137,18 @@ export async function POST(req: NextRequest) {
     }
   } catch (e) {
     console.error("PDF generation failed (signature still saved):", e);
+  }
+
+  // Fire the automated "quote signed" emails to the client and the account
+  // manager (best-effort — never block or fail signing on an email problem).
+  if (docData) {
+    for (const trigger of [QUOTE_SIGNED_CLIENT, QUOTE_SIGNED_AM]) {
+      try {
+        await sendTriggerEmail({ supabaseAdmin: supabase, trigger, eventId, docData });
+      } catch (e) {
+        console.error(`[automatic-emails] ${trigger} send failed:`, e);
+      }
+    }
   }
 
   return NextResponse.json({

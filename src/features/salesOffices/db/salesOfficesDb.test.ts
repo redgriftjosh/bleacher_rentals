@@ -1,25 +1,32 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  Kysely,
-  DummyDriver,
-  SqliteAdapter,
-  SqliteIntrospector,
-  SqliteQueryCompiler,
-  type CompiledQuery,
-} from "kysely";
+import { type CompiledQuery } from "kysely";
 
-// A real Kysely instance that compiles to SQLite SQL but never connects.
-const testDb = new Kysely<any>({
-  dialect: {
-    createAdapter: () => new SqliteAdapter(),
-    createDriver: () => new DummyDriver(),
-    createIntrospector: (d) => new SqliteIntrospector(d),
-    createQueryCompiler: () => new SqliteQueryCompiler(),
-  },
+// Hoisted so these are initialized before the imported modules under test are
+// evaluated. salesOfficesDb.ts builds some queries at import time (top-level
+// `db.selectFrom(...)`), which runs before this file's body — a plain `const`
+// here would still be in its temporal dead zone when the mock getter fires.
+const { testDb, executed, getAllResult } = vi.hoisted(() => {
+  const {
+    Kysely,
+    DummyDriver,
+    SqliteAdapter,
+    SqliteIntrospector,
+    SqliteQueryCompiler,
+  } = require("kysely");
+  return {
+    // A real Kysely instance that compiles to SQLite SQL but never connects.
+    testDb: new Kysely({
+      dialect: {
+        createAdapter: () => new SqliteAdapter(),
+        createDriver: () => new DummyDriver(),
+        createIntrospector: (d: any) => new SqliteIntrospector(d),
+        createQueryCompiler: () => new SqliteQueryCompiler(),
+      },
+    }),
+    executed: [] as CompiledQuery[],
+    getAllResult: [] as unknown[],
+  };
 });
-
-const executed: CompiledQuery[] = [];
-const getAllResult: unknown[] = [];
 
 vi.mock("@/components/providers/SystemProvider", () => ({
   get db() {
@@ -58,6 +65,7 @@ const addr = {
 const baseInput = (over: Partial<SalesOfficeInput> = {}): SalesOfficeInput => ({
   name: "Main Office",
   quickbookUuid: "qbo-1",
+  stripeConnectionUuid: null,
   address: null,
   ...over,
 });

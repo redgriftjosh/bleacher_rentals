@@ -4,7 +4,7 @@ SET session_replication_role = replica;
 -- PostgreSQL database dump
 --
 
--- \restrict goydOfdEVcjXeixCMDnIS1Tenfmhd9E0Lh76agkEohE2gbc3gUsIkadJJeb3Rzx
+-- \restrict AjY6UsfIIuTGqY0V2Xzt8T3s0MuGipgLF9grQNoTtw1F09J4gzcn3gAyKSpTS1O
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -187,7 +187,6 @@ INSERT INTO "public"."Users" ("created_at", "first_name", "last_name", "email", 
 	('2026-04-27 18:09:03.092189+00', 'Bobby', 'Smith', 'rockinsrodeo@gmail.com', NULL, NULL, 1, NULL, false, '7b65d5a1-8ee0-4b7a-816d-d3ec1ed123c5', 'ac0c0918-cbdb-44b0-b065-9a78e54f8a8e', NULL, false),
 	('2026-05-27 14:47:53.270368+00', 'Bobby', 'Smith', 'rockinsrodeo@yahoo.com', NULL, 'user_3EJOpSFvsfexeurPCAFdQzcjBlr', 1, NULL, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '9d589357-38c1-4ae1-a01f-d2cb41a1ff79', NULL, false),
 	('2026-02-03 21:32:12.480844+00', 'Sarah', 'Joo', 'sarahjoo8888@gmail.com', NULL, 'user_39B2ieuUY87J45ychwmsS4aJ1m8', 1, NULL, true, '7b65d5a1-8ee0-4b7a-816d-d3ec1ed123c5', 'f8581174-0fbf-48f4-a7bf-c98516c17b76', NULL, false),
-	('2025-05-27 17:21:05.15774+00', 'Josh', 'Redgrift', 'josh@bleacherrentals.com', NULL, 'user_3COnMJPaCrpWMNet2dnreN6Hdko', 2, NULL, true, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '9bddb34c-d84e-4d11-852a-27f16de08379', NULL, true),
 	('2026-06-01 17:30:06.208499+00', 'George', 'Smith', 'gsmith@gmail.com', NULL, NULL, 1, NULL, false, '75dfeb9e-6c28-4839-a91c-a7333b0921c6', '05e25b1c-3ca0-4752-bd9e-6746fca8aa3f', NULL, false),
 	('2026-06-02 18:04:59.260744+00', 'Vanessa Hill', 'Farms', 'vanessahillfarms@gmail.com', NULL, NULL, 1, NULL, false, '75dfeb9e-6c28-4839-a91c-a7333b0921c6', '8545b674-0fd8-4c26-84ab-18c97dd22c27', NULL, false),
 	('2026-03-16 13:05:53.004257+00', 'Todd', 'James', 'todd@bleacherrentals.com', NULL, 'user_3B1s6mhf8v5p9FHN9s2UMMoguoZ', 1, NULL, true, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', 'aa6313bb-ef67-45e1-be41-b3c70731c768', NULL, false),
@@ -234,7 +233,8 @@ INSERT INTO "public"."Users" ("created_at", "first_name", "last_name", "email", 
 	('2026-06-02 17:22:02.670591+00', 'luke', 'vandenouweland', 'vdolivestock@hotmail.com', NULL, 'user_3Edf1MMhH1VXFH0i971ipI9OHpr', 1, NULL, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '92b491a2-fc16-4181-82d1-3359c20b2d30', NULL, false),
 	('2025-10-10 16:46:45.643587+00', 'Stu ', 'Graham', 'stugraham@stoneridgegroup.ca', NULL, 'user_3B7WL8FTxDB2a5g5i60O5oDIbvX', 3, NULL, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '76a29929-71ce-478c-a03e-772b110bddb0', NULL, false),
 	('2025-05-27 17:40:14.038612+00', 'Denver', 'Spearman', 'denver@bleacherrentals.com', NULL, 'user_2ygykK2j2Uu2MSSMDRMM9YiHqoC', 2, NULL, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '5847580c-471a-481e-92f7-582e7441eff4', NULL, false),
-	('2026-06-18 18:59:02.326814+00', 'Josh', 'AccountManager', 'redgriftjosh@gmail.com', NULL, 'user_35f2pOOvsfbnuYFRKDMmPKqcc5f', 1, NULL, true, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', 'abb062c1-a182-4781-ad45-8447943281c9', NULL, false);
+	('2026-06-18 18:59:02.326814+00', 'Josh', 'AccountManager', 'redgriftjosh@gmail.com', NULL, 'user_35f2pOOvsfbnuYFRKDMmPKqcc5f', 1, NULL, true, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', 'abb062c1-a182-4781-ad45-8447943281c9', NULL, false),
+	('2025-05-27 17:21:05.15774+00', 'Josh', 'Redgrift', 'josh@bleacherrentals.com', NULL, 'user_3COnMJPaCrpWMNet2dnreN6Hdko', 2, NULL, true, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '9bddb34c-d84e-4d11-852a-27f16de08379', NULL, true);
 
 
 --
@@ -242,7 +242,7 @@ INSERT INTO "public"."Users" ("created_at", "first_name", "last_name", "email", 
 --
 
 INSERT INTO "public"."AccountManagers" ("created_at", "is_active", "id", "user_uuid") VALUES
-    ('2026-06-19 15:33:31.260933+00', true, '17885e57-1562-49d6-91d8-a9886b545863', '92e2449d-b246-44a9-a117-f922bc093a66'),
+	('2026-06-19 15:33:31.260933+00', true, '17885e57-1562-49d6-91d8-a9886b545863', '92e2449d-b246-44a9-a117-f922bc093a66'),
 	('2026-07-07 19:00:00+00', true, 'c5f6a789-0123-4def-c345-678901bcdefa', 'b4e5f6a7-8901-4cde-b234-567890abcdef'),
 	('2026-03-16 13:05:53.190401+00', true, 'd77dde2d-65dd-4771-9b0f-4f2cdb11217e', 'aa6313bb-ef67-45e1-be41-b3c70731c768'),
 	('2025-11-28 15:49:12.942723+00', true, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '5847580c-471a-481e-92f7-582e7441eff4'),
@@ -258,9 +258,9 @@ INSERT INTO "public"."AccountManagers" ("created_at", "is_active", "id", "user_u
 	('2025-11-28 15:49:12.942723+00', false, 'b79bb5e9-c14a-43d9-8326-27390cfc5ae5', '5869439d-bfc2-4ae3-adc0-27bc9f42a712'),
 	('2025-11-28 15:49:12.942723+00', true, '68de93a3-001f-4d45-bb39-88d2286e2fe7', '31a13a33-985d-40c8-8d8e-7cbe94cb4bc5'),
 	('2025-11-28 15:49:12.942723+00', false, 'a356bc8f-c77b-42f7-a2d5-678fdde08bb2', '04d8fe31-ba63-4037-8f89-c6383bdcfade'),
-	('2025-11-28 15:49:12.942723+00', false, '7ec1300f-f700-42c8-aad2-934110b8f9ed', '9bddb34c-d84e-4d11-852a-27f16de08379'),
 	('2026-02-12 17:24:29.558059+00', false, 'db4bcbd6-c8c3-4873-80bc-35210d74cdb2', '64f2e95f-adf8-46be-87b3-1731ed37553f'),
-	('2026-06-18 22:23:05.403977+00', true, 'bea128bb-c4a9-48d9-9ed8-8d5b13906527', 'abb062c1-a182-4781-ad45-8447943281c9');
+	('2026-06-18 22:23:05.403977+00', true, 'bea128bb-c4a9-48d9-9ed8-8d5b13906527', 'abb062c1-a182-4781-ad45-8447943281c9'),
+	('2025-11-28 15:49:12.942723+00', true, '7ec1300f-f700-42c8-aad2-934110b8f9ed', '9bddb34c-d84e-4d11-852a-27f16de08379');
 
 
 --
@@ -2432,7 +2432,8 @@ INSERT INTO "public"."Addresses" ("created_at", "street", "city", "state_provinc
 	('2026-06-04 18:10:59.531273+00', '123 Main Street, White Plains, NY, USA', 'White Plains', 'New York', '10601', 'fcf9d624-ddca-4762-bd77-a30fb4e1af6d'),
 	('2026-06-04 18:37:21.244058+00', 'St. Louis, MO, USA', 'St. Louis', 'Missouri', '', '2be29468-6372-4ce3-95ed-81dbdaa8db64'),
 	('2026-06-04 18:37:21.360641+00', 'Denver, CO, USA', 'Denver', 'Colorado', '', '82ee70bc-6034-4833-a932-325e9db6ead7'),
-	('2026-06-04 18:56:11.745706+00', 'Western Fair, Rectory Street, London, ON, Canada', 'London', 'Ontario', 'N5W 3V9', 'd9c61c2b-db7d-4f8b-a8cc-101b030c6aa9');
+	('2026-06-04 18:56:11.745706+00', 'Western Fair, Rectory Street, London, ON, Canada', 'London', 'Ontario', 'N5W 3V9', 'd9c61c2b-db7d-4f8b-a8cc-101b030c6aa9'),
+	('2026-07-30 03:31:55.495331+00', 'The Pit MX, Allen Street, Thamesford, ON, Canada', 'Zorra', 'Ontario', 'N0M 2M0', 'a5e0cec2-9481-43aa-bcb2-50275cc6c7df');
 
 
 --
@@ -2492,20 +2493,21 @@ INSERT INTO "public"."Alerts" ("id", "entity_uuid", "entity_type", "title", "mes
 	('9dad058c-fc9d-4358-8a17-3fd7382d7d83', '2c1dc8d4-4fda-4b8d-baad-d525d1d383b9', 'event', 'Event Requirements Not Met', 'Bleacher mismatch — 10-row: 0 needed, 1 assigned.', 'VA - Rockingham - County Fair — 4808 South Valley Pike, Harrisonburg, VA 22801, USA', '2026-06-04 13:28:21.500639+00'),
 	('cf314862-4815-43ec-8698-3a6426203a36', 'cb9396a6-8d5a-4cf8-a779-a582d9a26a89', 'event', 'Event Requirements Not Met', 'Bleacher mismatch — 10-row: 0 needed, 1 assigned.', 'TN - Memphis - 30th Annual Memphis Christmas Parade in Whitehaven — Elvis Presley Blvd, Memphis, TN 38116, USA', '2026-06-04 13:33:50.851504+00'),
 	('2e73a814-8713-48b0-8db3-8192acd0cf14', '18217a51-dad8-45a8-850f-913474b4fa24', 'event', 'Event Requirements Not Met', 'Bleacher mismatch — 7-row: 3 needed, 2 assigned, 10-row: 1 needed, 2 assigned, 15-row: 7 needed, 6 assigned.', 'ON-Norfolk Rodeo 2026 — 2454 Nixon Road, Simcoe, ON, Canada', '2026-06-04 16:23:08.07446+00'),
-	('15bfb17e-7dfd-4458-83e4-2635835c966f', '92d07219-9a2e-4d7a-a543-b4ba984032d0', 'event', 'Event Requirements Not Met', 'Bleacher mismatch — 7-row: 0 needed, 1 assigned, 10-row: 1 needed, 0 assigned.', 'tes tes test  — 123 Main Street, White Plains, NY, USA', '2026-06-04 18:11:00.078916+00');
+	('15bfb17e-7dfd-4458-83e4-2635835c966f', '92d07219-9a2e-4d7a-a543-b4ba984032d0', 'event', 'Event Requirements Not Met', 'Bleacher mismatch — 7-row: 0 needed, 1 assigned, 10-row: 1 needed, 0 assigned.', 'tes tes test  — 123 Main Street, White Plains, NY, USA', '2026-06-04 18:11:00.078916+00'),
+	('cfb7d880-a5b7-4546-a925-c5dfac6505d6', '96a3683b-501f-475d-b8a5-8664b585d7db', 'event', 'Event Requirements Not Met', 'Bleacher mismatch — 10-Row, 300 Seat: 3 needed, 0 assigned.', 'Redgrift Motocross Event — The Pit MX, Allen Street, Thamesford, ON, Canada', '2026-07-30 03:31:55.914096+00');
 
 
 --
 -- Data for Name: BleacherTypes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
--- INSERT INTO "public"."BleacherTypes" ("id", "name", "row_count", "deleted", "created_by_user_uuid", "created_at", "roof_type") VALUES
--- 	('ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', '15-Row, 450 Seat', 15, false, NULL, '2026-06-18 22:21:41.32037+00', 'none'),
--- 	('0e956e2c-602c-4428-a9c1-1ba11187e0ec', '10-Row, 300 Seat', 10, false, NULL, '2026-06-18 22:21:41.32037+00', 'none'),
--- 	('e6ac8488-57fa-40d7-979f-a7d5c23bae7b', '7-Row, 100/150 Seat', 7, false, NULL, '2026-06-18 22:21:41.32037+00', 'none'),
--- 	('fc8cde03-3d35-4364-9372-43afc2a3f33f', '4-Row, 20 Seat', 4, false, NULL, '2026-06-18 22:21:41.32037+00', 'none'),
--- 	('5a50900f-e5d9-4fa4-9e23-029a40d75c9d', '8-Row, 123 Seat', 8, false, NULL, '2026-06-18 22:21:41.789948+00', 'none'),
--- 	('188b8157-1c05-4318-953b-ec3a2a4c7b7e', '9-Row, 180 Seat', 9, false, NULL, '2026-06-18 22:21:41.789948+00', 'none');
+INSERT INTO "public"."BleacherTypes" ("id", "name", "row_count", "deleted", "created_by_user_uuid", "created_at", "roof_type") VALUES
+	('f9f48670-ce14-4bb5-89d4-6e06a4396a96', '15-Row, 450 Seat', 15, false, NULL, '2026-07-30 03:16:59.744691+00', 'none'),
+	('e5715519-fb57-4810-a78d-4c0d780f0b74', '10-Row, 300 Seat', 10, false, NULL, '2026-07-30 03:16:59.744691+00', 'none'),
+	('0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '7-Row, 100/150 Seat', 7, false, NULL, '2026-07-30 03:16:59.744691+00', 'none'),
+	('df04e56d-a4d8-46af-93d4-a3130b64fa09', '4-Row, 20 Seat', 4, false, NULL, '2026-07-30 03:16:59.744691+00', 'none'),
+	('d191c81d-ff2a-4ecd-8fec-9f08b5347f70', '8-Row, 123 Seat', 8, false, NULL, '2026-07-30 03:17:00.276051+00', 'none'),
+	('78bbffc6-5241-45b7-927f-b5dc0ee34300', '9-Row, 180 Seat', 9, false, NULL, '2026-07-30 03:17:00.276051+00', 'none');
 
 
 --
@@ -2531,204 +2533,210 @@ INSERT INTO "public"."HomeBases" ("created_at", "home_base_name", "id") VALUES
 
 
 --
+-- Data for Name: StorageLocations; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
 -- Data for Name: Bleachers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."Bleachers" ("created_at", "bleacher_number", "bleacher_rows", "bleacher_seats", "created_by", "updated_at", "updated_by", "linxup_device_id", "summer_account_manager_uuid", "winter_account_manager_uuid", "id", "summer_home_base_uuid", "winter_home_base_uuid", "hitch_type", "vin_number", "tag_number", "manufacturer", "height_folded_ft", "gvwr", "trailer_length", "opening_direction", "deleted", "trailer_length_in", "trailer_height_in", "nvis_pdf_path", "zone_uuid", "bleacher_type_uuid") VALUES
-	('2025-04-28 15:09:32.118054+00', 2, 15, 450, NULL, NULL, NULL, NULL, 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'e5d180a9-51f8-428c-a2d7-c6e58f15c35a', '08dca4cd-d390-4b3d-95e8-0c7657c3a60a', '08dca4cd-d390-4b3d-95e8-0c7657c3a60a', 'Gooseneck', '1XCBP5327J3003315', NULL, 'Century Industries', 13, 15909, 53, 'driver', true, 636, 156, NULL, NULL, NULL),
-	('2025-04-28 18:09:17.727234+00', 3, 15, 450, NULL, NULL, NULL, NULL, 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', '0cf7d7a3-50d1-4d57-a9fa-c7f303f2b2c5', '08dca4cd-d390-4b3d-95e8-0c7657c3a60a', '08dca4cd-d390-4b3d-95e8-0c7657c3a60a', 'Bumper Pull ', '1XCBP5329J3003316', NULL, 'Century Industries', 13, 15909, 53, 'driver', true, 636, 156, NULL, NULL, NULL),
-	('2025-05-01 14:04:04.672591+00', 622, 7, 100, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '2365d700-3985-4127-bf4d-e09bfc2aebb2', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', 'NO VIN', NULL, 'Bleacher Rentals ', NULL, 4100, NULL, 'passenger', true, NULL, NULL, NULL, NULL, NULL),
-	('2025-05-01 13:57:28.411383+00', 57, 15, 450, NULL, NULL, NULL, '861861043837858', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '0a646c6e-d5cd-4ea0-bc2d-823cb33b18e6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5325P3003645', '808DXB', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-57/nvis-1777986563282_1777986566950.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 15:10:25.490681+00', 19, 10, 300, NULL, NULL, NULL, '861861044411935', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '09ad4ab3-71af-4a5c-a6dd-6c828c71b51a', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '159BC5021LJ840681', '903DXA', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-19/nvis-1777985901396_1777985904596.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 19:07:37.193627+00', 24, 9, 180, NULL, NULL, NULL, '861861044651233', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '20085b11-89ff-440b-b08c-44b875f2cff8', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9AA3520MJ840705', '210DXJ', 'Kaypark', 11, NULL, 35, 'passenger', false, 421, 126, 'bleacher-24/nvis-1777985921410_1777985924633.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 19:09:17.449164+00', 27, 15, 450, NULL, NULL, NULL, '861861043871485', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'c0752dee-4013-4c20-801b-386f0d7b52a5', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5322M3003503', '291DWY', 'Century Industries ', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-27/nvis-1777985950163_1777985954398.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 20:46:17.060882+00', 30, 10, 260, NULL, NULL, NULL, '861861044750043', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '5ca34cd0-cb1c-4614-a7b8-0071b73b9343', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9AC4425MJ840720', '694DWV', 'Kaypark ', 13, 11900, 45, 'passenger', false, 541, 153, 'bleacher-30/nvis-1777985980794_1777985983473.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 20:58:33.807909+00', 50, 15, 450, NULL, NULL, NULL, '861861043835258', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'a0b2b9a7-14a9-470d-bad1-aa0f11537e9b', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5329N3003578', '277DXJ', 'Century Industries ', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-50/nvis-1777986326047_1777986329068.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-05-01 14:19:43.602069+00', 87, 10, 1, NULL, NULL, NULL, NULL, 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', '306d653f-fedb-41da-9897-ca79d94e99bd', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, 'Written Off', NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-15 16:08:14.781207+00', 438, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '4f7a8646-54c3-40e2-9215-28cab0cc9dfe', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-06 14:24:58.583717+00', 431, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '31955cbe-0ccc-4c64-a736-8d57f25d630c', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-06 14:24:48.430378+00', 430, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '1aaa682b-1233-4860-97bd-78a89c917e5e', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-15 16:06:49.633008+00', 432, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '7d88150b-a090-49a6-a7aa-2e70ae97d1bb', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-06 14:24:38.868793+00', 429, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '19f574cf-991f-4ba7-9927-48803613d2cc', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-06 14:24:13.462287+00', 427, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '40ca1a6f-4939-44e1-8d7c-8e3ec6512bf0', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-05 12:47:03.183255+00', 422, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '98f148c2-e9fd-4c76-91f9-9df2a06a2684', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-05 12:46:29.415867+00', 420, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'f150b2b2-36d9-4b81-8c46-99e85b296e82', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-05 12:46:40.137365+00', 421, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '744e9fca-80d6-4a7a-9175-f97aa64eb2df', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-05 12:47:13.340876+00', 423, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'de4547f0-7c93-4bb9-a6e1-c07d72875a70', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2026-01-23 14:51:25.154952+00', 111, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '4d558c77-671f-4552-92fd-c3126f737804', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 14:41:34.547139+00', 9, 15, 450, NULL, NULL, NULL, '866392065553426', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'f562e45a-82ba-4de3-8ee8-cc5d6520e4e3', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '1XCBP5320K3003397', NULL, 'Century Industries', 13, 15909, 53, 'driver', false, 628, 159, 'bleacher-9/nvis-1777985675926_1777985679193.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-01-23 14:52:56.807432+00', 115, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '5b4c1efa-f62a-4ea0-9b6e-5de1f24e445c', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-01-23 14:53:14.907076+00', 116, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '01956afc-7571-49fc-b15b-8f87daf63173', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-01-23 14:45:07.786121+00', 106, 10, 285, NULL, NULL, NULL, NULL, 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'cde560dc-8610-4cb3-a9c1-188ab65e2a78', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-08-05 12:47:22.47383+00', 424, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'c2919e00-28f6-4450-94a4-c059a07ae7ad', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-06 14:24:02.699551+00', 426, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3be0e3ca-2907-4365-9723-e26e5f7139b2', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-06 14:24:23.271832+00', 428, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '0100e516-0b1a-4d84-b7d5-18dfbae4bf89', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-05 12:47:32.855715+00', 425, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'c097165a-fbac-4c05-b071-3e196fa1d2fd', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-30 15:12:04.401427+00', 417, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '071b1cff-9172-41ce-815b-f07d1c58c4f9', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-05-01 14:01:07.857093+00', 59, 15, 450, NULL, NULL, NULL, '861861043837361', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '3d19afde-0497-446b-9943-59fd84ee9ab1', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '1XCBP5329P3003647', '902DXA', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-59/nvis-1777986581082_1777986585201.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-04-30 19:08:05.463917+00', 25, 15, 450, NULL, NULL, NULL, '861861043743114', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '32d114a2-2cc0-412a-90ce-279f25f51aab', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '1XCBP5329M3003501', '209DXJ', 'Century Industries', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-25/nvis-1777985931010_1777985934714.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-06-30 15:10:50.41744+00', 411, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '0b18428d-76b0-4924-a462-98aa89ce73f2', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-30 15:11:05.949085+00', 412, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '7de49bb1-579a-42c6-871f-719e3a22b389', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-30 15:11:14.852164+00', 413, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'b2f7df2a-065b-4cc4-a02c-051d5fe35728', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-30 15:11:27.049289+00', 414, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'c30d0c32-81a2-4067-a781-940768cc8e28', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-30 15:11:41.129496+00', 415, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'f28f230e-11f2-44d7-bfe0-0e7a4c5b2ab4', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-30 15:12:21.881345+00', 418, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'd9a7568c-161d-4d5f-9ae8-532b79e8df0f', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-30 15:11:50.36498+00', 416, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'd03b94eb-8eb4-4cbc-84de-fc8def7e5ec0', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-19 18:00:22.78418+00', 621, 7, 100, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'b6ce9316-4c0e-4c5d-ad4c-569ae9f90719', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', 'No Vin', NULL, 'Bleacher Rentals ', NULL, 4100, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-11-13 14:46:56.695833+00', 103, 10, 285, NULL, NULL, NULL, '862255068019097', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '9354cfcc-357e-4fd9-9fdc-683faebe5c0f', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB23SN302022', NULL, 'Bleacher Rentals ', 11, 9986, 53, 'passenger', false, 640, 130, 'bleacher-103/nvis-1777987337366_1777987340502.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:07:14.829734+00', 66, 15, 450, NULL, NULL, NULL, '861861044702754', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '6ee3aa1a-7664-491c-bea7-2f501f3aebbb', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5322R3003668', '204DXJ', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-66/nvis-1777986634784_1777986638025.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 13:58:20.360028+00', 58, 15, 450, NULL, NULL, NULL, '861861043741357', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'e03fc218-ca4f-4da1-9aba-be4e1e70aacf', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5327P3003646', NULL, 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-58/nvis-1777986571844_1777986576084.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-06-30 15:08:55.919298+00', 402, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '217c57cc-8c20-4f81-944d-cce4739e3d3e', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 14:44:51.826568+00', 11, 15, 450, NULL, NULL, NULL, NULL, 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', NULL, 'dfb1427d-7f1f-49a0-8712-f9c9cf9aa79b', '485d19e2-65bc-4c4a-a512-df95b0861757', '485d19e2-65bc-4c4a-a512-df95b0861757', 'Gooseneck', '1XCBP5324K3003399', NULL, 'Century Industries', 13, 15909, 53, 'passenger', true, 636, 156, NULL, NULL, NULL),
-	('2025-11-13 14:45:15.380942+00', 100, 7, 108, NULL, NULL, NULL, '862255068030524', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'e7e13ba2-1e8b-427f-b8b2-4971817670d6', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'Bumper Pull', '2F9BB7E25SN302019', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-100/nvis-1777987310136_1777987313046.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-08-15 16:07:58.594838+00', 437, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '53f2d70e-c6ea-4280-8e27-d98488875c15', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-11-13 14:43:18.443679+00', 96, 7, 108, NULL, NULL, NULL, '862255065862473', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '6b3292a6-4aeb-49dc-89ba-9dca7e3a2ae0', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '2F9BB7E28SN302015', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-96/nvis-1777987269168_1777987272253.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-11-13 14:43:35.589988+00', 97, 7, 108, NULL, NULL, NULL, '862255064982876', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'aa3c0493-d8db-49b3-84e0-03815fadd952', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '2F9BB7E2XSN302016', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-97/nvis-1777987278120_1777987281619.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 20:54:44.606117+00', 41, 10, 300, NULL, NULL, NULL, '861861043743015', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '60dbdcfa-467e-4f76-b98c-886021e58d67', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '1S9AC4425NJ840752', '975DXH', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-41/nvis-1777986254800_1777986262325.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-11-13 14:42:50.506721+00', 95, 7, 108, NULL, NULL, NULL, '861861044753559', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '0fe565a5-ff8d-4078-b16b-d5e97cb31f58', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Bumper Pull ', '2F9BB7E26SN302014', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-95/nvis-1777987257320_1777987264952.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-04-29 13:49:51.724322+00', 4, 10, 260, NULL, NULL, NULL, '861861044527359', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '83c455c7-29de-430b-85b7-19326529e454', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Bumper Pull ', '1XCBM4625H3003239', '104DXE', 'Century Industries', 13, 8920, 45, 'driver', false, 544, 157, 'bleacher-4/nvis-1777985648259_1777985653619.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-04-30 14:42:08.371224+00', 10, 15, 450, NULL, NULL, NULL, NULL, 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', '61f115a1-80ab-46af-99fa-520652ec38b4', '485d19e2-65bc-4c4a-a512-df95b0861757', '485d19e2-65bc-4c4a-a512-df95b0861757', 'Bumper Pull ', '1XCBP5322K3003398', NULL, 'Century Industries', 13, 15909, 53, 'driver', true, 636, 156, NULL, NULL, NULL),
-	('2025-04-30 20:57:56.557532+00', 48, 10, 300, NULL, NULL, NULL, '861861044527417', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3e38ff40-d410-46e1-8a65-0351dd2862af', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBN5227N3003554', NULL, 'Century Industries ', 13, 10800, 51, 'driver', true, 612, 156, NULL, NULL, NULL),
-	('2025-05-01 13:54:39.97021+00', 52, 10, 300, NULL, NULL, NULL, '862255065074210', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '28c2bd8a-0d87-43c3-b402-4daae0f745d1', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBN5224M3003526', NULL, 'Century Industries ', 13, 10800, 51, 'driver', true, 612, 156, NULL, NULL, NULL),
-	('2025-04-30 18:55:03.950811+00', 23, 7, 120, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'd0d74431-bfe0-48ce-98b4-883699adc79b', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9AJ3225LJ840704', NULL, 'Kaypark', NULL, 4400, NULL, 'passenger', true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-30 15:09:38.769118+00', 405, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'ae2a458b-14d0-4e12-b3e8-f450bdfa3eb1', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:19:23.84754+00', 86, 10, 285, NULL, NULL, NULL, '862255065858018', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '113140a5-e56e-4e0c-a952-46e3a9c5009b', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB27SN302007', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-86/nvis-1777987052235_1777987055126.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-01-23 14:45:47.200378+00', 107, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '1f7d1e84-764a-4e4e-a337-ca066207eaef', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-01-23 14:52:38.215828+00', 114, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '5bb63e28-66b3-4fef-b4ca-c4d358c76c94', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-01-23 14:50:58.483028+00', 110, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'a7978ebe-ba14-4572-ba1f-f563d26375a1', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:07:36.907401+00', 67, 15, 450, NULL, NULL, NULL, '861861044633702', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '60ad7d85-7392-45b1-bb93-9cd1bbba22ed', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5324R3003669', NULL, 'Century Industries', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-67/nvis-1777986642951_1777986646868.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:07:51.229179+00', 68, 15, 450, NULL, NULL, NULL, '861861044696865', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '54354f6f-57f1-4c61-b277-e91766ec63a6', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5320R3003670', '549DXL', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-68/nvis-1777986651401_1777986654354.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-03-19 22:19:55.536574+00', 117, 15, 450, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'bf203ee1-2655-4083-907f-2e4a2a1b28ef', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'gooseneck', NULL, NULL, NULL, NULL, 14500, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:08:23.550716+00', 69, 15, 450, NULL, NULL, NULL, '861861044412198', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'cfd93d69-0b60-4e48-9f1c-58625c4cdb52', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5320R3003671', '980DXH', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-69/nvis-1777986658715_1777986662073.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 20:53:29.140164+00', 38, 10, 260, NULL, NULL, NULL, '861861044412032', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '70271958-382a-4e90-9a99-4eb9c8c56b5e', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9AC4424MJ840742', NULL, 'Kaypark ', 13, 11900, 45, 'passenger', false, 541, 153, 'bleacher-38/nvis-1777986214646_1777986218305.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 20:54:09.061189+00', 40, 10, 260, NULL, NULL, NULL, '861861044527524', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3481cd7b-7615-4015-924c-68a32c9f8f41', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9BC5023NJ840751', '892DXE', 'Kaypark ', 13, 11900, 45, 'passenger', false, 541, 153, 'bleacher-40/nvis-1777986234964_1777986237846.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 14:45:34.866947+00', 12, 10, 300, NULL, NULL, NULL, '861861044535113', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '6cac1a68-77d0-4a27-9b92-73a8df5de7ad', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'Bumper Pull', '159AC5022KJ840666', '809DXB', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-12/nvis-1777985682892_1777985686379.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-08-15 16:09:54.245174+00', 442, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '1fe22ed8-b88d-473d-a1bb-a2c98d42c4e4', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-08-15 16:07:47.724771+00', 436, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'adcb1b1f-18fc-469d-95e5-c2d9d5a46099', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-15 16:07:35.886854+00', 435, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'ecfcf27a-7599-4cca-be53-70d13d657d4b', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-15 16:07:21.388344+00', 434, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'cc15bc1d-d08b-4ba0-ae21-b13409b20235', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-15 16:07:06.842448+00', 433, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'fa4f2f46-e2e2-4e1b-8dd7-6cadace1c501', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-15 16:11:52.70074+00', 450, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '7de7f80d-dc3d-4904-bc67-b71b1b6da671', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-08-15 16:12:04.986386+00', 451, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '1812af40-d7e2-414a-808d-aa4db9fedc49', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-08-15 16:12:22.122232+00', 452, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '9321bfe8-0887-469f-ae67-7386523d761b', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-12-05 15:22:27.802623+00', 473, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, 'f70bfd5a-44ef-4120-9214-021474079852', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-12-05 15:22:11.564098+00', 472, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, '77a12cb4-70a2-4dfb-be6f-c8cdbfde8f18', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-12-05 15:21:08.626581+00', 469, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, 'bac47b2f-7edb-4a27-8140-12ca510c0ab5', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-12-05 15:20:46.245006+00', 468, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, 'f2d84303-0c2d-4456-8cf9-f08a9d60ff15', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-05-01 14:18:44.935996+00', 85, 10, 285, NULL, NULL, NULL, '862255065058494', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '282d6aae-762f-4409-a6cb-e580dfc2f5cb', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB25SN302006', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-85/nvis-1777987040568_1777987043702.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 15:13:18.488821+00', 21, 7, 120, NULL, NULL, NULL, '861861044527730', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '85cc7e01-bff6-4e5d-a44e-8e9afc5e2d1d', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '159AJ3221LJ840702', NULL, 'Kaypark', NULL, 4400, NULL, 'passenger', true, NULL, NULL, NULL, NULL, NULL),
-	('2025-04-30 18:54:52.387162+00', 22, 7, 120, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '944ffcee-d1e8-40c5-9c9c-1c0f038ad355', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull', '159AJ3223LJ840703', NULL, 'Kaypark', NULL, 4400, NULL, 'passenger', true, NULL, NULL, NULL, NULL, NULL),
-	('2025-05-01 14:17:12.538174+00', 82, 10, 285, NULL, NULL, NULL, '862255065046234', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'f383242d-f65b-4e0d-99d6-4976ba2c5f18', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB2XSN302003', NULL, 'Bleacher Rentals', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-82/nvis-1777987015769_1777987019172.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-03-19 22:20:40.562132+00', 118, 15, 450, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '0d5a3b76-543b-4de7-914e-169a46222456', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'gooseneck', NULL, NULL, NULL, NULL, 14500, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 20:46:55.577548+00', 31, 7, 120, NULL, NULL, NULL, '861861044619693', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'bb9b8bfa-0853-4a5f-8535-6bb61ae206ef', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9AJ3222MJ840726', NULL, 'Kaypark ', NULL, 4180, NULL, 'passenger', true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-15 16:09:12.138458+00', 439, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '5d365963-ced2-4caf-b03c-722686b5737d', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-12-05 15:21:58.121944+00', 471, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, 'fe003f82-f0a3-49f5-8a64-3a1fe526742e', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-12-05 15:21:26.603226+00', 470, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, '1ff55519-e051-498e-8082-804b4e3554c2', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-12-05 15:20:30.765115+00', 467, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, 'abfe5778-ba63-4443-9ba9-eddfb9fe44be', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-12-05 15:20:16.030928+00', 466, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, 'd108f6df-a5f0-4c5c-80f7-84792967d30e', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-15 16:09:25.618793+00', 440, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '9825b758-ffe6-466b-a9df-e9adaaf271cf', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-08-15 16:12:35.226413+00', 453, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'fe0cdbb0-99de-4798-8639-a053f4ca1af1', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-08-15 16:13:02.560765+00', 455, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '92ba614d-a787-4fde-b77c-9065c3caf630', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-04-30 20:47:56.557177+00', 33, 10, 300, NULL, NULL, NULL, '861861044633942', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '9db78aaf-a82e-410c-89d9-8d458c8f09fa', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck/Bumper Pull ', '1S9BC5027YJ840729', '099DXE', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-33/nvis-1777986166247_1777986169260.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-04-15 03:16:44.907213+00', 1, 10, 300, NULL, NULL, NULL, '861861043871287', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '8104dfbb-65a1-475a-85a1-9757123fab69', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBN5224J3003280', NULL, 'Century Industries', NULL, 10800, NULL, 'driver', false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 20:53:46.876798+00', 39, 10, 300, NULL, NULL, NULL, '861861044651159', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'aae392ef-fe91-4192-ada6-770cf3143d75', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck/Bumper Pull ', '1S9BC5021MJ840746', '978DXH', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-39/nvis-1777986224096_1777986227552.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-11-13 14:42:29.193491+00', 94, 7, 108, NULL, NULL, NULL, '861861044728536', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '1a5c2f8c-2480-4058-8d1f-592f561af57c', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Bumper Pull ', '2F9BB7E24SN302013', NULL, 'Bleacher Rentals', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-94/nvis-1777987247736_1777987250878.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-05-01 13:54:59.423331+00', 53, 7, 120, NULL, NULL, NULL, '861861044755042', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '56ea6e10-0322-46da-bb6d-3559ee641863', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull', NULL, NULL, 'Vince Built-SOLD', NULL, NULL, NULL, 'passenger', true, NULL, NULL, NULL, NULL, NULL),
-	('2025-08-05 12:46:18.058219+00', 419, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '8a662931-20a4-4f10-ad47-ae164b1cd22a', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-30 15:09:50.324705+00', 406, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'a51396e4-a406-449b-9b7c-e9de3f8f932d', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-30 15:10:00.21258+00', 407, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '933aa520-97d1-41d8-9930-04223ee75abc', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-30 15:10:15.070233+00', 408, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'beda1a94-080a-45db-81f1-b67d4b35bed3', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-30 15:10:26.570944+00', 409, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'bca890cd-df48-4aa8-b64a-815910839859', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-06-30 15:10:37.511811+00', 410, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '4eb43f51-5c7a-4288-b463-496c72e67593', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL),
-	('2025-05-01 14:05:47.591039+00', 63, 7, 200, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'eadf7323-d2e2-4a28-a589-6a711b5f348f', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '2F9BB7C30RN302001', NULL, 'Century Industries', 9, 6200, NULL, 'passenger', false, NULL, 109, 'bleacher-63/nvis-1777986608745_1777986612840.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:20:21.873513+00', 89, 10, 285, NULL, NULL, NULL, '862255065032457', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '4cfbb0d4-ca40-4c43-b1ab-f300848924bb', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB27SN302010', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-89/nvis-1777987067702_1777987071211.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:06:04.622231+00', 64, 7, 200, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'ff5ddcc6-ab83-4fd7-b3b7-48f2e8e2a1b8', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7C32RN302002', NULL, 'Century Industries ', 9, 6200, NULL, 'passenger', false, NULL, 109, 'bleacher-64/nvis-1777986618234_1777986621164.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-11-13 14:46:37.793085+00', 102, 10, 285, NULL, NULL, NULL, '862255063902735', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '95f5e5f7-d353-429a-ac5b-fd2f7bb008b5', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB21SN302021', NULL, 'Bleacher Rentals ', 11, 9986, 53, 'passenger', false, 640, 130, 'bleacher-102/nvis-1777987328321_1777987331541.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-11-13 14:44:50.18482+00', 99, 7, 108, NULL, NULL, NULL, '862255065079367', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '81edb108-932a-4343-acdd-6288a6ae835c', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7E23SN302018', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-99/nvis-1777987300872_1777987304704.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 13:56:37.530651+00', 56, 15, 450, NULL, NULL, NULL, '861861043743130', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '31a0f156-7d94-4c6c-85c2-da854fad5bde', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5323P3003644', NULL, 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-56/nvis-1777986555116_1777986558944.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 13:55:31.979873+00', 54, 15, 450, NULL, NULL, NULL, '861861043743072', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'bb84d9d5-08e1-4a9d-a75c-6035fd3d2e2e', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP532XP3003642', NULL, 'Century Industries', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-54/nvis-1777986538014_1777986541965.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-06-16 19:25:04.993902+00', 92, 7, 108, NULL, NULL, NULL, '862255065020734', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '54cfaccd-0c43-4714-815b-3307bc99b6ae', '500921f6-83d8-4dea-bcc2-a05b267a893c', '500921f6-83d8-4dea-bcc2-a05b267a893c', 'Bumper Pull ', '2F9BB7E20SN302011', '203DXJ', 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-92/nvis-1777987229587_1777987232295.pdf', '5aff9ec2-a4e6-4764-af4c-7f871e641071', NULL),
-	('2025-06-16 19:25:24.557747+00', 93, 7, 108, NULL, NULL, NULL, '862255065023399', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'e15fabc7-8905-4379-a676-4c0e2647f8ec', '500921f6-83d8-4dea-bcc2-a05b267a893c', '500921f6-83d8-4dea-bcc2-a05b267a893c', 'Bumper Pull ', '2F9BB7E22SN302012', '205DXJ', 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-93/nvis-1777987239015_1777987241827.pdf', '5aff9ec2-a4e6-4764-af4c-7f871e641071', NULL),
-	('2025-04-30 15:01:49.991194+00', 15, 10, 260, NULL, NULL, NULL, '861861043868986', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '7774248a-c49d-4b6c-b9f8-a588813d50a9', '500921f6-83d8-4dea-bcc2-a05b267a893c', '500921f6-83d8-4dea-bcc2-a05b267a893c', 'Bumper Pull', '1S9AC4427LJ840684', NULL, 'Kaypark', 13, 11900, 45, 'passenger', false, 541, 153, 'bleacher-15/nvis-1777985863981_1777985867281.pdf', '5aff9ec2-a4e6-4764-af4c-7f871e641071', NULL),
-	('2026-05-11 14:46:52.360632+00', 623, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'f4a45f54-4bd4-40f7-8904-4dfd649ae5bd', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 20:51:23.440585+00', 35, 15, 450, NULL, NULL, NULL, '861861043741787', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'e1fbee2a-6c7e-42f8-9e85-35e808723ba4', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5323N3003530', '346DXB', 'Century Industries', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-35/nvis-1777986186896_1777986191717.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 20:51:43.692128+00', 36, 10, 260, NULL, NULL, NULL, '861861043743270', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'da8cf878-637b-4704-bb0c-2fce4a72d7bc', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9AC4421MJ840732', NULL, 'Kaypark', 13, 11900, 45, 'passenger', false, 541, 153, 'bleacher-36/nvis-1777986195879_1777986199826.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 14:46:01.21991+00', 13, 10, 300, NULL, NULL, NULL, '861861044744244', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '05843c92-d638-4a64-be38-a1a1ea14e940', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'Bumper Pull ', '159AC5025KJ840669', 'X6859H', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-13/nvis-1777985691875_1777985695520.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2026-05-11 14:47:08.847194+00', 624, 4, 4, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3ee4b604-1de5-41d6-af86-adab0ab30a4f', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-08-15 16:10:57.597292+00', 447, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '561a66ce-48a1-4ff2-9f1a-f476336bd909', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 15:12:19.534018+00', 20, 10, 300, NULL, NULL, NULL, '861861043859076', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '895cb41d-5121-42b8-81ba-154f4861792c', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck/Bumper Pull', '1S9BC5023DJ840439', '899DXA', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-20/nvis-1777985912425_1777985915906.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-04-30 20:47:26.149253+00', 32, 10, 300, NULL, NULL, NULL, '861861044619362', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '589ca998-ce83-4be4-af44-cabce9a021f6', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck/Bumper Pull ', '1S9BC5028MJ840730', '898DXA', 'Kaypark ', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-32/nvis-1777986157597_1777986160897.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-05-01 14:03:19.163612+00', 60, 15, 450, NULL, NULL, NULL, '861861043870941', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '4795e981-5e02-49b7-ac79-b5d5cc50ab4b', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '1XCBP5320P3003648', '348DXB', 'Century Industries', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-60/nvis-1777986589649_1777986592690.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-05-01 14:08:40.210892+00', 70, 15, 450, NULL, NULL, NULL, '861861044670910', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '3dfd725b-7706-4623-a5cb-07912898bf7d', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '1XCBP5320R3003672', '098DXE', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-70/nvis-1777986669451_1777986671951.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-05-01 14:13:02.079264+00', 77, 10, 285, NULL, NULL, NULL, '861861044651217', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'd86896c3-b6bb-4665-a8ee-def7432dd46c', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '2F9BBAB26RN302008', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-77/nvis-1777986975101_1777986978716.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:12:21.310939+00', 75, 7, 150, NULL, NULL, NULL, '862255065890359', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'c5779725-fedd-4ff5-b171-41a465f61171', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '2F9BB7D26SN302001', NULL, 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-75/nvis-1777986958301_1777986960730.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:12:41.374311+00', 76, 10, 140, NULL, NULL, NULL, '861861044527755', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '9580722d-8fa2-47a7-bb82-40825b755969', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAA22RN302007', NULL, 'Bleacher Rentals ', NULL, NULL, NULL, 'passenger', false, NULL, NULL, 'bleacher-76/nvis-1777986965049_1777986970719.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 20:55:10.705453+00', 42, 7, 96, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '709ad0ba-9a03-4bd1-9553-8102f46f4d1e', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1G9BB2529NA434045', NULL, NULL, NULL, NULL, NULL, 'passenger', false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 14:40:38.163055+00', 8, 10, 240, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'd033ffa0-a225-4208-8013-8cbd154474b6', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '4C9BM44230D017103', NULL, NULL, NULL, NULL, NULL, 'driver', false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-01-23 14:46:21.331254+00', 108, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'fdb50ac7-1146-4c26-a81f-9f0a38a92936', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-01-23 14:47:16.23644+00', 109, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6b205dd2-1481-4f45-b73e-b185a9d4543c', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-01-23 14:51:45.44763+00', 112, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '4b1a8494-5c06-45bd-8446-e69b72650662', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-06-18 19:11:38.218696+00', 401, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '1ec9c862-1f0f-4c21-bdd2-e6aac9ec299b', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-01-23 14:52:04.378718+00', 113, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6af47c9e-988c-4d3f-94ac-f9564a837020', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 20:56:11.814795+00', 44, 15, 450, NULL, NULL, NULL, '861861043874281', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'eff155d7-854d-410f-98fb-a642a1f1d344', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP532XN3003539', '981DXH', 'Century Industries ', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-44/nvis-1777986276544_1777986279481.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 15:10:06.251383+00', 18, 10, 300, NULL, NULL, NULL, '861861043869521', '68de93a3-001f-4d45-bb39-88d2286e2fe7', '68de93a3-001f-4d45-bb39-88d2286e2fe7', 'b4523877-2875-4a53-9385-5b197ae4e131', 'd6b36242-8f6b-4106-91d5-0cacc928c3fa', 'd6b36242-8f6b-4106-91d5-0cacc928c3fa', 'Gooseneck', '159BC5025LJ840683', '290DWY', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-18/nvis-1777985890581_1777985894200.pdf', '84db7c3d-5536-4129-b403-4f8e6a6c0fc9', NULL),
-	('2025-08-15 16:10:10.404665+00', 443, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'd4894163-4784-48e2-bf81-772e3b5c399c', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-08-15 16:10:20.630026+00', 444, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '371837a5-6557-4b5e-9f28-c34b29a6ab9b', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-08-15 16:10:33.480425+00', 445, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '94351fd4-a684-4d97-adc1-bf487ea82e3c', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-08-15 16:10:45.059582+00', 446, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '9a33d00e-cb27-440c-8aea-beffcfb27fc0', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-12-09 14:27:49.492902+00', 104, 10, 285, NULL, NULL, NULL, '862255068021689', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'f6e703e2-eb6d-48f5-8175-21f2f745e36e', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '2F9BBAB25SN302023', '973DXH', 'Bleacher Rentals ', 11, 9986, 53, 'passenger', false, 640, 130, 'bleacher-104/nvis-1777987345815_1777987348845.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-05-01 14:18:09.186555+00', 84, 10, 285, NULL, NULL, NULL, '862255065053735', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'ba737cdf-660c-4024-9f99-63cbb97aac92', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB23SN302005', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-84/nvis-1777987032253_1777987035445.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 20:56:56.539754+00', 46, 10, 300, NULL, NULL, NULL, '861861044406174', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '7f69339d-39b5-4738-b652-14b01723e8f0', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBN5225N3003553', NULL, 'Century Industries ', 13, 10800, 51, 'driver', false, 612, 157, 'bleacher-46/nvis-1777986292701_1777986296308.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 20:57:29.047995+00', 47, 10, 300, NULL, NULL, NULL, '861861044406521', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'f61e531c-bd22-47a9-8d29-d2ee7efe3a5d', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBN5223N3003552', NULL, 'Century Industries ', 13, 10800, 51, 'driver', false, 612, 157, 'bleacher-47/nvis-1777986301864_1777986305293.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 15:07:29.493219+00', 17, 10, 300, NULL, NULL, NULL, '861861044535147', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '588e778f-a3ae-43e4-a0f7-073ca64360d2', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '159BO5023LJ840682', NULL, 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-17/nvis-1777985880240_1777985884159.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-04-30 15:07:05.562893+00', 16, 10, 300, NULL, NULL, NULL, '861861044579061', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'c255992c-3e9f-49cf-9321-10c0cff43041', 'edef4d1d-8e8c-440e-b0d3-0eebb86c844e', 'edef4d1d-8e8c-440e-b0d3-0eebb86c844e', 'Gooseneck', '159BC502XLJ840680', '096DXE', 'Kaypark ', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-16/nvis-1777985871963_1777985875082.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-04-30 19:08:50.117187+00', 26, 15, 450, NULL, NULL, NULL, '861861044412115', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '4a54968b-3b40-41a6-bbac-70c8b8e1fd87', 'edef4d1d-8e8c-440e-b0d3-0eebb86c844e', 'edef4d1d-8e8c-440e-b0d3-0eebb86c844e', 'Gooseneck', '1XCBP5320M3003502', '105DXE', 'Century Industries', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-26/nvis-1777985941111_1777985945408.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-05-01 14:20:05.495826+00', 88, 10, 285, NULL, NULL, NULL, '862255064984211', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '20fdab55-349e-497b-8cbf-7f97251d7932', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '2F9BBAB20SN302009', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-88/nvis-1777987060201_1777987063690.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-05-01 14:16:55.775471+00', 81, 7, 100, NULL, NULL, NULL, '861861044413170', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '6e1065cd-9020-42a9-a497-cc38c8b2c087', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Bumper Pull ', '2F9BB7A26RN302011', '890DXE', 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-81/nvis-1777987008686_1777987011362.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-04-30 20:45:55.193303+00', 29, 9, 180, NULL, NULL, NULL, '861861044412156', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'c3729265-245c-4b18-acad-2126d5640ec6', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Bumper Pull ', '1S9AA3520MJ840719', '901DXA', 'Kaypark', 11, NULL, 35, 'passenger', false, 421, 126, 'bleacher-29/nvis-1777985970145_1777985974535.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-06-30 15:09:24.408045+00', 404, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'ff533839-7182-4ca0-b390-c56362cfc029', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:17:29.675475+00', 83, 10, 285, NULL, NULL, NULL, '862255065077957', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'cd21dac5-7759-4da3-b238-8076ef623ddd', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB21SN302004', NULL, 'Bleacher Rentals ', 10, 9300, 53, 'passenger', false, 640, 130, 'bleacher-83/nvis-1777987024882_1777987027692.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-01-23 14:44:30.773666+00', 105, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'aa5b5183-2c19-4b1b-959b-53b7d19f07df', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB27SN302024', '551DXL', 'Bleacher Rentals - Canopy', 12, 14409, 55, 'passenger', false, 657, 155, 'bleacher-105/nvis-1777987354051_1777987356906.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-29 13:50:35.310087+00', 5, 10, 300, NULL, NULL, NULL, '862407068859234', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '52cdbd89-eab3-44de-bd84-f5a907dc8789', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBN5226J3003328', 'S3292T', 'Century Industries', 17, 12000, 51, NULL, false, 612, 208, 'bleacher-5/nvis-1777985658644_1777985661767.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:14:59.848998+00', 78, 10, 285, NULL, NULL, NULL, '861861044538992', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '23e33006-6899-4702-8596-304cac76f91f', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB28RN302009', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-78/nvis-1777986985715_1777986989105.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:16:23.870556+00', 79, 7, 150, NULL, NULL, NULL, '862255062542516', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'ca2a51f3-911b-4da0-9c21-4592800619c1', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7D28SN302002', NULL, 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-79/nvis-1777986993216_1777986996506.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-06-30 15:09:13.125364+00', 403, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '09b5718d-2f48-436c-948d-8c2b040d7bec', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:06:24.875897+00', 65, 15, 450, NULL, NULL, NULL, '861861044650953', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'badb067b-f084-4864-85cd-2ea65aa3d4c3', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5320R3003667', '550DXL', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-65/nvis-1777986625968_1777986628758.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 14:39:24.710786+00', 7, 10, 240, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3945b1b2-015d-410a-b60c-268b6bfbcdf2', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '4C9BM44219D017016', NULL, NULL, NULL, NULL, NULL, 'driver', false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 13:56:16.209189+00', 55, 15, 450, NULL, NULL, NULL, '861861043741035', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '0103bfe1-c565-4b1a-8b97-050190260ad7', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5321P3003643', NULL, 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-55/nvis-1777986546816_1777986549878.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 20:58:13.84182+00', 49, 10, 300, NULL, NULL, NULL, '861861044670696', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'd3ffe79c-2d21-4b11-8f80-800eb8a8e0aa', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBN5229N3003555', NULL, 'Century Industries ', 13, 10800, 51, 'driver', false, 612, 157, 'bleacher-49/nvis-1777986317443_1777986321868.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-11-13 14:46:24.191672+00', 101, 7, 108, NULL, NULL, NULL, '862407068841513', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '4eace0d7-cd21-4bf3-9f10-ca86cd1c92ba', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7E21SN302020', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-101/nvis-1777987318136_1777987320930.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 13:54:18.833542+00', 51, 15, 450, NULL, NULL, NULL, '861861043743098', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '6f5bb403-8045-4f8e-b0e0-4b8b800af092', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '1XCBP5320N3003579', '904DXA', 'Century Industries ', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-51/nvis-1777986528733_1777986532627.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-12-05 15:17:38.968827+00', 460, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '99499ad7-3635-406e-9e1b-285d91669ba2', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-04-30 20:44:36.100772+00', 28, 10, 300, NULL, NULL, NULL, '862255062534638', '68de93a3-001f-4d45-bb39-88d2286e2fe7', '68de93a3-001f-4d45-bb39-88d2286e2fe7', '9c5d6cc5-f8f1-4792-9c62-8695e04ee942', 'd6b36242-8f6b-4106-91d5-0cacc928c3fa', 'd6b36242-8f6b-4106-91d5-0cacc928c3fa', 'Gooseneck', '1S9BC5025MJ840717', 'S3675P', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-28/nvis-1777985961029_1777985964016.pdf', '84db7c3d-5536-4129-b403-4f8e6a6c0fc9', NULL),
-	('2025-05-01 14:21:26.505798+00', 91, 15, 450, NULL, NULL, NULL, '862255065042803', '68de93a3-001f-4d45-bb39-88d2286e2fe7', '68de93a3-001f-4d45-bb39-88d2286e2fe7', '234a250b-4841-464d-ae11-a0ffd8b70c84', 'd6b36242-8f6b-4106-91d5-0cacc928c3fa', 'd6b36242-8f6b-4106-91d5-0cacc928c3fa', 'Gooseneck ', '1XCBP5323S3003765', '972DXH', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-91/nvis-1777987222409_1777987225253.pdf', '84db7c3d-5536-4129-b403-4f8e6a6c0fc9', NULL),
-	('2025-04-30 15:01:28.762251+00', 14, 10, 260, NULL, NULL, NULL, '861861043751133', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '7c206471-ffcd-4475-b2be-c6396767a7d9', '500921f6-83d8-4dea-bcc2-a05b267a893c', '500921f6-83d8-4dea-bcc2-a05b267a893c', 'Bumper Pull ', '159AC4429LJ840685', NULL, 'Kaypark ', 13, 11900, 45, 'passenger', false, 541, 153, 'bleacher-14/nvis-1777985704241_1777985708663.pdf', '5aff9ec2-a4e6-4764-af4c-7f871e641071', NULL),
-	('2025-08-15 16:09:35.813989+00', 441, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '1c64ee77-7185-4f9f-8b7b-f833fc36285c', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 20:48:17.116886+00', 34, 15, 450, NULL, NULL, NULL, '861861043845703', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '70dc2d23-8b7c-491b-9d3d-a3dd9264385e', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5325N3003531', '895DXA', 'Century Industries', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-34/nvis-1777986177314_1777986180662.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-04-30 20:51:57.455375+00', 37, 10, 300, NULL, NULL, NULL, '861861044535212', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'f2920c19-c414-41eb-9017-56b70a1e9909', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1S9BC5026MJ840743', '891DXE', 'Kaypark ', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-37/nvis-1777986204933_1777986208176.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-05-01 14:03:43.927261+00', 61, 15, 450, NULL, NULL, NULL, '861861043741738', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '93544913-d3d9-4399-b77f-dd05213d182b', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5322P3003649', '276DXJ', 'Century Industries', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-61/nvis-1777986597918_1777986601187.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-08-15 16:11:15.135368+00', 448, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3032258f-42ef-487a-b4f2-90e949f86cac', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-08-15 16:11:39.045615+00', 449, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '8aaa3442-d74b-4d3b-b237-24b5113266ef', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', NULL),
-	('2025-05-01 14:10:11.130347+00', 71, 7, 100, NULL, NULL, NULL, '861861044670167', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '8b236347-5c7a-4a40-b041-404f3564b1eb', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7A21RN302003', NULL, 'Bleacher Rentals', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-71/nvis-1777986920612_1777986923690.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:11:23.337227+00', 74, 7, 100, NULL, NULL, NULL, '862255063832221', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '0d086ebe-8afa-44a6-9549-a775c3b9f8c4', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '2F9BB7A27RN302006', NULL, 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-74/nvis-1777986950618_1777986953621.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2026-06-02 14:16:44.564284+00', -1, 4, -1, NULL, NULL, NULL, NULL, NULL, NULL, 'a38ab002-8947-429e-b725-3f3a7f21e4d0', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:10:26.242999+00', 72, 7, 100, NULL, NULL, NULL, '862255063934308', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '82003c0b-ac04-4529-9fd6-44eddbdf393a', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7A23RN302004', NULL, 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-72/nvis-1777986927483_1777986930036.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:11:06.958737+00', 73, 7, 100, NULL, NULL, NULL, '862255063872300', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'b777dbc5-56df-4e55-8867-82dfc6770535', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7A25RN302005', NULL, 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-73/nvis-1777986943285_1777986946072.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-12-05 15:19:28.25954+00', 465, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '692d4180-298c-4227-9b00-f606592a34a0', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-12-05 15:18:02.727288+00', 461, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '6d51071f-0371-404a-b41d-b994365c8345', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-12-05 15:18:56.184223+00', 464, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'a74a37c4-9d28-4d1f-a376-a5d7cbd317c9', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-08-15 16:20:26.990376+00', 459, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '23f9a52f-3322-407e-bb8a-2c2827ad2a46', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-08-15 16:13:40.779431+00', 458, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'c1a00d81-d6be-4109-bbc8-e487e6fc22d6', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-08-15 16:13:17.193552+00', 456, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '73eef447-0031-4461-bd6b-e27c01574e4f', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-08-15 16:13:27.692129+00', 457, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'c23096d6-9507-45af-b32a-3cd078a152d0', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-12-05 15:18:36.665696+00', 463, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'b0139717-e9be-474d-b626-375426e79d59', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-12-05 15:18:18.934053+00', 462, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'f8b36f46-9c00-4a86-a619-219e50423af2', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-08-15 16:12:49.825769+00', 454, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '29ce0caa-a483-4575-8ef2-9395dcce6614', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-05-01 14:16:41.280285+00', 80, 7, 100, NULL, NULL, NULL, '861861044526609', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '2b25b0e4-165b-4c4b-8027-576ec3c7617e', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Bumper Pull ', '2F9BB7A24RN302010', '889DXE', 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-80/nvis-1777987001050_1777987004155.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', NULL),
-	('2025-04-30 20:55:38.268434+00', 43, 15, 450, NULL, NULL, NULL, '861861043836538', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'f767306c-63a7-44cd-9b3d-28e92bfe95e6', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5328N3003538', '275DXJ', 'Century Industries', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-43/nvis-1777986268298_1777986272032.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-05-01 14:20:45.528168+00', 90, 15, 450, NULL, NULL, NULL, '862255062518219', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '37c0dbc8-500a-4cc9-9c45-e28de2150d43', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5325S3003766', NULL, 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-90/nvis-1777987075285_1777987078593.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-11-13 14:44:34.885615+00', 98, 7, 108, NULL, NULL, NULL, '862255068019931', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '116b31e8-487f-40e4-b07a-e0eba32defc1', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7E21SN302017', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-98/nvis-1777987287455_1777987290734.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL),
-	('2025-04-30 20:56:31.729997+00', 45, 8, 123, NULL, NULL, NULL, '861861044527425', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'd79c6027-6493-4064-9bdc-f0609b895b77', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBV3426N3003580', '896DWR', 'Century Industries ', 13, 4580, 34, 'driver', false, 410, 151, 'bleacher-45/nvis-1777986283470_1777986286576.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', NULL);
+INSERT INTO "public"."Bleachers" ("created_at", "bleacher_number", "bleacher_rows", "bleacher_seats", "created_by", "updated_at", "updated_by", "linxup_device_id", "summer_account_manager_uuid", "winter_account_manager_uuid", "id", "summer_home_base_uuid", "winter_home_base_uuid", "hitch_type", "vin_number", "tag_number", "manufacturer", "height_folded_ft", "gvwr", "trailer_length", "opening_direction", "deleted", "trailer_length_in", "trailer_height_in", "nvis_pdf_path", "zone_uuid", "bleacher_type_uuid", "storage_location_uuid") VALUES
+	('2025-04-28 15:09:32.118054+00', 2, 15, 450, NULL, NULL, NULL, NULL, 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'e5d180a9-51f8-428c-a2d7-c6e58f15c35a', '08dca4cd-d390-4b3d-95e8-0c7657c3a60a', '08dca4cd-d390-4b3d-95e8-0c7657c3a60a', 'Gooseneck', '1XCBP5327J3003315', NULL, 'Century Industries', 13, 15909, 53, 'driver', true, 636, 156, NULL, NULL, NULL, NULL),
+	('2025-04-28 18:09:17.727234+00', 3, 15, 450, NULL, NULL, NULL, NULL, 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', '0cf7d7a3-50d1-4d57-a9fa-c7f303f2b2c5', '08dca4cd-d390-4b3d-95e8-0c7657c3a60a', '08dca4cd-d390-4b3d-95e8-0c7657c3a60a', 'Bumper Pull ', '1XCBP5329J3003316', NULL, 'Century Industries', 13, 15909, 53, 'driver', true, 636, 156, NULL, NULL, NULL, NULL),
+	('2025-05-01 14:04:04.672591+00', 622, 7, 100, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '2365d700-3985-4127-bf4d-e09bfc2aebb2', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', 'NO VIN', NULL, 'Bleacher Rentals ', NULL, 4100, NULL, 'passenger', true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-05-01 14:19:43.602069+00', 87, 10, 1, NULL, NULL, NULL, NULL, 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', '306d653f-fedb-41da-9897-ca79d94e99bd', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, 'Written Off', NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-15 16:08:14.781207+00', 438, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '4f7a8646-54c3-40e2-9215-28cab0cc9dfe', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-06 14:24:58.583717+00', 431, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '31955cbe-0ccc-4c64-a736-8d57f25d630c', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-06 14:24:48.430378+00', 430, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '1aaa682b-1233-4860-97bd-78a89c917e5e', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-15 16:06:49.633008+00', 432, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '7d88150b-a090-49a6-a7aa-2e70ae97d1bb', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-06 14:24:38.868793+00', 429, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '19f574cf-991f-4ba7-9927-48803613d2cc', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-06 14:24:13.462287+00', 427, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '40ca1a6f-4939-44e1-8d7c-8e3ec6512bf0', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-05 12:47:03.183255+00', 422, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '98f148c2-e9fd-4c76-91f9-9df2a06a2684', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-05 12:46:29.415867+00', 420, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'f150b2b2-36d9-4b81-8c46-99e85b296e82', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-05 12:46:40.137365+00', 421, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '744e9fca-80d6-4a7a-9175-f97aa64eb2df', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-05 12:47:13.340876+00', 423, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'de4547f0-7c93-4bb9-a6e1-c07d72875a70', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-05 12:47:22.47383+00', 424, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'c2919e00-28f6-4450-94a4-c059a07ae7ad', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-06 14:24:02.699551+00', 426, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3be0e3ca-2907-4365-9723-e26e5f7139b2', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-06 14:24:23.271832+00', 428, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '0100e516-0b1a-4d84-b7d5-18dfbae4bf89', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-05 12:47:32.855715+00', 425, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'c097165a-fbac-4c05-b071-3e196fa1d2fd', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-30 15:12:04.401427+00', 417, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '071b1cff-9172-41ce-815b-f07d1c58c4f9', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-30 15:10:50.41744+00', 411, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '0b18428d-76b0-4924-a462-98aa89ce73f2', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-30 15:11:05.949085+00', 412, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '7de49bb1-579a-42c6-871f-719e3a22b389', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-30 15:11:14.852164+00', 413, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'b2f7df2a-065b-4cc4-a02c-051d5fe35728', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-30 15:11:27.049289+00', 414, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'c30d0c32-81a2-4067-a781-940768cc8e28', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-30 15:11:41.129496+00', 415, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'f28f230e-11f2-44d7-bfe0-0e7a4c5b2ab4', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-30 15:12:21.881345+00', 418, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'd9a7568c-161d-4d5f-9ae8-532b79e8df0f', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-30 15:11:50.36498+00', 416, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'd03b94eb-8eb4-4cbc-84de-fc8def7e5ec0', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-19 18:00:22.78418+00', 621, 7, 100, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'b6ce9316-4c0e-4c5d-ad4c-569ae9f90719', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', 'No Vin', NULL, 'Bleacher Rentals ', NULL, 4100, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-04-30 14:44:51.826568+00', 11, 15, 450, NULL, NULL, NULL, NULL, 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', NULL, 'dfb1427d-7f1f-49a0-8712-f9c9cf9aa79b', '485d19e2-65bc-4c4a-a512-df95b0861757', '485d19e2-65bc-4c4a-a512-df95b0861757', 'Gooseneck', '1XCBP5324K3003399', NULL, 'Century Industries', 13, 15909, 53, 'passenger', true, 636, 156, NULL, NULL, NULL, NULL),
+	('2025-08-15 16:07:58.594838+00', 437, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '53f2d70e-c6ea-4280-8e27-d98488875c15', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-04-30 14:42:08.371224+00', 10, 15, 450, NULL, NULL, NULL, NULL, 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', '61f115a1-80ab-46af-99fa-520652ec38b4', '485d19e2-65bc-4c4a-a512-df95b0861757', '485d19e2-65bc-4c4a-a512-df95b0861757', 'Bumper Pull ', '1XCBP5322K3003398', NULL, 'Century Industries', 13, 15909, 53, 'driver', true, 636, 156, NULL, NULL, NULL, NULL),
+	('2025-04-30 20:57:56.557532+00', 48, 10, 300, NULL, NULL, NULL, '861861044527417', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3e38ff40-d410-46e1-8a65-0351dd2862af', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBN5227N3003554', NULL, 'Century Industries ', 13, 10800, 51, 'driver', true, 612, 156, NULL, NULL, NULL, NULL),
+	('2025-05-01 13:54:39.97021+00', 52, 10, 300, NULL, NULL, NULL, '862255065074210', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '28c2bd8a-0d87-43c3-b402-4daae0f745d1', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBN5224M3003526', NULL, 'Century Industries ', 13, 10800, 51, 'driver', true, 612, 156, NULL, NULL, NULL, NULL),
+	('2025-04-30 18:55:03.950811+00', 23, 7, 120, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'd0d74431-bfe0-48ce-98b4-883699adc79b', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9AJ3225LJ840704', NULL, 'Kaypark', NULL, 4400, NULL, 'passenger', true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-15 16:07:47.724771+00', 436, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'adcb1b1f-18fc-469d-95e5-c2d9d5a46099', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-15 16:07:35.886854+00', 435, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'ecfcf27a-7599-4cca-be53-70d13d657d4b', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-15 16:07:21.388344+00', 434, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'cc15bc1d-d08b-4ba0-ae21-b13409b20235', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-15 16:07:06.842448+00', 433, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'fa4f2f46-e2e2-4e1b-8dd7-6cadace1c501', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-12-05 15:22:27.802623+00', 473, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, 'f70bfd5a-44ef-4120-9214-021474079852', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-12-05 15:22:11.564098+00', 472, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, '77a12cb4-70a2-4dfb-be6f-c8cdbfde8f18', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-12-05 15:21:08.626581+00', 469, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, 'bac47b2f-7edb-4a27-8140-12ca510c0ab5', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-12-05 15:20:46.245006+00', 468, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, 'f2d84303-0c2d-4456-8cf9-f08a9d60ff15', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-04-30 15:13:18.488821+00', 21, 7, 120, NULL, NULL, NULL, '861861044527730', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '85cc7e01-bff6-4e5d-a44e-8e9afc5e2d1d', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '159AJ3221LJ840702', NULL, 'Kaypark', NULL, 4400, NULL, 'passenger', true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-04-30 18:54:52.387162+00', 22, 7, 120, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '944ffcee-d1e8-40c5-9c9c-1c0f038ad355', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull', '159AJ3223LJ840703', NULL, 'Kaypark', NULL, 4400, NULL, 'passenger', true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-04-30 20:46:55.577548+00', 31, 7, 120, NULL, NULL, NULL, '861861044619693', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'bb9b8bfa-0853-4a5f-8535-6bb61ae206ef', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9AJ3222MJ840726', NULL, 'Kaypark ', NULL, 4180, NULL, 'passenger', true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-12-05 15:21:58.121944+00', 471, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, 'fe003f82-f0a3-49f5-8a64-3a1fe526742e', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-12-05 15:21:26.603226+00', 470, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, '1ff55519-e051-498e-8082-804b4e3554c2', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-12-05 15:20:30.765115+00', 467, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, 'abfe5778-ba63-4443-9ba9-eddfb9fe44be', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-12-05 15:20:16.030928+00', 466, 4, 20, NULL, NULL, NULL, NULL, NULL, NULL, 'd108f6df-a5f0-4c5c-80f7-84792967d30e', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-05-01 13:54:59.423331+00', 53, 7, 120, NULL, NULL, NULL, '861861044755042', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '56ea6e10-0322-46da-bb6d-3559ee641863', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull', NULL, NULL, 'Vince Built-SOLD', NULL, NULL, NULL, 'passenger', true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-08-05 12:46:18.058219+00', 419, 4, 20, NULL, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '8a662931-20a4-4f10-ad47-ae164b1cd22a', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-30 15:09:50.324705+00', 406, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'a51396e4-a406-449b-9b7c-e9de3f8f932d', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-30 15:10:00.21258+00', 407, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '933aa520-97d1-41d8-9930-04223ee75abc', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-30 15:10:15.070233+00', 408, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'beda1a94-080a-45db-81f1-b67d4b35bed3', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-30 15:10:26.570944+00', 409, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'bca890cd-df48-4aa8-b64a-815910839859', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-06-30 15:10:37.511811+00', 410, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '4eb43f51-5c7a-4288-b463-496c72e67593', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2025-05-01 13:57:28.411383+00', 57, 15, 450, NULL, NULL, NULL, '861861043837858', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '0a646c6e-d5cd-4ea0-bc2d-823cb33b18e6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5325P3003645', '808DXB', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-57/nvis-1777986563282_1777986566950.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-04-30 15:10:25.490681+00', 19, 10, 300, NULL, NULL, NULL, '861861044411935', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '09ad4ab3-71af-4a5c-a6dd-6c828c71b51a', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '159BC5021LJ840681', '903DXA', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-19/nvis-1777985901396_1777985904596.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 19:07:37.193627+00', 24, 9, 180, NULL, NULL, NULL, '861861044651233', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '20085b11-89ff-440b-b08c-44b875f2cff8', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9AA3520MJ840705', '210DXJ', 'Kaypark', 11, NULL, 35, 'passenger', false, 421, 126, 'bleacher-24/nvis-1777985921410_1777985924633.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', '78bbffc6-5241-45b7-927f-b5dc0ee34300', NULL),
+	('2025-04-30 19:09:17.449164+00', 27, 15, 450, NULL, NULL, NULL, '861861043871485', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'c0752dee-4013-4c20-801b-386f0d7b52a5', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5322M3003503', '291DWY', 'Century Industries ', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-27/nvis-1777985950163_1777985954398.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-04-30 20:46:17.060882+00', 30, 10, 260, NULL, NULL, NULL, '861861044750043', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '5ca34cd0-cb1c-4614-a7b8-0071b73b9343', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9AC4425MJ840720', '694DWV', 'Kaypark ', 13, 11900, 45, 'passenger', false, 541, 153, 'bleacher-30/nvis-1777985980794_1777985983473.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 20:58:33.807909+00', 50, 15, 450, NULL, NULL, NULL, '861861043835258', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'a0b2b9a7-14a9-470d-bad1-aa0f11537e9b', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5329N3003578', '277DXJ', 'Century Industries ', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-50/nvis-1777986326047_1777986329068.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2026-01-23 14:51:25.154952+00', 111, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '4d558c77-671f-4552-92fd-c3126f737804', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 14:41:34.547139+00', 9, 15, 450, NULL, NULL, NULL, '866392065553426', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'f562e45a-82ba-4de3-8ee8-cc5d6520e4e3', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '1XCBP5320K3003397', NULL, 'Century Industries', 13, 15909, 53, 'driver', false, 628, 159, 'bleacher-9/nvis-1777985675926_1777985679193.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2026-01-23 14:52:56.807432+00', 115, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '5b4c1efa-f62a-4ea0-9b6e-5de1f24e445c', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2026-01-23 14:53:14.907076+00', 116, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '01956afc-7571-49fc-b15b-8f87daf63173', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2026-01-23 14:45:07.786121+00', 106, 10, 285, NULL, NULL, NULL, NULL, 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'e762cf98-3477-4b8f-8bbc-2b412d5250f1', 'cde560dc-8610-4cb3-a9c1-188ab65e2a78', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 14:01:07.857093+00', 59, 15, 450, NULL, NULL, NULL, '861861043837361', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '3d19afde-0497-446b-9943-59fd84ee9ab1', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '1XCBP5329P3003647', '902DXA', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-59/nvis-1777986581082_1777986585201.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-04-30 19:08:05.463917+00', 25, 15, 450, NULL, NULL, NULL, '861861043743114', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '32d114a2-2cc0-412a-90ce-279f25f51aab', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '1XCBP5329M3003501', '209DXJ', 'Century Industries', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-25/nvis-1777985931010_1777985934714.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-11-13 14:46:56.695833+00', 103, 10, 285, NULL, NULL, NULL, '862255068019097', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '9354cfcc-357e-4fd9-9fdc-683faebe5c0f', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB23SN302022', NULL, 'Bleacher Rentals ', 11, 9986, 53, 'passenger', false, 640, 130, 'bleacher-103/nvis-1777987337366_1777987340502.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 14:07:14.829734+00', 66, 15, 450, NULL, NULL, NULL, '861861044702754', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '6ee3aa1a-7664-491c-bea7-2f501f3aebbb', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5322R3003668', '204DXJ', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-66/nvis-1777986634784_1777986638025.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-05-01 13:58:20.360028+00', 58, 15, 450, NULL, NULL, NULL, '861861043741357', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'e03fc218-ca4f-4da1-9aba-be4e1e70aacf', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5327P3003646', NULL, 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-58/nvis-1777986571844_1777986576084.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-06-30 15:08:55.919298+00', 402, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '217c57cc-8c20-4f81-944d-cce4739e3d3e', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-11-13 14:45:15.380942+00', 100, 7, 108, NULL, NULL, NULL, '862255068030524', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'e7e13ba2-1e8b-427f-b8b2-4971817670d6', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'Bumper Pull', '2F9BB7E25SN302019', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-100/nvis-1777987310136_1777987313046.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-11-13 14:43:18.443679+00', 96, 7, 108, NULL, NULL, NULL, '862255065862473', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '6b3292a6-4aeb-49dc-89ba-9dca7e3a2ae0', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '2F9BB7E28SN302015', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-96/nvis-1777987269168_1777987272253.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-11-13 14:43:35.589988+00', 97, 7, 108, NULL, NULL, NULL, '862255064982876', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'aa3c0493-d8db-49b3-84e0-03815fadd952', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '2F9BB7E2XSN302016', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-97/nvis-1777987278120_1777987281619.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-04-30 20:54:44.606117+00', 41, 10, 300, NULL, NULL, NULL, '861861043743015', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '60dbdcfa-467e-4f76-b98c-886021e58d67', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '1S9AC4425NJ840752', '975DXH', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-41/nvis-1777986254800_1777986262325.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-11-13 14:42:50.506721+00', 95, 7, 108, NULL, NULL, NULL, '861861044753559', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '0fe565a5-ff8d-4078-b16b-d5e97cb31f58', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Bumper Pull ', '2F9BB7E26SN302014', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-95/nvis-1777987257320_1777987264952.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-04-29 13:49:51.724322+00', 4, 10, 260, NULL, NULL, NULL, '861861044527359', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '83c455c7-29de-430b-85b7-19326529e454', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Bumper Pull ', '1XCBM4625H3003239', '104DXE', 'Century Industries', 13, 8920, 45, 'driver', false, 544, 157, 'bleacher-4/nvis-1777985648259_1777985653619.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-06-30 15:09:38.769118+00', 405, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'ae2a458b-14d0-4e12-b3e8-f450bdfa3eb1', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-05-01 14:19:23.84754+00', 86, 10, 285, NULL, NULL, NULL, '862255065858018', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '113140a5-e56e-4e0c-a952-46e3a9c5009b', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB27SN302007', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-86/nvis-1777987052235_1777987055126.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2026-01-23 14:45:47.200378+00', 107, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '1f7d1e84-764a-4e4e-a337-ca066207eaef', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2026-01-23 14:52:38.215828+00', 114, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '5bb63e28-66b3-4fef-b4ca-c4d358c76c94', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2026-01-23 14:50:58.483028+00', 110, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'a7978ebe-ba14-4572-ba1f-f563d26375a1', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 14:07:36.907401+00', 67, 15, 450, NULL, NULL, NULL, '861861044633702', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '60ad7d85-7392-45b1-bb93-9cd1bbba22ed', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5324R3003669', NULL, 'Century Industries', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-67/nvis-1777986642951_1777986646868.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-05-01 14:07:51.229179+00', 68, 15, 450, NULL, NULL, NULL, '861861044696865', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '54354f6f-57f1-4c61-b277-e91766ec63a6', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5320R3003670', '549DXL', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-68/nvis-1777986651401_1777986654354.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2026-03-19 22:19:55.536574+00', 117, 15, 450, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'bf203ee1-2655-4083-907f-2e4a2a1b28ef', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'gooseneck', NULL, NULL, NULL, NULL, 14500, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-05-01 14:08:23.550716+00', 69, 15, 450, NULL, NULL, NULL, '861861044412198', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'cfd93d69-0b60-4e48-9f1c-58625c4cdb52', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5320R3003671', '980DXH', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-69/nvis-1777986658715_1777986662073.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-04-30 20:53:29.140164+00', 38, 10, 260, NULL, NULL, NULL, '861861044412032', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '70271958-382a-4e90-9a99-4eb9c8c56b5e', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9AC4424MJ840742', NULL, 'Kaypark ', 13, 11900, 45, 'passenger', false, 541, 153, 'bleacher-38/nvis-1777986214646_1777986218305.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 20:54:09.061189+00', 40, 10, 260, NULL, NULL, NULL, '861861044527524', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3481cd7b-7615-4015-924c-68a32c9f8f41', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9BC5023NJ840751', '892DXE', 'Kaypark ', 13, 11900, 45, 'passenger', false, 541, 153, 'bleacher-40/nvis-1777986234964_1777986237846.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 14:45:34.866947+00', 12, 10, 300, NULL, NULL, NULL, '861861044535113', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '6cac1a68-77d0-4a27-9b92-73a8df5de7ad', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'Bumper Pull', '159AC5022KJ840666', '809DXB', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-12/nvis-1777985682892_1777985686379.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-08-15 16:09:54.245174+00', 442, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '1fe22ed8-b88d-473d-a1bb-a2c98d42c4e4', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:11:52.70074+00', 450, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '7de7f80d-dc3d-4904-bc67-b71b1b6da671', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:12:04.986386+00', 451, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '1812af40-d7e2-414a-808d-aa4db9fedc49', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:12:22.122232+00', 452, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '9321bfe8-0887-469f-ae67-7386523d761b', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-05-01 14:18:44.935996+00', 85, 10, 285, NULL, NULL, NULL, '862255065058494', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '282d6aae-762f-4409-a6cb-e580dfc2f5cb', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB25SN302006', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-85/nvis-1777987040568_1777987043702.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 14:17:12.538174+00', 82, 10, 285, NULL, NULL, NULL, '862255065046234', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'f383242d-f65b-4e0d-99d6-4976ba2c5f18', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB2XSN302003', NULL, 'Bleacher Rentals', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-82/nvis-1777987015769_1777987019172.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2026-03-19 22:20:40.562132+00', 118, 15, 450, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '0d5a3b76-543b-4de7-914e-169a46222456', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'gooseneck', NULL, NULL, NULL, NULL, 14500, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-08-15 16:09:12.138458+00', 439, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '5d365963-ced2-4caf-b03c-722686b5737d', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:09:25.618793+00', 440, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '9825b758-ffe6-466b-a9df-e9adaaf271cf', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:12:35.226413+00', 453, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'fe0cdbb0-99de-4798-8639-a053f4ca1af1', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:13:02.560765+00', 455, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '92ba614d-a787-4fde-b77c-9065c3caf630', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-04-30 20:47:56.557177+00', 33, 10, 300, NULL, NULL, NULL, '861861044633942', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '9db78aaf-a82e-410c-89d9-8d458c8f09fa', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck/Bumper Pull ', '1S9BC5027YJ840729', '099DXE', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-33/nvis-1777986166247_1777986169260.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-15 03:16:44.907213+00', 1, 10, 300, NULL, NULL, NULL, '861861043871287', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '8104dfbb-65a1-475a-85a1-9757123fab69', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBN5224J3003280', NULL, 'Century Industries', NULL, 10800, NULL, 'driver', false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 20:53:46.876798+00', 39, 10, 300, NULL, NULL, NULL, '861861044651159', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'aae392ef-fe91-4192-ada6-770cf3143d75', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck/Bumper Pull ', '1S9BC5021MJ840746', '978DXH', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-39/nvis-1777986224096_1777986227552.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-11-13 14:42:29.193491+00', 94, 7, 108, NULL, NULL, NULL, '861861044728536', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '1a5c2f8c-2480-4058-8d1f-592f561af57c', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Bumper Pull ', '2F9BB7E24SN302013', NULL, 'Bleacher Rentals', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-94/nvis-1777987247736_1777987250878.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-05-01 14:05:47.591039+00', 63, 7, 200, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'eadf7323-d2e2-4a28-a589-6a711b5f348f', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '2F9BB7C30RN302001', NULL, 'Century Industries', 9, 6200, NULL, 'passenger', false, NULL, 109, 'bleacher-63/nvis-1777986608745_1777986612840.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-05-01 14:20:21.873513+00', 89, 10, 285, NULL, NULL, NULL, '862255065032457', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '4cfbb0d4-ca40-4c43-b1ab-f300848924bb', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB27SN302010', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-89/nvis-1777987067702_1777987071211.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 14:06:04.622231+00', 64, 7, 200, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'ff5ddcc6-ab83-4fd7-b3b7-48f2e8e2a1b8', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7C32RN302002', NULL, 'Century Industries ', 9, 6200, NULL, 'passenger', false, NULL, 109, 'bleacher-64/nvis-1777986618234_1777986621164.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-11-13 14:46:37.793085+00', 102, 10, 285, NULL, NULL, NULL, '862255063902735', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '95f5e5f7-d353-429a-ac5b-fd2f7bb008b5', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB21SN302021', NULL, 'Bleacher Rentals ', 11, 9986, 53, 'passenger', false, 640, 130, 'bleacher-102/nvis-1777987328321_1777987331541.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-11-13 14:44:50.18482+00', 99, 7, 108, NULL, NULL, NULL, '862255065079367', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '81edb108-932a-4343-acdd-6288a6ae835c', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7E23SN302018', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-99/nvis-1777987300872_1777987304704.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-05-01 13:56:37.530651+00', 56, 15, 450, NULL, NULL, NULL, '861861043743130', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '31a0f156-7d94-4c6c-85c2-da854fad5bde', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5323P3003644', NULL, 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-56/nvis-1777986555116_1777986558944.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-05-01 13:55:31.979873+00', 54, 15, 450, NULL, NULL, NULL, '861861043743072', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'bb84d9d5-08e1-4a9d-a75c-6035fd3d2e2e', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP532XP3003642', NULL, 'Century Industries', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-54/nvis-1777986538014_1777986541965.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-06-16 19:25:04.993902+00', 92, 7, 108, NULL, NULL, NULL, '862255065020734', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '54cfaccd-0c43-4714-815b-3307bc99b6ae', '500921f6-83d8-4dea-bcc2-a05b267a893c', '500921f6-83d8-4dea-bcc2-a05b267a893c', 'Bumper Pull ', '2F9BB7E20SN302011', '203DXJ', 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-92/nvis-1777987229587_1777987232295.pdf', '5aff9ec2-a4e6-4764-af4c-7f871e641071', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-06-16 19:25:24.557747+00', 93, 7, 108, NULL, NULL, NULL, '862255065023399', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'e15fabc7-8905-4379-a676-4c0e2647f8ec', '500921f6-83d8-4dea-bcc2-a05b267a893c', '500921f6-83d8-4dea-bcc2-a05b267a893c', 'Bumper Pull ', '2F9BB7E22SN302012', '205DXJ', 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-93/nvis-1777987239015_1777987241827.pdf', '5aff9ec2-a4e6-4764-af4c-7f871e641071', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-04-30 15:01:49.991194+00', 15, 10, 260, NULL, NULL, NULL, '861861043868986', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '7774248a-c49d-4b6c-b9f8-a588813d50a9', '500921f6-83d8-4dea-bcc2-a05b267a893c', '500921f6-83d8-4dea-bcc2-a05b267a893c', 'Bumper Pull', '1S9AC4427LJ840684', NULL, 'Kaypark', 13, 11900, 45, 'passenger', false, 541, 153, 'bleacher-15/nvis-1777985863981_1777985867281.pdf', '5aff9ec2-a4e6-4764-af4c-7f871e641071', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2026-05-11 14:46:52.360632+00', 623, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'f4a45f54-4bd4-40f7-8904-4dfd649ae5bd', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-04-30 20:51:23.440585+00', 35, 15, 450, NULL, NULL, NULL, '861861043741787', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'e1fbee2a-6c7e-42f8-9e85-35e808723ba4', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5323N3003530', '346DXB', 'Century Industries', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-35/nvis-1777986186896_1777986191717.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-04-30 20:51:43.692128+00', 36, 10, 260, NULL, NULL, NULL, '861861043743270', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'da8cf878-637b-4704-bb0c-2fce4a72d7bc', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '1S9AC4421MJ840732', NULL, 'Kaypark', 13, 11900, 45, 'passenger', false, 541, 153, 'bleacher-36/nvis-1777986195879_1777986199826.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 14:46:01.21991+00', 13, 10, 300, NULL, NULL, NULL, '861861044744244', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '05843c92-d638-4a64-be38-a1a1ea14e940', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'Bumper Pull ', '159AC5025KJ840669', 'X6859H', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-13/nvis-1777985691875_1777985695520.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2026-05-11 14:47:08.847194+00', 624, 4, 4, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3ee4b604-1de5-41d6-af86-adab0ab30a4f', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:10:57.597292+00', 447, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '561a66ce-48a1-4ff2-9f1a-f476336bd909', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-04-30 15:12:19.534018+00', 20, 10, 300, NULL, NULL, NULL, '861861043859076', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '895cb41d-5121-42b8-81ba-154f4861792c', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck/Bumper Pull', '1S9BC5023DJ840439', '899DXA', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-20/nvis-1777985912425_1777985915906.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 20:47:26.149253+00', 32, 10, 300, NULL, NULL, NULL, '861861044619362', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '589ca998-ce83-4be4-af44-cabce9a021f6', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck/Bumper Pull ', '1S9BC5028MJ840730', '898DXA', 'Kaypark ', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-32/nvis-1777986157597_1777986160897.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 14:03:19.163612+00', 60, 15, 450, NULL, NULL, NULL, '861861043870941', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '4795e981-5e02-49b7-ac79-b5d5cc50ab4b', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '1XCBP5320P3003648', '348DXB', 'Century Industries', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-60/nvis-1777986589649_1777986592690.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-05-01 14:08:40.210892+00', 70, 15, 450, NULL, NULL, NULL, '861861044670910', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '3dfd725b-7706-4623-a5cb-07912898bf7d', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '1XCBP5320R3003672', '098DXE', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-70/nvis-1777986669451_1777986671951.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-05-01 14:13:02.079264+00', 77, 10, 285, NULL, NULL, NULL, '861861044651217', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'd86896c3-b6bb-4665-a8ee-def7432dd46c', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '2F9BBAB26RN302008', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-77/nvis-1777986975101_1777986978716.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 14:12:21.310939+00', 75, 7, 150, NULL, NULL, NULL, '862255065890359', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'c5779725-fedd-4ff5-b171-41a465f61171', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '2F9BB7D26SN302001', NULL, 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-75/nvis-1777986958301_1777986960730.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-05-01 14:12:41.374311+00', 76, 10, 140, NULL, NULL, NULL, '861861044527755', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '9580722d-8fa2-47a7-bb82-40825b755969', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAA22RN302007', NULL, 'Bleacher Rentals ', NULL, NULL, NULL, 'passenger', false, NULL, NULL, 'bleacher-76/nvis-1777986965049_1777986970719.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 20:55:10.705453+00', 42, 7, 96, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '709ad0ba-9a03-4bd1-9553-8102f46f4d1e', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1G9BB2529NA434045', NULL, NULL, NULL, NULL, NULL, 'passenger', false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-04-30 14:40:38.163055+00', 8, 10, 240, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'd033ffa0-a225-4208-8013-8cbd154474b6', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '4C9BM44230D017103', NULL, NULL, NULL, NULL, NULL, 'driver', false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2026-01-23 14:46:21.331254+00', 108, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'fdb50ac7-1146-4c26-a81f-9f0a38a92936', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2026-01-23 14:47:16.23644+00', 109, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6b205dd2-1481-4f45-b73e-b185a9d4543c', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2026-01-23 14:51:45.44763+00', 112, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '4b1a8494-5c06-45bd-8446-e69b72650662', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-06-18 19:11:38.218696+00', 401, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '1ec9c862-1f0f-4c21-bdd2-e6aac9ec299b', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2026-01-23 14:52:04.378718+00', 113, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6af47c9e-988c-4d3f-94ac-f9564a837020', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 20:56:11.814795+00', 44, 15, 450, NULL, NULL, NULL, '861861043874281', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'eff155d7-854d-410f-98fb-a642a1f1d344', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP532XN3003539', '981DXH', 'Century Industries ', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-44/nvis-1777986276544_1777986279481.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-04-30 15:10:06.251383+00', 18, 10, 300, NULL, NULL, NULL, '861861043869521', '68de93a3-001f-4d45-bb39-88d2286e2fe7', '68de93a3-001f-4d45-bb39-88d2286e2fe7', 'b4523877-2875-4a53-9385-5b197ae4e131', 'd6b36242-8f6b-4106-91d5-0cacc928c3fa', 'd6b36242-8f6b-4106-91d5-0cacc928c3fa', 'Gooseneck', '159BC5025LJ840683', '290DWY', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-18/nvis-1777985890581_1777985894200.pdf', '84db7c3d-5536-4129-b403-4f8e6a6c0fc9', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-08-15 16:10:10.404665+00', 443, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'd4894163-4784-48e2-bf81-772e3b5c399c', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:10:20.630026+00', 444, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '371837a5-6557-4b5e-9f28-c34b29a6ab9b', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:10:33.480425+00', 445, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '94351fd4-a684-4d97-adc1-bf487ea82e3c', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:10:45.059582+00', 446, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '9a33d00e-cb27-440c-8aea-beffcfb27fc0', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-12-09 14:27:49.492902+00', 104, 10, 285, NULL, NULL, NULL, '862255068021689', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'f6e703e2-eb6d-48f5-8175-21f2f745e36e', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '2F9BBAB25SN302023', '973DXH', 'Bleacher Rentals ', 11, 9986, 53, 'passenger', false, 640, 130, 'bleacher-104/nvis-1777987345815_1777987348845.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 14:18:09.186555+00', 84, 10, 285, NULL, NULL, NULL, '862255065053735', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'ba737cdf-660c-4024-9f99-63cbb97aac92', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB23SN302005', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-84/nvis-1777987032253_1777987035445.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 20:56:56.539754+00', 46, 10, 300, NULL, NULL, NULL, '861861044406174', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '7f69339d-39b5-4738-b652-14b01723e8f0', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBN5225N3003553', NULL, 'Century Industries ', 13, 10800, 51, 'driver', false, 612, 157, 'bleacher-46/nvis-1777986292701_1777986296308.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 20:57:29.047995+00', 47, 10, 300, NULL, NULL, NULL, '861861044406521', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'f61e531c-bd22-47a9-8d29-d2ee7efe3a5d', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBN5223N3003552', NULL, 'Century Industries ', 13, 10800, 51, 'driver', false, 612, 157, 'bleacher-47/nvis-1777986301864_1777986305293.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 15:07:29.493219+00', 17, 10, 300, NULL, NULL, NULL, '861861044535147', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '588e778f-a3ae-43e4-a0f7-073ca64360d2', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '159BO5023LJ840682', NULL, 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-17/nvis-1777985880240_1777985884159.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 15:07:05.562893+00', 16, 10, 300, NULL, NULL, NULL, '861861044579061', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'c255992c-3e9f-49cf-9321-10c0cff43041', 'edef4d1d-8e8c-440e-b0d3-0eebb86c844e', 'edef4d1d-8e8c-440e-b0d3-0eebb86c844e', 'Gooseneck', '159BC502XLJ840680', '096DXE', 'Kaypark ', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-16/nvis-1777985871963_1777985875082.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-30 19:08:50.117187+00', 26, 15, 450, NULL, NULL, NULL, '861861044412115', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '4a54968b-3b40-41a6-bbac-70c8b8e1fd87', 'edef4d1d-8e8c-440e-b0d3-0eebb86c844e', 'edef4d1d-8e8c-440e-b0d3-0eebb86c844e', 'Gooseneck', '1XCBP5320M3003502', '105DXE', 'Century Industries', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-26/nvis-1777985941111_1777985945408.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-05-01 14:20:05.495826+00', 88, 10, 285, NULL, NULL, NULL, '862255064984211', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '20fdab55-349e-497b-8cbf-7f97251d7932', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Bumper Pull ', '2F9BBAB20SN302009', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-88/nvis-1777987060201_1777987063690.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 14:16:55.775471+00', 81, 7, 100, NULL, NULL, NULL, '861861044413170', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '6e1065cd-9020-42a9-a497-cc38c8b2c087', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Bumper Pull ', '2F9BB7A26RN302011', '890DXE', 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-81/nvis-1777987008686_1777987011362.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-04-30 20:45:55.193303+00', 29, 9, 180, NULL, NULL, NULL, '861861044412156', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'c3729265-245c-4b18-acad-2126d5640ec6', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Bumper Pull ', '1S9AA3520MJ840719', '901DXA', 'Kaypark', 11, NULL, 35, 'passenger', false, 421, 126, 'bleacher-29/nvis-1777985970145_1777985974535.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', '78bbffc6-5241-45b7-927f-b5dc0ee34300', NULL),
+	('2025-06-30 15:09:24.408045+00', 404, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'ff533839-7182-4ca0-b390-c56362cfc029', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-05-01 14:17:29.675475+00', 83, 10, 285, NULL, NULL, NULL, '862255065077957', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'cd21dac5-7759-4da3-b238-8076ef623ddd', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB21SN302004', NULL, 'Bleacher Rentals ', 10, 9300, 53, 'passenger', false, 640, 130, 'bleacher-83/nvis-1777987024882_1777987027692.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2026-01-23 14:44:30.773666+00', 105, 10, 285, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'aa5b5183-2c19-4b1b-959b-53b7d19f07df', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB27SN302024', '551DXL', 'Bleacher Rentals - Canopy', 12, 14409, 55, 'passenger', false, 657, 155, 'bleacher-105/nvis-1777987354051_1777987356906.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-04-29 13:50:35.310087+00', 5, 10, 300, NULL, NULL, NULL, '862407068859234', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '52cdbd89-eab3-44de-bd84-f5a907dc8789', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBN5226J3003328', 'S3292T', 'Century Industries', 17, 12000, 51, NULL, false, 612, 208, 'bleacher-5/nvis-1777985658644_1777985661767.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 14:14:59.848998+00', 78, 10, 285, NULL, NULL, NULL, '861861044538992', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '23e33006-6899-4702-8596-304cac76f91f', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BBAB28RN302009', NULL, 'Bleacher Rentals ', 10, 9986, 53, 'passenger', false, 640, 130, 'bleacher-78/nvis-1777986985715_1777986989105.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 14:16:23.870556+00', 79, 7, 150, NULL, NULL, NULL, '862255062542516', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'ca2a51f3-911b-4da0-9c21-4592800619c1', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7D28SN302002', NULL, 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-79/nvis-1777986993216_1777986996506.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-06-30 15:09:13.125364+00', 403, 4, 20, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '09b5718d-2f48-436c-948d-8c2b040d7bec', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-05-01 14:06:24.875897+00', 65, 15, 450, NULL, NULL, NULL, '861861044650953', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'badb067b-f084-4864-85cd-2ea65aa3d4c3', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5320R3003667', '550DXL', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-65/nvis-1777986625968_1777986628758.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-04-30 14:39:24.710786+00', 7, 10, 240, NULL, NULL, NULL, NULL, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '3945b1b2-015d-410a-b60c-268b6bfbcdf2', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '4C9BM44219D017016', NULL, NULL, NULL, NULL, NULL, 'driver', false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 13:56:16.209189+00', 55, 15, 450, NULL, NULL, NULL, '861861043741035', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '0103bfe1-c565-4b1a-8b97-050190260ad7', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5321P3003643', NULL, 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-55/nvis-1777986546816_1777986549878.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-04-30 20:58:13.84182+00', 49, 10, 300, NULL, NULL, NULL, '861861044670696', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'd3ffe79c-2d21-4b11-8f80-800eb8a8e0aa', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBN5229N3003555', NULL, 'Century Industries ', 13, 10800, 51, 'driver', false, 612, 157, 'bleacher-49/nvis-1777986317443_1777986321868.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-11-13 14:46:24.191672+00', 101, 7, 108, NULL, NULL, NULL, '862407068841513', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '4eace0d7-cd21-4bf3-9f10-ca86cd1c92ba', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7E21SN302020', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-101/nvis-1777987318136_1777987320930.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-05-01 13:54:18.833542+00', 51, 15, 450, NULL, NULL, NULL, '861861043743098', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '6f5bb403-8045-4f8e-b0e0-4b8b800af092', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Gooseneck', '1XCBP5320N3003579', '904DXA', 'Century Industries ', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-51/nvis-1777986528733_1777986532627.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-12-05 15:17:38.968827+00', 460, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '99499ad7-3635-406e-9e1b-285d91669ba2', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-04-30 20:44:36.100772+00', 28, 10, 300, NULL, NULL, NULL, '862255062534638', '68de93a3-001f-4d45-bb39-88d2286e2fe7', '68de93a3-001f-4d45-bb39-88d2286e2fe7', '9c5d6cc5-f8f1-4792-9c62-8695e04ee942', 'd6b36242-8f6b-4106-91d5-0cacc928c3fa', 'd6b36242-8f6b-4106-91d5-0cacc928c3fa', 'Gooseneck', '1S9BC5025MJ840717', 'S3675P', 'Kaypark', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-28/nvis-1777985961029_1777985964016.pdf', '84db7c3d-5536-4129-b403-4f8e6a6c0fc9', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 14:21:26.505798+00', 91, 15, 450, NULL, NULL, NULL, '862255065042803', '68de93a3-001f-4d45-bb39-88d2286e2fe7', '68de93a3-001f-4d45-bb39-88d2286e2fe7', '234a250b-4841-464d-ae11-a0ffd8b70c84', 'd6b36242-8f6b-4106-91d5-0cacc928c3fa', 'd6b36242-8f6b-4106-91d5-0cacc928c3fa', 'Gooseneck ', '1XCBP5323S3003765', '972DXH', 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-91/nvis-1777987222409_1777987225253.pdf', '84db7c3d-5536-4129-b403-4f8e6a6c0fc9', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-04-30 15:01:28.762251+00', 14, 10, 260, NULL, NULL, NULL, '861861043751133', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '7c206471-ffcd-4475-b2be-c6396767a7d9', '500921f6-83d8-4dea-bcc2-a05b267a893c', '500921f6-83d8-4dea-bcc2-a05b267a893c', 'Bumper Pull ', '159AC4429LJ840685', NULL, 'Kaypark ', 13, 11900, 45, 'passenger', false, 541, 153, 'bleacher-14/nvis-1777985704241_1777985708663.pdf', '5aff9ec2-a4e6-4764-af4c-7f871e641071', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-08-15 16:09:35.813989+00', 441, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '1c64ee77-7185-4f9f-8b7b-f833fc36285c', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-04-30 20:48:17.116886+00', 34, 15, 450, NULL, NULL, NULL, '861861043845703', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '70dc2d23-8b7c-491b-9d3d-a3dd9264385e', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5325N3003531', '895DXA', 'Century Industries', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-34/nvis-1777986177314_1777986180662.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-04-30 20:51:57.455375+00', 37, 10, 300, NULL, NULL, NULL, '861861044535212', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', 'f2920c19-c414-41eb-9017-56b70a1e9909', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1S9BC5026MJ840743', '891DXE', 'Kaypark ', 13, 13170, 50, 'passenger', false, 601, 153, 'bleacher-37/nvis-1777986204933_1777986208176.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', NULL),
+	('2025-05-01 14:03:43.927261+00', 61, 15, 450, NULL, NULL, NULL, '861861043741738', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '93544913-d3d9-4399-b77f-dd05213d182b', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', '39ed4cd9-1f01-45a4-a4cf-29b8d39513c6', 'Gooseneck', '1XCBP5322P3003649', '276DXJ', 'Century Industries', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-61/nvis-1777986597918_1777986601187.pdf', 'baf2edb3-7a24-4269-86d7-25801941509d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-08-15 16:11:15.135368+00', 448, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3032258f-42ef-487a-b4f2-90e949f86cac', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:11:39.045615+00', 449, 4, 20, NULL, NULL, NULL, NULL, '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', '8aaa3442-d74b-4d3b-b237-24b5113266ef', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', 'c57f631c-0ed2-4900-a66c-0cbbdd99f230', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'baf2edb3-7a24-4269-86d7-25801941509d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-05-01 14:10:11.130347+00', 71, 7, 100, NULL, NULL, NULL, '861861044670167', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '8b236347-5c7a-4a40-b041-404f3564b1eb', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7A21RN302003', NULL, 'Bleacher Rentals', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-71/nvis-1777986920612_1777986923690.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-05-01 14:11:23.337227+00', 74, 7, 100, NULL, NULL, NULL, '862255063832221', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '0d086ebe-8afa-44a6-9549-a775c3b9f8c4', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull', '2F9BB7A27RN302006', NULL, 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-74/nvis-1777986950618_1777986953621.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2026-06-02 14:16:44.564284+00', -1, 4, -1, NULL, NULL, NULL, NULL, NULL, NULL, 'a38ab002-8947-429e-b725-3f3a7f21e4d0', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, '27633341-400b-4f18-a567-85e6de7ad65d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-05-01 14:10:26.242999+00', 72, 7, 100, NULL, NULL, NULL, '862255063934308', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '82003c0b-ac04-4529-9fd6-44eddbdf393a', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7A23RN302004', NULL, 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-72/nvis-1777986927483_1777986930036.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-05-01 14:11:06.958737+00', 73, 7, 100, NULL, NULL, NULL, '862255063872300', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'b777dbc5-56df-4e55-8867-82dfc6770535', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7A25RN302005', NULL, 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-73/nvis-1777986943285_1777986946072.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-12-05 15:19:28.25954+00', 465, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '692d4180-298c-4227-9b00-f606592a34a0', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-12-05 15:18:02.727288+00', 461, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '6d51071f-0371-404a-b41d-b994365c8345', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-12-05 15:18:56.184223+00', 464, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'a74a37c4-9d28-4d1f-a376-a5d7cbd317c9', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:20:26.990376+00', 459, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '23f9a52f-3322-407e-bb8a-2c2827ad2a46', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:13:40.779431+00', 458, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'c1a00d81-d6be-4109-bbc8-e487e6fc22d6', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:13:17.193552+00', 456, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '73eef447-0031-4461-bd6b-e27c01574e4f', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:13:27.692129+00', 457, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'c23096d6-9507-45af-b32a-3cd078a152d0', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-12-05 15:18:36.665696+00', 463, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'b0139717-e9be-474d-b626-375426e79d59', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-12-05 15:18:18.934053+00', 462, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'f8b36f46-9c00-4a86-a619-219e50423af2', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-08-15 16:12:49.825769+00', 454, 4, 20, NULL, NULL, NULL, NULL, 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '29ce0caa-a483-4575-8ef2-9395dcce6614', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, 'fd766707-2e02-4800-b70f-58de88724dc2', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', NULL),
+	('2025-05-01 14:16:41.280285+00', 80, 7, 100, NULL, NULL, NULL, '861861044526609', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', '2b25b0e4-165b-4c4b-8027-576ec3c7617e', '57165590-44b1-4295-8cfd-d7766f5b3e82', '57165590-44b1-4295-8cfd-d7766f5b3e82', 'Bumper Pull ', '2F9BB7A24RN302010', '889DXE', 'Bleacher Rentals ', 9, 6500, NULL, 'passenger', false, NULL, 108, 'bleacher-80/nvis-1777987001050_1777987004155.pdf', 'fd766707-2e02-4800-b70f-58de88724dc2', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-04-30 20:55:38.268434+00', 43, 15, 450, NULL, NULL, NULL, '861861043836538', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'f767306c-63a7-44cd-9b3d-28e92bfe95e6', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5328N3003538', '275DXJ', 'Century Industries', 13, 15909, 53, 'driver', false, 633, 159, 'bleacher-43/nvis-1777986268298_1777986272032.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-05-01 14:20:45.528168+00', 90, 15, 450, NULL, NULL, NULL, '862255062518219', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '37c0dbc8-500a-4cc9-9c45-e28de2150d43', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Gooseneck', '1XCBP5325S3003766', NULL, 'Century Industries ', 13, 14499, 53, 'driver', false, 633, 159, 'bleacher-90/nvis-1777987075285_1777987078593.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', NULL),
+	('2025-11-13 14:44:34.885615+00', 98, 7, 108, NULL, NULL, NULL, '862255068019931', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '116b31e8-487f-40e4-b07a-e0eba32defc1', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '2F9BB7E21SN302017', NULL, 'Bleacher Rentals ', 10, 6500, 32, 'passenger', false, 384, 114, 'bleacher-98/nvis-1777987287455_1777987290734.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', NULL),
+	('2025-04-30 20:56:31.729997+00', 45, 8, 123, NULL, NULL, NULL, '861861044527425', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'd79c6027-6493-4064-9bdc-f0609b895b77', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'eacc5f9b-1d4e-47f8-b01f-fe7140291724', 'Bumper Pull ', '1XCBV3426N3003580', '896DWR', 'Century Industries ', 13, 4580, 34, 'driver', false, 410, 151, 'bleacher-45/nvis-1777986283470_1777986286576.pdf', '27633341-400b-4f18-a567-85e6de7ad65d', 'd191c81d-ff2a-4ecd-8fec-9f08b5347f70', NULL);
 
 
 --
@@ -2749,17 +2757,18 @@ INSERT INTO "public"."Contacts" ("id", "company_uuid", "first_name", "last_name"
 	('d0a10001-0001-4000-8000-000000000001', 'c0a10001-0001-4000-8000-000000000001', 'Karen', 'Mitchell', '555-200-3001', 'karen.mitchell@midwestevent.com', NULL, false, '5847580c-471a-481e-92f7-582e7441eff4', '2026-06-18 22:21:41.789948+00'),
 	('d0a10001-0001-4000-8000-000000000002', 'c0a10001-0001-4000-8000-000000000002', 'Tom', 'Bradley', '555-200-3002', 'tom.bradley@sunrisefest.com', NULL, false, '5847580c-471a-481e-92f7-582e7441eff4', '2026-06-18 22:21:41.789948+00'),
 	('d0a10001-0001-4000-8000-000000000003', 'c0a10001-0001-4000-8000-000000000003', 'Sarah', 'Leblanc', '555-200-3003', 'sarah.leblanc@northernexpo.ca', NULL, false, '5847580c-471a-481e-92f7-582e7441eff4', '2026-06-18 22:21:41.789948+00'),
-	('d0a10001-0001-4000-8000-000000000004', 'c0a10001-0001-4000-8000-000000000001', 'Mike', 'Johnson', '555-200-3004', 'mike.j@midwestevent.com', 'Finance contact', false, '5847580c-471a-481e-92f7-582e7441eff4', '2026-06-18 22:21:41.789948+00');
+	('d0a10001-0001-4000-8000-000000000004', 'c0a10001-0001-4000-8000-000000000001', 'Mike', 'Johnson', '555-200-3004', 'mike.j@midwestevent.com', 'Finance contact', false, '5847580c-471a-481e-92f7-582e7441eff4', '2026-06-18 22:21:41.789948+00'),
+	('fe0656ea-5bf8-4c0d-835f-ae2fdba96391', NULL, 'Josh', 'Redgrift', '5198727202', 'redgriftjosh@gmail.com', 'notes here', false, '9bddb34c-d84e-4d11-852a-27f16de08379', '2026-07-30 03:30:22.925395+00');
 
 
 --
 -- Data for Name: EventTypes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
--- INSERT INTO "public"."EventTypes" ("id", "name", "deleted", "created_by_user_uuid", "created_at") VALUES
--- 	('cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 'Rural', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 'City', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('2bc9bf02-dc78-48a4-90f5-9a15a8246980', 'Corporate', false, NULL, '2026-06-18 22:21:41.32037+00');
+INSERT INTO "public"."EventTypes" ("id", "name", "deleted", "created_by_user_uuid", "created_at") VALUES
+	('3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 'Rural', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('916e3658-126a-4892-a898-36aed833fe4f', 'City', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 'Corporate', false, NULL, '2026-07-30 03:16:59.744691+00');
 
 
 --
@@ -2772,12 +2781,18 @@ INSERT INTO "public"."QboConnections" ("id", "display_name", "encrypted_token_va
 
 
 --
+-- Data for Name: StripeConnections; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
 -- Data for Name: SalesOffices; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."SalesOffices" ("id", "name", "address_uuid", "quickbook_uuid", "deleted", "created_by_user_uuid", "created_at", "phone") VALUES
-	('e0a10001-0001-4000-8000-000000000001', 'Ontario Office', NULL, 'd035695c-f298-4a95-885f-5ff4982ce4a3', false, '5847580c-471a-481e-92f7-582e7441eff4', '2026-06-18 22:21:41.789948+00', '555-300-4001'),
-	('e0a10001-0001-4000-8000-000000000002', 'Florida Office', NULL, '01ee7d08-f79c-4c21-878a-e5f63990b465', false, '5847580c-471a-481e-92f7-582e7441eff4', '2026-06-18 22:21:41.789948+00', '555-300-4002');
+INSERT INTO "public"."SalesOffices" ("id", "name", "address_uuid", "quickbook_uuid", "deleted", "created_by_user_uuid", "created_at", "phone", "stripe_connection_uuid") VALUES
+	('e0a10001-0001-4000-8000-000000000001', 'Ontario Office', NULL, 'd035695c-f298-4a95-885f-5ff4982ce4a3', false, '5847580c-471a-481e-92f7-582e7441eff4', '2026-06-18 22:21:41.789948+00', '555-300-4001', NULL),
+	('e0a10001-0001-4000-8000-000000000002', 'Florida Office', NULL, '01ee7d08-f79c-4c21-878a-e5f63990b465', false, '5847580c-471a-481e-92f7-582e7441eff4', '2026-06-18 22:21:41.789948+00', '555-300-4002', NULL);
 
 
 --
@@ -3686,7 +3701,8 @@ or
 	('2026-05-27 12:50:59.708119+00', 'FL - Viera - Space Coast Bulls & Barrels 2027', NULL, '2027-05-14', '2027-05-15', NULL, 0, 0, 0, 7, false, '', false, 109, 'https://pro.goodshuffle.com/app/project/detail?id=231506909&tab=contract', 'faf2fdfe-7221-47bd-8c1f-4d3948fd7cc4', '54e76bed-a62b-40b0-997d-ace0bf048598', 'fae8f510-96d3-4437-b184-45be5c4b7007', 2187500, 'quoted', NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	('2026-06-01 13:22:12.689755+00', 'AL - Elba - Pin Hook Multiplex Park and Campground LLC', NULL, '2026-08-15', '2026-09-26', NULL, 0, 1, 0, 0, false, '', false, 181, 'https://pro.goodshuffle.com/app/project/detail?id=231521790&tab=contract', 'd4ae09e5-5805-4661-8c6d-1a9d72c0d3b4', '50c48b4f-1b69-4343-af30-19db67d80f2e', 'fae8f510-96d3-4437-b184-45be5c4b7007', 510000, 'quoted', NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	('2026-06-01 19:54:12.100339+00', 'NV - Gardnerville - High School Rodeo (#231521446)', NULL, '2026-10-17', '2026-10-18', NULL, 0, 0, 1, 0, false, '', false, 107, 'https://pro.goodshuffle.com/app/project/detail?id=231521446&tab=contract', 'd6318c5e-aa5d-478f-bfb8-e92ed871792b', 'ec7e2c69-850c-4d6e-867c-b9ea7058b1d7', '746927fc-e6c7-4cff-b7a4-a12130a5c3d6', 1690000, 'quoted', NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-	('2026-06-03 15:42:17.621906+00', 'ON-Hamilton-Film Shoot', NULL, '2026-08-04', '2026-08-14', NULL, 0, 0, 1, 0, false, '10x 4 rows', false, 269, 'https://pro.goodshuffle.com/app/project/detail?id=231531523&tab=contract', 'a732941a-9e7e-4f53-9c99-1e0cac710471', 'd923887c-1c75-4987-a2a4-1358c107d12b', 'aa6313bb-ef67-45e1-be41-b3c70731c768', 465000, 'quoted', NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+	('2026-06-03 15:42:17.621906+00', 'ON-Hamilton-Film Shoot', NULL, '2026-08-04', '2026-08-14', NULL, 0, 0, 1, 0, false, '10x 4 rows', false, 269, 'https://pro.goodshuffle.com/app/project/detail?id=231531523&tab=contract', 'a732941a-9e7e-4f53-9c99-1e0cac710471', 'd923887c-1c75-4987-a2a4-1358c107d12b', 'aa6313bb-ef67-45e1-be41-b3c70731c768', 465000, 'quoted', NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+	('2026-07-30 03:31:55.616009+00', 'Redgrift Motocross Event', NULL, '2026-09-04', '2026-09-06', NULL, NULL, NULL, NULL, NULL, false, NULL, false, NULL, NULL, 'a5e0cec2-9481-43aa-bcb2-50275cc6c7df', '96a3683b-501f-475d-b8a5-8664b585d7db', '9bddb34c-d84e-4d11-852a-27f16de08379', 1020000, 'booked', '2026-07-30 11:34:30.282+00', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 'fe0656ea-5bf8-4c0d-835f-ae2fdba96391', NULL, NULL, 'e0a10001-0001-4000-8000-000000000001', false, '2026-08-31', 144819230, NULL, 'f0a10001-0001-4000-8000-000000000001', NULL, 0, NULL);
 
 
 --
@@ -6412,31 +6428,31 @@ INSERT INTO "public"."BleacherEvents" ("created_at", "setup_text", "setup_confir
 -- Data for Name: MaintenanceEvents; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."MaintenanceEvents" ("id", "event_name", "event_start", "event_end", "cost_cents", "address_uuid", "notes", "created_by_user_uuid", "created_at") VALUES
-	('f7ca796e-ca3a-4989-9835-829df4dcf7d9', 'Maintenance / Repair', '2026-05-26', '2026-05-26', NULL, '780a3e45-daca-4a43-a46c-93062bb915c5', 'Ground connection not working, light not working. Repaired by our shop. ', NULL, '2026-05-26 20:19:32.973871+00'),
-	('3d8c7e5b-f6f7-4160-9934-d393a71dd111', 'Maintenance / Repair', '2026-05-28', '2026-05-28', NULL, NULL, 'Cody to get center cap and put on during pick up. ', NULL, '2026-05-27 19:47:49.226909+00'),
-	('5ed638a4-ee1b-45b7-9a3c-9897dc2cbf19', 'Maintenance / Repair', '2026-05-05', '2026-05-29', 469463, 'a124db41-6604-4aac-9e98-423feb0e3616', 'Needs replacement axle 5/13/26 axle on order, will take approx. 2 wks to come in ', NULL, '2026-05-05 14:14:04.892736+00'),
-	('dd65ca50-dbe0-467b-88b2-234ee3c725ad', 'Maintenance / Repair', '2026-05-02', '2026-05-02', 40600, NULL, 'Tire blew. Matt Nauss replaced it. could use a new spare as it is worn.', NULL, '2026-05-04 14:25:23.063802+00'),
-	('1ea826ca-e9d5-4fe8-a51e-1dfcb98c69b9', 'Maintenance / Repair', '2026-05-04', '2026-05-04', 417328, '92232ab2-019d-411c-ad3d-963fdf38f8b5', NULL, NULL, '2026-05-04 16:34:07.757599+00'),
-	('5c4cf7dd-5eea-4e77-b18c-f16d3bfed9fe', 'Maintenance / Repair', '2026-04-30', '2026-04-30', NULL, '1e4bf393-8611-4bb0-8aac-56cac354d0c5', 'Breaks adjusted, and a wire fixed by BR Shop. ', NULL, '2026-05-04 16:52:34.766069+00'),
-	('9f0f62a7-18ef-4972-8da6-b18cf2d00c18', 'Maintenance / Repair', '2026-05-29', '2026-05-31', NULL, NULL, 'Matt taking tire to get fixed (tire not that old)', NULL, '2026-05-29 18:44:55.361347+00'),
-	('b5f47954-6716-4d36-8c49-4ce0ef71372d', 'Maintenance / Repair', '2026-05-01', '2026-05-01', 909147, '28e8df21-5685-423e-a6d9-f234078d69e5', 'All repairs completed. Annual Inspection completed. ', NULL, '2026-05-04 16:59:33.115694+00'),
-	('7bb8e8e8-f72b-4fca-8fb6-22fc2df02f65', 'Maintenance / Repair', '2026-04-28', '2026-05-01', NULL, '96ff0e00-e0a4-4907-9fde-6091d2a95250', 'multiple spindles broke', NULL, '2026-04-23 18:01:35.975675+00'),
-	('9383c942-f634-4923-86fe-ad022fa2e7a2', 'Maintenance / Repair', '2026-05-04', '2026-05-08', NULL, 'e376832b-d2fd-47c4-8b2c-2d1e1db1cbc7', 'Hinges broken, seat board wrecked. ', NULL, '2026-05-04 17:42:35.868614+00'),
-	('0c9bc1f2-e675-4507-8107-4cabd834b8a2', 'Maintenance / Repair', '2026-05-05', '2026-05-05', 15850, 'fc99fdf1-84ad-48d9-a509-47bcfeacfdb8', 'Checked Hydraulic pump, power going to solenoid, good, checked power going to solenoid to pump, found no power, disconnect connection, cleaned, and tightened prong, reconnected, power going through hydraulic pump is working now. ', NULL, '2026-05-05 19:18:30.599453+00'),
-	('fedb996b-c5dc-41a5-aae5-f2c07c2efe01', 'Maintenance / Repair', '2026-05-13', '2026-05-13', NULL, 'e23eeb38-b862-45dc-b358-5703617668b8', NULL, NULL, '2026-05-04 17:32:01.838332+00'),
+INSERT INTO "public"."MaintenanceEvents" ("id", "event_name", "event_start", "event_end", "cost_cents", "address_uuid", "notes", "created_by_user_uuid", "created_at", "deleted") VALUES
+	('f7ca796e-ca3a-4989-9835-829df4dcf7d9', 'Maintenance / Repair', '2026-05-26', '2026-05-26', NULL, '780a3e45-daca-4a43-a46c-93062bb915c5', 'Ground connection not working, light not working. Repaired by our shop. ', NULL, '2026-05-26 20:19:32.973871+00', false),
+	('3d8c7e5b-f6f7-4160-9934-d393a71dd111', 'Maintenance / Repair', '2026-05-28', '2026-05-28', NULL, NULL, 'Cody to get center cap and put on during pick up. ', NULL, '2026-05-27 19:47:49.226909+00', false),
+	('5ed638a4-ee1b-45b7-9a3c-9897dc2cbf19', 'Maintenance / Repair', '2026-05-05', '2026-05-29', 469463, 'a124db41-6604-4aac-9e98-423feb0e3616', 'Needs replacement axle 5/13/26 axle on order, will take approx. 2 wks to come in ', NULL, '2026-05-05 14:14:04.892736+00', false),
+	('dd65ca50-dbe0-467b-88b2-234ee3c725ad', 'Maintenance / Repair', '2026-05-02', '2026-05-02', 40600, NULL, 'Tire blew. Matt Nauss replaced it. could use a new spare as it is worn.', NULL, '2026-05-04 14:25:23.063802+00', false),
+	('1ea826ca-e9d5-4fe8-a51e-1dfcb98c69b9', 'Maintenance / Repair', '2026-05-04', '2026-05-04', 417328, '92232ab2-019d-411c-ad3d-963fdf38f8b5', NULL, NULL, '2026-05-04 16:34:07.757599+00', false),
+	('5c4cf7dd-5eea-4e77-b18c-f16d3bfed9fe', 'Maintenance / Repair', '2026-04-30', '2026-04-30', NULL, '1e4bf393-8611-4bb0-8aac-56cac354d0c5', 'Breaks adjusted, and a wire fixed by BR Shop. ', NULL, '2026-05-04 16:52:34.766069+00', false),
+	('9f0f62a7-18ef-4972-8da6-b18cf2d00c18', 'Maintenance / Repair', '2026-05-29', '2026-05-31', NULL, NULL, 'Matt taking tire to get fixed (tire not that old)', NULL, '2026-05-29 18:44:55.361347+00', false),
+	('b5f47954-6716-4d36-8c49-4ce0ef71372d', 'Maintenance / Repair', '2026-05-01', '2026-05-01', 909147, '28e8df21-5685-423e-a6d9-f234078d69e5', 'All repairs completed. Annual Inspection completed. ', NULL, '2026-05-04 16:59:33.115694+00', false),
+	('7bb8e8e8-f72b-4fca-8fb6-22fc2df02f65', 'Maintenance / Repair', '2026-04-28', '2026-05-01', NULL, '96ff0e00-e0a4-4907-9fde-6091d2a95250', 'multiple spindles broke', NULL, '2026-04-23 18:01:35.975675+00', false),
+	('9383c942-f634-4923-86fe-ad022fa2e7a2', 'Maintenance / Repair', '2026-05-04', '2026-05-08', NULL, 'e376832b-d2fd-47c4-8b2c-2d1e1db1cbc7', 'Hinges broken, seat board wrecked. ', NULL, '2026-05-04 17:42:35.868614+00', false),
+	('0c9bc1f2-e675-4507-8107-4cabd834b8a2', 'Maintenance / Repair', '2026-05-05', '2026-05-05', 15850, 'fc99fdf1-84ad-48d9-a509-47bcfeacfdb8', 'Checked Hydraulic pump, power going to solenoid, good, checked power going to solenoid to pump, found no power, disconnect connection, cleaned, and tightened prong, reconnected, power going through hydraulic pump is working now. ', NULL, '2026-05-05 19:18:30.599453+00', false),
+	('fedb996b-c5dc-41a5-aae5-f2c07c2efe01', 'Maintenance / Repair', '2026-05-13', '2026-05-13', NULL, 'e23eeb38-b862-45dc-b358-5703617668b8', NULL, NULL, '2026-05-04 17:32:01.838332+00', false),
 	('900211bb-6462-4184-ac8f-ed8c31f80d48', 'Maintenance / Repair', '2026-05-24', '2026-05-24', NULL, NULL, 'Needs spare tire, and replacement passenger side tire. 
 Rod beneath top bleacher is missing a section and there are no pins for handrails.
-Garreth to bring tires and pins with him when he picks this up. ', NULL, '2026-05-20 18:48:55.346508+00'),
-	('d2bfa82d-21de-4c53-b52d-56db4c615035', 'Maintenance / Repair', '2026-05-18', '2026-05-18', 80000, '92382cb9-5b18-4c5d-a04a-8a281a3042d7', 'Repair & weld broken braces, drill & add bolts for chain latch and reinforcement plate. Replace and drill hole for 2nd bleacher seat torn out from underneath. Straightened seat board. ', NULL, '2026-05-20 19:09:38.317303+00'),
+Garreth to bring tires and pins with him when he picks this up. ', NULL, '2026-05-20 18:48:55.346508+00', false),
+	('d2bfa82d-21de-4c53-b52d-56db4c615035', 'Maintenance / Repair', '2026-05-18', '2026-05-18', 80000, '92382cb9-5b18-4c5d-a04a-8a281a3042d7', 'Repair & weld broken braces, drill & add bolts for chain latch and reinforcement plate. Replace and drill hole for 2nd bleacher seat torn out from underneath. Straightened seat board. ', NULL, '2026-05-20 19:09:38.317303+00', false),
 	('99a61957-bc84-4900-a77a-723c4f2dc496', 'Maintenance / Repair', '2026-05-12', '2026-05-12', 5100, NULL, 'Garreth Purchased switch and repaired 
-Also greased axles- 2 tubes of grease used. ', NULL, '2026-05-20 19:05:44.862875+00'),
-	('f431608a-63a1-482a-9a15-3520475cf6d5', 'Maintenance / Repair', '2026-05-18', '2026-05-18', 27501, NULL, 'Tire replacement by Garreth', NULL, '2026-05-20 19:15:02.696622+00'),
-	('72f04f89-d4b8-4495-af76-54a385670465', 'Maintenance / Repair', '2026-05-18', '2026-05-18', 60000, NULL, 'Repair broken spindles and cracked axle tab and reinforce weld. Comal welding ', NULL, '2026-05-20 19:17:18.936112+00'),
-	('fd389210-9d58-4931-aa45-903c872ee940', 'Maintenance / Repair', '2026-05-14', '2026-05-14', NULL, NULL, 'Garreth put on 4 jacks that he had in stock that were missing from the bleacher. ', NULL, '2026-05-20 19:19:44.214629+00'),
-	('2db0e2e0-98a1-40eb-9f64-8fb174b4b017', 'Maintenance / Repair', '2026-05-27', '2026-05-27', 21239, NULL, 'Replace gooseneck hitch piece. Ordered by Michelle & shipped to Gary to put on. ', NULL, '2026-05-20 19:35:21.978645+00'),
-	('28788e84-049d-4502-892f-12e0d1a2057a', 'Maintenance / Repair', '2026-05-18', '2026-05-18', 70000, NULL, 'Breaks repaired by BM Diesel ', NULL, '2026-05-20 20:00:27.085439+00'),
-	('ce506757-a247-43b1-8216-95a2b8cd4556', 'Maintenance / Repair', '2026-05-18', '2026-05-18', 27501, NULL, 'Replacement Tire- Garreth ', NULL, '2026-05-20 20:15:16.415277+00');
+Also greased axles- 2 tubes of grease used. ', NULL, '2026-05-20 19:05:44.862875+00', false),
+	('f431608a-63a1-482a-9a15-3520475cf6d5', 'Maintenance / Repair', '2026-05-18', '2026-05-18', 27501, NULL, 'Tire replacement by Garreth', NULL, '2026-05-20 19:15:02.696622+00', false),
+	('72f04f89-d4b8-4495-af76-54a385670465', 'Maintenance / Repair', '2026-05-18', '2026-05-18', 60000, NULL, 'Repair broken spindles and cracked axle tab and reinforce weld. Comal welding ', NULL, '2026-05-20 19:17:18.936112+00', false),
+	('fd389210-9d58-4931-aa45-903c872ee940', 'Maintenance / Repair', '2026-05-14', '2026-05-14', NULL, NULL, 'Garreth put on 4 jacks that he had in stock that were missing from the bleacher. ', NULL, '2026-05-20 19:19:44.214629+00', false),
+	('2db0e2e0-98a1-40eb-9f64-8fb174b4b017', 'Maintenance / Repair', '2026-05-27', '2026-05-27', 21239, NULL, 'Replace gooseneck hitch piece. Ordered by Michelle & shipped to Gary to put on. ', NULL, '2026-05-20 19:35:21.978645+00', false),
+	('28788e84-049d-4502-892f-12e0d1a2057a', 'Maintenance / Repair', '2026-05-18', '2026-05-18', 70000, NULL, 'Breaks repaired by BM Diesel ', NULL, '2026-05-20 20:00:27.085439+00', false),
+	('ce506757-a247-43b1-8216-95a2b8cd4556', 'Maintenance / Repair', '2026-05-18', '2026-05-18', 27501, NULL, 'Replacement Tire- Garreth ', NULL, '2026-05-20 20:15:16.415277+00', false);
 
 
 --
@@ -7917,6 +7933,8 @@ INSERT INTO "public"."BlueBook" ("id", "name", "link", "description", "is_active
 -- Data for Name: ContractSignatures; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO "public"."ContractSignatures" ("id", "event_uuid", "terms_and_conditions_uuid", "signer_name", "signed_at", "signed_pdf_path", "status", "invalidated_at", "created_at") VALUES
+	('ae9566d8-d50c-4a92-b1d6-29541ebe2960', '96a3683b-501f-475d-b8a5-8664b585d7db', 'f0a10001-0001-4000-8000-000000000001', 'Josh Redgrift', '2026-07-30 11:34:30.282+00', '96a3683b-501f-475d-b8a5-8664b585d7db/ae9566d8-d50c-4a92-b1d6-29541ebe2960.pdf', 'active', NULL, '2026-07-30 11:34:30.328676+00');
 
 
 --
@@ -8988,79 +9006,79 @@ INSERT INTO "public"."WorkTrackerInspections" ("id", "created_at", "walk_around_
 -- Data for Name: DamageReports; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."DamageReports" ("id", "inspection_uuid", "bleacher_uuid", "is_safe_to_sit", "is_safe_to_haul", "note", "created_at", "resolved_at", "maintenance_event_uuid", "seat_damage", "haul_damage", "created_by_user_uuid") VALUES
+INSERT INTO "public"."DamageReports" ("id", "inspection_uuid", "bleacher_uuid", "is_safe_to_sit", "is_safe_to_haul", "note", "created_at", "resolved_at", "maintenance_event_uuid", "seat_damage", "haul_damage", "created_by_user_uuid", "deleted") VALUES
 	('02bbd4a7-22b3-4325-a888-05fc5837313a', 'c1ac695a-7224-4be8-9121-002eb4656b0e', 'aae392ef-fe91-4192-ada6-770cf3143d75', true, true, 'Past load pre trip was old method refer to old pre trip 
 
-', '2026-05-12 06:33:14.672+00', '2026-05-20 20:00:27.166+00', '28788e84-049d-4502-892f-12e0d1a2057a', 'none', 'none', NULL),
-	('e6df8f36-3d15-43be-b89d-5f4fccec1e46', '0029f3b4-df75-4b3d-86de-85b4e89f58c8', 'aae392ef-fe91-4192-ada6-770cf3143d75', true, true, 'one handrail was loaned to 33.  one pin missing from handrail. kid', '2026-05-13 18:55:25.38+00', '2026-05-20 20:00:27.166+00', '28788e84-049d-4502-892f-12e0d1a2057a', 'none', 'none', NULL),
+', '2026-05-12 06:33:14.672+00', '2026-05-20 20:00:27.166+00', '28788e84-049d-4502-892f-12e0d1a2057a', 'none', 'none', NULL, false),
+	('e6df8f36-3d15-43be-b89d-5f4fccec1e46', '0029f3b4-df75-4b3d-86de-85b4e89f58c8', 'aae392ef-fe91-4192-ada6-770cf3143d75', true, true, 'one handrail was loaned to 33.  one pin missing from handrail. kid', '2026-05-13 18:55:25.38+00', '2026-05-20 20:00:27.166+00', '28788e84-049d-4502-892f-12e0d1a2057a', 'none', 'none', NULL, false),
 	('30ca61d5-be04-435f-9de2-5d1ea980bb20', '30f507d4-b1b7-4040-9b87-d5e7708cb6ca', '895cb41d-5121-42b8-81ba-154f4861792c', true, false, 'Plastic covering for light damaged from event. Pins were replaced with extra pins. 
-', '2026-05-24 14:53:38.282+00', NULL, NULL, 'none', 'none', NULL),
-	('fc97a333-61e9-48a6-9d62-9353eea8b7b6', 'e2515260-3a1c-4cd8-8611-37073f4c97c5', '6cac1a68-77d0-4a27-9b92-73a8df5de7ad', true, true, 'Driver (left) rear tire flat. Replaced with spare.', '2026-05-26 13:36:38.259+00', '2026-05-29 18:44:55.905+00', '9f0f62a7-18ef-4972-8da6-b18cf2d00c18', 'none', 'none', NULL),
-	('16883f15-6290-43ca-bc47-9362cd55936c', '911df9dd-d87e-4a54-90e6-6103014e7a83', 'c255992c-3e9f-49cf-9321-10c0cff43041', true, true, 'Replaced one handrail with one from #39 because the one on #16 was bent. Battery tested at 45%. Chain in the battery box broke. ', '2026-05-24 14:58:29.614+00', NULL, NULL, 'none', 'none', NULL),
-	('dfb883f0-b550-4d21-a447-fdf0ec8b0d7a', '8e1a49f6-b9e0-4cdc-980b-96c4d92c06c6', '3dfd725b-7706-4623-a5cb-07912898bf7d', false, false, 'One jack does not work. Fender is starting to crack. Replaced a missing pin. Railing broke off. ', '2026-05-24 15:03:21.814+00', NULL, NULL, 'none', 'none', NULL),
+', '2026-05-24 14:53:38.282+00', NULL, NULL, 'none', 'none', NULL, false),
+	('fc97a333-61e9-48a6-9d62-9353eea8b7b6', 'e2515260-3a1c-4cd8-8611-37073f4c97c5', '6cac1a68-77d0-4a27-9b92-73a8df5de7ad', true, true, 'Driver (left) rear tire flat. Replaced with spare.', '2026-05-26 13:36:38.259+00', '2026-05-29 18:44:55.905+00', '9f0f62a7-18ef-4972-8da6-b18cf2d00c18', 'none', 'none', NULL, false),
+	('16883f15-6290-43ca-bc47-9362cd55936c', '911df9dd-d87e-4a54-90e6-6103014e7a83', 'c255992c-3e9f-49cf-9321-10c0cff43041', true, true, 'Replaced one handrail with one from #39 because the one on #16 was bent. Battery tested at 45%. Chain in the battery box broke. ', '2026-05-24 14:58:29.614+00', NULL, NULL, 'none', 'none', NULL, false),
+	('dfb883f0-b550-4d21-a447-fdf0ec8b0d7a', '8e1a49f6-b9e0-4cdc-980b-96c4d92c06c6', '3dfd725b-7706-4623-a5cb-07912898bf7d', false, false, 'One jack does not work. Fender is starting to crack. Replaced a missing pin. Railing broke off. ', '2026-05-24 15:03:21.814+00', NULL, NULL, 'none', 'none', NULL, false),
 	('a5ef84ff-ba9a-4200-ae93-5774e1a87215', '7e7db01e-b38e-4d3a-92a1-972f3e3ef2cf', '54354f6f-57f1-4c61-b277-e91766ec63a6', true, false, 'Marker light out as per Devin
 
 ******4/28/26 Justin to fix on Apr 30
-5/4/26 Justin repaired light. MA', '2026-04-27 20:14:39.286+00', '2026-05-04 16:24:06.22+00', NULL, 'none', 'none', NULL),
+5/4/26 Justin repaired light. MA', '2026-04-27 20:14:39.286+00', '2026-05-04 16:24:06.22+00', NULL, 'none', 'none', NULL, false),
 	('75f76b38-c92b-4b0e-863b-c8f39d097b17', '0380bada-e3dc-47f1-9e6c-12362075cf08', '54354f6f-57f1-4c61-b277-e91766ec63a6', true, true, 'Bleacher Dirty 
 ***5/4/26-Fixed Fender Light- JK
 
-', '2026-05-04 14:50:38.041+00', '2026-05-04 16:24:39.847+00', NULL, 'none', 'none', NULL),
-	('dfadf62c-33a7-499f-9015-fb94bf81771a', '7e6f56f5-e837-4b57-a313-869cf2ef9ffc', '588e778f-a3ae-43e4-a0f7-073ca64360d2', true, true, 'Replaced sticker with new one. Battery tested at 95%. ', '2026-05-24 14:55:46.818+00', '2026-05-25 13:42:57.089+00', NULL, 'none', 'none', NULL),
+', '2026-05-04 14:50:38.041+00', '2026-05-04 16:24:39.847+00', NULL, 'none', 'none', NULL, false),
+	('dfadf62c-33a7-499f-9015-fb94bf81771a', '7e6f56f5-e837-4b57-a313-869cf2ef9ffc', '588e778f-a3ae-43e4-a0f7-073ca64360d2', true, true, 'Replaced sticker with new one. Battery tested at 95%. ', '2026-05-24 14:55:46.818+00', '2026-05-25 13:42:57.089+00', NULL, 'none', 'none', NULL, false),
 	('fd55688d-1871-42e6-bf2a-ce0d3056c9ff', '429d320f-5716-4b49-9f27-184a2c6e1eba', '0103bfe1-c565-4b1a-8b97-050190260ad7', true, true, 'Breaks needed fixed, not working at all. Need to get back to the shop to fix.
-*** 5/4/26 breaks fixed by BR shop-MA ', '2026-04-23 18:03:24.63854+00', '2026-05-04 16:43:49.124+00', NULL, 'none', 'none', NULL),
+*** 5/4/26 breaks fixed by BR shop-MA ', '2026-04-23 18:03:24.63854+00', '2026-05-04 16:43:49.124+00', NULL, 'none', 'none', NULL, false),
 	('1058f50d-a6de-4ef6-839a-fdb1bba472a3', '3c1c4595-b7e6-4fca-8532-b09337c358f0', 'cfd93d69-0b60-4e48-9f1c-58625c4cdb52', true, false, 'Broken supports and spindles 
-', '2026-05-04 20:44:21.596+00', NULL, NULL, 'none', 'none', NULL),
-	('a62c5db1-4c65-41b8-8dd8-5aca6e6e48a7', '44da63cc-46a2-4964-9a1b-f143a42354b3', '93544913-d3d9-4399-b77f-dd05213d182b', false, false, 'Safety Rails Broken Welds', '2026-05-04 21:07:11.05+00', NULL, NULL, 'none', 'none', NULL),
-	('3a40ae58-44b7-4ae5-a11f-efd108bf7296', 'ed73ae36-ce5e-4243-ac46-cff5be87d806', 'a0b2b9a7-14a9-470d-bad1-aa0f11537e9b', true, false, 'Spindles ', '2026-05-11 13:25:05.537+00', NULL, NULL, 'none', 'none', NULL),
+', '2026-05-04 20:44:21.596+00', NULL, NULL, 'none', 'none', NULL, false),
+	('a62c5db1-4c65-41b8-8dd8-5aca6e6e48a7', '44da63cc-46a2-4964-9a1b-f143a42354b3', '93544913-d3d9-4399-b77f-dd05213d182b', false, false, 'Safety Rails Broken Welds', '2026-05-04 21:07:11.05+00', NULL, NULL, 'none', 'none', NULL, false),
+	('3a40ae58-44b7-4ae5-a11f-efd108bf7296', 'ed73ae36-ce5e-4243-ac46-cff5be87d806', 'a0b2b9a7-14a9-470d-bad1-aa0f11537e9b', true, false, 'Spindles ', '2026-05-11 13:25:05.537+00', NULL, NULL, 'none', 'none', NULL, false),
 	('9b826784-b7bc-4107-bed2-77ee19355a4a', '7d9ec3e9-87d7-4ed0-8119-5cb82ce2e847', '5ca34cd0-cb1c-4614-a7b8-0071b73b9343', true, false, 'One of the safety chain hooks is missing and the sleeve lock is missing
-', '2026-05-13 14:06:22.526+00', NULL, NULL, 'none', 'none', NULL),
-	('8b1d5ebe-dc31-480a-a518-7d1ebfd52a0b', 'a9e8ee4d-d74f-4112-a42e-02826d833e72', '5ca34cd0-cb1c-4614-a7b8-0071b73b9343', true, false, 'Tow chain miss hook', '2026-05-13 16:21:56.574+00', NULL, NULL, 'none', 'none', NULL),
+', '2026-05-13 14:06:22.526+00', NULL, NULL, 'none', 'none', NULL, false),
+	('8b1d5ebe-dc31-480a-a518-7d1ebfd52a0b', 'a9e8ee4d-d74f-4112-a42e-02826d833e72', '5ca34cd0-cb1c-4614-a7b8-0071b73b9343', true, false, 'Tow chain miss hook', '2026-05-13 16:21:56.574+00', NULL, NULL, 'none', 'none', NULL, false),
 	('aec68ddd-7da7-46ce-ba1b-43e6dc105cc6', 'b3d00894-bd61-4d54-b017-8d4bfc422365', '5ca34cd0-cb1c-4614-a7b8-0071b73b9343', true, false, 'Hook missing from tow chain.
-Sleeve missing ', '2026-05-15 19:32:21.037+00', NULL, NULL, 'none', 'none', NULL),
-	('02c1f693-fd65-44c8-861d-073ca24cbc8e', 'e2df1584-78eb-49b8-b3fb-1a0ece15334d', 'ba737cdf-660c-4024-9f99-63cbb97aac92', true, false, 'Bleacher has a twist in the frame ', '2026-05-18 12:52:37.014+00', NULL, NULL, 'none', 'none', NULL),
-	('6ee4ccaf-13c3-4723-ac9b-f59a54b3980e', 'acf25ef4-a2f5-4a3a-a8b5-c97d0d73ec5c', 'eff155d7-854d-410f-98fb-a642a1f1d344', false, true, 'Main Jack ', '2026-05-18 16:03:30.019+00', NULL, NULL, 'none', 'none', NULL),
-	('04f84eaa-2156-4543-bd0d-8a8087017306', 'fbb9a48f-477b-4152-ab05-6aeddcdb002d', 'f383242d-f65b-4e0d-99d6-4976ba2c5f18', false, true, 'Outrigger jacks needed to be changed to 3/4inch nut.', '2026-05-18 12:53:37.953+00', NULL, NULL, 'none', 'none', NULL),
-	('638890fe-f298-4f9a-9647-7ae2df7cbcea', 'cebfa1f5-594f-4761-9786-79e254764276', 'f383242d-f65b-4e0d-99d6-4976ba2c5f18', false, true, 'Outrigger jacks needed to be changed to 3/4inch nut.', '2026-05-18 12:53:41.349+00', NULL, NULL, 'none', 'none', NULL),
+Sleeve missing ', '2026-05-15 19:32:21.037+00', NULL, NULL, 'none', 'none', NULL, false),
+	('02c1f693-fd65-44c8-861d-073ca24cbc8e', 'e2df1584-78eb-49b8-b3fb-1a0ece15334d', 'ba737cdf-660c-4024-9f99-63cbb97aac92', true, false, 'Bleacher has a twist in the frame ', '2026-05-18 12:52:37.014+00', NULL, NULL, 'none', 'none', NULL, false),
+	('6ee4ccaf-13c3-4723-ac9b-f59a54b3980e', 'acf25ef4-a2f5-4a3a-a8b5-c97d0d73ec5c', 'eff155d7-854d-410f-98fb-a642a1f1d344', false, true, 'Main Jack ', '2026-05-18 16:03:30.019+00', NULL, NULL, 'none', 'none', NULL, false),
+	('04f84eaa-2156-4543-bd0d-8a8087017306', 'fbb9a48f-477b-4152-ab05-6aeddcdb002d', 'f383242d-f65b-4e0d-99d6-4976ba2c5f18', false, true, 'Outrigger jacks needed to be changed to 3/4inch nut.', '2026-05-18 12:53:37.953+00', NULL, NULL, 'none', 'none', NULL, false),
+	('638890fe-f298-4f9a-9647-7ae2df7cbcea', 'cebfa1f5-594f-4761-9786-79e254764276', 'f383242d-f65b-4e0d-99d6-4976ba2c5f18', false, true, 'Outrigger jacks needed to be changed to 3/4inch nut.', '2026-05-18 12:53:41.349+00', NULL, NULL, 'none', 'none', NULL, false),
 	('7091a875-b511-4abc-8b08-242ad36ebfde', 'ad1b99b8-1e61-4e66-94b0-e7158df37db1', '37c0dbc8-500a-4cc9-9c45-e28de2150d43', true, true, 'Spindles broke off. Spindle in control box 
-***** Repaired 5/15/26*****MA', '2026-05-11 13:25:29.118+00', '2026-05-19 14:37:49.465+00', NULL, 'none', 'none', NULL),
+***** Repaired 5/15/26*****MA', '2026-05-11 13:25:29.118+00', '2026-05-19 14:37:49.465+00', NULL, 'none', 'none', NULL, false),
 	('3da23c9d-4308-4d69-bcd6-354b0b0acdba', 'f90b074d-e52e-48a7-802f-c60aca21477d', '37c0dbc8-500a-4cc9-9c45-e28de2150d43', true, true, 'One spindle has a broken weld
-***** Repaired 5/15/26*****MA', '2026-04-28 17:40:24.122+00', '2026-05-19 14:38:08.182+00', NULL, 'none', 'none', NULL),
+***** Repaired 5/15/26*****MA', '2026-04-28 17:40:24.122+00', '2026-05-19 14:38:08.182+00', NULL, 'none', 'none', NULL, false),
 	('5bd97f03-5eca-4e8e-886f-bd0649519585', '0ce1a936-c9e6-4a7e-81c9-625b877a7a7f', '6cac1a68-77d0-4a27-9b92-73a8df5de7ad', true, true, 'Left rear tire flat. Replaced with spare.
-', '2026-05-26 10:11:01.639+00', '2026-05-29 18:44:55.905+00', '9f0f62a7-18ef-4972-8da6-b18cf2d00c18', 'none', 'none', NULL),
+', '2026-05-26 10:11:01.639+00', '2026-05-29 18:44:55.905+00', '9f0f62a7-18ef-4972-8da6-b18cf2d00c18', 'none', 'none', NULL, false),
 	('8a3306ff-8dd7-48e8-83be-1c210f9115b1', 'a3cc16af-a85e-4012-835b-7c578b67938b', '895cb41d-5121-42b8-81ba-154f4861792c', false, true, 'No spare tire one one tire in right side needs replaced .  
 Rod beneath top bleacher is missing a section and there are no pins for handrails 
 ￼
-', '2026-05-18 20:23:57.129+00', '2026-05-20 18:48:55.46+00', '900211bb-6462-4184-ac8f-ed8c31f80d48', 'none', 'none', NULL),
+', '2026-05-18 20:23:57.129+00', '2026-05-20 18:48:55.46+00', '900211bb-6462-4184-ac8f-ed8c31f80d48', 'none', 'none', NULL, false),
 	('ce6e6ae2-6646-475f-b0c5-fa18372762fb', '1c75e86a-039b-481f-84ec-f34437d40790', '6f5bb403-8045-4f8e-b0e0-4b8b800af092', true, true, 'Past load please refer to original
- pre trip sent in ', '2026-05-12 06:36:12.048+00', '2026-05-20 19:05:44.938+00', '99a61957-bc84-4900-a77a-723c4f2dc496', 'none', 'none', NULL),
+ pre trip sent in ', '2026-05-12 06:36:12.048+00', '2026-05-20 19:05:44.938+00', '99a61957-bc84-4900-a77a-723c4f2dc496', 'none', 'none', NULL, false),
 	('5947dc5b-548c-4d71-9e74-fe3a880b84b3', 'b8be4e4a-67ec-4775-b49d-155ed48f7778', '6f5bb403-8045-4f8e-b0e0-4b8b800af092', true, true, 'Past load please refer to pre tip sent in 
-', '2026-05-12 06:37:42.568+00', '2026-05-20 19:05:44.938+00', '99a61957-bc84-4900-a77a-723c4f2dc496', 'none', 'none', NULL),
+', '2026-05-12 06:37:42.568+00', '2026-05-20 19:05:44.938+00', '99a61957-bc84-4900-a77a-723c4f2dc496', 'none', 'none', NULL, false),
 	('b57ae4ef-a3a1-4837-b220-c8505acba6b8', 'a042240f-08df-4b86-a4b7-d952ce52c36a', '3d19afde-0497-446b-9943-59fd84ee9ab1', true, true, 'Past load please refer to original pre trip that was sent in 
-', '2026-05-12 06:36:54.532+00', '2026-05-20 19:50:26.536+00', NULL, 'none', 'none', NULL),
+', '2026-05-12 06:36:54.532+00', '2026-05-20 19:50:26.536+00', NULL, 'none', 'none', NULL, false),
 	('fb7109cf-71e8-4c29-9b05-1c4e671c86a8', '244767ef-a670-4325-82ba-742c304d9c94', '3d19afde-0497-446b-9943-59fd84ee9ab1', true, true, 'Pass load please refer to old pre trip method 
 That was sent in 
 
-Garreth Fixed- MA', '2026-05-12 06:34:51.074+00', '2026-05-20 19:50:46.725+00', NULL, 'none', 'none', NULL),
+Garreth Fixed- MA', '2026-05-12 06:34:51.074+00', '2026-05-20 19:50:46.725+00', NULL, 'none', 'none', NULL, false),
 	('2d278bb5-dae3-4ea7-ba7c-25c544931a6e', 'deb07def-3fda-4694-a9c0-a2092f978695', '895cb41d-5121-42b8-81ba-154f4861792c', false, true, 'Rod beneath top seat has a missing section.  Hand rails have no pins . 
 
-No spare tire and one tire on passenger side needs replaced ', '2026-05-18 20:17:57.766+00', '2026-05-20 18:48:55.46+00', '900211bb-6462-4184-ac8f-ed8c31f80d48', 'none', 'none', NULL),
-	('170fc4e2-6d77-48a9-a658-4c039bcaf4d6', 'd45b19be-575d-4e55-af7c-5635cafb794b', '3dfd725b-7706-4623-a5cb-07912898bf7d', false, true, 'Two broken jacks. Part of the frame is bent. ', '2026-06-01 15:07:04.695+00', NULL, NULL, 'none', 'none', NULL),
+No spare tire and one tire on passenger side needs replaced ', '2026-05-18 20:17:57.766+00', '2026-05-20 18:48:55.46+00', '900211bb-6462-4184-ac8f-ed8c31f80d48', 'none', 'none', NULL, false),
+	('170fc4e2-6d77-48a9-a658-4c039bcaf4d6', 'd45b19be-575d-4e55-af7c-5635cafb794b', '3dfd725b-7706-4623-a5cb-07912898bf7d', false, true, 'Two broken jacks. Part of the frame is bent. ', '2026-06-01 15:07:04.695+00', NULL, NULL, 'none', 'none', NULL, false),
 	('071b1178-3635-4643-8755-e61a53c96fb8', '84d08d77-3967-4646-b3ea-c9ab18eff12a', '70dc2d23-8b7c-491b-9d3d-a3dd9264385e', false, true, 'Damage in back of trailer, side rail middle section.  Needs replaced
 
-', '2026-05-25 14:13:58.317+00', NULL, NULL, 'none', 'none', NULL),
+', '2026-05-25 14:13:58.317+00', NULL, NULL, 'none', 'none', NULL, false),
 	('22971860-d19c-4872-9838-b4eca43e696c', 'cde32357-37ec-4236-a0d9-d98b149bbf84', '4795e981-5e02-49b7-ac79-b5d5cc50ab4b', false, false, 'Fender is bent. Missing breakaway latch. One jack is broken. Part of the frame is dented. Bleacher was also tampered with. 
-', '2026-06-01 15:59:45.333+00', NULL, NULL, 'none', 'none', NULL),
+', '2026-06-01 15:59:45.333+00', NULL, NULL, 'none', 'none', NULL, false),
 	('21c88fd0-3cd6-416e-bf5b-f1ca8f0d4bf3', 'fb24b28f-a467-4c3d-b73c-00ca9eafcde7', 'bb84d9d5-08e1-4a9d-a75c-6035fd3d2e2e', true, true, 'Needs spare tire replaced to
-', '2026-05-12 04:42:46.574+00', NULL, NULL, 'none', 'none', NULL),
-	('677f8bc6-ca72-4dbf-8bbf-32e2a7ba6765', '9f6304c3-395f-4086-aee3-43923eed550c', '20fdab55-349e-497b-8cbf-7f97251d7932', true, true, 'Broke Jack ', '2026-05-28 22:37:39.782+00', NULL, NULL, 'none', 'none', NULL),
+', '2026-05-12 04:42:46.574+00', NULL, NULL, 'none', 'none', NULL, false),
+	('677f8bc6-ca72-4dbf-8bbf-32e2a7ba6765', '9f6304c3-395f-4086-aee3-43923eed550c', '20fdab55-349e-497b-8cbf-7f97251d7932', true, true, 'Broke Jack ', '2026-05-28 22:37:39.782+00', NULL, NULL, 'none', 'none', NULL, false),
 	('2ce874f0-47e1-4814-a428-66bc4c186d09', '3c789109-847e-4a50-804d-c2a104252fde', '70271958-382a-4e90-9a99-4eb9c8c56b5e', true, false, 'Passenger rear tire has hub cap missing.
 
-Cody replacing the hub cap', '2026-05-26 20:03:16.607+00', '2026-05-27 19:47:50.162+00', '3d8c7e5b-f6f7-4160-9934-d393a71dd111', 'none', 'none', NULL),
-	('e202f292-b91a-448f-bf8a-0ca4c7f13760', '38440dc1-e02d-4472-ba8b-f6aad69b4b6e', '6f5bb403-8045-4f8e-b0e0-4b8b800af092', false, false, 'Part of the frame is falling off. One of the bars was found on the ground. Had to add a safety hook. ', '2026-06-02 14:04:19.653+00', NULL, NULL, 'none', 'none', NULL),
-	('f7b34ed5-2560-4dfa-a55b-034551cc328c', 'f5f231af-0ebc-4628-ba73-966cc3ae3e4a', 'bb84d9d5-08e1-4a9d-a75c-6035fd3d2e2e', true, true, 'Spare tire is flat. ', '2026-06-01 19:45:18.94+00', NULL, NULL, 'none', 'none', NULL),
-	('03e755d0-fdff-4ea5-a836-be57640c74bc', 'ed3c0bf6-e8fa-41b3-a545-91f4403e699e', '4795e981-5e02-49b7-ac79-b5d5cc50ab4b', true, true, 'Battery is at 40%. Pictures are from the pretrip. ', '2026-06-01 23:15:48.505+00', NULL, NULL, 'none', 'none', NULL),
-	('f0b84ca9-8fe9-4550-a24f-cb155941efdb', '2657530e-fcf0-4e38-8fa0-64dd4c4b30d1', '4795e981-5e02-49b7-ac79-b5d5cc50ab4b', true, true, 'Battery at 40%. Pictures are from pretrip. ', '2026-06-02 14:05:17.739+00', NULL, NULL, 'none', 'none', NULL);
+Cody replacing the hub cap', '2026-05-26 20:03:16.607+00', '2026-05-27 19:47:50.162+00', '3d8c7e5b-f6f7-4160-9934-d393a71dd111', 'none', 'none', NULL, false),
+	('e202f292-b91a-448f-bf8a-0ca4c7f13760', '38440dc1-e02d-4472-ba8b-f6aad69b4b6e', '6f5bb403-8045-4f8e-b0e0-4b8b800af092', false, false, 'Part of the frame is falling off. One of the bars was found on the ground. Had to add a safety hook. ', '2026-06-02 14:04:19.653+00', NULL, NULL, 'none', 'none', NULL, false),
+	('f7b34ed5-2560-4dfa-a55b-034551cc328c', 'f5f231af-0ebc-4628-ba73-966cc3ae3e4a', 'bb84d9d5-08e1-4a9d-a75c-6035fd3d2e2e', true, true, 'Spare tire is flat. ', '2026-06-01 19:45:18.94+00', NULL, NULL, 'none', 'none', NULL, false),
+	('03e755d0-fdff-4ea5-a836-be57640c74bc', 'ed3c0bf6-e8fa-41b3-a545-91f4403e699e', '4795e981-5e02-49b7-ac79-b5d5cc50ab4b', true, true, 'Battery is at 40%. Pictures are from the pretrip. ', '2026-06-01 23:15:48.505+00', NULL, NULL, 'none', 'none', NULL, false),
+	('f0b84ca9-8fe9-4550-a24f-cb155941efdb', '2657530e-fcf0-4e38-8fa0-64dd4c4b30d1', '4795e981-5e02-49b7-ac79-b5d5cc50ab4b', true, true, 'Battery at 40%. Pictures are from pretrip. ', '2026-06-02 14:05:17.739+00', NULL, NULL, 'none', 'none', NULL, false);
 
 
 --
@@ -9145,24 +9163,24 @@ INSERT INTO "public"."DamageReportPhotos" ("id", "damage_report_uuid", "photo_pa
 -- Data for Name: DashboardFilterSettings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."DashboardFilterSettings" ("id", "created_at", "updated_at", "user_uuid", "y_axis", "summer_home_base_uuids", "winter_home_base_uuids", "rows", "state_provinces", "only_show_my_events", "optimization_mode", "season", "account_manager_uuid", "rows_quick_filter", "show_address_tooltip") VALUES
-	('fae8f510-96d3-4437-b184-45be5c4b7007', '2026-01-26 17:03:11.437+00', '2026-06-02 19:24:01.734917+00', 'fae8f510-96d3-4437-b184-45be5c4b7007', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', true, false, 'WINTER', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', NULL, false),
-	('92b491a2-fc16-4181-82d1-3359c20b2d30', '2026-06-03 18:59:23.464+00', '2026-06-03 18:59:23.464+00', '92b491a2-fc16-4181-82d1-3359c20b2d30', 'Bleachers', '[]', '[]', '[]', '[]', true, false, 'SUMMER', NULL, NULL, false),
-	('64f2e95f-adf8-46be-87b3-1731ed37553f', '2026-02-12 18:37:41.877+00', '2026-05-20 15:36:09.205638+00', '64f2e95f-adf8-46be-87b3-1731ed37553f', 'Bleachers', '[]', '[]', '[15]', '[]', false, false, 'SUMMER', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 15, false),
-	('23b6f483-dd76-4add-baa5-4d07fed608a8', '2026-04-08 17:58:36.548+00', '2026-06-04 15:31:09.392763+00', '23b6f483-dd76-4add-baa5-4d07fed608a8', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', false, false, 'SUMMER', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', NULL, true),
-	('5847580c-471a-481e-92f7-582e7441eff4', '2026-01-26 14:00:30.268+00', '2026-06-04 18:41:22.419816+00', '5847580c-471a-481e-92f7-582e7441eff4', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', true, false, 'SUMMER', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', NULL, false),
-	('aa6313bb-ef67-45e1-be41-b3c70731c768', '2026-03-16 13:29:00.626+00', '2026-06-02 20:51:25.732198+00', 'aa6313bb-ef67-45e1-be41-b3c70731c768', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', false, true, 'SUMMER', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', NULL, false),
-	('5869439d-bfc2-4ae3-adc0-27bc9f42a712', '2026-01-29 17:34:52.386+00', '2026-01-29 17:34:52.386+00', '5869439d-bfc2-4ae3-adc0-27bc9f42a712', 'Bleachers', '[]', '[]', '[]', '[]', true, false, 'WINTER', 'b79bb5e9-c14a-43d9-8326-27390cfc5ae5', NULL, false),
-	('9bddb34c-d84e-4d11-852a-27f16de08379', '2026-01-23 23:53:07.423+00', '2026-06-04 17:31:27.042591+00', '9bddb34c-d84e-4d11-852a-27f16de08379', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', true, true, NULL, NULL, NULL, false),
-	('43f82f56-f6e2-4400-aeb2-7c5195c557ad', '2026-05-11 14:16:29.724+00', '2026-05-11 14:16:29.724+00', '43f82f56-f6e2-4400-aeb2-7c5195c557ad', 'Bleachers', '[]', '[]', '[]', '[]', true, false, 'WINTER', NULL, NULL, false),
-	('a2ab79fe-a192-4420-b6cd-cae8f3e9aa8e', '2026-02-23 18:20:03.86+00', '2026-02-23 18:20:49.358027+00', 'a2ab79fe-a192-4420-b6cd-cae8f3e9aa8e', 'Bleachers', '[]', '[]', '[]', '[]', true, false, NULL, NULL, NULL, false),
-	('f8581174-0fbf-48f4-a7bf-c98516c17b76', '2026-02-03 21:47:54.31+00', '2026-04-24 20:10:51.521262+00', 'f8581174-0fbf-48f4-a7bf-c98516c17b76', 'Bleachers', '[]', '[]', '[]', '[]', true, false, 'SUMMER', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', NULL, true),
-	('746927fc-e6c7-4cff-b7a4-a12130a5c3d6', '2026-01-30 14:51:33.713+00', '2026-05-23 19:08:19.199076+00', '746927fc-e6c7-4cff-b7a4-a12130a5c3d6', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', true, false, 'WINTER', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', NULL, false),
-	('04d8fe31-ba63-4037-8f89-c6383bdcfade', '2026-01-29 20:55:55.778+00', '2026-05-13 17:02:45.942192+00', '04d8fe31-ba63-4037-8f89-c6383bdcfade', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', false, false, NULL, NULL, NULL, true),
-	('788a4690-2a6f-4ad7-9365-3669d230aee0', '2026-03-16 14:01:18.538+00', '2026-03-16 14:01:18.538+00', '788a4690-2a6f-4ad7-9365-3669d230aee0', 'Bleachers', '[]', '[]', '[]', '[]', true, false, 'WINTER', NULL, NULL, false),
-	('31a13a33-985d-40c8-8d8e-7cbe94cb4bc5', '2026-01-29 18:56:45.117+00', '2026-06-04 16:19:03.031691+00', '31a13a33-985d-40c8-8d8e-7cbe94cb4bc5', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', false, false, 'SUMMER', '68de93a3-001f-4d45-bb39-88d2286e2fe7', NULL, false),
-	('6b080032-c889-4ce5-86e0-5a564a4d97f7', '2026-01-27 13:32:37.703+00', '2026-06-04 16:19:50.563627+00', '6b080032-c889-4ce5-86e0-5a564a4d97f7', 'Bleachers', '["39ed4cd9-1f01-45a4-a4cf-29b8d39513c6","c57f631c-0ed2-4900-a66c-0cbbdd99f230","57165590-44b1-4295-8cfd-d7766f5b3e82","edef4d1d-8e8c-440e-b0d3-0eebb86c844e","eacc5f9b-1d4e-47f8-b01f-fe7140291724","485d19e2-65bc-4c4a-a512-df95b0861757","d6b36242-8f6b-4106-91d5-0cacc928c3fa","500921f6-83d8-4dea-bcc2-a05b267a893c","fe7e9ca3-2269-443c-9c94-2386a4d54417","f470ed73-73f0-49e8-9ca7-545511db5780","18b8132c-8d3e-48d2-ad68-9bc553c56686","7c24111d-fbac-4b5a-89bf-18d58e79d21d","1c77e5af-2168-48a7-9111-e3b2d860b07a","75619a2e-3d10-4be8-a87c-78044075fb95","08dca4cd-d390-4b3d-95e8-0c7657c3a60a"]', '["39ed4cd9-1f01-45a4-a4cf-29b8d39513c6","c57f631c-0ed2-4900-a66c-0cbbdd99f230","57165590-44b1-4295-8cfd-d7766f5b3e82","edef4d1d-8e8c-440e-b0d3-0eebb86c844e","eacc5f9b-1d4e-47f8-b01f-fe7140291724","485d19e2-65bc-4c4a-a512-df95b0861757","d6b36242-8f6b-4106-91d5-0cacc928c3fa","500921f6-83d8-4dea-bcc2-a05b267a893c","fe7e9ca3-2269-443c-9c94-2386a4d54417","f470ed73-73f0-49e8-9ca7-545511db5780","18b8132c-8d3e-48d2-ad68-9bc553c56686","7c24111d-fbac-4b5a-89bf-18d58e79d21d","1c77e5af-2168-48a7-9111-e3b2d860b07a","75619a2e-3d10-4be8-a87c-78044075fb95","08dca4cd-d390-4b3d-95e8-0c7657c3a60a"]', '[4,7,8,9,10,15]', '[]', false, false, 'SUMMER', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', NULL, false),
-	('abb062c1-a182-4781-ad45-8447943281c9', '2026-06-18 22:23:08.221+00', '2026-06-18 22:23:08.221+00', 'abb062c1-a182-4781-ad45-8447943281c9', 'Bleachers', '[]', '[]', '[]', '[]', true, false, NULL, NULL, NULL, false);
+INSERT INTO "public"."DashboardFilterSettings" ("id", "created_at", "updated_at", "user_uuid", "y_axis", "summer_home_base_uuids", "winter_home_base_uuids", "rows", "state_provinces", "only_show_my_events", "optimization_mode", "season", "account_manager_uuid", "rows_quick_filter", "show_address_tooltip", "zone_uuids", "show_unassigned_zone") VALUES
+	('fae8f510-96d3-4437-b184-45be5c4b7007', '2026-01-26 17:03:11.437+00', '2026-06-02 19:24:01.734917+00', 'fae8f510-96d3-4437-b184-45be5c4b7007', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', true, false, 'WINTER', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', NULL, false, '[]', false),
+	('92b491a2-fc16-4181-82d1-3359c20b2d30', '2026-06-03 18:59:23.464+00', '2026-06-03 18:59:23.464+00', '92b491a2-fc16-4181-82d1-3359c20b2d30', 'Bleachers', '[]', '[]', '[]', '[]', true, false, 'SUMMER', NULL, NULL, false, '[]', false),
+	('64f2e95f-adf8-46be-87b3-1731ed37553f', '2026-02-12 18:37:41.877+00', '2026-05-20 15:36:09.205638+00', '64f2e95f-adf8-46be-87b3-1731ed37553f', 'Bleachers', '[]', '[]', '[15]', '[]', false, false, 'SUMMER', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 15, false, '[]', false),
+	('23b6f483-dd76-4add-baa5-4d07fed608a8', '2026-04-08 17:58:36.548+00', '2026-06-04 15:31:09.392763+00', '23b6f483-dd76-4add-baa5-4d07fed608a8', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', false, false, 'SUMMER', '3cb97f64-5c9c-4d7f-992d-f708b0c34568', NULL, true, '[]', false),
+	('5847580c-471a-481e-92f7-582e7441eff4', '2026-01-26 14:00:30.268+00', '2026-06-04 18:41:22.419816+00', '5847580c-471a-481e-92f7-582e7441eff4', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', true, false, 'SUMMER', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', NULL, false, '[]', false),
+	('aa6313bb-ef67-45e1-be41-b3c70731c768', '2026-03-16 13:29:00.626+00', '2026-06-02 20:51:25.732198+00', 'aa6313bb-ef67-45e1-be41-b3c70731c768', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', false, true, 'SUMMER', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', NULL, false, '[]', false),
+	('5869439d-bfc2-4ae3-adc0-27bc9f42a712', '2026-01-29 17:34:52.386+00', '2026-01-29 17:34:52.386+00', '5869439d-bfc2-4ae3-adc0-27bc9f42a712', 'Bleachers', '[]', '[]', '[]', '[]', true, false, 'WINTER', 'b79bb5e9-c14a-43d9-8326-27390cfc5ae5', NULL, false, '[]', false),
+	('9bddb34c-d84e-4d11-852a-27f16de08379', '2026-01-23 23:53:07.423+00', '2026-06-04 17:31:27.042591+00', '9bddb34c-d84e-4d11-852a-27f16de08379', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', true, true, NULL, NULL, NULL, false, '[]', false),
+	('43f82f56-f6e2-4400-aeb2-7c5195c557ad', '2026-05-11 14:16:29.724+00', '2026-05-11 14:16:29.724+00', '43f82f56-f6e2-4400-aeb2-7c5195c557ad', 'Bleachers', '[]', '[]', '[]', '[]', true, false, 'WINTER', NULL, NULL, false, '[]', false),
+	('a2ab79fe-a192-4420-b6cd-cae8f3e9aa8e', '2026-02-23 18:20:03.86+00', '2026-02-23 18:20:49.358027+00', 'a2ab79fe-a192-4420-b6cd-cae8f3e9aa8e', 'Bleachers', '[]', '[]', '[]', '[]', true, false, NULL, NULL, NULL, false, '[]', false),
+	('f8581174-0fbf-48f4-a7bf-c98516c17b76', '2026-02-03 21:47:54.31+00', '2026-04-24 20:10:51.521262+00', 'f8581174-0fbf-48f4-a7bf-c98516c17b76', 'Bleachers', '[]', '[]', '[]', '[]', true, false, 'SUMMER', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', NULL, true, '[]', false),
+	('746927fc-e6c7-4cff-b7a4-a12130a5c3d6', '2026-01-30 14:51:33.713+00', '2026-05-23 19:08:19.199076+00', '746927fc-e6c7-4cff-b7a4-a12130a5c3d6', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', true, false, 'WINTER', 'ae4a950d-e6e9-40da-9715-defecf6cc57b', NULL, false, '[]', false),
+	('04d8fe31-ba63-4037-8f89-c6383bdcfade', '2026-01-29 20:55:55.778+00', '2026-05-13 17:02:45.942192+00', '04d8fe31-ba63-4037-8f89-c6383bdcfade', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', false, false, NULL, NULL, NULL, true, '[]', false),
+	('788a4690-2a6f-4ad7-9365-3669d230aee0', '2026-03-16 14:01:18.538+00', '2026-03-16 14:01:18.538+00', '788a4690-2a6f-4ad7-9365-3669d230aee0', 'Bleachers', '[]', '[]', '[]', '[]', true, false, 'WINTER', NULL, NULL, false, '[]', false),
+	('31a13a33-985d-40c8-8d8e-7cbe94cb4bc5', '2026-01-29 18:56:45.117+00', '2026-06-04 16:19:03.031691+00', '31a13a33-985d-40c8-8d8e-7cbe94cb4bc5', 'Bleachers', '[]', '[]', '[4,7,8,9,10,15]', '[]', false, false, 'SUMMER', '68de93a3-001f-4d45-bb39-88d2286e2fe7', NULL, false, '[]', false),
+	('6b080032-c889-4ce5-86e0-5a564a4d97f7', '2026-01-27 13:32:37.703+00', '2026-06-04 16:19:50.563627+00', '6b080032-c889-4ce5-86e0-5a564a4d97f7', 'Bleachers', '["39ed4cd9-1f01-45a4-a4cf-29b8d39513c6","c57f631c-0ed2-4900-a66c-0cbbdd99f230","57165590-44b1-4295-8cfd-d7766f5b3e82","edef4d1d-8e8c-440e-b0d3-0eebb86c844e","eacc5f9b-1d4e-47f8-b01f-fe7140291724","485d19e2-65bc-4c4a-a512-df95b0861757","d6b36242-8f6b-4106-91d5-0cacc928c3fa","500921f6-83d8-4dea-bcc2-a05b267a893c","fe7e9ca3-2269-443c-9c94-2386a4d54417","f470ed73-73f0-49e8-9ca7-545511db5780","18b8132c-8d3e-48d2-ad68-9bc553c56686","7c24111d-fbac-4b5a-89bf-18d58e79d21d","1c77e5af-2168-48a7-9111-e3b2d860b07a","75619a2e-3d10-4be8-a87c-78044075fb95","08dca4cd-d390-4b3d-95e8-0c7657c3a60a"]', '["39ed4cd9-1f01-45a4-a4cf-29b8d39513c6","c57f631c-0ed2-4900-a66c-0cbbdd99f230","57165590-44b1-4295-8cfd-d7766f5b3e82","edef4d1d-8e8c-440e-b0d3-0eebb86c844e","eacc5f9b-1d4e-47f8-b01f-fe7140291724","485d19e2-65bc-4c4a-a512-df95b0861757","d6b36242-8f6b-4106-91d5-0cacc928c3fa","500921f6-83d8-4dea-bcc2-a05b267a893c","fe7e9ca3-2269-443c-9c94-2386a4d54417","f470ed73-73f0-49e8-9ca7-545511db5780","18b8132c-8d3e-48d2-ad68-9bc553c56686","7c24111d-fbac-4b5a-89bf-18d58e79d21d","1c77e5af-2168-48a7-9111-e3b2d860b07a","75619a2e-3d10-4be8-a87c-78044075fb95","08dca4cd-d390-4b3d-95e8-0c7657c3a60a"]', '[4,7,8,9,10,15]', '[]', false, false, 'SUMMER', '6ae8269d-c07b-4bc0-8488-94f10a7100fd', NULL, false, '[]', false),
+	('abb062c1-a182-4781-ad45-8447943281c9', '2026-06-18 22:23:08.221+00', '2026-06-18 22:23:08.221+00', 'abb062c1-a182-4781-ad45-8447943281c9', 'Bleachers', '[]', '[]', '[]', '[]', true, false, NULL, NULL, NULL, false, '[]', false);
 
 
 --
@@ -9282,7 +9300,6 @@ INSERT INTO "public"."Drivers" ("created_at", "tax", "pay_rate_cents", "pay_curr
 	('2026-02-03 21:49:24.321276+00', 13, 530, 'CAD', 'KM', true, '40971c38-0730-45c7-8435-0fac683b28d5', '877e91d8-e1cf-4cb6-bae9-509ac4becccf', 'f8581174-0fbf-48f4-a7bf-c98516c17b76', '1234567890', 'fd49c643-c54e-43cf-9976-f0d31297706f', '877e91d8-e1cf-4cb6-bae9-509ac4becccf/license_1774535187929.jpeg', '877e91d8-e1cf-4cb6-bae9-509ac4becccf/insurance_1774535187929.jpeg', NULL, 'de2188dc-0c82-4aa9-b7d6-f8cc5100de3f', NULL),
 	('2026-05-28 14:00:30.7501+00', 13, 400, 'CAD', 'KM', true, 'd77dde2d-65dd-4771-9b0f-4f2cdb11217e', '8b7fd1de-6dbf-4a7a-a165-5b32373f7e7a', 'b6b4cfcd-33fc-425d-a56b-a5c6f804aeb7', '6138525111', 'ef449b4f-539f-48db-affa-004dd44a12ab', NULL, NULL, NULL, '6460960a-67ed-44a9-b450-66a4afe7532a', NULL),
 	('2026-04-27 18:09:03.207659+00', 0, 300, 'USD', 'MI', false, '68de93a3-001f-4d45-bb39-88d2286e2fe7', '8ca57e42-b76e-44c8-941d-bdaf6cf9c303', 'ac0c0918-cbdb-44b0-b065-9a78e54f8a8e', '225-719-3911', '603f03f6-f671-42f8-a9a0-bc2617e65509', 'driver-documents/ac0c0918-cbdb-44b0-b065-9a78e54f8a8e/license_1779670641418.jpg', 'driver-documents/ac0c0918-cbdb-44b0-b065-9a78e54f8a8e/insurance_1779818423907.pdf', 'driver-documents/ac0c0918-cbdb-44b0-b065-9a78e54f8a8e/medical_card_1779670650980.pdf', '0de73e8d-2ffe-4cad-aed1-2e2df6039adc', NULL),
-	('2026-01-26 13:54:55.829831+00', 13, 300, 'CAD', 'KM', false, NULL, 'db5b0835-9f3f-453c-849f-b63c99c95516', '9bddb34c-d84e-4d11-852a-27f16de08379', '5198727202', '0a2e2686-276d-494d-a632-6b76cc34e8e9', 'db5b0835-9f3f-453c-849f-b63c99c95516/license_1770673605262.jpeg', 'db5b0835-9f3f-453c-849f-b63c99c95516/insurance_1770211525084.jpg', 'db5b0835-9f3f-453c-849f-b63c99c95516/medical_card_1770218494144.jpg', '2b9572f9-e118-46ed-9dc2-5bcfc6ae54b5', NULL),
 	('2025-12-18 17:33:01.936083+00', 0, 300, 'USD', 'MI', false, NULL, '41a58c3d-f4ce-4f8c-9496-2a670c0df5a8', 'a728e934-8e3b-435d-a8b8-7c0dd4de3303', '706-717-8490', '2882e40c-0b6f-4aa1-ab81-a64b80a13e48', 'driver-documents/a728e934-8e3b-435d-a8b8-7c0dd4de3303/license_1779672217231.jpeg', 'driver-documents/a728e934-8e3b-435d-a8b8-7c0dd4de3303/insurance_1779672231099.jpeg', 'driver-documents/a728e934-8e3b-435d-a8b8-7c0dd4de3303/medical_card_1779672243213.jpeg', '6624cef9-af8e-4bef-8fcd-d2a562794b88', NULL),
 	('2026-06-01 17:28:20.541905+00', 0, 0, 'CAD', 'KM', true, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '87ee13d7-b08b-4e17-9eaa-de723ee91254', '102edb99-5dde-406e-a3bd-9c38150e2749', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	('2025-10-10 16:47:08.981771+00', 13, 300, 'CAD', 'KM', true, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'd08f7880-9c83-46f4-882c-23fad708cfc3', '2cb14ae5-1585-4688-895e-8557cfa9ad36', NULL, NULL, NULL, NULL, NULL, NULL, 'f2a07e99-585c-458a-ac4f-c86aab15611e'),
@@ -9311,7 +9328,8 @@ INSERT INTO "public"."Drivers" ("created_at", "tax", "pay_rate_cents", "pay_curr
 	('2025-10-10 16:45:43.001958+00', 13, 400, 'CAD', 'KM', true, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'c6bed24a-6b73-4de0-b398-75d6867fbd9b', 'b3ffe528-d1d7-4ec5-85e1-49051a13128e', '5197183113', '7eb9110e-10ff-4526-952d-7337598c2131', 'c6bed24a-6b73-4de0-b398-75d6867fbd9b/license_1772152932450.jpg', 'c6bed24a-6b73-4de0-b398-75d6867fbd9b/insurance_1772218904853.jpg', NULL, 'f5a7a82c-3cd7-4fcd-aaa5-2c9e9f56e39b', '08fd4515-10d3-436f-aa73-f96277ad024f'),
 	('2026-05-20 11:43:22.186194+00', 13, 400, 'CAD', 'KM', true, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '8db5ca61-4a11-44c6-bd8b-c0924dca0962', '25d5d81b-db0f-48be-9a68-9f1680c0ac56', '5195503941', '775bcf56-6e90-4759-9c7f-f304ca266707', '8db5ca61-4a11-44c6-bd8b-c0924dca0962/license_1779283440216.jpg', '8db5ca61-4a11-44c6-bd8b-c0924dca0962/insurance_1779283440216.jpg', NULL, '21c7c793-9ce9-4bb7-b113-599bc8ac8d14', NULL),
 	('2026-06-02 13:36:40.504372+00', 0, 300, 'USD', 'MI', true, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', '421eb739-4dd6-4337-87d9-9a06a7cad9bc', '98212da0-2390-492c-8bac-a4c591d50d9b', '8159856834', '2aebf81e-dc18-4d3c-855e-0590bb24244b', '421eb739-4dd6-4337-87d9-9a06a7cad9bc/license_1780487613902.jpg', '421eb739-4dd6-4337-87d9-9a06a7cad9bc/insurance_1780487613902.pdf', '421eb739-4dd6-4337-87d9-9a06a7cad9bc/medical_card_1780572253837.jpg', 'aac3c6c4-512d-4938-ab07-c437f2e138f3', NULL),
-	('2025-10-10 13:18:26.345782+00', 13, 400, 'CAD', 'KM', true, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'eaeee623-f203-4680-b8a9-3bc6c3d258c0', '6dfb01a5-eba2-4b21-93f9-6481cd64d08b', '5192917116', 'fcca265d-40b3-43a1-90b1-00fec5da749b', 'eaeee623-f203-4680-b8a9-3bc6c3d258c0/license_1771341513161.heic', 'eaeee623-f203-4680-b8a9-3bc6c3d258c0/insurance_1771341513161.pdf', NULL, 'a222e5ef-4ace-44aa-b033-20b263a7dfc4', 'b62a00b9-4679-4c8b-b601-e3784f3be774');
+	('2025-10-10 13:18:26.345782+00', 13, 400, 'CAD', 'KM', true, '6ae8269d-c07b-4bc0-8488-94f10a7100fd', 'eaeee623-f203-4680-b8a9-3bc6c3d258c0', '6dfb01a5-eba2-4b21-93f9-6481cd64d08b', '5192917116', 'fcca265d-40b3-43a1-90b1-00fec5da749b', 'eaeee623-f203-4680-b8a9-3bc6c3d258c0/license_1771341513161.heic', 'eaeee623-f203-4680-b8a9-3bc6c3d258c0/insurance_1771341513161.pdf', NULL, 'a222e5ef-4ace-44aa-b033-20b263a7dfc4', 'b62a00b9-4679-4c8b-b601-e3784f3be774'),
+	('2026-01-26 13:54:55.829831+00', 13, 300, 'CAD', 'KM', false, NULL, 'db5b0835-9f3f-453c-849f-b63c99c95516', '9bddb34c-d84e-4d11-852a-27f16de08379', '5198727202', '0a2e2686-276d-494d-a632-6b76cc34e8e9', 'db5b0835-9f3f-453c-849f-b63c99c95516/license_1770673605262.jpeg', 'db5b0835-9f3f-453c-849f-b63c99c95516/insurance_1770211525084.jpg', 'db5b0835-9f3f-453c-849f-b63c99c95516/medical_card_1770218494144.jpg', '2b9572f9-e118-46ed-9dc2-5bcfc6ae54b5', NULL);
 
 
 --
@@ -9423,6 +9441,1300 @@ INSERT INTO "public"."DriverZones" ("id", "created_at", "driver_uuid", "zone_uui
 
 
 --
+-- Data for Name: EmailTriggerBindings; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO "public"."EmailTriggerBindings" ("id", "sales_office_uuid", "trigger", "created_at", "updated_at") VALUES
+	('ac416979-c010-4695-8304-ff1b757b129a', 'e0a10001-0001-4000-8000-000000000001', 'quote_signed_client', '2026-07-30 03:33:55.12+00', '2026-07-30 03:33:55.12+00'),
+	('7773c534-b3e7-4cc6-a2ff-7fefd33a7ba3', 'e0a10001-0001-4000-8000-000000000001', 'quote_signed_am', '2026-07-30 12:06:02.418+00', '2026-07-30 12:06:02.418+00'),
+	('c4a6d6fd-975d-4c01-ae21-54b2cccf0d73', 'e0a10001-0001-4000-8000-000000000001', 'payment_made_client', '2026-07-30 12:11:25.803+00', '2026-07-30 12:11:25.803+00'),
+	('00fec9f0-950f-41d7-a24e-d5daf2567600', 'e0a10001-0001-4000-8000-000000000001', 'quote_sent_client', '2026-07-30 12:31:13.532+00', '2026-07-30 12:31:13.532+00');
+
+
+--
+-- Data for Name: EmailTemplates; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO "public"."EmailTemplates" ("id", "name", "subject", "html_body", "trigger_uuid", "is_active", "created_at", "created_by_user_uuid", "updated_at", "edited_by_user_uuid", "deleted_at", "error_message") VALUES
+	('4ee21824-ffe8-44a9-a70e-e706e9892bc4', 'Untitled template', '', '', 'c4a6d6fd-975d-4c01-ae21-54b2cccf0d73', false, '2026-07-30 12:11:25.824+00', '9bddb34c-d84e-4d11-852a-27f16de08379', '2026-07-30 12:11:26.947+00', '9bddb34c-d84e-4d11-852a-27f16de08379', NULL, NULL),
+	('5b39e0e4-9a76-4aa4-8e81-2508f3794ec1', 'Quote Signed Client Info', 'Signed Contract Attached - {{customerName}} - {{eventName}} (Project #{{quoteNumber}})', '<div style="background-color: #dbe5ea; padding: 0; margin: 0">
+  <!-- Header: brand + View Invoice button -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="
+      border-spacing: 0;
+      width: 100%;
+      background-color: #ffffff;
+      border-bottom: 1px solid #d7dbe0;
+    "
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  style="
+                    text-align: left;
+                    vertical-align: middle;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #3e484d;
+                  "
+                >
+                  Bleacher Rentals
+                </td>
+                <td style="text-align: right; vertical-align: middle">
+                  <a
+                    href="{{quoteLink}}"
+                    target="_blank"
+                    style="
+                      display: inline-block;
+                      background-color: #405daa;
+                      color: #ffffff;
+                      font-family: Helvetica, Arial, sans-serif;
+                      border-radius: 4px;
+                      font-weight: bold;
+                      font-size: 14px;
+                      padding: 8px 16px;
+                      text-decoration: none;
+                    "
+                  >
+                    View Invoice
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Title -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 32px 16px 16px; text-align: center">
+          <h1
+            style="
+              margin: 0;
+              padding: 0;
+              font-family: Helvetica, Arial, sans-serif;
+              font-weight: bold;
+              color: #3e484d;
+              font-size: 32px;
+              line-height: 42px;
+            "
+          >
+            Contract Signed Online
+          </h1>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Body copy -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  style="
+                    padding: 0 16px;
+                    color: #616161;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 16px;
+                    line-height: 23px;
+                    text-align: left;
+                  "
+                >
+                  <div>
+                    Hi {{firstName}}, thank you for signing your contract with
+                    {{companyName}}! We''re excited to support your upcoming
+                    event and ensure a smooth rental experience.
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    <em style="background-color: #ffff00"
+                      >Please review the following important notes:</em
+                    >
+                  </div>
+                  <div><br /></div>
+                  <div><strong>Documentation:</strong></div>
+                  <div>
+                    ~Review the attached W9 and General Liability Insurance
+                    Certificate.
+                  </div>
+                  <div>
+                    ~To be listed as an additional insured, email us at
+                    <a href="mailto:office@bleacherrentals.com" target="_blank"
+                      >office@bleacherrentals.com</a
+                    >
+                    with the required information.
+                  </div>
+                  <div><br /></div>
+                  <div><strong>Booking Confirmation:</strong></div>
+                  <div>
+                    ~Your booking is not finalized until we receive both the
+                    signed contract and deposit.
+                    <em>(Missing the deposit may result in cancellation.)</em>
+                  </div>
+                  <div>
+                    <em
+                      >~If not paying in full with a credit card, please fill
+                      out the attached Billing, Credit and AP Form.</em
+                    >
+                  </div>
+                  <div><br /></div>
+                  <div><strong>Questions or Concerns?</strong></div>
+                  <div>
+                    ~Contact us anytime - we''re here to help and committed to
+                    excellent service.
+                  </div>
+                  <div>
+                    ~See attached document, "Now What?" to see some answers to
+                    common questions about the process of renting bleachers.
+                  </div>
+                  <div><br /></div>
+                  <div><strong>Payment Options:</strong>&nbsp;</div>
+                  <div>
+                    <strong>1) Online:&nbsp;</strong>Click the&nbsp;<strong
+                      style="color: #0066cc"
+                      >"View Invoice"</strong
+                    >&nbsp;button and follow the instructions.
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    <strong>2) Bank Transfer/ACH:&nbsp;</strong>Use the attached
+                    details and
+                    email&nbsp;<em>payments@bleacherrentals.com</em>&nbsp;in
+                    order to be credited properly.
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    <strong>3) Check:&nbsp;</strong>Make payable to&nbsp;<em
+                      >Bleacher Rentals Florida, LLC</em
+                    >&nbsp;and mail to: 7901 4th Street N #25767 St. Petersburg,
+                    FL 33702
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    <strong>4) Scanned Check:&nbsp;</strong>For faster
+                    processing, you may also scan the front and back of the
+                    check and email it
+                    to&nbsp;<em>payments@bleacherrentals.com</em>.
+                  </div>
+
+                  <br /><br />
+                  <div>
+                    Sincerely,<br /><br />{{accountManager}}<br />{{companyName}}
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- View Invoice button (centered) -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 0 16px 8px; text-align: center">
+          <a
+            href="{{quoteLink}}"
+            target="_blank"
+            style="
+              display: inline-block;
+              background-color: #405daa;
+              color: #ffffff;
+              font-family: Helvetica, Arial, sans-serif;
+              border-radius: 4px;
+              font-weight: bold;
+              font-size: 14px;
+              padding: 10px 20px;
+              text-decoration: none;
+            "
+          >
+            View Invoice
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Details: Event + Invoice summary -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  width="50%"
+                  style="
+                    vertical-align: top;
+                    padding: 0 16px;
+                    text-align: left;
+                    font-family: Helvetica, Arial, sans-serif;
+                  "
+                >
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Event
+                  </h6>
+                  <p
+                    style="color: #616161; font-size: 14px; line-height: 20px; margin: 0 0 16px"
+                  >
+                    {{eventName}} - {{quoteNumber}}<br />
+                    {{eventStartDate}}
+                  </p>
+
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Contact
+                  </h6>
+                  <p
+                    style="color: #616161; font-size: 14px; line-height: 20px; margin: 0 0 16px"
+                  >
+                    {{customerName}}
+                  </p>
+                </td>
+
+                <td
+                  width="50%"
+                  style="
+                    vertical-align: top;
+                    padding: 0 16px;
+                    text-align: left;
+                    font-family: Helvetica, Arial, sans-serif;
+                  "
+                >
+                  <table
+                    width="100%"
+                    border="0"
+                    cellspacing="0"
+                    cellpadding="0"
+                    style="border-spacing: 0"
+                  >
+                    <tbody>
+                      <tr>
+                        <td
+                          style="
+                            background-color: #f4f6f8;
+                            border-radius: 4px;
+                            padding: 0 16px 16px;
+                            text-align: left;
+                          "
+                        >
+                          <h6
+                            style="
+                              margin: 20px 0 8px;
+                              padding: 0;
+                              font-weight: bold;
+                              color: #3e484d;
+                              font-size: 13px;
+                              line-height: 20px;
+                            "
+                          >
+                            Invoice Details
+                          </h6>
+                          <p
+                            style="
+                              color: #616161;
+                              font-size: 14px;
+                              line-height: 20px;
+                              margin: 0 0 16px;
+                            "
+                          >
+                            Invoice Number: {{quoteNumber}}<br /><br />
+                            <b
+                              ><span style="color: #e9573f"
+                                >Total: {{total}}</span
+                              ></b
+                            >
+                            <br />*Excludes processing fees
+                          </p>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Have questions -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td
+          style="padding: 16px; text-align: center; font-family: Helvetica, Arial, sans-serif"
+        >
+          <h4
+            style="
+              margin: 20px 0 8px;
+              padding: 0;
+              font-weight: bold;
+              color: #3e484d;
+              font-size: 19px;
+              line-height: 25px;
+            "
+          >
+            Have Questions?
+          </h4>
+          <p
+            style="color: #616161; font-size: 16px; line-height: 23px; margin: 0 0 16px"
+          >
+            Reply directly to this email and {{accountManager}} will be happy to
+            help.
+          </p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Footer -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #dbe5ea"
+  >
+    <tbody>
+      <tr>
+        <td
+          style="
+            padding: 16px;
+            text-align: center;
+            font-family: Helvetica, Arial, sans-serif;
+            color: #a7b1b6;
+            font-size: 14px;
+            line-height: 20px;
+          "
+        >
+          <p style="margin: 0 0 4px; font-weight: bold; color: #7a8791">
+            Bleacher Rentals
+          </p>
+          <p style="margin: 0">7901 4th St N #25767</p>
+          <p style="margin: 0">St. Petersburg, FL 33702</p>
+          <p style="margin: 0">P: (800) 436-0416</p>
+          <p style="margin: 4px 0 0">
+            <a
+              href="mailto:office@bleacherrentals.com"
+              target="_blank"
+              style="color: #448aff"
+              >office@bleacherrentals.com</a
+            >
+          </p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+', 'ac416979-c010-4695-8304-ff1b757b129a', true, '2026-07-30 03:33:55.131+00', '9bddb34c-d84e-4d11-852a-27f16de08379', '2026-07-30 12:09:47.023+00', '9bddb34c-d84e-4d11-852a-27f16de08379', NULL, NULL),
+	('2a3b7796-c253-4a04-823e-53021a844a85', 'Quote Signed Account Manager Info', 'Signed Contract Attached - {{customerName}} - {{eventName}} (Project #{{quoteNumber}})', '<div style="background-color: #dbe5ea; padding: 0; margin: 0">
+  <!-- Header: brand + View Invoice button -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="
+      border-spacing: 0;
+      width: 100%;
+      background-color: #ffffff;
+      border-bottom: 1px solid #d7dbe0;
+    "
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  style="
+                    text-align: left;
+                    vertical-align: middle;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #3e484d;
+                  "
+                >
+                  Bleacher Rentals
+                </td>
+                <td style="text-align: right; vertical-align: middle">
+                  <a
+                    href="{{quoteLink}}"
+                    target="_blank"
+                    style="
+                      display: inline-block;
+                      background-color: #405daa;
+                      color: #ffffff;
+                      font-family: Helvetica, Arial, sans-serif;
+                      border-radius: 4px;
+                      font-weight: bold;
+                      font-size: 14px;
+                      padding: 8px 16px;
+                      text-decoration: none;
+                    "
+                  >
+                    View Invoice
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Title -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 32px 16px 16px; text-align: center">
+          <h1
+            style="
+              margin: 0;
+              padding: 0;
+              font-family: Helvetica, Arial, sans-serif;
+              font-weight: bold;
+              color: #3e484d;
+              font-size: 32px;
+              line-height: 42px;
+            "
+          >
+            Contract Signed Online
+          </h1>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Body copy -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  style="
+                    padding: 0 16px;
+                    color: #616161;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 16px;
+                    line-height: 23px;
+                    text-align: left;
+                  "
+                >
+                  <div>
+                    Hi {{firstName}}, thank you for signing your contract with
+                    {{companyName}}! We''re excited to support your upcoming
+                    event and ensure a smooth rental experience.
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    <em style="background-color: #ffff00"
+                      >Please review the following important notes:</em
+                    >
+                  </div>
+                  <div><br /></div>
+                  <div><strong>Documentation:</strong></div>
+                  <div>
+                    ~Review the attached W9 and General Liability Insurance
+                    Certificate.
+                  </div>
+                  <div>
+                    ~To be listed as an additional insured, email us at
+                    <a href="mailto:office@bleacherrentals.com" target="_blank"
+                      >office@bleacherrentals.com</a
+                    >
+                    with the required information.
+                  </div>
+                  <div><br /></div>
+                  <div><strong>Booking Confirmation:</strong></div>
+                  <div>
+                    ~Your booking is not finalized until we receive both the
+                    signed contract and deposit.
+                    <em>(Missing the deposit may result in cancellation.)</em>
+                  </div>
+                  <div>
+                    <em
+                      >~If not paying in full with a credit card, please fill
+                      out the attached Billing, Credit and AP Form.</em
+                    >
+                  </div>
+                  <div><br /></div>
+                  <div><strong>Questions or Concerns?</strong></div>
+                  <div>
+                    ~Contact us anytime - we''re here to help and committed to
+                    excellent service.
+                  </div>
+                  <div>
+                    ~See attached document, "Now What?" to see some answers to
+                    common questions about the process of renting bleachers.
+                  </div>
+                  <div><br /></div>
+                  <div><strong>Payment Options:</strong>&nbsp;</div>
+                  <div>
+                    <strong>1) Online:&nbsp;</strong>Click the&nbsp;<strong
+                      style="color: #0066cc"
+                      >"View Invoice"</strong
+                    >&nbsp;button and follow the instructions.
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    <strong>2) Bank Transfer/ACH:&nbsp;</strong>Use the attached
+                    details and
+                    email&nbsp;<em>payments@bleacherrentals.com</em>&nbsp;in
+                    order to be credited properly.
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    <strong>3) Check:&nbsp;</strong>Make payable to&nbsp;<em
+                      >Bleacher Rentals Florida, LLC</em
+                    >&nbsp;and mail to: 7901 4th Street N #25767 St. Petersburg,
+                    FL 33702
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    <strong>4) Scanned Check:&nbsp;</strong>For faster
+                    processing, you may also scan the front and back of the
+                    check and email it
+                    to&nbsp;<em>payments@bleacherrentals.com</em>.
+                  </div>
+
+                  <br /><br />
+                  <div>
+                    Sincerely,<br /><br />{{accountManager}}<br />{{companyName}}
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- View Invoice button (centered) -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 0 16px 8px; text-align: center">
+          <a
+            href="{{quoteLink}}"
+            target="_blank"
+            style="
+              display: inline-block;
+              background-color: #405daa;
+              color: #ffffff;
+              font-family: Helvetica, Arial, sans-serif;
+              border-radius: 4px;
+              font-weight: bold;
+              font-size: 14px;
+              padding: 10px 20px;
+              text-decoration: none;
+            "
+          >
+            View Invoice
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Details: Event + Invoice summary -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  width="50%"
+                  style="
+                    vertical-align: top;
+                    padding: 0 16px;
+                    text-align: left;
+                    font-family: Helvetica, Arial, sans-serif;
+                  "
+                >
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Event
+                  </h6>
+                  <p
+                    style="color: #616161; font-size: 14px; line-height: 20px; margin: 0 0 16px"
+                  >
+                    {{eventName}} - {{quoteNumber}}<br />
+                    {{eventStartDate}}
+                  </p>
+
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Contact
+                  </h6>
+                  <p
+                    style="color: #616161; font-size: 14px; line-height: 20px; margin: 0 0 16px"
+                  >
+                    {{customerName}}
+                  </p>
+                </td>
+
+                <td
+                  width="50%"
+                  style="
+                    vertical-align: top;
+                    padding: 0 16px;
+                    text-align: left;
+                    font-family: Helvetica, Arial, sans-serif;
+                  "
+                >
+                  <table
+                    width="100%"
+                    border="0"
+                    cellspacing="0"
+                    cellpadding="0"
+                    style="border-spacing: 0"
+                  >
+                    <tbody>
+                      <tr>
+                        <td
+                          style="
+                            background-color: #f4f6f8;
+                            border-radius: 4px;
+                            padding: 0 16px 16px;
+                            text-align: left;
+                          "
+                        >
+                          <h6
+                            style="
+                              margin: 20px 0 8px;
+                              padding: 0;
+                              font-weight: bold;
+                              color: #3e484d;
+                              font-size: 13px;
+                              line-height: 20px;
+                            "
+                          >
+                            Invoice Details
+                          </h6>
+                          <p
+                            style="
+                              color: #616161;
+                              font-size: 14px;
+                              line-height: 20px;
+                              margin: 0 0 16px;
+                            "
+                          >
+                            Invoice Number: {{quoteNumber}}<br /><br />
+                            <b
+                              ><span style="color: #e9573f"
+                                >Total: {{total}}</span
+                              ></b
+                            >
+                            <br />*Excludes processing fees
+                          </p>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Have questions -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td
+          style="padding: 16px; text-align: center; font-family: Helvetica, Arial, sans-serif"
+        >
+          <h4
+            style="
+              margin: 20px 0 8px;
+              padding: 0;
+              font-weight: bold;
+              color: #3e484d;
+              font-size: 19px;
+              line-height: 25px;
+            "
+          >
+            Have Questions?
+          </h4>
+          <p
+            style="color: #616161; font-size: 16px; line-height: 23px; margin: 0 0 16px"
+          >
+            Reply directly to this email and {{accountManager}} will be happy to
+            help.
+          </p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Footer -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #dbe5ea"
+  >
+    <tbody>
+      <tr>
+        <td
+          style="
+            padding: 16px;
+            text-align: center;
+            font-family: Helvetica, Arial, sans-serif;
+            color: #a7b1b6;
+            font-size: 14px;
+            line-height: 20px;
+          "
+        >
+          <p style="margin: 0 0 4px; font-weight: bold; color: #7a8791">
+            Bleacher Rentals
+          </p>
+          <p style="margin: 0">7901 4th St N #25767</p>
+          <p style="margin: 0">St. Petersburg, FL 33702</p>
+          <p style="margin: 0">P: (800) 436-0416</p>
+          <p style="margin: 4px 0 0">
+            <a
+              href="mailto:office@bleacherrentals.com"
+              target="_blank"
+              style="color: #448aff"
+              >office@bleacherrentals.com</a
+            >
+          </p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+', '7773c534-b3e7-4cc6-a2ff-7fefd33a7ba3', true, '2026-07-30 12:06:02.434+00', '9bddb34c-d84e-4d11-852a-27f16de08379', '2026-07-30 12:11:05.812+00', '9bddb34c-d84e-4d11-852a-27f16de08379', NULL, NULL),
+	('6cd3373e-34c9-43d5-a546-9ba84678f5be', 'Send Quote to Client', 'Invoice {{quoteNumber}} from {{companyName}}', '<!--
+  Quote-sent email template for Bleacher Rentals.
+
+  Sent to the client when an account manager manually sends them their quote
+  from the admin app. The full quote detail and line-item breakdown is in the
+  attached PDF; this email is the friendly cover note with a View Quote CTA.
+
+  Uses variables that the app fills in at send time (see
+  src/features/automaticEmails/variables.ts). Available here:
+    {{firstName}} {{customerName}} {{eventName}} {{quoteNumber}}
+    {{quoteLink}} {{total}} {{eventStartDate}} {{accountManager}} {{companyName}}
+
+  Table-based layout + inline styles so it renders in Gmail/Outlook.
+-->
+<div style="background-color: #dbe5ea; padding: 0; margin: 0">
+  <!-- Header: brand + View Quote button -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="
+      border-spacing: 0;
+      width: 100%;
+      background-color: #ffffff;
+      border-bottom: 1px solid #d7dbe0;
+    "
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  style="
+                    text-align: left;
+                    vertical-align: middle;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #3e484d;
+                  "
+                >
+                  {{companyName}}
+                </td>
+                <td style="text-align: right; vertical-align: middle">
+                  <a
+                    href="{{quoteLink}}"
+                    target="_blank"
+                    style="
+                      display: inline-block;
+                      background-color: #405daa;
+                      color: #ffffff;
+                      font-family: Helvetica, Arial, sans-serif;
+                      border-radius: 4px;
+                      font-weight: bold;
+                      font-size: 14px;
+                      padding: 8px 16px;
+                      text-decoration: none;
+                    "
+                  >
+                    View Quote
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Title -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 32px 16px 16px; text-align: center">
+          <h1
+            style="
+              margin: 0;
+              padding: 0;
+              font-family: Helvetica, Arial, sans-serif;
+              font-weight: bold;
+              color: #3e484d;
+              font-size: 32px;
+              line-height: 42px;
+            "
+          >
+            You Have a New Quote
+          </h1>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Body copy -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  style="
+                    padding: 0 16px;
+                    color: #616161;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 16px;
+                    line-height: 23px;
+                    text-align: left;
+                  "
+                >
+                  <div>
+                    Hi {{firstName}}, {{companyName}} has sent you a quote for your upcoming event.
+                    Please review the details below and click the button to view your full quote
+                    online.
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    A PDF copy of the quote is also attached to this email for your records.
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    If you have any questions, please don''t hesitate to reach out — we''re happy
+                    to help.
+                  </div>
+                  <br /><br />
+                  <div>Sincerely,<br /><br />{{accountManager}}<br />{{companyName}}</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- View Quote button (centered) -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 0 16px 8px; text-align: center">
+          <a
+            href="{{quoteLink}}"
+            target="_blank"
+            style="
+              display: inline-block;
+              background-color: #405daa;
+              color: #ffffff;
+              font-family: Helvetica, Arial, sans-serif;
+              border-radius: 4px;
+              font-weight: bold;
+              font-size: 14px;
+              padding: 10px 20px;
+              text-decoration: none;
+            "
+          >
+            View Quote
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Details: Event + Invoice summary -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  width="50%"
+                  style="
+                    vertical-align: top;
+                    padding: 0 16px;
+                    text-align: left;
+                    font-family: Helvetica, Arial, sans-serif;
+                  "
+                >
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Event
+                  </h6>
+                  <p style="color: #616161; font-size: 14px; line-height: 20px; margin: 0 0 16px">
+                    {{eventName}}<br />
+                    {{eventStartDate}}
+                  </p>
+
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Customer
+                  </h6>
+                  <p style="color: #616161; font-size: 14px; line-height: 20px; margin: 0 0 16px">
+                    {{customerName}}
+                  </p>
+                </td>
+
+                <td
+                  width="50%"
+                  style="
+                    vertical-align: top;
+                    padding: 0 16px;
+                    text-align: left;
+                    font-family: Helvetica, Arial, sans-serif;
+                  "
+                >
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Quote
+                  </h6>
+                  <p style="color: #616161; font-size: 14px; line-height: 20px; margin: 0 0 16px">
+                    {{quoteNumber}}
+                  </p>
+
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Total
+                  </h6>
+                  <p
+                    style="
+                      color: #3e484d;
+                      font-size: 20px;
+                      font-weight: bold;
+                      line-height: 20px;
+                      margin: 0 0 16px;
+                    "
+                  >
+                    {{total}}
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Divider -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 0 32px">
+          <hr style="border: none; border-top: 1px solid #e0e4e8; margin: 0" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Footer -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <p
+            style="
+              color: #9ca3af;
+              font-family: Helvetica, Arial, sans-serif;
+              font-size: 12px;
+              line-height: 18px;
+              margin: 0;
+            "
+          >
+            {{companyName}} &middot; {{quoteNumber}}
+          </p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+', '00fec9f0-950f-41d7-a24e-d5daf2567600', true, '2026-07-30 12:31:13.54+00', '9bddb34c-d84e-4d11-852a-27f16de08379', '2026-07-30 12:52:48.251+00', '9bddb34c-d84e-4d11-852a-27f16de08379', NULL, NULL);
+
+
+--
 -- Data for Name: EventAttachments; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -9432,22 +10744,86 @@ INSERT INTO "public"."DriverZones" ("id", "created_at", "driver_uuid", "zone_uui
 -- Data for Name: EventChangeLog; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO "public"."EventChangeLog" ("id", "event_uuid", "prev_value", "next_value", "changed_by_user_uuid", "changed_at", "field_name", "action_type") VALUES
+	('f84c5eda-c04c-460c-a1ec-3c63b01009e3', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, 'Redgrift Motocross Event', '9bddb34c-d84e-4d11-852a-27f16de08379', '2026-07-30 03:31:55.58+00', 'event_name', 'create'),
+	('063b57d6-ed82-48fa-bca5-8a1631b5e57a', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, 'redgriftjosh@gmail.com', '9bddb34c-d84e-4d11-852a-27f16de08379', '2026-07-30 03:31:56.633+00', 'email_sent', 'send'),
+	('3ca17b6d-f2f4-45d6-a081-3915fbd70515', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, '144819230', NULL, '2026-07-30 03:32:19.668+00', NULL, 'client_page_view'),
+	('a7b4ec66-dbbf-4eb4-8b22-edcb45ed6775', '96a3683b-501f-475d-b8a5-8664b585d7db', 'Approved Quote', 'Signed Contract', NULL, '2026-07-30 03:32:21.157+00', 'tab', 'client_tab_change'),
+	('8dd727a0-5600-4928-bee2-299a77f7e131', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, 'Josh Redgrift', NULL, '2026-07-30 03:32:27.695185+00', 'signature', 'sign'),
+	('24cda01f-0749-4f2d-aa71-2b6678ebbdcc', '96a3683b-501f-475d-b8a5-8664b585d7db', 'quoted', 'booked', NULL, '2026-07-30 03:32:27.709148+00', 'event_status', 'status_change'),
+	('1ec4cf2f-b4dd-4477-a8f4-7522f93cb9e1', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, 'Josh Redgrift', NULL, '2026-07-30 03:32:28.108+00', 'contract', 'client_contract_signed'),
+	('d7b44f9f-1291-4378-af48-e80192d5da4f', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, '144819230', NULL, '2026-07-30 03:38:15.282+00', NULL, 'client_page_view'),
+	('7a76e513-63b0-47f5-a0f3-178af2761e42', '96a3683b-501f-475d-b8a5-8664b585d7db', 'Approved Quote', 'Signed Contract', NULL, '2026-07-30 03:38:16.34+00', 'tab', 'client_tab_change'),
+	('3ae8fd0d-8f0e-42f0-b59e-1550856653f0', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, '144819230', NULL, '2026-07-30 03:39:17.271+00', NULL, 'client_page_view'),
+	('dfdf6d33-115b-4f9c-8697-36e62a9a7a22', '96a3683b-501f-475d-b8a5-8664b585d7db', 'Approved Quote', 'Signed Contract', NULL, '2026-07-30 03:39:18.238+00', 'tab', 'client_tab_change'),
+	('ac7c33bd-eb5d-477a-897d-8b826dd72bba', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, 'Josh Redgrift', NULL, '2026-07-30 03:39:24.033277+00', 'signature', 'sign'),
+	('3b4e541e-0d0a-4fab-8517-dc3c0a7cbb5d', '96a3683b-501f-475d-b8a5-8664b585d7db', 'quoted', 'booked', NULL, '2026-07-30 03:39:24.04859+00', 'event_status', 'status_change'),
+	('cb669449-af80-42e3-8b80-2661f71a006b', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, 'Josh Redgrift', NULL, '2026-07-30 03:39:24.544+00', 'contract', 'client_contract_signed'),
+	('575bf223-a2eb-4b0c-8b19-ba21f71b58fc', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, '144819230', NULL, '2026-07-30 11:17:32.536+00', NULL, 'client_page_view'),
+	('910d3606-a6aa-4ce7-b6bf-1c3c242d36e6', '96a3683b-501f-475d-b8a5-8664b585d7db', 'Approved Quote', 'Signed Contract', NULL, '2026-07-30 11:17:33.426+00', 'tab', 'client_tab_change'),
+	('819abef2-43f7-4b9b-a23c-d1c9b3c66636', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, '144819230', NULL, '2026-07-30 11:17:48.444+00', NULL, 'client_page_view'),
+	('ef5b5f57-0619-4fc2-8bf2-6d36662a1fb5', '96a3683b-501f-475d-b8a5-8664b585d7db', 'Approved Quote', 'Signed Contract', NULL, '2026-07-30 11:17:49.59+00', 'tab', 'client_tab_change'),
+	('c03d7296-899c-436b-99a5-0e1d60b13e65', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, 'Josh Redgrift', NULL, '2026-07-30 11:17:54.632555+00', 'signature', 'sign'),
+	('764e99aa-152c-45c7-bbbf-a28c97857825', '96a3683b-501f-475d-b8a5-8664b585d7db', 'booked', 'booked', NULL, '2026-07-30 11:17:54.647114+00', 'event_status', 'status_change'),
+	('65a116ca-7852-44d0-8357-104bb83e9816', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, 'Josh Redgrift', NULL, '2026-07-30 11:17:55.196+00', 'contract', 'client_contract_signed'),
+	('29839500-afa2-4263-aea5-04287e4e7b0e', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, '144819230', NULL, '2026-07-30 11:34:10.848+00', NULL, 'client_page_view'),
+	('b80ebacd-c80f-4188-9509-050c0bf70b63', '96a3683b-501f-475d-b8a5-8664b585d7db', 'Approved Quote', 'Signed Contract', NULL, '2026-07-30 11:34:11.646+00', 'tab', 'client_tab_change'),
+	('740f3524-b3f4-46c7-bd04-a43ca5ef3bba', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, 'Josh Redgrift', NULL, '2026-07-30 11:34:30.368363+00', 'signature', 'sign'),
+	('674ada55-3ebf-4301-994f-d37431bc0141', '96a3683b-501f-475d-b8a5-8664b585d7db', 'booked', 'booked', NULL, '2026-07-30 11:34:30.378642+00', 'event_status', 'status_change'),
+	('e4d28bae-cd2b-4189-ac0b-ff691d00db83', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, 'Josh Redgrift', NULL, '2026-07-30 11:34:31.553+00', 'contract', 'client_contract_signed'),
+	('285cbf90-b4c6-405f-a9c7-e851a7d39903', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, '144819230', NULL, '2026-07-30 11:34:52.949+00', NULL, 'client_page_view'),
+	('281c00e8-42a3-4bcc-8420-3da39f877afa', '96a3683b-501f-475d-b8a5-8664b585d7db', 'Approved Quote', 'Signed Contract', NULL, '2026-07-30 11:34:54.278+00', 'tab', 'client_tab_change'),
+	('804dc21f-b229-4bc7-adef-e72748c2727e', '96a3683b-501f-475d-b8a5-8664b585d7db', 'Signed Contract', 'Approved Quote', NULL, '2026-07-30 11:35:01.997+00', 'tab', 'client_tab_change'),
+	('d28ba6ab-1191-4bd7-9d05-acfe8d38cc7e', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, '144819230', NULL, '2026-07-30 11:35:46.956+00', NULL, 'client_page_view'),
+	('038e95f5-3cc2-4e24-a630-17cce5b10ef2', '96a3683b-501f-475d-b8a5-8664b585d7db', 'Approved Quote', 'Pay Invoice', NULL, '2026-07-30 11:35:53.19+00', 'tab', 'client_tab_change'),
+	('51c16eff-defb-4da0-b742-c441d81fed04', '96a3683b-501f-475d-b8a5-8664b585d7db', NULL, 'redgriftjosh@gmail.com', '9bddb34c-d84e-4d11-852a-27f16de08379', '2026-07-30 12:37:47.734+00', 'email_sent', 'send');
+
+
+--
+-- Data for Name: EventEmailLog; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO "public"."EventEmailLog" ("id", "event_uuid", "trigger", "status", "reason", "to_email", "template_id", "fired_at") VALUES
+	('b1641017-38c3-4f4b-91e0-22bdde8b65cf', '96a3683b-501f-475d-b8a5-8664b585d7db', 'quote_signed_client', 'failed', 'no_binding', NULL, NULL, '2026-07-30 03:32:28.041311+00'),
+	('0a565ff6-1fa0-4e6e-90b2-0dcf58a7921a', '96a3683b-501f-475d-b8a5-8664b585d7db', 'quote_signed_am', 'failed', 'no_binding', NULL, NULL, '2026-07-30 03:32:28.060407+00'),
+	('ca4a12c5-a3f5-43e7-8b69-9be4417f6b5d', '96a3683b-501f-475d-b8a5-8664b585d7db', 'quote_signed_client', 'failed', 'no_binding', NULL, NULL, '2026-07-30 03:39:24.351801+00'),
+	('c3a704de-0098-46e3-a8f0-aced7510c2a2', '96a3683b-501f-475d-b8a5-8664b585d7db', 'quote_signed_am', 'failed', 'no_binding', NULL, NULL, '2026-07-30 03:39:24.437354+00'),
+	('9fcff40e-2758-4ebc-8db0-4910a0fe5554', '96a3683b-501f-475d-b8a5-8664b585d7db', 'quote_signed_client', 'failed', 'binding_inactive', NULL, NULL, '2026-07-30 11:17:55.115424+00'),
+	('21dc6340-7cae-45c2-a69d-938ae0966be0', '96a3683b-501f-475d-b8a5-8664b585d7db', 'quote_signed_am', 'failed', 'no_binding', NULL, NULL, '2026-07-30 11:17:55.148505+00'),
+	('9820a6f9-1fca-446b-9eda-9c82cd802075', '96a3683b-501f-475d-b8a5-8664b585d7db', 'quote_signed_client', 'sent', NULL, 'redgriftjosh@gmail.com', '5b39e0e4-9a76-4aa4-8e81-2508f3794ec1', '2026-07-30 11:34:31.463242+00'),
+	('b954e908-d422-48ad-a5c9-93a4758da71a', '96a3683b-501f-475d-b8a5-8664b585d7db', 'quote_signed_am', 'failed', 'no_binding', NULL, NULL, '2026-07-30 11:34:31.49337+00'),
+	('a9043c59-f2a1-43ab-918b-ad6e7657c1e0', '96a3683b-501f-475d-b8a5-8664b585d7db', 'quote_sent_client', 'sent', NULL, 'redgriftjosh@gmail.com', '6cd3373e-34c9-43d5-a546-9ba84678f5be', '2026-07-30 12:37:47.496585+00');
 
 
 --
 -- Data for Name: EventFiles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO "public"."EventFiles" ("id", "event_uuid", "file_name", "storage_path", "mime_type", "file_size_bytes", "source", "uploaded_by", "created_at") VALUES
+	('d57a9eca-f5fa-46ee-a3da-c695f3fb5c00', '96a3683b-501f-475d-b8a5-8664b585d7db', '144819230.pdf', '96a3683b-501f-475d-b8a5-8664b585d7db/sent-quote-1785382316440.pdf', 'application/pdf', 5634, 'sent_quote', '9bddb34c-d84e-4d11-852a-27f16de08379', '2026-07-30 03:31:56.625968+00'),
+	('f91eb532-7798-40a4-8851-66519e607119', '96a3683b-501f-475d-b8a5-8664b585d7db', 'Signed Contract - 144819230.pdf', 'contracts/96a3683b-501f-475d-b8a5-8664b585d7db/341e2290-4a54-45b0-b762-4a36dda18c39.pdf', 'application/pdf', 8932, 'signed_contract', NULL, '2026-07-30 03:32:28.023381+00'),
+	('9961fe93-2959-41b9-b8df-56f71e0dcfae', '96a3683b-501f-475d-b8a5-8664b585d7db', 'Signed Contract - 144819230.pdf', 'contracts/96a3683b-501f-475d-b8a5-8664b585d7db/b8c2a756-2ef9-4a82-b732-1f760704f7fe.pdf', 'application/pdf', 8932, 'signed_contract', NULL, '2026-07-30 03:39:24.319154+00'),
+	('273b7735-25dd-4151-9015-90f11794a3a8', '96a3683b-501f-475d-b8a5-8664b585d7db', 'Signed Contract - 144819230.pdf', 'contracts/96a3683b-501f-475d-b8a5-8664b585d7db/91b76dc9-e7b7-4a01-8d79-233b4cdb9c10.pdf', 'application/pdf', 8932, 'signed_contract', NULL, '2026-07-30 11:17:55.081867+00'),
+	('a20a0ff2-a222-4f2d-aeef-6f3c73d63360', '96a3683b-501f-475d-b8a5-8664b585d7db', 'Signed Contract - 144819230.pdf', 'contracts/96a3683b-501f-475d-b8a5-8664b585d7db/ae9566d8-d50c-4a92-b1d6-29541ebe2960.pdf', 'application/pdf', 8932, 'signed_contract', NULL, '2026-07-30 11:34:30.665875+00'),
+	('478c5b36-d741-4aff-bf47-32c51835b30a', '96a3683b-501f-475d-b8a5-8664b585d7db', '144819230.pdf', '96a3683b-501f-475d-b8a5-8664b585d7db/sent-quote-1785415067513.pdf', 'application/pdf', 8932, 'sent_quote', '9bddb34c-d84e-4d11-852a-27f16de08379', '2026-07-30 12:37:47.724922+00');
 
 
 --
 -- Data for Name: EventLineItems; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO "public"."EventLineItems" ("id", "header", "description", "currency", "value_cents", "is_template", "quantity", "event_uuid", "bleacher_type_uuid", "deleted", "created_by_user_uuid", "created_at") VALUES
+	('d177c008-edcb-4a48-9db8-ba84ec2c6291', '10-Row, 300 Seat', NULL, 'USD', 340000, false, 3, '96a3683b-501f-475d-b8a5-8664b585d7db', 'e5715519-fb57-4810-a78d-4c0d780f0b74', false, '9bddb34c-d84e-4d11-852a-27f16de08379', '2026-07-30 03:31:55.798069+00');
 
 
 --
 -- Data for Name: EventMessages; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
+-- Data for Name: EventMessageMentions; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 
@@ -9462,6 +10838,8 @@ INSERT INTO "public"."DriverZones" ("id", "created_at", "driver_uuid", "zone_uui
 -- Data for Name: EventSubscriptions; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO "public"."EventSubscriptions" ("id", "event_uuid", "created_at", "user_uuid", "unread") VALUES
+	('97683aff-2d8a-4200-b8a3-65d372b9937c', '96a3683b-501f-475d-b8a5-8664b585d7db', '2026-07-30 03:31:55.616009+00', '9bddb34c-d84e-4d11-852a-27f16de08379', false);
 
 
 --
@@ -10318,6 +11696,11 @@ INSERT INTO "public"."Notifications" ("id", "created_at", "user_id", "title", "b
 --
 
 INSERT INTO "public"."PriceDurations" ("id", "name", "min_days", "max_days", "deleted", "created_by_user_uuid", "created_at") VALUES
+	('b34bd8bd-f503-4f48-825f-1131b5fe59b8', '1 Day Rental', 1, 2, false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('551487eb-3d34-4cce-a105-c6d4d7d4cdac', '3 Day Rental', 3, 6, false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('14b5061d-9eeb-4d5e-b08d-067931fd5947', '1 Week Rental', 7, 12, false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('7b216f95-e770-435b-bf0e-0db431c3ed0d', '2 Week Rental', 13, 21, false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'Monthly Rental', 22, 35, false, NULL, '2026-07-30 03:16:59.744691+00'),
 	('fbadff42-38e2-4aa0-99e2-27419f2bd53d', '1 Day Rental', 1, 2, false, NULL, '2026-06-18 22:21:41.32037+00'),
 	('072aced8-546f-4620-bdd6-ccdfa1e95873', '3 Day Rental', 3, 6, false, NULL, '2026-06-18 22:21:41.32037+00'),
 	('ed9fb632-7697-48e5-902c-2718e91517de', '1 Week Rental', 7, 12, false, NULL, '2026-06-18 22:21:41.32037+00'),
@@ -10329,127 +11712,127 @@ INSERT INTO "public"."PriceDurations" ("id", "name", "min_days", "max_days", "de
 -- Data for Name: Prices; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
--- INSERT INTO "public"."Prices" ("id", "price_duration_uuid", "bleacher_type_uuid", "event_type_uuid", "price_cents", "currency", "deleted", "created_by_user_uuid", "created_at") VALUES
--- 	('168feda0-8ebc-4b06-933a-c56e50d80f37', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 220000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('488084e3-c544-46e6-89d8-9907389c97e1', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 240000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('8b0a3e33-5fb7-47ea-b472-f61b7345cf53', 'ed9fb632-7697-48e5-902c-2718e91517de', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 260000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('9ebde8a0-b6ea-4707-b1a9-4f9821c08a68', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 370000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('6e1a49b6-5965-41bf-bcbf-304a86b4332e', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 530000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('890070d9-d41d-4bd0-9247-b86dbb10e878', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 290000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('574cfbad-83e7-4a0d-889a-b892001d1363', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 320000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('60ebc9e7-28ea-41b3-92c2-ae6e287bf7d3', 'ed9fb632-7697-48e5-902c-2718e91517de', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 350000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('0a5314d3-bc42-41e8-8e59-3ce018187934', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 480000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('49ba9ff3-5fa8-4e7a-82a2-e26c6c8ec856', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 700000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('2aebe9aa-ba81-4d9e-b40c-9ee0ef241ba3', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 350000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('9a6ab861-979a-4832-903d-c22e2e8f6f15', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 380000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('b2c4dad0-934e-438f-9fb2-3303b585e458', 'ed9fb632-7697-48e5-902c-2718e91517de', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 410000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('e01bcef7-855e-46c2-8e12-8ff4431a0c9e', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 620000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('3cacdb1a-6b02-41f7-ad70-8e5f6b86df8c', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 820000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('46327c7b-47cb-44ab-8716-895e2c189498', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 125000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('79605596-4559-42ad-8d4d-479d2171b3a0', '072aced8-546f-4620-bdd6-ccdfa1e95873', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 145000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('5a31ae37-d74b-4001-93d2-5982e01066fc', 'ed9fb632-7697-48e5-902c-2718e91517de', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 165000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('88996c1d-8266-4127-a92b-4175384f474e', '0b41678d-b92d-46e0-a37b-c30a0fab922d', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 250000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('093a6ac1-c78a-4a16-af88-936091d87b03', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 340000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('be245f33-9b9f-41ef-8769-0849df68feb2', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 160000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('38ce4ec1-f932-4feb-a0fa-715d46054a96', '072aced8-546f-4620-bdd6-ccdfa1e95873', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 185000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('c4d4c66e-0572-4169-9c04-3231390b0a0e', 'ed9fb632-7697-48e5-902c-2718e91517de', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 210000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('b1d2c474-41e1-4796-aee6-07154b451366', '0b41678d-b92d-46e0-a37b-c30a0fab922d', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 320000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('0833afa5-7452-46be-a1cb-a6bd9e9a150c', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 440000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('e58c50f3-592a-4b2c-888c-b8da4c594385', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 180000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('285fb985-08ae-48b1-8e6b-52210644cfe4', '072aced8-546f-4620-bdd6-ccdfa1e95873', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 210000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('ce13be78-3bd8-4cfe-81d7-eb5e142344d5', 'ed9fb632-7697-48e5-902c-2718e91517de', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 340000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('d9bcb0b0-a766-4828-b306-23e556b2108a', '0b41678d-b92d-46e0-a37b-c30a0fab922d', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 360000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('d6f5439f-8b70-44ea-9ac6-dcb457986767', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 500000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('5edd286c-2092-446e-af7f-5b9e8254476e', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 95000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('ad1ba647-9333-4c6a-8d90-d4ca8cd4de44', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 110000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('6a78e218-64dd-4d27-89ed-866ad370ae30', 'ed9fb632-7697-48e5-902c-2718e91517de', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 125000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('f622d6b0-9975-4be2-95ab-151c99c4a2f9', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 190000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('1491575b-1c31-472c-9f21-266dee22cc2d', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 260000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('81c6b694-19a9-4f3e-b032-a1006c6ec60c', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 125000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('27e993e8-bdeb-4a2d-a950-e25b30b89c60', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 145000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('b2d3c0f5-3425-4b3f-b490-b8996ff4efa5', 'ed9fb632-7697-48e5-902c-2718e91517de', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 170000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('142e8e29-29bf-4346-add5-c8fa63be292d', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 250000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('0eb38fe4-cd0a-4dce-bc11-f7e06b6b7e3a', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 340000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('af95f095-2b3a-45e6-9cdb-30f6bab5c33e', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 150000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('b6dce250-dbe5-4710-b885-153aa4156b6f', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 180000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('3559b269-afb8-40f8-8ed2-cdd05ca292e5', 'ed9fb632-7697-48e5-902c-2718e91517de', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 210000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('0114e2c2-b71e-453e-80b1-58f9ea5d57e1', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 310000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('63ee5f14-e20d-4fda-b6d7-e5492f241961', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 420000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('82c4c6b2-486a-4c9d-a1b6-99ada92ce234', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 30000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('1d68e1f8-8aed-4396-9bfa-3d2858784019', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 30000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('a72dc4a0-ac9b-4c1e-8a9a-8767040a4e89', 'ed9fb632-7697-48e5-902c-2718e91517de', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 40000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('24ae5af1-0b62-47e2-a037-7cdbfd36a47f', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 50000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('75d274e7-4b21-48be-8bdf-347a077fbc2b', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 60000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('9469bad0-143c-430d-bb24-7925ff5527d0', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 35000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('ed819c0c-9ca0-4489-a4ce-e1dbd54a2893', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 35000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('26076591-0642-4112-9e31-c4c400796297', 'ed9fb632-7697-48e5-902c-2718e91517de', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 45000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('9f211e56-4a6c-4674-a3fa-23a5b51c987d', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 55000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('36242583-f29b-484b-b046-215d44f10363', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 65000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('45a8c31e-45d8-4a4c-b460-c17e5de80624', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 40000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('91fc5f04-c06c-4b1a-b09f-e697ea368879', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 40000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('f59d9d04-c434-4de0-82ea-41f74a5be678', 'ed9fb632-7697-48e5-902c-2718e91517de', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 50000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('7fa97670-af27-4ef0-938a-1597af6a0c31', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 60000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('878e6f5d-b5bd-488f-b49f-7466b69e22db', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 70000, 'USD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('7e0db8c7-b96b-407f-83b0-8bd87cda8c6e', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 308000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('bbc91b74-91c8-4308-b098-c950c76e35c8', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 336000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('98363429-fde6-4098-9b48-3fd3b2fa4587', 'ed9fb632-7697-48e5-902c-2718e91517de', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 364000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('e928753e-0d7d-4c82-8714-7b4d9f63e207', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 518000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('3b1de6c2-a977-4d88-bd6d-02818261920d', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 741000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('1c71c19a-39cc-4f86-837d-e6f83f6a7090', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 406000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('c288fcd5-7706-4cc3-92ce-73b169b18caf', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 448000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('c814fa3b-4035-440e-8a23-38740e845d9d', 'ed9fb632-7697-48e5-902c-2718e91517de', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 490000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('a7811d02-7566-4534-8bd3-35c175f51177', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 672000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('b08d7555-2930-4be0-a1eb-be0b1518712b', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 979000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('3507d1a0-e051-4cd4-8087-038399138ad8', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 490000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('f22a228e-06ea-47f3-a83e-f2bdced0f365', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 532000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('42527a37-20f4-4a10-9df4-7891e04a5b88', 'ed9fb632-7697-48e5-902c-2718e91517de', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 574000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('9b26f549-8339-47b0-9bee-a01fda6a5797', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 867000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('a8b08be4-01a8-46ce-b056-102ba22ae928', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'ab9411fa-daea-4ad2-a64e-432c1dcb6bfb', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 1147000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('3be81bfe-f918-40ef-a317-d829a6d75d7c', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 175000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('91181c29-ac2f-48b9-98f8-91941688757a', '072aced8-546f-4620-bdd6-ccdfa1e95873', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 203000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('d25d7011-b5ad-41d0-97c6-5d50afbcc43b', 'ed9fb632-7697-48e5-902c-2718e91517de', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 231000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('dbbef93b-422f-4f27-8f49-9d521fe81c05', '0b41678d-b92d-46e0-a37b-c30a0fab922d', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 350000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('0c650f0a-fd09-48b6-aaaf-c27db23110f1', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 476000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('5ef4f0a5-0137-423b-b35d-d37d15fab332', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 224000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('ded522a3-3213-4af1-8903-e1b270461405', '072aced8-546f-4620-bdd6-ccdfa1e95873', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 259000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('8bdd046e-be75-4412-b2c0-2a8283db2e4f', 'ed9fb632-7697-48e5-902c-2718e91517de', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 294000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('eb71e9fb-f193-4e28-a4a4-49955ee28baf', '0b41678d-b92d-46e0-a37b-c30a0fab922d', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 448000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('c826f69f-0545-415f-ad02-f0a0d5cae81d', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 616000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('7f3cbde9-ee0c-49d9-8871-207f8f80b45b', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 252000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('051868dc-690b-44e4-9e8d-18db4dcbc0a8', '072aced8-546f-4620-bdd6-ccdfa1e95873', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 294000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('06cbdd96-e035-4be0-a7c6-b26c776f6d28', 'ed9fb632-7697-48e5-902c-2718e91517de', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 476000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('66c070d5-29ca-4729-949b-56e309ebe477', '0b41678d-b92d-46e0-a37b-c30a0fab922d', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 504000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('7347605c-1ab7-4824-9590-135fac3cb19a', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', '0e956e2c-602c-4428-a9c1-1ba11187e0ec', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 700000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('e9479e2a-2618-4123-aedd-d1ae762f393f', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 133000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('7b5db660-a4da-4baf-936d-13ed1100e5e1', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 154000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('e04f7d0c-4d91-40fc-8b10-dae737a1f7c0', 'ed9fb632-7697-48e5-902c-2718e91517de', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 175000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('2638c631-3c54-4fa8-ae8c-fb886242e4a2', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 266000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('2ceb150c-785b-4502-a7f8-a154791279b5', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 364000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('9017a8a5-c04e-4e83-b36a-ec7777cdfbf6', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 175000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('6ec97468-530b-47b5-bc6b-d0127acbe85e', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 203000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('d7827eb4-fd62-41cb-8cd7-9301293b5135', 'ed9fb632-7697-48e5-902c-2718e91517de', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 238000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('cd5c6692-0f2a-4952-b01e-aae294555d4d', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 350000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('504422bc-501c-48ac-a360-8145b4cc6610', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 476000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('20b17d5e-79f8-4b1f-b420-839951e737ec', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 210000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('1a28678f-7f11-4abd-a6f6-d1369f4d4a03', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 252000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('95e8e800-f32b-442d-a41d-2e9623130ecf', 'ed9fb632-7697-48e5-902c-2718e91517de', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 294000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('50027cab-8be4-40a6-8f13-6d201fe84051', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 434000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('15ce2e28-24c9-49d3-a540-ca53406c6de2', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'e6ac8488-57fa-40d7-979f-a7d5c23bae7b', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 588000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('0f765bcc-3b2a-4214-9867-f1da3115e65e', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 42000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('91ba1a86-66af-49b9-ad44-4b45ea155c38', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 42000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('859a1123-0b3a-482f-82c0-34d7dd4ecd23', 'ed9fb632-7697-48e5-902c-2718e91517de', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 56000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('c76b3580-0d89-48d6-b1c4-1959f32716fd', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 70000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('989e081c-80a6-480a-8eba-30b976d2760f', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'cee5e5a3-d72e-4c99-bbf6-d2f8420509b3', 84000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('2f157183-e41f-4203-96d6-208f152b0295', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 49000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('58312932-4d88-4ad1-bc8e-ec2894db4151', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 49000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('82708937-da07-4d33-8e0a-7859136627c1', 'ed9fb632-7697-48e5-902c-2718e91517de', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 63000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('59ac3afa-02c9-4760-a124-9940226fd1cf', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 77000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('6d744fbc-6925-4bea-855d-c5515f3adb9c', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', 'c88b9c09-648b-4b3d-9b97-34c3bed10ac0', 91000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('db1cb04a-a733-442b-bb5d-999582032a90', 'fbadff42-38e2-4aa0-99e2-27419f2bd53d', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 56000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('929efbad-9f6a-4568-8aca-b7a46ff78847', '072aced8-546f-4620-bdd6-ccdfa1e95873', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 56000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('7d6ed4d2-fc09-4ceb-b643-6411a9f20847', 'ed9fb632-7697-48e5-902c-2718e91517de', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 70000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('0a46fa78-0dd4-46bf-a0aa-bdd491a4afd4', '0b41678d-b92d-46e0-a37b-c30a0fab922d', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 84000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00'),
--- 	('f1cd6b13-b4e3-4d5f-a1ce-204b267fdfe4', '0b3ded7a-944c-4d58-afaa-b58dd4661ebf', 'fc8cde03-3d35-4364-9372-43afc2a3f33f', '2bc9bf02-dc78-48a4-90f5-9a15a8246980', 98000, 'CAD', false, NULL, '2026-06-18 22:21:41.32037+00');
+INSERT INTO "public"."Prices" ("id", "price_duration_uuid", "bleacher_type_uuid", "event_type_uuid", "price_cents", "currency", "deleted", "created_by_user_uuid", "created_at") VALUES
+	('0b8445f2-fb1c-497d-b854-ba67f0c3b484', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 220000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('a42f1534-d55c-4288-a58b-3a0456d56eb7', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 240000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('eea1737f-7e6a-46a4-a694-4c11b0c89a18', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 260000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('b43b5530-2a55-473d-86b2-f025abedd423', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 370000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('82c6c4e7-b7b8-4fa9-b609-33870c64f36c', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 530000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('c9a08eb4-6365-4af1-92d3-c28ca6fd1550', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '916e3658-126a-4892-a898-36aed833fe4f', 290000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('dc8fe743-fd74-4f58-862a-b916eb92f29c', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '916e3658-126a-4892-a898-36aed833fe4f', 320000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('852c1c31-3b28-4a38-87b6-7c267c984f67', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '916e3658-126a-4892-a898-36aed833fe4f', 350000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('cd98a361-1b9a-41db-85d3-1c614b20e947', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '916e3658-126a-4892-a898-36aed833fe4f', 480000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('56ac60ad-e0c8-4ef8-86ce-d093e85310b6', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '916e3658-126a-4892-a898-36aed833fe4f', 700000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('9588c093-f2a1-4478-96ff-2aacaf688bee', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 350000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('f84d0e7e-55d4-462c-bfe3-6cd2bb8660ab', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 380000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('5f230641-42ff-43c1-98ef-f6856f5f54c6', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 410000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('5e326b9b-a8cd-43ba-a6ce-0d40299a3d58', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 620000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('bcf27dbd-9f03-43c7-aacb-3ad7cda57d9e', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 820000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('c7f4e8d3-d24e-4582-b42f-b2ab79378f9e', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 125000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('509161e0-c9d0-46e1-93a9-a77c0e7cae01', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 145000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('14fdf6a0-00a9-44d2-b5ca-2663737b9734', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 165000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('a15d914d-3622-442e-aabf-2cce2be600f5', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 250000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('4a5672d8-2968-47d1-a1fc-cea6f34955be', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 340000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('b73be794-26d0-4d80-882e-cbc4ec25582b', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '916e3658-126a-4892-a898-36aed833fe4f', 160000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('6da24913-1c34-4e27-b2bb-abb4e929a24d', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '916e3658-126a-4892-a898-36aed833fe4f', 185000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('06a09276-b98d-4f91-9eba-497f0b23840f', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '916e3658-126a-4892-a898-36aed833fe4f', 210000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('29c6cd5f-e637-4a35-8f79-71c1fef7d953', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '916e3658-126a-4892-a898-36aed833fe4f', 320000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('d704a95f-5795-4c87-84ea-429de1ab19c8', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '916e3658-126a-4892-a898-36aed833fe4f', 440000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('c8a6ffe2-ee95-4a90-9891-6d53c9c70357', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'e5715519-fb57-4810-a78d-4c0d780f0b74', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 180000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('8d4cf00b-951e-447e-8e97-e831f1dfeaf8', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'e5715519-fb57-4810-a78d-4c0d780f0b74', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 210000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('02a91b05-1dba-4701-99e5-d60c7ce39845', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'e5715519-fb57-4810-a78d-4c0d780f0b74', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 340000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('4ff72420-41f1-4fd6-b02d-acab5609b179', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 360000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('ea60e4a7-916e-4840-b690-0e53098e91b1', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'e5715519-fb57-4810-a78d-4c0d780f0b74', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 500000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('6587b477-f51d-4bfe-9389-09d0a9e9a853', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 95000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('edf35f0c-b7c7-4157-83b1-db8a1f6c934e', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 110000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('eb725e46-c35b-48cb-bdab-f6279525b260', '14b5061d-9eeb-4d5e-b08d-067931fd5947', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 125000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('d8a686a8-a8b7-4de7-9d84-f63bc3765409', '7b216f95-e770-435b-bf0e-0db431c3ed0d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 190000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('8fabb8cd-d0f2-49c5-b262-ad82a3c75129', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 260000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('75093b3d-ee8e-4595-8372-37d60b096f37', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '916e3658-126a-4892-a898-36aed833fe4f', 125000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('40a78e4f-1b0b-4280-8275-426ff49e16fb', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '916e3658-126a-4892-a898-36aed833fe4f', 145000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('8b664a3c-c7c9-46ae-8782-a0517ba6e59f', '14b5061d-9eeb-4d5e-b08d-067931fd5947', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '916e3658-126a-4892-a898-36aed833fe4f', 170000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('678f3099-1909-47bd-ad96-0dbb4cb7dafb', '7b216f95-e770-435b-bf0e-0db431c3ed0d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '916e3658-126a-4892-a898-36aed833fe4f', 250000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('ee27cd6c-7c8c-42af-a7c5-5e02ba9cf718', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '916e3658-126a-4892-a898-36aed833fe4f', 340000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('dc85dee6-3c13-4005-87ea-a8cb0396c2d8', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 150000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('1bdec70a-dad8-45ce-b66a-3de855c23d53', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 180000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('1f940c9e-daf8-45f1-8d45-863cabaf7c08', '14b5061d-9eeb-4d5e-b08d-067931fd5947', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 210000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('fce1c75e-d06f-4b87-b577-7d85558a9ef2', '7b216f95-e770-435b-bf0e-0db431c3ed0d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 310000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('6ffbb103-a631-46cd-8d64-2b3ba5e55661', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 420000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('da5f3c32-5686-434e-aa1f-e57a6fa41a7c', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 30000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('7c1311c6-5692-4cfc-ae54-9146c91b2ef4', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 30000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('f76b2c37-cf1d-4428-9254-40b1f63eef05', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 40000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('6d6db164-c34f-4e56-b9b9-0354306a1031', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 50000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('2f43da40-498e-4e64-a100-78f7f856bc42', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 60000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('e2d5d969-1242-430d-895a-62071ebe0739', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '916e3658-126a-4892-a898-36aed833fe4f', 35000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('a8012f4c-2116-4f6c-b179-00885b93fb66', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '916e3658-126a-4892-a898-36aed833fe4f', 35000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('70e054af-bf75-4eed-ba97-c46b51e87173', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '916e3658-126a-4892-a898-36aed833fe4f', 45000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('0785b2d3-7c86-4507-8370-67965d558ae3', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '916e3658-126a-4892-a898-36aed833fe4f', 55000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('27368add-dc02-4807-81df-9f6ef2b5e61f', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '916e3658-126a-4892-a898-36aed833fe4f', 65000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('aebd4764-0a48-4fae-a031-e2fb4999f776', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 40000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('2ed5f039-b605-47ad-ab46-a122843947ca', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 40000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('9b89df0a-0665-413d-a1ea-7787be592d32', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 50000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('4b24182d-c7de-4eb5-ad45-d34f378d4e99', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 60000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('cf90259a-6cca-47ad-bea5-4576d27e74b9', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 70000, 'USD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('cf32be00-6018-4798-8751-3060184e245b', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 308000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('2f860425-1a25-4e95-8e0c-eea0e1e6aaaf', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 336000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('85d6cb9a-2ca4-4566-b130-d0bb9bcbc280', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 364000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('da4d6954-d788-4ddc-b9af-deb2e239c3fe', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 518000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('a29fd650-c2f3-4e8c-98a3-ac9cf0276a11', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 741000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('4c8927b7-3685-4f60-89b2-1891cf593b84', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '916e3658-126a-4892-a898-36aed833fe4f', 406000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('064a6588-8ba1-4094-b429-c34912525a8e', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '916e3658-126a-4892-a898-36aed833fe4f', 448000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('88e3c696-85e0-4402-8a9c-6ef383ce2168', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '916e3658-126a-4892-a898-36aed833fe4f', 490000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('643d5c98-c989-48c1-98d0-4af157fe2561', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '916e3658-126a-4892-a898-36aed833fe4f', 672000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('3f7487ec-f576-4622-b4c3-2c878ec2268c', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', '916e3658-126a-4892-a898-36aed833fe4f', 979000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('c30940e5-d0a0-4ca3-b608-be6f95864a39', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 490000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('a0bc2990-ec99-4f65-aea4-27a70772f06c', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 532000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('0e2c51d9-7514-48ca-ad79-0f4683636fd1', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 574000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('6030b6ae-e9b4-4991-98dc-8b80f41922d2', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 867000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('25c394f0-9476-4191-9108-dfac6743153a', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'f9f48670-ce14-4bb5-89d4-6e06a4396a96', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 1147000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('18c397e7-9282-4681-9366-c530210f4f89', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 175000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('3ffa0f25-f8e0-4801-9c93-b6cb1a42ade5', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 203000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('b126464a-728d-4b03-8065-14ab44505ee1', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 231000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('f565af59-cb19-4e86-8c67-0ecf6b0f71ca', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 350000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('251b0a6b-6170-4a3e-89a2-d65030a7811b', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 476000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('25d44a1a-7a94-463a-a9ad-caa1b425276e', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '916e3658-126a-4892-a898-36aed833fe4f', 224000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('5a5a9c8d-528a-4e54-b037-b06dfd270fc9', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '916e3658-126a-4892-a898-36aed833fe4f', 259000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('7a880059-d6f2-4c28-9af8-4fb9f5a0ef56', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '916e3658-126a-4892-a898-36aed833fe4f', 294000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('4c1ce04e-6cfa-4fe8-8d1a-19f864f8d3a9', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '916e3658-126a-4892-a898-36aed833fe4f', 448000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('f4c3f7d8-c13c-4be6-bba0-8737948ea015', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'e5715519-fb57-4810-a78d-4c0d780f0b74', '916e3658-126a-4892-a898-36aed833fe4f', 616000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('fdf9aa11-ba0a-47fe-af98-74d22f1694ab', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'e5715519-fb57-4810-a78d-4c0d780f0b74', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 252000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('416ba2cd-f904-437d-8b34-a9805cea0238', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'e5715519-fb57-4810-a78d-4c0d780f0b74', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 294000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('7a310cc5-76df-41e7-aa96-befc376278fd', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'e5715519-fb57-4810-a78d-4c0d780f0b74', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 476000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('e616872a-a61f-4e21-ab37-577724070e3c', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'e5715519-fb57-4810-a78d-4c0d780f0b74', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 504000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('51cdca54-58b3-41c1-8f1a-9fe447ef8939', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'e5715519-fb57-4810-a78d-4c0d780f0b74', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 700000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('04860a7e-66a5-4a49-9d9f-59364149171c', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 133000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('c6b6cdc1-1e46-4c48-b5d8-85a4a8a7f635', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 154000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('b47234c3-3094-473c-b847-9e47f4e2bcf2', '14b5061d-9eeb-4d5e-b08d-067931fd5947', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 175000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('05347254-49b0-4ad4-84db-6c8c61cce86f', '7b216f95-e770-435b-bf0e-0db431c3ed0d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 266000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('12d3aaf4-bc10-426a-a205-97128874b233', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 364000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('957c604d-c5f9-4889-9888-90142f5edeb7', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '916e3658-126a-4892-a898-36aed833fe4f', 175000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('9c7692b4-8d7a-46d6-b8bd-e4131f19fb21', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '916e3658-126a-4892-a898-36aed833fe4f', 203000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('118016ca-aa34-4a90-9bec-e7b44bf67a80', '14b5061d-9eeb-4d5e-b08d-067931fd5947', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '916e3658-126a-4892-a898-36aed833fe4f', 238000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('d259f3c2-e48d-4fa6-8871-0776488b5c15', '7b216f95-e770-435b-bf0e-0db431c3ed0d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '916e3658-126a-4892-a898-36aed833fe4f', 350000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('2c571217-cd8c-427d-9bef-9284a9626533', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', '916e3658-126a-4892-a898-36aed833fe4f', 476000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('548f5770-8a2e-43d2-a116-48acf84db32b', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 210000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('91c54857-7bf1-4af0-85a0-100201ffe4e3', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 252000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('2b20609b-f3e9-40a1-8944-99b7bc5555b2', '14b5061d-9eeb-4d5e-b08d-067931fd5947', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 294000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('21f93eb2-c14e-48b0-b37e-7b13adede3bc', '7b216f95-e770-435b-bf0e-0db431c3ed0d', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 434000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('15d8d9c3-8394-442a-a470-8107100f0e85', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', '0a21c4d5-9b12-405d-b1b5-6dfda2abdb1e', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 588000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('7b51879d-2687-46ff-b7f6-e3acbf076955', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 42000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('e7b454b4-df68-427e-8f5f-eb7217c745bf', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 42000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('5e3c6008-e105-4c66-9436-1bf6a4dcef83', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 56000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('71d73b4a-bbf8-4c75-b63d-11328fadd6c5', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 70000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('847c65a6-a4f8-40f7-9f7e-a26653b0643c', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '3fd95e18-32b0-4f51-a2dc-fc887c17f9f3', 84000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('ca084759-c494-4ea8-9bce-12856a4401c4', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '916e3658-126a-4892-a898-36aed833fe4f', 49000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('7ce02042-035d-437a-9904-e55bcbd6f16e', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '916e3658-126a-4892-a898-36aed833fe4f', 49000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('fe20a3aa-ff7b-478d-b810-2bd0daadb49d', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '916e3658-126a-4892-a898-36aed833fe4f', 63000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('43ef40ec-e348-40ac-a65a-a4db049df014', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '916e3658-126a-4892-a898-36aed833fe4f', 77000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('7b1f8d1a-8f5c-40ca-a321-d9cb1ddb904a', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', '916e3658-126a-4892-a898-36aed833fe4f', 91000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('107a7587-d4a6-4869-9c60-df54eb656863', 'b34bd8bd-f503-4f48-825f-1131b5fe59b8', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 56000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('5e388b55-6d3c-4e5c-a9cc-5216da452478', '551487eb-3d34-4cce-a105-c6d4d7d4cdac', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 56000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('0d9e80b4-3804-4115-814e-5783b409aeeb', '14b5061d-9eeb-4d5e-b08d-067931fd5947', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 70000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('678235e2-de75-4c34-be81-40e744a7e4b8', '7b216f95-e770-435b-bf0e-0db431c3ed0d', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 84000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00'),
+	('35b6f8bf-b9e2-416e-a576-13808f8f60f9', '8c93ddfe-115c-4e90-bdb5-0884ba9dfed5', 'df04e56d-a4d8-46af-93d4-a3130b64fa09', 'f779e1e5-f60c-4cdb-b0b7-1c98b526b136', 98000, 'CAD', false, NULL, '2026-07-30 03:16:59.744691+00');
 
 
 --
@@ -11859,6 +13242,12 @@ INSERT INTO "public"."ScorecardTargets" ("id", "created_at", "updated_at", "acco
 
 
 --
+-- Data for Name: SubrentalEvents; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+
+
+--
 -- Data for Name: Tasks; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -12077,7 +13466,8 @@ INSERT INTO "public"."UserAlerts" ("id", "user_uuid", "alert_uuid", "dismissed",
 	('b8b9f2f9-db2c-48b7-86d1-658d5cac09ed', 'fae8f510-96d3-4437-b184-45be5c4b7007', 'cf314862-4815-43ec-8698-3a6426203a36', false, NULL, '2026-06-04 13:33:51.083463+00'),
 	('f54537d0-27ed-4c02-b86a-e5241c7c62aa', '6b080032-c889-4ce5-86e0-5a564a4d97f7', '2e73a814-8713-48b0-8db3-8192acd0cf14', false, NULL, '2026-06-04 16:23:08.784436+00'),
 	('f7599a5c-3f3c-48b1-8eca-7c23e4555e6c', '5847580c-471a-481e-92f7-582e7441eff4', '2e73a814-8713-48b0-8db3-8192acd0cf14', false, NULL, '2026-06-04 16:23:08.784436+00'),
-	('bb53e9ec-8a08-4289-a28a-0f7e48593372', '5847580c-471a-481e-92f7-582e7441eff4', '15bfb17e-7dfd-4458-83e4-2635835c966f', false, NULL, '2026-06-04 18:11:00.241698+00');
+	('bb53e9ec-8a08-4289-a28a-0f7e48593372', '5847580c-471a-481e-92f7-582e7441eff4', '15bfb17e-7dfd-4458-83e4-2635835c966f', false, NULL, '2026-06-04 18:11:00.241698+00'),
+	('a9339f48-3d58-4b53-b690-b1f8668cd17c', '9bddb34c-d84e-4d11-852a-27f16de08379', 'cfb7d880-a5b7-4546-a925-c5dfac6505d6', false, NULL, '2026-07-30 03:31:55.960386+00');
 
 
 --
@@ -12351,6 +13741,9 @@ INSERT INTO "public"."WorkTrackerGroups" ("id", "created_at", "week_start", "wee
 --
 
 INSERT INTO "public"."WorkTrackerTypes" ("id", "created_at", "display_name", "sort_order", "is_deleted") VALUES
+	('642f6ff8-0ec7-4e24-9945-da06d7a8040e', '2026-07-30 03:16:59.390806+00', 'Trip', 1, false),
+	('5f751c35-3150-4d4b-bcff-0893ba5f5fbb', '2026-07-30 03:16:59.390806+00', 'Repair/Maintenance', 2, false),
+	('d98a8c14-6d7b-43d1-a434-17df20b76781', '2026-07-30 03:16:59.390806+00', 'Cleaning', 3, false),
 	('cc7310ee-ed58-4925-a318-f7c01f2c1bc9', '2026-06-18 22:21:40.90899+00', 'Trip', 1, false),
 	('980d4526-02df-4df0-880b-4a321fd2884a', '2026-06-18 22:21:40.90899+00', 'Repair/Maintenance', 2, false),
 	('6a072f96-7963-4e00-8237-1af8997b45ac', '2026-06-18 22:21:40.90899+00', 'Cleaning', 3, false),
@@ -13694,7 +15087,13 @@ INSERT INTO "storage"."objects" ("id", "bucket_id", "name", "owner", "created_at
 	('6cc6d097-55d0-4028-b1d5-c331cce8fe54', 'zone-photos', 'baf2edb3-7a24-4269-86d7-25801941509d_1781822451924.png', NULL, '2026-06-18 22:40:52.015208+00', '2026-06-18 22:40:52.015208+00', '2026-06-18 22:40:52.015208+00', '{"eTag": "\"30145987b9c1e969fc7c9a176d3ba001\"", "size": 146091, "mimetype": "image/png", "cacheControl": "max-age=3600", "lastModified": "2026-06-18T22:40:52.011Z", "contentLength": 146091, "httpStatusCode": 200}', 'b80bbe4d-90c0-4328-a098-119da13fb032', 'user_3COnMJPaCrpWMNet2dnreN6Hdko', '{}'),
 	('cb4dd57e-c982-4958-8318-00bc0f1d2037', 'zone-photos', 'fd766707-2e02-4800-b70f-58de88724dc2_1781822509044.png', NULL, '2026-06-18 22:41:49.15573+00', '2026-06-18 22:41:49.15573+00', '2026-06-18 22:41:49.15573+00', '{"eTag": "\"0877f96d12efce4ddb0e1f948e4c8f0d\"", "size": 102254, "mimetype": "image/png", "cacheControl": "max-age=3600", "lastModified": "2026-06-18T22:41:49.147Z", "contentLength": 102254, "httpStatusCode": 200}', '3c0838c6-e6fd-4a95-8693-4f1003339ddb', 'user_3COnMJPaCrpWMNet2dnreN6Hdko', '{}'),
 	('61441022-2c23-40d9-9032-07e7d53bbad3', 'zone-photos', '84db7c3d-5536-4129-b403-4f8e6a6c0fc9_1781822530585.png', NULL, '2026-06-18 22:42:10.673959+00', '2026-06-18 22:42:10.673959+00', '2026-06-18 22:42:10.673959+00', '{"eTag": "\"f3b3d39427abbbca327b15ded310b68c\"", "size": 85704, "mimetype": "image/png", "cacheControl": "max-age=3600", "lastModified": "2026-06-18T22:42:10.661Z", "contentLength": 85704, "httpStatusCode": 200}', 'e1315cbf-7947-453d-a9f5-0410177cca95', 'user_3COnMJPaCrpWMNet2dnreN6Hdko', '{}'),
-	('f52c597a-4b05-4948-a7e7-fee78c8a4ec3', 'zone-photos', '5aff9ec2-a4e6-4764-af4c-7f871e641071_1781822589057.png', NULL, '2026-06-18 22:43:09.209211+00', '2026-06-18 22:43:09.209211+00', '2026-06-18 22:43:09.209211+00', '{"eTag": "\"46471d4fbb016a71ba5a7ed1fa4ae152\"", "size": 94078, "mimetype": "image/png", "cacheControl": "max-age=3600", "lastModified": "2026-06-18T22:43:09.202Z", "contentLength": 94078, "httpStatusCode": 200}', '1150b3b5-7c64-4224-8a3a-e466703847ef', 'user_3COnMJPaCrpWMNet2dnreN6Hdko', '{}');
+	('f52c597a-4b05-4948-a7e7-fee78c8a4ec3', 'zone-photos', '5aff9ec2-a4e6-4764-af4c-7f871e641071_1781822589057.png', NULL, '2026-06-18 22:43:09.209211+00', '2026-06-18 22:43:09.209211+00', '2026-06-18 22:43:09.209211+00', '{"eTag": "\"46471d4fbb016a71ba5a7ed1fa4ae152\"", "size": 94078, "mimetype": "image/png", "cacheControl": "max-age=3600", "lastModified": "2026-06-18T22:43:09.202Z", "contentLength": 94078, "httpStatusCode": 200}', '1150b3b5-7c64-4224-8a3a-e466703847ef', 'user_3COnMJPaCrpWMNet2dnreN6Hdko', '{}'),
+	('408b9d60-dc87-47f9-96ed-53fda578db1f', 'event-files', '96a3683b-501f-475d-b8a5-8664b585d7db/sent-quote-1785382316440.pdf', NULL, '2026-07-30 03:31:56.583477+00', '2026-07-30 03:31:56.583477+00', '2026-07-30 03:31:56.583477+00', '{"eTag": "\"29d06063ca35e5770ef0ef17002b19b1\"", "size": 5634, "mimetype": "application/pdf", "cacheControl": "max-age=3600", "lastModified": "2026-07-30T03:31:56.577Z", "contentLength": 5634, "httpStatusCode": 200}', '78dc7a56-2f3a-448d-83b0-fb50bd1e0740', NULL, '{}'),
+	('ea5bb3c1-fd16-44f6-97e8-68190deec54a', 'contracts', '96a3683b-501f-475d-b8a5-8664b585d7db/341e2290-4a54-45b0-b762-4a36dda18c39.pdf', NULL, '2026-07-30 03:32:28.000967+00', '2026-07-30 03:32:28.000967+00', '2026-07-30 03:32:28.000967+00', '{"eTag": "\"d9d2f79be50ef9e8385c1b9339d99d80\"", "size": 8932, "mimetype": "application/pdf", "cacheControl": "max-age=3600", "lastModified": "2026-07-30T03:32:27.989Z", "contentLength": 8932, "httpStatusCode": 200}', '5a177af5-4e39-482a-828e-4510bbeb42f8', NULL, '{}'),
+	('9fbc78f4-16e3-42bf-aeaf-79862fdc7cb4', 'contracts', '96a3683b-501f-475d-b8a5-8664b585d7db/b8c2a756-2ef9-4a82-b732-1f760704f7fe.pdf', NULL, '2026-07-30 03:39:24.296343+00', '2026-07-30 03:39:24.296343+00', '2026-07-30 03:39:24.296343+00', '{"eTag": "\"bc605b3a0bfb59f559816d315bd3f840\"", "size": 8932, "mimetype": "application/pdf", "cacheControl": "max-age=3600", "lastModified": "2026-07-30T03:39:24.292Z", "contentLength": 8932, "httpStatusCode": 200}', '3a28196d-937e-4b75-b524-84d2a3245120', NULL, '{}'),
+	('75c2c8f2-d98c-42df-ada9-04b3b5e995a3', 'contracts', '96a3683b-501f-475d-b8a5-8664b585d7db/91b76dc9-e7b7-4a01-8d79-233b4cdb9c10.pdf', NULL, '2026-07-30 11:17:55.048273+00', '2026-07-30 11:17:55.048273+00', '2026-07-30 11:17:55.048273+00', '{"eTag": "\"18ae2a746f33b9adee046a58661b3c1d\"", "size": 8932, "mimetype": "application/pdf", "cacheControl": "max-age=3600", "lastModified": "2026-07-30T11:17:55.037Z", "contentLength": 8932, "httpStatusCode": 200}', 'ced3d7f9-85c3-4ad9-b836-186395c177a9', NULL, '{}'),
+	('d01f7816-b10d-4e19-946e-26de56e207f0', 'contracts', '96a3683b-501f-475d-b8a5-8664b585d7db/ae9566d8-d50c-4a92-b1d6-29541ebe2960.pdf', NULL, '2026-07-30 11:34:30.644199+00', '2026-07-30 11:34:30.644199+00', '2026-07-30 11:34:30.644199+00', '{"eTag": "\"2a9e9fe50de7baa92a1fc31cdb08f4e8\"", "size": 8932, "mimetype": "application/pdf", "cacheControl": "max-age=3600", "lastModified": "2026-07-30T11:34:30.639Z", "contentLength": 8932, "httpStatusCode": 200}', 'c68fd219-f2c2-43f7-bd01-3ffd612906be', NULL, '{}'),
+	('48a3619b-720c-45c3-bf13-494fcec9e569', 'event-files', '96a3683b-501f-475d-b8a5-8664b585d7db/sent-quote-1785415067513.pdf', NULL, '2026-07-30 12:37:47.689394+00', '2026-07-30 12:37:47.689394+00', '2026-07-30 12:37:47.689394+00', '{"eTag": "\"0105568b54fdd0a7ec0e53e990bc8d33\"", "size": 8932, "mimetype": "application/pdf", "cacheControl": "max-age=3600", "lastModified": "2026-07-30T12:37:47.681Z", "contentLength": 8932, "httpStatusCode": 200}', 'c9b1db14-e4d0-47c4-bba4-360a59dadffa', NULL, '{}');
 
 
 --
@@ -13739,7 +15138,7 @@ SELECT pg_catalog.setval('"supabase_functions"."hooks_id_seq"', 1, false);
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict goydOfdEVcjXeixCMDnIS1Tenfmhd9E0Lh76agkEohE2gbc3gUsIkadJJeb3Rzx
+-- \unrestrict AjY6UsfIIuTGqY0V2Xzt8T3s0MuGipgLF9grQNoTtw1F09J4gzcn3gAyKSpTS1O
 
 RESET ALL;
 

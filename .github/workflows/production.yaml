@@ -16,11 +16,12 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ secrets.PROD_PROJECT_ID }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v2
         with:
           version: latest
 
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
       - run: supabase db push
+      - run: supabase seed buckets --linked --yes

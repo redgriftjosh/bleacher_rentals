@@ -1,12 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertTriangle } from "lucide-react";
 import { Dropdown } from "@/components/DropDown";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import {
@@ -17,9 +13,11 @@ import {
   SalesOfficeRow,
   SalesOfficeAddress,
 } from "../db/salesOfficesDb";
+import { useStripeConnections } from "@/features/stripe-integration/hooks/useStripeConnections";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
+import { AutoEmailsForSalesOfficeBtn } from "./AutoEmailsForSalesOfficeBtn";
 
 type Props = {
   open: boolean;
@@ -34,11 +32,18 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
 
   const [name, setName] = useState("");
   const [quickbookUuid, setQuickbookUuid] = useState<string | null>(null);
+  const [stripeConnectionUuid, setStripeConnectionUuid] = useState<string | null>(null);
   const [address, setAddress] = useState<SalesOfficeAddress | null>(null);
   const [saving, setSaving] = useState(false);
 
   const [qboOptions, setQboOptions] = useState<QboConnectionOption[]>([]);
   const [loadingQbo, setLoadingQbo] = useState(false);
+
+  // Active Stripe connections come reactively from PowerSync (unlike QBO, which
+  // isn't synced and is fetched above).
+  const { connections: stripeConnections, isLoading: loadingStripe } = useStripeConnections({
+    showDeleted: false,
+  });
 
   const isEditing = !!editing;
 
@@ -56,6 +61,7 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
     if (editing) {
       setName(editing.name ?? "");
       setQuickbookUuid(editing.quickbook_uuid ?? null);
+      setStripeConnectionUuid(editing.stripe_connection_uuid ?? null);
       setAddress(
         editing.address_street
           ? {
@@ -69,6 +75,7 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
     } else {
       setName("");
       setQuickbookUuid(null);
+      setStripeConnectionUuid(null);
       setAddress(null);
     }
   }, [open, editing]);
@@ -78,6 +85,28 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
     value: q.id,
   }));
 
+  // Currency is inherited from the chosen QuickBooks connection.
+  const selectedCurrency = quickbookUuid
+    ? (qboOptions.find((q) => q.id === quickbookUuid)?.currency ?? null)
+    : null;
+
+  // What's still missing for the office to be fully set up.
+  const missing = [
+    !address?.street && "address",
+    !quickbookUuid && "QuickBooks account",
+    !stripeConnectionUuid && "Stripe account",
+  ].filter(Boolean) as string[];
+
+  // "" is the empty/None choice (Stripe connection is optional). Business name
+  // falls back to the account id, then a placeholder, when unnamed.
+  const stripeDropdownOptions = [
+    { label: "— None —", value: "" },
+    ...stripeConnections.map((c) => ({
+      label: c.businessName ?? c.stripeAccountId ?? "Unnamed connection",
+      value: c.id,
+    })),
+  ];
+
   const resetAndClose = () => {
     onClose();
   };
@@ -86,7 +115,7 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
     if (!name.trim() || !quickbookUuid) return;
     setSaving(true);
     try {
-      const payload = { name: name.trim(), quickbookUuid, address };
+      const payload = { name: name.trim(), quickbookUuid, stripeConnectionUuid, address };
       if (isEditing && editing) {
         await updateSalesOffice(editing.id, editing.address_uuid, payload);
         createSuccessToast([`Sales office "${name}" updated.`]);
@@ -160,8 +189,42 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
               placeholder={loadingQbo ? "Loading..." : "Select QuickBooks..."}
               disabled={loadingQbo}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Currency:{" "}
+              <span className="font-medium text-gray-700">
+                {selectedCurrency ?? "— (set once QuickBooks is connected)"}
+              </span>
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Stripe Connection
+            </label>
+            <Dropdown
+              options={stripeDropdownOptions}
+              selected={stripeConnectionUuid ?? ""}
+              onSelect={(v) => setStripeConnectionUuid(v || null)}
+              placeholder={loadingStripe ? "Loading..." : "Select Stripe (optional)..."}
+              disabled={loadingStripe}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Automated Emails</label>
+            <AutoEmailsForSalesOfficeBtn officeId={editing?.id ?? null} />
           </div>
         </div>
+
+        {name.trim() && missing.length > 0 && (
+          <div className="mt-4 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+            <span>
+              Not fully set up — still needs: {missing.join(", ")}. The office can be saved now and
+              completed later.
+            </span>
+          </div>
+        )}
 
         <div className="flex justify-between mt-4">
           <button

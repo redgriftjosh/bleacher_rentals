@@ -14,7 +14,10 @@ type ContractData = {
   } | null;
 };
 
-export function formatSignedAt(iso: string): string {
+// `timeZone` defaults to the viewer's local zone (a signature timestamp is shown
+// in the reader's own time). It's parameterized only so tests can pin a zone and
+// assert the UTC→local conversion deterministically.
+export function formatSignedAt(iso: string, timeZone?: string): string {
   const d = new Date(iso);
   const options: Intl.DateTimeFormatOptions = {
     month: "short",
@@ -23,6 +26,7 @@ export function formatSignedAt(iso: string): string {
     hour: "numeric",
     minute: "2-digit",
     timeZoneName: "short",
+    ...(timeZone ? { timeZone } : {}),
   };
   return d.toLocaleString("en-US", options);
 }

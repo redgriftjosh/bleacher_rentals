@@ -1,0 +1,360 @@
+<!--
+  Quote-sent email template for Bleacher Rentals.
+
+  Sent to the client when an account manager manually sends them their quote
+  from the admin app. The full quote detail and line-item breakdown is in the
+  attached PDF; this email is the friendly cover note with a View Quote CTA.
+
+  Uses double-curly variable tokens that the app fills in at send time (see
+  src/features/automaticEmails/variables.ts). Available here:
+    {{firstName}} {{customerName}} {{eventName}} {{quoteNumber}}
+    {{quoteLink}} {{total}} {{eventStartDate}} {{accountManager}} {{companyName}}
+
+  Table-based layout + inline styles so it renders in Gmail/Outlook.
+-->
+<div style="background-color: #dbe5ea; padding: 0; margin: 0">
+  <!-- Header: brand + View Quote button -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="
+      border-spacing: 0;
+      width: 100%;
+      background-color: #ffffff;
+      border-bottom: 1px solid #d7dbe0;
+    "
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  style="
+                    text-align: left;
+                    vertical-align: middle;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #3e484d;
+                  "
+                >
+                  {{companyName}}
+                </td>
+                <td style="text-align: right; vertical-align: middle">
+                  <a
+                    href="{{quoteLink}}"
+                    target="_blank"
+                    style="
+                      display: inline-block;
+                      background-color: #405daa;
+                      color: #ffffff;
+                      font-family: Helvetica, Arial, sans-serif;
+                      border-radius: 4px;
+                      font-weight: bold;
+                      font-size: 14px;
+                      padding: 8px 16px;
+                      text-decoration: none;
+                    "
+                  >
+                    View Quote
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Title -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 32px 16px 16px; text-align: center">
+          <h1
+            style="
+              margin: 0;
+              padding: 0;
+              font-family: Helvetica, Arial, sans-serif;
+              font-weight: bold;
+              color: #3e484d;
+              font-size: 32px;
+              line-height: 42px;
+            "
+          >
+            You Have a New Quote
+          </h1>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Body copy -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  style="
+                    padding: 0 16px;
+                    color: #616161;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 16px;
+                    line-height: 23px;
+                    text-align: left;
+                  "
+                >
+                  <div>
+                    Hi {{firstName}}, {{companyName}} has sent you a quote for your upcoming event.
+                    Please review the details below and click the button to view your full quote
+                    online.
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    A PDF copy of the quote is also attached to this email for your records.
+                  </div>
+                  <div><br /></div>
+                  <div>
+                    If you have any questions, please don't hesitate to reach out — we're happy to
+                    help.
+                  </div>
+                  <br /><br />
+                  <div>Sincerely,<br /><br />{{accountManager}}<br />{{companyName}}</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- View Quote button (centered) -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 0 16px 8px; text-align: center">
+          <a
+            href="{{quoteLink}}"
+            target="_blank"
+            style="
+              display: inline-block;
+              background-color: #405daa;
+              color: #ffffff;
+              font-family: Helvetica, Arial, sans-serif;
+              border-radius: 4px;
+              font-weight: bold;
+              font-size: 14px;
+              padding: 10px 20px;
+              text-decoration: none;
+            "
+          >
+            View Quote
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Details: Event + Invoice summary -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <table
+            width="100%"
+            border="0"
+            cellspacing="0"
+            cellpadding="0"
+            style="border-spacing: 0; max-width: 600px; margin: 0 auto"
+          >
+            <tbody>
+              <tr>
+                <td
+                  width="50%"
+                  style="
+                    vertical-align: top;
+                    padding: 0 16px;
+                    text-align: left;
+                    font-family: Helvetica, Arial, sans-serif;
+                  "
+                >
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Event
+                  </h6>
+                  <p style="color: #616161; font-size: 14px; line-height: 20px; margin: 0 0 16px">
+                    {{eventName}}<br />
+                    {{eventStartDate}}
+                  </p>
+
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Customer
+                  </h6>
+                  <p style="color: #616161; font-size: 14px; line-height: 20px; margin: 0 0 16px">
+                    {{customerName}}
+                  </p>
+                </td>
+
+                <td
+                  width="50%"
+                  style="
+                    vertical-align: top;
+                    padding: 0 16px;
+                    text-align: left;
+                    font-family: Helvetica, Arial, sans-serif;
+                  "
+                >
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Quote
+                  </h6>
+                  <p style="color: #616161; font-size: 14px; line-height: 20px; margin: 0 0 16px">
+                    {{quoteNumber}}
+                  </p>
+
+                  <h6
+                    style="
+                      margin: 20px 0 8px;
+                      padding: 0;
+                      font-weight: bold;
+                      color: #3e484d;
+                      font-size: 13px;
+                      line-height: 20px;
+                    "
+                  >
+                    Total
+                  </h6>
+                  <p
+                    style="
+                      color: #3e484d;
+                      font-size: 20px;
+                      font-weight: bold;
+                      line-height: 20px;
+                      margin: 0 0 16px;
+                    "
+                  >
+                    {{total}}
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Divider -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 0 32px">
+          <hr style="border: none; border-top: 1px solid #e0e4e8; margin: 0" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Footer -->
+  <table
+    width="100%"
+    border="0"
+    cellspacing="0"
+    cellpadding="0"
+    style="border-spacing: 0; width: 100%; background-color: #ffffff"
+  >
+    <tbody>
+      <tr>
+        <td style="padding: 16px; text-align: center">
+          <p
+            style="
+              color: #9ca3af;
+              font-family: Helvetica, Arial, sans-serif;
+              font-size: 12px;
+              line-height: 18px;
+              margin: 0;
+            "
+          >
+            {{companyName}} &middot; {{quoteNumber}}
+          </p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

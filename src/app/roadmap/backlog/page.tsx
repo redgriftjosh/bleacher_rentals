@@ -6,7 +6,7 @@ import { Plus, Calendar } from "lucide-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useBacklogTasks } from "../_lib/hooks/useBacklogTasks";
 import { useAllSprintsMap } from "../_lib/hooks/useSprints";
-import { RoadmapHeader } from "../_lib/components/RoadmapHeader";
+import { PageHeaderWithBreadCrumbs as RoadmapHeader } from "@/components/PageHeaderWithBreadCrumbs";
 import { StatusPill } from "../_lib/components/StatusPill";
 import { TaskModal } from "../_lib/components/TaskModal";
 import { TaskMessageBadge } from "../_lib/components/TaskMessageBadge";

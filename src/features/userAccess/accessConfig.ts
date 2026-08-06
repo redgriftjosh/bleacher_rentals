@@ -41,6 +41,8 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
       "/quote",
       "/companies-contacts",
       "/messages",
+      "/stripe-connections",
+      "/automatic-emails",
     ],
     showSidebar: true,
   },
