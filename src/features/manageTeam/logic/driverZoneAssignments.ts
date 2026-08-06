@@ -28,6 +28,39 @@ export function computeDriverZoneAssignmentChanges(params: {
   };
 }
 
+/**
+ * Folds a driver-tab zone edit (the add/remove diff just applied via
+ * syncDriverZoneAssignments) into the AM's per-zone driver map, so a later
+ * full delete+reinsert sync of that map (syncDriverZonesForAm) reproduces
+ * the driver-tab edit instead of clobbering it with the stale snapshot the
+ * map was loaded with. One-directional: reflects driver-tab changes into the
+ * map only, does not resolve conflicts coming from the AM-grid side.
+ */
+export function reconcileZoneDriverMap(params: {
+  zoneDriverMap: Record<string, string[]>;
+  driverUuid: string;
+  addedZoneUuids: string[];
+  removedZoneUuids: string[];
+}): Record<string, string[]> {
+  const { zoneDriverMap, driverUuid, addedZoneUuids, removedZoneUuids } = params;
+  const next: Record<string, string[]> = Object.fromEntries(
+    Object.entries(zoneDriverMap).map(([zoneUuid, driverUuids]) => [zoneUuid, [...driverUuids]]),
+  );
+
+  for (const zoneUuid of removedZoneUuids) {
+    if (next[zoneUuid]) {
+      next[zoneUuid] = next[zoneUuid].filter((id) => id !== driverUuid);
+    }
+  }
+
+  for (const zoneUuid of addedZoneUuids) {
+    const existing = next[zoneUuid] ?? [];
+    next[zoneUuid] = existing.includes(driverUuid) ? existing : [...existing, driverUuid];
+  }
+
+  return next;
+}
+
 /** Merges multi-select changes for an AM (only zones they can manage). */
 export function mergeDriverZoneSelection(params: {
   currentAssignedZoneUuids: string[];

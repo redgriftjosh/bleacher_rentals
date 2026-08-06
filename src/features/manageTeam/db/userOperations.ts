@@ -2,7 +2,10 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { CurrentUserState, TeamRoleTab } from "../state/useCurrentUserStore";
 import { Database } from "@/../database.types";
 import { STATUSES } from "../constants";
-import { computeDriverZoneAssignmentChanges } from "../logic/driverZoneAssignments";
+import {
+  computeDriverZoneAssignmentChanges,
+  reconcileZoneDriverMap,
+} from "../logic/driverZoneAssignments";
 
 type TypedSupabaseClient = SupabaseClient<Database>;
 
@@ -241,6 +244,13 @@ export async function updateUser(
   try {
     const userUuid = state.existingUserUuid;
 
+    // Snapshot of state.zoneDriverMap, folded with whatever the driver block below does to
+    // this user's own DriverZones rows in this same submit. Kept separate from state.zoneDriverMap
+    // (which stays a stale, page-load snapshot) so the AM-role sync at the end of this function
+    // doesn't clobber a driver-zone edit that just happened above it. See
+    // docs/specs/fix-am-self-driver-zone-clobber.md.
+    let zoneDriverMapForAmSync = state.zoneDriverMap;
+
     // 1. Update Users table
     const { error: userError } = await supabase
       .from("Users")
@@ -274,7 +284,17 @@ export async function updateUser(
         // row update below (drivers_update RLS is zone-based). This keeps the UI and the DB
         // in agreement: if the form let the AM edit the other fields because they picked one
         // of their zones, those edits are actually saved in the same submit.
-        await syncDriverZoneAssignments(supabase, existingDriver.id, state.assignedDriverZoneUuids);
+        const { toAdd, toRemove } = await syncDriverZoneAssignments(
+          supabase,
+          existingDriver.id,
+          state.assignedDriverZoneUuids,
+        );
+        zoneDriverMapForAmSync = reconcileZoneDriverMap({
+          zoneDriverMap: zoneDriverMapForAmSync,
+          driverUuid: existingDriver.id,
+          addedZoneUuids: toAdd,
+          removedZoneUuids: toRemove,
+        });
 
         // Only update the Drivers row when allowed by RLS (admin, or an AM sharing a zone
         // with the driver — which now includes any zone added just above).
@@ -320,7 +340,17 @@ export async function updateUser(
 
         if (driverInsertError) throw driverInsertError;
 
-        await syncDriverZoneAssignments(supabase, newDriverId, state.assignedDriverZoneUuids);
+        const { toAdd, toRemove } = await syncDriverZoneAssignments(
+          supabase,
+          newDriverId,
+          state.assignedDriverZoneUuids,
+        );
+        zoneDriverMapForAmSync = reconcileZoneDriverMap({
+          zoneDriverMap: zoneDriverMapForAmSync,
+          driverUuid: newDriverId,
+          addedZoneUuids: toAdd,
+          removedZoneUuids: toRemove,
+        });
       }
     } else if (existingDriver) {
       // Mark driver as inactive instead of deleting
@@ -374,7 +404,7 @@ export async function updateUser(
         if (await currentUserIsAdmin(supabase)) {
           await syncZoneAssignments(supabase, currentAmData.id, state.assignedZoneEntries);
         }
-        await syncDriverZonesForAm(supabase, state.zoneDriverMap);
+        await syncDriverZonesForAm(supabase, zoneDriverMapForAmSync);
       }
     } else if (existingAM) {
       // Remove account manager role
@@ -472,7 +502,7 @@ async function syncDriverZoneAssignments(
   supabase: TypedSupabaseClient,
   driverUuid: string,
   selectedZoneUuids: string[],
-): Promise<void> {
+): Promise<{ toAdd: string[]; toRemove: string[] }> {
   const { data: existingRows, error: existingError } = await supabase
     .from("DriverZones")
     .select("zone_uuid")
@@ -533,6 +563,8 @@ async function syncDriverZoneAssignments(
     const { error } = await supabase.from("DriverZones").insert(rows);
     if (error) throw new Error(error.message);
   }
+
+  return { toAdd, toRemove };
 }
 
 async function syncDriverZonesForAm(

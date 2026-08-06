@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   computeDriverZoneAssignmentChanges,
   mergeDriverZoneSelection,
+  reconcileZoneDriverMap,
 } from "./driverZoneAssignments";
 
 describe("computeDriverZoneAssignmentChanges", () => {
@@ -45,5 +46,62 @@ describe("mergeDriverZoneSelection", () => {
         selectedManageableZoneUuids: ["z2"],
       }),
     ).toEqual(["other", "z2"]);
+  });
+});
+
+describe("reconcileZoneDriverMap", () => {
+  it("adds the driver to newly assigned zones, creating a key if missing", () => {
+    expect(
+      reconcileZoneDriverMap({
+        zoneDriverMap: { z1: ["other-driver"] },
+        driverUuid: "self",
+        addedZoneUuids: ["z1", "z2"],
+        removedZoneUuids: [],
+      }),
+    ).toEqual({ z1: ["other-driver", "self"], z2: ["self"] });
+  });
+
+  it("removes the driver from zones it was unassigned from", () => {
+    expect(
+      reconcileZoneDriverMap({
+        zoneDriverMap: { z1: ["self", "other-driver"] },
+        driverUuid: "self",
+        addedZoneUuids: [],
+        removedZoneUuids: ["z1"],
+      }),
+    ).toEqual({ z1: ["other-driver"] });
+  });
+
+  it("does not duplicate the driver if it's already present in an added zone", () => {
+    expect(
+      reconcileZoneDriverMap({
+        zoneDriverMap: { z1: ["self"] },
+        driverUuid: "self",
+        addedZoneUuids: ["z1"],
+        removedZoneUuids: [],
+      }),
+    ).toEqual({ z1: ["self"] });
+  });
+
+  it("is a no-op for zones not mentioned in added or removed", () => {
+    expect(
+      reconcileZoneDriverMap({
+        zoneDriverMap: { z1: ["a"], z2: ["b"] },
+        driverUuid: "self",
+        addedZoneUuids: [],
+        removedZoneUuids: [],
+      }),
+    ).toEqual({ z1: ["a"], z2: ["b"] });
+  });
+
+  it("does not mutate the input map", () => {
+    const input = { z1: ["other-driver"] };
+    reconcileZoneDriverMap({
+      zoneDriverMap: input,
+      driverUuid: "self",
+      addedZoneUuids: ["z1"],
+      removedZoneUuids: [],
+    });
+    expect(input).toEqual({ z1: ["other-driver"] });
   });
 });
