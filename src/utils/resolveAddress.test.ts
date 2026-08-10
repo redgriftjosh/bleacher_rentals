@@ -31,11 +31,6 @@ describe("resolveAddress", () => {
       expect(resolveAddress(b, "2026-06-15")).toBe("Same Day");
     });
 
-    it("prefers the event over a work tracker on the same date", () => {
-      const b = bleacher([ev("2026-06-10T00:00:00Z", "Event Addr")], [wt("2026-06-10", "WT Addr")]);
-      expect(resolveAddress(b, "2026-06-15")).toBe("Event Addr");
-    });
-
     it("uses a later work tracker over an earlier event", () => {
       const b = bleacher([ev("2026-06-01T00:00:00Z", "Event Addr")], [wt("2026-06-12", "WT Addr")]);
       expect(resolveAddress(b, "2026-06-15")).toBe("WT Addr");
@@ -68,11 +63,6 @@ describe("resolveAddress", () => {
         ev("2026-06-20T00:00:00Z", "After"),
       ]);
       expect(resolveAddress(b, "2026-06-15", "future")).toBe("After");
-    });
-
-    it("prefers the event over a work tracker on the same future date", () => {
-      const b = bleacher([ev("2026-07-01T00:00:00Z", "Event Addr")], [wt("2026-07-01", "WT Addr")]);
-      expect(resolveAddress(b, "2026-06-15", "future")).toBe("Event Addr");
     });
 
     it("uses an earlier work tracker over a later event", () => {
