@@ -21,6 +21,7 @@ import {
   Warehouse,
   MessageSquare,
   Mails,
+  Sparkles,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";
@@ -216,6 +217,13 @@ const ALL_ITEMS: SidebarItemConfig[] = [
         label: "Role Permissions",
         href: "/permissions",
         icon: ShieldCheck,
+      },
+      {
+        type: "button",
+        key: "changelog",
+        label: "What's New",
+        href: "/changelog",
+        icon: Sparkles,
       },
     ],
   },

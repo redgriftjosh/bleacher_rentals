@@ -6,12 +6,14 @@ import { SideNavButton } from "./SideNavButton";
 import { SideNavDropdown } from "./SideNavDropdown";
 import { useUserAccess } from "@/features/userAccess/client";
 import { useSidebarItems, type SidebarItemConfig } from "./useSidebarItems";
+import { useHasUnreadChangelog } from "@/features/changelog/hooks/useHasUnreadChangelog";
 
 const SideBar = () => {
   const access = useUserAccess();
   const roles = access.status === "active" ? access.roles : [];
   const items = useSidebarItems(roles);
   const pathname = usePathname();
+  const hasUnreadChangelog = useHasUnreadChangelog();
 
   return (
     <div
@@ -19,7 +21,7 @@ const SideBar = () => {
       data-testid="sidebar"
     >
       <nav className="flex-1 overflow-auto pt-2">
-        {items.map((item) => renderItem(item, pathname))}
+        {items.map((item) => renderItem(item, pathname, hasUnreadChangelog))}
       </nav>
     </div>
   );
@@ -58,10 +60,18 @@ const SideNavSection = ({
   );
 };
 
-function renderItem(item: SidebarItemConfig, pathname: string) {
+function renderItem(item: SidebarItemConfig, pathname: string, hasUnreadChangelog: boolean) {
   switch (item.type) {
     case "button":
-      return <SideNavButton key={item.key} label={item.label} href={item.href} icon={item.icon} />;
+      return (
+        <SideNavButton
+          key={item.key}
+          label={item.label}
+          href={item.href}
+          icon={item.icon}
+          showIndicator={item.key === "changelog" && hasUnreadChangelog}
+        />
+      );
     case "dropdown":
       return (
         <SideNavDropdown
@@ -74,7 +84,7 @@ function renderItem(item: SidebarItemConfig, pathname: string) {
     case "section":
       return (
         <SideNavSection key={item.key} item={item} pathname={pathname}>
-          {item.children.map((child) => renderItem(child, pathname))}
+          {item.children.map((child) => renderItem(child, pathname, hasUnreadChangelog))}
         </SideNavSection>
       );
   }

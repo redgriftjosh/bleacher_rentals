@@ -297,7 +297,15 @@ const UsersCols = {
   is_viewer: column.integer,
   created_at: column.text,
   expo_push_token: column.text,
+  changelog_last_read_at: column.text,
 } satisfies PowerSyncColsFor<"Users">;
+
+const ChangeLogCols = {
+  version: column.text,
+  released_at: column.text,
+  body_md: column.text,
+} satisfies PowerSyncColsFor<"ChangeLog">;
+const ChangeLog = new Table(ChangeLogCols);
 const Users = new Table(UsersCols, { indexes: { status_uuid: ["status_uuid"] } });
 
 const UserStatusesCols = {
@@ -1055,6 +1063,7 @@ export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
   AccountManagerZones,
+  ChangeLog,
   Zones,
   Developers,
   DashboardFilterSettings,
@@ -1191,3 +1200,4 @@ export type SalesOfficesRecord = PowerSyncDB["SalesOffices"];
 export type TermsAndConditionsRecord = PowerSyncDB["TermsAndConditions"];
 export type ContractSignaturesRecord = PowerSyncDB["ContractSignatures"];
 export type EventFilesRecord = PowerSyncDB["EventFiles"];
+export type ChangeLogRecord = PowerSyncDB["ChangeLog"];

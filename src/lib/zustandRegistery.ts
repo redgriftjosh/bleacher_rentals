@@ -100,4 +100,5 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   SubrentalEvents: () => {},
   StorageLocations: () => {},
   AppVersionPolicy: () => {},
+  ChangeLog: () => {},
 };

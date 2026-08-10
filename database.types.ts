@@ -551,6 +551,27 @@ export type Database = {
         }
         Relationships: []
       }
+      ChangeLog: {
+        Row: {
+          body_md: string
+          id: string
+          released_at: string
+          version: string
+        }
+        Insert: {
+          body_md: string
+          id?: string
+          released_at?: string
+          version: string
+        }
+        Update: {
+          body_md?: string
+          id?: string
+          released_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
       Companies: {
         Row: {
           billing_address_uuid: string | null
@@ -3280,6 +3301,7 @@ export type Database = {
       Users: {
         Row: {
           avatar_image_url: string | null
+          changelog_last_read_at: string | null
           clerk_user_id: string | null
           created_at: string
           email: string
@@ -3295,6 +3317,7 @@ export type Database = {
         }
         Insert: {
           avatar_image_url?: string | null
+          changelog_last_read_at?: string | null
           clerk_user_id?: string | null
           created_at?: string
           email: string
@@ -3310,6 +3333,7 @@ export type Database = {
         }
         Update: {
           avatar_image_url?: string | null
+          changelog_last_read_at?: string | null
           clerk_user_id?: string | null
           created_at?: string
           email?: string
