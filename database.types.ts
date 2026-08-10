@@ -134,6 +134,42 @@ export type Database = {
         }
         Relationships: []
       }
+      AppVersionPolicy: {
+        Row: {
+          android_store_url: string
+          environment: string
+          id: string
+          ios_store_url: string
+          message: string | null
+          recommended_version: string
+          required_version: string
+          soft_deadline: string | null
+          updated_at: string
+        }
+        Insert: {
+          android_store_url?: string
+          environment: string
+          id?: string
+          ios_store_url?: string
+          message?: string | null
+          recommended_version: string
+          required_version: string
+          soft_deadline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          android_store_url?: string
+          environment?: string
+          id?: string
+          ios_store_url?: string
+          message?: string | null
+          recommended_version?: string
+          required_version?: string
+          soft_deadline?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       BleacherEvents: {
         Row: {
           bleacher_uuid: string | null
@@ -686,25 +722,40 @@ export type Database = {
       }
       DamageReportPhotos: {
         Row: {
+          attempts: number
           created_at: string
           damage_report_uuid: string
+          gallery_asset_id: string | null
           id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          local_uri: string | null
           photo_path: string
           thumbnail: string | null
           upload_status: string
         }
         Insert: {
+          attempts?: number
           created_at?: string
           damage_report_uuid: string
+          gallery_asset_id?: string | null
           id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          local_uri?: string | null
           photo_path: string
           thumbnail?: string | null
           upload_status?: string
         }
         Update: {
+          attempts?: number
           created_at?: string
           damage_report_uuid?: string
+          gallery_asset_id?: string | null
           id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          local_uri?: string | null
           photo_path?: string
           thumbnail?: string | null
           upload_status?: string
@@ -906,15 +957,71 @@ export type Database = {
           },
         ]
       }
+      DriverDocuments: {
+        Row: {
+          attempts: number
+          created_at: string
+          doc_type: string
+          driver_uuid: string
+          gallery_asset_id: string | null
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          local_uri: string | null
+          photo_path: string
+          upload_status: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          doc_type: string
+          driver_uuid: string
+          gallery_asset_id?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          local_uri?: string | null
+          photo_path: string
+          upload_status?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          doc_type?: string
+          driver_uuid?: string
+          gallery_asset_id?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          local_uri?: string | null
+          photo_path?: string
+          upload_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "DriverDocuments_driver_uuid_fkey"
+            columns: ["driver_uuid"]
+            isOneToOne: false
+            referencedRelation: "Drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Drivers: {
         Row: {
           account_manager_uuid: string | null
           address_uuid: string | null
+          app_platform: string | null
+          app_version: string | null
+          app_version_reported_at: string | null
           created_at: string
           id: string
+          insurance_expires_on: string | null
           insurance_photo_path: string | null
           is_active: boolean
+          license_expires_on: string | null
           license_photo_path: string | null
+          medical_card_expires_on: string | null
           medical_card_photo_path: string | null
           pay_currency: Database["public"]["Enums"]["pay_currency_type"]
           pay_per_unit: Database["public"]["Enums"]["pay_per_unit_type"]
@@ -928,11 +1035,17 @@ export type Database = {
         Insert: {
           account_manager_uuid?: string | null
           address_uuid?: string | null
+          app_platform?: string | null
+          app_version?: string | null
+          app_version_reported_at?: string | null
           created_at?: string
           id?: string
+          insurance_expires_on?: string | null
           insurance_photo_path?: string | null
           is_active?: boolean
+          license_expires_on?: string | null
           license_photo_path?: string | null
+          medical_card_expires_on?: string | null
           medical_card_photo_path?: string | null
           pay_currency?: Database["public"]["Enums"]["pay_currency_type"]
           pay_per_unit?: Database["public"]["Enums"]["pay_per_unit_type"]
@@ -946,11 +1059,17 @@ export type Database = {
         Update: {
           account_manager_uuid?: string | null
           address_uuid?: string | null
+          app_platform?: string | null
+          app_version?: string | null
+          app_version_reported_at?: string | null
           created_at?: string
           id?: string
+          insurance_expires_on?: string | null
           insurance_photo_path?: string | null
           is_active?: boolean
+          license_expires_on?: string | null
           license_photo_path?: string | null
+          medical_card_expires_on?: string | null
           medical_card_photo_path?: string | null
           pay_currency?: Database["public"]["Enums"]["pay_currency_type"]
           pay_per_unit?: Database["public"]["Enums"]["pay_per_unit_type"]
@@ -1949,25 +2068,43 @@ export type Database = {
       }
       InspectionPhotos: {
         Row: {
+          attempts: number
           caption: string | null
           created_at: string
+          gallery_asset_id: string | null
           id: string
           inspection_uuid: string
+          last_attempt_at: string | null
+          last_error: string | null
+          local_uri: string | null
           storage_path: string
+          upload_status: string
         }
         Insert: {
+          attempts?: number
           caption?: string | null
           created_at?: string
+          gallery_asset_id?: string | null
           id?: string
           inspection_uuid: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          local_uri?: string | null
           storage_path: string
+          upload_status?: string
         }
         Update: {
+          attempts?: number
           caption?: string | null
           created_at?: string
+          gallery_asset_id?: string | null
           id?: string
           inspection_uuid?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          local_uri?: string | null
           storage_path?: string
+          upload_status?: string
         }
         Relationships: [
           {
@@ -3796,6 +3933,15 @@ export type Database = {
       recompute_maintenance_cost_per_year_bucket: {
         Args: { p_year: number }
         Returns: undefined
+      }
+      recompute_quote_hashes: {
+        Args: { p_event_id: string }
+        Returns: undefined
+      }
+      user_can_manage_zone: { Args: { p_zone_uuid: string }; Returns: boolean }
+      user_shares_zone_with_driver: {
+        Args: { p_driver_uuid: string }
+        Returns: boolean
       }
     }
     Enums: {
