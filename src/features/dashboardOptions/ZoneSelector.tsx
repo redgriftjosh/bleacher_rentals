@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
-import { useZoneFilterStore } from "./useZoneFilterStore";
 import { useDashboardFilterSettings } from "./useDashboardFilterSettings";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,43 +12,24 @@ import { AppTooltip } from "@/components/AppTooltip";
 
 type ZoneRow = { id: string; displayName: string | null };
 
-const UNASSIGNED_VALUE = "__unassigned__";
-
 export function ZoneSelector({ accountManagerId }: { accountManagerId: string | null }) {
   const [open, setOpen] = useState(false);
-  const { selectedZoneIds, setSelectedZoneIds, showUnassigned, setShowUnassigned } =
-    useZoneFilterStore();
-
-  // Persisted filter settings (survives refresh). The zustand store stays the
-  // live source for filtering; we hydrate it once from persisted settings and
-  // write changes back so the selection persists.
   const { state: filterSettings, setField } = useDashboardFilterSettings();
-  const hydratedRef = useRef(false);
-
-  useEffect(() => {
-    if (hydratedRef.current) return;
-    if (!filterSettings) return;
-    setSelectedZoneIds(filterSettings.zoneUuids);
-    setShowUnassigned(filterSettings.showUnassignedZone);
-    hydratedRef.current = true;
-  }, [filterSettings, setSelectedZoneIds, setShowUnassigned]);
+  const selectedZoneIds = filterSettings?.zoneUuids ?? [];
+  const showUnassigned = filterSettings?.showUnassignedZone ?? false;
 
   const handleToggleZone = (id: string) => {
     const next = selectedZoneIds.includes(id)
       ? selectedZoneIds.filter((z) => z !== id)
       : [...selectedZoneIds, id];
-    setSelectedZoneIds(next);
     void setField("zoneUuids", next);
   };
 
   const handleSetShowUnassigned = (v: boolean) => {
-    setShowUnassigned(v);
     void setField("showUnassignedZone", v);
   };
 
   const handleClearAll = () => {
-    setSelectedZoneIds([]);
-    setShowUnassigned(false);
     void setField("zoneUuids", []);
     void setField("showUnassignedZone", false);
   };

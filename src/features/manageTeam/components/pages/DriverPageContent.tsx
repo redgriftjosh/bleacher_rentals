@@ -3,14 +3,14 @@
 import InputPercents from "@/components/InputPercents";
 import CentsInput from "@/components/CentsInput";
 import { Dropdown } from "@/components/DropDown";
-import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
+import { SelectDriverZones } from "@/features/manageTeam/components/inputs/SelectDriverZones";
 import { VendorSelection } from "@/features/manageTeam/components/inputs/VendorSelection";
 import { useCurrentUserStore } from "@/features/manageTeam/state/useCurrentUserStore";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
 import { useUserFormPaths } from "@/features/manageTeam/hooks/useUserFormPaths";
 import { CountryIndicator } from "@/features/manageTeam/components/CountryIndicator";
-import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
+import { useEditAccess } from "@/features/manageTeam/state/EditAccessContext";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -39,13 +39,12 @@ export function DriverPageContent() {
   const vendorUuid = useCurrentUserStore((s) => s.vendorUuid);
   const setField = useCurrentUserStore((s) => s.setField);
   const existingUserUuid = useCurrentUserStore((s) => s.existingUserUuid);
-  const permissions = useTeamPermissions();
 
-  // AM can only assign drivers to themselves
-  const amRestrictIds =
-    permissions.isAccountManager && !permissions.isAdmin && permissions.accountManagerId
-      ? [permissions.accountManagerId]
-      : undefined;
+  // In "zones-only" access the surrounding form is locked (pointer-events-none). Every field
+  // except the zone multi-select is visually dimmed; the zone block re-enables interaction.
+  const editAccess = useEditAccess();
+  const zonesOnly = editAccess === "zones-only";
+  const dimmed = zonesOnly ? "opacity-60" : "";
 
   useEffect(() => {
     // Don't redirect while loading:
@@ -81,7 +80,7 @@ export function DriverPageContent() {
   const payRateCents = useCurrentUserStore((s) => s.payRateCents);
   const payCurrency = useCurrentUserStore((s) => s.payCurrency);
   const payPerUnit = useCurrentUserStore((s) => s.payPerUnit);
-  const accountManagerUuid = useCurrentUserStore((s) => s.accountManagerUuid);
+  const assignedDriverZoneUuids = useCurrentUserStore((s) => s.assignedDriverZoneUuids);
   const phoneNumber = useCurrentUserStore((s) => s.phoneNumber);
   const homeAddress = useCurrentUserStore((s) => s.homeAddress);
   const homeState = useCurrentUserStore((s) => s.homeState);
@@ -213,21 +212,21 @@ export function DriverPageContent() {
 
         <div className="space-y-3">
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_auto]">
-            {/* Account Manager */}
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Account Manager
-              </label>
-              <SelectAccountManager
-                value={accountManagerUuid}
-                onChange={(value) => setField("accountManagerUuid", value)}
-                placeholder="Select Account Manager..."
-                restrictToIds={amRestrictIds}
+            {/* Zones — stays interactive even when the rest of the form is locked. */}
+            <div className={zonesOnly ? "pointer-events-auto" : ""}>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Zones</label>
+              <SelectDriverZones
+                value={assignedDriverZoneUuids}
+                onChange={(value) => setField("assignedDriverZoneUuids", value)}
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Assign this driver to one or more zones. They will appear in Work Tracker driver
+                lists for those zones.
+              </p>
             </div>
 
             {/* Vendor Card / Ghost Card */}
-            <div>
+            <div className={dimmed}>
               <label className="mb-1 block text-sm font-medium text-gray-700">Vendor Company</label>
               <VendorSelection
                 value={vendorUuid}
@@ -237,7 +236,7 @@ export function DriverPageContent() {
             </div>
 
             {/* Driver Type Dropdown */}
-            <div className="lg:w-[180px]">
+            <div className={`lg:w-[180px] ${dimmed}`}>
               <label className="mb-1 block text-sm font-medium text-gray-700">Driver Type</label>
               <Dropdown
                 options={driverTypeOptions}
@@ -261,7 +260,7 @@ export function DriverPageContent() {
           )}
         </div>
 
-        <div>
+        <div className={dimmed}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">Pay Rate</label>
@@ -316,7 +315,7 @@ export function DriverPageContent() {
       </section>
 
       {/* Driver Setup Section */}
-      <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-4">
+      <section className={`space-y-4 rounded-lg border border-gray-200 bg-white p-4 ${dimmed}`}>
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Driver Setup</h2>
           <p className="text-sm text-gray-600">

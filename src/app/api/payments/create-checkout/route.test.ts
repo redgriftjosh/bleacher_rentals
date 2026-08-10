@@ -162,7 +162,8 @@ describe("POST /api/payments/create-checkout", () => {
     seedHappyPath({ event: { id: "evt-uuid-123", invoice_number: null } });
     await POST(makeRequest({ eventId: "evt-uuid-123", amountCents: 5000, payerName: "Bob" }));
     const sessionArgs = mockCheckoutCreate.mock.calls[0][0];
-    expect(sessionArgs.success_url).toContain("evt-uuid-123");
-    expect(sessionArgs.cancel_url).toContain("evt-uuid-123");
+    expect(sessionArgs.success_url).toContain("/quote/evt-uuid-123");
+    expect(sessionArgs.cancel_url).toContain("/quote/evt-uuid-123");
+    expect(sessionArgs.success_url).not.toContain("987654321");
   });
 });

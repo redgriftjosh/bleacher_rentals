@@ -27,6 +27,8 @@ export type CurrentUserState = {
   payCurrency: "CAD" | "USD";
   payPerUnit: "KM" | "MI" | "HR";
   accountManagerUuid: string | null;
+  /** Zones this driver is assigned to (DriverZones). */
+  assignedDriverZoneUuids: string[];
   vendorUuid: string | null;
 
   // Driver setup (optional - can be set by driver in mobile app)
@@ -85,6 +87,7 @@ const initialState: CurrentUserState = {
   payCurrency: "CAD",
   payPerUnit: "KM",
   accountManagerUuid: null,
+  assignedDriverZoneUuids: [],
   vendorUuid: null,
   phoneNumber: null,
   addressUuid: null,
@@ -129,10 +132,7 @@ export const useCurrentUserStore = create<CurrentUserStore>((set) => ({
         // Default auto-subscribe to true when developer role is first added
         autoSubscribeToNewTickets: role === "developer" ? true : state.autoSubscribeToNewTickets,
         // Pre-allocate Drivers.id so document uploads match the mobile app path convention
-        driverId:
-          role === "driver" && !state.driverId
-            ? crypto.randomUUID()
-            : state.driverId,
+        driverId: role === "driver" && !state.driverId ? crypto.randomUUID() : state.driverId,
       };
     }),
 

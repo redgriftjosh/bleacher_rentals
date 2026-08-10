@@ -27,14 +27,24 @@ test.describe("Manage Team invites", () => {
 
     await page.getByRole("button", { name: "Send Invite" }).click();
 
-    const message = await waitForGmailMessage({
-      clientId: gmailClientId!,
-      clientSecret: gmailClientSecret!,
-      refreshToken: gmailRefreshToken!,
-      toEmail: inviteEmail,
-      receivedAfter: sentAt,
-      timeoutMs: 120_000,
-    });
+    let message;
+    try {
+      message = await waitForGmailMessage({
+        clientId: gmailClientId!,
+        clientSecret: gmailClientSecret!,
+        refreshToken: gmailRefreshToken!,
+        toEmail: inviteEmail,
+        receivedAfter: sentAt,
+        timeoutMs: 120_000,
+      });
+    } catch (err) {
+      const msg = String(err);
+      test.skip(
+        msg.includes("invalid_grant"),
+        "Gmail refresh token invalid — renew E2E_GMAIL_REFRESH_TOKEN in .env.local",
+      );
+      throw err;
+    }
 
     expect(message.to.toLowerCase()).toContain(inviteEmail.toLowerCase());
     expect(message.subject).toMatch(/invitation|invite/i);

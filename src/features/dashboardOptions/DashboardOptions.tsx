@@ -32,6 +32,17 @@ export function DashboardOptions() {
   const onlyShowMyEvents = state?.onlyShowMyEvents ?? true;
   const optimizationMode = state?.optimizationMode ?? false;
   const showAddressTooltip = state?.showAddressTooltip ?? false;
+  const showDistanceTooltip = state?.showDistanceTooltip ?? false;
+
+  // Address & Distance tooltips are mutually exclusive: enabling one disables the other.
+  const handleAddressTooltip = (checked: boolean) => {
+    void setField("showAddressTooltip", checked);
+    if (checked) void setField("showDistanceTooltip", false);
+  };
+  const handleDistanceTooltip = (checked: boolean) => {
+    void setField("showDistanceTooltip", checked);
+    if (checked) void setField("showAddressTooltip", false);
+  };
 
   // Options
   const rowOptions = getRowOptions();
@@ -53,7 +64,15 @@ export function DashboardOptions() {
 
     if (rows.length === 0) void setField("rows", allRowVals);
     if (stateProvinces.length === 0) void setField("stateProvinces", allStates);
-  }, [initialized, rowOptions, stateProvOptions, setField, state, rows.length, stateProvinces.length]);
+  }, [
+    initialized,
+    rowOptions,
+    stateProvOptions,
+    setField,
+    state,
+    rows.length,
+    stateProvinces.length,
+  ]);
 
   return (
     <>
@@ -105,10 +124,17 @@ export function DashboardOptions() {
             </MenubarCheckboxItem>
             <MenubarCheckboxItem
               checked={showAddressTooltip}
-              onCheckedChange={(checked) => void setField("showAddressTooltip", Boolean(checked))}
+              onCheckedChange={(checked) => handleAddressTooltip(Boolean(checked))}
               title="This will display the last address for each bleacher based on the cell you're hovering over."
             >
               Show Address Tooltip
+            </MenubarCheckboxItem>
+            <MenubarCheckboxItem
+              checked={showDistanceTooltip}
+              onCheckedChange={(checked) => handleDistanceTooltip(Boolean(checked))}
+              title="This will display the distance between each bleacher's last and next location based on the cell you're hovering over."
+            >
+              Show Distance Tooltip
             </MenubarCheckboxItem>
           </MenubarContent>
         </MenubarMenu>

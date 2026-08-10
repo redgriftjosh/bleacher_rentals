@@ -15,10 +15,11 @@ import { EventConfiguration } from "@/features/eventConfiguration/components/Eve
 import { MaintenanceEventPanel } from "@/features/maintenanceEvents/components/MaintenanceEventPanel";
 import BleacherLocationModal from "@/features/dashboard/components/BleacherLocationModal";
 import SwapConfirmationModal from "@/features/dashboard/components/SwapConfirmationModal";
+import WorkTrackerDragConfirmModal from "@/features/workTrackers/components/WorkTrackerDragConfirmModal";
 import { useBleacherLocationModalStore } from "@/features/dashboard/state/useBleacherLocationModalStore";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { supabaseClientRegistry } from "@/features/dashboard/util/supabaseClientRegistry";
-import { AddressTooltip } from "@/features/dashboard/components/AddressTooltip";
+import { DashboardTooltip } from "@/features/dashboard/components/DashboardTooltip";
 import { useDriverUnavailability } from "@/features/dashboard/db/hooks/useDriverUnavailability";
 import { useDriverUnavailabilityStore } from "@/features/dashboard/state/useDriverUnavailabilityStore";
 import { useDashboardPowerSync } from "@/features/dashboard/db/hooks/powersync/useDashboardPowerSync";
@@ -113,6 +114,7 @@ export default function Page() {
         />
       )}
       <SwapConfirmationModal />
+      <WorkTrackerDragConfirmModal />
       <div className="min-w-0 mb-2.5">
         <div className="flex justify-between items-center pt-2 pl-2 pr-2">
           <div className="flex items-center gap-3">
@@ -130,7 +132,7 @@ export default function Page() {
       <div className="min-h-0 min-w-0 overflow-hidden">
         <DashboardApp />
       </div>
-      <AddressTooltip />
+      <DashboardTooltip />
     </div>
   );
 }

@@ -10,27 +10,36 @@ type AddressResolvableBleacher = {
 };
 
 /**
- * Resolve the most recent address for a bleacher at a given date.
+ * Resolve a bleacher's address relative to a given date.
+ *
+ * direction:
+ *   'past'   (default) — the most recent event/drop-off with date <= targetDate
+ *                        (i.e. where the bleacher currently is).
+ *   'future' — the earliest event/drop-off with date > targetDate
+ *              (i.e. where the bleacher goes next).
  *
  * Logic:
- * - Look backwards from the target date for the most recent event (by eventStart)
- *   or work tracker (by date) that has an address.
- * - If both fall on the same date, prefer the event.
  * - Events use `address` (street); work trackers use `dropoffAddress` (street).
+ * - If an event and a work tracker fall on the same date, prefer the event.
  */
 export function resolveAddress(
   bleacher: AddressResolvableBleacher,
   targetDate: string,
+  direction: "past" | "future" = "past",
 ): string | null {
+  const isBetter = (candidate: string, current: string | null) =>
+    !current || (direction === "past" ? candidate > current : candidate < current);
+
   let bestEventDate: string | null = null;
   let bestEventAddress: string | null = null;
 
   for (const ev of bleacher.bleacherEvents) {
     if (!ev.booked) continue;
     const startDate = DateTime.fromISO(ev.eventStart).toISODate();
-    if (!startDate || startDate > targetDate) continue;
+    if (!startDate) continue;
+    if (direction === "past" ? startDate > targetDate : startDate <= targetDate) continue;
     if (!ev.address) continue;
-    if (!bestEventDate || startDate > bestEventDate) {
+    if (isBetter(startDate, bestEventDate)) {
       bestEventDate = startDate;
       bestEventAddress = ev.address;
     }
@@ -40,18 +49,20 @@ export function resolveAddress(
   let bestWtAddress: string | null = null;
 
   for (const wt of bleacher.workTrackers) {
-    if (!wt.date || wt.date > targetDate) continue;
+    if (!wt.date) continue;
+    if (direction === "past" ? wt.date > targetDate : wt.date <= targetDate) continue;
     if (!wt.dropoffAddress) continue;
-    if (!bestWtDate || wt.date > bestWtDate) {
+    if (isBetter(wt.date, bestWtDate)) {
       bestWtDate = wt.date;
       bestWtAddress = wt.dropoffAddress;
     }
   }
 
-  // Both found: prefer the one with the later date, or event if same date
+  // Both found: prefer the one nearer the target date, or the event on a tie.
   if (bestEventDate && bestWtDate) {
-    if (bestEventDate >= bestWtDate) return bestEventAddress;
-    return bestWtAddress;
+    const eventWins =
+      direction === "past" ? bestEventDate >= bestWtDate : bestEventDate <= bestWtDate;
+    return eventWins ? bestEventAddress : bestWtAddress;
   }
 
   return bestEventAddress ?? bestWtAddress;

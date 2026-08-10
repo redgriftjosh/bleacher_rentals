@@ -5,32 +5,61 @@ type BleacherFilterSortOptions = {
   // allowed row counts
   rows: number[];
 
+  // selected zone ids; empty + showUnassignedZone=false means no zone filter
+  zoneUuids: string[];
+  showUnassignedZone: boolean;
+
   // ids to always include when expanded/optimizing
   alwaysIncludeBleacherUuids: string[];
   isFormExpanded: boolean;
   optimizationMode: boolean;
 };
 
+function getRowKey(b: Bleacher): string {
+  return b.isSubrentalRow ? `${b.bleacherUuid}:${b.zoneUuid}` : b.bleacherUuid;
+}
+
+function passesZoneFilter(
+  zoneUuid: string | null,
+  zoneUuids: string[],
+  showUnassignedZone: boolean,
+): boolean {
+  if (zoneUuids.length === 0 && !showUnassignedZone) return true;
+  if (showUnassignedZone && !zoneUuid) return true;
+  if (zoneUuids.length > 0 && zoneUuid && zoneUuids.includes(zoneUuid)) return true;
+  return false;
+}
+
 export function filterSortPixiBleachers(
   bleachers: Bleacher[],
   opts: BleacherFilterSortOptions,
 ): Bleacher[] {
-  const { rows, alwaysIncludeBleacherUuids, isFormExpanded, optimizationMode } = opts;
+  const {
+    rows,
+    zoneUuids,
+    showUnassignedZone,
+    alwaysIncludeBleacherUuids,
+    isFormExpanded,
+    optimizationMode,
+  } = opts;
 
   const rowsSet = rows.length > 0 ? new Set(rows) : null;
   const alwaysSet = new Set(alwaysIncludeBleacherUuids);
 
-  // 1) Filter bleachers by rows
+  // 1) Filter bleachers by rows and zone
   const included = new Set<string>();
   for (const b of bleachers) {
     if (rowsSet && !rowsSet.has(b.bleacherRows)) continue;
-    included.add(b.bleacherUuid);
+    if (!passesZoneFilter(b.zoneUuid, zoneUuids, showUnassignedZone)) continue;
+    included.add(getRowKey(b));
   }
 
   // 2) Ensure always-include IDs are present when form expanded OR optimization mode is ON.
   if (isFormExpanded || optimizationMode) {
-    for (const id of alwaysSet) {
-      included.add(id);
+    for (const b of bleachers) {
+      if (alwaysSet.has(b.bleacherUuid)) {
+        included.add(getRowKey(b));
+      }
     }
   }
 
@@ -40,7 +69,7 @@ export function filterSortPixiBleachers(
     const rest: Bleacher[] = [];
 
     for (const b of bleachers) {
-      if (!included.has(b.bleacherUuid)) continue;
+      if (!included.has(getRowKey(b))) continue;
       if (alwaysSet.has(b.bleacherUuid)) top.push(b);
       else rest.push(b);
     }
@@ -50,7 +79,7 @@ export function filterSortPixiBleachers(
 
   const result: Bleacher[] = [];
   for (const b of bleachers) {
-    if (included.has(b.bleacherUuid)) result.push(b);
+    if (included.has(getRowKey(b))) result.push(b);
   }
   return result;
 }

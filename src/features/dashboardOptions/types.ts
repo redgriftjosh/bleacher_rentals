@@ -15,6 +15,7 @@ export type DashboardFilterState = {
   onlyShowMyEvents: boolean;
   optimizationMode: boolean;
   showAddressTooltip: boolean;
+  showDistanceTooltip: boolean;
 
   // convenience UI toggle (also persisted)
   rowsQuickFilter: RowsQuickFilter;

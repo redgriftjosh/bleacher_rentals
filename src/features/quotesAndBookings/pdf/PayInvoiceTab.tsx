@@ -169,9 +169,12 @@ export function PayInvoiceTab({
     }
   }
 
-  const urlParams =
-    typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-  const paymentStatus = urlParams?.get("payment");
+  // Read the ?payment= flag only after mount so server and first client render match
+  // (reading window during render causes a hydration mismatch).
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
+  useEffect(() => {
+    setPaymentStatus(new URLSearchParams(window.location.search).get("payment"));
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
@@ -203,7 +206,7 @@ export function PayInvoiceTab({
           <div className="bg-white border rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-lg">Amount Due</h3>
-              <span className="text-2xl font-bold text-blue-600">
+              <span className="text-2xl font-bold text-[#405daa]">
                 {formatMoney(remainingCents, currency)}
               </span>
             </div>
@@ -232,7 +235,7 @@ export function PayInvoiceTab({
                       type="text"
                       value={payerName}
                       onChange={(e) => setPayerName(e.target.value)}
-                      className="w-full border rounded-md px-3 py-2 text-sm"
+                      className="w-full border rounded-md px-3 py-2 text-base sm:text-sm"
                       placeholder="Full name"
                     />
                   </div>
@@ -242,7 +245,7 @@ export function PayInvoiceTab({
                       type="email"
                       value={payerEmail}
                       onChange={(e) => setPayerEmail(e.target.value)}
-                      className="w-full border rounded-md px-3 py-2 text-sm"
+                      className="w-full border rounded-md px-3 py-2 text-base sm:text-sm"
                       placeholder="email@example.com"
                     />
                   </div>
@@ -258,7 +261,7 @@ export function PayInvoiceTab({
                         onChange={() => setUseCustomAmount(false)}
                       />
                       {hasSchedule && overdueOwedCents > 0
-                        ? `Pay overdue balance (${formatMoney(defaultPayCents, currency)})`
+                        ? `Pay due balance (${formatMoney(defaultPayCents, currency)})`
                         : `Pay ${formatMoney(defaultPayCents, currency)}`}
                     </label>
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -275,12 +278,14 @@ export function PayInvoiceTab({
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-gray-700">{"$"}</span>
                       <input
-                        type="number"
-                        min={0.5}
-                        step={0.01}
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*[.,]?[0-9]*"
                         value={customAmountInput}
-                        onChange={(e) => setCustomAmountInput(e.target.value)}
-                        className="w-40 border rounded-md px-3 py-2 text-sm"
+                        onChange={(e) =>
+                          setCustomAmountInput(e.target.value.replace(/[^0-9.]/g, ""))
+                        }
+                        className="w-40 border rounded-md px-3 py-2 text-base sm:text-sm"
                         placeholder="0.00"
                       />
                       {customCents > 0 && customCents < 50 && (
@@ -296,7 +301,7 @@ export function PayInvoiceTab({
                 <button
                   onClick={handlePay}
                   disabled={isLoading || !payerName.trim() || !payAmountValid}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  className="w-full bg-[#405daa] hover:bg-[#10365a] disabled:opacity-40 text-white font-semibold text-base py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
                   <CreditCard className="w-5 h-5" />
                   {isLoading
@@ -310,6 +315,11 @@ export function PayInvoiceTab({
                     <span>{payError}</span>
                   </div>
                 )}
+
+                <p className="mt-3 text-xs text-gray-500 text-center">
+                  Alternatively you can pay by ACH or Check. View the confirmation email for
+                  details.
+                </p>
               </>
             )}
           </div>
@@ -470,7 +480,7 @@ export function PayInvoiceTab({
               </div>
               <div className="flex justify-between border-t pt-2">
                 <span className="text-gray-800 font-medium">Remaining</span>
-                <span className="font-bold text-blue-600">
+                <span className="font-bold text-[#405daa]">
                   {formatMoney(remainingCents, currency)}
                 </span>
               </div>
@@ -486,7 +496,7 @@ export function PayInvoiceTab({
                   type="text"
                   value={poNumber}
                   onChange={(e) => setPoNumber(e.target.value)}
-                  className="flex-1 border rounded-md px-3 py-1.5 text-sm"
+                  className="flex-1 border rounded-md px-3 py-1.5 text-base sm:text-sm"
                   placeholder="Enter PO number"
                   autoFocus
                 />

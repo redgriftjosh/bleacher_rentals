@@ -7,7 +7,6 @@ import { formatMoney } from "../../../utils/formatMoney";
 import { DateTime } from "luxon";
 import { useMemo, useState, useEffect } from "react";
 import { ExternalLink, FileText } from "lucide-react";
-import { resolveInvoiceDisplay } from "../../../utils/invoiceNumber";
 
 type SignatureInfo = {
   signerName: string;
@@ -172,15 +171,13 @@ export function ContractTab({ quote }: { quote: QuoteDetail }) {
       .catch(() => {});
   }, [quote.id]);
 
-  const invoiceSlug = resolveInvoiceDisplay(quote.invoiceNumber, quote.id);
-
   return (
     <div className="space-y-6">
       {/* Action buttons + signature info */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <a
-            href={`/quote/${invoiceSlug}`}
+            href={`/quote/${quote.id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-darkBlue border border-darkBlue rounded-sm hover:bg-blue-50 transition"

@@ -15141,3 +15141,65 @@ SELECT pg_catalog.setval('"supabase_functions"."hooks_id_seq"', 1, false);
 -- \unrestrict AjY6UsfIIuTGqY0V2Xzt8T3s0MuGipgLF9grQNoTtw1F09J4gzcn3gAyKSpTS1O
 
 RESET ALL;
+
+
+-- Create missing BleacherTypes for row counts that exist in Bleachers but have no type
+INSERT INTO public."BleacherTypes" (name, row_count, roof_type)
+SELECT
+  format('%s-Row, %s Seat', b.bleacher_rows, b.bleacher_seats),
+  b.bleacher_rows,
+  'none'::public.roof_type
+FROM (
+  SELECT DISTINCT bleacher_rows, bleacher_seats
+  FROM public."Bleachers"
+  WHERE deleted = false
+    AND bleacher_rows NOT IN (
+      SELECT row_count FROM public."BleacherTypes" WHERE deleted = false AND roof_type = 'none'
+    )
+) b;
+
+-- Link every bleacher to its BleacherType by row_count (using roof_type = 'none')
+UPDATE public."Bleachers" b
+SET bleacher_type_uuid = bt.id
+FROM public."BleacherTypes" bt
+WHERE bt.row_count = b.bleacher_rows
+  AND bt.roof_type = 'none'
+  AND bt.deleted = false
+  AND b.deleted = false
+  AND b.bleacher_type_uuid IS NULL;
+
+
+--
+-- E2E test users (Playwright). Roles are driven by is_admin / is_viewer and by
+-- rows in AccountManagers / Drivers (see src/features/userAccess/logic/determineAccess.ts).
+-- Passwords live in Clerk, not here; emails/clerk ids must match .env.local E2E_* vars.
+--
+INSERT INTO "public"."Users"
+  ("first_name", "last_name", "email", "clerk_user_id", "role", "is_admin", "status_uuid", "id", "is_viewer")
+VALUES
+  ('E2E', 'Admin',  'max+6@bleacherrentals.com', 'user_3FrqAgc0dx7EDVJFmn1ihrie0Y3', 1, true,  '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '7caabedc-3b29-43da-9944-81fdd7d9eaca', false),
+  ('E2E', 'AM',     'max+5@bleacherrentals.com', 'user_3FrpC7dZBNKkfSnb2CjGACNrrGN', 1, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '28c7861e-ab61-4e3e-80df-68b2b4684aed', false),
+  ('E2E', 'Driver', 'max+4@bleacherrentals.com', 'user_3Frk1zjHtD39YB1ex73cgezrqf1', 1, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', 'cb6b755e-53b1-41ae-b4ea-aa412c1ce951', false),
+  ('E2E', 'Viewer', 'max+3@bleacherrentals.com', 'user_3Frgr1SbGGZiOzPVLE0n3EqriFW', 1, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '52b41509-56f9-4619-bd30-0764e495ed1d', true);
+
+-- AM user needs an active AccountManagers row to gain the account_manager role.
+INSERT INTO "public"."AccountManagers" ("is_active", "id", "user_uuid")
+VALUES (true, '8d5473b1-269a-4e28-9420-dc98e9442e1b', '28c7861e-ab61-4e3e-80df-68b2b4684aed');
+
+-- Driver user needs an active Drivers row to gain the driver role.
+INSERT INTO "public"."Drivers"
+  ("tax", "pay_rate_cents", "pay_currency", "pay_per_unit", "is_active", "id", "user_uuid")
+VALUES (0, 400, 'CAD', 'KM', true, '0fcf50a1-f0ae-4f98-8565-1fe0eb588017', 'cb6b755e-53b1-41ae-b4ea-aa412c1ce951');
+
+-- E2E: give the AM one zone (Zone 1) and deliberately leave the driver OUT of it, so the
+-- driver profile opens in "zones-only" mode for the AM. Used by driver-zones.am.spec.ts.
+INSERT INTO "public"."AccountManagerZones" ("id", "account_manager_uuid", "zone_uuid", "is_lead")
+VALUES
+  ('a1b2c3d4-0000-4000-8000-000000000001', '8d5473b1-269a-4e28-9420-dc98e9442e1b', '27633341-400b-4f18-a567-85e6de7ad65d', true);
+
+-- E2E: two changelog releases. Ordering, markdown rendering and the unread
+-- indicator are asserted against these in changelog.admin.spec.ts.
+INSERT INTO "public"."ChangeLog" ("version", "released_at", "body_md") VALUES
+  ('1.0.0', '2026-01-01 00:00:00+00', E'## First release\n\n- Bullet one\n- Bullet two'),
+  ('1.1.0', '2026-02-01 00:00:00+00', E'## Second release 🎉\n\n- Newer bullet')
+ON CONFLICT ("version") DO NOTHING;

@@ -34,9 +34,11 @@ export function formatSignedAt(iso: string, timeZone?: string): string {
 export function SignContractTab({
   data,
   track,
+  onQuoteChanged,
 }: {
   data: QuoteDocumentData;
   track: (e: TrackEvent) => void;
+  onQuoteChanged?: () => void;
 }) {
   const [contract, setContract] = useState<ContractData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,8 +63,15 @@ export function SignContractTab({
           eventId: data.eventId,
           termsAndConditionsUuid: contract.termsAndConditionsUuid,
           signerName: signerName.trim(),
+          // Sign-time guard: the server rejects (409) if the quote changed since load.
+          expectedContractHash: data.contractHash,
         }),
       });
+      if (res.status === 409) {
+        // Quote changed underneath the client — do not record; prompt a refresh.
+        onQuoteChanged?.();
+        return;
+      }
       const result = await res.json();
       if (res.ok) {
         track({
@@ -110,7 +119,7 @@ export function SignContractTab({
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="bg-white border rounded-lg overflow-hidden">
         {/* Contract HTML content */}
-        <div className="px-8 py-6">
+        <div className="px-4 sm:px-8 py-6 overflow-x-auto">
           <div
             className="prose prose-sm max-w-none"
             dangerouslySetInnerHTML={{ __html: contract.termsHtml }}
@@ -118,7 +127,7 @@ export function SignContractTab({
         </div>
 
         {/* Signature section */}
-        <div className="px-8 py-6 border-t">
+        <div className="px-4 sm:px-8 py-6 border-t">
           {!isSigned ? (
             <div className="space-y-4">
               <div>
@@ -130,7 +139,7 @@ export function SignContractTab({
                   value={signerName}
                   onChange={(e) => setSignerName(e.target.value)}
                   placeholder="Full name"
-                  className="w-full max-w-md border rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full max-w-md border rounded px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
@@ -162,9 +171,7 @@ export function SignContractTab({
                         <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">
                           Timestamp
                         </td>
-                        <td className="px-4 py-3 text-gray-400 italic">
-                          Will be recorded on sign
-                        </td>
+                        <td className="px-4 py-3 text-gray-400 italic">Will be recorded on sign</td>
                       </tr>
                     </tbody>
                   </table>
@@ -174,7 +181,7 @@ export function SignContractTab({
               <button
                 onClick={handleSign}
                 disabled={signing || !signerName.trim()}
-                className="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                className="px-6 py-2.5 bg-[#405daa] text-white text-base font-semibold rounded hover:bg-[#10365a] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
               >
                 {signing ? "Signing..." : "Sign Contract"}
               </button>
@@ -197,18 +204,12 @@ export function SignContractTab({
                     </td>
                   </tr>
                   <tr className="border-b">
-                    <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">
-                      Printed Name
-                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">Printed Name</td>
                     <td className="px-4 py-3">{contract.signature!.signerName}</td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">
-                      Timestamp
-                    </td>
-                    <td className="px-4 py-3">
-                      {formatSignedAt(contract.signature!.signedAt)}
-                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">Timestamp</td>
+                    <td className="px-4 py-3">{formatSignedAt(contract.signature!.signedAt)}</td>
                   </tr>
                 </tbody>
               </table>
