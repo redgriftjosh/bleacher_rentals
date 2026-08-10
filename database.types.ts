@@ -134,6 +134,42 @@ export type Database = {
         }
         Relationships: []
       }
+      AppVersionPolicy: {
+        Row: {
+          android_store_url: string
+          environment: string
+          id: string
+          ios_store_url: string
+          message: string | null
+          recommended_version: string
+          required_version: string
+          soft_deadline: string | null
+          updated_at: string
+        }
+        Insert: {
+          android_store_url?: string
+          environment: string
+          id?: string
+          ios_store_url?: string
+          message?: string | null
+          recommended_version: string
+          required_version: string
+          soft_deadline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          android_store_url?: string
+          environment?: string
+          id?: string
+          ios_store_url?: string
+          message?: string | null
+          recommended_version?: string
+          required_version?: string
+          soft_deadline?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       BleacherEvents: {
         Row: {
           bleacher_uuid: string | null
@@ -910,11 +946,17 @@ export type Database = {
         Row: {
           account_manager_uuid: string | null
           address_uuid: string | null
+          app_platform: string | null
+          app_version: string | null
+          app_version_reported_at: string | null
           created_at: string
           id: string
+          insurance_expires_on: string | null
           insurance_photo_path: string | null
           is_active: boolean
+          license_expires_on: string | null
           license_photo_path: string | null
+          medical_card_expires_on: string | null
           medical_card_photo_path: string | null
           pay_currency: Database["public"]["Enums"]["pay_currency_type"]
           pay_per_unit: Database["public"]["Enums"]["pay_per_unit_type"]
@@ -928,11 +970,17 @@ export type Database = {
         Insert: {
           account_manager_uuid?: string | null
           address_uuid?: string | null
+          app_platform?: string | null
+          app_version?: string | null
+          app_version_reported_at?: string | null
           created_at?: string
           id?: string
+          insurance_expires_on?: string | null
           insurance_photo_path?: string | null
           is_active?: boolean
+          license_expires_on?: string | null
           license_photo_path?: string | null
+          medical_card_expires_on?: string | null
           medical_card_photo_path?: string | null
           pay_currency?: Database["public"]["Enums"]["pay_currency_type"]
           pay_per_unit?: Database["public"]["Enums"]["pay_per_unit_type"]
@@ -946,11 +994,17 @@ export type Database = {
         Update: {
           account_manager_uuid?: string | null
           address_uuid?: string | null
+          app_platform?: string | null
+          app_version?: string | null
+          app_version_reported_at?: string | null
           created_at?: string
           id?: string
+          insurance_expires_on?: string | null
           insurance_photo_path?: string | null
           is_active?: boolean
+          license_expires_on?: string | null
           license_photo_path?: string | null
+          medical_card_expires_on?: string | null
           medical_card_photo_path?: string | null
           pay_currency?: Database["public"]["Enums"]["pay_currency_type"]
           pay_per_unit?: Database["public"]["Enums"]["pay_per_unit_type"]
@@ -3796,6 +3850,15 @@ export type Database = {
       recompute_maintenance_cost_per_year_bucket: {
         Args: { p_year: number }
         Returns: undefined
+      }
+      recompute_quote_hashes: {
+        Args: { p_event_id: string }
+        Returns: undefined
+      }
+      user_can_manage_zone: { Args: { p_zone_uuid: string }; Returns: boolean }
+      user_shares_zone_with_driver: {
+        Args: { p_driver_uuid: string }
+        Returns: boolean
       }
     }
     Enums: {

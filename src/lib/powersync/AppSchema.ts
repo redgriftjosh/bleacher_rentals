@@ -226,6 +226,12 @@ const DriversCols = {
   medical_card_photo_path: column.text,
   vehicle_uuid: column.text,
   vendor_uuid: column.text,
+  app_platform: column.text,
+  app_version: column.text,
+  app_version_reported_at: column.text,
+  insurance_expires_on: column.text,
+  license_expires_on: column.text,
+  medical_card_expires_on: column.text,
 } satisfies PowerSyncColsFor<"Drivers">;
 const Drivers = new Table(DriversCols, {
   indexes: {
