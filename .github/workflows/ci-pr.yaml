@@ -25,6 +25,30 @@ jobs:
       - name: Run unit tests
         run: npx vitest run
 
+  changelog:
+    runs-on: ubuntu-latest
+    # Only gate promotions into the deployable branches.
+    if: contains(fromJSON('["develop","staging","main"]'), github.base_ref)
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch target branch
+        run: git fetch origin ${{ github.base_ref }}
+
+      - name: Check version bump and release notes
+        run: npx tsx scripts/changelog/checkChangelog.cli.ts ${{ github.base_ref }}
+
   test:
     runs-on: ubuntu-latest
 

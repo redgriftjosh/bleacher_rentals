@@ -36,6 +36,11 @@ import {
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute, typedGetAll, expect } from "@/lib/powersync/typedQuery";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import {
+  resolveStatusOnSave,
+  shouldSendDriverNotification,
+  type WorkTrackerChangeType,
+} from "@/features/workTrackers/util/workTrackerEditPolicy";
 
 // 🔁 1. For each bleacher, find all bleacherEvents with its bleacher_id.
 // 🔁 2. From those bleacherEvents, get the event_ids.
@@ -331,6 +336,7 @@ export async function saveWorkTracker(
   dropOffAddress: AddressData | null,
   options?: {
     previousStatus?: Enums<"worktracker_status">;
+    changeType?: WorkTrackerChangeType;
     driverUserUuid?: string | null;
     previousPickupAddress?: string;
     previousPickupCity?: string;
@@ -365,7 +371,11 @@ export async function saveWorkTracker(
     previousBleacherUuid = previousRows[0]?.bleacher_uuid ?? null;
   }
   const previousStatus = options?.previousStatus ?? "draft";
-  const nextStatus = workTracker.status;
+  const changeType = options?.changeType;
+  const effectiveStatus =
+    changeType === undefined
+      ? workTracker.status
+      : resolveStatusOnSave(previousStatus, changeType, workTracker.status);
   const pickupAddressText = toNotificationAddress(
     pickUpAddress,
     options?.previousPickupAddress ?? "an unknown pickup location",
@@ -394,7 +404,7 @@ export async function saveWorkTracker(
     bleacher_uuid: workTracker.bleacher_uuid,
     internal_notes: workTracker.internal_notes,
     driver_uuid: workTracker.driver_uuid,
-    status: workTracker.status,
+    status: effectiveStatus,
     work_tracker_type_uuid: workTracker.work_tracker_type_uuid,
     distance_meters: workTracker.distance_meters,
     drive_minutes: workTracker.drive_minutes,
@@ -417,15 +427,19 @@ export async function saveWorkTracker(
     );
   }
 
-  const notification = buildTripStatusNotification({
-    previousStatus: wasInsert ? "draft" : previousStatus,
-    nextStatus,
-    pickupAddress: pickupAddressText,
-    pickupCity: pickupCityText,
-    dropoffAddress: dropoffAddressText,
-    dropoffCity: dropoffCityText,
-    date: workTracker.date,
-  });
+  const notification =
+    changeType === undefined ||
+    shouldSendDriverNotification(changeType, previousStatus, wasInsert, effectiveStatus)
+      ? buildTripStatusNotification({
+          previousStatus: wasInsert ? "draft" : previousStatus,
+          nextStatus: effectiveStatus,
+          pickupAddress: pickupAddressText,
+          pickupCity: pickupCityText,
+          dropoffAddress: dropoffAddressText,
+          dropoffCity: dropoffCityText,
+          date: workTracker.date,
+        })
+      : null;
 
   if (notification) {
     const driverUserUuid =
@@ -448,6 +462,71 @@ export async function saveWorkTracker(
 
   updateDataBase(["WorkTrackers", "Addresses"]);
   createSuccessToast(["Work Tracker saved"]);
+}
+
+export async function moveWorkTracker(params: {
+  workTrackerUuid: string;
+  targetBleacherUuid: string;
+  targetDate: string;
+  previousStatus: Enums<"worktracker_status">;
+  previousBleacherUuid: string;
+  driverUuid?: string | null;
+  driverUserUuid?: string | null;
+  pickupAddress?: string;
+  pickupCity?: string;
+  dropoffAddress?: string;
+  dropoffCity?: string;
+  date?: string | null;
+}): Promise<void> {
+  const nextStatus =
+    params.previousStatus === "accepted" ? "released" : params.previousStatus;
+
+  await typedExecute(
+    db
+      .updateTable("WorkTrackers")
+      .set({
+        bleacher_uuid: params.targetBleacherUuid,
+        date: params.targetDate,
+        status: nextStatus,
+      })
+      .where("id", "=", params.workTrackerUuid)
+      .compile(),
+  );
+
+  if (
+    shouldSendDriverNotification("un-accept", params.previousStatus, false, nextStatus)
+  ) {
+    const notification = buildTripStatusNotification({
+      previousStatus: params.previousStatus,
+      nextStatus,
+      pickupAddress: params.pickupAddress ?? "an unknown pickup location",
+      pickupCity: params.pickupCity,
+      dropoffAddress: params.dropoffAddress ?? "an unknown dropoff location",
+      dropoffCity: params.dropoffCity,
+      date: params.date ?? params.targetDate,
+    });
+
+    if (notification) {
+      const driverUserUuid =
+        params.driverUserUuid ?? (await fetchDriverUserUuidByDriverUuid(params.driverUuid ?? null));
+
+      if (driverUserUuid) {
+        await insertDriverNotification(driverUserUuid, notification);
+      }
+    }
+  }
+
+  try {
+    const { triage } = await import("@/features/alerts/triage");
+    await triage("WorkTrackers", {
+      id: params.workTrackerUuid,
+      previous_bleacher_uuid: params.previousBleacherUuid,
+    });
+  } catch (e) {
+    console.error("[alerts] failed to triage after work tracker move", e);
+  }
+
+  updateDataBase(["WorkTrackers"]);
 }
 
 export async function deleteWorkTracker(

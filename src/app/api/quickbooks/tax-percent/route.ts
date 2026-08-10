@@ -1,8 +1,5 @@
-import {
-  getBaseUrl,
-  getQboAccessTokenAndRealmId,
-} from "@/features/quickbooks-integration/util";
-import { requireAdmin } from "@/features/userAccess/logic/requireAdmin";
+import { getBaseUrl, getQboAccessTokenAndRealmId } from "@/features/quickbooks-integration/util";
+import { requireAdminOrAccountManager } from "@/features/userAccess/logic/requireAdminOrAccountManager";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -24,7 +21,7 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function GET(req: NextRequest) {
   try {
-    await requireAdmin();
+    await requireAdminOrAccountManager();
 
     const sp = req.nextUrl.searchParams;
     const connectionId = sp.get("connectionId");
@@ -174,15 +171,12 @@ export async function GET(req: NextRequest) {
     let taxCodes: any[] = [];
     try {
       const tcQuery = encodeURIComponent("SELECT * FROM TaxCode WHERE Active = true");
-      const tcRes = await fetch(
-        `${baseUrl}/${realmId}/query?query=${tcQuery}&minorversion=73`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            Accept: "application/json",
-          },
+      const tcRes = await fetch(`${baseUrl}/${realmId}/query?query=${tcQuery}&minorversion=73`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
         },
-      );
+      });
       if (tcRes.ok) {
         const tcData = await tcRes.json();
         taxCodes = tcData.QueryResponse?.TaxCode ?? [];
@@ -201,15 +195,12 @@ export async function GET(req: NextRequest) {
     // ── 4. Query tax rates for detail ──
     try {
       const trQuery = encodeURIComponent("SELECT * FROM TaxRate WHERE Active = true");
-      const trRes = await fetch(
-        `${baseUrl}/${realmId}/query?query=${trQuery}&minorversion=73`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            Accept: "application/json",
-          },
+      const trRes = await fetch(`${baseUrl}/${realmId}/query?query=${trQuery}&minorversion=73`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
         },
-      );
+      });
       if (trRes.ok) {
         const trData = await trRes.json();
         debug.taxRates = (trData.QueryResponse?.TaxRate ?? []).map((tr: any) => ({

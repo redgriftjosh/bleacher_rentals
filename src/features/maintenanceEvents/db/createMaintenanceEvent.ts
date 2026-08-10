@@ -6,10 +6,17 @@ import { SuccessToast } from "@/components/toasts/SuccessToast";
 import { MaintenanceEventStore } from "../state/useMaintenanceEventStore";
 import { Database, TablesInsert } from "../../../../database.types";
 
+export type CreateMaintenanceEventOptions = {
+  /** When set, only this damage report is resolved (dashboard bulk-resolve otherwise). */
+  resolveDamageReportUuid?: string;
+  createdByUserUuid?: string | null;
+};
+
 export async function createMaintenanceEvent(
   state: MaintenanceEventStore,
   supabase: SupabaseClient<Database>,
-): Promise<void> {
+  options?: CreateMaintenanceEventOptions,
+): Promise<string> {
   if (!supabase) {
     throw new Error("No Supabase Client found");
   }
@@ -87,6 +94,7 @@ export async function createMaintenanceEvent(
     cost_cents: state.costCents,
     address_uuid: addressUuid,
     notes: state.notes || null,
+    ...(options?.createdByUserUuid ? { created_by_user_uuid: options.createdByUserUuid } : {}),
   };
 
   const { data: eventData, error: eventError } = await supabase
@@ -138,15 +146,22 @@ export async function createMaintenanceEvent(
     throw new Error(`Failed to link bleachers: ${junctionError.message}`);
   }
 
-  // 4. Auto-resolve unresolved damage reports for selected bleachers
-  const { error: resolveError } = await supabase
-    .from("DamageReports")
-    .update({
-      resolved_at: new Date().toISOString(),
-      maintenance_event_uuid: maintenanceEventUuid,
-    })
-    .in("bleacher_uuid", state.bleacherUuids)
-    .is("resolved_at", null);
+  // 4. Resolve linked damage report(s)
+  const resolvePayload = {
+    resolved_at: new Date().toISOString(),
+    maintenance_event_uuid: maintenanceEventUuid,
+  };
+  const { error: resolveError } = options?.resolveDamageReportUuid
+    ? await supabase
+        .from("DamageReports")
+        .update(resolvePayload)
+        .eq("id", options.resolveDamageReportUuid)
+        .is("resolved_at", null)
+    : await supabase
+        .from("DamageReports")
+        .update(resolvePayload)
+        .in("bleacher_uuid", state.bleacherUuids)
+        .is("resolved_at", null);
 
   if (resolveError) {
     console.warn("Failed to auto-resolve damage reports:", resolveError.message);
@@ -160,4 +175,6 @@ export async function createMaintenanceEvent(
       }),
     { duration: 5000 },
   );
+
+  return maintenanceEventUuid;
 }
