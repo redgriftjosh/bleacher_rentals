@@ -45,9 +45,11 @@ export const ChangeLogPage = () => {
         <div className="mt-8 space-y-10">
           {entries.map((entry) => (
             <article key={entry.id} data-testid="changelog-entry" data-version={entry.version}>
-              <div className="flex items-baseline gap-3 border-b border-gray-200 pb-2">
-                <h2 className="text-lg font-semibold text-darkBlue">{entry.version}</h2>
-                <span className="text-sm text-gray-500">{formatReleasedAt(entry.released_at)}</span>
+              <div className="-mx-16 rounded-md bg-darkBlue px-8 py-4">
+                <h2 className="text-3xl font-bold text-white">{entry.version}</h2>
+                <p className="mt-0 text-sm font-medium text-white/70">
+                  {formatReleasedAt(entry.released_at)}
+                </p>
               </div>
               <div className="pt-4">
                 <ChangeLogMarkdown body={entry.body_md} />
