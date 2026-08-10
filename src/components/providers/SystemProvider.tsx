@@ -13,6 +13,7 @@ import {
   LogLevel,
 } from "@powersync/web";
 import { wrapPowerSyncWithKysely } from "@powersync/kysely-driver";
+import { DummyDriver, Kysely, SqliteDialect } from "kysely";
 import React, { Suspense, useEffect, useMemo } from "react";
 
 const logger = createBaseLogger();
@@ -20,7 +21,8 @@ logger.useDefaults();
 logger.setLevel(LogLevel.DEBUG);
 
 let _powerSyncDb: PowerSyncDatabase | undefined;
-let _db: ReturnType<typeof wrapPowerSyncWithKysely<PowerSyncDB>> | undefined;
+let _db: Kysely<PowerSyncDB> | undefined;
+let _ssrDb: Kysely<PowerSyncDB> | undefined;
 
 function chooseVfs() {
   const isBrowser = typeof window !== "undefined";
@@ -75,7 +77,21 @@ export function getPowerSyncDb(): PowerSyncDatabase {
   return _powerSyncDb;
 }
 
-export function getDb() {
+function getSsrCompileDb(): Kysely<PowerSyncDB> {
+  _ssrDb ??= new Kysely<PowerSyncDB>({
+    dialect: new SqliteDialect({
+      // Compile-only on the server: query building never touches the driver.
+      database: () => new DummyDriver() as never,
+    }),
+  });
+  return _ssrDb;
+}
+
+export function getDb(): Kysely<PowerSyncDB> {
+  if (typeof window === "undefined") {
+    return getSsrCompileDb();
+  }
+
   _db ??= wrapPowerSyncWithKysely<PowerSyncDB>(getPowerSyncDb());
   return _db;
 }
@@ -92,8 +108,7 @@ function createBoundLazyProxy<T extends object>(getInstance: () => T): T {
 
 // Backwards-compatible exports so existing imports keep working.
 export const powerSyncDb: PowerSyncDatabase = createBoundLazyProxy(getPowerSyncDb);
-export const db: ReturnType<typeof wrapPowerSyncWithKysely<PowerSyncDB>> =
-  createBoundLazyProxy(getDb);
+export const db: Kysely<PowerSyncDB> = createBoundLazyProxy(getDb);
 
 export const SystemProvider = ({ children }: { children: React.ReactNode }) => {
   const { isSignedIn } = useAuth();

@@ -2,8 +2,52 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { CurrentUserState, TeamRoleTab } from "../state/useCurrentUserStore";
 import { Database } from "@/../database.types";
 import { STATUSES } from "../constants";
+import {
+  computeDriverZoneAssignmentChanges,
+  reconcileZoneDriverMap,
+} from "../logic/driverZoneAssignments";
+import {
+  clerkInviteErrorMessage,
+  isDuplicateUserEmailError,
+  toErrorMessage,
+} from "../util/inviteErrorMessages";
 
 type TypedSupabaseClient = SupabaseClient<Database>;
+
+// Resolves the current user's admin flag via the same mechanism the RLS policies use
+// (auth.jwt() -> 'sub'), so it stays consistent with the database's row-level security.
+async function currentUserIsAdmin(supabase: TypedSupabaseClient): Promise<boolean> {
+  const { data: roles, error } = await supabase.rpc("get_user_roles");
+  if (error) throw new Error(error.message);
+  return (roles ?? []).includes("admin");
+}
+
+// Whether the current actor may update the Drivers row itself (pay, contact, etc.).
+// Zone-based, independent of the deprecated account_manager_uuid: admin, or an AM who
+// already shares a zone with the driver. A driver not yet in any of the AM's zones is
+// still added to the zone via syncDriverZoneAssignments (its own DriverZones RLS) — the
+// row-detail update is simply skipped until the driver is in one of the AM's zones.
+async function currentUserCanEditDriverRow(
+  supabase: TypedSupabaseClient,
+  driverUuid: string,
+): Promise<boolean> {
+  if (await currentUserIsAdmin(supabase)) return true;
+
+  const { data: amId, error: amError } = await supabase.rpc("get_current_account_manager_id");
+  if (amError) throw new Error(amError.message);
+  if (!amId) return false;
+
+  const [{ data: managedZones, error: mzError }, { data: driverZones, error: dzError }] =
+    await Promise.all([
+      supabase.from("AccountManagerZones").select("zone_uuid").eq("account_manager_uuid", amId),
+      supabase.from("DriverZones").select("zone_uuid").eq("driver_uuid", driverUuid),
+    ]);
+  if (mzError) throw new Error(mzError.message);
+  if (dzError) throw new Error(dzError.message);
+
+  const managed = new Set((managedZones ?? []).map((r) => r.zone_uuid));
+  return (driverZones ?? []).some((r) => managed.has(r.zone_uuid));
+}
 
 // Helper function to create or update an address
 async function upsertAddress(
@@ -116,7 +160,12 @@ export async function createUser(
       .select("id")
       .single();
 
-    if (userError) throw userError;
+    if (userError) {
+      if (isDuplicateUserEmailError(userError)) {
+        throw new Error(`A user with the email "${state.email}" already exists.`);
+      }
+      throw userError;
+    }
     const userUuid = userData.id;
 
     // 2. If driver, insert into Drivers table
@@ -127,14 +176,14 @@ export async function createUser(
       // Create vehicle if provided
       const vehicleUuid = await upsertVehicle(supabase, state, null);
 
+      const driverUuid = state.driverId ?? crypto.randomUUID();
       const { error: driverError } = await supabase.from("Drivers").insert({
-        id: state.driverId ?? undefined,
+        id: driverUuid,
         user_uuid: userUuid,
         tax: state.tax ?? 0,
         pay_rate_cents: state.payRateCents ?? 0,
         pay_currency: state.payCurrency,
         pay_per_unit: state.payPerUnit,
-        account_manager_uuid: state.accountManagerUuid,
         vendor_uuid: state.vendorUuid,
         phone_number: state.phoneNumber,
         address_uuid: addressUuid,
@@ -146,6 +195,8 @@ export async function createUser(
       });
 
       if (driverError) throw driverError;
+
+      await syncDriverZoneAssignments(supabase, driverUuid, state.assignedDriverZoneUuids);
     }
 
     // 3. If account manager, insert into AccountManagers table
@@ -167,7 +218,10 @@ export async function createUser(
         .eq("user_uuid", userUuid)
         .single();
       if (newAmData) {
-        await syncZoneAssignments(supabase, newAmData.id, state.assignedZoneEntries);
+        // AccountManagerZones is admin-only per RLS; skip for non-admin actors.
+        if (await currentUserIsAdmin(supabase)) {
+          await syncZoneAssignments(supabase, newAmData.id, state.assignedZoneEntries);
+        }
         await syncDriverZonesForAm(supabase, state.zoneDriverMap);
       }
     }
@@ -185,7 +239,7 @@ export async function createUser(
     return { success: true, userUuid };
   } catch (error) {
     console.error("Error creating user:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    return { success: false, error: toErrorMessage(error) };
   }
 }
 
@@ -199,6 +253,13 @@ export async function updateUser(
 
   try {
     const userUuid = state.existingUserUuid;
+
+    // Snapshot of state.zoneDriverMap, folded with whatever the driver block below does to
+    // this user's own DriverZones rows in this same submit. Kept separate from state.zoneDriverMap
+    // (which stays a stale, page-load snapshot) so the AM-role sync at the end of this function
+    // doesn't clobber a driver-zone edit that just happened above it. See
+    // docs/specs/fix-am-self-driver-zone-clobber.md.
+    let zoneDriverMapForAmSync = state.zoneDriverMap;
 
     // 1. Update Users table
     const { error: userError } = await supabase
@@ -229,36 +290,54 @@ export async function updateUser(
       const vehicleUuid = await upsertVehicle(supabase, state, state.vehicleUuid);
 
       if (existingDriver) {
-        // Update existing driver and set to active
-        const { error: driverUpdateError } = await supabase
-          .from("Drivers")
-          .update({
-            tax: state.tax ?? 0,
-            pay_rate_cents: state.payRateCents ?? 0,
-            pay_currency: state.payCurrency,
-            pay_per_unit: state.payPerUnit,
-            account_manager_uuid: state.accountManagerUuid,
-            vendor_uuid: state.vendorUuid,
-            phone_number: state.phoneNumber,
-            address_uuid: addressUuid,
-            vehicle_uuid: vehicleUuid,
-            license_photo_path: state.licensePhotoPath,
-            insurance_photo_path: state.insurancePhotoPath,
-            medical_card_photo_path: state.medicalCardPhotoPath,
-            is_active: true,
-          })
-          .eq("user_uuid", userUuid);
-        if (driverUpdateError) throw driverUpdateError;
+        // Sync zones FIRST so that a zone the AM just added grants them edit rights on the
+        // row update below (drivers_update RLS is zone-based). This keeps the UI and the DB
+        // in agreement: if the form let the AM edit the other fields because they picked one
+        // of their zones, those edits are actually saved in the same submit.
+        const { toAdd, toRemove } = await syncDriverZoneAssignments(
+          supabase,
+          existingDriver.id,
+          state.assignedDriverZoneUuids,
+        );
+        zoneDriverMapForAmSync = reconcileZoneDriverMap({
+          zoneDriverMap: zoneDriverMapForAmSync,
+          driverUuid: existingDriver.id,
+          addedZoneUuids: toAdd,
+          removedZoneUuids: toRemove,
+        });
+
+        // Only update the Drivers row when allowed by RLS (admin, or an AM sharing a zone
+        // with the driver — which now includes any zone added just above).
+        if (await currentUserCanEditDriverRow(supabase, existingDriver.id)) {
+          const { error: driverUpdateError } = await supabase
+            .from("Drivers")
+            .update({
+              tax: state.tax ?? 0,
+              pay_rate_cents: state.payRateCents ?? 0,
+              pay_currency: state.payCurrency,
+              pay_per_unit: state.payPerUnit,
+              vendor_uuid: state.vendorUuid,
+              phone_number: state.phoneNumber,
+              address_uuid: addressUuid,
+              vehicle_uuid: vehicleUuid,
+              license_photo_path: state.licensePhotoPath,
+              insurance_photo_path: state.insurancePhotoPath,
+              medical_card_photo_path: state.medicalCardPhotoPath,
+              is_active: true,
+            })
+            .eq("user_uuid", userUuid);
+          if (driverUpdateError) throw driverUpdateError;
+        }
       } else {
         // Create new driver record
+        const newDriverId = state.driverId ?? crypto.randomUUID();
         const { error: driverInsertError } = await supabase.from("Drivers").insert({
-          id: state.driverId ?? undefined,
+          id: newDriverId,
           user_uuid: userUuid,
           tax: state.tax ?? 0,
           pay_rate_cents: state.payRateCents ?? 0,
           pay_currency: state.payCurrency,
           pay_per_unit: state.payPerUnit,
-          account_manager_uuid: state.accountManagerUuid,
           vendor_uuid: state.vendorUuid,
           phone_number: state.phoneNumber,
           address_uuid: addressUuid,
@@ -270,6 +349,18 @@ export async function updateUser(
         });
 
         if (driverInsertError) throw driverInsertError;
+
+        const { toAdd, toRemove } = await syncDriverZoneAssignments(
+          supabase,
+          newDriverId,
+          state.assignedDriverZoneUuids,
+        );
+        zoneDriverMapForAmSync = reconcileZoneDriverMap({
+          zoneDriverMap: zoneDriverMapForAmSync,
+          driverUuid: newDriverId,
+          addedZoneUuids: toAdd,
+          removedZoneUuids: toRemove,
+        });
       }
     } else if (existingDriver) {
       // Mark driver as inactive instead of deleting
@@ -317,8 +408,13 @@ export async function updateUser(
         .eq("user_uuid", userUuid)
         .single();
       if (currentAmData) {
-        await syncZoneAssignments(supabase, currentAmData.id, state.assignedZoneEntries);
-        await syncDriverZonesForAm(supabase, state.zoneDriverMap);
+        // Which zones an AM manages (AccountManagerZones) is admin-only per RLS.
+        // A non-admin AM editing this page keeps their existing zone assignments;
+        // they can still manage the drivers within their zones below.
+        if (await currentUserIsAdmin(supabase)) {
+          await syncZoneAssignments(supabase, currentAmData.id, state.assignedZoneEntries);
+        }
+        await syncDriverZonesForAm(supabase, zoneDriverMapForAmSync);
       }
     } else if (existingAM) {
       // Remove account manager role
@@ -374,7 +470,7 @@ export async function updateUser(
     return { success: true };
   } catch (error) {
     console.error("Error updating user:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    return { success: false, error: toErrorMessage(error) };
   }
 }
 
@@ -410,6 +506,75 @@ async function updateDriverAssignments(
       .update({ account_manager_uuid: accountManagerUuid })
       .in("id", state.assignedDriverUuids);
   }
+}
+
+async function syncDriverZoneAssignments(
+  supabase: TypedSupabaseClient,
+  driverUuid: string,
+  selectedZoneUuids: string[],
+): Promise<{ toAdd: string[]; toRemove: string[] }> {
+  const { data: existingRows, error: existingError } = await supabase
+    .from("DriverZones")
+    .select("zone_uuid")
+    .eq("driver_uuid", driverUuid);
+
+  if (existingError) throw new Error(existingError.message);
+
+  const existingZoneUuids = (existingRows ?? []).map((r) => r.zone_uuid);
+
+  // Resolve identity via the same mechanism as the RLS policies (auth.jwt() -> 'sub'),
+  // NOT supabase.auth.getUser(): this app authenticates through Clerk third-party auth,
+  // so there is no Supabase auth user, and `user.id` would be the Clerk sub, not Users.id.
+  const isAdmin = await currentUserIsAdmin(supabase);
+
+  let manageableZoneUuids: string[] | null = null;
+  if (!isAdmin) {
+    const { data: currentUserUuid, error: userIdError } =
+      await supabase.rpc("get_current_user_uuid");
+    if (userIdError) throw new Error(userIdError.message);
+    if (!currentUserUuid) throw new Error("Not authenticated");
+
+    const { data: amRow, error: amError } = await supabase
+      .from("AccountManagers")
+      .select("id")
+      .eq("user_uuid", currentUserUuid)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (amError) throw new Error(amError.message);
+    if (!amRow) throw new Error("Not authorized to manage driver zone assignments");
+
+    const { data: zoneRows, error: zoneError } = await supabase
+      .from("AccountManagerZones")
+      .select("zone_uuid")
+      .eq("account_manager_uuid", amRow.id);
+
+    if (zoneError) throw new Error(zoneError.message);
+    manageableZoneUuids = (zoneRows ?? []).map((r) => r.zone_uuid);
+  }
+
+  const { toAdd, toRemove } = computeDriverZoneAssignmentChanges({
+    selectedZoneUuids,
+    existingZoneUuids,
+    manageableZoneUuids,
+  });
+
+  if (toRemove.length > 0) {
+    const { error } = await supabase
+      .from("DriverZones")
+      .delete()
+      .eq("driver_uuid", driverUuid)
+      .in("zone_uuid", toRemove);
+    if (error) throw new Error(error.message);
+  }
+
+  if (toAdd.length > 0) {
+    const rows = toAdd.map((zone_uuid) => ({ driver_uuid: driverUuid, zone_uuid }));
+    const { error } = await supabase.from("DriverZones").insert(rows);
+    if (error) throw new Error(error.message);
+  }
+
+  return { toAdd, toRemove };
 }
 
 async function syncDriverZonesForAm(
@@ -459,15 +624,42 @@ export async function sendUserInvite(email: string): Promise<{ success: boolean;
       body: JSON.stringify({ email }),
     });
 
+    const data = await response.json();
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to send invite");
+      // The API route already resolves this to a human-readable message
+      // (see clerkInviteErrorMessage in inviteErrorMessages.ts); fall back
+      // to the generic Clerk-shaped mapper only if that field is missing.
+      throw new Error(data.error || clerkInviteErrorMessage(data, "Failed to send invite"));
     }
 
     return { success: true };
   } catch (error) {
     console.error("Error sending invite:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    return { success: false, error: toErrorMessage(error) };
+  }
+}
+
+export async function revokeUserInvite(
+  email: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch("/api/invite", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || clerkInviteErrorMessage(data, "Failed to revoke invite"));
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error revoking invite:", error);
+    return { success: false, error: toErrorMessage(error) };
   }
 }
 
@@ -533,6 +725,12 @@ export async function fetchUserById(
       result.medicalCardPhotoPath = driver.medical_card_photo_path;
       result.driverId = driver.id;
       result.phoneNumber = driver.phone_number;
+
+      const { data: driverZoneRows } = await supabase
+        .from("DriverZones")
+        .select("zone_uuid")
+        .eq("driver_uuid", driver.id);
+      result.assignedDriverZoneUuids = (driverZoneRows ?? []).map((r) => r.zone_uuid);
 
       // Address info
       if (driver.Addresses) {

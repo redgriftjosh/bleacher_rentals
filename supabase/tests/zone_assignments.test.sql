@@ -27,6 +27,9 @@ DECLARE
   v_driver_id    UUID;
   v_zone_a       UUID;
   v_zone_b       UUID;
+  v_zone_c       UUID;
+  v_other_am_usr UUID;
+  v_other_am     UUID;
   v_bleacher_id  UUID;
   v_count        INTEGER;
   v_zone         UUID;
@@ -218,14 +221,35 @@ BEGIN
     format('3.6 Admin should see DriverZones, got %s', v_count);
   RAISE NOTICE 'TEST 3.6 (admin SELECT DriverZones) OK';
 
-  -- TEST 3.7: AM CANNOT insert into DriverZones
+  -- TEST 3.7: AM CAN insert into DriverZones for their zone
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
+  DELETE FROM public."DriverZones"
+  WHERE driver_uuid = v_driver_id AND zone_uuid = v_zone_a;
+
   PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
   BEGIN
     INSERT INTO public."DriverZones" (driver_uuid, zone_uuid)
-    VALUES (v_driver_id, gen_random_uuid());
-    ASSERT false, '3.7 AM should not be able to insert into DriverZones';
+    VALUES (v_driver_id, v_zone_a);
+    RAISE NOTICE 'TEST 3.7 (AM INSERT DriverZones for own zone) OK';
   EXCEPTION WHEN others THEN
-    RAISE NOTICE 'TEST 3.7 (AM INSERT DriverZones denied) OK';
+    ASSERT false, format('3.7 AM should insert DriverZones for assigned zone: %s', SQLERRM);
+  END;
+
+  -- TEST 3.7b: AM CANNOT insert into DriverZones for a zone they do not manage.
+  -- Use a real, FK-valid zone (created by admin) so the failure is enforced by RLS,
+  -- not by a foreign-key violation on a random uuid.
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
+  INSERT INTO public."Zones" (display_name, description)
+  VALUES ('Test Zone C (unmanaged)', 'Zone the AM does not manage')
+  RETURNING id INTO v_zone_c;
+
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
+  BEGIN
+    INSERT INTO public."DriverZones" (driver_uuid, zone_uuid)
+    VALUES (v_driver_id, v_zone_c);
+    ASSERT false, '3.7b AM should not insert DriverZones for zone they do not manage';
+  EXCEPTION WHEN others THEN
+    RAISE NOTICE 'TEST 3.7b (AM INSERT DriverZones denied for foreign zone) OK';
   END;
 
   -- TEST 3.8: Viewer CANNOT insert into DriverZones
@@ -237,6 +261,44 @@ BEGIN
   EXCEPTION WHEN others THEN
     RAISE NOTICE 'TEST 3.8 (viewer INSERT DriverZones denied) OK';
   END;
+
+  -- TEST 3.9: AM CAN update a Drivers row for a driver in their zone, even when the
+  -- driver still carries a legacy account_manager_uuid pointing at a different AM.
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
+  INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer)
+  VALUES ('ZA OtherAM', 'Test', 'za_other_am@test.com', 'clerk_za_other_am', false, false)
+  RETURNING id INTO v_other_am_usr;
+  INSERT INTO public."AccountManagers" (user_uuid, is_active)
+  VALUES (v_other_am_usr, true)
+  RETURNING id INTO v_other_am;
+
+  -- Driver is owned (legacy) by the other AM but assigned to zone_a, which clerk_am manages.
+  UPDATE public."Drivers" SET account_manager_uuid = v_other_am WHERE id = v_driver_id;
+  INSERT INTO public."DriverZones" (driver_uuid, zone_uuid)
+  VALUES (v_driver_id, v_zone_a)
+  ON CONFLICT DO NOTHING;
+
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
+  BEGIN
+    UPDATE public."Drivers" SET pay_rate_cents = 222 WHERE id = v_driver_id;
+    SELECT count(*) INTO v_count FROM public."Drivers"
+    WHERE id = v_driver_id AND pay_rate_cents = 222;
+    ASSERT v_count = 1, '3.9 AM should update driver sharing their zone regardless of owner';
+    RAISE NOTICE 'TEST 3.9 (AM UPDATE driver in shared zone) OK';
+  EXCEPTION WHEN others THEN
+    ASSERT false, format('3.9 AM should update driver in shared zone: %s', SQLERRM);
+  END;
+
+  -- TEST 3.9b: AM CANNOT update a driver they neither own nor share a zone with.
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_admin)::text, true);
+  DELETE FROM public."DriverZones" WHERE driver_uuid = v_driver_id;
+
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', clerk_am)::text, true);
+  UPDATE public."Drivers" SET pay_rate_cents = 999 WHERE id = v_driver_id;
+  SELECT count(*) INTO v_count FROM public."Drivers"
+  WHERE id = v_driver_id AND pay_rate_cents = 999;
+  ASSERT v_count = 0, '3.9b AM should not update driver outside their zones';
+  RAISE NOTICE 'TEST 3.9b (AM UPDATE driver outside zones denied) OK';
 
   RAISE NOTICE '--- all zone assignment tests passed ---';
 END;

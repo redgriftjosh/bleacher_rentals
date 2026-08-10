@@ -25,3 +25,16 @@ jobs:
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
       - run: supabase db push
       - run: supabase seed buckets --linked --yes
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Insert release notes
+        env:
+          SUPABASE_URL: https://${{ secrets.DEV_PROJECT_ID }}.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/changelog/insertChangelog.cli.ts

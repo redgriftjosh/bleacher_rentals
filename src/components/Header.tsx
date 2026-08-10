@@ -1,14 +1,12 @@
 "use client";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Lightbulb } from "lucide-react";
 import { AlertsDropDown } from "@/features/alerts/components/AlertsDropDown";
+import { ProductDropDown } from "@/features/changelog/components/ProductDropDown";
 import { EventChatNotificationsDropDown } from "@/features/eventChat/components/EventChatNotificationsDropDown";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 
 const Header = () => {
-  const router = useRouter();
   const environment = process.env.NEXT_PUBLIC_ENVIRONMENT;
   const { isAdmin, isAccountManager } = usePermissionsStore();
   const showChatNotifications = isAdmin || isAccountManager;
@@ -55,13 +53,7 @@ const Header = () => {
           />
           <div className="flex items-center mr-2 relative">
             <div className="flex items-center  mr-4">
-              <button
-                className="flex text-white/70 items-center gap-1 rounded py-1 ml-2 text-sm hover:font-bold hover:underline hover:text-white cursor-pointer transition-all duration-300"
-                onClick={() => router.push("/roadmap")}
-              >
-                <Lightbulb size={20} />
-                Request a Feature
-              </button>
+              <ProductDropDown />
             </div>
             {showChatNotifications && (
               <div className="mr-3">

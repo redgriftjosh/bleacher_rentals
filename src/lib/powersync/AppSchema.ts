@@ -194,6 +194,8 @@ const EventsCols = {
   tax_percent: column.real,
   tax_amount_cents: column.integer,
   finance_contact_uuid: column.text,
+  content_hash: column.text,
+  contract_hash: column.text,
 } satisfies PowerSyncColsFor<"Events">;
 const Events = new Table(EventsCols, {
   indexes: {
@@ -224,6 +226,12 @@ const DriversCols = {
   medical_card_photo_path: column.text,
   vehicle_uuid: column.text,
   vendor_uuid: column.text,
+  app_platform: column.text,
+  app_version: column.text,
+  app_version_reported_at: column.text,
+  insurance_expires_on: column.text,
+  license_expires_on: column.text,
+  medical_card_expires_on: column.text,
 } satisfies PowerSyncColsFor<"Drivers">;
 const Drivers = new Table(DriversCols, {
   indexes: {
@@ -246,6 +254,7 @@ const DashboardFilterSettingsCols = {
   only_show_my_events: column.integer,
   optimization_mode: column.integer,
   show_address_tooltip: column.integer,
+  show_distance_tooltip: column.integer,
   season: column.text,
   account_manager_uuid: column.text,
   rows_quick_filter: column.integer,
@@ -288,7 +297,15 @@ const UsersCols = {
   is_viewer: column.integer,
   created_at: column.text,
   expo_push_token: column.text,
+  changelog_last_read_at: column.text,
 } satisfies PowerSyncColsFor<"Users">;
+
+const ChangeLogCols = {
+  version: column.text,
+  released_at: column.text,
+  body_md: column.text,
+} satisfies PowerSyncColsFor<"ChangeLog">;
+const ChangeLog = new Table(ChangeLogCols);
 const Users = new Table(UsersCols, { indexes: { status_uuid: ["status_uuid"] } });
 
 const UserStatusesCols = {
@@ -933,6 +950,7 @@ const ContractSignaturesCols = {
   status: column.text,
   invalidated_at: column.text,
   created_at: column.text,
+  signed_contract_hash: column.text,
 } satisfies PowerSyncColsFor<"ContractSignatures">;
 const ContractSignatures = new Table(ContractSignaturesCols, {
   indexes: { event_uuid: ["event_uuid"] },
@@ -1045,6 +1063,7 @@ export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
   AccountManagerZones,
+  ChangeLog,
   Zones,
   Developers,
   DashboardFilterSettings,
@@ -1181,3 +1200,4 @@ export type SalesOfficesRecord = PowerSyncDB["SalesOffices"];
 export type TermsAndConditionsRecord = PowerSyncDB["TermsAndConditions"];
 export type ContractSignaturesRecord = PowerSyncDB["ContractSignatures"];
 export type EventFilesRecord = PowerSyncDB["EventFiles"];
+export type ChangeLogRecord = PowerSyncDB["ChangeLog"];

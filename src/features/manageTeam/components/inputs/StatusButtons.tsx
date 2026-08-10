@@ -2,8 +2,7 @@
 import { useCurrentUserStore } from "../../state/useCurrentUserStore";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import { deactivateUser, reactivateUser, deleteUser } from "../../db/userStatusOperations";
-import { sendInviteUserEmail } from "../../api/sendInviteUserEmail";
-import { deleteInviteUserEmail } from "../../api/deleteInviteUserEmail";
+import { sendUserInvite, revokeUserInvite } from "../../db/userOperations";
 import { createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import {
@@ -40,9 +39,9 @@ export default function StatusButtons() {
   const handleResendInvite = async () => {
     setField("isSubmitting", true);
     try {
-      const success = await sendInviteUserEmail(email);
-      if (!success) {
-        throw new Error("Failed to send invite");
+      const result = await sendUserInvite(email);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to send invite");
       }
       createSuccessToast(["Invitation email sent successfully"]);
     } catch (error) {
@@ -58,9 +57,9 @@ export default function StatusButtons() {
   const handleRevokeInvite = async () => {
     setField("isSubmitting", true);
     try {
-      const success = await deleteInviteUserEmail(email);
-      if (!success) {
-        throw new Error("Failed to revoke invite");
+      const result = await revokeUserInvite(email);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to revoke invite");
       }
 
       const deleteResult = await deleteUser(supabase, existingUserUuid!);

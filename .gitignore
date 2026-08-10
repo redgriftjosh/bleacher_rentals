@@ -45,3 +45,11 @@ public/@powersync/
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# Playwright auth sessions (live tokens — never commit) + generated output
+playwright/.auth/
+test-results/
+playwright-report/
+
+# Editor/AI tooling
+.cursor/

@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, typedExecute, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { effectiveColumnDamage } from "@/lib/damageReportSeverity";
 
 export type DamageSeverity = "none" | "minor" | "major";
 
@@ -119,8 +120,8 @@ export function useDamageReports(params: { bleacherUuid: string | null; showDele
         inspection_uuid: r.inspection_uuid,
         is_safe_to_sit: !!r.is_safe_to_sit,
         is_safe_to_haul: !!r.is_safe_to_haul,
-        seat_damage: (r.seat_damage as DamageSeverity) ?? "none",
-        haul_damage: (r.haul_damage as DamageSeverity) ?? "none",
+        seat_damage: effectiveColumnDamage(r.seat_damage, r.is_safe_to_sit),
+        haul_damage: effectiveColumnDamage(r.haul_damage, r.is_safe_to_haul),
         note: r.note,
         created_at: r.created_at ?? "",
         resolved_at: r.resolved_at,

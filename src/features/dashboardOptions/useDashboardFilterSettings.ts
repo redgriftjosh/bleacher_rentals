@@ -19,6 +19,7 @@ type SettingsRow = {
   onlyShowMyEvents: number | null;
   optimizationMode: number | null;
   showAddressTooltip: number | null;
+  showDistanceTooltip: number | null;
   rowsQuickFilter: number | null;
   zoneUuids: string | null;
   showUnassignedZone: number | null;
@@ -91,6 +92,7 @@ export function useDashboardFilterSettings(): {
         "s.only_show_my_events as onlyShowMyEvents",
         "s.optimization_mode as optimizationMode",
         "s.show_address_tooltip as showAddressTooltip",
+        "s.show_distance_tooltip as showDistanceTooltip",
         "s.rows_quick_filter as rowsQuickFilter",
         "s.zone_uuids as zoneUuids",
         "s.show_unassigned_zone as showUnassignedZone",
@@ -133,6 +135,7 @@ export function useDashboardFilterSettings(): {
         only_show_my_events: 1,
         optimization_mode: 0,
         show_address_tooltip: 0,
+        show_distance_tooltip: 0,
         season: null,
         account_manager_uuid: null,
         rows_quick_filter: null,
@@ -167,6 +170,7 @@ export function useDashboardFilterSettings(): {
       onlyShowMyEvents: toBool(settingsRow.onlyShowMyEvents),
       optimizationMode: toBool(settingsRow.optimizationMode),
       showAddressTooltip: toBool(settingsRow.showAddressTooltip),
+      showDistanceTooltip: toBool(settingsRow.showDistanceTooltip),
       rowsQuickFilter:
         settingsRow.rowsQuickFilter === 10 || settingsRow.rowsQuickFilter === 15
           ? (settingsRow.rowsQuickFilter as 10 | 15)
@@ -215,6 +219,9 @@ export function useDashboardFilterSettings(): {
 
         case "showAddressTooltip":
           return updateDb({ show_address_tooltip: value ? 1 : 0 });
+
+        case "showDistanceTooltip":
+          return updateDb({ show_distance_tooltip: value ? 1 : 0 });
 
         case "rowsQuickFilter":
           return updateDb({ rows_quick_filter: value });

@@ -7,13 +7,13 @@ import {
 } from "../values/constants";
 import type { BleacherWorkTracker } from "../types";
 import { STATUS_TINT } from "../ui/event/worktracker/statusTint";
-import { supabaseClientRegistry } from "./supabaseClientRegistry";
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
-import { db } from "@/components/providers/SystemProvider";
-import { typedExecute } from "@/lib/powersync/typedQuery";
-import { triage } from "@/features/alerts/triage";
+import { moveWorkTracker } from "@/features/dashboard/db/client/db";
+import { canEditWorkTrackerByUuid } from "@/features/workTrackers/db/workTrackerEditAccess";
+import { isWorkTrackerBlockedFromEdit } from "@/features/workTrackers/util/workTrackerEditPolicy";
+import { useWorkTrackerDragConfirmStore } from "@/features/workTrackers/state/useWorkTrackerDragConfirmStore";
 
 interface GridInfo {
   getCurrentScrollX: () => number;
@@ -34,7 +34,7 @@ interface DragContext {
  *  1. `init(app, gridInfo, dates, rowBleacherUuids)` — called once when the dashboard boots
  *  2. `startDrag(ctx, globalX, globalY)` — called from WorkTrackerGroup on pointerdown
  *  3. Internally tracks pointer → shows ghost → on pointerup resolves target cell
- *  4. Calls lightweight Supabase update (only bleacher_uuid + date)
+ *  4. Persists via PowerSync (`moveWorkTracker`)
  *  5. Optimistically updates the dashboard store
  */
 class _WorkTrackerDragManager {
@@ -149,48 +149,62 @@ class _WorkTrackerDragManager {
     // No-op if dropped on same cell
     if (targetBleacherUuid === ctx.sourceBleacherUuid && targetDate === ctx.sourceDate) return;
 
-    // Optimistic local update
-    this.optimisticMove(ctx.tracker, ctx.sourceBleacherUuid, targetBleacherUuid, targetDate);
+    const canEdit = await canEditWorkTrackerByUuid(ctx.tracker.workTrackerUuid);
+    if (!canEdit) {
+      createErrorToast(["You do not have permission to move this work tracker."]);
+      return;
+    }
 
-    // Persist to PowerSync (replicates to Supabase automatically)
+    if (isWorkTrackerBlockedFromEdit(ctx.tracker.status)) {
+      createErrorToast([
+        "This trip is in progress and cannot be moved. Contact a lead account manager if changes are needed.",
+      ]);
+      return;
+    }
+
+    if (ctx.tracker.status === "accepted") {
+      const confirmed = await useWorkTrackerDragConfirmStore
+        .getState()
+        .requestConfirm(ctx.tracker);
+      if (!confirmed) return;
+    }
+
+    const nextStatus =
+      ctx.tracker.status === "accepted" ? "released" : ctx.tracker.status;
+
+    // Optimistic local update
+    this.optimisticMove(
+      ctx.tracker,
+      ctx.sourceBleacherUuid,
+      targetBleacherUuid,
+      targetDate,
+      nextStatus,
+    );
+
     try {
-      await typedExecute(
-        db
-          .updateTable("WorkTrackers")
-          .set({ bleacher_uuid: targetBleacherUuid, date: targetDate } as any)
-          .where("id", "=", ctx.tracker.workTrackerUuid)
-          .compile(),
-      );
+      await moveWorkTracker({
+        workTrackerUuid: ctx.tracker.workTrackerUuid,
+        targetBleacherUuid,
+        targetDate,
+        previousStatus: ctx.tracker.status,
+        previousBleacherUuid: ctx.sourceBleacherUuid,
+        driverUuid: ctx.tracker.driverUuid,
+        date: ctx.sourceDate,
+        dropoffAddress: ctx.tracker.dropoffAddress ?? "an unknown dropoff location",
+      });
     } catch (err) {
-      // Revert: move back
       this.optimisticMove(
-        { ...ctx.tracker, date: targetDate },
+        { ...ctx.tracker, date: targetDate, status: nextStatus },
         targetBleacherUuid,
         ctx.sourceBleacherUuid,
         ctx.sourceDate,
+        ctx.tracker.status,
       );
       createErrorToast(["Failed to move work tracker.", String(err)]);
       return;
     }
 
     createSuccessToast(["Work tracker moved successfully."]);
-
-    // Trigger alert triage now that the WT has moved
-    try {
-      const supabase = supabaseClientRegistry.getClient();
-      if (supabase) {
-        await triage(
-          "WorkTrackers",
-          {
-            id: ctx.tracker.workTrackerUuid,
-            previous_bleacher_uuid: ctx.sourceBleacherUuid,
-          },
-          supabase,
-        );
-      }
-    } catch (e) {
-      console.error("[alerts] failed to triage after work tracker drag", e);
-    }
   }
 
   /**
@@ -223,17 +237,22 @@ class _WorkTrackerDragManager {
     fromBleacherUuid: string,
     toBleacherUuid: string,
     toDate: string,
+    statusOverride?: BleacherWorkTracker["status"],
   ) {
+    const movedTracker: BleacherWorkTracker = {
+      ...tracker,
+      date: toDate,
+      ...(statusOverride ? { status: statusOverride } : {}),
+    };
     const store = useDashboardBleachersStore.getState();
     const sameBleacher = fromBleacherUuid === toBleacherUuid;
     const bleachers = store.data.map((b) => {
       if (sameBleacher && b.bleacherUuid === fromBleacherUuid) {
-        // Same bleacher: remove from old date, add with new date in one pass
         return {
           ...b,
           workTrackers: [
             ...b.workTrackers.filter((wt) => wt.workTrackerUuid !== tracker.workTrackerUuid),
-            { ...tracker, date: toDate },
+            movedTracker,
           ],
         };
       }
@@ -248,7 +267,7 @@ class _WorkTrackerDragManager {
       if (b.bleacherUuid === toBleacherUuid) {
         return {
           ...b,
-          workTrackers: [...b.workTrackers, { ...tracker, date: toDate }],
+          workTrackers: [...b.workTrackers, movedTracker],
         };
       }
       return b;

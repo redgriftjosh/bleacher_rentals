@@ -6,9 +6,16 @@ type SideNavButtonProps = {
   label: string;
   href: string;
   icon: React.ComponentType<any>;
+  /** Renders an unread dot to the right of the label. */
+  showIndicator?: boolean;
 };
 
-export const SideNavButton = ({ label, href, icon: Icon }: SideNavButtonProps) => {
+export const SideNavButton = ({
+  label,
+  href,
+  icon: Icon,
+  showIndicator = false,
+}: SideNavButtonProps) => {
   const pathname = usePathname();
   const isSelected = pathname.startsWith(href);
 
@@ -22,6 +29,13 @@ export const SideNavButton = ({ label, href, icon: Icon }: SideNavButtonProps) =
     >
       <Icon className="h-4 w-4" />
       <span>{label}</span>
+      {showIndicator && (
+        <span
+          data-testid="sidebar-unread-indicator"
+          aria-label="New releases"
+          className="h-2 w-2 shrink-0 rounded-full bg-blue-600"
+        />
+      )}
     </Link>
   );
 };
