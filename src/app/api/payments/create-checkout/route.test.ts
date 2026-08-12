@@ -158,7 +158,7 @@ describe("POST /api/payments/create-checkout", () => {
     expect(mockCheckoutCreate.mock.calls[0][0].line_items[0].price_data.currency).toBe("usd");
   });
 
-  it("uses eventId in success_url when invoice_number is null", async () => {
+  it("uses eventId in success_url/cancel_url when invoice_number is null", async () => {
     seedHappyPath({ event: { id: "evt-uuid-123", invoice_number: null } });
     await POST(makeRequest({ eventId: "evt-uuid-123", amountCents: 5000, payerName: "Bob" }));
     const sessionArgs = mockCheckoutCreate.mock.calls[0][0];
@@ -174,11 +174,19 @@ describe("POST /api/payments/create-checkout", () => {
     await POST(makeRequest({ eventId: "evt-uuid-123", amountCents: 5000, payerName: "Bob" }));
     const sessionArgs = mockCheckoutCreate.mock.calls[0][0];
     expect(sessionArgs.success_url).toBe(
-      "http://localhost:3000/quote/evt-uuid-123?payment=success",
+      "http://localhost:3000/quote/evt-uuid-123/payment-success",
     );
     expect(sessionArgs.cancel_url).toBe(
       "http://localhost:3000/quote/evt-uuid-123?payment=cancelled",
     );
     expect(sessionArgs.success_url).not.toContain("987654321");
+  });
+
+  it("sends success_url to the standalone payment-success page, not the pay tab", async () => {
+    seedHappyPath();
+    await POST(makeRequest({ eventId: "evt-1", amountCents: 5000, payerName: "Bob" }));
+    const sessionArgs = mockCheckoutCreate.mock.calls[0][0];
+    expect(sessionArgs.success_url).toBe("http://localhost:3000/quote/evt-1/payment-success");
+    expect(sessionArgs.success_url).not.toContain("?payment=success");
   });
 });
