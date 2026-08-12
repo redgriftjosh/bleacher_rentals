@@ -525,12 +525,14 @@ export function PayInvoiceTab({
           <div className="bg-gray-50 border rounded-lg p-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-2">Make Checks Payable To</h3>
             <p className="text-sm text-gray-600">{data.company.name}</p>
-            {data.company.street && <p className="text-sm text-gray-600">{data.company.street}</p>}
-            {(data.company.city || data.company.state) && (
+            {data.company.street && (
+              <p className="text-sm text-gray-600">{`${data.company.street}, ${data.company.zip}`}</p>
+            )}
+            {/* {(data.company.city || data.company.state) && (
               <p className="text-sm text-gray-600">
                 {data.company.city}, {data.company.state} {data.company.zip}
               </p>
-            )}
+            )} */}
           </div>
 
           {/* Contact */}
