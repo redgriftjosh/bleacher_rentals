@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lightbulb, Sparkles, ChevronDown } from "lucide-react";
+import { CodeXml, Sparkles, ChevronDown } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useHasUnreadChangelog } from "../hooks/useHasUnreadChangelog";
+import pkg from "../../../../package.json";
 
 /**
  * Header entry point for everything product/development facing.
@@ -29,8 +30,8 @@ export function ProductDropDown() {
           className="flex items-center gap-1 rounded py-1 ml-2 text-sm text-white/70 hover:text-white hover:underline cursor-pointer transition-all duration-300"
           aria-label={hasUnread ? "Product — new releases" : "Product"}
         >
-          <Lightbulb size={20} />
-          Product
+          <CodeXml size={20} />
+          {`Software ${pkg.version}`}
           {hasUnread && (
             <span
               data-testid="product-unread-indicator"
@@ -72,7 +73,7 @@ export function ProductDropDown() {
             onClick={() => go("/roadmap")}
             className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
           >
-            <Lightbulb size={16} className="shrink-0 text-gray-400" />
+            <CodeXml size={16} className="shrink-0 text-gray-400" />
             <span className="flex-1">Request a Feature</span>
           </button>
         </div>
