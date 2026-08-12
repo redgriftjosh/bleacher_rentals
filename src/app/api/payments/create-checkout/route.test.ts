@@ -158,12 +158,27 @@ describe("POST /api/payments/create-checkout", () => {
     expect(mockCheckoutCreate.mock.calls[0][0].line_items[0].price_data.currency).toBe("usd");
   });
 
-  it("falls back to eventId in success_url when invoice_number is null", async () => {
+  it("uses eventId in success_url when invoice_number is null", async () => {
     seedHappyPath({ event: { id: "evt-uuid-123", invoice_number: null } });
     await POST(makeRequest({ eventId: "evt-uuid-123", amountCents: 5000, payerName: "Bob" }));
     const sessionArgs = mockCheckoutCreate.mock.calls[0][0];
     expect(sessionArgs.success_url).toContain("/quote/evt-uuid-123");
     expect(sessionArgs.cancel_url).toContain("/quote/evt-uuid-123");
+    expect(sessionArgs.success_url).not.toContain("987654321");
+  });
+
+  it("uses eventId (not invoice_number) in success_url/cancel_url even when invoice_number is set", async () => {
+    // Regression test: /quote/[eventUUID] expects the event's UUID. Using the
+    // human-facing invoice_number here sent customers to a 404 after payment.
+    seedHappyPath({ event: { id: "evt-uuid-123", invoice_number: 987654321 } });
+    await POST(makeRequest({ eventId: "evt-uuid-123", amountCents: 5000, payerName: "Bob" }));
+    const sessionArgs = mockCheckoutCreate.mock.calls[0][0];
+    expect(sessionArgs.success_url).toBe(
+      "http://localhost:3000/quote/evt-uuid-123?payment=success",
+    );
+    expect(sessionArgs.cancel_url).toBe(
+      "http://localhost:3000/quote/evt-uuid-123?payment=cancelled",
+    );
     expect(sessionArgs.success_url).not.toContain("987654321");
   });
 });
