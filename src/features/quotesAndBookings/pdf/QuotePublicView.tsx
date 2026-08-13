@@ -46,10 +46,10 @@ function formatDateRange(start: string, end: string): string {
 
 function companyFullAddress(c: QuoteDocumentData["company"]): string {
   const parts = [c.street];
-  if (c.city || c.state || c.zip) {
-    parts.push(`${c.city}, ${c.state} ${c.zip}`.trim());
+  if (c.zip) {
+    parts.push(`, ${c.zip}`.trim());
   }
-  return parts.filter(Boolean).join("\n");
+  return parts.filter(Boolean).join("");
 }
 
 /**
