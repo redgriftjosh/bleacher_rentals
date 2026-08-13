@@ -10,7 +10,6 @@
 -- nothing recomputes a photo's "neededness" from a JOIN.
 --
 -- Adds, to every photo-bearing table:
---   local_uri         current on-device file URI (gallery / cache copy)
 --   gallery_asset_id  MediaLibrary asset id, for re-access
 --   attempts          failed-attempt counter, drives backoff (never "give up")
 --   last_attempt_at   timestamp of the last attempt
@@ -24,7 +23,6 @@
 -- ═══════════════════════════════════════════════════════════════
 
 ALTER TABLE "DamageReportPhotos"
-  ADD COLUMN IF NOT EXISTS local_uri        text,
   ADD COLUMN IF NOT EXISTS gallery_asset_id text,
   ADD COLUMN IF NOT EXISTS attempts         integer NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS last_attempt_at  timestamptz,
@@ -36,7 +34,6 @@ ALTER TABLE "DamageReportPhotos"
 
 ALTER TABLE "InspectionPhotos"
   ADD COLUMN IF NOT EXISTS upload_status    text NOT NULL DEFAULT 'pending',
-  ADD COLUMN IF NOT EXISTS local_uri        text,
   ADD COLUMN IF NOT EXISTS gallery_asset_id text,
   ADD COLUMN IF NOT EXISTS attempts         integer NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS last_attempt_at  timestamptz,
@@ -65,7 +62,6 @@ CREATE TABLE IF NOT EXISTS public."DriverDocuments" (
   doc_type          TEXT NOT NULL CHECK (doc_type IN ('license', 'insurance', 'medical_card')),
   photo_path        TEXT NOT NULL,
   upload_status     TEXT NOT NULL DEFAULT 'pending',
-  local_uri         TEXT,
   gallery_asset_id  TEXT,
   attempts          INTEGER NOT NULL DEFAULT 0,
   last_attempt_at   TIMESTAMPTZ,
