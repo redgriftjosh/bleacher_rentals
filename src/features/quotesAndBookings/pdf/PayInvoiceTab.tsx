@@ -170,7 +170,9 @@ export function PayInvoiceTab({
   }
 
   // Read the ?payment= flag only after mount so server and first client render match
-  // (reading window during render causes a hydration mismatch).
+  // (reading window during render causes a hydration mismatch). A successful
+  // payment redirects to its own confirmation page, so "cancelled" is the only
+  // value that ever lands back here.
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   useEffect(() => {
     setPaymentStatus(new URLSearchParams(window.location.search).get("payment"));
@@ -178,18 +180,7 @@ export function PayInvoiceTab({
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
-      {/* Success / cancel banners */}
-      {paymentStatus === "success" && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-          <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
-          <div>
-            <p className="font-medium text-green-800">Payment Successful!</p>
-            <p className="text-sm text-green-700">
-              Your payment has been processed. A receipt will be sent to your email.
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Cancel banner */}
       {paymentStatus === "cancelled" && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0" />
@@ -534,12 +525,14 @@ export function PayInvoiceTab({
           <div className="bg-gray-50 border rounded-lg p-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-2">Make Checks Payable To</h3>
             <p className="text-sm text-gray-600">{data.company.name}</p>
-            {data.company.street && <p className="text-sm text-gray-600">{data.company.street}</p>}
-            {(data.company.city || data.company.state) && (
+            {data.company.street && (
+              <p className="text-sm text-gray-600">{`${data.company.street}, ${data.company.zip}`}</p>
+            )}
+            {/* {(data.company.city || data.company.state) && (
               <p className="text-sm text-gray-600">
                 {data.company.city}, {data.company.state} {data.company.zip}
               </p>
-            )}
+            )} */}
           </div>
 
           {/* Contact */}

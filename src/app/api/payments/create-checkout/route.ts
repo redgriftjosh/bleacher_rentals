@@ -78,8 +78,10 @@ export async function POST(req: NextRequest) {
         payerName,
         stripeConnectionId: stripeConfig.config.connectionId,
       },
-      success_url: `${origin}/quote/${event.invoice_number ?? eventId}?payment=success`,
-      cancel_url: `${origin}/quote/${event.invoice_number ?? eventId}?payment=cancelled`,
+      // Success gets its own standalone confirmation page (not the quote/pay
+      // tab) so the "you're done" moment is unambiguous.
+      success_url: `${origin}/quote/${eventId}/payment-success`,
+      cancel_url: `${origin}/quote/${eventId}?payment=cancelled`,
     },
     // Create the session ON the office's connected account (direct charge), so
     // the funds land in that account rather than the platform account.
