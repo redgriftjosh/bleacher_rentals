@@ -30,8 +30,8 @@ export function ProductDropDown() {
           className="flex items-center gap-1 rounded py-1 ml-2 text-sm text-white/70 hover:text-white hover:underline cursor-pointer transition-all duration-300"
           aria-label={hasUnread ? "Product — new releases" : "Product"}
         >
-          <CodeXml size={20} />
-          {`Software ${pkg.version}`}
+          {/* <CodeXml size={20} /> */}
+          {`App Version ${pkg.version}`}
           {hasUnread && (
             <span
               data-testid="product-unread-indicator"
