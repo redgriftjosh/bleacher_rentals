@@ -3,6 +3,8 @@ type CentsInputProps = {
   onChange: (value: string, cents: number | null) => void;
   placeholder?: string;
   className?: string;
+  /** For inputs that have no visible <label> of their own (repeated rows, grids). */
+  ariaLabel?: string;
 };
 
 function formatWithCommas(value: string): string {
@@ -23,6 +25,7 @@ export default function CentsInput({
   onChange,
   placeholder = "0.00",
   className = "",
+  ariaLabel,
 }: CentsInputProps) {
   // Format the display value with commas
   const displayValue = formatWithCommas(value);
@@ -63,6 +66,7 @@ export default function CentsInput({
       value={displayValue}
       onChange={handleChange}
       placeholder={placeholder}
+      aria-label={ariaLabel}
     />
   );
 }

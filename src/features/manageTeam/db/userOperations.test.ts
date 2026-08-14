@@ -18,6 +18,7 @@ const baseState: CurrentUserState = {
   payRateCents: null,
   payCurrency: "CAD",
   payPerUnit: "KM",
+  payRanges: [],
   accountManagerUuid: null,
   assignedDriverZoneUuids: [],
   vendorUuid: null,

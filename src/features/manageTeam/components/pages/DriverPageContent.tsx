@@ -1,9 +1,9 @@
 "use client";
 
 import InputPercents from "@/components/InputPercents";
-import CentsInput from "@/components/CentsInput";
 import { Dropdown } from "@/components/DropDown";
 import { SelectDriverZones } from "@/features/manageTeam/components/inputs/SelectDriverZones";
+import { DriverPayTrack } from "@/features/manageTeam/components/inputs/DriverPayTrack";
 import { VendorSelection } from "@/features/manageTeam/components/inputs/VendorSelection";
 import { useCurrentUserStore } from "@/features/manageTeam/state/useCurrentUserStore";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
@@ -80,6 +80,7 @@ export function DriverPageContent() {
   const payRateCents = useCurrentUserStore((s) => s.payRateCents);
   const payCurrency = useCurrentUserStore((s) => s.payCurrency);
   const payPerUnit = useCurrentUserStore((s) => s.payPerUnit);
+  const payRanges = useCurrentUserStore((s) => s.payRanges);
   const assignedDriverZoneUuids = useCurrentUserStore((s) => s.assignedDriverZoneUuids);
   const phoneNumber = useCurrentUserStore((s) => s.phoneNumber);
   const homeAddress = useCurrentUserStore((s) => s.homeAddress);
@@ -92,23 +93,6 @@ export function DriverPageContent() {
   const insurancePhotoPath = useCurrentUserStore((s) => s.insurancePhotoPath);
   const medicalCardPhotoPath = useCurrentUserStore((s) => s.medicalCardPhotoPath);
   const driverId = useCurrentUserStore((s) => s.driverId);
-
-  // Pay rate display state for CentsInput
-  const [payRateDisplay, setPayRateDisplay] = useState(
-    payRateCents !== null ? (payRateCents / 100).toFixed(2) : "",
-  );
-
-  // Only sync when existingUserUuid changes (loading a different user)
-  useEffect(() => {
-    const displayValue = payRateCents !== null ? (payRateCents / 100).toFixed(2) : "";
-    setPayRateDisplay(displayValue);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existingUserUuid]);
-
-  const handlePayRateChange = (displayValue: string, cents: number | null) => {
-    setPayRateDisplay(displayValue);
-    setField("payRateCents", cents);
-  };
 
   // Detect USA states (normalized to lowercase for comparison)
   const usaStates = [
@@ -261,19 +245,7 @@ export function DriverPageContent() {
         </div>
 
         <div className={dimmed}>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Pay Rate</label>
-              <div style={{ height: "calc(2.5rem + 0px)" }}>
-                <CentsInput
-                  value={payRateDisplay}
-                  onChange={handlePayRateChange}
-                  placeholder="0.00"
-                  className="h-full w-full rounded border px-3 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-                />
-              </div>
-            </div>
-
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">Currency</label>
               <Dropdown
@@ -302,15 +274,22 @@ export function DriverPageContent() {
             </div>
           </div>
 
-          {payRateCents !== null && payRateCents > 0 && (
-            <div className="mt-2 bg-gray-50 border border-gray-200 rounded-lg p-3">
-              <p className="text-sm text-gray-700">
-                <strong>Preview:</strong> ${(payRateCents / 100).toFixed(2)} {payCurrency} per{" "}
-                {payPerUnit}
-                {` + ${tax ?? 0}% tax`}
-              </p>
-            </div>
-          )}
+          <div className="mt-3">
+            <DriverPayTrack
+              payRateCents={payRateCents}
+              payRanges={payRanges}
+              onChange={(next) => {
+                setField("payRateCents", next.payRateCents);
+                setField("payRanges", next.payRanges);
+              }}
+              unit={payPerUnit}
+              currency={payCurrency}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Rates are in {payCurrency} per {payPerUnit}
+              {tax ? `, plus ${tax}% tax` : ""}.
+            </p>
+          </div>
         </div>
       </section>
 
