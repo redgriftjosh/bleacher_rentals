@@ -15,7 +15,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";
 import { fetchBleachersForOptions, fetchDriverPaymentData } from "@/app/team/_lib/db";
-import { toLatLngString, calculateDriverPay } from "../util";
+import { toLatLngString, describeDriverPay } from "../util";
 import RouteMapPreview from "./RouteMapPreview";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import WorkTrackerStatusBadge from "./WorkTrackerStatusBadge";
@@ -518,6 +518,13 @@ export default function WorkTrackerModal({
     }
   }
 
+  // The same breakdown the button applies, so the tooltip always shows the work
+  // that clicking would actually do.
+  const payBreakdown = useMemo(
+    () => (driverPaymentData && leg ? describeDriverPay(driverPaymentData, leg) : null),
+    [driverPaymentData, leg],
+  );
+
   const handleCalculatePay = () => {
     if (!driverPaymentData) {
       createErrorToast(["Cannot calculate pay: Driver payment data not loaded"]);
@@ -529,12 +536,12 @@ export default function WorkTrackerModal({
       return;
     }
 
-    const amount = calculateDriverPay(driverPaymentData, leg);
-
-    if (amount === null || amount === 0) {
+    if (!payBreakdown) {
       createErrorToast(["Cannot calculate pay: Missing distance or duration data"]);
       return;
     }
+
+    const amount = payBreakdown.amount;
 
     // Update the pay input field
     const formattedAmount = amount.toFixed(2);
@@ -574,25 +581,24 @@ export default function WorkTrackerModal({
     workTracker?.status ?? "draft",
   );
 
-  const saveNotificationPreview =
-    shouldSendDriverNotification(
-      currentChangeType === "none" ? "un-accept" : currentChangeType,
-      workTracker?.id === "-1" ? "draft" : initialStatus,
-      workTracker?.id === "-1",
-      effectiveNextStatus,
-    )
-      ? buildTripStatusNotification({
-          previousStatus: workTracker?.id === "-1" ? "draft" : initialStatus,
-          nextStatus: effectiveNextStatus,
-          pickupAddress:
-            pickUpAddress?.address ?? pickupAddress?.address ?? "an unknown pickup location",
-          pickupCity: pickUpAddress?.city ?? pickupAddress?.city ?? "",
-          dropoffAddress:
-            dropOffAddress?.address ?? dropoffAddress?.address ?? "an unknown dropoff location",
-          dropoffCity: dropOffAddress?.city ?? dropoffAddress?.city ?? "",
-          date: workTracker?.date ?? null,
-        })
-      : null;
+  const saveNotificationPreview = shouldSendDriverNotification(
+    currentChangeType === "none" ? "un-accept" : currentChangeType,
+    workTracker?.id === "-1" ? "draft" : initialStatus,
+    workTracker?.id === "-1",
+    effectiveNextStatus,
+  )
+    ? buildTripStatusNotification({
+        previousStatus: workTracker?.id === "-1" ? "draft" : initialStatus,
+        nextStatus: effectiveNextStatus,
+        pickupAddress:
+          pickUpAddress?.address ?? pickupAddress?.address ?? "an unknown pickup location",
+        pickupCity: pickUpAddress?.city ?? pickupAddress?.city ?? "",
+        dropoffAddress:
+          dropOffAddress?.address ?? dropoffAddress?.address ?? "an unknown dropoff location",
+        dropoffCity: dropOffAddress?.city ?? dropoffAddress?.city ?? "",
+        date: workTracker?.date ?? null,
+      })
+    : null;
 
   const handleSaveClick = () => {
     if (isSaving) return;
@@ -875,10 +881,12 @@ export default function WorkTrackerModal({
                       placeholder="0.00"
                     />
                     {canEditFields && (
-                      <Calculator
-                        className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer text-darkBlue hover:text-lightBlue"
-                        onClick={handleCalculatePay}
-                      />
+                      <AppTooltip content={payBreakdown?.text ?? "Calculate pay"}>
+                        <Calculator
+                          className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer text-darkBlue hover:text-lightBlue"
+                          onClick={handleCalculatePay}
+                        />
+                      </AppTooltip>
                     )}
                   </div>
                 </div>

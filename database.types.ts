@@ -963,6 +963,41 @@ export type Database = {
           },
         ]
       }
+      DriverPayRanges: {
+        Row: {
+          created_at: string
+          driver_uuid: string
+          id: string
+          max_value: number | null
+          min_value: number
+          rate: number
+        }
+        Insert: {
+          created_at?: string
+          driver_uuid: string
+          id?: string
+          max_value?: number | null
+          min_value?: number
+          rate?: number
+        }
+        Update: {
+          created_at?: string
+          driver_uuid?: string
+          id?: string
+          max_value?: number | null
+          min_value?: number
+          rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_pay_ranges_driver_uuid_fkey"
+            columns: ["driver_uuid"]
+            isOneToOne: false
+            referencedRelation: "Drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Drivers: {
         Row: {
           account_manager_uuid: string | null

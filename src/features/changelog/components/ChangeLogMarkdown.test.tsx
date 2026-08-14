@@ -51,4 +51,27 @@ describe("ChangeLogMarkdown", () => {
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;");
   });
+
+  it("turns a Loom share link into an inline player", () => {
+    const html = render(
+      "[Walkthrough](https://www.loom.com/share/7decda7d37d14124b8fac9b17659b7dc)",
+    );
+
+    expect(html).toContain('src="https://www.loom.com/embed/7decda7d37d14124b8fac9b17659b7dc"');
+    expect(html).toContain("<iframe");
+    // Never an anchor to the share page as well as the player.
+    expect(html).not.toContain("loom.com/share");
+  });
+
+  it("leaves other links as links", () => {
+    const html = render("[Docs](https://example.com/docs)");
+    expect(html).toContain('<a href="https://example.com/docs"');
+    expect(html).not.toContain("<iframe");
+  });
+
+  it("renders markdown images", () => {
+    const html = render("![Pay ranges](/changelog/pay-ranges.png)");
+    expect(html).toContain('src="/changelog/pay-ranges.png"');
+    expect(html).toContain('alt="Pay ranges"');
+  });
 });

@@ -6,6 +6,7 @@ import {
   computeDriverZoneAssignmentChanges,
   reconcileZoneDriverMap,
 } from "../logic/driverZoneAssignments";
+import { toDriverPayRangeDrafts, toDriverPayRangeRows } from "../logic/driverPayRanges";
 import {
   clerkInviteErrorMessage,
   isDuplicateUserEmailError,
@@ -196,6 +197,7 @@ export async function createUser(
 
       if (driverError) throw driverError;
 
+      await syncDriverPayRanges(supabase, driverUuid, state.payRanges);
       await syncDriverZoneAssignments(supabase, driverUuid, state.assignedDriverZoneUuids);
     }
 
@@ -327,6 +329,9 @@ export async function updateUser(
             })
             .eq("user_uuid", userUuid);
           if (driverUpdateError) throw driverUpdateError;
+
+          // Tiers ride along with the pay fields they override, under the same permission.
+          await syncDriverPayRanges(supabase, existingDriver.id, state.payRanges);
         }
       } else {
         // Create new driver record
@@ -349,6 +354,8 @@ export async function updateUser(
         });
 
         if (driverInsertError) throw driverInsertError;
+
+        await syncDriverPayRanges(supabase, newDriverId, state.payRanges);
 
         const { toAdd, toRemove } = await syncDriverZoneAssignments(
           supabase,
@@ -577,6 +584,37 @@ async function syncDriverZoneAssignments(
   return { toAdd, toRemove };
 }
 
+// Replaces the driver's tiered pay rows with what the form holds. Rows carry client-side
+// uuids, so an edited tier upserts onto its own row and only tiers the user actually
+// removed are deleted. Gated by the same rule as the Drivers row itself at the call sites.
+async function syncDriverPayRanges(
+  supabase: TypedSupabaseClient,
+  driverUuid: string,
+  ranges: CurrentUserState["payRanges"],
+): Promise<void> {
+  const rows = toDriverPayRangeRows(driverUuid, ranges);
+
+  const { data: existingRows, error: existingError } = await supabase
+    .from("DriverPayRanges")
+    .select("id")
+    .eq("driver_uuid", driverUuid);
+
+  if (existingError) throw new Error(existingError.message);
+
+  const keptIds = new Set(rows.map((r) => r.id));
+  const idsToRemove = (existingRows ?? []).map((r) => r.id).filter((id) => !keptIds.has(id));
+
+  if (idsToRemove.length > 0) {
+    const { error } = await supabase.from("DriverPayRanges").delete().in("id", idsToRemove);
+    if (error) throw new Error(error.message);
+  }
+
+  if (rows.length > 0) {
+    const { error } = await supabase.from("DriverPayRanges").upsert(rows);
+    if (error) throw new Error(error.message);
+  }
+}
+
 async function syncDriverZonesForAm(
   supabase: TypedSupabaseClient,
   zoneDriverMap: Record<string, string[]>,
@@ -731,6 +769,12 @@ export async function fetchUserById(
         .select("zone_uuid")
         .eq("driver_uuid", driver.id);
       result.assignedDriverZoneUuids = (driverZoneRows ?? []).map((r) => r.zone_uuid);
+
+      const { data: payRangeRows } = await supabase
+        .from("DriverPayRanges")
+        .select("id, min_value, max_value, rate")
+        .eq("driver_uuid", driver.id);
+      result.payRanges = toDriverPayRangeDrafts(payRangeRows ?? []);
 
       // Address info
       if (driver.Addresses) {

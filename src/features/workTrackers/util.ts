@@ -1,5 +1,9 @@
 import { DateTime } from "luxon";
 import { WorkTrackersResult } from "@/features/workTrackers/db/db";
+import {
+  resolveDriverPayRateCents,
+  type DriverPayRange,
+} from "@/features/manageTeam/logic/driverPayRanges";
 
 export function getDateRange(startDate: string): string {
   const start = DateTime.fromISO(startDate, { zone: "utc" });
@@ -39,39 +43,75 @@ export type DriverPaymentData = {
   payRateCents: number;
   payCurrency: "CAD" | "USD";
   payPerUnit: "KM" | "MI" | "HR";
+  /** Tiered rates (DriverPayRanges). Empty or absent = the flat payRateCents applies. */
+  payRanges?: DriverPayRange[];
 };
+
+export type DriverPayBreakdown = {
+  /** Trip size in the driver's pay unit: kilometres, miles or hours. */
+  value: number;
+  unit: "KM" | "MI" | "HR";
+  /** The rate that applied — from the matching range, else the flat rate. */
+  rateCents: number;
+  amount: number;
+  /** e.g. "52.5MI × $2.25/MI = $118.13" */
+  text: string;
+};
+
+/** The trip size the rate is charged against, in the driver's own unit. */
+function tripValue(unit: "KM" | "MI" | "HR", distanceData: DistanceData): number | null {
+  switch (unit) {
+    case "KM":
+      return distanceData.distanceMeters != null ? distanceData.distanceMeters / 1000 : null;
+    case "MI":
+      return distanceData.distanceMeters != null ? distanceData.distanceMeters / 1609.34 : null;
+    case "HR":
+      return distanceData.durationSeconds != null ? distanceData.durationSeconds / 3600 : null;
+  }
+}
+
+/**
+ * How the driver's pay for one leg is arrived at, for showing the work.
+ *
+ * One rate covers the whole trip — the range the trip falls into, not a
+ * progressive sum across ranges. A driver with no ranges (or a trip outside
+ * every range) is paid the flat `payRateCents`, exactly as before ranges existed.
+ */
+export function describeDriverPay(
+  driverPaymentData: DriverPaymentData,
+  distanceData: DistanceData,
+): DriverPayBreakdown | null {
+  if (!driverPaymentData || !distanceData) return null;
+
+  const unit = driverPaymentData.payPerUnit;
+  const value = tripValue(unit, distanceData);
+  if (value === null) return null;
+
+  const rateCents =
+    resolveDriverPayRateCents({
+      ranges: driverPaymentData.payRanges ?? [],
+      value,
+      fallbackRateCents: driverPaymentData.payRateCents,
+    }) ?? driverPaymentData.payRateCents;
+
+  const amount = (rateCents / 100) * value;
+  if (!(amount > 0)) return null;
+
+  const rate = `$${(rateCents / 100).toFixed(2)}`;
+  const shownValue = value.toFixed(1);
+
+  return {
+    value,
+    unit,
+    rateCents,
+    amount,
+    text: `${shownValue}${unit} × ${rate}/${unit} = $${amount.toFixed(2)}`,
+  };
+}
 
 export function calculateDriverPay(
   driverPaymentData: DriverPaymentData,
   distanceData: DistanceData,
 ): number | null {
-  if (!driverPaymentData || !distanceData) {
-    return null;
-  }
-
-  let amount = 0;
-  const rate = driverPaymentData.payRateCents / 100; // Convert cents to dollars
-
-  switch (driverPaymentData.payPerUnit) {
-    case "KM":
-      if (distanceData.distanceMeters != null) {
-        const kilometers = distanceData.distanceMeters / 1000;
-        amount = rate * kilometers;
-      }
-      break;
-    case "MI":
-      if (distanceData.distanceMeters != null) {
-        const miles = distanceData.distanceMeters / 1609.34;
-        amount = rate * miles;
-      }
-      break;
-    case "HR":
-      if (distanceData.durationSeconds != null) {
-        const hours = distanceData.durationSeconds / 3600;
-        amount = rate * hours;
-      }
-      break;
-  }
-
-  return amount > 0 ? amount : null;
+  return describeDriverPay(driverPaymentData, distanceData)?.amount ?? null;
 }
