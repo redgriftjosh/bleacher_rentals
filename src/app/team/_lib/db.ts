@@ -5,6 +5,10 @@ import { createErrorToast, createErrorToastNoThrow } from "@/components/toasts/E
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { Database } from "../../../../database.types";
+import {
+  toDriverPayRangeDrafts,
+  type DriverPayRange,
+} from "@/features/manageTeam/logic/driverPayRanges";
 
 export async function fetchDriverTaxById(
   userUuid: string,
@@ -39,6 +43,8 @@ export type DriverPaymentData = {
   payRateCents: number;
   payCurrency: "CAD" | "USD";
   payPerUnit: "KM" | "MI" | "HR";
+  /** Tiered rates (DriverPayRanges). Empty = the flat payRateCents applies. */
+  payRanges: DriverPayRange[];
 };
 
 export async function fetchDriverPaymentData(
@@ -51,19 +57,30 @@ export async function fetchDriverPaymentData(
   // const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from("Drivers")
-    .select("tax, pay_rate_cents, pay_currency, pay_per_unit")
+    .select("id, tax, pay_rate_cents, pay_currency, pay_per_unit")
     .eq("user_uuid", userUuid)
     .maybeSingle();
 
   if (error) {
     createErrorToastNoThrow(["Failed to fetch driver payment data.", error.message]);
-    return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM" };
+    return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM", payRanges: [] };
   }
 
   // `maybeSingle()` avoids the noisy 406 (PGRST116) when no rows.
   if (!data) {
     await ensureDriverExists(userUuid, 0, 0, "CAD", "KM", supabase);
-    return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM" };
+    return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM", payRanges: [] };
+  }
+
+  // Tiered rates, if this driver has any. A failure here is not worth blocking the
+  // calculator over — no ranges means the flat rate applies, which is the old behaviour.
+  const { data: rangeRows, error: rangeError } = await supabase
+    .from("DriverPayRanges")
+    .select("id, min_value, max_value, rate")
+    .eq("driver_uuid", data.id);
+
+  if (rangeError) {
+    createErrorToastNoThrow(["Failed to fetch driver pay ranges.", rangeError.message]);
   }
 
   return {
@@ -71,6 +88,7 @@ export async function fetchDriverPaymentData(
     payRateCents: data.pay_rate_cents ?? 0,
     payCurrency: (data.pay_currency as "CAD" | "USD") ?? "CAD",
     payPerUnit: (data.pay_per_unit as "KM" | "MI" | "HR") ?? "KM",
+    payRanges: toDriverPayRangeDrafts(rangeRows ?? []),
   };
 }
 

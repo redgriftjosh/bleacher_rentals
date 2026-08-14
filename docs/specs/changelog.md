@@ -123,9 +123,11 @@ Writes `changelog_last_read_at = now()` via `typedExecute`. Called once on `/cha
 
 - Server component shell, client component for the list (needs PowerSync hooks).
 - Entries newest-first. Each entry: version + formatted release date as the header, then rendered `body_md` below.
+- **Body content comes from `versions/*.md`, not from the DB** (amended 2026-08-14). The server component reads the directory with `readVersionFiles()` and hands the bodies to the client page, which merges them with the `ChangeLog` rows in `mergeVersionEntries()`. The files decide which releases exist and what they say — they ship with the build, so the page always matches the deployed code, and editing a file is the whole publishing step. The rows contribute only `released_at`, which a file cannot know; a release with no row yet renders without a date. Rows with no file are still shown, so releases written before this convention don't disappear. `next.config.ts` traces `versions/**/*.md` into the deploy, since the read path is built at runtime.
+- **Video and images** (added 2026-08-14). A Loom **link** whose href is a `loom.com/share/<id>` or `/embed/<id>` URL renders as an inline player instead of an anchor (`parseLoomEmbedUrl` normalises it, dropping the query string, which can carry a viewer's `sid`). Images are ordinary markdown pointing at files in `public/`, e.g. `![Pay ranges](/changelog/1.2.0-pay-ranges.png)`. Both are handled by `components` overrides on `react-markdown` — **not** by enabling raw HTML.
 - Markdown rendering: `react-markdown` + `remark-gfm` (tables, strikethrough, task lists), styled with `@tailwindcss/typography` (`prose` classes) to get the chat-style look — headers, bullets, code blocks, emoji. Emoji need no special handling; they are plain unicode in the markdown source.
-- **Security:** `react-markdown` does not render raw HTML by default. Do **not** enable `rehype-raw`. Changelog content is developer-authored and passes code review, but keeping raw HTML off removes the injection surface entirely.
-- Empty state when the table has no rows.
+- **Security:** `react-markdown` does not render raw HTML by default. Do **not** enable `rehype-raw`. Changelog content is developer-authored and passes code review, but keeping raw HTML off removes the injection surface entirely. This is why embeds are link/image overrides rather than pasted `<iframe>` markup.
+- Empty state when there are no files and no rows.
 
 ### Indicator
 
