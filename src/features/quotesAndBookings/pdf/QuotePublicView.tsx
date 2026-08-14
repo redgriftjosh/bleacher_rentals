@@ -109,7 +109,7 @@ export function QuotePublicView({
                 <p className="text-sm">{data.venue.name}</p>
                 <p className="text-sm text-gray-600">
                   {data.venue.street}
-                  {data.venue.city && `, ${data.venue.city}, ${data.venue.state} ${data.venue.zip}`}
+                  {` ${data.venue.zip}`}
                 </p>
               </div>
             )}
