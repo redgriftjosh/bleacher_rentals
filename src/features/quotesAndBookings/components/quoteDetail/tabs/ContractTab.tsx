@@ -43,11 +43,23 @@ function categorizeItems(items: EventLineItemRow[]): CategorizedItems {
   return result;
 }
 
-function ItemSection({ title, items, color, currency = "USD" }: { title: string; items: EventLineItemRow[]; color?: string; currency?: "USD" | "CAD" }) {
+function ItemSection({
+  title,
+  items,
+  color,
+  currency = "USD",
+}: {
+  title: string;
+  items: EventLineItemRow[];
+  color?: string;
+  currency?: "USD" | "CAD";
+}) {
   if (items.length === 0) return null;
   return (
     <div className="mb-4">
-      <h4 className={`text-xs font-bold uppercase tracking-wide mb-2 ${color ?? "text-gray-500"}`}>{title}</h4>
+      <h4 className={`text-xs font-bold uppercase tracking-wide mb-2 ${color ?? "text-gray-500"}`}>
+        {title}
+      </h4>
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b text-left text-gray-500 text-xs uppercase tracking-wide">
@@ -84,7 +96,17 @@ function ItemSection({ title, items, color, currency = "USD" }: { title: string;
   );
 }
 
-function LineItemsTable({ lineItems, taxPercent, taxAmountCents, currency = "USD" }: { lineItems: EventLineItemRow[]; taxPercent: number | null; taxAmountCents: number | null; currency?: "USD" | "CAD" }) {
+function LineItemsTable({
+  lineItems,
+  taxPercent,
+  taxAmountCents,
+  currency = "USD",
+}: {
+  lineItems: EventLineItemRow[];
+  taxPercent: number | null;
+  taxAmountCents: number | null;
+  currency?: "USD" | "CAD";
+}) {
   const categories = useMemo(() => categorizeItems(lineItems), [lineItems]);
 
   const { subtotalCents, discountsCents } = useMemo(() => {
@@ -102,7 +124,8 @@ function LineItemsTable({ lineItems, taxPercent, taxAmountCents, currency = "USD
   }, [lineItems]);
 
   const taxable = subtotalCents + discountsCents;
-  const effectiveTax = taxAmountCents ?? (taxPercent ? Math.round(taxable * (taxPercent / 100)) : 0);
+  const effectiveTax =
+    taxAmountCents ?? (taxPercent ? Math.round(taxable * (taxPercent / 100)) : 0);
   const totalCents = taxable + effectiveTax;
 
   if (lineItems.length === 0) {
@@ -118,24 +141,35 @@ function LineItemsTable({ lineItems, taxPercent, taxAmountCents, currency = "USD
       <ItemSection title="Bleachers" items={categories.bleachers} currency={currency} />
       <ItemSection title="Logistics" items={categories.logistics} currency={currency} />
       <ItemSection title="Services" items={categories.services} currency={currency} />
-      <ItemSection title="Discounts" items={categories.discounts} color="text-red-600" currency={currency} />
+      <ItemSection
+        title="Discounts"
+        items={categories.discounts}
+        color="text-red-600"
+        currency={currency}
+      />
 
       {/* Totals */}
       <div className="mt-4 flex flex-col items-end gap-1 text-sm">
         <div className="flex gap-8">
           <span className="text-gray-500">Subtotal</span>
-          <span className="font-medium w-24 text-right">{formatMoney(subtotalCents, currency)}</span>
+          <span className="font-medium w-24 text-right">
+            {formatMoney(subtotalCents, currency)}
+          </span>
         </div>
         {discountsCents !== 0 && (
           <div className="flex gap-8 text-red-600">
             <span>Discounts</span>
-            <span className="font-medium w-24 text-right">{formatMoney(discountsCents, currency)}</span>
+            <span className="font-medium w-24 text-right">
+              {formatMoney(discountsCents, currency)}
+            </span>
           </div>
         )}
         {effectiveTax > 0 && (
           <div className="flex gap-8">
             <span className="text-gray-500">Tax{taxPercent ? ` (${taxPercent}%)` : ""}</span>
-            <span className="font-medium w-24 text-right">{formatMoney(effectiveTax, currency)}</span>
+            <span className="font-medium w-24 text-right">
+              {formatMoney(effectiveTax, currency)}
+            </span>
           </div>
         )}
         <div className="flex gap-8 border-t pt-1 mt-1">
@@ -204,7 +238,9 @@ export function ContractTab({ quote }: { quote: QuoteDetail }) {
 
       {/* Project Info */}
       <div>
-        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Project Info</h3>
+        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">
+          Project Info
+        </h3>
         <div className="grid grid-cols-2 gap-6">
           <div className="space-y-2 text-sm">
             {quote.invoiceNumber && (
@@ -219,12 +255,17 @@ export function ContractTab({ quote }: { quote: QuoteDetail }) {
             </div>
             <div>
               <span className="text-gray-500">Status:</span>{" "}
-              <span className={`font-medium px-2 py-0.5 rounded text-xs ${
-                quote.eventStatus === "booked" ? "bg-green-100 text-green-800" :
-                quote.eventStatus === "quoted" ? "bg-yellow-100 text-yellow-800" :
-                quote.eventStatus === "lost" ? "bg-red-100 text-red-800" :
-                "bg-gray-100 text-gray-800"
-              }`}>
+              <span
+                className={`font-medium px-2 py-0.5 rounded text-xs ${
+                  quote.eventStatus === "booked"
+                    ? "bg-green-100 text-green-800"
+                    : quote.eventStatus === "quoted"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : quote.eventStatus === "lost"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-gray-100 text-gray-800"
+                }`}
+              >
                 {quote.eventStatus ?? "Unknown"}
               </span>
             </div>
@@ -254,14 +295,12 @@ export function ContractTab({ quote }: { quote: QuoteDetail }) {
                 </div>
                 {quote.contact.email && (
                   <div>
-                    <span className="text-gray-500">Email:</span>{" "}
-                    <span>{quote.contact.email}</span>
+                    <span className="text-gray-500">Email:</span> <span>{quote.contact.email}</span>
                   </div>
                 )}
                 {quote.contact.phone && (
                   <div>
-                    <span className="text-gray-500">Phone:</span>{" "}
-                    <span>{quote.contact.phone}</span>
+                    <span className="text-gray-500">Phone:</span> <span>{quote.contact.phone}</span>
                   </div>
                 )}
               </>
@@ -299,7 +338,7 @@ export function ContractTab({ quote }: { quote: QuoteDetail }) {
           <p className="text-sm">
             {quote.address.street}
             <br />
-            {quote.address.city}, {quote.address.stateProvince} {quote.address.zipPostal ?? ""}
+            {quote.address.zipPostal ?? ""}
           </p>
         </div>
       )}
@@ -335,7 +374,9 @@ export function ContractTab({ quote }: { quote: QuoteDetail }) {
       {/* Internal Notes */}
       {quote.internalNotes && (
         <div>
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Internal Notes</h3>
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">
+            Internal Notes
+          </h3>
           <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
             <p className="text-sm whitespace-pre-wrap">{quote.internalNotes}</p>
           </div>
@@ -348,7 +389,12 @@ export function ContractTab({ quote }: { quote: QuoteDetail }) {
         {isLoading ? (
           <p className="text-sm text-gray-400 py-4 text-center">Loading line items...</p>
         ) : (
-          <LineItemsTable lineItems={lineItems} taxPercent={quote.taxPercent} taxAmountCents={quote.taxAmountCents} currency={currency} />
+          <LineItemsTable
+            lineItems={lineItems}
+            taxPercent={quote.taxPercent}
+            taxAmountCents={quote.taxAmountCents}
+            currency={currency}
+          />
         )}
       </div>
     </div>
