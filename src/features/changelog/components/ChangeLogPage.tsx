@@ -7,6 +7,7 @@ import { useCurrentUser } from "@/hooks/db/useCurrentUser";
 import { markChangelogRead } from "../db/markChangelogRead";
 import { ChangeLogMarkdown } from "./ChangeLogMarkdown";
 import { toEpochMs } from "../util/timestamps";
+import { mergeVersionEntries, type VersionFile } from "../util/mergeVersionEntries";
 
 function formatReleasedAt(value: string): string {
   const ms = toEpochMs(value);
@@ -18,10 +19,13 @@ function formatReleasedAt(value: string): string {
   });
 }
 
-export const ChangeLogPage = () => {
-  const { entries, isLoading } = useChangeLog();
+/** `files` comes from the server component — the committed versions/*.md bodies. */
+export const ChangeLogPage = ({ files = [] }: { files?: VersionFile[] }) => {
+  const { entries: rows, isLoading } = useChangeLog();
   const { data: userData } = useCurrentUser();
   const userUuid = userData?.[0]?.id ?? null;
+
+  const entries = mergeVersionEntries(files, rows);
 
   // Opening the page marks everything up to now as seen.
   useEffect(() => {
@@ -34,7 +38,10 @@ export const ChangeLogPage = () => {
       <div className="mx-auto max-w-3xl">
         <PageHeader title="What's New" subtitle="Everything we've shipped, newest first." />
 
-        {isLoading && <p className="mt-8 text-sm text-gray-500">Loading…</p>}
+        {/* The files render immediately; only a cold DB with no files waits. */}
+        {isLoading && entries.length === 0 && (
+          <p className="mt-8 text-sm text-gray-500">Loading…</p>
+        )}
 
         {!isLoading && entries.length === 0 && (
           <p className="mt-8 text-sm text-gray-500" data-testid="changelog-empty">
@@ -47,9 +54,12 @@ export const ChangeLogPage = () => {
             <article key={entry.id} data-testid="changelog-entry" data-version={entry.version}>
               <div className="-mx-16 rounded-md bg-darkBlue px-8 py-4">
                 <h2 className="text-3xl font-bold text-white">{entry.version}</h2>
-                <p className="mt-0 text-sm font-medium text-white/70">
-                  {formatReleasedAt(entry.released_at)}
-                </p>
+                {/* No date until this environment records the release. */}
+                {formatReleasedAt(entry.released_at) && (
+                  <p className="mt-0 text-sm font-medium text-white/70">
+                    {formatReleasedAt(entry.released_at)}
+                  </p>
+                )}
               </div>
               <div className="pt-4">
                 <ChangeLogMarkdown body={entry.body_md} />

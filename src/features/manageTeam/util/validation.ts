@@ -1,4 +1,5 @@
 import { CurrentUserState } from "../state/useCurrentUserStore";
+import { validateDriverPayRanges } from "../logic/driverPayRanges";
 
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,6 +40,14 @@ export function validateDriverSection(state: CurrentUserState): {
 
   // Driver validation removed - now handled in UI alerts
   // Drivers can be saved without payment details
+
+  // Pay ranges are the exception: a half-filled or overlapping tier would either be
+  // rejected by the DriverPayRanges check constraints or silently pay the wrong rate.
+  if (state.isDriver) {
+    for (const error of validateDriverPayRanges(state.payRanges)) {
+      errors.push(`Pay range ${error.index + 1}: ${error.message}`);
+    }
+  }
 
   return {
     isValid: errors.length === 0,
