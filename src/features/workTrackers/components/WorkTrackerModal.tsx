@@ -111,6 +111,9 @@ export default function WorkTrackerModal({
   const [showEditTypes, setShowEditTypes] = useState(false);
   const initialSnapshotRef = useRef<WorkTrackerSnapshot | null>(null);
   const pendingChangeTypeRef = useRef<WorkTrackerChangeType>("none");
+  // id of the auto-managed "Hauling" line item (if any) — its amount is kept in
+  // sync with pickup/dropoff/driver instead of being hand-edited or button-triggered.
+  const autoHaulingLineItemIdRef = useRef<string | null>(null);
 
   // Fetch available work tracker types (local-first via PowerSync)
   const { types: workTrackerTypes } = useWorkTrackerTypes();
@@ -217,8 +220,21 @@ export default function WorkTrackerModal({
 
   useEffect(() => {
     if (isNew) {
-      setLineItems([]);
+      // New work trackers always start with one auto-calculated Hauling line item.
+      const haulingId = crypto.randomUUID();
+      autoHaulingLineItemIdRef.current = haulingId;
+      setLineItems([
+        {
+          id: haulingId,
+          type: "hauling",
+          quantity: 1,
+          unitAmtCents: 0,
+          description: null,
+        },
+      ]);
     } else if (fetchedLineItems) {
+      autoHaulingLineItemIdRef.current =
+        fetchedLineItems.find((item) => item.type === "hauling")?.id ?? null;
       setLineItems(fetchedLineItems);
     }
   }, [selectedWorkTracker?.id, isNew, fetchedLineItems]);
@@ -562,6 +578,26 @@ export default function WorkTrackerModal({
     () => (driverPaymentData && leg ? describeDriverPay(driverPaymentData, leg) : null),
     [driverPaymentData, leg],
   );
+
+  // Keep the auto-managed Hauling line item's amount in step with payBreakdown —
+  // itself derived from pickup/dropoff (via `leg`) and the selected driver (via
+  // `driverPaymentData`) — instead of requiring its own calculate button.
+  useEffect(() => {
+    const haulingId = autoHaulingLineItemIdRef.current;
+    if (!haulingId || !payBreakdown) return;
+    setLineItems((prev) =>
+      prev.map((item) =>
+        item.id === haulingId
+          ? {
+              ...item,
+              quantity: 1,
+              unitAmtCents: Math.round(payBreakdown.amount * 100),
+              description: payBreakdown.text,
+            }
+          : item,
+      ),
+    );
+  }, [payBreakdown]);
 
   const handleCalculatePay = () => {
     if (!driverPaymentData) {
