@@ -10,8 +10,6 @@ import { isDriverUnavailable } from "../../../state/useDriverUnavailabilityStore
 import { useAlertCountsStore } from "../../../state/useAlertCountsStore";
 
 const MAX_SMALL_THUMBNAILS = 4;
-const DRAG_THRESHOLD = 6; // px movement before drag starts
-
 /**
  * Controller container that decides how to render work trackers for a cell.
  *
@@ -99,7 +97,7 @@ export class WorkTrackerGroup extends Container {
   /**
    * Adds pointer handlers that differentiate between click and drag.
    * - Small movement → click (opens modal)
-   * - Movement > DRAG_THRESHOLD → initiates drag-and-drop
+   * - Movement > 6px → initiates drag-and-drop
    */
   private addInteractionHandler(
     target: Container,
@@ -111,54 +109,19 @@ export class WorkTrackerGroup extends Container {
     target.eventMode = "static";
     target.cursor = "grab";
 
-    let downX = 0;
-    let downY = 0;
-    let isDown = false;
-    let dragStarted = false;
-
-    const onMove = (e: FederatedPointerEvent) => {
-      if (!isDown) return;
-      const dx = e.global.x - downX;
-      const dy = e.global.y - downY;
-      if (!dragStarted && dx * dx + dy * dy > DRAG_THRESHOLD * DRAG_THRESHOLD) {
-        dragStarted = true;
-        // Initiate drag via the manager
-        WorkTrackerDragManager.startDrag(
-          { tracker, sourceBleacherUuid: bleacherUuid, sourceDate: date },
-          e.global.x,
-          e.global.y,
-        );
-        // Remove move listener from this target — manager takes over on stage
-        target.off("pointermove", onMove);
-      }
-    };
-
     target.on("pointerdown", (e: FederatedPointerEvent) => {
       e.stopPropagation();
-      downX = e.global.x;
-      downY = e.global.y;
-      isDown = true;
-      dragStarted = false;
       target.cursor = "grabbing";
-      target.on("pointermove", onMove);
-    });
-
-    target.on("pointerup", (e: FederatedPointerEvent) => {
-      e.stopPropagation();
-      target.off("pointermove", onMove);
-      target.cursor = "grab";
-      if (isDown && !dragStarted) {
-        onClick(tracker);
-      }
-      isDown = false;
-      dragStarted = false;
-    });
-
-    target.on("pointerupoutside", () => {
-      target.off("pointermove", onMove);
-      target.cursor = "grab";
-      isDown = false;
-      dragStarted = false;
+      const dragStarted = WorkTrackerDragManager.beginPendingDrag(
+        { tracker, sourceBleacherUuid: bleacherUuid, sourceDate: date },
+        e.global.x,
+        e.global.y,
+        () => onClick(tracker),
+        () => {
+          target.cursor = "grab";
+        },
+      );
+      if (!dragStarted) target.cursor = "grab";
     });
 
     target.on("pointertap", (e: FederatedPointerEvent) => e.stopPropagation());
