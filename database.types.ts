@@ -3546,6 +3546,44 @@ export type Database = {
         }
         Relationships: []
       }
+      WorkTrackerLineItems: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          quantity: number
+          type: Database["public"]["Enums"]["work_tracker_line_item_type"]
+          unit_amt_cents: number
+          work_tracker_uuid: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          quantity?: number
+          type: Database["public"]["Enums"]["work_tracker_line_item_type"]
+          unit_amt_cents?: number
+          work_tracker_uuid: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          quantity?: number
+          type?: Database["public"]["Enums"]["work_tracker_line_item_type"]
+          unit_amt_cents?: number
+          work_tracker_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_tracker_line_items_work_tracker_uuid_fkey"
+            columns: ["work_tracker_uuid"]
+            isOneToOne: false
+            referencedRelation: "WorkTrackers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       WorkTrackers: {
         Row: {
           accepted_at: string | null
@@ -3950,6 +3988,14 @@ export type Database = {
         | "in_staging"
         | "paused"
       task_type: "feature" | "bug"
+      work_tracker_line_item_type:
+        | "hauling"
+        | "deadhead"
+        | "setup"
+        | "teardown"
+        | "maintenance"
+        | "per_diem"
+        | "custom"
       worktracker_group_status:
         | "draft"
         | "qbo_bill_creating"
@@ -4124,6 +4170,15 @@ export const Constants = {
         "paused",
       ],
       task_type: ["feature", "bug"],
+      work_tracker_line_item_type: [
+        "hauling",
+        "deadhead",
+        "setup",
+        "teardown",
+        "maintenance",
+        "per_diem",
+        "custom",
+      ],
       worktracker_group_status: [
         "draft",
         "qbo_bill_creating",
