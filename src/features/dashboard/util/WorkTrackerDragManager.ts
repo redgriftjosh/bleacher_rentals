@@ -27,6 +27,16 @@ interface DragContext {
   sourceDate: string;
 }
 
+interface PendingDrag {
+  ctx: DragContext;
+  startX: number;
+  startY: number;
+  onClick: () => void;
+  onEnd: () => void;
+}
+
+const DRAG_THRESHOLD = 6;
+
 /**
  * Singleton manager for work tracker drag-and-drop on the PixiJS dashboard.
  *
@@ -45,6 +55,7 @@ class _WorkTrackerDragManager {
 
   private isDragging = false;
   private dragCtx: DragContext | null = null;
+  private pendingDrag: PendingDrag | null = null;
   private ghost: Container | null = null;
   private highlight: Graphics | null = null;
 
@@ -74,12 +85,30 @@ class _WorkTrackerDragManager {
   }
 
   /**
-   * Begin dragging a work tracker.
-   * Called from WorkTrackerGroup on pointerdown.
+   * Claim a tracker pointer sequence from the stage. This is intentionally done
+   * on pointerdown, before the drag threshold is crossed: event spans underneath
+   * trackers are also interactive and otherwise can take the next pointermove.
    */
-  startDrag(ctx: DragContext, globalX: number, globalY: number) {
-    if (!this.app || !this.gridInfo) return;
-    if (this.isDragging) return;
+  beginPendingDrag(
+    ctx: DragContext,
+    globalX: number,
+    globalY: number,
+    onClick: () => void,
+    onEnd: () => void,
+  ) {
+    if (!this.app || !this.gridInfo) return false;
+    if (this.isDragging || this.pendingDrag) return false;
+
+    this.pendingDrag = { ctx, startX: globalX, startY: globalY, onClick, onEnd };
+
+    this.app.stage.on("pointermove", this.onMoveBound);
+    this.app.stage.on("pointerup", this.onUpBound);
+    this.app.stage.on("pointerupoutside", this.onUpBound);
+    return true;
+  }
+
+  private startDrag(ctx: DragContext, globalX: number, globalY: number) {
+    if (!this.app || !this.gridInfo || this.isDragging) return;
 
     this.isDragging = true;
     this.dragCtx = ctx;
@@ -93,14 +122,18 @@ class _WorkTrackerDragManager {
     this.highlight = new Graphics();
     this.highlight.visible = false;
     this.app.stage.addChild(this.highlight);
-
-    // Listen for global pointer events
-    this.app.stage.on("pointermove", this.onMoveBound);
-    this.app.stage.on("pointerup", this.onUpBound);
-    this.app.stage.on("pointerupoutside", this.onUpBound);
   }
 
   private onPointerMove(e: FederatedPointerEvent) {
+    if (this.pendingDrag && !this.isDragging) {
+      const dx = e.global.x - this.pendingDrag.startX;
+      const dy = e.global.y - this.pendingDrag.startY;
+      if (dx * dx + dy * dy > DRAG_THRESHOLD * DRAG_THRESHOLD) {
+        this.startDrag(this.pendingDrag.ctx, e.global.x, e.global.y);
+      }
+      return;
+    }
+
     if (!this.isDragging || !this.ghost || !this.highlight || !this.gridInfo) return;
 
     const gx = e.global.x;
@@ -130,6 +163,13 @@ class _WorkTrackerDragManager {
   }
 
   private async onPointerUp(e: FederatedPointerEvent) {
+    if (this.pendingDrag && !this.isDragging) {
+      const { onClick } = this.pendingDrag;
+      this.cleanup();
+      onClick();
+      return;
+    }
+
     if (!this.isDragging || !this.dragCtx) {
       this.cleanup();
       return;
@@ -163,14 +203,11 @@ class _WorkTrackerDragManager {
     }
 
     if (ctx.tracker.status === "accepted") {
-      const confirmed = await useWorkTrackerDragConfirmStore
-        .getState()
-        .requestConfirm(ctx.tracker);
+      const confirmed = await useWorkTrackerDragConfirmStore.getState().requestConfirm(ctx.tracker);
       if (!confirmed) return;
     }
 
-    const nextStatus =
-      ctx.tracker.status === "accepted" ? "released" : ctx.tracker.status;
+    const nextStatus = ctx.tracker.status === "accepted" ? "released" : ctx.tracker.status;
 
     // Optimistic local update
     this.optimisticMove(
@@ -310,8 +347,11 @@ class _WorkTrackerDragManager {
    * Remove ghost, highlight and unbind stage listeners.
    */
   private cleanup() {
+    const onEnd = this.pendingDrag?.onEnd;
+
     this.isDragging = false;
     this.dragCtx = null;
+    this.pendingDrag = null;
 
     if (this.ghost) {
       this.ghost.destroy({ children: true });
@@ -326,6 +366,7 @@ class _WorkTrackerDragManager {
       this.app.stage.off("pointerup", this.onUpBound);
       this.app.stage.off("pointerupoutside", this.onUpBound);
     }
+    onEnd?.();
   }
 
   /** Tear down all state (called on dashboard unmount). */
