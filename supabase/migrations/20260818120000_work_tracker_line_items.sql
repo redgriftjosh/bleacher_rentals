@@ -90,3 +90,10 @@ create policy "work_tracker_line_items_delete" on public."WorkTrackerLineItems"
   using (
     public.get_user_roles() && '{admin,account_manager}'::text[]
   );
+
+-- =====================
+-- Drivers: deadhead pay rate (cents per the driver's existing pay_per_unit),
+-- mirrors pay_rate_cents.
+-- =====================
+alter table public."Drivers"
+  add column if not exists deadhead_cents integer not null default 0;

@@ -1006,6 +1006,7 @@ export type Database = {
           app_version: string | null
           app_version_reported_at: string | null
           created_at: string
+          deadhead_cents: number
           id: string
           insurance_expires_on: string | null
           insurance_photo_path: string | null
@@ -1030,6 +1031,7 @@ export type Database = {
           app_version?: string | null
           app_version_reported_at?: string | null
           created_at?: string
+          deadhead_cents?: number
           id?: string
           insurance_expires_on?: string | null
           insurance_photo_path?: string | null
@@ -1054,6 +1056,7 @@ export type Database = {
           app_version?: string | null
           app_version_reported_at?: string | null
           created_at?: string
+          deadhead_cents?: number
           id?: string
           insurance_expires_on?: string | null
           insurance_photo_path?: string | null

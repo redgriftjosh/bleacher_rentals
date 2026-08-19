@@ -15,7 +15,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";
 import { fetchBleachersForOptions, fetchDriverPaymentData } from "@/app/team/_lib/db";
-import { toLatLngString, describeDriverPay } from "../util";
+import { toLatLngString, describeDriverPay, describeDeadheadPay } from "../util";
 import RouteMapPreview from "./RouteMapPreview";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import WorkTrackerStatusBadge from "./WorkTrackerStatusBadge";
@@ -111,9 +111,11 @@ export default function WorkTrackerModal({
   const [showEditTypes, setShowEditTypes] = useState(false);
   const initialSnapshotRef = useRef<WorkTrackerSnapshot | null>(null);
   const pendingChangeTypeRef = useRef<WorkTrackerChangeType>("none");
-  // id of the auto-managed "Hauling" line item (if any) — its amount is kept in
-  // sync with pickup/dropoff/driver instead of being hand-edited or button-triggered.
+  // ids of the auto-managed "Hauling" / "Deadhead" line items (if any) — their
+  // amounts are kept in sync with pickup/dropoff/driver instead of being
+  // hand-edited or button-triggered.
   const autoHaulingLineItemIdRef = useRef<string | null>(null);
+  const autoDeadheadLineItemIdRef = useRef<string | null>(null);
 
   // Fetch available work tracker types (local-first via PowerSync)
   const { types: workTrackerTypes } = useWorkTrackerTypes();
@@ -220,21 +222,21 @@ export default function WorkTrackerModal({
 
   useEffect(() => {
     if (isNew) {
-      // New work trackers always start with one auto-calculated Hauling line item.
+      // New work trackers always start with one auto-calculated Hauling line item,
+      // followed by one auto-calculated Deadhead line item.
       const haulingId = crypto.randomUUID();
+      const deadheadId = crypto.randomUUID();
       autoHaulingLineItemIdRef.current = haulingId;
+      autoDeadheadLineItemIdRef.current = deadheadId;
       setLineItems([
-        {
-          id: haulingId,
-          type: "hauling",
-          quantity: 1,
-          unitAmtCents: 0,
-          description: null,
-        },
+        { id: haulingId, type: "hauling", quantity: 1, unitAmtCents: 0, description: null },
+        { id: deadheadId, type: "deadhead", quantity: 1, unitAmtCents: 0, description: null },
       ]);
     } else if (fetchedLineItems) {
       autoHaulingLineItemIdRef.current =
         fetchedLineItems.find((item) => item.type === "hauling")?.id ?? null;
+      autoDeadheadLineItemIdRef.current =
+        fetchedLineItems.find((item) => item.type === "deadhead")?.id ?? null;
       setLineItems(fetchedLineItems);
     }
   }, [selectedWorkTracker?.id, isNew, fetchedLineItems]);
@@ -579,25 +581,44 @@ export default function WorkTrackerModal({
     [driverPaymentData, leg],
   );
 
-  // Keep the auto-managed Hauling line item's amount in step with payBreakdown —
-  // itself derived from pickup/dropoff (via `leg`) and the selected driver (via
-  // `driverPaymentData`) — instead of requiring its own calculate button.
+  // Same trip (`leg`) and driver (`driverPaymentData`), but at the driver's flat
+  // deadhead rate instead of their haul rate.
+  const deadheadBreakdown = useMemo(
+    () => (driverPaymentData && leg ? describeDeadheadPay(driverPaymentData, leg) : null),
+    [driverPaymentData, leg],
+  );
+
+  // Keep the auto-managed Hauling/Deadhead line items' amounts in step with
+  // payBreakdown/deadheadBreakdown — themselves derived from pickup/dropoff (via
+  // `leg`) and the selected driver (via `driverPaymentData`) — instead of
+  // requiring their own calculate button.
   useEffect(() => {
     const haulingId = autoHaulingLineItemIdRef.current;
-    if (!haulingId || !payBreakdown) return;
+    const deadheadId = autoDeadheadLineItemIdRef.current;
+    if ((!haulingId || !payBreakdown) && (!deadheadId || !deadheadBreakdown)) return;
+
     setLineItems((prev) =>
-      prev.map((item) =>
-        item.id === haulingId
-          ? {
-              ...item,
-              quantity: 1,
-              unitAmtCents: Math.round(payBreakdown.amount * 100),
-              description: payBreakdown.text,
-            }
-          : item,
-      ),
+      prev.map((item) => {
+        if (item.id === haulingId && payBreakdown) {
+          return {
+            ...item,
+            quantity: 1,
+            unitAmtCents: Math.round(payBreakdown.amount * 100),
+            description: payBreakdown.text,
+          };
+        }
+        if (item.id === deadheadId && deadheadBreakdown) {
+          return {
+            ...item,
+            quantity: 1,
+            unitAmtCents: Math.round(deadheadBreakdown.amount * 100),
+            description: deadheadBreakdown.text,
+          };
+        }
+        return item;
+      }),
     );
-  }, [payBreakdown]);
+  }, [payBreakdown, deadheadBreakdown]);
 
   const handleCalculatePay = () => {
     if (!driverPaymentData) {
