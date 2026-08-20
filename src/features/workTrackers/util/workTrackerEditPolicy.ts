@@ -10,12 +10,6 @@ export const IN_PROGRESS_STATUSES: WorkTrackerStatus[] = [
   "dropoff_inspection",
 ];
 
-export const BLOCKED_EDIT_STATUSES: WorkTrackerStatus[] = [
-  ...IN_PROGRESS_STATUSES,
-  "completed",
-  "cancelled",
-];
-
 export type WorkTrackerChangeType = "none" | "silent" | "notify-only" | "un-accept";
 
 export type AddressSnapshot = {
@@ -95,10 +89,6 @@ export function isWorkTrackerInProgress(status: WorkTrackerStatus): boolean {
   return IN_PROGRESS_STATUSES.includes(status);
 }
 
-export function isWorkTrackerBlockedFromEdit(status: WorkTrackerStatus): boolean {
-  return BLOCKED_EDIT_STATUSES.includes(status);
-}
-
 function normalizeString(value: string | null | undefined): string {
   return (value ?? "").trim();
 }
@@ -116,10 +106,7 @@ function addressesEqual(a: AddressSnapshot | null, b: AddressSnapshot | null): b
   );
 }
 
-function hasUnacceptFieldChanges(
-  before: WorkTrackerSnapshot,
-  after: WorkTrackerSnapshot,
-): boolean {
+function hasUnacceptFieldChanges(before: WorkTrackerSnapshot, after: WorkTrackerSnapshot): boolean {
   if (normalizeString(before.bleacher_uuid) !== normalizeString(after.bleacher_uuid)) return true;
   if (normalizeString(before.date) !== normalizeString(after.date)) return true;
   if (normalizeString(before.driver_uuid) !== normalizeString(after.driver_uuid)) return true;
@@ -138,7 +125,9 @@ function hasUnacceptFieldChanges(
   if (before.pay_cents !== after.pay_cents) return true;
   if (before.teardown_required !== after.teardown_required) return true;
   if (before.setup_required !== after.setup_required) return true;
-  if (normalizeString(before.work_tracker_type_uuid) !== normalizeString(after.work_tracker_type_uuid)) {
+  if (
+    normalizeString(before.work_tracker_type_uuid) !== normalizeString(after.work_tracker_type_uuid)
+  ) {
     return true;
   }
   if (before.distance_meters !== after.distance_meters) return true;
@@ -153,24 +142,15 @@ function hasNotesChange(before: WorkTrackerSnapshot, after: WorkTrackerSnapshot)
   return normalizeString(before.notes) !== normalizeString(after.notes);
 }
 
-function hasInternalNotesChange(
-  before: WorkTrackerSnapshot,
-  after: WorkTrackerSnapshot,
-): boolean {
+function hasInternalNotesChange(before: WorkTrackerSnapshot, after: WorkTrackerSnapshot): boolean {
   return normalizeString(before.internal_notes) !== normalizeString(after.internal_notes);
 }
 
-function hasProjectNumberChange(
-  before: WorkTrackerSnapshot,
-  after: WorkTrackerSnapshot,
-): boolean {
+function hasProjectNumberChange(before: WorkTrackerSnapshot, after: WorkTrackerSnapshot): boolean {
   return normalizeString(before.project_number) !== normalizeString(after.project_number);
 }
 
-function hasSilentFieldChanges(
-  before: WorkTrackerSnapshot,
-  after: WorkTrackerSnapshot,
-): boolean {
+function hasSilentFieldChanges(before: WorkTrackerSnapshot, after: WorkTrackerSnapshot): boolean {
   return hasInternalNotesChange(before, after) || hasProjectNumberChange(before, after);
 }
 
@@ -236,5 +216,5 @@ export function shouldSendDriverNotification(
 
   if (isInsert) return resolvedNext !== "draft";
 
-  return previousStatus === "accepted";
+  return previousStatus === "accepted" || isWorkTrackerInProgress(previousStatus);
 }

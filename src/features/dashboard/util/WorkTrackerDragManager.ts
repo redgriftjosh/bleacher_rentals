@@ -12,7 +12,6 @@ import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { moveWorkTracker } from "@/features/dashboard/db/client/db";
 import { canEditWorkTrackerByUuid } from "@/features/workTrackers/db/workTrackerEditAccess";
-import { isWorkTrackerBlockedFromEdit } from "@/features/workTrackers/util/workTrackerEditPolicy";
 import { useWorkTrackerDragConfirmStore } from "@/features/workTrackers/state/useWorkTrackerDragConfirmStore";
 
 interface GridInfo {
@@ -192,13 +191,6 @@ class _WorkTrackerDragManager {
     const canEdit = await canEditWorkTrackerByUuid(ctx.tracker.workTrackerUuid);
     if (!canEdit) {
       createErrorToast(["You do not have permission to move this work tracker."]);
-      return;
-    }
-
-    if (isWorkTrackerBlockedFromEdit(ctx.tracker.status)) {
-      createErrorToast([
-        "This trip is in progress and cannot be moved. Contact a lead account manager if changes are needed.",
-      ]);
       return;
     }
 
