@@ -31,6 +31,7 @@ import { DamageReportResolveMaintenanceModal } from "./DamageReportResolveMainte
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { buildPhotoInserts } from "./_lib/photoInserts";
 import { validateDamageReportForm, describePhotoLimit } from "./_lib/damageReportForm";
+import { optimizeDamagePhoto, isHeicFile } from "./_lib/compressPhoto";
 
 const PHOTO_BUCKET = "damage-report-photos";
 const ACCEPTED_PHOTO_TYPES = [
@@ -199,7 +200,11 @@ export function DamageReportModal({
       return;
     }
 
-    if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) {
+    // Browsers commonly report an empty type for HEIC, so an unlabelled file is
+    // accepted only once its header confirms it really is HEIC.
+    const isAcceptedType =
+      ACCEPTED_PHOTO_TYPES.includes(file.type) || (file.type === "" && (await isHeicFile(file)));
+    if (!isAcceptedType) {
       createErrorToast(["Invalid file type", `Please upload: ${ACCEPTED_PHOTO_TYPES.join(", ")}`]);
       return;
     }
@@ -210,12 +215,17 @@ export function DamageReportModal({
 
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() ?? "jpg";
+      // Downscale to at most 1920x1080 and convert HEIC to JPEG. Returns the
+      // original file untouched if it is already small enough or already well
+      // compressed.
+      const { file: photo } = await optimizeDamagePhoto(file);
+
+      const ext = photo.name.split(".").pop() ?? "jpg";
       const storagePath = `bleacher-${resolvedBleacherUuid || "unknown"}/${crypto.randomUUID()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from(PHOTO_BUCKET)
-        .upload(storagePath, file, { upsert: false });
+        .upload(storagePath, photo, { upsert: false });
       if (uploadError) throw uploadError;
 
       setPhotoPaths((prev) => [...prev, storagePath]);
