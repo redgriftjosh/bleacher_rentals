@@ -743,37 +743,25 @@ export type Database = {
       }
       DamageReportPhotos: {
         Row: {
-          attempts: number
           created_at: string
           damage_report_uuid: string
-          gallery_asset_id: string | null
           id: string
-          last_attempt_at: string | null
-          last_error: string | null
           photo_path: string
           thumbnail: string | null
           upload_status: string
         }
         Insert: {
-          attempts?: number
           created_at?: string
           damage_report_uuid: string
-          gallery_asset_id?: string | null
           id?: string
-          last_attempt_at?: string | null
-          last_error?: string | null
           photo_path: string
           thumbnail?: string | null
           upload_status?: string
         }
         Update: {
-          attempts?: number
           created_at?: string
           damage_report_uuid?: string
-          gallery_asset_id?: string | null
           id?: string
-          last_attempt_at?: string | null
-          last_error?: string | null
           photo_path?: string
           thumbnail?: string | null
           upload_status?: string
@@ -2071,40 +2059,25 @@ export type Database = {
       }
       InspectionPhotos: {
         Row: {
-          attempts: number
           caption: string | null
           created_at: string
-          gallery_asset_id: string | null
           id: string
           inspection_uuid: string
-          last_attempt_at: string | null
-          last_error: string | null
           storage_path: string
-          upload_status: string
         }
         Insert: {
-          attempts?: number
           caption?: string | null
           created_at?: string
-          gallery_asset_id?: string | null
           id?: string
           inspection_uuid: string
-          last_attempt_at?: string | null
-          last_error?: string | null
           storage_path: string
-          upload_status?: string
         }
         Update: {
-          attempts?: number
           caption?: string | null
           created_at?: string
-          gallery_asset_id?: string | null
           id?: string
           inspection_uuid?: string
-          last_attempt_at?: string | null
-          last_error?: string | null
           storage_path?: string
-          upload_status?: string
         }
         Relationships: [
           {
