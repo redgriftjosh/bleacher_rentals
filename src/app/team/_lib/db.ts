@@ -41,10 +41,21 @@ export async function fetchDriverTaxById(
 export type DriverPaymentData = {
   tax: number;
   payRateCents: number;
+  /** Flat amount paid per payPerUnit for deadhead travel — no tiers. */
+  deadheadRateCents: number;
   payCurrency: "CAD" | "USD";
   payPerUnit: "KM" | "MI" | "HR";
   /** Tiered rates (DriverPayRanges). Empty = the flat payRateCents applies. */
   payRanges: DriverPayRange[];
+};
+
+const EMPTY_DRIVER_PAYMENT_DATA: DriverPaymentData = {
+  tax: 0,
+  payRateCents: 0,
+  deadheadRateCents: 0,
+  payCurrency: "CAD",
+  payPerUnit: "KM",
+  payRanges: [],
 };
 
 export async function fetchDriverPaymentData(
@@ -57,19 +68,19 @@ export async function fetchDriverPaymentData(
   // const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from("Drivers")
-    .select("id, tax, pay_rate_cents, pay_currency, pay_per_unit")
+    .select("id, tax, pay_rate_cents, deadhead_cents, pay_currency, pay_per_unit")
     .eq("user_uuid", userUuid)
     .maybeSingle();
 
   if (error) {
     createErrorToastNoThrow(["Failed to fetch driver payment data.", error.message]);
-    return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM", payRanges: [] };
+    return EMPTY_DRIVER_PAYMENT_DATA;
   }
 
   // `maybeSingle()` avoids the noisy 406 (PGRST116) when no rows.
   if (!data) {
     await ensureDriverExists(userUuid, 0, 0, "CAD", "KM", supabase);
-    return { tax: 0, payRateCents: 0, payCurrency: "CAD", payPerUnit: "KM", payRanges: [] };
+    return EMPTY_DRIVER_PAYMENT_DATA;
   }
 
   // Tiered rates, if this driver has any. A failure here is not worth blocking the
@@ -86,6 +97,7 @@ export async function fetchDriverPaymentData(
   return {
     tax: data.tax ?? 0,
     payRateCents: data.pay_rate_cents ?? 0,
+    deadheadRateCents: data.deadhead_cents ?? 0,
     payCurrency: (data.pay_currency as "CAD" | "USD") ?? "CAD",
     payPerUnit: (data.pay_per_unit as "KM" | "MI" | "HR") ?? "KM",
     payRanges: toDriverPayRangeDrafts(rangeRows ?? []),

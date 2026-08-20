@@ -16,6 +16,7 @@ const baseState: CurrentUserState = {
   roleTabs: [],
   tax: undefined,
   payRateCents: null,
+  deadheadRateCents: null,
   payCurrency: "CAD",
   payPerUnit: "KM",
   payRanges: [],
