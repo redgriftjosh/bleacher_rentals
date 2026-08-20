@@ -394,6 +394,7 @@ const WorkTrackerLineItemsCols = {
   quantity: column.integer,
   unit_amt_cents: column.integer,
   description: column.text,
+  is_automatically_managed: column.integer,
 } satisfies PowerSyncColsFor<"WorkTrackerLineItems">;
 const WorkTrackerLineItems = new Table(WorkTrackerLineItemsCols, {
   indexes: { work_tracker_uuid: ["work_tracker_uuid"] },

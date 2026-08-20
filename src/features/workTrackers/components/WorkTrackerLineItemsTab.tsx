@@ -141,6 +141,7 @@ function AddLineItemRow({ onAdd }: { onAdd: (item: DraftWorkTrackerLineItem) => 
       quantity,
       unitAmtCents: amountCents ?? 0,
       description: description.trim() === "" ? null : description.trim(),
+      isAutomaticallyManaged: false,
     });
     reset();
   };

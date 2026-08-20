@@ -36,6 +36,7 @@ export type DraftWorkTrackerLineItem = {
   quantity: number;
   unitAmtCents: number;
   description: string | null;
+  isAutomaticallyManaged: boolean;
 };
 
 type Row = {
@@ -44,6 +45,7 @@ type Row = {
   quantity: number | null;
   unit_amt_cents: number | null;
   description: string | null;
+  is_automatically_managed: number | null;
 };
 
 /**
@@ -55,7 +57,7 @@ export async function fetchWorkTrackerLineItems(
 ): Promise<DraftWorkTrackerLineItem[]> {
   const compiled = db
     .selectFrom("WorkTrackerLineItems")
-    .select(["id", "type", "quantity", "unit_amt_cents", "description"])
+    .select(["id", "type", "quantity", "unit_amt_cents", "description", "is_automatically_managed"])
     .where("work_tracker_uuid", "=", workTrackerUuid)
     .orderBy("created_at", "asc")
     .compile();
@@ -68,7 +70,55 @@ export async function fetchWorkTrackerLineItems(
     quantity: r.quantity ?? 0,
     unitAmtCents: r.unit_amt_cents ?? 0,
     description: r.description,
+    isAutomaticallyManaged: !!r.is_automatically_managed,
   }));
+}
+
+export type WorkTrackerRequirements = {
+  setupRequired: boolean;
+  teardownRequired: boolean;
+};
+
+/** Keeps requirement-owned lines in sync without touching user-created rows. */
+export function reconcileRequirementLineItems(
+  items: DraftWorkTrackerLineItem[],
+  requirements: WorkTrackerRequirements,
+  createId: () => string = () => crypto.randomUUID(),
+): DraftWorkTrackerLineItem[] {
+  let next = items.filter(
+    (item) =>
+      !item.isAutomaticallyManaged ||
+      (item.type === "setup" && requirements.setupRequired) ||
+      (item.type === "teardown" && requirements.teardownRequired),
+  );
+
+  for (const [type, required] of [
+    ["setup", requirements.setupRequired],
+    ["teardown", requirements.teardownRequired],
+  ] as const) {
+    if (!required) continue;
+    const matching = next.filter((item) => item.isAutomaticallyManaged && item.type === type);
+    if (matching.length === 0) {
+      next = [
+        ...next,
+        {
+          id: createId(),
+          type,
+          quantity: 1,
+          unitAmtCents: 0,
+          description: null,
+          isAutomaticallyManaged: true,
+        },
+      ];
+    } else if (matching.length > 1) {
+      const keepId = matching[0].id;
+      next = next.filter(
+        (item) => !item.isAutomaticallyManaged || item.type !== type || item.id === keepId,
+      );
+    }
+  }
+
+  return next;
 }
 
 /**
@@ -99,6 +149,7 @@ export async function syncWorkTrackerLineItems(
           quantity: item.quantity,
           unit_amt_cents: item.unitAmtCents,
           description: item.description,
+          is_automatically_managed: item.isAutomaticallyManaged ? 1 : 0,
         })
         .compile(),
     );

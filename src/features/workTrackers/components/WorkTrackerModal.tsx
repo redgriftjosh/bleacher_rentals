@@ -60,6 +60,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import WorkTrackerLineItemsTab from "./WorkTrackerLineItemsTab";
 import {
   fetchWorkTrackerLineItems,
+  reconcileRequirementLineItems,
   syncWorkTrackerLineItems,
   type DraftWorkTrackerLineItem,
 } from "../db/workTrackerLineItems";
@@ -229,8 +230,22 @@ export default function WorkTrackerModal({
       autoHaulingLineItemIdRef.current = haulingId;
       autoDeadheadLineItemIdRef.current = deadheadId;
       setLineItems([
-        { id: haulingId, type: "hauling", quantity: 1, unitAmtCents: 0, description: null },
-        { id: deadheadId, type: "deadhead", quantity: 1, unitAmtCents: 0, description: null },
+        {
+          id: haulingId,
+          type: "hauling",
+          quantity: 1,
+          unitAmtCents: 0,
+          description: null,
+          isAutomaticallyManaged: false,
+        },
+        {
+          id: deadheadId,
+          type: "deadhead",
+          quantity: 1,
+          unitAmtCents: 0,
+          description: null,
+          isAutomaticallyManaged: false,
+        },
       ]);
     } else if (fetchedLineItems) {
       autoHaulingLineItemIdRef.current =
@@ -240,6 +255,15 @@ export default function WorkTrackerModal({
       setLineItems(fetchedLineItems);
     }
   }, [selectedWorkTracker?.id, isNew, fetchedLineItems]);
+
+  useEffect(() => {
+    setLineItems((items) =>
+      reconcileRequirementLineItems(items, {
+        setupRequired: !!workTracker?.setup_required,
+        teardownRequired: !!workTracker?.teardown_required,
+      }),
+    );
+  }, [workTracker?.setup_required, workTracker?.teardown_required]);
 
   // Populate pickup address from the bleacher's last known location in PS
   const handlePopulatePickupFromLastAddress = async () => {
@@ -1178,7 +1202,14 @@ export default function WorkTrackerModal({
               <TabsContent value="line-items">
                 <WorkTrackerLineItemsTab
                   lineItems={lineItems}
-                  onChange={setLineItems}
+                  onChange={(items) =>
+                    setLineItems(
+                      reconcileRequirementLineItems(items, {
+                        setupRequired: !!workTracker?.setup_required,
+                        teardownRequired: !!workTracker?.teardown_required,
+                      }),
+                    )
+                  }
                   canEdit={canEditFields}
                   isLoading={isLineItemsLoading}
                 />
