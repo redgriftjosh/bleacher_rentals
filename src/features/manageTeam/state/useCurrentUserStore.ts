@@ -25,6 +25,8 @@ export type CurrentUserState = {
   // Driver-specific fields
   tax: number | undefined;
   payRateCents: number | null;
+  /** Amount paid per payPerUnit for deadhead travel — flat, no tiers. */
+  deadheadRateCents: number | null;
   payCurrency: "CAD" | "USD";
   payPerUnit: "KM" | "MI" | "HR";
   /** Tiered rates (DriverPayRanges). A matching range overrides payRateCents. */
@@ -87,6 +89,7 @@ const initialState: CurrentUserState = {
   roleTabs: [],
   tax: undefined,
   payRateCents: null,
+  deadheadRateCents: null,
   payCurrency: "CAD",
   payPerUnit: "KM",
   payRanges: [],

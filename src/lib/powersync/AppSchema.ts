@@ -214,6 +214,7 @@ const DriversCols = {
   created_at: column.text,
   tax: column.integer,
   pay_rate_cents: column.integer,
+  deadhead_cents: column.integer,
   pay_currency: column.text,
   pay_per_unit: column.text,
   is_active: column.integer,
@@ -385,6 +386,19 @@ const WorkTrackerTypesCols = {
   sort_order: column.integer,
 } satisfies PowerSyncColsFor<"WorkTrackerTypes">;
 const WorkTrackerTypes = new Table(WorkTrackerTypesCols);
+
+const WorkTrackerLineItemsCols = {
+  created_at: column.text,
+  work_tracker_uuid: column.text,
+  type: column.text,
+  quantity: column.integer,
+  unit_amt_cents: column.integer,
+  description: column.text,
+  is_automatically_managed: column.integer,
+} satisfies PowerSyncColsFor<"WorkTrackerLineItems">;
+const WorkTrackerLineItems = new Table(WorkTrackerLineItemsCols, {
+  indexes: { work_tracker_uuid: ["work_tracker_uuid"] },
+});
 
 const NotificationsCols = {
   created_at: column.text,
@@ -1091,6 +1105,7 @@ export const AppSchema = new Schema({
   WorkTrackers,
   WorkTrackerGroups,
   WorkTrackerTypes,
+  WorkTrackerLineItems,
   Notifications,
   WorkTrackerInspections,
   DriverScorecardStatsPerDriver,
@@ -1159,6 +1174,7 @@ export type VendorRecord = PowerSyncDB["Vendors"];
 export type WorkTrackerRecord = PowerSyncDB["WorkTrackers"];
 export type WorkTrackerGroupRecord = PowerSyncDB["WorkTrackerGroups"];
 export type WorkTrackerTypeRecord = PowerSyncDB["WorkTrackerTypes"];
+export type WorkTrackerLineItemRecord = PowerSyncDB["WorkTrackerLineItems"];
 export type NotificationRecord = PowerSyncDB["Notifications"];
 export type DriverUnavailabilityRecord = PowerSyncDB["DriverUnavailability"];
 export type WorkTrackerInspectionsRecord = PowerSyncDB["WorkTrackerInspections"];

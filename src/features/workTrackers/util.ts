@@ -41,6 +41,8 @@ export type DistanceData = {
 export type DriverPaymentData = {
   tax: number;
   payRateCents: number;
+  /** Flat amount paid per payPerUnit for deadhead travel — no tiers. */
+  deadheadRateCents?: number;
   payCurrency: "CAD" | "USD";
   payPerUnit: "KM" | "MI" | "HR";
   /** Tiered rates (DriverPayRanges). Empty or absent = the flat payRateCents applies. */
@@ -114,4 +116,42 @@ export function calculateDriverPay(
   distanceData: DistanceData,
 ): number | null {
   return describeDriverPay(driverPaymentData, distanceData)?.amount ?? null;
+}
+
+/**
+ * How the driver's deadhead pay for one leg is arrived at — same trip size as
+ * `describeDriverPay` (same pickup/dropoff leg), but at the driver's flat
+ * deadhead rate instead of their (possibly tiered) haul rate.
+ */
+export function describeDeadheadPay(
+  driverPaymentData: DriverPaymentData,
+  distanceData: DistanceData,
+): DriverPayBreakdown | null {
+  if (!driverPaymentData || !distanceData) return null;
+
+  const unit = driverPaymentData.payPerUnit;
+  const value = tripValue(unit, distanceData);
+  if (value === null) return null;
+
+  const rateCents = driverPaymentData.deadheadRateCents ?? 0;
+  const amount = (rateCents / 100) * value;
+  if (!(amount > 0)) return null;
+
+  const rate = `$${(rateCents / 100).toFixed(2)}`;
+  const shownValue = value.toFixed(1);
+
+  return {
+    value,
+    unit,
+    rateCents,
+    amount,
+    text: `${shownValue}${unit} × ${rate}/${unit} (deadhead) = $${amount.toFixed(2)}`,
+  };
+}
+
+export function calculateDeadheadPay(
+  driverPaymentData: DriverPaymentData,
+  distanceData: DistanceData,
+): number | null {
+  return describeDeadheadPay(driverPaymentData, distanceData)?.amount ?? null;
 }

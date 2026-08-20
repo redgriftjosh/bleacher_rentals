@@ -1056,6 +1056,7 @@ export type Database = {
           app_version: string | null
           app_version_reported_at: string | null
           created_at: string
+          deadhead_cents: number
           id: string
           insurance_expires_on: string | null
           insurance_photo_path: string | null
@@ -1080,6 +1081,7 @@ export type Database = {
           app_version?: string | null
           app_version_reported_at?: string | null
           created_at?: string
+          deadhead_cents?: number
           id?: string
           insurance_expires_on?: string | null
           insurance_photo_path?: string | null
@@ -1104,6 +1106,7 @@ export type Database = {
           app_version?: string | null
           app_version_reported_at?: string | null
           created_at?: string
+          deadhead_cents?: number
           id?: string
           insurance_expires_on?: string | null
           insurance_photo_path?: string | null
@@ -2109,40 +2112,25 @@ export type Database = {
       }
       InspectionPhotos: {
         Row: {
-          attempts: number
           caption: string | null
           created_at: string
-          gallery_asset_id: string | null
           id: string
           inspection_uuid: string
-          last_attempt_at: string | null
-          last_error: string | null
           storage_path: string
-          upload_status: string
         }
         Insert: {
-          attempts?: number
           caption?: string | null
           created_at?: string
-          gallery_asset_id?: string | null
           id?: string
           inspection_uuid: string
-          last_attempt_at?: string | null
-          last_error?: string | null
           storage_path: string
-          upload_status?: string
         }
         Update: {
-          attempts?: number
           caption?: string | null
           created_at?: string
-          gallery_asset_id?: string | null
           id?: string
           inspection_uuid?: string
-          last_attempt_at?: string | null
-          last_error?: string | null
           storage_path?: string
-          upload_status?: string
         }
         Relationships: [
           {
@@ -3611,6 +3599,47 @@ export type Database = {
         }
         Relationships: []
       }
+      WorkTrackerLineItems: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_automatically_managed: boolean
+          quantity: number
+          type: Database["public"]["Enums"]["work_tracker_line_item_type"]
+          unit_amt_cents: number
+          work_tracker_uuid: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_automatically_managed?: boolean
+          quantity?: number
+          type: Database["public"]["Enums"]["work_tracker_line_item_type"]
+          unit_amt_cents?: number
+          work_tracker_uuid: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_automatically_managed?: boolean
+          quantity?: number
+          type?: Database["public"]["Enums"]["work_tracker_line_item_type"]
+          unit_amt_cents?: number
+          work_tracker_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_tracker_line_items_work_tracker_uuid_fkey"
+            columns: ["work_tracker_uuid"]
+            isOneToOne: false
+            referencedRelation: "WorkTrackers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       WorkTrackers: {
         Row: {
           accepted_at: string | null
@@ -4019,6 +4048,14 @@ export type Database = {
         | "in_staging"
         | "paused"
       task_type: "feature" | "bug"
+      work_tracker_line_item_type:
+        | "hauling"
+        | "deadhead"
+        | "setup"
+        | "teardown"
+        | "maintenance"
+        | "per_diem"
+        | "custom"
       worktracker_group_status:
         | "draft"
         | "qbo_bill_creating"
@@ -4193,6 +4230,15 @@ export const Constants = {
         "paused",
       ],
       task_type: ["feature", "bug"],
+      work_tracker_line_item_type: [
+        "hauling",
+        "deadhead",
+        "setup",
+        "teardown",
+        "maintenance",
+        "per_diem",
+        "custom",
+      ],
       worktracker_group_status: [
         "draft",
         "qbo_bill_creating",

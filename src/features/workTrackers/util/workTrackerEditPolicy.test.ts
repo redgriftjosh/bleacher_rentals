@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   buildWorkTrackerSnapshot,
   classifyWorkTrackerChanges,
-  isWorkTrackerBlockedFromEdit,
   requiresUnacceptWarning,
   resolveEffectiveChangeType,
   resolveStatusOnSave,
@@ -88,12 +87,6 @@ describe("workTrackerEditPolicy", () => {
     expect(classifyWorkTrackerChanges(before, after)).toBe("un-accept");
   });
 
-  it("blocks in-progress statuses from edit", () => {
-    expect(isWorkTrackerBlockedFromEdit("dest_pickup")).toBe(true);
-    expect(isWorkTrackerBlockedFromEdit("accepted")).toBe(false);
-    expect(isWorkTrackerBlockedFromEdit("released")).toBe(false);
-  });
-
   it("requires un-accept warning only for accepted + un-accept changes", () => {
     expect(requiresUnacceptWarning("accepted", "un-accept")).toBe(true);
     expect(requiresUnacceptWarning("accepted", "notify-only")).toBe(false);
@@ -106,6 +99,18 @@ describe("workTrackerEditPolicy", () => {
     expect(resolveStatusOnSave("accepted", "notify-only", "accepted")).toBe("accepted");
   });
 
+  it("preserves an in-progress workflow state for structural changes", () => {
+    expect(resolveStatusOnSave("pickup_inspection", "un-accept", "pickup_inspection")).toBe(
+      "pickup_inspection",
+    );
+    expect(resolveStatusOnSave("dest_dropoff", "un-accept", "dest_dropoff")).toBe("dest_dropoff");
+  });
+
+  it("preserves terminal workflow states for structural changes", () => {
+    expect(resolveStatusOnSave("completed", "un-accept", "completed")).toBe("completed");
+    expect(resolveStatusOnSave("cancelled", "un-accept", "cancelled")).toBe("cancelled");
+  });
+
   it("skips driver notifications for silent changes and draft trips", () => {
     expect(shouldSendDriverNotification("silent", "accepted", false)).toBe(false);
     expect(shouldSendDriverNotification("notify-only", "draft", false)).toBe(false);
@@ -115,9 +120,19 @@ describe("workTrackerEditPolicy", () => {
   it("skips change notifications for released but not accepted trips", () => {
     expect(shouldSendDriverNotification("un-accept", "released", false, "released")).toBe(false);
     expect(shouldSendDriverNotification("notify-only", "released", false, "released")).toBe(false);
-    expect(
-      shouldSendDriverNotification("un-accept", "accepted", false, "released"),
-    ).toBe(true);
+    expect(shouldSendDriverNotification("un-accept", "accepted", false, "released")).toBe(true);
+  });
+
+  it("notifies the driver when an in-progress trip changes", () => {
+    expect(shouldSendDriverNotification("notify-only", "dest_pickup", false)).toBe(true);
+    expect(shouldSendDriverNotification("un-accept", "pickup_inspection", false)).toBe(true);
+    expect(shouldSendDriverNotification("un-accept", "dest_dropoff", false)).toBe(true);
+    expect(shouldSendDriverNotification("notify-only", "dropoff_inspection", false)).toBe(true);
+  });
+
+  it("does not notify the driver when a terminal trip changes", () => {
+    expect(shouldSendDriverNotification("notify-only", "completed", false)).toBe(false);
+    expect(shouldSendDriverNotification("un-accept", "cancelled", false)).toBe(false);
   });
 
   it("still notifies when a draft trip is released", () => {

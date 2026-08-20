@@ -1,6 +1,7 @@
 "use client";
 
 import InputPercents from "@/components/InputPercents";
+import CentsInput from "@/components/CentsInput";
 import { Dropdown } from "@/components/DropDown";
 import { SelectDriverZones } from "@/features/manageTeam/components/inputs/SelectDriverZones";
 import { DriverPayTrack } from "@/features/manageTeam/components/inputs/DriverPayTrack";
@@ -29,6 +30,35 @@ const driverTypeOptions = [
   { label: "Employee", value: "employee" },
   { label: "Contractor", value: "contractor" },
 ];
+
+/** Flat $/unit input for deadhead pay — resyncs its display when `cents` changes elsewhere. */
+function DeadheadRateInput({
+  cents,
+  unit,
+  onChange,
+}: {
+  cents: number | null;
+  unit: "KM" | "MI" | "HR";
+  onChange: (cents: number | null) => void;
+}) {
+  const [display, setDisplay] = useState(cents != null ? (cents / 100).toFixed(2) : "");
+  useEffect(() => {
+    setDisplay(cents != null ? (cents / 100).toFixed(2) : "");
+  }, [cents]);
+
+  return (
+    <CentsInput
+      value={display}
+      onChange={(nextDisplay, nextCents) => {
+        setDisplay(nextDisplay);
+        onChange(nextCents);
+      }}
+      placeholder="0.00"
+      className="w-full rounded border px-3 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
+      ariaLabel={`Deadhead amount per ${unit}`}
+    />
+  );
+}
 
 export function DriverPageContent() {
   const router = useRouter();
@@ -78,6 +108,7 @@ export function DriverPageContent() {
 
   const tax = useCurrentUserStore((s) => s.tax);
   const payRateCents = useCurrentUserStore((s) => s.payRateCents);
+  const deadheadRateCents = useCurrentUserStore((s) => s.deadheadRateCents);
   const payCurrency = useCurrentUserStore((s) => s.payCurrency);
   const payPerUnit = useCurrentUserStore((s) => s.payPerUnit);
   const payRanges = useCurrentUserStore((s) => s.payRanges);
@@ -288,6 +319,18 @@ export function DriverPageContent() {
             <p className="mt-1 text-xs text-gray-500">
               Rates are in {payCurrency} per {payPerUnit}
               {tax ? `, plus ${tax}% tax` : ""}.
+            </p>
+          </div>
+
+          <div className="mt-3 max-w-xs">
+            <label className="mb-1 block text-sm font-medium text-gray-700">Deadhead Rate</label>
+            <DeadheadRateInput
+              cents={deadheadRateCents}
+              unit={payPerUnit}
+              onChange={(cents) => setField("deadheadRateCents", cents)}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Amount paid per {payPerUnit} for deadhead travel, in {payCurrency}.
             </p>
           </div>
         </div>
