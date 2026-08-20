@@ -15203,3 +15203,69 @@ INSERT INTO "public"."ChangeLog" ("version", "released_at", "body_md") VALUES
   ('1.0.0', '2026-01-01 00:00:00+00', E'## First release\n\n- Bullet one\n- Bullet two'),
   ('1.1.0', '2026-02-01 00:00:00+00', E'## Second release 🎉\n\n- Newer bullet')
 ON CONFLICT ("version") DO NOTHING;
+
+
+INSERT INTO public."DriverDocuments"
+  (id, driver_uuid, doc_type, photo_path, upload_status, gallery_asset_id, attempts, last_attempt_at, last_error, created_at)
+SELECT
+  gen_random_uuid(),
+  d.id,
+  'license',
+  d.license_photo_path,
+  'uploaded',
+  NULL,
+  0,
+  NULL,
+  NULL,
+  now()
+FROM public."Drivers" d
+WHERE d.license_photo_path IS NOT NULL
+  AND btrim(d.license_photo_path) <> ''
+ON CONFLICT (driver_uuid, doc_type) DO NOTHING;
+
+INSERT INTO public."DriverDocuments"
+  (id, driver_uuid, doc_type, photo_path, upload_status, gallery_asset_id, attempts, last_attempt_at, last_error, created_at)
+SELECT
+  gen_random_uuid(),
+  d.id,
+  'insurance',
+  d.insurance_photo_path,
+  'uploaded',
+  NULL,
+  0,
+  NULL,
+  NULL,
+  now()
+FROM public."Drivers" d
+WHERE d.insurance_photo_path IS NOT NULL
+  AND btrim(d.insurance_photo_path) <> ''
+ON CONFLICT (driver_uuid, doc_type) DO NOTHING;
+
+INSERT INTO public."DriverDocuments"
+  (id, driver_uuid, doc_type, photo_path, upload_status, gallery_asset_id, attempts, last_attempt_at, last_error, created_at)
+SELECT
+  gen_random_uuid(),
+  d.id,
+  'medical_card',
+  d.medical_card_photo_path,
+  'uploaded',
+  NULL,
+  0,
+  NULL,
+  NULL,
+  now()
+FROM public."Drivers" d
+WHERE d.medical_card_photo_path IS NOT NULL
+  AND btrim(d.medical_card_photo_path) <> ''
+ON CONFLICT (driver_uuid, doc_type) DO NOTHING;
+
+UPDATE public."DamageReports"
+SET photos_uploaded = true
+WHERE photos_uploaded IS DISTINCT FROM true;
+
+-- Photo-level half of the same grandfathering. Without this, the first edit
+-- or repair touching a legacy report recomputes from scratch, sees its old
+-- photos still 'pending', and silently un-grandfathers it.
+UPDATE public."DamageReportPhotos"
+SET upload_status = 'uploaded'
+WHERE upload_status IS DISTINCT FROM 'uploaded';

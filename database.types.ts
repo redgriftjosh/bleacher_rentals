@@ -789,6 +789,7 @@ export type Database = {
           is_safe_to_sit: boolean
           maintenance_event_uuid: string | null
           note: string | null
+          photos_uploaded: boolean
           resolved_at: string | null
           seat_damage: Database["public"]["Enums"]["damage_severity"]
         }
@@ -804,6 +805,7 @@ export type Database = {
           is_safe_to_sit?: boolean
           maintenance_event_uuid?: string | null
           note?: string | null
+          photos_uploaded?: boolean
           resolved_at?: string | null
           seat_damage?: Database["public"]["Enums"]["damage_severity"]
         }
@@ -819,6 +821,7 @@ export type Database = {
           is_safe_to_sit?: boolean
           maintenance_event_uuid?: string | null
           note?: string | null
+          photos_uploaded?: boolean
           resolved_at?: string | null
           seat_damage?: Database["public"]["Enums"]["damage_severity"]
         }
@@ -959,6 +962,53 @@ export type Database = {
             columns: ["user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      DriverDocuments: {
+        Row: {
+          attempts: number
+          created_at: string
+          doc_type: string
+          driver_uuid: string
+          gallery_asset_id: string | null
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          photo_path: string
+          upload_status: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          doc_type: string
+          driver_uuid: string
+          gallery_asset_id?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          photo_path: string
+          upload_status?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          doc_type?: string
+          driver_uuid?: string
+          gallery_asset_id?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          photo_path?: string
+          upload_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "DriverDocuments_driver_uuid_fkey"
+            columns: ["driver_uuid"]
+            isOneToOne: false
+            referencedRelation: "Drivers"
             referencedColumns: ["id"]
           },
         ]
@@ -2062,25 +2112,40 @@ export type Database = {
       }
       InspectionPhotos: {
         Row: {
+          attempts: number
           caption: string | null
           created_at: string
+          gallery_asset_id: string | null
           id: string
           inspection_uuid: string
+          last_attempt_at: string | null
+          last_error: string | null
           storage_path: string
+          upload_status: string
         }
         Insert: {
+          attempts?: number
           caption?: string | null
           created_at?: string
+          gallery_asset_id?: string | null
           id?: string
           inspection_uuid: string
+          last_attempt_at?: string | null
+          last_error?: string | null
           storage_path: string
+          upload_status?: string
         }
         Update: {
+          attempts?: number
           caption?: string | null
           created_at?: string
+          gallery_asset_id?: string | null
           id?: string
           inspection_uuid?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
           storage_path?: string
+          upload_status?: string
         }
         Relationships: [
           {
@@ -3932,6 +3997,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      damage_reports_recompute_photos_uploaded: {
+        Args: { p_ids: string[] }
+        Returns: undefined
+      }
       generate_invoice_number: { Args: never; Returns: number }
       get_current_account_manager_id: { Args: never; Returns: string }
       get_current_driver_id: { Args: never; Returns: string }

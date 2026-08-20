@@ -54,6 +54,7 @@ export const setStaleByTable: Record<TableName, SetStaleFn> = {
   WorkTrackerTypeQboAccounts: () => {},
   DriverUnavailability: () => {},
   DriverPayRanges: () => {},
+  DriverDocuments: () => {},
   DriverZones: () => {},
   MaintenanceEvents: () => {},
   DamageReports: () => {},
