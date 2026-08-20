@@ -29,6 +29,9 @@ import {
 } from "@/components/ui/command";
 import { DamageReportResolveMaintenanceModal } from "./DamageReportResolveMaintenanceModal";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { buildPhotoInserts } from "./_lib/photoInserts";
+import { validateDamageReportForm, describePhotoLimit } from "./_lib/damageReportForm";
+import { optimizeDamagePhoto, isHeicFile } from "./_lib/compressPhoto";
 
 const PHOTO_BUCKET = "damage-report-photos";
 const ACCEPTED_PHOTO_TYPES = [
@@ -81,7 +84,7 @@ function DamageSeverityField({
   onChange,
 }: {
   label: string;
-  value: DamageSeverity;
+  value: DamageSeverity | null;
   onChange: (v: DamageSeverity) => void;
 }) {
   return (
@@ -124,8 +127,8 @@ export function DamageReportModal({
   const isEditing = !!editReport;
 
   const [selectedBleacherUuid, setSelectedBleacherUuid] = useState("");
-  const [seatDamage, setSeatDamage] = useState<DamageSeverity>("none");
-  const [haulDamage, setHaulDamage] = useState<DamageSeverity>("none");
+  const [seatDamage, setSeatDamage] = useState<DamageSeverity | null>(null);
+  const [haulDamage, setHaulDamage] = useState<DamageSeverity | null>(null);
   const [note, setNote] = useState("");
   const [photoPaths, setPhotoPaths] = useState<string[]>([]);
   const [existingPhotos, setExistingPhotos] = useState<{ id: string; photo_path: string }[]>([]);
@@ -168,6 +171,20 @@ export function DamageReportModal({
 
   const resolvedBleacherUuid = isEditing ? editReport.bleacher_uuid : selectedBleacherUuid || null;
 
+  // Existing photos already exclude anything the admin removed in this
+  // session (handleRemoveExistingPhoto filters them out immediately), so this
+  // count is "existing + new, post-removal" without any extra bookkeeping —
+  // including the edge case of removing every existing photo down to zero.
+  const photoCount = existingPhotos.length + photoPaths.length;
+  const photoLimit = describePhotoLimit(photoCount);
+  const validationError = validateDamageReportForm({
+    bleacherUuid: resolvedBleacherUuid,
+    seatDamage,
+    haulDamage,
+    note,
+    photoCount,
+  });
+
   const getPhotoUrl = (path: string) => {
     const { data } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path);
     return data.publicUrl;
@@ -177,7 +194,17 @@ export function DamageReportModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) {
+    if (photoLimit.atLimit) {
+      createErrorToast(["Photo limit reached", photoLimit.notice ?? ""]);
+      e.target.value = "";
+      return;
+    }
+
+    // Browsers commonly report an empty type for HEIC, so an unlabelled file is
+    // accepted only once its header confirms it really is HEIC.
+    const isAcceptedType =
+      ACCEPTED_PHOTO_TYPES.includes(file.type) || (file.type === "" && (await isHeicFile(file)));
+    if (!isAcceptedType) {
       createErrorToast(["Invalid file type", `Please upload: ${ACCEPTED_PHOTO_TYPES.join(", ")}`]);
       return;
     }
@@ -188,12 +215,17 @@ export function DamageReportModal({
 
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() ?? "jpg";
+      // Downscale to at most 1920x1080 and convert HEIC to JPEG. Returns the
+      // original file untouched if it is already small enough or already well
+      // compressed.
+      const { file: photo } = await optimizeDamagePhoto(file);
+
+      const ext = photo.name.split(".").pop() ?? "jpg";
       const storagePath = `bleacher-${resolvedBleacherUuid || "unknown"}/${crypto.randomUUID()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from(PHOTO_BUCKET)
-        .upload(storagePath, file, { upsert: false });
+        .upload(storagePath, photo, { upsert: false });
       if (uploadError) throw uploadError;
 
       setPhotoPaths((prev) => [...prev, storagePath]);
@@ -217,8 +249,8 @@ export function DamageReportModal({
   const resetForm = () => {
     setSelectedBleacherUuid("");
     setComboboxOpen(false);
-    setSeatDamage("none");
-    setHaulDamage("none");
+    setSeatDamage(null);
+    setHaulDamage(null);
     setNote("");
     setResolveMaintenanceOpen(false);
     setPhotoPaths([]);
@@ -228,6 +260,10 @@ export function DamageReportModal({
   };
 
   const handleSubmit = async () => {
+    if (validationError) {
+      createErrorToast([validationError]);
+      return;
+    }
     if (isEditing) {
       await handleUpdate();
     } else {
@@ -236,17 +272,16 @@ export function DamageReportModal({
   };
 
   const handleCreate = async () => {
-    if (!resolvedBleacherUuid) {
-      toast.custom(
-        (t) =>
-          React.createElement(ErrorToast, {
-            id: t,
-            lines: ["Please select a bleacher."],
-          }),
-        { duration: 5000 },
-      );
-      return;
-    }
+    // Guards handleSubmit already validated (validationError covers a missing
+    // bleacher too); this just narrows resolvedBleacherUuid's type for TS.
+    if (!resolvedBleacherUuid) return;
+
+    // A severity left at null ("unanswered" — the form permits submitting
+    // with only one of the two answered) is stored as "none", matching
+    // br_driver's severityValueToEnum(null) -> "none" and keeping
+    // is_safe_to_* in sync with what actually got stored.
+    const seatDamageForDb = seatDamage ?? "none";
+    const haulDamageForDb = haulDamage ?? "none";
 
     setSaving(true);
     try {
@@ -254,10 +289,10 @@ export function DamageReportModal({
         .from("DamageReports")
         .insert({
           bleacher_uuid: resolvedBleacherUuid,
-          seat_damage: seatDamage,
-          haul_damage: haulDamage,
-          is_safe_to_sit: seatDamage === "none",
-          is_safe_to_haul: haulDamage === "none",
+          seat_damage: seatDamageForDb,
+          haul_damage: haulDamageForDb,
+          is_safe_to_sit: seatDamageForDb === "none",
+          is_safe_to_haul: haulDamageForDb === "none",
           note: note || null,
           // created_by_user_uuid intentionally omitted — the DB DEFAULT
           // public.get_current_user_uuid() autopopulates the creator. Sending
@@ -271,10 +306,7 @@ export function DamageReportModal({
       }
 
       if (photoPaths.length > 0) {
-        const photoInserts = photoPaths.map((photo_path) => ({
-          damage_report_uuid: damageReport.id,
-          photo_path,
-        }));
+        const photoInserts = buildPhotoInserts(damageReport.id, photoPaths);
         const { error: photoError } = await supabase
           .from("DamageReportPhotos")
           .insert(photoInserts);
@@ -307,15 +339,18 @@ export function DamageReportModal({
   const handleUpdate = async () => {
     if (!editReport) return;
 
+    const seatDamageForDb = seatDamage ?? "none";
+    const haulDamageForDb = haulDamage ?? "none";
+
     setSaving(true);
     try {
       const { error: updateError } = await supabase
         .from("DamageReports")
         .update({
-          seat_damage: seatDamage,
-          haul_damage: haulDamage,
-          is_safe_to_sit: seatDamage === "none",
-          is_safe_to_haul: haulDamage === "none",
+          seat_damage: seatDamageForDb,
+          haul_damage: haulDamageForDb,
+          is_safe_to_sit: seatDamageForDb === "none",
+          is_safe_to_haul: haulDamageForDb === "none",
           note: note || null,
         })
         .eq("id", editReport.id);
@@ -329,10 +364,7 @@ export function DamageReportModal({
 
       // Add new photos
       if (photoPaths.length > 0) {
-        const photoInserts = photoPaths.map((photo_path) => ({
-          damage_report_uuid: editReport.id,
-          photo_path,
-        }));
+        const photoInserts = buildPhotoInserts(editReport.id, photoPaths);
         await supabase.from("DamageReportPhotos").insert(photoInserts);
       }
 
@@ -469,23 +501,33 @@ export function DamageReportModal({
               </div>
             )}
 
-            {/* Seating Configuration Damage */}
-            <DamageSeverityField
-              label="Seating Configuration Damage"
-              value={seatDamage}
-              onChange={setSeatDamage}
-            />
+            {/* Damage severity — at least one of the two is required */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-gray-500">
+                Damage Severity <span className="text-red-500">*</span>{" "}
+                <span className="font-normal text-gray-400">(at least one required)</span>
+              </p>
 
-            {/* Hauling Configuration Damage */}
-            <DamageSeverityField
-              label="Hauling Configuration Damage"
-              value={haulDamage}
-              onChange={setHaulDamage}
-            />
+              {/* Seating Configuration Damage */}
+              <DamageSeverityField
+                label="Seating Configuration Damage"
+                value={seatDamage}
+                onChange={setSeatDamage}
+              />
+
+              {/* Hauling Configuration Damage */}
+              <DamageSeverityField
+                label="Hauling Configuration Damage"
+                value={haulDamage}
+                onChange={setHaulDamage}
+              />
+            </div>
 
             {/* Note */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Note</label>
+              <label className="text-sm font-medium">
+                Note <span className="text-red-500">*</span>
+              </label>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
@@ -497,7 +539,17 @@ export function DamageReportModal({
 
             {/* Photos */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Photos</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">
+                  Photos <span className="text-red-500">*</span>
+                </label>
+                <span
+                  className={`text-xs font-medium ${photoLimit.atLimit ? "text-amber-600" : "text-gray-400"}`}
+                >
+                  {photoLimit.current}/{photoLimit.max}
+                </span>
+              </div>
+              {photoLimit.notice && <p className="text-xs text-amber-600">{photoLimit.notice}</p>}
               <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
                 {/* Existing photos (edit mode) */}
                 {existingPhotos.map((photo) => {
@@ -569,8 +621,10 @@ export function DamageReportModal({
                 })}
                 {/* Upload button */}
                 <label
-                  className={`flex flex-col items-center justify-center w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 hover:border-darkBlue hover:bg-gray-50 transition cursor-pointer flex-shrink-0 ${
-                    uploading ? "opacity-50 pointer-events-none" : ""
+                  className={`flex flex-col items-center justify-center w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 hover:border-darkBlue hover:bg-gray-50 transition flex-shrink-0 ${
+                    uploading || photoLimit.atLimit
+                      ? "opacity-50 pointer-events-none cursor-not-allowed"
+                      : "cursor-pointer"
                   }`}
                 >
                   {uploading ? (
@@ -586,7 +640,7 @@ export function DamageReportModal({
                     className="hidden"
                     accept={ACCEPTED_PHOTO_TYPES.join(",")}
                     onChange={handlePhotoUpload}
-                    disabled={uploading}
+                    disabled={uploading || photoLimit.atLimit}
                   />
                 </label>
               </div>
@@ -604,8 +658,9 @@ export function DamageReportModal({
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={saving || (!isEditing && !resolvedBleacherUuid)}
-              className="px-4 py-2 bg-darkBlue text-white rounded-md hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 text-sm font-semibold"
+              disabled={saving || uploading || !!validationError}
+              title={validationError ?? undefined}
+              className="px-4 py-2 bg-darkBlue text-white rounded-md hover:bg-lightBlue transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold"
             >
               {saving ? "Saving..." : isEditing ? "Save Changes" : "Create Report"}
             </button>

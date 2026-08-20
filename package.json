@@ -1,6 +1,6 @@
 {
   "name": "bleacher_rentals",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "scripts": {
     "generate-types-staging": "supabase gen types typescript --project-id \"sycrvbdpdbaczyfdwcnc\" --schema public > database.types.ts",
@@ -22,7 +22,8 @@
     "test": "vitest",
     "test:db": "psql \"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" -v ON_ERROR_STOP=1 -f supabase/tests/driver-scorecard.test.sql",
     "test:db:fuzz": "psql \"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" -v ON_ERROR_STOP=1 -f supabase/tests/driver-scorecard.fuzz.sql",
-    "test:db:all": "npm run test:db && npm run test:db:fuzz",
+    "test:db:damage": "psql \"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" -v ON_ERROR_STOP=1 -f supabase/tests/damage_reports_photos_uploaded.test.sql",
+    "test:db:all": "npm run test:db && npm run test:db:fuzz && npm run test:db:damage",
     "test:e2e": "set -a && source .env.local && set +a && playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:auth": "playwright test src/features/manageTeam/e2e/auth.setup.ts --headed --project=chromium",
@@ -72,6 +73,7 @@
     "cmdk": "^1.1.1",
     "dom-helpers": "^5.2.1",
     "framer-motion": "^12.6.5",
+    "heic-to": "^1.5.2",
     "intuit-oauth-ts": "^0.0.4",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.487.0",

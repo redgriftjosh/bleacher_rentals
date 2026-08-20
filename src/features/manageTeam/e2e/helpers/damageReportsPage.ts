@@ -30,3 +30,24 @@ export async function showResolvedReports(page: Page) {
     await expect(page.getByRole("button", { name: /Showing Resolved/i })).toBeVisible();
   }
 }
+
+/** Toggles the "hide reports still uploading photos" filter (defaults on). */
+export async function toggleHideUploadingPhotos(page: Page) {
+  await page
+    .getByRole("button", { name: /Hiding Uploading Photos|Showing Uploading Photos/i })
+    .click();
+}
+
+export function damageReportCardByNote(page: Page, note: string) {
+  return page.locator(".border.rounded-lg", { hasText: note });
+}
+
+export async function openCreateDamageReportModal(page: Page) {
+  await page.getByRole("button", { name: "Create Damage Report" }).click();
+  await expect(page.getByRole("dialog").getByText("Create Damage Report")).toBeVisible();
+}
+
+/** Picks "Minor" for the Seating Configuration Damage severity field. */
+export async function pickSeatMinorDamage(page: Page) {
+  await page.getByRole("dialog").getByRole("button", { name: "Minor" }).first().click();
+}

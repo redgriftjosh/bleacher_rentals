@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import type { CompiledQuery } from "kysely";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, typedExecute, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { effectiveColumnDamage } from "@/lib/damageReportSeverity";
@@ -21,6 +22,7 @@ export type DamageReport = {
   maintenance_event_uuid: string | null;
   created_by_user_uuid: string | null;
   deleted: boolean;
+  photos_uploaded: boolean;
   bleacher: { bleacher_number: number } | null;
   maintenance_event: { event_name: string } | null;
   created_by_user: { first_name: string; last_name: string } | null;
@@ -41,11 +43,61 @@ type ReportRow = {
   maintenance_event_uuid: string | null;
   created_by_user_uuid: string | null;
   deleted: number | null;
+  photos_uploaded: number | null;
   bleacher_number: number | null;
   event_name: string | null;
   first_name: string | null;
   last_name: string | null;
 };
+
+/**
+ * Builds the compiled DamageReports list query. Pulled out of the
+ * useDamageReports hook so it can be unit-tested directly (compiled SQL/
+ * params) without needing a React hook-testing harness.
+ *
+ * hideNotUploaded (default true) adds `dr.photos_uploaded = 1`, hiding
+ * reports whose photo evidence is still mid-upload. Admins can flip it off
+ * to see in-flight reports.
+ */
+export function buildDamageReportsQuery(params: {
+  bleacherUuid: string | null;
+  showDeleted: boolean;
+  hideNotUploaded?: boolean;
+}): CompiledQuery<ReportRow> {
+  const { bleacherUuid, showDeleted, hideNotUploaded = true } = params;
+
+  let q = db
+    .selectFrom("DamageReports as dr")
+    .leftJoin("Bleachers as b", "b.id", "dr.bleacher_uuid")
+    .leftJoin("MaintenanceEvents as me", "me.id", "dr.maintenance_event_uuid")
+    .leftJoin("Users as u", "u.id", "dr.created_by_user_uuid")
+    .select([
+      "dr.id",
+      "dr.bleacher_uuid",
+      "dr.inspection_uuid",
+      "dr.is_safe_to_sit",
+      "dr.is_safe_to_haul",
+      "dr.seat_damage",
+      "dr.haul_damage",
+      "dr.note",
+      "dr.created_at",
+      "dr.resolved_at",
+      "dr.maintenance_event_uuid",
+      "dr.created_by_user_uuid",
+      "dr.deleted",
+      "dr.photos_uploaded",
+      "b.bleacher_number as bleacher_number",
+      "me.event_name as event_name",
+      "u.first_name as first_name",
+      "u.last_name as last_name",
+    ])
+    .where("dr.deleted", "=", showDeleted ? 1 : 0);
+
+  if (bleacherUuid) q = q.where("dr.bleacher_uuid", "=", bleacherUuid);
+  if (hideNotUploaded) q = q.where("dr.photos_uploaded", "=", 1);
+
+  return q.orderBy("dr.created_at", "desc").compile() as unknown as CompiledQuery<ReportRow>;
+}
 
 type PhotoRow = { id: string; damage_report_uuid: string | null; photo_path: string | null };
 
@@ -54,43 +106,20 @@ type PhotoRow = { id: string; damage_report_uuid: string | null; photo_path: str
  * event and creator; photos are read separately and grouped in JS since
  * PowerSync/SQLite can't aggregate a one-to-many into the row.
  */
-export function useDamageReports(params: { bleacherUuid: string | null; showDeleted: boolean }): {
+export function useDamageReports(params: {
+  bleacherUuid: string | null;
+  showDeleted: boolean;
+  hideNotUploaded?: boolean;
+}): {
   reports: DamageReport[];
   isLoading: boolean;
 } {
-  const { bleacherUuid, showDeleted } = params;
+  const { bleacherUuid, showDeleted, hideNotUploaded = true } = params;
 
-  const compiled = useMemo(() => {
-    let q = db
-      .selectFrom("DamageReports as dr")
-      .leftJoin("Bleachers as b", "b.id", "dr.bleacher_uuid")
-      .leftJoin("MaintenanceEvents as me", "me.id", "dr.maintenance_event_uuid")
-      .leftJoin("Users as u", "u.id", "dr.created_by_user_uuid")
-      .select([
-        "dr.id",
-        "dr.bleacher_uuid",
-        "dr.inspection_uuid",
-        "dr.is_safe_to_sit",
-        "dr.is_safe_to_haul",
-        "dr.seat_damage",
-        "dr.haul_damage",
-        "dr.note",
-        "dr.created_at",
-        "dr.resolved_at",
-        "dr.maintenance_event_uuid",
-        "dr.created_by_user_uuid",
-        "dr.deleted",
-        "b.bleacher_number as bleacher_number",
-        "me.event_name as event_name",
-        "u.first_name as first_name",
-        "u.last_name as last_name",
-      ])
-      .where("dr.deleted", "=", showDeleted ? 1 : 0);
-
-    if (bleacherUuid) q = q.where("dr.bleacher_uuid", "=", bleacherUuid);
-
-    return q.orderBy("dr.created_at", "desc").compile();
-  }, [bleacherUuid, showDeleted]);
+  const compiled = useMemo(
+    () => buildDamageReportsQuery({ bleacherUuid, showDeleted, hideNotUploaded }),
+    [bleacherUuid, showDeleted, hideNotUploaded],
+  );
 
   const { data: rows } = useTypedQuery(compiled, expect<ReportRow>());
 
@@ -128,6 +157,7 @@ export function useDamageReports(params: { bleacherUuid: string | null; showDele
         maintenance_event_uuid: r.maintenance_event_uuid,
         created_by_user_uuid: r.created_by_user_uuid,
         deleted: !!r.deleted,
+        photos_uploaded: !!r.photos_uploaded,
         bleacher: r.bleacher_number != null ? { bleacher_number: r.bleacher_number } : null,
         maintenance_event: r.event_name ? { event_name: r.event_name } : null,
         created_by_user:
