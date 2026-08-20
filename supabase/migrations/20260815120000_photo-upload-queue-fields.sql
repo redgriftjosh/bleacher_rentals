@@ -1,11 +1,13 @@
-
-
 -- ═══════════════════════════════════════════════════════════════
 -- 1. InspectionPhotos — had no upload_status at all
 -- ═══════════════════════════════════════════════════════════════
 
 ALTER TABLE "InspectionPhotos"
   ADD COLUMN IF NOT EXISTS upload_status    text NOT NULL DEFAULT 'pending',
+  ADD COLUMN IF NOT EXISTS gallery_asset_id text,
+  ADD COLUMN IF NOT EXISTS attempts         integer NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS last_attempt_at  timestamptz,
+  ADD COLUMN IF NOT EXISTS last_error       text;
 
 -- Drivers already have SELECT/INSERT on InspectionPhotos (20260605110000);
 -- they now also need UPDATE to advance upload_status / attempts as photos upload
