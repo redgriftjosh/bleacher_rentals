@@ -343,7 +343,7 @@ export async function saveWorkTracker(
     previousDropoffAddress?: string;
     previousDropoffCity?: string;
   },
-): Promise<void> {
+): Promise<string> {
   if (!workTracker) {
     createErrorToast(["Failed to save work tracker. No work tracker provided."]);
   }
@@ -462,6 +462,8 @@ export async function saveWorkTracker(
 
   updateDataBase(["WorkTrackers", "Addresses"]);
   createSuccessToast(["Work Tracker saved"]);
+
+  return savedWorkTrackerUuid;
 }
 
 export async function moveWorkTracker(params: {
@@ -478,8 +480,7 @@ export async function moveWorkTracker(params: {
   dropoffCity?: string;
   date?: string | null;
 }): Promise<void> {
-  const nextStatus =
-    params.previousStatus === "accepted" ? "released" : params.previousStatus;
+  const nextStatus = params.previousStatus === "accepted" ? "released" : params.previousStatus;
 
   await typedExecute(
     db
@@ -493,9 +494,7 @@ export async function moveWorkTracker(params: {
       .compile(),
   );
 
-  if (
-    shouldSendDriverNotification("un-accept", params.previousStatus, false, nextStatus)
-  ) {
+  if (shouldSendDriverNotification("un-accept", params.previousStatus, false, nextStatus)) {
     const notification = buildTripStatusNotification({
       previousStatus: params.previousStatus,
       nextStatus,

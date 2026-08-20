@@ -183,6 +183,7 @@ export async function createUser(
         user_uuid: userUuid,
         tax: state.tax ?? 0,
         pay_rate_cents: state.payRateCents ?? 0,
+        deadhead_cents: state.deadheadRateCents ?? 0,
         pay_currency: state.payCurrency,
         pay_per_unit: state.payPerUnit,
         vendor_uuid: state.vendorUuid,
@@ -316,6 +317,7 @@ export async function updateUser(
             .update({
               tax: state.tax ?? 0,
               pay_rate_cents: state.payRateCents ?? 0,
+              deadhead_cents: state.deadheadRateCents ?? 0,
               pay_currency: state.payCurrency,
               pay_per_unit: state.payPerUnit,
               vendor_uuid: state.vendorUuid,
@@ -341,6 +343,7 @@ export async function updateUser(
           user_uuid: userUuid,
           tax: state.tax ?? 0,
           pay_rate_cents: state.payRateCents ?? 0,
+          deadhead_cents: state.deadheadRateCents ?? 0,
           pay_currency: state.payCurrency,
           pay_per_unit: state.payPerUnit,
           vendor_uuid: state.vendorUuid,
@@ -754,6 +757,7 @@ export async function fetchUserById(
       // Always load driver data so re-enabling restores saved values
       result.tax = driver.tax;
       result.payRateCents = driver.pay_rate_cents;
+      result.deadheadRateCents = driver.deadhead_cents;
       result.payCurrency = driver.pay_currency as "CAD" | "USD";
       result.payPerUnit = driver.pay_per_unit as "KM" | "MI" | "HR";
       result.accountManagerUuid = driver.account_manager_uuid;
