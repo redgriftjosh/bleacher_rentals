@@ -1,43 +1,11 @@
--- =============================================================
--- Custom photo upload queue — schema support
---
--- Design doc (br_driver repo): docs/custom-photo-upload-queue.md §3.
---
--- Replaces the deprecated @powersync/attachments queue, whose "recompute which
--- photos are still needed" pass could archive + delete a photo before it ever
--- reached Storage. The queue state now lives entirely on the photo row itself
--- (upload_status + bookkeeping columns), changed only by the upload logic —
--- nothing recomputes a photo's "neededness" from a JOIN.
---
--- Adds, to every photo-bearing table:
---   gallery_asset_id  MediaLibrary asset id, for re-access
---   attempts          failed-attempt counter, drives backoff (never "give up")
---   last_attempt_at   timestamp of the last attempt
---   last_error        last error text (support diagnostics, visible server-side)
--- InspectionPhotos additionally gains upload_status (it had none).
--- DriverDocuments is a new table: one row per driver document, same shape.
--- =============================================================
+
 
 -- ═══════════════════════════════════════════════════════════════
--- 1. DamageReportPhotos — already has photo_path + upload_status
--- ═══════════════════════════════════════════════════════════════
-
-ALTER TABLE "DamageReportPhotos"
-  ADD COLUMN IF NOT EXISTS gallery_asset_id text,
-  ADD COLUMN IF NOT EXISTS attempts         integer NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS last_attempt_at  timestamptz,
-  ADD COLUMN IF NOT EXISTS last_error       text;
-
--- ═══════════════════════════════════════════════════════════════
--- 2. InspectionPhotos — had no upload_status at all
+-- 1. InspectionPhotos — had no upload_status at all
 -- ═══════════════════════════════════════════════════════════════
 
 ALTER TABLE "InspectionPhotos"
   ADD COLUMN IF NOT EXISTS upload_status    text NOT NULL DEFAULT 'pending',
-  ADD COLUMN IF NOT EXISTS gallery_asset_id text,
-  ADD COLUMN IF NOT EXISTS attempts         integer NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS last_attempt_at  timestamptz,
-  ADD COLUMN IF NOT EXISTS last_error       text;
 
 -- Drivers already have SELECT/INSERT on InspectionPhotos (20260605110000);
 -- they now also need UPDATE to advance upload_status / attempts as photos upload
@@ -49,7 +17,7 @@ CREATE POLICY "driver_inspection_photos_update"
   WITH CHECK (public.get_current_driver_id() IS NOT NULL);
 
 -- ═══════════════════════════════════════════════════════════════
--- 3. DriverDocuments — new table, one row per driver document
+-- 2. DriverDocuments — new table, one row per driver document
 --
 -- Supersedes Drivers.{license,insurance,medical_card}_photo_path as the source
 -- of truth (those columns become derived, read by doc_type). Same queue shape
