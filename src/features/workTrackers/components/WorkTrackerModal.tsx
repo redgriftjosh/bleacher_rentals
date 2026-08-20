@@ -35,7 +35,7 @@ import { buildTripStatusNotification } from "@/features/workTrackers/db/notifica
 import {
   buildWorkTrackerSnapshot,
   classifyWorkTrackerChanges,
-  isWorkTrackerBlockedFromEdit,
+  isWorkTrackerInProgress,
   requiresUnacceptWarning,
   resolveEffectiveChangeType,
   resolveStatusOnSave,
@@ -689,9 +689,8 @@ export default function WorkTrackerModal({
     [fieldChangeType, statusChanged, isNew],
   );
 
-  const isBlockedFromEdit = !isNew && isWorkTrackerBlockedFromEdit(initialStatus);
-  const isReleasedLocked = !isNew && initialStatus === "released" && !canRelease;
-  const canEditFields = canEdit && !isBlockedFromEdit && !isReleasedLocked;
+  const isInProgress = !isNew && isWorkTrackerInProgress(initialStatus);
+  const canEditFields = canEdit;
   const showUnacceptWarning = requiresUnacceptWarning(initialStatus, currentChangeType);
 
   const effectiveNextStatus = resolveStatusOnSave(
@@ -721,18 +720,6 @@ export default function WorkTrackerModal({
 
   const handleSaveClick = () => {
     if (isSaving) return;
-
-    if (isBlockedFromEdit) {
-      createErrorToast([
-        "This trip is in progress and cannot be edited. Contact a lead account manager if changes are needed.",
-      ]);
-      return;
-    }
-
-    if (isReleasedLocked) {
-      createErrorToast(["You do not have permission to edit a released work tracker."]);
-      return;
-    }
 
     const before = initialSnapshotRef.current;
     const after = buildWorkTrackerSnapshot(workTracker, pickUpAddress, dropOffAddress);
@@ -824,15 +811,10 @@ export default function WorkTrackerModal({
                 You have read-only access to this work tracker.
               </div>
             )}
-            {isBlockedFromEdit && (
-              <div className="mb-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                This trip is in progress and cannot be edited. Contact a lead account manager if
-                changes are needed.
-              </div>
-            )}
-            {isReleasedLocked && (
-              <div className="mb-2 rounded border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
-                You do not have permission to edit a released work tracker.
+            {isInProgress && canEdit && (
+              <div className="mb-2 rounded border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+                This trip is in progress. Saving driver-visible changes will notify the driver and
+                preserve their current workflow step.
               </div>
             )}
             <Tabs defaultValue="details">
@@ -1217,7 +1199,7 @@ export default function WorkTrackerModal({
             </Tabs>
 
             <div className="mt-4 flex justify-between items-center gap-2">
-              {canEditFields && workTracker?.id && workTracker.id !== "-1" && (
+              {canEditFields && !isInProgress && workTracker?.id && workTracker.id !== "-1" && (
                 <button
                   className="text-sm px-3 py-1 rounded bg-red-600 text-white cursor-pointer hover:bg-red-700 transition-all duration-200 flex items-center gap-1"
                   onClick={handleDeleteWorkTracker}
