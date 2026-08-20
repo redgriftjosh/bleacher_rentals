@@ -1,6 +1,6 @@
 {
   "name": "bleacher_rentals",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "scripts": {
     "generate-types-staging": "supabase gen types typescript --project-id \"sycrvbdpdbaczyfdwcnc\" --schema public > database.types.ts",

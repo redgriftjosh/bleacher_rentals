@@ -7,6 +7,7 @@ import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient"
 import { AlertTriangle, CheckCircle2, Plus, X, Trash2, RotateCcw, ImageUp } from "lucide-react";
 import { DamageReportModal, EditDamageReport } from "./DamageReportModal";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
+import { useUserAccess } from "@/features/userAccess/client";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import {
@@ -21,6 +22,8 @@ function DamageReportsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isAdmin } = useTeamPermissions();
+  const access = useUserAccess();
+  const isDeveloper = access.status === "active" && access.roles.includes("developer");
   const [showResolved, setShowResolved] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
   const [hideNotUploaded, setHideNotUploaded] = useState(true);
@@ -112,22 +115,24 @@ function DamageReportsContent() {
         )}
 
         <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={() => setHideNotUploaded((v) => !v)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition cursor-pointer ${
-              hideNotUploaded
-                ? "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
-                : "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100"
-            }`}
-            title={
-              hideNotUploaded
-                ? "Reports with photos still uploading are hidden"
-                : "Showing reports with photos still uploading"
-            }
-          >
-            <ImageUp className="h-3.5 w-3.5" />
-            {hideNotUploaded ? "Hiding Uploading Photos" : "Showing Uploading Photos"}
-          </button>
+          {isDeveloper && (
+            <button
+              onClick={() => setHideNotUploaded((v) => !v)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition cursor-pointer ${
+                hideNotUploaded
+                  ? "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                  : "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100"
+              }`}
+              title={
+                hideNotUploaded
+                  ? "Reports with photos still uploading are hidden"
+                  : "Showing reports with photos still uploading"
+              }
+            >
+              <ImageUp className="h-3.5 w-3.5" />
+              {hideNotUploaded ? "Hiding Uploading Photos" : "Showing Uploading Photos"}
+            </button>
+          )}
 
           {isAdmin && (
             <button
