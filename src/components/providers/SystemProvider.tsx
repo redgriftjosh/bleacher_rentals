@@ -24,26 +24,23 @@ let _powerSyncDb: PowerSyncDatabase | undefined;
 let _db: Kysely<PowerSyncDB> | undefined;
 let _ssrDb: Kysely<PowerSyncDB> | undefined;
 
-function chooseVfs() {
-  const isBrowser = typeof window !== "undefined";
-  const isSecureContext = isBrowser && globalThis.isSecureContext === true;
-  const hasLocks =
-    isBrowser && typeof navigator !== "undefined" && typeof navigator.locks !== "undefined";
-
-  // OPFS VFS depends on secure context + Web Locks.
-  if (isSecureContext && hasLocks) return WASQLiteVFS.OPFSCoopSyncVFS;
-
+// OPFSCoopSyncVFS relies on a SharedWorker to arbitrate one exclusive
+// FileSystemSyncAccessHandle per tab. In real-world multi-tab Chrome sessions
+// (e.g. Windows session-restore reopening several tabs of the app at once)
+// that arbitration deadlocks: a tab fails to open its access handle with
+// `NoModificationAllowedError`, sqlite3_open_v2 retries 3x and then rejects,
+// and the app is stuck on the loading screen forever. Incognito windows don't
+// hit this because their OPFS storage is ephemeral per-session, so there's
+// never a competing handle left over from another tab. See
+// https://github.com/powersync-ja/powersync-js/issues/785 — the confirmed
+// workaround is to skip OPFS and let multi-tab sync run over IndexedDB
+// instead, which doesn't take an exclusive per-file lock.
+export function chooseVfs() {
   return WASQLiteVFS.IDBBatchAtomicVFS;
 }
 
 function createPowerSyncDb() {
   const vfs = chooseVfs();
-
-  if (vfs !== WASQLiteVFS.OPFSCoopSyncVFS) {
-    logger.warn(
-      `[PowerSync] Using ${vfs} (OPFS disabled: secure context or navigator.locks unavailable).`,
-    );
-  }
 
   return new PowerSyncDatabase({
     schema: AppSchema,

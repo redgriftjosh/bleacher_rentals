@@ -1,6 +1,5 @@
 -- ============================================================================
 -- Tests for the quote content-hash triggers (staleness detection).
--- Plain-ASSERT style (no pgTAP dependency) so it runs via psql or docker exec.
 -- Verifies:
 --   * insert populates content_hash + contract_hash
 --   * a contract-material change (line item price) flips BOTH hashes
@@ -9,9 +8,11 @@
 -- ============================================================================
 
 \set ON_ERROR_STOP on
+\timing off
 
 BEGIN;
 SET search_path TO extensions, public, "$user";
+SELECT plan(1);
 
 DO $$
 DECLARE
@@ -55,7 +56,11 @@ BEGIN
   ASSERT h_content1  IS DISTINCT FROM h_content0,  'client-note change flips content_hash';
   ASSERT h_contract1 = h_contract0, 'client-note change does NOT flip contract_hash';
 
-  RAISE NOTICE 'quote_content_hash: all assertions passed';
+  RAISE NOTICE '--- all quote_content_hash assertions passed ---';
 END $$;
+
+SELECT ok(true, 'all assertions passed');
+
+SELECT * FROM finish();
 
 ROLLBACK;

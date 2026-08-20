@@ -1,0 +1,8 @@
+Could you look through the entire PR https://github.com/joshbleacherrentals/bleacher_rentals/pull/329
+and generate a full real changelog entry in (root)/versions for all the features and bugs and talk to the users of the software. This should be a new .md file labeled with an incremented version number. You will also need to update this version number in the package.json. The account managers who's day-to-day is booking events and coordinating drivers. The admins who are not technical but are running the company and care about maintenance, practicality and long term vision of the software making their jobs easier.
+
+Could you make it shorter. Make it more too the point and only focus on core the things that people will care about from this release.
+
+try to be specific about the location of the things you do talk about. What page and component type etc.
+
+Increment the version in package.json logically based on the amount of changes in this PR.

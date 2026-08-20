@@ -15196,3 +15196,10 @@ VALUES (0, 400, 'CAD', 'KM', true, '0fcf50a1-f0ae-4f98-8565-1fe0eb588017', 'cb6b
 INSERT INTO "public"."AccountManagerZones" ("id", "account_manager_uuid", "zone_uuid", "is_lead")
 VALUES
   ('a1b2c3d4-0000-4000-8000-000000000001', '8d5473b1-269a-4e28-9420-dc98e9442e1b', '27633341-400b-4f18-a567-85e6de7ad65d', true);
+
+-- E2E: two changelog releases. Ordering, markdown rendering and the unread
+-- indicator are asserted against these in changelog.admin.spec.ts.
+INSERT INTO "public"."ChangeLog" ("version", "released_at", "body_md") VALUES
+  ('1.0.0', '2026-01-01 00:00:00+00', E'## First release\n\n- Bullet one\n- Bullet two'),
+  ('1.1.0', '2026-02-01 00:00:00+00', E'## Second release 🎉\n\n- Newer bullet')
+ON CONFLICT ("version") DO NOTHING;

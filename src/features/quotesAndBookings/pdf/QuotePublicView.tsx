@@ -46,10 +46,10 @@ function formatDateRange(start: string, end: string): string {
 
 function companyFullAddress(c: QuoteDocumentData["company"]): string {
   const parts = [c.street];
-  if (c.city || c.state || c.zip) {
-    parts.push(`${c.city}, ${c.state} ${c.zip}`.trim());
+  if (c.zip) {
+    parts.push(`, ${c.zip}`.trim());
   }
-  return parts.filter(Boolean).join("\n");
+  return parts.filter(Boolean).join("");
 }
 
 /**
@@ -109,7 +109,7 @@ export function QuotePublicView({
                 <p className="text-sm">{data.venue.name}</p>
                 <p className="text-sm text-gray-600">
                   {data.venue.street}
-                  {data.venue.city && `, ${data.venue.city}, ${data.venue.state} ${data.venue.zip}`}
+                  {` ${data.venue.zip}`}
                 </p>
               </div>
             )}

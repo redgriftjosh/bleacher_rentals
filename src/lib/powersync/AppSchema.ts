@@ -226,6 +226,12 @@ const DriversCols = {
   medical_card_photo_path: column.text,
   vehicle_uuid: column.text,
   vendor_uuid: column.text,
+  app_platform: column.text,
+  app_version: column.text,
+  app_version_reported_at: column.text,
+  insurance_expires_on: column.text,
+  license_expires_on: column.text,
+  medical_card_expires_on: column.text,
 } satisfies PowerSyncColsFor<"Drivers">;
 const Drivers = new Table(DriversCols, {
   indexes: {
@@ -291,7 +297,15 @@ const UsersCols = {
   is_viewer: column.integer,
   created_at: column.text,
   expo_push_token: column.text,
+  changelog_last_read_at: column.text,
 } satisfies PowerSyncColsFor<"Users">;
+
+const ChangeLogCols = {
+  version: column.text,
+  released_at: column.text,
+  body_md: column.text,
+} satisfies PowerSyncColsFor<"ChangeLog">;
+const ChangeLog = new Table(ChangeLogCols);
 const Users = new Table(UsersCols, { indexes: { status_uuid: ["status_uuid"] } });
 
 const UserStatusesCols = {
@@ -1049,6 +1063,7 @@ export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
   AccountManagerZones,
+  ChangeLog,
   Zones,
   Developers,
   DashboardFilterSettings,
@@ -1185,3 +1200,4 @@ export type SalesOfficesRecord = PowerSyncDB["SalesOffices"];
 export type TermsAndConditionsRecord = PowerSyncDB["TermsAndConditions"];
 export type ContractSignaturesRecord = PowerSyncDB["ContractSignatures"];
 export type EventFilesRecord = PowerSyncDB["EventFiles"];
+export type ChangeLogRecord = PowerSyncDB["ChangeLog"];

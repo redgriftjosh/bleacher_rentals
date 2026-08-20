@@ -551,6 +551,27 @@ export type Database = {
         }
         Relationships: []
       }
+      ChangeLog: {
+        Row: {
+          body_md: string
+          id: string
+          released_at: string
+          version: string
+        }
+        Insert: {
+          body_md: string
+          id?: string
+          released_at?: string
+          version: string
+        }
+        Update: {
+          body_md?: string
+          id?: string
+          released_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
       Companies: {
         Row: {
           billing_address_uuid: string | null
@@ -954,46 +975,34 @@ export type Database = {
           },
         ]
       }
-      DriverDocuments: {
+      DriverPayRanges: {
         Row: {
-          attempts: number
           created_at: string
-          doc_type: string
           driver_uuid: string
-          gallery_asset_id: string | null
           id: string
-          last_attempt_at: string | null
-          last_error: string | null
-          photo_path: string
-          upload_status: string
+          max_value: number | null
+          min_value: number
+          rate: number
         }
         Insert: {
-          attempts?: number
           created_at?: string
-          doc_type: string
           driver_uuid: string
-          gallery_asset_id?: string | null
           id?: string
-          last_attempt_at?: string | null
-          last_error?: string | null
-          photo_path: string
-          upload_status?: string
+          max_value?: number | null
+          min_value?: number
+          rate?: number
         }
         Update: {
-          attempts?: number
           created_at?: string
-          doc_type?: string
           driver_uuid?: string
-          gallery_asset_id?: string | null
           id?: string
-          last_attempt_at?: string | null
-          last_error?: string | null
-          photo_path?: string
-          upload_status?: string
+          max_value?: number | null
+          min_value?: number
+          rate?: number
         }
         Relationships: [
           {
-            foreignKeyName: "DriverDocuments_driver_uuid_fkey"
+            foreignKeyName: "driver_pay_ranges_driver_uuid_fkey"
             columns: ["driver_uuid"]
             isOneToOne: false
             referencedRelation: "Drivers"
@@ -3354,6 +3363,7 @@ export type Database = {
       Users: {
         Row: {
           avatar_image_url: string | null
+          changelog_last_read_at: string | null
           clerk_user_id: string | null
           created_at: string
           email: string
@@ -3369,6 +3379,7 @@ export type Database = {
         }
         Insert: {
           avatar_image_url?: string | null
+          changelog_last_read_at?: string | null
           clerk_user_id?: string | null
           created_at?: string
           email: string
@@ -3384,6 +3395,7 @@ export type Database = {
         }
         Update: {
           avatar_image_url?: string | null
+          changelog_last_read_at?: string | null
           clerk_user_id?: string | null
           created_at?: string
           email?: string

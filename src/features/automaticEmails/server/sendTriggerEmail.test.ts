@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { QuoteDocumentData } from "@/features/quotesAndBookings/pdf/quoteDocumentData";
-import { QUOTE_SIGNED_CLIENT, QUOTE_SIGNED_AM, PAYMENT_DUE_CLIENT } from "../triggers";
+import { QUOTE_SIGNED_CLIENT, QUOTE_SIGNED_AM } from "../triggers";
 
 const { mockSendEmail } = vi.hoisted(() => ({ mockSendEmail: vi.fn() }));
 
@@ -98,44 +98,69 @@ beforeEach(() => {
 describe("guard ladder — nothing sends and every attempt is logged", () => {
   it("unknown trigger", async () => {
     const { supabase, inserted } = makeSupabase(READY);
-    const r = await sendTriggerEmail({ supabaseAdmin: supabase, trigger: "nope", eventId: "e1", docData: doc() });
+    const r = await sendTriggerEmail({
+      supabaseAdmin: supabase,
+      trigger: "nope",
+      eventId: "e1",
+      docData: doc(),
+    });
     expect(r).toMatchObject({ sent: false });
     expect(mockSendEmail).not.toHaveBeenCalled();
     expect(lastEmailLog(inserted)?.status).toBe("failed");
   });
 
-  it("trigger not wired (coming soon)", async () => {
-    const { supabase } = makeSupabase(READY);
-    const r = await sendTriggerEmail({ supabaseAdmin: supabase, trigger: PAYMENT_DUE_CLIENT, eventId: "e1", docData: doc() });
-    expect(r).toMatchObject({ sent: false });
-    expect(mockSendEmail).not.toHaveBeenCalled();
-  });
+  // it("trigger not wired (coming soon)", async () => {
+  //   const { supabase } = makeSupabase(READY);
+  //   const r = await sendTriggerEmail({ supabaseAdmin: supabase, trigger: PAYMENT_DUE_CLIENT, eventId: "e1", docData: doc() });
+  //   expect(r).toMatchObject({ sent: false });
+  //   expect(mockSendEmail).not.toHaveBeenCalled();
+  // });
 
   it("missing Postmark credentials", async () => {
     delete process.env.POSTMARK_API_KEY;
     const { supabase } = makeSupabase(READY);
-    const r = await sendTriggerEmail({ supabaseAdmin: supabase, trigger: QUOTE_SIGNED_CLIENT, eventId: "e1", docData: doc() });
+    const r = await sendTriggerEmail({
+      supabaseAdmin: supabase,
+      trigger: QUOTE_SIGNED_CLIENT,
+      eventId: "e1",
+      docData: doc(),
+    });
     expect(r).toMatchObject({ sent: false });
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
   it("event has no sales office", async () => {
     const { supabase } = makeSupabase({ ...READY, event: { sales_office_uuid: null } });
-    const r = await sendTriggerEmail({ supabaseAdmin: supabase, trigger: QUOTE_SIGNED_CLIENT, eventId: "e1", docData: doc() });
+    const r = await sendTriggerEmail({
+      supabaseAdmin: supabase,
+      trigger: QUOTE_SIGNED_CLIENT,
+      eventId: "e1",
+      docData: doc(),
+    });
     expect(r).toMatchObject({ sent: false });
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
   it("no binding for this office+trigger", async () => {
     const { supabase } = makeSupabase({ ...READY, binding: null });
-    const r = await sendTriggerEmail({ supabaseAdmin: supabase, trigger: QUOTE_SIGNED_CLIENT, eventId: "e1", docData: doc() });
+    const r = await sendTriggerEmail({
+      supabaseAdmin: supabase,
+      trigger: QUOTE_SIGNED_CLIENT,
+      eventId: "e1",
+      docData: doc(),
+    });
     expect(r).toMatchObject({ sent: false });
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
   it("no active template", async () => {
     const { supabase } = makeSupabase({ ...READY, template: null });
-    const r = await sendTriggerEmail({ supabaseAdmin: supabase, trigger: QUOTE_SIGNED_CLIENT, eventId: "e1", docData: doc() });
+    const r = await sendTriggerEmail({
+      supabaseAdmin: supabase,
+      trigger: QUOTE_SIGNED_CLIENT,
+      eventId: "e1",
+      docData: doc(),
+    });
     expect(r).toMatchObject({ sent: false });
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
@@ -156,7 +181,12 @@ describe("guard ladder — nothing sends and every attempt is logged", () => {
 describe("sender identity", () => {
   it("client emails send AS the account manager, to the client", async () => {
     const { supabase, inserted } = makeSupabase(READY);
-    const r = await sendTriggerEmail({ supabaseAdmin: supabase, trigger: QUOTE_SIGNED_CLIENT, eventId: "e1", docData: doc() });
+    const r = await sendTriggerEmail({
+      supabaseAdmin: supabase,
+      trigger: QUOTE_SIGNED_CLIENT,
+      eventId: "e1",
+      docData: doc(),
+    });
     expect(r).toMatchObject({ sent: true, to: "jordan@example.com" });
     const arg = mockSendEmail.mock.calls[0][0];
     expect(arg.From).toBe("Sam Rivera <sam@bleacherrentals.com>");
@@ -168,7 +198,12 @@ describe("sender identity", () => {
 
   it("account-manager emails send from the default address, to the AM", async () => {
     const { supabase } = makeSupabase(READY);
-    const r = await sendTriggerEmail({ supabaseAdmin: supabase, trigger: QUOTE_SIGNED_AM, eventId: "e1", docData: doc() });
+    const r = await sendTriggerEmail({
+      supabaseAdmin: supabase,
+      trigger: QUOTE_SIGNED_AM,
+      eventId: "e1",
+      docData: doc(),
+    });
     expect(r).toMatchObject({ sent: true, to: "sam@bleacherrentals.com" });
     expect(mockSendEmail.mock.calls[0][0].From).toBe("from@bleacherrentals.com");
   });
@@ -205,7 +240,9 @@ describe("attachments", () => {
   it("merges caller-supplied and stored attachments", async () => {
     const { supabase } = makeSupabase({
       ...READY,
-      attachments: [{ file_name: "coi.pdf", storage_path: "p/coi.pdf", mime_type: "application/pdf" }],
+      attachments: [
+        { file_name: "coi.pdf", storage_path: "p/coi.pdf", mime_type: "application/pdf" },
+      ],
       download: { ok: true },
     });
     await sendTriggerEmail({
@@ -213,7 +250,9 @@ describe("attachments", () => {
       trigger: QUOTE_SIGNED_CLIENT,
       eventId: "e1",
       docData: doc(),
-      attachments: [{ name: "quote.pdf", content: Buffer.from("x"), contentType: "application/pdf" }],
+      attachments: [
+        { name: "quote.pdf", content: Buffer.from("x"), contentType: "application/pdf" },
+      ],
     });
     const arg = mockSendEmail.mock.calls[0][0];
     expect(arg.Attachments).toHaveLength(2);
@@ -223,10 +262,17 @@ describe("attachments", () => {
   it("skips a stored attachment whose download fails, still sends", async () => {
     const { supabase } = makeSupabase({
       ...READY,
-      attachments: [{ file_name: "coi.pdf", storage_path: "p/coi.pdf", mime_type: "application/pdf" }],
+      attachments: [
+        { file_name: "coi.pdf", storage_path: "p/coi.pdf", mime_type: "application/pdf" },
+      ],
       download: { ok: false },
     });
-    const r = await sendTriggerEmail({ supabaseAdmin: supabase, trigger: QUOTE_SIGNED_CLIENT, eventId: "e1", docData: doc() });
+    const r = await sendTriggerEmail({
+      supabaseAdmin: supabase,
+      trigger: QUOTE_SIGNED_CLIENT,
+      eventId: "e1",
+      docData: doc(),
+    });
     expect(r).toMatchObject({ sent: true });
     // Failed download skipped → no Attachments key (empty list).
     expect(mockSendEmail.mock.calls[0][0].Attachments).toBeUndefined();

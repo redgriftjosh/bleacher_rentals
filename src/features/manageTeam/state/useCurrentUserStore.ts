@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { fetchUserById } from "../db/userOperations";
+import type { DriverPayRange } from "../logic/driverPayRanges";
 
 export type TeamRoleTab = "administrator" | "account-manager" | "driver" | "developer" | "viewer";
 
@@ -26,6 +27,8 @@ export type CurrentUserState = {
   payRateCents: number | null;
   payCurrency: "CAD" | "USD";
   payPerUnit: "KM" | "MI" | "HR";
+  /** Tiered rates (DriverPayRanges). A matching range overrides payRateCents. */
+  payRanges: DriverPayRange[];
   accountManagerUuid: string | null;
   /** Zones this driver is assigned to (DriverZones). */
   assignedDriverZoneUuids: string[];
@@ -86,6 +89,7 @@ const initialState: CurrentUserState = {
   payRateCents: null,
   payCurrency: "CAD",
   payPerUnit: "KM",
+  payRanges: [],
   accountManagerUuid: null,
   assignedDriverZoneUuids: [],
   vendorUuid: null,

@@ -255,9 +255,7 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
             <Text style={styles.infoBold}>{data.venue.name}</Text>
             {data.venue.street ? (
               <Text style={styles.infoText}>
-                {data.venue.street}
-                {"\n"}
-                {data.venue.city}, {data.venue.state} {data.venue.zip}
+                {data.venue.street} {data.venue.zip}
               </Text>
             ) : null}
           </View>

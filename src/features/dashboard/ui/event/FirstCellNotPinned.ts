@@ -1,4 +1,4 @@
-import { Application, Container, Graphics } from "pixi.js";
+import { Application, Container, Graphics, Rectangle } from "pixi.js";
 import { EventInfo } from "../../util/Events";
 import { EventBody } from "./EventBody";
 import { Baker } from "../../util/Baker";
@@ -59,6 +59,11 @@ export class FirstCellNotPinned extends HoverableBakedSprite {
       },
       // dimensions
     );
+
+    // The baked container spans every day in the event. Restrict its own hover
+    // hit area to its start cell so it cannot capture a work tracker rendered in
+    // a later cell. Those later cells have their own EventBody click targets.
+    this.hitArea = new Rectangle(0, 0, dimensions.width, dimensions.height);
   }
 
   /**
