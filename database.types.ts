@@ -789,6 +789,7 @@ export type Database = {
           is_safe_to_sit: boolean
           maintenance_event_uuid: string | null
           note: string | null
+          photos_uploaded: boolean
           resolved_at: string | null
           seat_damage: Database["public"]["Enums"]["damage_severity"]
         }
@@ -804,6 +805,7 @@ export type Database = {
           is_safe_to_sit?: boolean
           maintenance_event_uuid?: string | null
           note?: string | null
+          photos_uploaded?: boolean
           resolved_at?: string | null
           seat_damage?: Database["public"]["Enums"]["damage_severity"]
         }
@@ -819,6 +821,7 @@ export type Database = {
           is_safe_to_sit?: boolean
           maintenance_event_uuid?: string | null
           note?: string | null
+          photos_uploaded?: boolean
           resolved_at?: string | null
           seat_damage?: Database["public"]["Enums"]["damage_severity"]
         }
@@ -3950,6 +3953,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      damage_reports_recompute_photos_uploaded: {
+        Args: { p_ids: string[] }
+        Returns: undefined
+      }
       generate_invoice_number: { Args: never; Returns: number }
       get_current_account_manager_id: { Args: never; Returns: string }
       get_current_driver_id: { Args: never; Returns: string }

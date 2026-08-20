@@ -519,6 +519,7 @@ const DamageReportsCols = {
   maintenance_event_uuid: column.text,
   created_by_user_uuid: column.text,
   deleted: column.integer,
+  photos_uploaded: column.integer,
 } satisfies PowerSyncColsFor<"DamageReports">;
 const DamageReports = new Table(DamageReportsCols, {
   indexes: { bleacher_uuid: ["bleacher_uuid"], maintenance_event_uuid: ["maintenance_event_uuid"] },

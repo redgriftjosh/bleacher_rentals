@@ -35,10 +35,48 @@ vi.mock("@/lib/powersync/typedQuery", () => ({
   useTypedQuery: () => ({ data: [] }),
 }));
 
-import { setDamageReportDeleted } from "./db";
+import { setDamageReportDeleted, buildDamageReportsQuery } from "./db";
 
 beforeEach(() => {
   executed.length = 0;
+});
+
+describe("buildDamageReportsQuery", () => {
+  it("selects dr.photos_uploaded", () => {
+    const compiled = buildDamageReportsQuery({ bleacherUuid: null, showDeleted: false });
+    expect(compiled.sql).toContain('"dr"."photos_uploaded"');
+  });
+
+  it("filters to photos_uploaded = 1 by default (hideNotUploaded defaults true)", () => {
+    const compiled = buildDamageReportsQuery({ bleacherUuid: null, showDeleted: false });
+    expect(compiled.sql).toContain('"dr"."photos_uploaded" = ?');
+    expect(compiled.parameters).toContain(1);
+  });
+
+  it("omits the photos_uploaded filter when hideNotUploaded is false", () => {
+    const compiled = buildDamageReportsQuery({
+      bleacherUuid: null,
+      showDeleted: false,
+      hideNotUploaded: false,
+    });
+    expect(compiled.sql).not.toContain('"dr"."photos_uploaded" = ?');
+  });
+
+  it("applies the photos_uploaded filter when hideNotUploaded is explicitly true", () => {
+    const compiled = buildDamageReportsQuery({
+      bleacherUuid: null,
+      showDeleted: false,
+      hideNotUploaded: true,
+    });
+    expect(compiled.sql).toContain('"dr"."photos_uploaded" = ?');
+  });
+
+  it("still applies bleacher and deleted filters alongside the photos_uploaded filter", () => {
+    const compiled = buildDamageReportsQuery({ bleacherUuid: "b-1", showDeleted: true });
+    expect(compiled.sql).toContain('"dr"."bleacher_uuid" = ?');
+    expect(compiled.sql).toContain('"dr"."deleted" = ?');
+    expect(compiled.parameters).toContain("b-1");
+  });
 });
 
 describe("setDamageReportDeleted", () => {
