@@ -743,37 +743,25 @@ export type Database = {
       }
       DamageReportPhotos: {
         Row: {
-          attempts: number
           created_at: string
           damage_report_uuid: string
-          gallery_asset_id: string | null
           id: string
-          last_attempt_at: string | null
-          last_error: string | null
           photo_path: string
           thumbnail: string | null
           upload_status: string
         }
         Insert: {
-          attempts?: number
           created_at?: string
           damage_report_uuid: string
-          gallery_asset_id?: string | null
           id?: string
-          last_attempt_at?: string | null
-          last_error?: string | null
           photo_path: string
           thumbnail?: string | null
           upload_status?: string
         }
         Update: {
-          attempts?: number
           created_at?: string
           damage_report_uuid?: string
-          gallery_asset_id?: string | null
           id?: string
-          last_attempt_at?: string | null
-          last_error?: string | null
           photo_path?: string
           thumbnail?: string | null
           upload_status?: string
@@ -971,6 +959,53 @@ export type Database = {
             columns: ["user_uuid"]
             isOneToOne: false
             referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      DriverDocuments: {
+        Row: {
+          attempts: number
+          created_at: string
+          doc_type: string
+          driver_uuid: string
+          gallery_asset_id: string | null
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          photo_path: string
+          upload_status: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          doc_type: string
+          driver_uuid: string
+          gallery_asset_id?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          photo_path: string
+          upload_status?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          doc_type?: string
+          driver_uuid?: string
+          gallery_asset_id?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          photo_path?: string
+          upload_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "DriverDocuments_driver_uuid_fkey"
+            columns: ["driver_uuid"]
+            isOneToOne: false
+            referencedRelation: "Drivers"
             referencedColumns: ["id"]
           },
         ]
