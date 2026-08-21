@@ -59,6 +59,7 @@ import { expect, useTypedQuery, typedGetAll } from "@/lib/powersync/typedQuery";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import WorkTrackerLineItemsTab from "./WorkTrackerLineItemsTab";
 import {
+  calculateWorkTrackerLineItemsTotalCents,
   fetchWorkTrackerLineItems,
   reconcileRequirementLineItems,
   syncWorkTrackerLineItems,
@@ -257,13 +258,23 @@ export default function WorkTrackerModal({
   }, [selectedWorkTracker?.id, isNew, fetchedLineItems]);
 
   useEffect(() => {
+    const selectedDriver = drivers?.find(
+      (driver) => driver.driver_uuid === workTracker?.driver_uuid,
+    );
     setLineItems((items) =>
       reconcileRequirementLineItems(items, {
         setupRequired: !!workTracker?.setup_required,
         teardownRequired: !!workTracker?.teardown_required,
+        setupCents: selectedDriver?.setup_cents,
+        teardownCents: selectedDriver?.teardown_cents,
       }),
     );
-  }, [workTracker?.setup_required, workTracker?.teardown_required]);
+  }, [
+    drivers,
+    workTracker?.driver_uuid,
+    workTracker?.setup_required,
+    workTracker?.teardown_required,
+  ]);
 
   // Populate pickup address from the bleacher's last known location in PS
   const handlePopulatePickupFromLastAddress = async () => {
@@ -644,30 +655,16 @@ export default function WorkTrackerModal({
     );
   }, [payBreakdown, deadheadBreakdown]);
 
+  const lineItemsTotalCents = useMemo(
+    () => calculateWorkTrackerLineItemsTotalCents(lineItems),
+    [lineItems],
+  );
+
   const handleCalculatePay = () => {
-    if (!driverPaymentData) {
-      createErrorToast(["Cannot calculate pay: Driver payment data not loaded"]);
-      return;
-    }
-
-    if (!leg) {
-      createErrorToast(["Cannot calculate pay: Distance/duration data not available"]);
-      return;
-    }
-
-    if (!payBreakdown) {
-      createErrorToast(["Cannot calculate pay: Missing distance or duration data"]);
-      return;
-    }
-
-    const amount = payBreakdown.amount;
-
-    // Update the pay input field
-    const formattedAmount = amount.toFixed(2);
-    setPayInput(formattedAmount);
+    setPayInput((lineItemsTotalCents / 100).toFixed(2));
     setWorkTracker((prev) => ({
       ...prev!,
-      pay_cents: Math.round(amount * 100),
+      pay_cents: lineItemsTotalCents,
     }));
   };
 
@@ -989,7 +986,11 @@ export default function WorkTrackerModal({
                           placeholder="0.00"
                         />
                         {canEditFields && (
-                          <AppTooltip content={payBreakdown?.text ?? "Calculate pay"}>
+                          <AppTooltip
+                            content={`Set pay to line items total: $${(
+                              lineItemsTotalCents / 100
+                            ).toFixed(2)}`}
+                          >
                             <Calculator
                               className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer text-darkBlue hover:text-lightBlue"
                               onClick={handleCalculatePay}

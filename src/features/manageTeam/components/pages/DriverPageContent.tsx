@@ -31,14 +31,14 @@ const driverTypeOptions = [
   { label: "Contractor", value: "contractor" },
 ];
 
-/** Flat $/unit input for deadhead pay — resyncs its display when `cents` changes elsewhere. */
-function DeadheadRateInput({
+/** Flat currency input that resyncs its display when `cents` changes elsewhere. */
+function DriverAmountInput({
   cents,
-  unit,
+  ariaLabel,
   onChange,
 }: {
   cents: number | null;
-  unit: "KM" | "MI" | "HR";
+  ariaLabel: string;
   onChange: (cents: number | null) => void;
 }) {
   const [display, setDisplay] = useState(cents != null ? (cents / 100).toFixed(2) : "");
@@ -55,7 +55,7 @@ function DeadheadRateInput({
       }}
       placeholder="0.00"
       className="w-full rounded border px-3 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-      ariaLabel={`Deadhead amount per ${unit}`}
+      ariaLabel={ariaLabel}
     />
   );
 }
@@ -109,6 +109,8 @@ export function DriverPageContent() {
   const tax = useCurrentUserStore((s) => s.tax);
   const payRateCents = useCurrentUserStore((s) => s.payRateCents);
   const deadheadRateCents = useCurrentUserStore((s) => s.deadheadRateCents);
+  const setupCents = useCurrentUserStore((s) => s.setupCents);
+  const teardownCents = useCurrentUserStore((s) => s.teardownCents);
   const payCurrency = useCurrentUserStore((s) => s.payCurrency);
   const payPerUnit = useCurrentUserStore((s) => s.payPerUnit);
   const payRanges = useCurrentUserStore((s) => s.payRanges);
@@ -322,16 +324,42 @@ export function DriverPageContent() {
             </p>
           </div>
 
-          <div className="mt-3 max-w-xs">
-            <label className="mb-1 block text-sm font-medium text-gray-700">Deadhead Rate</label>
-            <DeadheadRateInput
-              cents={deadheadRateCents}
-              unit={payPerUnit}
-              onChange={(cents) => setField("deadheadRateCents", cents)}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Amount paid per {payPerUnit} for deadhead travel, in {payCurrency}.
-            </p>
+          <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Deadhead Rate</label>
+              <DriverAmountInput
+                cents={deadheadRateCents}
+                ariaLabel={`Deadhead amount per ${payPerUnit}`}
+                onChange={(cents) => setField("deadheadRateCents", cents)}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Amount paid per {payPerUnit} for deadhead travel, in {payCurrency}.
+              </p>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Setup Pay</label>
+              <DriverAmountInput
+                cents={setupCents}
+                ariaLabel="Setup pay amount"
+                onChange={(cents) => setField("setupCents", cents)}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Flat amount paid for installation, in {payCurrency}.
+              </p>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Teardown Pay</label>
+              <DriverAmountInput
+                cents={teardownCents}
+                ariaLabel="Teardown pay amount"
+                onChange={(cents) => setField("teardownCents", cents)}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Flat amount paid for dismantling, in {payCurrency}.
+              </p>
+            </div>
           </div>
         </div>
       </section>

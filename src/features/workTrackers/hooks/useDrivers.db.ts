@@ -11,6 +11,8 @@ type Compiled = {
   user_uuid: string | null;
   tax: number | null;
   pay_rate_cents: number | null;
+  setup_cents: number | null;
+  teardown_cents: number | null;
   pay_currency: string | null;
   pay_per_unit: string | null;
   is_active: number | null;
@@ -25,6 +27,8 @@ export type DriverWithUser = {
   user_uuid: string;
   tax: number;
   pay_rate_cents: number;
+  setup_cents: number | null;
+  teardown_cents: number | null;
   pay_currency: string;
   pay_per_unit: string;
   is_active: boolean;
@@ -74,6 +78,8 @@ export function useDrivers(options?: { showAll?: boolean }): {
           "d.user_uuid as user_uuid",
           "d.tax as tax",
           "d.pay_rate_cents as pay_rate_cents",
+          "d.setup_cents as setup_cents",
+          "d.teardown_cents as teardown_cents",
           "d.pay_currency as pay_currency",
           "d.pay_per_unit as pay_per_unit",
           "d.is_active as is_active",
@@ -94,6 +100,8 @@ export function useDrivers(options?: { showAll?: boolean }): {
         "d.user_uuid as user_uuid",
         "d.tax as tax",
         "d.pay_rate_cents as pay_rate_cents",
+        "d.setup_cents as setup_cents",
+        "d.teardown_cents as teardown_cents",
         "d.pay_currency as pay_currency",
         "d.pay_per_unit as pay_per_unit",
         "d.is_active as is_active",
