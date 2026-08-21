@@ -6,6 +6,7 @@ import { Dropdown } from "@/components/DropDown";
 import CentsInput from "@/components/CentsInput";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import {
+  calculateWorkTrackerLineItemsTotalCents,
   WORK_TRACKER_LINE_ITEM_TYPES,
   WORK_TRACKER_LINE_ITEM_TYPE_LABELS,
   WorkTrackerLineItemType,
@@ -212,10 +213,7 @@ export default function WorkTrackerLineItemsTab({
   canEdit: boolean;
   isLoading?: boolean;
 }) {
-  const totalCents = lineItems.reduce(
-    (sum, item) => sum + Math.round(item.quantity * item.unitAmtCents),
-    0,
-  );
+  const totalCents = calculateWorkTrackerLineItemsTotalCents(lineItems);
 
   const updateItem = (id: string, patch: Partial<DraftWorkTrackerLineItem>) => {
     onChange(lineItems.map((item) => (item.id === id ? { ...item, ...patch } : item)));

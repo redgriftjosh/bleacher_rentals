@@ -39,6 +39,11 @@ export type DraftWorkTrackerLineItem = {
   isAutomaticallyManaged: boolean;
 };
 
+/** Returns the sum of every line total, in cents. */
+export function calculateWorkTrackerLineItemsTotalCents(items: DraftWorkTrackerLineItem[]): number {
+  return items.reduce((sum, item) => sum + Math.round(item.quantity * item.unitAmtCents), 0);
+}
+
 type Row = {
   id: string;
   type: string | null;

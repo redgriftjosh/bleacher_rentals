@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculateWorkTrackerLineItemsTotalCents,
   reconcileRequirementLineItems,
   type DraftWorkTrackerLineItem,
 } from "./workTrackerLineItems";
@@ -15,6 +16,23 @@ const item = (
   unitAmtCents: 0,
   description: null,
   isAutomaticallyManaged,
+});
+
+describe("calculateWorkTrackerLineItemsTotalCents", () => {
+  it("totals every line item, including automatically managed setup and teardown", () => {
+    const lines = [
+      { ...item("haul", "hauling"), quantity: 2, unitAmtCents: 10_050 },
+      { ...item("setup", "setup", true), unitAmtCents: 12_345 },
+      { ...item("teardown", "teardown", true), unitAmtCents: 6_789 },
+      { ...item("custom", "custom"), quantity: 3, unitAmtCents: 250 },
+    ];
+
+    expect(calculateWorkTrackerLineItemsTotalCents(lines)).toBe(39_984);
+  });
+
+  it("returns zero when there are no line items", () => {
+    expect(calculateWorkTrackerLineItemsTotalCents([])).toBe(0);
+  });
 });
 
 describe("reconcileRequirementLineItems", () => {
