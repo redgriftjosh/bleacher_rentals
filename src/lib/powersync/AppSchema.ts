@@ -215,6 +215,8 @@ const DriversCols = {
   tax: column.integer,
   pay_rate_cents: column.integer,
   deadhead_cents: column.integer,
+  setup_cents: column.integer,
+  teardown_cents: column.integer,
   pay_currency: column.text,
   pay_per_unit: column.text,
   is_active: column.integer,

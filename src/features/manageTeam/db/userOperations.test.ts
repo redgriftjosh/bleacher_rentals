@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createUser } from "./userOperations";
+import { createUser, driverPayFields } from "./userOperations";
 import type { CurrentUserState } from "../state/useCurrentUserStore";
 
 const baseState: CurrentUserState = {
@@ -17,6 +17,8 @@ const baseState: CurrentUserState = {
   tax: undefined,
   payRateCents: null,
   deadheadRateCents: null,
+  setupCents: null,
+  teardownCents: null,
   payCurrency: "CAD",
   payPerUnit: "KM",
   payRanges: [],
@@ -88,5 +90,30 @@ describe("createUser", () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("check constraint violated");
+  });
+});
+
+describe("driverPayFields", () => {
+  it("maps setup and teardown amounts to their database cent fields", () => {
+    expect(
+      driverPayFields({
+        ...baseState,
+        tax: 13,
+        payRateCents: 250,
+        deadheadRateCents: 75,
+        setupCents: 12_345,
+        teardownCents: 6_789,
+        payCurrency: "USD",
+        payPerUnit: "MI",
+      }),
+    ).toEqual({
+      tax: 13,
+      pay_rate_cents: 250,
+      deadhead_cents: 75,
+      setup_cents: 12_345,
+      teardown_cents: 6_789,
+      pay_currency: "USD",
+      pay_per_unit: "MI",
+    });
   });
 });

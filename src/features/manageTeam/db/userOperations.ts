@@ -15,6 +15,18 @@ import {
 
 type TypedSupabaseClient = SupabaseClient<Database>;
 
+export function driverPayFields(state: CurrentUserState) {
+  return {
+    tax: state.tax ?? 0,
+    pay_rate_cents: state.payRateCents ?? 0,
+    deadhead_cents: state.deadheadRateCents ?? 0,
+    setup_cents: state.setupCents ?? 0,
+    teardown_cents: state.teardownCents ?? 0,
+    pay_currency: state.payCurrency,
+    pay_per_unit: state.payPerUnit,
+  };
+}
+
 // Resolves the current user's admin flag via the same mechanism the RLS policies use
 // (auth.jwt() -> 'sub'), so it stays consistent with the database's row-level security.
 async function currentUserIsAdmin(supabase: TypedSupabaseClient): Promise<boolean> {
@@ -181,11 +193,7 @@ export async function createUser(
       const { error: driverError } = await supabase.from("Drivers").insert({
         id: driverUuid,
         user_uuid: userUuid,
-        tax: state.tax ?? 0,
-        pay_rate_cents: state.payRateCents ?? 0,
-        deadhead_cents: state.deadheadRateCents ?? 0,
-        pay_currency: state.payCurrency,
-        pay_per_unit: state.payPerUnit,
+        ...driverPayFields(state),
         vendor_uuid: state.vendorUuid,
         phone_number: state.phoneNumber,
         address_uuid: addressUuid,
@@ -315,11 +323,7 @@ export async function updateUser(
           const { error: driverUpdateError } = await supabase
             .from("Drivers")
             .update({
-              tax: state.tax ?? 0,
-              pay_rate_cents: state.payRateCents ?? 0,
-              deadhead_cents: state.deadheadRateCents ?? 0,
-              pay_currency: state.payCurrency,
-              pay_per_unit: state.payPerUnit,
+              ...driverPayFields(state),
               vendor_uuid: state.vendorUuid,
               phone_number: state.phoneNumber,
               address_uuid: addressUuid,
@@ -341,11 +345,7 @@ export async function updateUser(
         const { error: driverInsertError } = await supabase.from("Drivers").insert({
           id: newDriverId,
           user_uuid: userUuid,
-          tax: state.tax ?? 0,
-          pay_rate_cents: state.payRateCents ?? 0,
-          deadhead_cents: state.deadheadRateCents ?? 0,
-          pay_currency: state.payCurrency,
-          pay_per_unit: state.payPerUnit,
+          ...driverPayFields(state),
           vendor_uuid: state.vendorUuid,
           phone_number: state.phoneNumber,
           address_uuid: addressUuid,
@@ -758,6 +758,8 @@ export async function fetchUserById(
       result.tax = driver.tax;
       result.payRateCents = driver.pay_rate_cents;
       result.deadheadRateCents = driver.deadhead_cents;
+      result.setupCents = driver.setup_cents;
+      result.teardownCents = driver.teardown_cents;
       result.payCurrency = driver.pay_currency as "CAD" | "USD";
       result.payPerUnit = driver.pay_per_unit as "KM" | "MI" | "HR";
       result.accountManagerUuid = driver.account_manager_uuid;
