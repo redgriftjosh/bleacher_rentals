@@ -257,13 +257,23 @@ export default function WorkTrackerModal({
   }, [selectedWorkTracker?.id, isNew, fetchedLineItems]);
 
   useEffect(() => {
+    const selectedDriver = drivers?.find(
+      (driver) => driver.driver_uuid === workTracker?.driver_uuid,
+    );
     setLineItems((items) =>
       reconcileRequirementLineItems(items, {
         setupRequired: !!workTracker?.setup_required,
         teardownRequired: !!workTracker?.teardown_required,
+        setupCents: selectedDriver?.setup_cents,
+        teardownCents: selectedDriver?.teardown_cents,
       }),
     );
-  }, [workTracker?.setup_required, workTracker?.teardown_required]);
+  }, [
+    drivers,
+    workTracker?.driver_uuid,
+    workTracker?.setup_required,
+    workTracker?.teardown_required,
+  ]);
 
   // Populate pickup address from the bleacher's last known location in PS
   const handlePopulatePickupFromLastAddress = async () => {

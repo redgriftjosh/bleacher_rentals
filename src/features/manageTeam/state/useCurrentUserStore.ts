@@ -27,6 +27,10 @@ export type CurrentUserState = {
   payRateCents: number | null;
   /** Amount paid per payPerUnit for deadhead travel — flat, no tiers. */
   deadheadRateCents: number | null;
+  /** Flat amount paid for installing bleachers at an event. */
+  setupCents: number | null;
+  /** Flat amount paid for dismantling bleachers after an event. */
+  teardownCents: number | null;
   payCurrency: "CAD" | "USD";
   payPerUnit: "KM" | "MI" | "HR";
   /** Tiered rates (DriverPayRanges). A matching range overrides payRateCents. */
@@ -90,6 +94,8 @@ const initialState: CurrentUserState = {
   tax: undefined,
   payRateCents: null,
   deadheadRateCents: null,
+  setupCents: null,
+  teardownCents: null,
   payCurrency: "CAD",
   payPerUnit: "KM",
   payRanges: [],

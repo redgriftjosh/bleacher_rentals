@@ -32,6 +32,36 @@ describe("reconcileRequirementLineItems", () => {
     expect(result.filter((line) => line.isAutomaticallyManaged)).toHaveLength(2);
   });
 
+  it("uses the selected driver's setup and teardown amounts for new managed lines", () => {
+    const result = reconcileRequirementLineItems(
+      [],
+      {
+        setupRequired: true,
+        teardownRequired: true,
+        setupCents: 12_345,
+        teardownCents: 6_789,
+      },
+      (() => {
+        let id = 0;
+        return () => `generated-${++id}`;
+      })(),
+    );
+
+    expect(result.map(({ type, unitAmtCents }) => ({ type, unitAmtCents }))).toEqual([
+      { type: "setup", unitAmtCents: 12_345 },
+      { type: "teardown", unitAmtCents: 6_789 },
+    ]);
+  });
+
+  it("defaults missing setup and teardown amounts to zero", () => {
+    const result = reconcileRequirementLineItems([], {
+      setupRequired: true,
+      teardownRequired: true,
+    });
+
+    expect(result.map(({ unitAmtCents }) => unitAmtCents)).toEqual([0, 0]);
+  });
+
   it("deduplicates managed requirement lines", () => {
     const result = reconcileRequirementLineItems(
       [item("setup-1", "setup", true), item("setup-2", "setup", true)],

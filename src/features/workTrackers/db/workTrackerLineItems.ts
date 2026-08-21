@@ -77,6 +77,8 @@ export async function fetchWorkTrackerLineItems(
 export type WorkTrackerRequirements = {
   setupRequired: boolean;
   teardownRequired: boolean;
+  setupCents?: number | null;
+  teardownCents?: number | null;
 };
 
 /** Keeps requirement-owned lines in sync without touching user-created rows. */
@@ -105,7 +107,8 @@ export function reconcileRequirementLineItems(
           id: createId(),
           type,
           quantity: 1,
-          unitAmtCents: 0,
+          unitAmtCents:
+            (type === "setup" ? requirements.setupCents : requirements.teardownCents) ?? 0,
           description: null,
           isAutomaticallyManaged: true,
         },
