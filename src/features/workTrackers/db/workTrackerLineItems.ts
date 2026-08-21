@@ -39,6 +39,11 @@ export type DraftWorkTrackerLineItem = {
   isAutomaticallyManaged: boolean;
 };
 
+/** Returns the sum of every line total, in cents. */
+export function calculateWorkTrackerLineItemsTotalCents(items: DraftWorkTrackerLineItem[]): number {
+  return items.reduce((sum, item) => sum + Math.round(item.quantity * item.unitAmtCents), 0);
+}
+
 type Row = {
   id: string;
   type: string | null;
@@ -77,6 +82,8 @@ export async function fetchWorkTrackerLineItems(
 export type WorkTrackerRequirements = {
   setupRequired: boolean;
   teardownRequired: boolean;
+  setupCents?: number | null;
+  teardownCents?: number | null;
 };
 
 /** Keeps requirement-owned lines in sync without touching user-created rows. */
@@ -105,7 +112,8 @@ export function reconcileRequirementLineItems(
           id: createId(),
           type,
           quantity: 1,
-          unitAmtCents: 0,
+          unitAmtCents:
+            (type === "setup" ? requirements.setupCents : requirements.teardownCents) ?? 0,
           description: null,
           isAutomaticallyManaged: true,
         },

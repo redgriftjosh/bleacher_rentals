@@ -1069,7 +1069,9 @@ export type Database = {
           pay_per_unit: Database["public"]["Enums"]["pay_per_unit_type"]
           pay_rate_cents: number
           phone_number: string | null
+          setup_cents: number
           tax: number
+          teardown_cents: number
           user_uuid: string | null
           vehicle_uuid: string | null
           vendor_uuid: string | null
@@ -1094,7 +1096,9 @@ export type Database = {
           pay_per_unit?: Database["public"]["Enums"]["pay_per_unit_type"]
           pay_rate_cents?: number
           phone_number?: string | null
+          setup_cents?: number
           tax?: number
+          teardown_cents?: number
           user_uuid?: string | null
           vehicle_uuid?: string | null
           vendor_uuid?: string | null
@@ -1119,7 +1123,9 @@ export type Database = {
           pay_per_unit?: Database["public"]["Enums"]["pay_per_unit_type"]
           pay_rate_cents?: number
           phone_number?: string | null
+          setup_cents?: number
           tax?: number
+          teardown_cents?: number
           user_uuid?: string | null
           vehicle_uuid?: string | null
           vendor_uuid?: string | null
@@ -3999,6 +4005,10 @@ export type Database = {
     Functions: {
       damage_reports_recompute_photos_uploaded: {
         Args: { p_ids: string[] }
+        Returns: undefined
+      }
+      drivers_backfill_document: {
+        Args: { p_doc_type: string; p_driver_id: string; p_photo_path: string }
         Returns: undefined
       }
       generate_invoice_number: { Args: never; Returns: number }
