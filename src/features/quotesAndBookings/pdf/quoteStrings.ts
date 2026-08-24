@@ -96,6 +96,13 @@ export const quoteStrings = {
     fr: (date: string) => `Dernier versement le ${date}`,
   },
 
+  // ── Language toggle (EN | FR in the header) ──────────────────────────
+  // The visible labels are ISO codes ("EN"/"FR") and live in the component —
+  // they are identifiers, not copy. These accessible names are copy.
+  languageGroupLabel: { en: "Quote language", fr: "Langue du devis" },
+  switchToEnglish: { en: "View this quote in English", fr: "Voir ce devis en anglais" },
+  switchToFrench: { en: "View this quote in French", fr: "Voir ce devis en français" },
+
   // ── Quote tab: notes + footer ────────────────────────────────────────
   notes: { en: "Notes", fr: "Notes" },
   downloadPdf: { en: "Download PDF", fr: "Télécharger le PDF" },

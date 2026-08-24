@@ -43,6 +43,8 @@ const USER_VISIBLE_ATTRS = new Set([
  */
 const ALLOWED = new Map<string, string>([
   ["Bleacher Rentals", "company name — a proper noun, identical in both languages"],
+  ["EN", "language toggle — an ISO code, identical in every language"],
+  ["FR", "language toggle — an ISO code, identical in every language"],
 ]);
 
 /** Strip HTML entities (&middot;) so their letters don't read as words. */

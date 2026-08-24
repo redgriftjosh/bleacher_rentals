@@ -202,3 +202,33 @@ Then the Definition-of-Done cycle: `npm run gtl`, `npm run tc`, `npm run test`,
 **New** — migration, `pdf/quoteStrings.ts`, `pdf/quoteFormat.ts`, `pdf/quoteLanguage.ts`, 3 test files.
 **Modified** — `AppSchema.ts`, `database.types.ts` (generated), `quoteDocumentData.ts`,
 the 8 `pdf/*` render files, `create-checkout/route.ts`, 3 contact modals, 3 contact db helpers.
+
+---
+
+## 10. Client-side language toggle
+
+An EN | FR switch in the public quote header lets a client correct the language
+when the account manager set the wrong one on their contact record.
+
+- **Stored in the client's browser only** (`localStorage`, key
+  `quote-language:{eventId}`), never written back to
+  `Contacts.preferred_language`. `/quote/[id]` is unauthenticated, so persisting
+  there would let anyone holding a quote link mutate a shared CRM row that other
+  quotes read from. Scoped per quote, so one correction never affects another.
+- **Read after mount**, never during render, so the server render and the first
+  client render agree. Unknown, tampered or unreadable values fall back to the
+  contact's language.
+- **One localized copy** of `QuoteDocumentData` feeds every tab, the modals and
+  the PDF link, so a switch can never leave half the page in the other language.
+- **The PDF follows it**: the download link carries `?lang=`, and
+  `/api/quotes/[id]/pdf` honours `en` / `fr`. Anything else keeps the contact's
+  language.
+- **The payment-success page follows it too** — Stripe redirects to its own
+  route, which reads the same stored preference.
+- **Logged** as `client_language_change` in the activity trail (English labels,
+  like the tab-change events), so the account manager finds out the contact
+  record is wrong and can fix it for future quotes. Allowlisted in
+  `api/quotes/[id]/activity/route.ts`; no migration needed.
+- The visible `EN` / `FR` labels are ISO codes, not copy — they stay identical
+  in both languages so a French speaker can find the switch on an English page.
+  The buttons' accessible names _are_ copy and come from `quoteStrings.ts`.

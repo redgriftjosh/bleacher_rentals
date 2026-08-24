@@ -243,7 +243,7 @@ export function QuotePublicView({
             {data.company.name} &middot; {s.invoiceNumber(data.quoteNumber)}
           </p>
           <a
-            href={`/api/quotes/${data.eventId}/pdf`}
+            href={`/api/quotes/${data.eventId}/pdf?lang=${language}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => track?.({ action_type: "client_pdf_download" })}

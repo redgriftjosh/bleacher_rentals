@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Lottie from "lottie-react";
 import successAnimation from "../../../../public/animations/Success.json";
 import type { QuoteLanguage } from "./quoteLanguage";
 import { quoteText } from "./quoteStrings";
+import { readStoredQuoteLanguage } from "./quoteLanguageStorage";
 
 /**
  * Landing page the customer sees after Stripe Checkout redirects back on a
@@ -17,7 +19,16 @@ export function PaymentSuccessView({
   eventUUID: string;
   language?: QuoteLanguage;
 }) {
-  const s = quoteText(language);
+  // Stripe redirects here on its own route, so pick up the same correction the
+  // client made on the quote page. Read after mount to keep SSR and the first
+  // client render identical.
+  const [active, setActive] = useState(language);
+  useEffect(() => {
+    const stored = readStoredQuoteLanguage(eventUUID);
+    if (stored) setActive(stored);
+  }, [eventUUID]);
+
+  const s = quoteText(active);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
