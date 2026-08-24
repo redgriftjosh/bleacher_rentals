@@ -14,9 +14,26 @@ import { findContactDuplicates } from "../utils/findDuplicates";
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  /**
+   * Fires after a successful insert, before onClose. Carries the display name as well as the
+   * id: a caller that wants to select the new contact cannot yet find it in a reactive query,
+   * which has not re-emitted at this point.
+   */
+  onCreated?: (contact: { id: string; displayName: string }) => void;
+  /**
+   * Extra classes for the dialog panel. Needed when opening from a surface that is not a Radix
+   * dialog — WorkTrackerModal paints its own overlay at z-[2000], well above the z-50 this
+   * portal defaults to, so the panel needs raising or it renders underneath.
+   */
+  contentClassName?: string;
 };
 
-export function CreateContactModal({ isOpen, onClose }: Props) {
+export function CreateContactModal({
+  isOpen,
+  onClose,
+  onCreated,
+  contentClassName,
+}: Props) {
   const { companies, isLoading } = useCompaniesAll();
   const { contacts } = useContactsAll();
   const [createCompanyOpen, setCreateCompanyOpen] = useState(false);
@@ -38,8 +55,11 @@ export function CreateContactModal({ isOpen, onClose }: Props) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await createContact({ firstName, lastName, phone, email, notes, companyUuid });
+      const contactId = await createContact({
+        firstName, lastName, phone, email, notes, companyUuid,
+      });
       createSuccessToast([`Contact "${`${firstName} ${lastName}`.trim()}" created.`]);
+      onCreated?.({ id: contactId, displayName: `${firstName} ${lastName}`.trim() });
       handleClose();
     } catch { /* error shown by createContact */ } finally { setSaving(false); }
   };
@@ -58,7 +78,7 @@ export function CreateContactModal({ isOpen, onClose }: Props) {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-        <DialogContent className="sm:max-w-md p-0 gap-0 rounded-xl">
+        <DialogContent className={`sm:max-w-md p-0 gap-0 rounded-xl ${contentClassName ?? ""}`}>
           {/* Header */}
           <div className="px-6 pt-6 pb-4 border-b border-gray-100">
             <DialogHeader>
@@ -145,7 +165,11 @@ export function CreateContactModal({ isOpen, onClose }: Props) {
         </DialogContent>
       </Dialog>
 
-      <CreateCompanyModal isOpen={createCompanyOpen} onClose={() => setCreateCompanyOpen(false)} />
+      <CreateCompanyModal
+        isOpen={createCompanyOpen}
+        onClose={() => setCreateCompanyOpen(false)}
+        contentClassName={contentClassName ? "z-[2102]" : undefined}
+      />
     </>
   );
 }

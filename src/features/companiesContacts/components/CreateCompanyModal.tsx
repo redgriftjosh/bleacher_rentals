@@ -15,9 +15,11 @@ const EMPTY_ADDR: AddressFields = { street: "", city: "", stateProvince: "", zip
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  /** Extra classes for the dialog panel — used to raise it above non-Radix overlays. */
+  contentClassName?: string;
 };
 
-export function CreateCompanyModal({ isOpen, onClose }: Props) {
+export function CreateCompanyModal({ isOpen, onClose, contentClassName }: Props) {
   const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -57,7 +59,9 @@ export function CreateCompanyModal({ isOpen, onClose }: Props) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto p-0 gap-0 rounded-xl">
+      <DialogContent
+        className={`sm:max-w-md max-h-[85vh] overflow-y-auto p-0 gap-0 rounded-xl ${contentClassName ?? ""}`}
+      >
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-gray-100">
           <DialogHeader>

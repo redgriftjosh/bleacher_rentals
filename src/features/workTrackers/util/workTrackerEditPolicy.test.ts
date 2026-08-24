@@ -15,10 +15,12 @@ const baseWorkTracker = {
   bleacher_uuid: "b-1",
   date: "2026-08-01",
   driver_uuid: "d-1",
-  pickup_poc: null,
+  pickup_poc: "Jane Smith",
+  pickup_poc_contact_uuid: "contact-1",
   pickup_time: "08:00",
   pickup_instructions: null,
-  dropoff_poc: null,
+  dropoff_poc: "John Doe",
+  dropoff_poc_contact_uuid: "contact-2",
   dropoff_time: "12:00",
   dropoff_instructions: null,
   notes: "Driver note",
@@ -51,6 +53,27 @@ function cloneSnapshot(snapshot: WorkTrackerSnapshot): WorkTrackerSnapshot {
 
 describe("workTrackerEditPolicy", () => {
   const before = buildWorkTrackerSnapshot(baseWorkTracker, baseAddress, baseAddress)!;
+
+  it("un-accepts when the pickup POC contact changes behind an identical name", () => {
+    const after = cloneSnapshot(before);
+    after.pickup_poc_contact_uuid = "contact-99";
+
+    expect(classifyWorkTrackerChanges(before, after)).toBe("un-accept");
+  });
+
+  it("un-accepts when the dropoff POC contact changes behind an identical name", () => {
+    const after = cloneSnapshot(before);
+    after.dropoff_poc_contact_uuid = "contact-99";
+
+    expect(classifyWorkTrackerChanges(before, after)).toBe("un-accept");
+  });
+
+  it("un-accepts when a legacy free-text POC is linked to a contact record", () => {
+    const after = cloneSnapshot(before);
+    after.pickup_poc_contact_uuid = null;
+
+    expect(classifyWorkTrackerChanges(before, after)).toBe("un-accept");
+  });
 
   it("detects no changes", () => {
     expect(classifyWorkTrackerChanges(before, cloneSnapshot(before))).toBe("none");
