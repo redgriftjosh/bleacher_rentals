@@ -1,16 +1,26 @@
 "use client";
 
-import type { QuoteLanguage } from "./quoteLanguage";
+import { Globe, Check } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { QUOTE_LANGUAGE_OPTIONS, type QuoteLanguage } from "./quoteLanguage";
 import { quoteText } from "./quoteStrings";
 
 /**
- * EN | FR switch in the public quote header, so a client can correct the
+ * Language picker in the public quote header, so a client can correct the
  * language when the account manager set the wrong one on their contact record.
  *
- * The labels are ISO language codes, not copy — they read the same whichever
- * language is active, which is the point: a French speaker looking at an
- * English quote has to be able to find this. The accessible names ARE copy and
- * come from quoteStrings.
+ * Deliberately a single neutral globe icon rather than a visible "EN | FR"
+ * switch: a permanent English/French pair reads as a Canadian-market product to
+ * US clients. The icon says nothing about which languages exist until asked,
+ * and it costs no extra room when a third language is added.
+ *
+ * The menu labels are endonyms from QUOTE_LANGUAGE_OPTIONS; the accessible
+ * names are copy and come from quoteStrings.
  */
 export function QuoteLanguageToggle({
   language,
@@ -20,36 +30,32 @@ export function QuoteLanguageToggle({
   onChange: (next: QuoteLanguage) => void;
 }) {
   const s = quoteText(language);
-  const options: { value: QuoteLanguage; code: string; label: string }[] = [
-    { value: "en", code: "EN", label: s.switchToEnglish },
-    { value: "fr", code: "FR", label: s.switchToFrench },
-  ];
 
   return (
-    <div
-      role="group"
-      aria-label={s.languageGroupLabel}
-      className="flex items-center rounded-md border border-gray-200 overflow-hidden shrink-0"
-    >
-      {options.map((option) => {
-        const isActive = language === option.value;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => onChange(option.value)}
-            aria-label={option.label}
-            aria-pressed={isActive}
-            className={`px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
-              isActive
-                ? "bg-[#405daa] text-white"
-                : "bg-white text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            {option.code}
-          </button>
-        );
-      })}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        aria-label={s.languageGroupLabel}
+        title={s.languageGroupLabel}
+        className="flex items-center justify-center h-8 w-8 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#405daa]/30"
+      >
+        <Globe className="h-4 w-4" />
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="end" className="min-w-[9rem]">
+        {QUOTE_LANGUAGE_OPTIONS.map((option) => {
+          const isActive = option.value === language;
+          return (
+            <DropdownMenuItem
+              key={option.value}
+              onSelect={() => onChange(option.value)}
+              className="cursor-pointer justify-between"
+            >
+              <span className={isActive ? "font-semibold" : undefined}>{option.label}</span>
+              {isActive && <Check className="h-3.5 w-3.5" />}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

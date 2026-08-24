@@ -207,8 +207,14 @@ the 8 `pdf/*` render files, `create-checkout/route.ts`, 3 contact modals, 3 cont
 
 ## 10. Client-side language toggle
 
-An EN | FR switch in the public quote header lets a client correct the language
-when the account manager set the wrong one on their contact record.
+A globe icon in the public quote header opens a short menu of languages, so a
+client can correct the language when the account manager set the wrong one on
+their contact record.
+
+Deliberately an icon rather than a visible "EN | FR" pair: a permanent
+English/French switch on every quote reads as a Canadian-market product to US
+clients. The icon names no language until it is opened, and it costs no extra
+room when a third language is added.
 
 - **Stored in the client's browser only** (`localStorage`, key
   `quote-language:{eventId}`), never written back to
