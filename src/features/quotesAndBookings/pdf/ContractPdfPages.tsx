@@ -1,6 +1,8 @@
 import { Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
 import { QuoteDocumentData } from "./quoteDocumentData";
 import { parseHtmlToNodes, type HtmlNode } from "./htmlToNodes";
+import { formatQuoteDateTime } from "./quoteFormat";
+import { quoteText } from "./quoteStrings";
 
 Font.register({
   family: "DancingScript",
@@ -138,23 +140,12 @@ function RenderHtmlNodes({ nodes }: { nodes: HtmlNode[] }) {
   );
 }
 
-function formatSignatureDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
-}
-
 export function ContractPdfPages({ data }: { data: QuoteDocumentData }) {
   if (!data.termsHtml) return null;
 
   const nodes = parseHtmlToNodes(data.termsHtml);
   const sig = data.contractSignature;
+  const s = quoteText(data.language);
 
   return (
     <Page size="LETTER" style={styles.page} wrap>
@@ -164,26 +155,26 @@ export function ContractPdfPages({ data }: { data: QuoteDocumentData }) {
       {/* Signature block */}
       <View style={styles.signatureSection}>
         <View style={styles.signatureRow}>
-          <Text style={styles.signatureLabel}>Signature</Text>
+          <Text style={styles.signatureLabel}>{s.signature}</Text>
           <View style={styles.signatureValue}>
-            {sig ? (
-              <Text style={styles.signatureCursive}>{sig.signerName}</Text>
-            ) : null}
+            {sig ? <Text style={styles.signatureCursive}>{sig.signerName}</Text> : null}
           </View>
         </View>
 
         <View style={styles.signatureRow}>
-          <Text style={styles.signatureLabel}>Printed Name</Text>
+          <Text style={styles.signatureLabel}>{s.printedName}</Text>
           <View style={styles.signatureValue}>
             {sig ? <Text style={styles.signatureText}>{sig.signerName}</Text> : null}
           </View>
         </View>
 
         <View style={styles.signatureRow}>
-          <Text style={styles.signatureLabel}>Date</Text>
+          <Text style={styles.signatureLabel}>{s.signatureDate}</Text>
           <View style={styles.signatureValue}>
             {sig ? (
-              <Text style={styles.signatureText}>{formatSignatureDate(sig.signedAt)}</Text>
+              <Text style={styles.signatureText}>
+                {formatQuoteDateTime(sig.signedAt, data.language)}
+              </Text>
             ) : null}
           </View>
         </View>

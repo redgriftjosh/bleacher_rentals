@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { SearchableSelect } from "@/components/SearchableSelect";
+import { Dropdown } from "@/components/DropDown";
+import {
+  PREFERRED_LANGUAGE_OPTIONS,
+  type PreferredLanguage,
+} from "@/features/companiesContacts/db/preferredLanguage";
 import { createContact } from "../../../db/createContact";
 import { useCompanies } from "../../../hooks/useCompanies";
 import { useContacts } from "../../../hooks/useContacts";
@@ -30,6 +30,8 @@ export function NewContactModal() {
   const [phone, setPhone] = useState("");
   const [companyUuid, setCompanyUuid] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
+  // Language this contact's quotes render in — docs/specs/quote-preferred-language.md.
+  const [preferredLanguage, setPreferredLanguage] = useState<PreferredLanguage>("english");
   const [saving, setSaving] = useState(false);
 
   const companyOptions = companies.map((c) => ({
@@ -42,8 +44,8 @@ export function NewContactModal() {
   const selectedCompanyName = companies.find((c) => c.id === companyUuid)?.companyName ?? "";
 
   const duplicateContacts = findContactDuplicates(contacts, { email, phone });
-  const duplicateLabels = duplicateContacts.map((c) =>
-    `${c.firstName} ${c.lastName ?? ""}`.trim() + (c.email ? ` (${c.email})` : ""),
+  const duplicateLabels = duplicateContacts.map(
+    (c) => `${c.firstName} ${c.lastName ?? ""}`.trim() + (c.email ? ` (${c.email})` : ""),
   );
 
   const resetAndClose = () => {
@@ -53,13 +55,22 @@ export function NewContactModal() {
     setPhone("");
     setCompanyUuid(null);
     setNotes("");
+    setPreferredLanguage("english");
     setField("isNewContactModalOpen", false);
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await createContact({ firstName, lastName, phone, email, notes, companyUuid });
+      await createContact({
+        firstName,
+        lastName,
+        phone,
+        email,
+        notes,
+        companyUuid,
+        preferredLanguage,
+      });
 
       setField("contactName", `${firstName} ${lastName}`.trim());
       setField("companyEmail", email);
@@ -153,6 +164,16 @@ export function NewContactModal() {
                 + New Company
               </button>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Quote Language</label>
+            <Dropdown
+              options={PREFERRED_LANGUAGE_OPTIONS}
+              selected={preferredLanguage}
+              onSelect={(v) => setPreferredLanguage(v as PreferredLanguage)}
+              placeholder="Select language..."
+            />
           </div>
 
           <div>

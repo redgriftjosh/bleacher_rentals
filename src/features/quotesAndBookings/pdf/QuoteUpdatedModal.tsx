@@ -2,6 +2,8 @@
 
 import { RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import type { QuoteLanguage } from "./quoteLanguage";
+import { quoteText } from "./quoteStrings";
 
 /**
  * Blocking "this quote was updated" notice for the public quote page. The only exit is
@@ -13,11 +15,15 @@ export function QuoteUpdatedModal({
   open,
   onRefresh,
   description,
+  language = "en",
 }: {
   open: boolean;
   onRefresh: () => void;
   description?: string;
+  language?: QuoteLanguage;
 }) {
+  const s = quoteText(language);
+
   return (
     <Dialog open={open}>
       <DialogContent
@@ -27,11 +33,8 @@ export function QuoteUpdatedModal({
         onInteractOutside={(e) => e.preventDefault()}
         className="[&>button]:hidden"
       >
-        <DialogTitle>This quote has been updated</DialogTitle>
-        <DialogDescription>
-          {description ??
-            "The details of this quote have changed since you opened this page. Please refresh to see the latest version."}
-        </DialogDescription>
+        <DialogTitle>{s.quoteUpdatedTitle}</DialogTitle>
+        <DialogDescription>{description ?? s.quoteUpdatedBody}</DialogDescription>
         {/* Wrapped so the `[&>button]:hidden` above (which hides Radix's built-in X) does
             not also hide this action button. */}
         <div className="mt-2">
@@ -41,7 +44,7 @@ export function QuoteUpdatedModal({
             className="inline-flex items-center justify-center gap-2 rounded-md bg-darkBlue px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
           >
             <RefreshCw className="h-4 w-4" />
-            Refresh
+            {s.refresh}
           </button>
         </div>
       </DialogContent>

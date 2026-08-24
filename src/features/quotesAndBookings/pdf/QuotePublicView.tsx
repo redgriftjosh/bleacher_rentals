@@ -3,46 +3,8 @@
 import Image from "next/image";
 import { QuoteDocumentData } from "./quoteDocumentData";
 import type { TrackEvent } from "./useQuoteActivityTracker";
-
-function formatMoney(cents: number, currency: "USD" | "CAD"): string {
-  const symbol = "$";
-  const formatted = (Math.abs(cents) / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return cents < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
-}
-
-function formatDate(d: string): string {
-  if (!d) return "—";
-  const date = new Date(d + "T00:00:00");
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-function formatDateRange(start: string, end: string): string {
-  if (!start || !end) return "—";
-  const s = new Date(start + "T00:00:00");
-  const e = new Date(end + "T00:00:00");
-  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-
-  const sDay = dayNames[s.getDay()];
-  const sMonth = monthNames[s.getMonth()];
-  const eDay = dayNames[e.getDay()];
-  const eMonth = monthNames[e.getMonth()];
-
-  return `${sDay}, ${sMonth} ${s.getDate()} - ${eDay}, ${eMonth} ${e.getDate()}, ${e.getFullYear()}`;
-}
+import { formatQuoteDate, formatQuoteDateRange, formatQuoteMoney } from "./quoteFormat";
+import { quoteText } from "./quoteStrings";
 
 function companyFullAddress(c: QuoteDocumentData["company"]): string {
   const parts = [c.street];
@@ -63,7 +25,10 @@ export function QuotePublicView({
   data: QuoteDocumentData;
   track?: (event: TrackEvent) => void;
 }) {
-  const { currency } = data;
+  const { currency, language } = data;
+  const s = quoteText(language);
+  const formatMoney = (cents: number) => formatQuoteMoney(cents, currency, language);
+  const formatDate = (d: string) => formatQuoteDate(d, language);
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
@@ -85,7 +50,11 @@ export function QuotePublicView({
                 {companyFullAddress(data.company)}
               </p>
             )}
-            {data.company.phone && <p className="text-xs text-gray-600">P: {data.company.phone}</p>}
+            {data.company.phone && (
+              <p className="text-xs text-gray-600">
+                {s.phonePrefix} {data.company.phone}
+              </p>
+            )}
             <p className="text-xs text-gray-600">{data.company.email}</p>
             <a
               href={`https://${data.company.website}`}
@@ -97,15 +66,15 @@ export function QuotePublicView({
 
           {/* Center: Event Info + Location */}
           <div>
-            <p className="font-bold text-sm mb-1">Event Information</p>
+            <p className="font-bold text-sm mb-1">{s.eventInformation}</p>
             <p className="text-sm">{data.venue.name}</p>
             <p className="text-sm text-gray-600">
-              {formatDateRange(data.dates.eventStart, data.dates.eventEnd)}
+              {formatQuoteDateRange(data.dates.eventStart, data.dates.eventEnd, language)}
             </p>
 
             {data.venue.street && (
               <div className="mt-3">
-                <p className="font-bold text-sm mb-1">Location / Venue</p>
+                <p className="font-bold text-sm mb-1">{s.locationVenue}</p>
                 <p className="text-sm">{data.venue.name}</p>
                 <p className="text-sm text-gray-600">
                   {data.venue.street}
@@ -117,16 +86,16 @@ export function QuotePublicView({
 
           {/* Right: INVOICE badge */}
           <div className="text-left sm:text-right">
-            <p className="text-3xl font-bold text-green-700">INVOICE</p>
-            <p className="text-sm mt-1">Invoice #{data.quoteNumber}</p>
-            {data.poNumber && <p className="text-sm">PO #{data.poNumber}</p>}
+            <p className="text-3xl font-bold text-green-700">{s.invoiceBadge}</p>
+            <p className="text-sm mt-1">{s.invoiceNumber(data.quoteNumber)}</p>
+            {data.poNumber && <p className="text-sm">{s.poNumberShort(data.poNumber)}</p>}
           </div>
         </div>
 
         {/* Contact row */}
         {data.contact && (
           <div className="px-4 sm:px-8 py-4 border-b">
-            <p className="font-bold text-sm mb-1">Contact</p>
+            <p className="font-bold text-sm mb-1">{s.contact}</p>
             <p className="text-sm">{data.contact.name}</p>
             {data.contact.email && <p className="text-sm text-gray-600">{data.contact.email}</p>}
             {data.contact.phone && <p className="text-sm text-gray-600">{data.contact.phone}</p>}
@@ -138,7 +107,7 @@ export function QuotePublicView({
           <div>
             {/* Rental Items header bar */}
             <div className="flex justify-between items-center bg-darkBlue text-white px-3 py-2 rounded-t text-sm font-semibold">
-              <span>Rental Items</span>
+              <span>{s.rentalItems}</span>
               <span>
                 {formatDate(data.dates.eventStart)} - {formatDate(data.dates.eventEnd)}
               </span>
@@ -147,10 +116,10 @@ export function QuotePublicView({
               <table className="w-full text-sm min-w-[480px]">
                 <thead>
                   <tr className="border-b text-gray-500 text-xs uppercase">
-                    <th className="px-3 py-2 text-left font-medium">Description</th>
-                    <th className="px-3 py-2 text-center font-medium w-16">Qty</th>
-                    <th className="px-3 py-2 text-right font-medium w-24">Unit</th>
-                    <th className="px-3 py-2 text-right font-medium w-24">Total</th>
+                    <th className="px-3 py-2 text-left font-medium">{s.colDescription}</th>
+                    <th className="px-3 py-2 text-center font-medium w-16">{s.colQty}</th>
+                    <th className="px-3 py-2 text-right font-medium w-24">{s.colUnit}</th>
+                    <th className="px-3 py-2 text-right font-medium w-24">{s.colTotal}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -164,17 +133,17 @@ export function QuotePublicView({
                       </td>
                       <td className="px-3 py-2 border-b border-gray-100 text-center">{item.qty}</td>
                       <td className="px-3 py-2 border-b border-gray-100 text-right">
-                        {formatMoney(item.unitPrice, currency)}
+                        {formatMoney(item.unitPrice)}
                       </td>
                       <td className="px-3 py-2 border-b border-gray-100 text-right font-semibold">
-                        {formatMoney(item.total, currency)}
+                        {formatMoney(item.total)}
                       </td>
                     </tr>
                   ))}
                   {data.lineItems.length === 0 && (
                     <tr>
                       <td colSpan={4} className="px-3 py-6 text-center text-gray-400">
-                        No items
+                        {s.noItems}
                       </td>
                     </tr>
                   )}
@@ -187,51 +156,47 @@ export function QuotePublicView({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left: Make checks payable */}
             <div className="bg-gray-50 rounded-lg p-5 text-sm text-center">
-              <p className="font-bold mb-2">Make checks payable to:</p>
+              <p className="font-bold mb-2">{s.makeChecksPayableTo}</p>
               <p>{data.company.name}</p>
               {data.company.street && (
                 <p className="whitespace-pre-line">{companyFullAddress(data.company)}</p>
               )}
-              <p className="italic mt-2 text-gray-500">Memo: Invoice #{data.quoteNumber}</p>
+              <p className="italic mt-2 text-gray-500">{s.memoInvoice(data.quoteNumber)}</p>
             </div>
 
             {/* Right: Totals box */}
             <div>
               <div className="bg-darkBlue text-white px-4 py-2 rounded-t text-sm font-semibold">
-                Totals
+                {s.totalsHeading}
               </div>
               <div className="border border-t-0 rounded-b p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span className="font-medium">{formatMoney(data.subtotalCents, currency)}</span>
+                  <span>{s.subtotal}</span>
+                  <span className="font-medium">{formatMoney(data.subtotalCents)}</span>
                 </div>
                 {data.discountsCents !== 0 && (
                   <>
                     <div className="flex justify-between text-red-600">
-                      <span>Discounts</span>
-                      <span className="font-medium">
-                        {formatMoney(data.discountsCents, currency)}
-                      </span>
+                      <span>{s.discounts}</span>
+                      <span className="font-medium">{formatMoney(data.discountsCents)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Subtotal After Discount</span>
+                      <span>{s.subtotalAfterDiscount}</span>
                       <span className="font-medium">
-                        {formatMoney(data.subtotalCents + data.discountsCents, currency)}
+                        {formatMoney(data.subtotalCents + data.discountsCents)}
                       </span>
                     </div>
                   </>
                 )}
                 {data.taxAmountCents !== 0 && (
                   <div className="flex justify-between">
-                    <span>Tax{data.taxPercent ? ` (${data.taxPercent}%)` : ""}</span>
-                    <span className="font-medium">
-                      {formatMoney(data.taxAmountCents, currency)}
-                    </span>
+                    <span>{data.taxPercent ? s.taxWithPercent(data.taxPercent) : s.tax}</span>
+                    <span className="font-medium">{formatMoney(data.taxAmountCents)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold border-t pt-2">
-                  <span>Total*</span>
-                  <span>{formatMoney(data.totalCents, currency)}</span>
+                  <span>{s.totalWithAsterisk}</span>
+                  <span>{formatMoney(data.totalCents)}</span>
                 </div>
               </div>
 
@@ -242,24 +207,22 @@ export function QuotePublicView({
                     const isFirst = i === 0;
                     const isLast = i === data.paymentSchedule.length - 1;
                     const label = isFirst
-                      ? "Due Now"
+                      ? s.dueNow
                       : isLast
-                        ? `Final Due on ${formatDate(p.dueDate)}`
-                        : `Due on ${formatDate(p.dueDate)}`;
+                        ? s.finalDueOn(formatDate(p.dueDate))
+                        : s.dueOn(formatDate(p.dueDate));
                     return (
                       <div key={i} className="flex justify-between">
                         <span>{label}</span>
-                        <span className="font-medium">{formatMoney(p.amountCents, currency)}</span>
+                        <span className="font-medium">{formatMoney(p.amountCents)}</span>
                       </div>
                     );
                   })}
                   <div className="flex justify-between font-bold border-t pt-2">
-                    <span>Remaining Balance</span>
-                    <span>{formatMoney(data.totalCents, currency)}</span>
+                    <span>{s.remainingBalance}</span>
+                    <span>{formatMoney(data.totalCents)}</span>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Additional convenience fees may apply
-                  </p>
+                  <p className="text-xs text-gray-400 mt-1">{s.convenienceFeesNote}</p>
                 </div>
               )}
             </div>
@@ -268,7 +231,7 @@ export function QuotePublicView({
           {/* Notes */}
           {data.clientNotes && (
             <div>
-              <h3 className="text-sm font-bold text-darkBlue mb-2">Notes</h3>
+              <h3 className="text-sm font-bold text-darkBlue mb-2">{s.notes}</h3>
               <p className="text-sm text-gray-600 whitespace-pre-wrap">{data.clientNotes}</p>
             </div>
           )}
@@ -277,7 +240,7 @@ export function QuotePublicView({
         {/* Footer */}
         <div className="px-4 sm:px-8 py-4 bg-gray-50 border-t flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           <p className="text-xs text-gray-400">
-            {data.company.name} &middot; Invoice #{data.quoteNumber}
+            {data.company.name} &middot; {s.invoiceNumber(data.quoteNumber)}
           </p>
           <a
             href={`/api/quotes/${data.eventId}/pdf`}
@@ -286,7 +249,7 @@ export function QuotePublicView({
             onClick={() => track?.({ action_type: "client_pdf_download" })}
             className="px-4 py-2 text-sm font-medium text-darkBlue border border-darkBlue rounded-sm hover:bg-blue-50 transition"
           >
-            Download PDF
+            {s.downloadPdf}
           </a>
         </div>
       </div>
