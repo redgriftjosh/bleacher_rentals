@@ -72,17 +72,27 @@ import {
   isPickupTransportationMismatch,
 } from "@/features/alerts/util/workTrackerTransportation";
 import { getUpcomingWindowEnd } from "@/features/alerts/util/getUpcomingWindow";
+import { PocSelect } from "./PocSelect";
+import { getExpectedPocForWorkTracker, type PocDirection } from "../util/resolvePocContact";
+import { describePocPopulateResult, type PocValue } from "../util/pocField";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
   setSelectedWorkTracker: (block: Tables<"WorkTrackers"> | null) => void;
   setSelectedBlock: (block: EditBlock | null) => void;
+  /**
+   * Run the pickup/dropoff address + POC locators once when a NEW tracker opens. Set by the
+   * dashboard's ⌘/Ctrl+click shortcut, which has no popup where the user could press the
+   * locator buttons themselves.
+   */
+  autoPopulate?: boolean;
 };
 
 export default function WorkTrackerModal({
   selectedWorkTracker,
   setSelectedWorkTracker,
   setSelectedBlock,
+  autoPopulate = false,
 }: WorkTrackerModalProps) {
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
@@ -113,6 +123,8 @@ export default function WorkTrackerModal({
   const [showEditTypes, setShowEditTypes] = useState(false);
   const initialSnapshotRef = useRef<WorkTrackerSnapshot | null>(null);
   const pendingChangeTypeRef = useRef<WorkTrackerChangeType>("none");
+  // `${bleacher_uuid}|${date}` of the draft whose fields were already auto-populated.
+  const autoPopulatedKeyRef = useRef<string | null>(null);
   // ids of the auto-managed "Hauling" / "Deadhead" line items (if any) — their
   // amounts are kept in sync with pickup/dropoff/driver instead of being
   // hand-edited or button-triggered.
@@ -319,6 +331,46 @@ export default function WorkTrackerModal({
     }
   };
 
+  const setPickupPoc = (next: PocValue) =>
+    setWorkTracker((prev) => ({
+      ...prev!,
+      pickup_poc: next.pocText,
+      pickup_poc_contact_uuid: next.contactUuid,
+    }));
+
+  const setDropoffPoc = (next: PocValue) =>
+    setWorkTracker((prev) => ({
+      ...prev!,
+      dropoff_poc: next.pocText,
+      dropoff_poc_contact_uuid: next.contactUuid,
+    }));
+
+  // Populate a POC from the neighbouring event / work tracker, mirroring the address locate
+  // buttons above. A neighbour holding only legacy free text is refused rather than copied:
+  // the driver app dials the POC through Contacts, and free text carries no phone number.
+  const handlePopulatePoc = async (direction: PocDirection, options?: { silent?: boolean }) => {
+    if (!workTracker?.bleacher_uuid || !workTracker?.date) return;
+
+    const resolution = await getExpectedPocForWorkTracker({
+      bleacherUuid: workTracker.bleacher_uuid,
+      targetDate: workTracker.date,
+      excludeWorkTrackerUuid: workTracker.id,
+      direction,
+    });
+
+    const outcome = describePocPopulateResult(resolution, direction);
+
+    if (outcome.kind === "error") {
+      // Silent = auto-population: leave the field empty rather than greeting the user with two
+      // toasts they never asked for. The locator buttons stay loud.
+      if (!options?.silent) createErrorToast(outcome.messages);
+      return;
+    }
+
+    if (direction === "past") setPickupPoc(outcome.value);
+    else setDropoffPoc(outcome.value);
+  };
+
   // Pre-save in-memory transportation warning for pickup mismatch
   const { data: expectedPickupStreet } = useQuery({
     queryKey: [
@@ -437,11 +489,10 @@ export default function WorkTrackerModal({
       setPickUpAddress(null);
       setDropOffAddress(null);
       initialSnapshotRef.current = buildWorkTrackerSnapshot(selectedWorkTracker, null, null);
-      // Default to "Trip" type for new work trackers
-      const tripType = workTrackerTypes.find((t) => t.display_name === "Trip");
-      if (tripType) {
-        setWorkTracker((prev) => ({ ...prev!, work_tracker_type_uuid: tripType.id }));
-      }
+      // The "Trip" default is applied by the effect above once the types load — deliberately not
+      // duplicated here, so `workTrackerTypes` can stay out of this effect's deps. It re-emits
+      // while the PowerSync query settles, and re-running this would blank the addresses that
+      // auto-population just filled in.
     } else if (fetchedWorkTracker) {
       console.log("fetchedWorkTracker", fetchedWorkTracker);
       const nextPickupAddress = {
@@ -473,7 +524,38 @@ export default function WorkTrackerModal({
       setPickUpAddress(nextPickupAddress);
       setDropOffAddress(nextDropoffAddress);
     }
-  }, [selectedWorkTracker, fetchedWorkTracker, workTrackerTypes]);
+  }, [selectedWorkTracker, fetchedWorkTracker]);
+
+  /**
+   * ⌘/Ctrl+click on an empty dashboard cell opens this modal with no popup in between, so the
+   * four locators the user would otherwise press are run for them, once, on open.
+   *
+   * The guard is keyed on bleacher+date rather than a plain "already ran" flag: `workTracker`
+   * is seeded by the effect above, so on the first pass it can still hold the previously opened
+   * tracker — populating from that would silently fill in another bleacher's addresses.
+   */
+  useEffect(() => {
+    if (!selectedWorkTracker) {
+      autoPopulatedKeyRef.current = null;
+      return;
+    }
+    if (!autoPopulate || selectedWorkTracker.id !== "-1") return;
+
+    const key = `${selectedWorkTracker.bleacher_uuid}|${selectedWorkTracker.date}`;
+    if (autoPopulatedKeyRef.current === key) return;
+    // Wait until the local state has caught up with the tracker we were handed.
+    if (`${workTracker?.bleacher_uuid}|${workTracker?.date}` !== key) return;
+
+    autoPopulatedKeyRef.current = key;
+
+    void Promise.all([
+      handlePopulatePickupFromLastAddress(),
+      handlePopulateDropoffFromNextAddress(),
+      handlePopulatePoc("past", { silent: true }),
+      handlePopulatePoc("future", { silent: true }),
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPopulate, selectedWorkTracker, workTracker?.bleacher_uuid, workTracker?.date]);
 
   const handleSaveWorkTracker = async () => {
     if (isSaving) return;
@@ -821,10 +903,16 @@ export default function WorkTrackerModal({
               </TabsList>
 
               <TabsContent value="details">
-                <fieldset disabled={!canEditFields}>
+                {/*
+                  min-w-0 is load-bearing: browsers give <fieldset> a UA
+                  `min-inline-size: min-content`, so it refuses to shrink below its content and
+                  overflows the modal's fixed 900px width — no amount of min-w-0 on descendants
+                  can override that from the inside.
+                */}
+                <fieldset className="min-w-0" disabled={!canEditFields}>
                   <div className="flex flex-row gap-4">
                     {/* Column 1: Global Info */}
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex flex-row gap-2">
                         <div className="flex-[2]">
                           <label className={labelClassName}>Driver</label>
@@ -1001,10 +1089,10 @@ export default function WorkTrackerModal({
                     </div>
 
                     {/* Columns 2 & 3: Pickup, Dropoff, and Map */}
-                    <div className="flex-[2] flex flex-col gap-4">
+                    <div className="flex-[2] min-w-0 flex flex-col gap-4">
                       <div className="flex flex-row gap-4">
                         {/* Column 2: Pickup */}
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <label className={labelClassName}>Pickup Time</label>
                           <input
                             type="text"
@@ -1016,15 +1104,27 @@ export default function WorkTrackerModal({
                             }
                           />
                           <label className={labelClassName}>Pickup POC</label>
-                          <input
-                            type="text"
-                            className={inputClassName}
-                            placeholder="Pickup POC"
-                            value={workTracker?.pickup_poc ?? ""}
-                            onChange={(e) =>
-                              setWorkTracker((prev) => ({ ...prev!, pickup_poc: e.target.value }))
-                            }
-                          />
+                          <div className="flex flex-row gap-2 items-center">
+                            <div className="flex-1 min-w-0">
+                              <PocSelect
+                                contactUuid={workTracker?.pickup_poc_contact_uuid ?? null}
+                                pocText={workTracker?.pickup_poc ?? null}
+                                onChange={setPickupPoc}
+                                placeholder="Pickup POC"
+                              />
+                            </div>
+                            {canEditFields && (
+                              <AppTooltip content="Populate from previous event contact">
+                                <button
+                                  type="button"
+                                  onClick={() => handlePopulatePoc("past")}
+                                  className="text-gray-400 hover:text-darkBlue transition-colors"
+                                >
+                                  <LocateFixed className="h-5 w-5" />
+                                </button>
+                              </AppTooltip>
+                            )}
+                          </div>
                           <div className="flex items-center gap-2">
                             <label className={labelClassName}>Pickup Address</label>
                             {showPickupTransportWarning && (
@@ -1089,7 +1189,7 @@ export default function WorkTrackerModal({
                         </div>
 
                         {/* Column 3: Dropoff */}
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <label className={labelClassName}>Dropoff Time</label>
                           <input
                             type="text"
@@ -1101,15 +1201,27 @@ export default function WorkTrackerModal({
                             }
                           />
                           <label className={labelClassName}>Dropoff POC</label>
-                          <input
-                            type="text"
-                            className={inputClassName}
-                            placeholder="Dropoff POC"
-                            value={workTracker?.dropoff_poc ?? ""}
-                            onChange={(e) =>
-                              setWorkTracker((prev) => ({ ...prev!, dropoff_poc: e.target.value }))
-                            }
-                          />
+                          <div className="flex flex-row gap-2 items-center">
+                            <div className="flex-1 min-w-0">
+                              <PocSelect
+                                contactUuid={workTracker?.dropoff_poc_contact_uuid ?? null}
+                                pocText={workTracker?.dropoff_poc ?? null}
+                                onChange={setDropoffPoc}
+                                placeholder="Dropoff POC"
+                              />
+                            </div>
+                            {canEditFields && (
+                              <AppTooltip content="Populate from next event contact">
+                                <button
+                                  type="button"
+                                  onClick={() => handlePopulatePoc("future")}
+                                  className="text-gray-400 hover:text-darkBlue transition-colors"
+                                >
+                                  <LocateFixed className="h-5 w-5" />
+                                </button>
+                              </AppTooltip>
+                            )}
+                          </div>
                           <label className={labelClassName}>Dropoff Address</label>
                           <div className="flex flex-row gap-2 items-center">
                             <AddressAutocomplete
