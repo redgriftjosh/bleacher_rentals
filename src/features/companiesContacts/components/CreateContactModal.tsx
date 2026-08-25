@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/SearchableSelect";
+import { Dropdown } from "@/components/DropDown";
 import { FIELD_LABEL, TextAreaField, TextField } from "@/components/form/TextField";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
 import { useTouchedErrors } from "@/lib/validation/useTouchedErrors";
@@ -13,6 +14,7 @@ import { CreateCompanyModal } from "./CreateCompanyModal";
 import { DuplicateWarning } from "./DuplicateWarning";
 import { findContactDuplicates } from "../utils/findDuplicates";
 import { hasErrors, validateContactForm, type ContactFormValues } from "../utils/formValidation";
+import { PREFERRED_LANGUAGE_OPTIONS, type PreferredLanguage } from "../db/preferredLanguage";
 
 export type CreatedContact = {
   id: string;
@@ -54,6 +56,7 @@ export function CreateContactModal({ isOpen, onClose, onCreated, contentClassNam
   });
   const [companyUuid, setCompanyUuid] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
+  const [preferredLanguage, setPreferredLanguage] = useState<PreferredLanguage>("english");
   const [saving, setSaving] = useState(false);
 
   const errors = validateContactForm(values);
@@ -66,6 +69,7 @@ export function CreateContactModal({ isOpen, onClose, onCreated, contentClassNam
     setValues({ firstName: "", lastName: "", email: "", phone: "" });
     setCompanyUuid(null);
     setNotes("");
+    setPreferredLanguage("english");
     resetTouched();
   };
 
@@ -96,7 +100,7 @@ export function CreateContactModal({ isOpen, onClose, onCreated, contentClassNam
     setSaving(true);
     try {
       const displayName = `${values.firstName} ${values.lastName}`.trim();
-      const id = await createContact({ ...values, notes, companyUuid });
+      const id = await createContact({ ...values, notes, companyUuid, preferredLanguage });
       createSuccessToast([`Contact "${displayName}" created.`]);
       onCreated?.({
         id,
@@ -171,6 +175,16 @@ export function CreateContactModal({ isOpen, onClose, onCreated, contentClassNam
             </div>
 
             <DuplicateWarning matches={duplicateLabels} kind="contact" severity="block" />
+
+            <div>
+              <label className={FIELD_LABEL}>Quote Language</label>
+              <Dropdown
+                options={PREFERRED_LANGUAGE_OPTIONS}
+                selected={preferredLanguage}
+                onSelect={(value) => setPreferredLanguage(value as PreferredLanguage)}
+                placeholder="Select language..."
+              />
+            </div>
 
             <div>
               <label className={FIELD_LABEL}>Company</label>

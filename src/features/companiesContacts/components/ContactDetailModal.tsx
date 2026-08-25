@@ -12,6 +12,7 @@ import { useCompaniesAll } from "../hooks/useCompaniesAll";
 import type { ContactFull } from "../hooks/useContactsAll";
 import { DetailField } from "./DetailField";
 import { hasErrors, validateContactForm, type ContactFormValues } from "../utils/formValidation";
+import { PREFERRED_LANGUAGE_OPTIONS, type PreferredLanguage } from "../db/preferredLanguage";
 
 const CONTACT_FIELDS = ["firstName", "lastName", "email", "phone"] as const;
 
@@ -28,6 +29,8 @@ export function ContactDetailModal({ contact, onClose }: Props) {
   const [values, setValues] = useState<ContactFormValues>(EMPTY_VALUES);
   const [notes, setNotes] = useState("");
   const [companyUuid, setCompanyUuid] = useState<string | null>(null);
+  // Language this contact's quotes render in. See docs/specs/quote-preferred-language.md.
+  const [preferredLanguage, setPreferredLanguage] = useState<PreferredLanguage>("english");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -47,6 +50,7 @@ export function ContactDetailModal({ contact, onClose }: Props) {
     });
     setNotes(contact.notes ?? "");
     setCompanyUuid(contact.companyUuid);
+    setPreferredLanguage(contact.preferredLanguage);
     setMode("view");
     resetTouched();
   }, [contact, resetTouched]);
@@ -64,7 +68,7 @@ export function ContactDetailModal({ contact, onClose }: Props) {
 
     setSaving(true);
     try {
-      await updateContact(contact.id, { ...values, notes, companyUuid });
+      await updateContact(contact.id, { ...values, notes, companyUuid, preferredLanguage });
       createSuccessToast(["Contact updated."]);
       setMode("view");
     } catch {
@@ -90,6 +94,9 @@ export function ContactDetailModal({ contact, onClose }: Props) {
   };
 
   const companyOptions = companies.map((c) => ({ label: c.companyName, value: c.id }));
+  const languageLabel = PREFERRED_LANGUAGE_OPTIONS.find(
+    (o) => o.value === contact?.preferredLanguage,
+  )?.label;
   const displayCompany =
     contact?.companyName ?? companies.find((c) => c.id === companyUuid)?.companyName;
 
@@ -114,6 +121,7 @@ export function ContactDetailModal({ contact, onClose }: Props) {
               <DetailField label="Email" value={contact?.email} />
               <DetailField label="Phone" value={contact?.phone} />
               <DetailField label="Company" value={displayCompany} />
+              <DetailField label="Language" value={languageLabel} />
               <DetailField label="Notes" value={contact?.notes} />
             </div>
           ) : (
@@ -161,6 +169,15 @@ export function ContactDetailModal({ contact, onClose }: Props) {
                   onSelect={setCompanyUuid}
                   placeholder={loadingCompanies ? "Loading..." : "Select company..."}
                   disabled={loadingCompanies}
+                />
+              </div>
+              <div>
+                <label className={FIELD_LABEL}>Quote Language</label>
+                <Dropdown
+                  options={PREFERRED_LANGUAGE_OPTIONS}
+                  selected={preferredLanguage}
+                  onSelect={(value) => setPreferredLanguage(value as PreferredLanguage)}
+                  placeholder="Select language..."
                 />
               </div>
               <TextAreaField label="Notes" value={notes} onChange={setNotes} />
