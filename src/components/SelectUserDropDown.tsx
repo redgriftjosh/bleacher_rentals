@@ -72,7 +72,7 @@ export function SelectUserDropDown<T extends UserOption>({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-between text-left font-normal disabled:opacity-100",
+            "w-full min-w-0 justify-between text-left font-normal disabled:opacity-100",
             disabled && "bg-gray-50 text-gray-700 cursor-default",
           )}
           disabled={isLoading || disabled}

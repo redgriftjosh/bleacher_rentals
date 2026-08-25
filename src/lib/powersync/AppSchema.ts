@@ -332,6 +332,8 @@ const WorkTrackersCols = {
   pickup_address_uuid: column.text,
   dropoff_address_uuid: column.text,
   bleacher_uuid: column.text,
+  actual_bleacher_uuid: column.text,
+  bleacher_change_reason: column.text,
   driver_uuid: column.text,
   user_uuid: column.text,
   status: column.text,
@@ -506,6 +508,7 @@ const DriverUnavailability = new Table(DriverUnavailabilityCols, {
 
 const WorkTrackerInspectionsCols = {
   created_at: column.text,
+  bleacher_uuid: column.text,
   walk_around_complete: column.integer,
   issues_found: column.integer,
   issue_description: column.text,

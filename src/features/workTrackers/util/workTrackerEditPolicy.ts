@@ -22,6 +22,8 @@ export type AddressSnapshot = {
 
 export type WorkTrackerSnapshot = {
   bleacher_uuid: string | null;
+  actual_bleacher_uuid: string | null;
+  bleacher_change_reason: string | null;
   date: string | null;
   driver_uuid: string | null;
   pickup_poc: string | null;
@@ -65,6 +67,8 @@ export function buildWorkTrackerSnapshot(
 
   return {
     bleacher_uuid: workTracker.bleacher_uuid,
+    actual_bleacher_uuid: workTracker.actual_bleacher_uuid,
+    bleacher_change_reason: workTracker.bleacher_change_reason,
     date: workTracker.date,
     driver_uuid: workTracker.driver_uuid,
     pickup_poc: workTracker.pickup_poc,
@@ -166,8 +170,28 @@ function hasProjectNumberChange(before: WorkTrackerSnapshot, after: WorkTrackerS
   return normalizeString(before.project_number) !== normalizeString(after.project_number);
 }
 
+/**
+ * A manager correcting which bleacher the driver took. Silent on purpose: the
+ * driver already knows what they hitched up, and this must not un-accept a trip
+ * that is halfway down the highway.
+ */
+function hasActualBleacherChange(before: WorkTrackerSnapshot, after: WorkTrackerSnapshot): boolean {
+  if (
+    normalizeString(before.actual_bleacher_uuid) !== normalizeString(after.actual_bleacher_uuid)
+  ) {
+    return true;
+  }
+  return (
+    normalizeString(before.bleacher_change_reason) !== normalizeString(after.bleacher_change_reason)
+  );
+}
+
 function hasSilentFieldChanges(before: WorkTrackerSnapshot, after: WorkTrackerSnapshot): boolean {
-  return hasInternalNotesChange(before, after) || hasProjectNumberChange(before, after);
+  return (
+    hasInternalNotesChange(before, after) ||
+    hasProjectNumberChange(before, after) ||
+    hasActualBleacherChange(before, after)
+  );
 }
 
 export function classifyWorkTrackerChanges(

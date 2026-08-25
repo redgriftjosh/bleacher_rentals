@@ -36,6 +36,7 @@ import {
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute, typedGetAll, expect } from "@/lib/powersync/typedQuery";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { buildActualBleacherUpdate } from "@/features/workTrackers/util/bleacherSwap";
 import {
   resolveStatusOnSave,
   shouldSendDriverNotification,
@@ -404,6 +405,14 @@ export async function saveWorkTracker(
     notes: workTracker.notes,
     pay_cents: workTracker.pay_cents,
     bleacher_uuid: workTracker.bleacher_uuid,
+    // Both columns always move together: reverting to the assigned bleacher has
+    // to clear the reason in the same UPDATE, or the row keeps a reason for a
+    // swap that no longer exists.
+    ...buildActualBleacherUpdate({
+      assignedBleacherUuid: workTracker.bleacher_uuid,
+      nextActualBleacherUuid: workTracker.actual_bleacher_uuid,
+      nextReason: workTracker.bleacher_change_reason,
+    }),
     internal_notes: workTracker.internal_notes,
     driver_uuid: workTracker.driver_uuid,
     status: effectiveStatus,

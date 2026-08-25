@@ -168,3 +168,84 @@ describe("workTrackerEditPolicy", () => {
     expect(resolveEffectiveChangeType("un-accept", true, false)).toBe("un-accept");
   });
 });
+
+describe("actual bleacher corrections", () => {
+  it("captures the confirmed bleacher and its reason in the snapshot", () => {
+    const snapshot = buildWorkTrackerSnapshot(
+      {
+        ...baseWorkTracker,
+        actual_bleacher_uuid: "b-2",
+        bleacher_change_reason: "damaged",
+      } as Tables<"WorkTrackers">,
+      baseAddress,
+      baseAddress,
+    );
+
+    expect(snapshot?.actual_bleacher_uuid).toBe("b-2");
+    expect(snapshot?.bleacher_change_reason).toBe("damaged");
+  });
+
+  it("treats a manager correcting the actual bleacher as a silent change", () => {
+    // The driver already knows which bleacher they hitched up — pushing it back
+    // at them is noise, and it must not un-accept the trip either.
+    const before = buildWorkTrackerSnapshot(
+      {
+        ...baseWorkTracker,
+        actual_bleacher_uuid: "b-2",
+        bleacher_change_reason: "damaged",
+      } as Tables<"WorkTrackers">,
+      baseAddress,
+      baseAddress,
+    )!;
+    const after = buildWorkTrackerSnapshot(
+      {
+        ...baseWorkTracker,
+        actual_bleacher_uuid: "b-1",
+        bleacher_change_reason: null,
+      } as Tables<"WorkTrackers">,
+      baseAddress,
+      baseAddress,
+    )!;
+
+    expect(classifyWorkTrackerChanges(before, after)).toBe("silent");
+    expect(shouldSendDriverNotification("silent", "accepted", false, "accepted")).toBe(false);
+  });
+
+  it("treats a reason-only correction as a change worth saving", () => {
+    const before = buildWorkTrackerSnapshot(
+      {
+        ...baseWorkTracker,
+        actual_bleacher_uuid: "b-2",
+        bleacher_change_reason: "damaged",
+      } as Tables<"WorkTrackers">,
+      baseAddress,
+      baseAddress,
+    )!;
+    const after = buildWorkTrackerSnapshot(
+      {
+        ...baseWorkTracker,
+        actual_bleacher_uuid: "b-2",
+        bleacher_change_reason: "not_on_site",
+      } as Tables<"WorkTrackers">,
+      baseAddress,
+      baseAddress,
+    )!;
+
+    expect(classifyWorkTrackerChanges(before, after)).toBe("silent");
+  });
+
+  it("still reports no change when nothing about the swap moved", () => {
+    const snapshotOf = () =>
+      buildWorkTrackerSnapshot(
+        {
+          ...baseWorkTracker,
+          actual_bleacher_uuid: "b-2",
+          bleacher_change_reason: "damaged",
+        } as Tables<"WorkTrackers">,
+        baseAddress,
+        baseAddress,
+      )!;
+
+    expect(classifyWorkTrackerChanges(snapshotOf(), snapshotOf())).toBe("none");
+  });
+});

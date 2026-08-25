@@ -13,14 +13,14 @@ export function UserSmall({ clerkUserId, firstName, lastName, className }: UserS
   const displayName = [firstName, lastName].filter(Boolean).join(" ") || "Unknown User";
 
   return (
-    <div className={`flex items-center gap-3 ${className || ""}`}>
+    <div className={`flex items-center gap-3 min-w-0 ${className || ""}`}>
       <UserAvatar
         clerkUserId={clerkUserId}
         firstName={firstName}
         lastName={lastName}
         className="w-8 h-8"
       />
-      <span className="font-medium text-sm text-gray-700">{displayName}</span>
+      <span className="font-medium text-sm text-gray-700 truncate">{displayName}</span>
     </div>
   );
 }
