@@ -53,7 +53,20 @@ export default function Page() {
     clerkUserId: userId,
   });
 
+  // Set only for trackers opened via ⌘/Ctrl+click on an empty cell — tells the modal to run the
+  // address/POC locators once on open. Cleared for every other way of opening the modal.
+  const [autoPopulate, setAutoPopulate] = useState(false);
+
   const handleWorkTrackerOpen = (workTracker: Tables<"WorkTrackers">) => {
+    setAutoPopulate(false);
+    setSelectedWorkTracker(workTracker);
+  };
+
+  const handleWorkTrackerClose = (workTracker: Tables<"WorkTrackers"> | null) => {
+    if (!workTracker) {
+      setAutoPopulate(false);
+      useWorkTrackerSelectionStore.getState().clear();
+    }
     setSelectedWorkTracker(workTracker);
   };
 
@@ -85,6 +98,19 @@ export default function Page() {
     return () => unsub();
   }, []);
 
+  // Brand-new tracker requested from the grid (⌘/Ctrl+click). The whole draft row travels in the
+  // store — there is nothing to fetch — and `autoPopulate` asks the modal to fill in the
+  // addresses and POCs from the neighbouring event / work tracker.
+  useEffect(() => {
+    const unsub = useWorkTrackerSelectionStore.subscribe((s) => {
+      const draft = s.draft;
+      if (!draft) return;
+      setAutoPopulate(draft.autoPopulate);
+      setSelectedWorkTracker(draft.workTracker);
+    });
+    return () => unsub();
+  }, []);
+
   // Sync driver unavailability data into the store for PixiJS access
   const unavailKeys = useDriverUnavailability();
   useEffect(() => {
@@ -104,7 +130,8 @@ export default function Page() {
       <CellEditor onWorkTrackerOpen={handleWorkTrackerOpen} />
       <WorkTrackerModal
         selectedWorkTracker={selectedWorkTracker}
-        setSelectedWorkTracker={setSelectedWorkTracker}
+        setSelectedWorkTracker={handleWorkTrackerClose}
+        autoPopulate={autoPopulate}
         setSelectedBlock={() => {}} // Not used in PixiJS version
       />
       {locationModal.isOpen && locationModal.bleacherNumber && locationModal.deviceId && (

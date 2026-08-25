@@ -16,12 +16,15 @@ import { AppTooltip } from "@/components/AppTooltip";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { useDashboardBleachersStore } from "../state/useDashboardBleachersStore";
 import { isBleacherOwnedByAM } from "@/features/userAccess/logic/isBleacherOwnedByAM";
-import { hasSubrentalAccessForDate } from "@/features/userAccess/logic/hasSubrentalAccessForDate";
 import { canEditCell as canEditCellFn } from "@/features/userAccess/logic/canEditCell";
 import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
 import { SUBRENTAL_COLOR } from "@/features/dashboard/values/constants";
 import { DamageReportModal, EditDamageReport } from "@/app/damage-reports/DamageReportModal";
 import { useDamageReports } from "@/app/damage-reports/_lib/db";
+import {
+  buildWorkTrackerDraft,
+  checkWorkTrackerOpenAccess,
+} from "@/features/workTrackers/util/createWorkTrackerDraft";
 
 type CellEditorProps = {
   onWorkTrackerOpen?: (workTracker: Tables<"WorkTrackers">) => void;
@@ -130,82 +133,25 @@ export default function CellEditor({ onWorkTrackerOpen }: CellEditorProps) {
       return;
     }
 
-    if (!workTrackerUuid) {
-      const perms = usePermissionsStore.getState();
-      if (perms.isAccountManager && !perms.isAdmin) {
-        const dashBleachers = useDashboardBleachersStore.getState().data;
-        const bleacher = dashBleachers.find(
-          (b) => b.bleacherUuid === bleacherUuid && !b.isSubrentalRow,
-        );
-        const ownedByAM =
-          bleacher &&
-          isBleacherOwnedByAM({
-            bleacherZoneUuid: bleacher.zoneUuid,
-            accountManagerZoneIds: perms.accountManagerZoneIds,
-          });
-        // Block if the owned bleacher is subrented out on this date
-        const subrented =
-          ownedByAM &&
-          (bleacher?.acceptedSubrentalBlocks ?? []).some(
-            (r) => date >= r.eventStart.substring(0, 10) && date <= r.eventEnd.substring(0, 10),
-          );
-        const hasSubrentalAccess = hasSubrentalAccessForDate({
-          bleacherUuid,
-          date,
-          accountManagerZoneIds: perms.accountManagerZoneIds,
-          allBleachers: dashBleachers,
-        });
-        if (subrented) {
-          createErrorToast(["This bleacher is subrented out on this date."]);
-          return;
-        }
-        if (!ownedByAM && !hasSubrentalAccess) {
-          createErrorToast(["You can only create work trackers for bleachers assigned to you."]);
-          return;
-        }
-      }
+    const perms = usePermissionsStore.getState();
+    const access = checkWorkTrackerOpenAccess({
+      bleacherUuid,
+      date,
+      workTrackerUuid,
+      perms: {
+        isAdmin: perms.isAdmin,
+        isAccountManager: perms.isAccountManager,
+        accountManagerZoneIds: perms.accountManagerZoneIds,
+      },
+      allBleachers: useDashboardBleachersStore.getState().data,
+    });
+
+    if (!access.allowed) {
+      createErrorToast(access.messages);
+      return;
     }
 
-    const workTracker: Tables<"WorkTrackers"> = {
-      id: workTrackerUuid ?? "-1",
-      bleacher_uuid: bleacherUuid,
-      created_at: "",
-      updated_at: "",
-      created_by_user_uuid: null,
-      date: date,
-      status: "draft",
-      dropoff_address_uuid: null,
-      dropoff_poc: null,
-      dropoff_poc_contact_uuid: null,
-      dropoff_time: null,
-      dropoff_instructions: null,
-      notes: null,
-      pay_cents: null,
-      pickup_address_uuid: null,
-      pickup_poc: null,
-      pickup_poc_contact_uuid: null,
-      pickup_time: null,
-      pickup_instructions: null,
-      user_uuid: null,
-      internal_notes: null,
-      driver_uuid: null,
-      accepted_at: null,
-      released_at: null,
-      started_at: null,
-      completed_at: null,
-      post_inspection_uuid: null,
-      worktracker_group_uuid: null,
-      pre_inspection_uuid: null,
-      work_tracker_type_uuid: null,
-      distance_meters: null,
-      drive_minutes: null,
-      bol_number: null,
-      project_number: null,
-      setup_required: false,
-      teardown_required: false,
-    };
-
-    onWorkTrackerOpen?.(workTracker);
+    onWorkTrackerOpen?.(buildWorkTrackerDraft({ bleacherUuid, date, workTrackerUuid }));
   };
 
   const handleCreateEvent = () => {

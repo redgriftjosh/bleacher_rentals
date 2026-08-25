@@ -80,12 +80,19 @@ type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
   setSelectedWorkTracker: (block: Tables<"WorkTrackers"> | null) => void;
   setSelectedBlock: (block: EditBlock | null) => void;
+  /**
+   * Run the pickup/dropoff address + POC locators once when a NEW tracker opens. Set by the
+   * dashboard's ⌘/Ctrl+click shortcut, which has no popup where the user could press the
+   * locator buttons themselves.
+   */
+  autoPopulate?: boolean;
 };
 
 export default function WorkTrackerModal({
   selectedWorkTracker,
   setSelectedWorkTracker,
   setSelectedBlock,
+  autoPopulate = false,
 }: WorkTrackerModalProps) {
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
@@ -116,6 +123,8 @@ export default function WorkTrackerModal({
   const [showEditTypes, setShowEditTypes] = useState(false);
   const initialSnapshotRef = useRef<WorkTrackerSnapshot | null>(null);
   const pendingChangeTypeRef = useRef<WorkTrackerChangeType>("none");
+  // `${bleacher_uuid}|${date}` of the draft whose fields were already auto-populated.
+  const autoPopulatedKeyRef = useRef<string | null>(null);
   // ids of the auto-managed "Hauling" / "Deadhead" line items (if any) — their
   // amounts are kept in sync with pickup/dropoff/driver instead of being
   // hand-edited or button-triggered.
@@ -339,7 +348,7 @@ export default function WorkTrackerModal({
   // Populate a POC from the neighbouring event / work tracker, mirroring the address locate
   // buttons above. A neighbour holding only legacy free text is refused rather than copied:
   // the driver app dials the POC through Contacts, and free text carries no phone number.
-  const handlePopulatePoc = async (direction: PocDirection) => {
+  const handlePopulatePoc = async (direction: PocDirection, options?: { silent?: boolean }) => {
     if (!workTracker?.bleacher_uuid || !workTracker?.date) return;
 
     const resolution = await getExpectedPocForWorkTracker({
@@ -352,7 +361,9 @@ export default function WorkTrackerModal({
     const outcome = describePocPopulateResult(resolution, direction);
 
     if (outcome.kind === "error") {
-      createErrorToast(outcome.messages);
+      // Silent = auto-population: leave the field empty rather than greeting the user with two
+      // toasts they never asked for. The locator buttons stay loud.
+      if (!options?.silent) createErrorToast(outcome.messages);
       return;
     }
 
@@ -478,11 +489,10 @@ export default function WorkTrackerModal({
       setPickUpAddress(null);
       setDropOffAddress(null);
       initialSnapshotRef.current = buildWorkTrackerSnapshot(selectedWorkTracker, null, null);
-      // Default to "Trip" type for new work trackers
-      const tripType = workTrackerTypes.find((t) => t.display_name === "Trip");
-      if (tripType) {
-        setWorkTracker((prev) => ({ ...prev!, work_tracker_type_uuid: tripType.id }));
-      }
+      // The "Trip" default is applied by the effect above once the types load — deliberately not
+      // duplicated here, so `workTrackerTypes` can stay out of this effect's deps. It re-emits
+      // while the PowerSync query settles, and re-running this would blank the addresses that
+      // auto-population just filled in.
     } else if (fetchedWorkTracker) {
       console.log("fetchedWorkTracker", fetchedWorkTracker);
       const nextPickupAddress = {
@@ -514,7 +524,38 @@ export default function WorkTrackerModal({
       setPickUpAddress(nextPickupAddress);
       setDropOffAddress(nextDropoffAddress);
     }
-  }, [selectedWorkTracker, fetchedWorkTracker, workTrackerTypes]);
+  }, [selectedWorkTracker, fetchedWorkTracker]);
+
+  /**
+   * ⌘/Ctrl+click on an empty dashboard cell opens this modal with no popup in between, so the
+   * four locators the user would otherwise press are run for them, once, on open.
+   *
+   * The guard is keyed on bleacher+date rather than a plain "already ran" flag: `workTracker`
+   * is seeded by the effect above, so on the first pass it can still hold the previously opened
+   * tracker — populating from that would silently fill in another bleacher's addresses.
+   */
+  useEffect(() => {
+    if (!selectedWorkTracker) {
+      autoPopulatedKeyRef.current = null;
+      return;
+    }
+    if (!autoPopulate || selectedWorkTracker.id !== "-1") return;
+
+    const key = `${selectedWorkTracker.bleacher_uuid}|${selectedWorkTracker.date}`;
+    if (autoPopulatedKeyRef.current === key) return;
+    // Wait until the local state has caught up with the tracker we were handed.
+    if (`${workTracker?.bleacher_uuid}|${workTracker?.date}` !== key) return;
+
+    autoPopulatedKeyRef.current = key;
+
+    void Promise.all([
+      handlePopulatePickupFromLastAddress(),
+      handlePopulateDropoffFromNextAddress(),
+      handlePopulatePoc("past", { silent: true }),
+      handlePopulatePoc("future", { silent: true }),
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPopulate, selectedWorkTracker, workTracker?.bleacher_uuid, workTracker?.date]);
 
   const handleSaveWorkTracker = async () => {
     if (isSaving) return;
