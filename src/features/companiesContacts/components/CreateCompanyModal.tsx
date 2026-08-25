@@ -2,59 +2,105 @@
 
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { createCompany } from "../db/createCompany";
+import { TextAreaField, TextField } from "@/components/form/TextField";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
-import AddressAutocomplete from "@/components/AddressAutoComplete";
+import { useTouchedErrors } from "@/lib/validation/useTouchedErrors";
 import { AddressFields } from "@/features/quotesAndBookings/types/quoteTypes";
+import { createCompany } from "../db/createCompany";
 import { useCompaniesAll } from "../hooks/useCompaniesAll";
+import { AddressSection, EMPTY_ADDRESS } from "./AddressSection";
 import { DuplicateWarning } from "./DuplicateWarning";
 import { findCompanyContactDuplicates, findCompanyDuplicates } from "../utils/findDuplicates";
+import { hasErrors, validateCompanyForm, type CompanyFormValues } from "../utils/formValidation";
 
-const EMPTY_ADDR: AddressFields = { street: "", city: "", stateProvince: "", zipPostal: "" };
+export type CreatedCompany = {
+  id: string;
+  companyName: string;
+  email: string;
+  phone: string;
+};
+
+const COMPANY_FIELDS = ["companyName", "email", "phone"] as const;
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  /** Fires after a successful insert, before onClose — see CreateContactModal.onCreated. */
+  onCreated?: (company: CreatedCompany) => void;
   /** Extra classes for the dialog panel — used to raise it above non-Radix overlays. */
   contentClassName?: string;
 };
 
-export function CreateCompanyModal({ isOpen, onClose, contentClassName }: Props) {
-  const [companyName, setCompanyName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+export function CreateCompanyModal({ isOpen, onClose, onCreated, contentClassName }: Props) {
+  const [values, setValues] = useState<CompanyFormValues>({
+    companyName: "",
+    email: "",
+    phone: "",
+  });
   const [notes, setNotes] = useState("");
-  const [billing, setBilling] = useState<AddressFields>({ ...EMPTY_ADDR });
-  const [shipping, setShipping] = useState<AddressFields>({ ...EMPTY_ADDR });
+  const [billing, setBilling] = useState<AddressFields>({ ...EMPTY_ADDRESS });
+  const [shipping, setShipping] = useState<AddressFields>({ ...EMPTY_ADDRESS });
   const [sameAsBilling, setSameAsBilling] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const errors = validateCompanyForm(values);
+  const { errorFor, markTouched, markAllTouched, reset: resetTouched } = useTouchedErrors(errors);
+
+  const setValue = (key: keyof CompanyFormValues) => (value: string) =>
+    setValues((prev) => ({ ...prev, [key]: value }));
 
   const { companies } = useCompaniesAll();
   const labelOf = (c: { companyName: string; email: string | null }) =>
     c.companyName + (c.email ? ` (${c.email})` : "");
 
   // Email/phone matches hard-block creation; a name-only match is just advisory.
-  const blockingCompanies = findCompanyContactDuplicates(companies, { email, phone });
+  const blockingCompanies = findCompanyContactDuplicates(companies, values);
   const blockingLabels = blockingCompanies.map(labelOf);
-  const nameOnlyLabels = findCompanyDuplicates(companies, { companyName, email: "", phone: "" })
+  const nameOnlyLabels = findCompanyDuplicates(companies, {
+    companyName: values.companyName,
+    email: "",
+    phone: "",
+  })
     .filter((c) => !blockingCompanies.some((b) => b.id === c.id))
     .map(labelOf);
 
+  const canSave = !hasErrors(errors) && !saving && blockingCompanies.length === 0;
+
   const reset = () => {
-    setCompanyName(""); setEmail(""); setPhone(""); setNotes("");
-    setBilling({ ...EMPTY_ADDR }); setShipping({ ...EMPTY_ADDR });
+    setValues({ companyName: "", email: "", phone: "" });
+    setNotes("");
+    setBilling({ ...EMPTY_ADDRESS });
+    setShipping({ ...EMPTY_ADDRESS });
     setSameAsBilling(true);
+    resetTouched();
   };
 
-  const handleClose = () => { reset(); onClose(); };
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
 
   const handleSave = async () => {
+    markAllTouched(COMPANY_FIELDS);
+    if (!canSave) return;
+
     setSaving(true);
     try {
-      await createCompany({ companyName, phone, email, notes, billingAddress: billing, shippingAddress: sameAsBilling ? billing : shipping, shippingSameAsBilling: sameAsBilling });
-      createSuccessToast([`Company "${companyName}" created.`]);
+      const id = await createCompany({
+        ...values,
+        notes,
+        billingAddress: billing,
+        shippingAddress: sameAsBilling ? billing : shipping,
+        shippingSameAsBilling: sameAsBilling,
+      });
+      createSuccessToast([`Company "${values.companyName}" created.`]);
+      onCreated?.({ id, ...values });
       handleClose();
-    } catch { /* error shown by createCompany */ } finally { setSaving(false); }
+    } catch {
+      /* error toast shown by createCompany */
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -71,82 +117,77 @@ export function CreateCompanyModal({ isOpen, onClose, contentClassName }: Props)
 
         {/* Body */}
         <div className="px-6 py-4 space-y-3">
-          <div>
-            <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Company Name *</label>
-            <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="Live Nation Entertainment"
-              className="w-full h-9 px-3 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 transition-colors" />
-          </div>
+          <TextField
+            label="Company Name"
+            required
+            value={values.companyName}
+            onChange={setValue("companyName")}
+            onBlur={() => markTouched("companyName")}
+            error={errorFor("companyName")}
+            placeholder="Live Nation Entertainment"
+          />
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="info@company.com"
-                className="w-full h-9 px-3 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 transition-colors" />
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Phone</label>
-              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1 (310) 867-7000"
-                className="w-full h-9 px-3 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 transition-colors" />
-            </div>
+            <TextField
+              label="Email"
+              type="email"
+              value={values.email}
+              onChange={setValue("email")}
+              onBlur={() => markTouched("email")}
+              error={errorFor("email")}
+              placeholder="info@company.com"
+            />
+            <TextField
+              label="Phone"
+              type="tel"
+              value={values.phone}
+              onChange={setValue("phone")}
+              onBlur={() => markTouched("phone")}
+              error={errorFor("phone")}
+              placeholder="+1 (310) 867-7000"
+            />
           </div>
 
           <DuplicateWarning matches={blockingLabels} kind="company" severity="block" />
           <DuplicateWarning matches={nameOnlyLabels} kind="company" severity="warn" />
 
-          <div>
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Billing Address</p>
-            <AddressAutocomplete
-              initialValue={billing.street}
-              onAddressSelect={(d) => setBilling({ street: d.address ?? "", city: d.city ?? "", stateProvince: d.state ?? "", zipPostal: d.postalCode ?? "" })}
-              className="h-9 px-3 bg-gray-50 border border-gray-200 rounded-md text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 transition-colors"
-            />
-            {billing.city && (
-              <p className="text-xs text-gray-400 mt-1">
-                {billing.city}{billing.stateProvince ? `, ${billing.stateProvince}` : ""}{billing.zipPostal ? ` ${billing.zipPostal}` : ""}
-              </p>
-            )}
-          </div>
+          <AddressSection label="Billing Address" value={billing} onChange={setBilling} />
 
           <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
-            <input type="checkbox" checked={sameAsBilling} onChange={(e) => setSameAsBilling(e.target.checked)} className="rounded" />
+            <input
+              type="checkbox"
+              checked={sameAsBilling}
+              onChange={(e) => setSameAsBilling(e.target.checked)}
+              className="rounded"
+            />
             Shipping same as billing
           </label>
 
           {!sameAsBilling && (
-            <div>
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Shipping Address</p>
-              <AddressAutocomplete
-                initialValue={shipping.street}
-                onAddressSelect={(d) => setShipping({ street: d.address ?? "", city: d.city ?? "", stateProvince: d.state ?? "", zipPostal: d.postalCode ?? "" })}
-                className="h-9 px-3 bg-gray-50 border border-gray-200 rounded-md text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 transition-colors"
-              />
-              {shipping.city && (
-                <p className="text-xs text-gray-400 mt-1">
-                  {shipping.city}{shipping.stateProvince ? `, ${shipping.stateProvince}` : ""}{shipping.zipPostal ? ` ${shipping.zipPostal}` : ""}
-                </p>
-              )}
-            </div>
+            <AddressSection label="Shipping Address" value={shipping} onChange={setShipping} />
           )}
 
-          <div>
-            <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Notes</label>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3}
-              placeholder="VIP client..."
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 transition-colors" />
-          </div>
+          <TextAreaField
+            label="Notes"
+            value={notes}
+            onChange={setNotes}
+            placeholder="VIP client..."
+          />
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-xl">
-          <button onClick={handleClose}
-            className="px-4 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">
+          <button
+            onClick={handleClose}
+            className="px-4 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+          >
             Cancel
           </button>
-          <button onClick={handleSave} disabled={!companyName.trim() || saving || blockingCompanies.length > 0}
-            className="px-4 py-1.5 text-sm font-medium text-white bg-darkBlue rounded-md hover:bg-lightBlue transition-colors cursor-pointer disabled:opacity-40">
+          <button
+            onClick={handleSave}
+            disabled={!canSave}
+            className="px-4 py-1.5 text-sm font-medium text-white bg-darkBlue rounded-md hover:bg-lightBlue transition-colors cursor-pointer disabled:opacity-40"
+          >
             {saving ? "Saving…" : "Save Company"}
           </button>
         </div>
