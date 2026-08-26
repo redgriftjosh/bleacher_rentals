@@ -102,7 +102,11 @@ function toWorkTrackerCandidate(row: PocWorkTrackerRow, direction: PocDirection)
 function toEventCandidate(row: PocEventRow): Candidate | null {
   if (!row.booked) return null;
 
-  const date = DateTime.fromISO(row.eventStart).toISODate();
+  // Parsed as UTC, never in the viewer's zone. Events.event_start is a Postgres
+  // `date` with no time part, so today this only guards the future: were it ever
+  // widened to a timestamp, a local-zone parse would silently shift the day for
+  // anyone west of Greenwich and hand back the wrong neighbour's POC.
+  const date = DateTime.fromISO(row.eventStart, { zone: "utc" }).toISODate();
   if (!date) return null;
 
   return {
