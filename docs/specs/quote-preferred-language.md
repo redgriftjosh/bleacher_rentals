@@ -238,3 +238,18 @@ room when a third language is added.
 - The visible `EN` / `FR` labels are ISO codes, not copy — they stay identical
   in both languages so a French speaker can find the switch on an English page.
   The buttons' accessible names _are_ copy and come from `quoteStrings.ts`.
+
+---
+
+## 11. Who may set the language
+
+Admin and account manager. Contacts are a shared address book rather than owned
+records, and the account manager is the one speaking to the client and sending
+the quote, so both can set Quote Language on any contact.
+
+Viewer is read-only and developer has no access to the page at all — recorded in
+`permissionPageData.ts`, which renders `/permissions` for every authenticated
+user.
+
+The client's own globe toggle on the public quote is deliberately outside this:
+it is anonymous, per-browser, and never writes to the contact record. See §10.
