@@ -92,6 +92,8 @@ export function buildWorkTrackerDraft(params: {
   return {
     id: workTrackerUuid ?? "-1",
     bleacher_uuid: bleacherUuid,
+    actual_bleacher_uuid: null,
+    bleacher_change_reason: null,
     created_at: "",
     updated_at: "",
     created_by_user_uuid: null,
