@@ -50,6 +50,10 @@ export default defineConfig({
     ...ROLES.map((role) => ({
       name: role,
       dependencies: ["setup"],
+      // Role specs live beside the feature they cover, not only in manageTeam/e2e.
+      // The filename suffix is what assigns them to a role, so scanning all of src
+      // is safe: testMatch still admits only *.<role>.spec.ts.
+      testDir: "src",
       testMatch: roleSpec(role),
       use: {
         ...devices["Desktop Chrome"],
