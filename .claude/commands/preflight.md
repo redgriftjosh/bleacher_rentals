@@ -1,66 +1,68 @@
 ---
-description: Plan a manual-style test pass over a PR before it goes to production
+description: Build the manual test checklist for a release, before it goes to production
 argument-hint: <PR number>
 ---
 
-Build the preflight plan for PR
-https://github.com/joshbleacherrentals/bleacher_rentals/pull/$1
+Write the checklist I will work through by hand before putting PR
+https://github.com/joshbleacherrentals/bleacher_rentals/pull/$1 into production.
 
-This is the checklist before takeoff: what could this PR have broken, who is
-allowed to do each thing, and what will be clicked to prove it. **This command
-plans only — it runs nothing.** `/preflight-run` executes the approved plan.
+The output is **a list of things for me to click**, in `preflight/<version>.md`.
+Nothing runs. Nothing is recorded. I do the testing.
 
 ## 1. Read the change
 
-Read every commit and every changed file — not the description. For each
-user-facing change, work out:
+Read every commit and every changed file — not the description. Look hard at
+merge commits: a merge can silently drop a field from a form while leaving the
+database layer intact, which has happened twice in this repo.
 
-- what it adds or alters
-- what it could have broken that is **not** in the diff (shared components,
-  merges that dropped code, data written by one screen and read by another)
-- which existing tests already cover it, and which do not
-
-Look hard at merge commits. A merge can silently drop a field from a form while
-leaving the database layer intact — that has already happened twice in this repo.
-
-## 2. Permissions — the part that gets skipped
+## 2. Permissions
 
 For every behaviour the PR adds or changes, answer: **who is allowed to do
-this?** Go role by role: `admin`, `account_manager`, `developer`, `viewer`,
-`driver` (see `WebRole` in `src/features/userAccess/logic/determineAccess.ts`).
+this?** Go role by role — `admin`, `account_manager`, `developer`, `viewer`,
+`driver` (`WebRole` in `src/features/userAccess/logic/determineAccess.ts`).
 
 Check each answer against
-[`src/features/userAccess/permissionPageData.ts`](src/features/userAccess/permissionPageData.ts)
-— the 20-entry matrix that renders the `/permissions` page every authenticated
-user can read.
+[`permissionPageData.ts`](src/features/userAccess/permissionPageData.ts), the
+matrix that renders `/permissions` for every authenticated user.
 
-Then:
+- Behaviour the matrix does not cover → ask me, then add the entry.
+- The PR changes who can do something already listed → update the entry.
+- Code and matrix disagree → say so plainly before this ships.
 
-- **The PR adds a behaviour the matrix does not cover** → ask me who should have
-  it, then add the entry.
-- **The PR changes who can do something already listed** → update the entry.
-- **The code and the matrix disagree** → say so plainly. One of them is wrong,
-  and I need to know which before this ships.
+Never write a separate permissions document. Users and this command read the
+same file.
 
-`permissionPageData.ts` is the single source of truth. Never write a separate
-permissions document — users and this command must read the same file.
+Do not take the client-side code as the answer. Write helpers here run against
+the local PowerSync database; row-level security in Postgres is what actually
+decides. Check `pg_policies` before concluding anything about who can write.
 
 ## 3. Ask, then write the answers down
 
-Where the intended behaviour is not obvious from the code, **ask me** rather
-than guessing. Group the questions; do not drip-feed them.
+Where the intended behaviour is not obvious, **ask me** — grouped, not
+drip-fed. Then record the answers so nobody asks twice: a permission rule goes
+in `permissionPageData.ts`, how a feature is meant to work goes in the relevant
+`docs/specs/*.md`. Answers that live only in the chat are lost.
 
-Once I answer, record it so nobody has to ask again:
+## 4. Automate the cheap ones first
 
-- a permission rule → `permissionPageData.ts`
-- how a feature is meant to work → the relevant `docs/specs/*.md`
+Before writing a manual item, ask whether a test would be quicker to write than
+to perform by hand every release. If it is, **write the test** and leave it off
+my list.
 
-Answers that live only in the chat are lost.
+Worth automating: a value that must land in Postgres, a role that must be
+refused, a string that must appear in a PDF, a request that must carry a
+parameter. Public pages are cheapest of all — no login.
 
-## 4. Write the plan
+Not worth automating: anything on the PixiJS dashboard grid, where cells are
+drawn rather than being DOM elements; anything in the driver mobile app, which
+is a separate codebase; and anything whose value is visual judgement.
 
-Create `preflight/<version>.md`, where `<version>` is the current
-`package.json` version. Use this shape:
+Say which tests you added and what they now cover, so I can see why they are not
+on my list.
+
+## 5. Write the checklist
+
+`preflight/<version>.md`, in two groups:
 
 ```markdown
 # Preflight — <version>
@@ -68,37 +70,49 @@ Create `preflight/<version>.md`, where `<version>` is the current
 PR: #<number>
 Status: planned
 
-## Automated
-
-| #   | Test | Role  | Covers |
-| --- | ---- | ----- | ------ |
-| 1   | ...  | admin | ...    |
-
-## Human — I cannot judge these
+## New in this release
 
 - [ ] ...
+
+## Could have broken
+
+- [ ] ...
+
+## Not testing
+
+- ... — because ...
 ```
 
-Two lists, and the second matters. Playwright checks what it is told to check.
-It will never notice that a button is misaligned, a colour is unreadable, or a
-label is confusing. Put those in the human list so I still look.
+**New in this release** — one item per feature a customer would notice. The path
+they actually take, not every branch of it.
 
-Order the automated list by risk: permissions first, then money and language,
-then everything else.
+**Could have broken** — only what this diff plausibly disturbed: shared
+components, files a merge rewrote, data written by one screen and read by
+another. Not a tour of the application.
 
-For each row, also settle **what evidence proves it** — the thing I will be
-looking at in the report afterwards. Usually one of:
+Write each item as an instruction with an expected result, so I never have to
+guess what "pass" means:
 
-- a value read back out of Postgres (the strongest: the screen can lie, a stored
-  row cannot)
-- a page state that must or must not appear
-- a request that must or must not be sent
+> - [ ] Set a contact to French, send the quote, open the link — the page, the
+>       contract tab and the PDF are all French.
 
-Write that into the "Covers" column in plain words. `/preflight-run` turns each
-one into a report annotation, so the evidence is stated before the test is
-written rather than invented after it passes.
+**Keep the whole list to about a dozen items.** A list I will not finish is
+worse than a short one I will. If more than a dozen look necessary, the release
+is too big to verify by hand, and you should say so rather than padding the
+list.
 
-## 5. Stop
+**Not testing** is not optional. List what you considered and dropped, with the
+reason — already covered by a unit test, unreachable from the web app, cosmetic.
+That is how I judge whether your confidence is well placed, instead of trusting
+it blindly.
 
-Show me both lists and every permissions change you made. Ask whether the plan
-is right. **Do not run anything.**
+## 6. Stop
+
+Show me both groups, the "not testing" list, any tests you wrote, and every
+permissions change. Ask whether it is right. **Run nothing.**
+
+When I have finished the testing myself, I sign it off with:
+
+```bash
+npm run preflight:sign
+```
