@@ -322,14 +322,18 @@ const WorkTrackersCols = {
   date: column.text,
   pickup_time: column.text,
   pickup_poc: column.text,
+  pickup_poc_contact_uuid: column.text,
   dropoff_time: column.text,
   dropoff_poc: column.text,
+  dropoff_poc_contact_uuid: column.text,
   pay_cents: column.integer,
   notes: column.text,
   internal_notes: column.text,
   pickup_address_uuid: column.text,
   dropoff_address_uuid: column.text,
   bleacher_uuid: column.text,
+  actual_bleacher_uuid: column.text,
+  bleacher_change_reason: column.text,
   driver_uuid: column.text,
   user_uuid: column.text,
   status: column.text,
@@ -504,6 +508,7 @@ const DriverUnavailability = new Table(DriverUnavailabilityCols, {
 
 const WorkTrackerInspectionsCols = {
   created_at: column.text,
+  bleacher_uuid: column.text,
   walk_around_complete: column.integer,
   issues_found: column.integer,
   issue_description: column.text,
@@ -782,6 +787,7 @@ const ContactsCols = {
   last_name: column.text,
   notes: column.text,
   phone: column.text,
+  preferred_language: column.text,
 } satisfies PowerSyncColsFor<"Contacts">;
 const Contacts = new Table(ContactsCols, {
   indexes: { company_uuid: ["company_uuid"] },

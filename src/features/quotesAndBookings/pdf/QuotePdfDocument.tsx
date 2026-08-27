@@ -1,6 +1,8 @@
 import { Page, Text, View, Document, StyleSheet } from "@react-pdf/renderer";
 import { QuoteDocumentData } from "./quoteDocumentData";
 import { ContractPdfPages } from "./ContractPdfPages";
+import { formatQuoteDate, formatQuoteMoney } from "./quoteFormat";
+import { quoteText, statusLabel } from "./quoteStrings";
 
 const DARK_BLUE = "#10365a";
 const LIGHT_GRAY = "#f3f4f6";
@@ -192,24 +194,11 @@ const styles = StyleSheet.create({
   },
 });
 
-function formatMoney(cents: number, currency: "USD" | "CAD"): string {
-  const symbol = "$";
-  const abs = Math.abs(cents);
-  const formatted = (abs / 100).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  return cents < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
-}
-
-function formatDate(d: string): string {
-  if (!d) return "—";
-  const date = new Date(d + "T00:00:00");
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
 export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
-  const { currency } = data;
+  const { currency, language } = data;
+  const s = quoteText(language);
+  const formatMoney = (cents: number) => formatQuoteMoney(cents, currency, language);
+  const formatDate = (d: string) => formatQuoteDate(d, language);
 
   return (
     <Document>
@@ -227,11 +216,11 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
             ) : null}
           </View>
           <View>
-            <Text style={styles.quoteTitle}>QUOTE</Text>
+            <Text style={styles.quoteTitle}>{s.pdfQuoteTitle}</Text>
             <Text style={styles.quoteNumber}>{data.quoteNumber}</Text>
-            <Text style={styles.quoteNumber}>Date: {formatDate(data.quoteDate)}</Text>
+            <Text style={styles.quoteNumber}>{s.pdfDate(formatDate(data.quoteDate))}</Text>
             {data.validUntil ? (
-              <Text style={styles.quoteNumber}>Valid until: {formatDate(data.validUntil)}</Text>
+              <Text style={styles.quoteNumber}>{s.pdfValidUntil(formatDate(data.validUntil))}</Text>
             ) : null}
           </View>
         </View>
@@ -240,7 +229,7 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
         <View style={styles.infoRow}>
           {data.contact && (
             <View style={styles.infoBlock}>
-              <Text style={styles.infoLabel}>Bill To</Text>
+              <Text style={styles.infoLabel}>{s.pdfBillTo}</Text>
               <Text style={styles.infoBold}>{data.contact.name}</Text>
               {data.contact.email ? (
                 <Text style={styles.infoText}>{data.contact.email}</Text>
@@ -251,7 +240,7 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
             </View>
           )}
           <View style={styles.infoBlock}>
-            <Text style={styles.infoLabel}>Event Venue</Text>
+            <Text style={styles.infoLabel}>{s.pdfEventVenue}</Text>
             <Text style={styles.infoBold}>{data.venue.name}</Text>
             {data.venue.street ? (
               <Text style={styles.infoText}>
@@ -260,7 +249,7 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
             ) : null}
           </View>
           <View style={styles.infoBlock}>
-            <Text style={styles.infoLabel}>Account Manager</Text>
+            <Text style={styles.infoLabel}>{s.pdfAccountManager}</Text>
             <Text style={styles.infoBold}>{data.accountManager || "—"}</Text>
           </View>
         </View>
@@ -268,11 +257,11 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
         {/* Dates */}
         <View style={styles.datesRow}>
           <View style={styles.dateItem}>
-            <Text style={styles.dateLabel}>Event Start</Text>
+            <Text style={styles.dateLabel}>{s.pdfEventStart}</Text>
             <Text style={styles.dateValue}>{formatDate(data.dates.eventStart)}</Text>
           </View>
           <View style={styles.dateItem}>
-            <Text style={styles.dateLabel}>Event End</Text>
+            <Text style={styles.dateLabel}>{s.pdfEventEnd}</Text>
             <Text style={styles.dateValue}>{formatDate(data.dates.eventEnd)}</Text>
           </View>
         </View>
@@ -280,10 +269,10 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
         {/* Line Items Table */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderText, styles.cellItem]}>Item</Text>
-            <Text style={[styles.tableHeaderText, styles.cellQty]}>Qty</Text>
-            <Text style={[styles.tableHeaderText, styles.cellPrice]}>Unit Price</Text>
-            <Text style={[styles.tableHeaderText, styles.cellTotal]}>Total</Text>
+            <Text style={[styles.tableHeaderText, styles.cellItem]}>{s.pdfColItem}</Text>
+            <Text style={[styles.tableHeaderText, styles.cellQty]}>{s.colQty}</Text>
+            <Text style={[styles.tableHeaderText, styles.cellPrice]}>{s.pdfColUnitPrice}</Text>
+            <Text style={[styles.tableHeaderText, styles.cellTotal]}>{s.colTotal}</Text>
           </View>
           {data.lineItems.map((item, i) => (
             <View key={i} style={[styles.tableRow, i % 2 === 1 ? styles.tableRowAlt : {}]}>
@@ -296,8 +285,8 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
                 ) : null}
               </View>
               <Text style={styles.cellQty}>{item.qty}</Text>
-              <Text style={styles.cellPrice}>{formatMoney(item.unitPrice, currency)}</Text>
-              <Text style={styles.cellTotal}>{formatMoney(item.total, currency)}</Text>
+              <Text style={styles.cellPrice}>{formatMoney(item.unitPrice)}</Text>
+              <Text style={styles.cellTotal}>{formatMoney(item.total)}</Text>
             </View>
           ))}
         </View>
@@ -305,21 +294,21 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
         {/* Totals */}
         <View style={styles.totalsBlock}>
           <View style={styles.totalsRow}>
-            <Text style={styles.totalsLabel}>Subtotal</Text>
-            <Text style={styles.totalsValue}>{formatMoney(data.subtotalCents, currency)}</Text>
+            <Text style={styles.totalsLabel}>{s.subtotal}</Text>
+            <Text style={styles.totalsValue}>{formatMoney(data.subtotalCents)}</Text>
           </View>
           {data.discountsCents !== 0 && (
             <>
               <View style={styles.totalsRow}>
-                <Text style={styles.totalsLabel}>Discounts</Text>
+                <Text style={styles.totalsLabel}>{s.discounts}</Text>
                 <Text style={[styles.totalsValue, { color: "#dc2626" }]}>
-                  {formatMoney(data.discountsCents, currency)}
+                  {formatMoney(data.discountsCents)}
                 </Text>
               </View>
               <View style={styles.totalsRow}>
-                <Text style={styles.totalsLabel}>Subtotal After Discount</Text>
+                <Text style={styles.totalsLabel}>{s.subtotalAfterDiscount}</Text>
                 <Text style={styles.totalsValue}>
-                  {formatMoney(data.subtotalCents + data.discountsCents, currency)}
+                  {formatMoney(data.subtotalCents + data.discountsCents)}
                 </Text>
               </View>
             </>
@@ -327,28 +316,26 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
           {data.taxAmountCents !== 0 && (
             <View style={styles.totalsRow}>
               <Text style={styles.totalsLabel}>
-                Tax{data.taxPercent ? ` (${data.taxPercent}%)` : ""}
+                {data.taxPercent ? s.taxWithPercent(data.taxPercent) : s.tax}
               </Text>
-              <Text style={styles.totalsValue}>{formatMoney(data.taxAmountCents, currency)}</Text>
+              <Text style={styles.totalsValue}>{formatMoney(data.taxAmountCents)}</Text>
             </View>
           )}
           <View style={styles.totalsDivider} />
           <View style={styles.totalsRow}>
-            <Text style={styles.grandTotalLabel}>TOTAL</Text>
-            <Text style={styles.grandTotalValue}>{formatMoney(data.totalCents, currency)}</Text>
+            <Text style={styles.grandTotalLabel}>{s.grandTotal}</Text>
+            <Text style={styles.grandTotalValue}>{formatMoney(data.totalCents)}</Text>
           </View>
         </View>
 
         {/* Payment Schedule */}
         {data.paymentSchedule.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Payment Schedule</Text>
+            <Text style={styles.sectionTitle}>{s.paymentSchedule}</Text>
             {data.paymentSchedule.map((p, i) => (
               <View key={i} style={[styles.tableRow, { paddingHorizontal: 0 }]}>
                 <Text style={{ flex: 1 }}>{formatDate(p.dueDate)}</Text>
-                <Text style={{ width: 80, textAlign: "right" }}>
-                  {formatMoney(p.amountCents, currency)}
-                </Text>
+                <Text style={{ width: 80, textAlign: "right" }}>{formatMoney(p.amountCents)}</Text>
                 <Text
                   style={{
                     width: 60,
@@ -356,7 +343,7 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
                     color: p.status === "paid" ? "#16a34a" : "#6b7280",
                   }}
                 >
-                  {p.status}
+                  {statusLabel(language, p.status)}
                 </Text>
               </View>
             ))}
@@ -366,7 +353,7 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
         {/* Notes */}
         {data.clientNotes ? (
           <>
-            <Text style={styles.sectionTitle}>Notes</Text>
+            <Text style={styles.sectionTitle}>{s.notes}</Text>
             <Text style={styles.notesText}>{data.clientNotes}</Text>
           </>
         ) : null}

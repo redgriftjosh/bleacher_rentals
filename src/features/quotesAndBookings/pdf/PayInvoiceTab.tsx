@@ -13,18 +13,8 @@ import {
 } from "lucide-react";
 import { QuoteDocumentData } from "./quoteDocumentData";
 import { TrackEvent } from "./useQuoteActivityTracker";
-
-function formatMoney(cents: number, currency: "USD" | "CAD"): string {
-  const symbol = "$";
-  const formatted = (Math.abs(cents) / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return cents < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
-}
-
-function formatDate(d: string): string {
-  if (!d) return "—";
-  const date = new Date(d);
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
+import { formatQuoteDate, formatQuoteMoney } from "./quoteFormat";
+import { quoteText, paymentMethodLabel, statusLabel } from "./quoteStrings";
 
 type PaymentHistoryRow = {
   id: string;
@@ -50,7 +40,11 @@ export function PayInvoiceTab({
   data: QuoteDocumentData;
   track: (e: TrackEvent) => void;
 }) {
-  const { currency } = data;
+  const { currency, language } = data;
+  const s = quoteText(language);
+  const formatMoney = (cents: number, cur: "USD" | "CAD" = currency) =>
+    formatQuoteMoney(cents, cur, language);
+  const formatDate = (d: string) => formatQuoteDate(d, language);
   const [payerName, setPayerName] = useState(data.contact?.name ?? "");
   const [payerEmail, setPayerEmail] = useState(data.contact?.email ?? "");
   const [isLoading, setIsLoading] = useState(false);
@@ -126,6 +120,8 @@ export function PayInvoiceTab({
           currency,
           payerName: payerName.trim(),
           payerEmail: payerEmail.trim() || undefined,
+          // Stripe renders its own checkout chrome — keep it in the client's language.
+          language,
         }),
       });
       const json = await res.json();
@@ -133,15 +129,15 @@ export function PayInvoiceTab({
         track({
           action_type: "client_payment_started",
           field_name: "payment",
-          next_value: formatMoney(payAmountCents, currency),
+          next_value: formatMoney(payAmountCents),
         });
         window.location.href = json.url;
       } else {
-        setPayError(json.error ?? "Unable to start payment. Please try again.");
+        setPayError(json.error ?? s.payError);
       }
     } catch (e) {
       console.error("Checkout error:", e);
-      setPayError("Unable to start payment. Please try again.");
+      setPayError(s.payError);
     } finally {
       setIsLoading(false);
     }
@@ -184,9 +180,7 @@ export function PayInvoiceTab({
       {paymentStatus === "cancelled" && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0" />
-          <p className="text-sm text-yellow-800">
-            Payment was cancelled. You can try again when ready.
-          </p>
+          <p className="text-sm text-yellow-800">{s.paymentCancelled}</p>
         </div>
       )}
 
@@ -196,48 +190,49 @@ export function PayInvoiceTab({
           {/* Amount Due Card */}
           <div className="bg-white border rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-lg">Amount Due</h3>
+              <h3 className="font-semibold text-lg">{s.amountDue}</h3>
               <span className="text-2xl font-bold text-[#405daa]">
-                {formatMoney(remainingCents, currency)}
+                {formatMoney(remainingCents)}
               </span>
             </div>
 
             {remainingCents <= 0 ? (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
                 <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                <p className="font-medium text-green-800">Paid in Full</p>
+                <p className="font-medium text-green-800">{s.paidInFull}</p>
               </div>
             ) : (
               <>
                 {/* Overdue summary */}
                 {hasSchedule && overdueOwedCents > 0 && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-800">
-                    <strong>{formatMoney(overdueOwedCents, currency)}</strong> is overdue based on
-                    your payment schedule.
+                    <strong>{formatMoney(overdueOwedCents)}</strong> {s.overdueNoticeSuffix}
                   </div>
                 )}
 
                 <div className="space-y-3 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Your Name *
+                      {s.yourNameRequired}
                     </label>
                     <input
                       type="text"
                       value={payerName}
                       onChange={(e) => setPayerName(e.target.value)}
                       className="w-full border rounded-md px-3 py-2 text-base sm:text-sm"
-                      placeholder="Full name"
+                      placeholder={s.fullNamePlaceholder}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {s.email}
+                    </label>
                     <input
                       type="email"
                       value={payerEmail}
                       onChange={(e) => setPayerEmail(e.target.value)}
                       className="w-full border rounded-md px-3 py-2 text-base sm:text-sm"
-                      placeholder="email@example.com"
+                      placeholder={s.emailPlaceholder}
                     />
                   </div>
                 </div>
@@ -252,8 +247,8 @@ export function PayInvoiceTab({
                         onChange={() => setUseCustomAmount(false)}
                       />
                       {hasSchedule && overdueOwedCents > 0
-                        ? `Pay due balance (${formatMoney(defaultPayCents, currency)})`
-                        : `Pay ${formatMoney(defaultPayCents, currency)}`}
+                        ? s.payDueBalance(formatMoney(defaultPayCents))
+                        : s.payAmount(formatMoney(defaultPayCents))}
                     </label>
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
                       <input
@@ -261,7 +256,7 @@ export function PayInvoiceTab({
                         checked={useCustomAmount}
                         onChange={() => setUseCustomAmount(true)}
                       />
-                      Custom amount
+                      {s.customAmount}
                     </label>
                   </div>
 
@@ -280,10 +275,12 @@ export function PayInvoiceTab({
                         placeholder="0.00"
                       />
                       {customCents > 0 && customCents < 50 && (
-                        <span className="text-xs text-red-600">Minimum $0.50</span>
+                        <span className="text-xs text-red-600">
+                          {s.minimumAmount(formatMoney(50))}
+                        </span>
                       )}
                       {customCents > remainingCents && (
-                        <span className="text-xs text-red-600">Exceeds balance</span>
+                        <span className="text-xs text-red-600">{s.exceedsBalance}</span>
                       )}
                     </div>
                   )}
@@ -295,9 +292,7 @@ export function PayInvoiceTab({
                   className="w-full bg-[#405daa] hover:bg-[#10365a] disabled:opacity-40 text-white font-semibold text-base py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
                   <CreditCard className="w-5 h-5" />
-                  {isLoading
-                    ? "Redirecting to Stripe..."
-                    : `Pay ${formatMoney(payAmountCents, currency)} Online`}
+                  {isLoading ? s.redirectingToStripe : s.payOnline(formatMoney(payAmountCents))}
                 </button>
 
                 {payError && (
@@ -307,10 +302,7 @@ export function PayInvoiceTab({
                   </div>
                 )}
 
-                <p className="mt-3 text-xs text-gray-500 text-center">
-                  Alternatively you can pay by ACH or Check. View the confirmation email for
-                  details.
-                </p>
+                <p className="mt-3 text-xs text-gray-500 text-center">{s.alternativePayment}</p>
               </>
             )}
           </div>
@@ -318,16 +310,16 @@ export function PayInvoiceTab({
           {/* Payment Schedule */}
           {data.paymentSchedule.length > 0 && (
             <div className="bg-white border rounded-lg p-6">
-              <h3 className="font-semibold text-lg mb-4">Payment Schedule</h3>
+              <h3 className="font-semibold text-lg mb-4">{s.paymentSchedule}</h3>
               <div className="space-y-3">
                 {data.paymentSchedule.map((inst, i) => {
                   const isPaid = inst.status === "paid";
                   const isOverdue = !isPaid && inst.dueDate <= today;
                   const isFirst = i === 0;
                   const isLast = i === data.paymentSchedule.length - 1;
-                  let label = `Due on ${formatDate(inst.dueDate)}`;
-                  if (isFirst) label = "Due Now";
-                  else if (isLast) label = `Final Due on ${formatDate(inst.dueDate)}`;
+                  let label = s.dueOn(formatDate(inst.dueDate));
+                  if (isFirst) label = s.dueNow;
+                  else if (isLast) label = s.finalDueOn(formatDate(inst.dueDate));
 
                   return (
                     <div
@@ -350,8 +342,8 @@ export function PayInvoiceTab({
                         )}
                         <div>
                           <p className="text-sm font-medium">{label}</p>
-                          {isPaid && <p className="text-xs text-green-600">Paid</p>}
-                          {isOverdue && <p className="text-xs text-red-600">Overdue</p>}
+                          {isPaid && <p className="text-xs text-green-600">{s.paid}</p>}
+                          {isOverdue && <p className="text-xs text-red-600">{s.overdue}</p>}
                         </div>
                       </div>
                       <span
@@ -359,7 +351,7 @@ export function PayInvoiceTab({
                           isPaid ? "text-green-700" : isOverdue ? "text-red-700" : "text-gray-900"
                         }`}
                       >
-                        {formatMoney(inst.amountCents, currency)}
+                        {formatMoney(inst.amountCents)}
                       </span>
                     </div>
                   );
@@ -367,12 +359,9 @@ export function PayInvoiceTab({
               </div>
 
               <div className="mt-4 pt-4 border-t flex justify-between text-sm">
-                <span className="text-gray-600">Total Scheduled</span>
+                <span className="text-gray-600">{s.totalScheduled}</span>
                 <span className="font-semibold">
-                  {formatMoney(
-                    data.paymentSchedule.reduce((s, i) => s + i.amountCents, 0),
-                    currency,
-                  )}
+                  {formatMoney(data.paymentSchedule.reduce((sum, i) => sum + i.amountCents, 0))}
                 </span>
               </div>
             </div>
@@ -380,21 +369,21 @@ export function PayInvoiceTab({
 
           {/* Payment History */}
           <div className="bg-white border rounded-lg p-6">
-            <h3 className="font-semibold text-lg mb-4">Payment History</h3>
+            <h3 className="font-semibold text-lg mb-4">{s.paymentHistory}</h3>
             {paymentsLoading ? (
-              <p className="text-sm text-gray-500">Loading...</p>
+              <p className="text-sm text-gray-500">{s.loading}</p>
             ) : payments.length === 0 ? (
-              <p className="text-sm text-gray-500">No payments recorded yet.</p>
+              <p className="text-sm text-gray-500">{s.noPaymentsYet}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left text-gray-500">
-                      <th className="pb-2 font-medium">Date</th>
-                      <th className="pb-2 font-medium">Amount</th>
-                      <th className="pb-2 font-medium">Method</th>
-                      <th className="pb-2 font-medium">Status</th>
-                      <th className="pb-2 font-medium">Receipt</th>
+                      <th className="pb-2 font-medium">{s.colDate}</th>
+                      <th className="pb-2 font-medium">{s.colAmount}</th>
+                      <th className="pb-2 font-medium">{s.colMethod}</th>
+                      <th className="pb-2 font-medium">{s.colStatus}</th>
+                      <th className="pb-2 font-medium">{s.colReceipt}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -404,7 +393,9 @@ export function PayInvoiceTab({
                         <td className="py-2 font-medium">
                           {formatMoney(p.amount_cents, (p.currency ?? "USD") as "USD" | "CAD")}
                         </td>
-                        <td className="py-2 capitalize">{p.payment_method_type ?? "card"}</td>
+                        <td className="py-2 capitalize">
+                          {paymentMethodLabel(language, p.payment_method_type ?? "card")}
+                        </td>
                         <td className="py-2">
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -416,7 +407,7 @@ export function PayInvoiceTab({
                             }`}
                           >
                             {p.status === "succeeded" && <Check className="w-3 h-3" />}
-                            {p.status}
+                            {statusLabel(language, p.status)}
                           </span>
                         </td>
                         <td className="py-2">
@@ -427,7 +418,7 @@ export function PayInvoiceTab({
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:underline text-xs"
                             >
-                              View
+                              {s.viewReceipt}
                             </a>
                           )}
                         </td>
@@ -446,41 +437,37 @@ export function PayInvoiceTab({
           <div className="bg-white border rounded-lg p-6">
             <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              Invoice Summary
+              {s.invoiceSummary}
             </h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Invoice #</span>
+                <span className="text-gray-600">{s.invoiceNumberLabel}</span>
                 <span className="font-medium">{data.quoteNumber}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Event</span>
+                <span className="text-gray-600">{s.event}</span>
                 <span className="font-medium text-right max-w-[160px] truncate">
                   {data.venue.name}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Total</span>
-                <span className="font-medium">{formatMoney(totalDue, currency)}</span>
+                <span className="text-gray-600">{s.total}</span>
+                <span className="font-medium">{formatMoney(totalDue)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Paid</span>
-                <span className="font-medium text-green-600">
-                  {formatMoney(paidCents, currency)}
-                </span>
+                <span className="text-gray-600">{s.paidLabel}</span>
+                <span className="font-medium text-green-600">{formatMoney(paidCents)}</span>
               </div>
               <div className="flex justify-between border-t pt-2">
-                <span className="text-gray-800 font-medium">Remaining</span>
-                <span className="font-bold text-[#405daa]">
-                  {formatMoney(remainingCents, currency)}
-                </span>
+                <span className="text-gray-800 font-medium">{s.remaining}</span>
+                <span className="font-bold text-[#405daa]">{formatMoney(remainingCents)}</span>
               </div>
             </div>
           </div>
 
           {/* PO Number */}
           <div className="bg-white border rounded-lg p-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">Purchase Order #</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">{s.purchaseOrderNumber}</h3>
             {editingPo ? (
               <div className="flex items-center gap-2">
                 <input
@@ -488,7 +475,7 @@ export function PayInvoiceTab({
                   value={poNumber}
                   onChange={(e) => setPoNumber(e.target.value)}
                   className="flex-1 border rounded-md px-3 py-1.5 text-base sm:text-sm"
-                  placeholder="Enter PO number"
+                  placeholder={s.enterPoNumber}
                   autoFocus
                 />
                 <button
@@ -510,7 +497,7 @@ export function PayInvoiceTab({
               </div>
             ) : (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{poNumber || "Not set"}</span>
+                <span className="text-sm text-gray-600">{poNumber || s.notSet}</span>
                 <button
                   onClick={() => setEditingPo(true)}
                   className="text-gray-400 hover:text-gray-600 cursor-pointer"
@@ -523,7 +510,9 @@ export function PayInvoiceTab({
 
           {/* Make Checks Payable */}
           <div className="bg-gray-50 border rounded-lg p-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">Make Checks Payable To</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">
+              {s.makeChecksPayableToHeading}
+            </h3>
             <p className="text-sm text-gray-600">{data.company.name}</p>
             {data.company.street && (
               <p className="text-sm text-gray-600">{`${data.company.street}, ${data.company.zip}`}</p>
@@ -537,7 +526,7 @@ export function PayInvoiceTab({
 
           {/* Contact */}
           <div className="bg-gray-50 border rounded-lg p-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">Questions?</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">{s.questions}</h3>
             <p className="text-sm text-gray-600">{data.company.email}</p>
             {data.company.phone && <p className="text-sm text-gray-600">{data.company.phone}</p>}
           </div>

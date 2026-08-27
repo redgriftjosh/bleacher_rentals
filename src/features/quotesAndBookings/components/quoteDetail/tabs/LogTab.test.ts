@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { FIELD_LABELS } from "../../../db/logEventChanges";
+import { isClientEvent, getClientTitle } from "./LogTab";
 
 type LogRow = {
   id: string;
@@ -81,11 +82,15 @@ describe("getTitle", () => {
   });
 
   it("returns 'Quote Sent to client' when no next_value", () => {
-    expect(getTitle(makeLog({ action_type: "send", next_value: null }))).toBe("Quote Sent to client");
+    expect(getTitle(makeLog({ action_type: "send", next_value: null }))).toBe(
+      "Quote Sent to client",
+    );
   });
 
   it("returns 'Updated: Event Name' for field update", () => {
-    expect(getTitle(makeLog({ action_type: "update", field_name: "event_name" }))).toBe("Updated: Event Name");
+    expect(getTitle(makeLog({ action_type: "update", field_name: "event_name" }))).toBe(
+      "Updated: Event Name",
+    );
   });
 
   it("returns 'Status Changed: Status' for status_change", () => {
@@ -95,7 +100,9 @@ describe("getTitle", () => {
   });
 
   it("returns 'Updated: Account Manager' for AM change", () => {
-    expect(getTitle(makeLog({ field_name: "created_by_user_uuid" }))).toBe("Updated: Account Manager");
+    expect(getTitle(makeLog({ field_name: "created_by_user_uuid" }))).toBe(
+      "Updated: Account Manager",
+    );
   });
 
   it("returns 'Line Item Added' for line_item_add", () => {
@@ -119,29 +126,6 @@ describe("getTitle", () => {
   });
 });
 
-// --- client event helpers (mirrored from LogTab.tsx) ---
-
-function isClientEvent(row: LogRow): boolean {
-  return row.action_type?.startsWith("client_") ?? false;
-}
-
-function getClientTitle(row: LogRow): string {
-  switch (row.action_type) {
-    case "client_page_view":
-      return `Viewed quote${row.next_value ? ` #${row.next_value}` : ""}`;
-    case "client_tab_change":
-      return `Navigated to "${row.next_value ?? ""}"`;
-    case "client_contract_signed":
-      return `Signed contract${row.next_value ? ` as "${row.next_value}"` : ""}`;
-    case "client_po_submitted":
-      return `Submitted PO #${row.next_value ?? ""}`;
-    case "client_payment_started":
-      return `Initiated payment${row.next_value ? ` of ${row.next_value}` : ""}`;
-    default:
-      return "Customer activity";
-  }
-}
-
 describe("isClientEvent", () => {
   it("returns true for client_* action types", () => {
     expect(isClientEvent(makeLog({ action_type: "client_page_view" }))).toBe(true);
@@ -149,6 +133,7 @@ describe("isClientEvent", () => {
     expect(isClientEvent(makeLog({ action_type: "client_contract_signed" }))).toBe(true);
     expect(isClientEvent(makeLog({ action_type: "client_po_submitted" }))).toBe(true);
     expect(isClientEvent(makeLog({ action_type: "client_payment_started" }))).toBe(true);
+    expect(isClientEvent(makeLog({ action_type: "client_language_change" }))).toBe(true);
   });
 
   it("returns false for internal action types", () => {
@@ -165,9 +150,9 @@ describe("isClientEvent", () => {
 
 describe("getClientTitle", () => {
   it("shows invoice number in page_view", () => {
-    expect(getClientTitle(makeLog({ action_type: "client_page_view", next_value: "INV-2026-001" }))).toBe(
-      "Viewed quote #INV-2026-001",
-    );
+    expect(
+      getClientTitle(makeLog({ action_type: "client_page_view", next_value: "INV-2026-001" })),
+    ).toBe("Viewed quote #INV-2026-001");
   });
 
   it("omits invoice number when next_value is null", () => {
@@ -204,6 +189,22 @@ describe("getClientTitle", () => {
     expect(
       getClientTitle(makeLog({ action_type: "client_payment_started", next_value: "$1,500.00" })),
     ).toBe("Initiated payment of $1,500.00");
+  });
+
+  it("names a PDF download", () => {
+    expect(getClientTitle(makeLog({ action_type: "client_pdf_download" }))).toBe("Downloaded PDF");
+  });
+
+  it("names a client language switch, so it is not filed as generic activity", () => {
+    expect(
+      getClientTitle(
+        makeLog({
+          action_type: "client_language_change",
+          prev_value: "English",
+          next_value: "French",
+        }),
+      ),
+    ).toBe("Switched language to French");
   });
 
   it("returns 'Customer activity' for unknown client action type", () => {

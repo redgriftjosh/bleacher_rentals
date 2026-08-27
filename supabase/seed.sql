@@ -15180,7 +15180,14 @@ VALUES
   ('E2E', 'Admin',  'max+6@bleacherrentals.com', 'user_3FrqAgc0dx7EDVJFmn1ihrie0Y3', 1, true,  '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '7caabedc-3b29-43da-9944-81fdd7d9eaca', false),
   ('E2E', 'AM',     'max+5@bleacherrentals.com', 'user_3FrpC7dZBNKkfSnb2CjGACNrrGN', 1, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '28c7861e-ab61-4e3e-80df-68b2b4684aed', false),
   ('E2E', 'Driver', 'max+4@bleacherrentals.com', 'user_3Frk1zjHtD39YB1ex73cgezrqf1', 1, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', 'cb6b755e-53b1-41ae-b4ea-aa412c1ce951', false),
-  ('E2E', 'Viewer', 'max+3@bleacherrentals.com', 'user_3Frgr1SbGGZiOzPVLE0n3EqriFW', 1, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '52b41509-56f9-4619-bd30-0764e495ed1d', true);
+  ('E2E', 'Viewer', 'max+3@bleacherrentals.com', 'user_3Frgr1SbGGZiOzPVLE0n3EqriFW', 1, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', '52b41509-56f9-4619-bd30-0764e495ed1d', true),
+  ('E2E', 'Developer', 'josh+dev@bleacherrentals.com', 'user_3ISmH04E5xSaFhgBZNjyiC5wVni', 1, false, '5d314da7-0a1e-4294-b012-ab74f6e07cd6', 'b7e14c02-5f3a-4d68-9c41-2ae90f7d5b11', false);
+
+-- Developer user needs an active Developers row to gain the developer role.
+-- auto_subscribe_to_new_tickets is left at its default so the seeded developer
+-- behaves like a real one.
+INSERT INTO "public"."Developers" ("is_active", "id", "user_uuid")
+VALUES (true, 'c3f27a55-91d4-4b0e-8a76-1d5e3c9f4022', 'b7e14c02-5f3a-4d68-9c41-2ae90f7d5b11');
 
 -- AM user needs an active AccountManagers row to gain the account_manager role.
 INSERT INTO "public"."AccountManagers" ("is_active", "id", "user_uuid")

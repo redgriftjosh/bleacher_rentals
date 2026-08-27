@@ -49,6 +49,26 @@ jobs:
       - name: Check version bump and release notes
         run: npx tsx scripts/changelog/checkChangelog.cli.ts ${{ github.base_ref }}
 
+  preflight:
+    runs-on: ubuntu-latest
+    # Same gate as the changelog job: only promotions into a deployable branch
+    # need evidence that someone clicked through the release.
+    if: contains(fromJSON('["develop","staging","main"]'), github.base_ref)
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check this version was preflighted
+        run: npx tsx scripts/preflight/checkPreflight.cli.ts
+
   test:
     runs-on: ubuntu-latest
 

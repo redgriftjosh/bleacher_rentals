@@ -22,12 +22,16 @@ export type AddressSnapshot = {
 
 export type WorkTrackerSnapshot = {
   bleacher_uuid: string | null;
+  actual_bleacher_uuid: string | null;
+  bleacher_change_reason: string | null;
   date: string | null;
   driver_uuid: string | null;
   pickup_poc: string | null;
+  pickup_poc_contact_uuid: string | null;
   pickup_time: string | null;
   pickup_instructions: string | null;
   dropoff_poc: string | null;
+  dropoff_poc_contact_uuid: string | null;
   dropoff_time: string | null;
   dropoff_instructions: string | null;
   notes: string | null;
@@ -63,12 +67,16 @@ export function buildWorkTrackerSnapshot(
 
   return {
     bleacher_uuid: workTracker.bleacher_uuid,
+    actual_bleacher_uuid: workTracker.actual_bleacher_uuid,
+    bleacher_change_reason: workTracker.bleacher_change_reason,
     date: workTracker.date,
     driver_uuid: workTracker.driver_uuid,
     pickup_poc: workTracker.pickup_poc,
+    pickup_poc_contact_uuid: workTracker.pickup_poc_contact_uuid,
     pickup_time: workTracker.pickup_time,
     pickup_instructions: workTracker.pickup_instructions,
     dropoff_poc: workTracker.dropoff_poc,
+    dropoff_poc_contact_uuid: workTracker.dropoff_poc_contact_uuid,
     dropoff_time: workTracker.dropoff_time,
     dropoff_instructions: workTracker.dropoff_instructions,
     notes: workTracker.notes,
@@ -111,11 +119,23 @@ function hasUnacceptFieldChanges(before: WorkTrackerSnapshot, after: WorkTracker
   if (normalizeString(before.date) !== normalizeString(after.date)) return true;
   if (normalizeString(before.driver_uuid) !== normalizeString(after.driver_uuid)) return true;
   if (normalizeString(before.pickup_poc) !== normalizeString(after.pickup_poc)) return true;
+  if (
+    normalizeString(before.pickup_poc_contact_uuid) !==
+    normalizeString(after.pickup_poc_contact_uuid)
+  ) {
+    return true;
+  }
   if (normalizeString(before.pickup_time) !== normalizeString(after.pickup_time)) return true;
   if (normalizeString(before.pickup_instructions) !== normalizeString(after.pickup_instructions)) {
     return true;
   }
   if (normalizeString(before.dropoff_poc) !== normalizeString(after.dropoff_poc)) return true;
+  if (
+    normalizeString(before.dropoff_poc_contact_uuid) !==
+    normalizeString(after.dropoff_poc_contact_uuid)
+  ) {
+    return true;
+  }
   if (normalizeString(before.dropoff_time) !== normalizeString(after.dropoff_time)) return true;
   if (
     normalizeString(before.dropoff_instructions) !== normalizeString(after.dropoff_instructions)
@@ -150,8 +170,28 @@ function hasProjectNumberChange(before: WorkTrackerSnapshot, after: WorkTrackerS
   return normalizeString(before.project_number) !== normalizeString(after.project_number);
 }
 
+/**
+ * A manager correcting which bleacher the driver took. Silent on purpose: the
+ * driver already knows what they hitched up, and this must not un-accept a trip
+ * that is halfway down the highway.
+ */
+function hasActualBleacherChange(before: WorkTrackerSnapshot, after: WorkTrackerSnapshot): boolean {
+  if (
+    normalizeString(before.actual_bleacher_uuid) !== normalizeString(after.actual_bleacher_uuid)
+  ) {
+    return true;
+  }
+  return (
+    normalizeString(before.bleacher_change_reason) !== normalizeString(after.bleacher_change_reason)
+  );
+}
+
 function hasSilentFieldChanges(before: WorkTrackerSnapshot, after: WorkTrackerSnapshot): boolean {
-  return hasInternalNotesChange(before, after) || hasProjectNumberChange(before, after);
+  return (
+    hasInternalNotesChange(before, after) ||
+    hasProjectNumberChange(before, after) ||
+    hasActualBleacherChange(before, after)
+  );
 }
 
 export function classifyWorkTrackerChanges(

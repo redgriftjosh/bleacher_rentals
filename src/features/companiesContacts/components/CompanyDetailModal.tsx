@@ -2,11 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TextAreaField, TextField } from "@/components/form/TextField";
 import { createSuccessToast } from "@/components/toasts/SuccessToast";
+import { useTouchedErrors } from "@/lib/validation/useTouchedErrors";
 import { updateCompany } from "../db/updateCompany";
 import { softDeleteCompany } from "../db/softDeleteCompany";
 import { useContactsByCompany } from "../hooks/useContactsByCompany";
 import type { CompanyFull } from "../hooks/useCompaniesAll";
+import { DetailField } from "./DetailField";
+import { hasErrors, validateCompanyForm, type CompanyFormValues } from "../utils/formValidation";
+
+const COMPANY_FIELDS = ["companyName", "email", "phone"] as const;
+
+const EMPTY_VALUES: CompanyFormValues = { companyName: "", email: "", phone: "" };
 
 type Props = {
   company: CompanyFull | null;
@@ -15,46 +23,68 @@ type Props = {
 
 export function CompanyDetailModal({ company, onClose }: Props) {
   const [mode, setMode] = useState<"view" | "edit">("view");
-  const [companyName, setCompanyName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [values, setValues] = useState<CompanyFormValues>(EMPTY_VALUES);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const linkedContacts = useContactsByCompany(company?.id ?? null);
 
-  useEffect(() => {
-    if (company) {
-      setCompanyName(company.companyName);
-      setEmail(company.email ?? "");
-      setPhone(company.phone ?? "");
-      setNotes(company.notes ?? "");
-      setMode("view");
-    }
-  }, [company]);
+  const errors = validateCompanyForm(values);
+  const { errorFor, markTouched, markAllTouched, reset: resetTouched } = useTouchedErrors(errors);
 
-  const handleClose = () => { setMode("view"); onClose(); };
+  const setValue = (key: keyof CompanyFormValues) => (value: string) =>
+    setValues((prev) => ({ ...prev, [key]: value }));
+
+  useEffect(() => {
+    if (!company) return;
+    setValues({
+      companyName: company.companyName,
+      email: company.email ?? "",
+      phone: company.phone ?? "",
+    });
+    setNotes(company.notes ?? "");
+    setMode("view");
+    resetTouched();
+  }, [company, resetTouched]);
+
+  const handleClose = () => {
+    setMode("view");
+    onClose();
+  };
+
+  const canSave = !!company && !hasErrors(errors) && !saving;
 
   const handleSave = async () => {
-    if (!company) return;
+    markAllTouched(COMPANY_FIELDS);
+    if (!company || !canSave) return;
+
     setSaving(true);
     try {
-      await updateCompany(company.id, { companyName, email, phone, notes });
+      await updateCompany(company.id, { ...values, notes });
       createSuccessToast(["Company updated."]);
       setMode("view");
-    } catch { /* error shown by updateCompany */ } finally { setSaving(false); }
+    } catch {
+      /* error shown by updateCompany */
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
     if (!company) return;
-    if (!confirm(`Delete company "${company.companyName}"? Linked contacts will not be deleted.`)) return;
+    if (!confirm(`Delete company "${company.companyName}"? Linked contacts will not be deleted.`))
+      return;
     setDeleting(true);
     try {
       await softDeleteCompany(company.id);
       createSuccessToast(["Company deleted."]);
       handleClose();
-    } catch { /* error shown */ } finally { setDeleting(false); }
+    } catch {
+      /* error shown */
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -73,9 +103,9 @@ export function CompanyDetailModal({ company, onClose }: Props) {
         <div className="px-6 py-4">
           {mode === "view" ? (
             <div className="space-y-1">
-              <Field label="Email" value={company?.email} />
-              <Field label="Phone" value={company?.phone} />
-              <Field label="Notes" value={company?.notes} />
+              <DetailField label="Email" value={company?.email} />
+              <DetailField label="Phone" value={company?.phone} />
+              <DetailField label="Notes" value={company?.notes} />
 
               <div className="pt-3 mt-3 border-t border-gray-100">
                 <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
@@ -102,58 +132,75 @@ export function CompanyDetailModal({ company, onClose }: Props) {
             </div>
           ) : (
             <div className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Company Name *</label>
-                <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)}
-                  className="w-full h-9 px-3 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 transition-colors" />
-              </div>
+              <TextField
+                label="Company Name"
+                required
+                value={values.companyName}
+                onChange={setValue("companyName")}
+                onBlur={() => markTouched("companyName")}
+                error={errorFor("companyName")}
+              />
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Email</label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                    className="w-full h-9 px-3 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 transition-colors" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Phone</label>
-                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                    className="w-full h-9 px-3 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 transition-colors" />
-                </div>
+                <TextField
+                  label="Email"
+                  type="email"
+                  value={values.email}
+                  onChange={setValue("email")}
+                  onBlur={() => markTouched("email")}
+                  error={errorFor("email")}
+                />
+                <TextField
+                  label="Phone"
+                  type="tel"
+                  value={values.phone}
+                  onChange={setValue("phone")}
+                  onBlur={() => markTouched("phone")}
+                  error={errorFor("phone")}
+                />
               </div>
-              <div>
-                <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Notes</label>
-                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 transition-colors" />
-              </div>
+              <TextAreaField label="Notes" value={notes} onChange={setNotes} />
             </div>
           )}
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-xl">
-          <button onClick={handleDelete} disabled={deleting}
-            className="text-sm font-medium text-red-500 hover:text-red-600 transition-colors disabled:opacity-40 cursor-pointer">
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="text-sm font-medium text-red-500 hover:text-red-600 transition-colors disabled:opacity-40 cursor-pointer"
+          >
             {deleting ? "Deleting…" : "Delete"}
           </button>
           <div className="flex items-center gap-2">
             {mode === "view" ? (
               <>
-                <button onClick={handleClose}
-                  className="px-4 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">
+                <button
+                  onClick={handleClose}
+                  className="px-4 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+                >
                   Close
                 </button>
-                <button onClick={() => setMode("edit")}
-                  className="px-4 py-1.5 text-sm font-medium text-white bg-darkBlue rounded-md hover:bg-lightBlue transition-colors cursor-pointer">
+                <button
+                  onClick={() => setMode("edit")}
+                  className="px-4 py-1.5 text-sm font-medium text-white bg-darkBlue rounded-md hover:bg-lightBlue transition-colors cursor-pointer"
+                >
                   Edit
                 </button>
               </>
             ) : (
               <>
-                <button onClick={() => setMode("view")}
-                  className="px-4 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">
+                <button
+                  onClick={() => setMode("view")}
+                  className="px-4 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+                >
                   Cancel
                 </button>
-                <button onClick={handleSave} disabled={!companyName.trim() || saving}
-                  className="px-4 py-1.5 text-sm font-medium text-white bg-darkBlue rounded-md hover:bg-lightBlue transition-colors cursor-pointer disabled:opacity-40">
+                <button
+                  onClick={handleSave}
+                  disabled={!canSave}
+                  className="px-4 py-1.5 text-sm font-medium text-white bg-darkBlue rounded-md hover:bg-lightBlue transition-colors cursor-pointer disabled:opacity-40"
+                >
                   {saving ? "Saving…" : "Save"}
                 </button>
               </>
@@ -162,16 +209,5 @@ export function CompanyDetailModal({ company, onClose }: Props) {
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string | null | undefined }) {
-  return (
-    <div className="flex py-2 border-b border-gray-50 last:border-0">
-      <span className="w-20 flex-shrink-0 text-[11px] font-semibold text-gray-400 uppercase tracking-wider pt-0.5">{label}</span>
-      <span className="text-sm text-gray-800">
-        {value || <span className="text-gray-300">—</span>}
-      </span>
-    </div>
   );
 }
