@@ -86,6 +86,18 @@ label is confusing. Put those in the human list so I still look.
 Order the automated list by risk: permissions first, then money and language,
 then everything else.
 
+For each row, also settle **what evidence proves it** — the thing I will be
+looking at in the report afterwards. Usually one of:
+
+- a value read back out of Postgres (the strongest: the screen can lie, a stored
+  row cannot)
+- a page state that must or must not appear
+- a request that must or must not be sent
+
+Write that into the "Covers" column in plain words. `/preflight-run` turns each
+one into a report annotation, so the evidence is stated before the test is
+written rather than invented after it passes.
+
 ## 5. Stop
 
 Show me both lists and every permissions change you made. Ask whether the plan
