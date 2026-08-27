@@ -1081,6 +1081,69 @@ const SubrentalEvents = new Table(SubrentalEventsCols, {
   },
 });
 
+// ── Driver Satisfaction Score ───────────────────────────────────────────────
+//
+// The survey the driver app forces on a driver every `interval_days` (30 today,
+// 7 from next quarter). Read-only on this side: the web app reports on it, and
+// — from next quarter — edits the questions. Nothing here is written by a
+// driver's browser, because drivers do not have one.
+const DriverSurveysCols = {
+  title: column.text,
+  interval_days: column.integer,
+  is_active: column.integer,
+  sort_order: column.integer,
+  created_at: column.text,
+  updated_at: column.text,
+} satisfies PowerSyncColsFor<"DriverSurveys">;
+const DriverSurveys = new Table(DriverSurveysCols, {
+  indexes: { is_active: ["is_active"] },
+});
+
+const DriverSurveyQuestionsCols = {
+  survey_uuid: column.text,
+  prompt: column.text,
+  kind: column.text,
+  follow_up_max_score: column.integer,
+  follow_up_prompt: column.text,
+  is_required: column.integer,
+  is_active: column.integer,
+  sort_order: column.integer,
+  created_at: column.text,
+  updated_at: column.text,
+} satisfies PowerSyncColsFor<"DriverSurveyQuestions">;
+const DriverSurveyQuestions = new Table(DriverSurveyQuestionsCols, {
+  indexes: { survey_uuid: ["survey_uuid"] },
+});
+
+// One row per question answered, grouped by `submission_uuid`. There is no
+// submission parent table — see the migration header — so every column the
+// report needs is already on the row and the page reads it with a single join
+// to Drivers/Users for the name.
+//
+// Report on `prompt_snapshot`, never on a join to DriverSurveyQuestions: once
+// the questions are editable, a join would silently re-label every historical
+// answer with a question that was never asked.
+const DriverSurveyResponsesCols = {
+  submission_uuid: column.text,
+  survey_uuid: column.text,
+  question_uuid: column.text,
+  driver_uuid: column.text,
+  user_uuid: column.text,
+  score: column.integer,
+  reason_text: column.text,
+  prompt_snapshot: column.text,
+  submitted_at: column.text,
+  app_version: column.text,
+  app_platform: column.text,
+  created_at: column.text,
+} satisfies PowerSyncColsFor<"DriverSurveyResponses">;
+const DriverSurveyResponses = new Table(DriverSurveyResponsesCols, {
+  indexes: {
+    driver_uuid: ["driver_uuid"],
+    submitted_at: ["submitted_at"],
+  },
+});
+
 export const AppSchema = new Schema({
   Addresses,
   AccountManagers,
@@ -1117,6 +1180,9 @@ export const AppSchema = new Schema({
   WorkTrackerInspections,
   DriverScorecardStatsPerDriver,
   DriverScoreCardStats,
+  DriverSurveys,
+  DriverSurveyQuestions,
+  DriverSurveyResponses,
   RoadmapQuarters,
   RoadmapSprints,
   RoadmapFeatures,
@@ -1225,3 +1291,6 @@ export type TermsAndConditionsRecord = PowerSyncDB["TermsAndConditions"];
 export type ContractSignaturesRecord = PowerSyncDB["ContractSignatures"];
 export type EventFilesRecord = PowerSyncDB["EventFiles"];
 export type ChangeLogRecord = PowerSyncDB["ChangeLog"];
+export type DriverSurveyRecord = PowerSyncDB["DriverSurveys"];
+export type DriverSurveyQuestionRecord = PowerSyncDB["DriverSurveyQuestions"];
+export type DriverSurveyResponseRecord = PowerSyncDB["DriverSurveyResponses"];
