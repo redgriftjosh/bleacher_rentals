@@ -1,6 +1,7 @@
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute } from "@/lib/powersync/typedQuery";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
+import type { PreferredLanguage } from "@/features/companiesContacts/db/preferredLanguage";
 
 type CreateContactParams = {
   firstName: string;
@@ -9,6 +10,8 @@ type CreateContactParams = {
   email: string;
   notes: string;
   companyUuid: string | null;
+  // Language this contact's quotes render in. See docs/specs/quote-preferred-language.md.
+  preferredLanguage?: PreferredLanguage;
 };
 
 export async function createContact(params: CreateContactParams): Promise<string> {
@@ -25,6 +28,7 @@ export async function createContact(params: CreateContactParams): Promise<string
           email: params.email || null,
           notes: params.notes || null,
           company_uuid: params.companyUuid,
+          preferred_language: params.preferredLanguage ?? "english",
           deleted: 0,
         })
         .compile(),

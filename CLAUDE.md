@@ -37,6 +37,33 @@ Any work with grid borders/overlays must follow the z-index rules:
 
 ---
 
+## Permissions — update the matrix, always
+
+Every feature answers a question that is easy to forget: **who is allowed to do
+this?** Ask it while building, not after someone complains.
+
+The answer lives in exactly one place:
+[`src/features/userAccess/permissionPageData.ts`](src/features/userAccess/permissionPageData.ts)
+— a typed matrix of permissions, each with a level and a note for all five roles
+in `WebRole` (`admin`, `account_manager`, `developer`, `viewer`, `driver`).
+
+That file renders `/permissions`, which **every authenticated user can read**. So
+it is not developer documentation: it is the answer your account managers get
+when they ask what they are allowed to do.
+
+**Whenever a change adds or alters what a role can do, update
+`permissionPageData.ts` in the same commit.** No exceptions, and never write a
+separate permissions document — a second copy will drift, and users would then be
+reading the wrong one.
+
+If the intended rule is not obvious, ask rather than guessing, then write the
+answer into the matrix so nobody has to ask twice.
+
+`/preflight` checks a PR against this file and fails the CI gate on a release
+that was never verified.
+
+---
+
 ## Spec-Driven Development (SDD)
 
 Before writing any code or tests for a **large feature**:
@@ -86,13 +113,13 @@ by the `Users.role` column.
 
 Role is selected by the spec filename suffix — the matching project supplies the right session:
 
-| File pattern         | Runs as               |
-| -------------------- | --------------------- |
-| `*.admin.spec.ts`    | Admin                 |
-| `*.am.spec.ts`       | Account Manager       |
-| `*.driver.spec.ts`   | Driver                |
-| `*.viewer.spec.ts`   | Viewer                |
-| `*.spec.ts`          | default user (chromium) |
+| File pattern       | Runs as                 |
+| ------------------ | ----------------------- |
+| `*.admin.spec.ts`  | Admin                   |
+| `*.am.spec.ts`     | Account Manager         |
+| `*.driver.spec.ts` | Driver                  |
+| `*.viewer.spec.ts` | Viewer                  |
+| `*.spec.ts`        | default user (chromium) |
 
 Run one role: `npm run test:e2e -- --project=admin`.
 

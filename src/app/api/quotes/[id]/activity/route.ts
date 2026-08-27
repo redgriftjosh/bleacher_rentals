@@ -8,6 +8,8 @@ export const ALLOWED_ACTION_TYPES = new Set([
   "client_po_submitted",
   "client_payment_started",
   "client_pdf_download",
+  // Client corrected the language the account manager set on their contact.
+  "client_language_change",
 ]);
 
 function getSupabaseAdmin() {
@@ -17,10 +19,7 @@ function getSupabaseAdmin() {
   );
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: eventId } = await params;
 
   let body: unknown;

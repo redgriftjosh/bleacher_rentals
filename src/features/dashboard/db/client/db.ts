@@ -36,6 +36,7 @@ import {
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute, typedGetAll, expect } from "@/lib/powersync/typedQuery";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { buildActualBleacherUpdate } from "@/features/workTrackers/util/bleacherSwap";
 import {
   resolveStatusOnSave,
   shouldSendDriverNotification,
@@ -391,17 +392,27 @@ export async function saveWorkTracker(
     date: workTracker.date,
     pickup_address_uuid: pickUpAddressUuid,
     pickup_poc: workTracker.pickup_poc,
+    pickup_poc_contact_uuid: workTracker.pickup_poc_contact_uuid,
     pickup_time: workTracker.pickup_time,
     pickup_instructions: workTracker.pickup_instructions,
     teardown_required: workTracker.teardown_required ? 1 : 0,
     dropoff_address_uuid: dropOffAddressUuid,
     dropoff_poc: workTracker.dropoff_poc,
+    dropoff_poc_contact_uuid: workTracker.dropoff_poc_contact_uuid,
     dropoff_time: workTracker.dropoff_time,
     dropoff_instructions: workTracker.dropoff_instructions,
     setup_required: workTracker.setup_required ? 1 : 0,
     notes: workTracker.notes,
     pay_cents: workTracker.pay_cents,
     bleacher_uuid: workTracker.bleacher_uuid,
+    // Both columns always move together: reverting to the assigned bleacher has
+    // to clear the reason in the same UPDATE, or the row keeps a reason for a
+    // swap that no longer exists.
+    ...buildActualBleacherUpdate({
+      assignedBleacherUuid: workTracker.bleacher_uuid,
+      nextActualBleacherUuid: workTracker.actual_bleacher_uuid,
+      nextReason: workTracker.bleacher_change_reason,
+    }),
     internal_notes: workTracker.internal_notes,
     driver_uuid: workTracker.driver_uuid,
     status: effectiveStatus,

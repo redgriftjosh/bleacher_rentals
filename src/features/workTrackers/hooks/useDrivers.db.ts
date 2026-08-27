@@ -5,6 +5,7 @@ import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { useCurrentUser } from "@/hooks/db/useCurrentUser";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { STATUSES } from "@/features/manageTeam/constants";
+import { applyDriverScope, NO_DRIVER_MATCH, resolveDriverScope } from "../db/driverZoneScope";
 
 type Compiled = {
   driver_uuid: string;
@@ -63,7 +64,7 @@ export function useDrivers(options?: { showAll?: boolean }): {
 
   const { data: accountManagerData } = useTypedQuery(
     accountManagerQuery ??
-      db.selectFrom("AccountManagers").select("id").where("id", "=", "__no_match__").compile(),
+      db.selectFrom("AccountManagers").select("id").where("id", "=", NO_DRIVER_MATCH).compile(),
     expect<{ id: string }>(),
   );
 
@@ -88,11 +89,11 @@ export function useDrivers(options?: { showAll?: boolean }): {
           "u.last_name as last_name",
           "u.email as email",
         ])
-        .where("d.id", "=", "__no_match__") // This will return no results
+        .where("d.id", "=", NO_DRIVER_MATCH) // This will return no results
         .compile();
     }
 
-    let query = db
+    const query = db
       .selectFrom("Drivers as d")
       .innerJoin("Users as u", "u.id", "d.user_uuid")
       .select([
@@ -117,20 +118,17 @@ export function useDrivers(options?: { showAll?: boolean }): {
           eb("u.status_uuid", "=", STATUSES.invited),
         ]),
       );
-    // If not admin, filter by drivers in the same zones as the current AM
-    if (currentUser.is_admin !== 1 && !showAll) {
-      const accountManagerId = accountManagerData?.[0]?.id;
-      if (accountManagerId) {
-        query = query
-          .innerJoin("DriverZones as dz", "dz.driver_uuid", "d.id")
-          .innerJoin("AccountManagerZones as amz", "amz.zone_uuid", "dz.zone_uuid")
-          .where("amz.account_manager_uuid", "=", accountManagerId);
-      } else {
-        query = query.where("d.id", "=", "__no_match__");
-      }
-    }
+    // Shared scoping rule: admins see everyone, account managers see their zones.
+    const scoped = applyDriverScope(
+      query,
+      resolveDriverScope({
+        isAdmin: currentUser.is_admin === 1,
+        accountManagerUuid: accountManagerData?.[0]?.id ?? null,
+        showAll,
+      }),
+    );
 
-    return query.orderBy("d.user_uuid", "asc").compile();
+    return scoped.orderBy("d.user_uuid", "asc").compile();
   }, [currentUser, accountManagerData, showAll]);
 
   const { data, isLoading, error } = useTypedQuery(compiled, expect<Compiled>());

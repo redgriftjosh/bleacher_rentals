@@ -1,5 +1,6 @@
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute } from "@/lib/powersync/typedQuery";
+import type { PreferredLanguage } from "./preferredLanguage";
 
 type UpdateContactParams = {
   firstName: string;
@@ -8,6 +9,8 @@ type UpdateContactParams = {
   phone: string;
   notes: string;
   companyUuid: string | null;
+  // Language this contact's quotes render in. See docs/specs/quote-preferred-language.md.
+  preferredLanguage?: PreferredLanguage;
 };
 
 export async function updateContact(id: string, params: UpdateContactParams): Promise<void> {
@@ -21,6 +24,7 @@ export async function updateContact(id: string, params: UpdateContactParams): Pr
         phone: params.phone || null,
         notes: params.notes || null,
         company_uuid: params.companyUuid,
+        preferred_language: params.preferredLanguage ?? "english",
       })
       .where("id", "=", id)
       .compile(),

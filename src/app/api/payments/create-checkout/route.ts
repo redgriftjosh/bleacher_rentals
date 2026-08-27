@@ -18,7 +18,7 @@ function getSupabaseAdmin() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { eventId, installmentId, amountCents, currency, payerName } = body;
+  const { eventId, installmentId, amountCents, currency, payerName, language } = body;
 
   if (!eventId || !amountCents || !payerName) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -57,6 +57,9 @@ export async function POST(req: NextRequest) {
     {
       payment_method_types: ["card"],
       mode: "payment",
+      // Stripe's own checkout chrome follows the quote's language (fr-CA for a
+      // French contact). Anything else falls back to Stripe's browser detection.
+      locale: language === "fr" ? "fr-CA" : "auto",
       // Email is intentionally NOT prefilled: passing customer_email locks the
       // field on the Checkout page. We let the customer enter/edit it, then the
       // webhook sends the receipt to the address they actually submit.

@@ -297,7 +297,7 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
     .select(
       `
       *,
-      bleacher:Bleachers(bleacher_number),
+      bleacher:Bleachers!WorkTrackers_bleacher_uuid_fkey(bleacher_number),
       work_tracker_type:WorkTrackerTypes(display_name)
     `,
     )

@@ -17,7 +17,7 @@ function admin(): SupabaseClient {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-export type CreatedQuote = { eventId: string; invoiceNumber: number };
+export type CreatedQuote = { eventId: string; invoiceNumber: number; contactId?: string };
 
 /** Create a minimal, self-contained quote (event + one line item) and return its ids. */
 export async function createQuote(): Promise<CreatedQuote> {
@@ -56,6 +56,33 @@ export async function createQuote(): Promise<CreatedQuote> {
   if (liError) throw new Error(`createQuote: line item insert failed: ${liError.message}`);
 
   return { eventId, invoiceNumber };
+}
+
+/**
+ * Attach a contact whose quotes render in the given language, so the public page
+ * resolves a language the way a real quote does — through Contacts.preferred_language,
+ * not through a query param. See docs/specs/quote-preferred-language.md.
+ */
+export async function assignContact(
+  eventId: string,
+  preferredLanguage: "english" | "french",
+): Promise<string> {
+  const db = admin();
+  const { data: contact, error } = await db
+    .from("Contacts")
+    .insert({
+      first_name: "E2E",
+      last_name: `Contact ${Date.now()}`,
+      email: "e2e@example.com",
+      preferred_language: preferredLanguage,
+      deleted: false,
+    })
+    .select("id")
+    .single();
+  if (error || !contact) throw new Error(`assignContact: insert failed: ${error?.message}`);
+
+  await db.from("Events").update({ contact_uuid: contact.id }).eq("id", eventId);
+  return contact.id as string;
 }
 
 /** Simulate a manager editing the price — bumps both content_hash and contract_hash. */
@@ -108,11 +135,17 @@ export async function activeSignatureCount(eventId: string): Promise<number> {
 }
 
 /** Remove everything created for a test. */
-export async function cleanupQuote(eventId: string, termsId?: string): Promise<void> {
+export async function cleanupQuote(
+  eventId: string,
+  termsId?: string,
+  contactId?: string,
+): Promise<void> {
   const db = admin();
   await db.from("ContractSignatures").delete().eq("event_uuid", eventId);
   await db.from("EventLineItems").delete().eq("event_uuid", eventId);
   await db.from("PaymentInstallments").delete().eq("event_uuid", eventId);
   await db.from("Events").delete().eq("id", eventId);
   if (termsId) await db.from("TermsAndConditions").delete().eq("id", termsId);
+  // After the event, which references it.
+  if (contactId) await db.from("Contacts").delete().eq("id", contactId);
 }

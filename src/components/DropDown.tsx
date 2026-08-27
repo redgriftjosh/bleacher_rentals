@@ -48,6 +48,16 @@ export function Dropdown<T>({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // The list is portaled to <body> at an absolute position computed once, so any
+  // scroll underneath it — including the work tracker modal's own scroll —
+  // leaves it hanging over the wrong control. Close instead of chasing.
+  useEffect(() => {
+    if (!isOpen) return;
+    const close = () => setIsOpen(false);
+    window.addEventListener("scroll", close, true);
+    return () => window.removeEventListener("scroll", close, true);
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen && ref.current) {
       const rect = ref.current.getBoundingClientRect();
@@ -73,13 +83,17 @@ export function Dropdown<T>({
           ref={buttonRef}
           onClick={() => !disabled && setIsOpen((prev) => !prev)}
           disabled={disabled}
-          className={`w-full h-[40px] flex items-center text-sm font-medium justify-between border rounded px-2 py-2 text-left transition-all disabled:opacity-100 ${
+          className={`w-full h-[40px] min-w-0 flex items-center text-sm font-medium justify-between border rounded px-2 py-2 text-left transition-all disabled:opacity-100 ${
             disabled
               ? "bg-gray-50 text-gray-700 cursor-default"
               : "bg-white text-muted-foreground cursor-pointer hover:shadow"
           }`}
         >
-          <span>{selectedLabel}</span>
+          {/* truncate + title: long option labels used to widen the button past
+              its column and spill over the neighbouring one. */}
+          <span className="truncate" title={selectedLabel}>
+            {selectedLabel}
+          </span>
           {!disabled && (
             <ChevronDown
               size={16}
