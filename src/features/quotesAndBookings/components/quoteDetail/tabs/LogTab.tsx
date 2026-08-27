@@ -59,6 +59,10 @@ export function getClientTitle(row: LogRow): string {
       return `Initiated payment${row.next_value ? ` of ${row.next_value}` : ""}`;
     case "client_pdf_download":
       return "Downloaded PDF";
+    case "client_language_change":
+      // The client corrected the language on their own — the contact record
+      // still has the wrong one until someone updates it.
+      return `Switched language to ${row.next_value ?? ""}`;
     default:
       return "Customer activity";
   }
@@ -247,11 +251,13 @@ function ClientActivityRow({ log }: { log: LogRow }) {
             Customer
           </span>
         </div>
-        {log.action_type === "client_tab_change" && log.prev_value && (
-          <p className="text-xs text-gray-400 mt-0.5">
-            {log.prev_value} → {log.next_value}
-          </p>
-        )}
+        {(log.action_type === "client_tab_change" ||
+          log.action_type === "client_language_change") &&
+          log.prev_value && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              {log.prev_value} → {log.next_value}
+            </p>
+          )}
       </div>
       <p className="text-xs text-gray-400 shrink-0">{formatDateTime(log.changed_at)}</p>
     </div>

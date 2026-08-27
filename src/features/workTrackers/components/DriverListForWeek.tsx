@@ -78,7 +78,7 @@ export function DriverListForWeek({ startDate }: Props) {
   const { drivers, isLoading } = useDriversForWeek(
     startDate,
     showAllDrivers,
-    accessData?.accountManagerUuid ?? null,
+    accessData ?? null,
     hasAccess,
   );
 
@@ -184,7 +184,7 @@ export function DriverListForWeek({ startDate }: Props) {
             <td className="py-4 px-3 text-center text-gray-500">
               {showAllDrivers
                 ? "No drivers found in the system."
-                : "No drivers are currently assigned to you."}
+                : "No drivers are assigned to your zones."}
             </td>
           </tr>
         )}

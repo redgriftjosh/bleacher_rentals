@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite } from "pixi.js";
+import { Container, FederatedPointerEvent, Graphics, Sprite } from "pixi.js";
 import { Baker } from "../util/Baker";
 
 export type DamageSeverity = "major" | "minor";
@@ -66,10 +66,17 @@ export class Tile extends Container {
     }
   }
 
-  private handleClick(): void {
-    // Emit cell edit request with coordinates
-    this.emit("cell:edit-request", { row: this.row, col: this.col });
-    console.log(`Tile clicked: (${this.row}, ${this.col})`);
+  private handleClick(e: FederatedPointerEvent): void {
+    // Emit cell edit request with coordinates. The modifier state travels with it so the
+    // renderer can tell a plain click (open the cell editor) from ⌘/Ctrl+click (create a work
+    // tracker) — the tile itself stays dumb about what those mean.
+    this.emit("cell:edit-request", {
+      row: this.row,
+      col: this.col,
+      metaKey: e.metaKey,
+      ctrlKey: e.ctrlKey,
+      button: e.button,
+    });
   }
 
   private buildTile(c: Container) {

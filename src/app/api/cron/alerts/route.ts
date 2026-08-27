@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
     const { data: workTrackers } = await supabase
       .from("WorkTrackers")
       .select(
-        "id, status, date, released_at, accepted_at, created_by_user_uuid, Bleachers(bleacher_number)",
+        "id, status, date, released_at, accepted_at, created_by_user_uuid, Bleachers!WorkTrackers_bleacher_uuid_fkey(bleacher_number)",
       )
       .gte("date", windowStart)
       .lte("date", windowEnd);

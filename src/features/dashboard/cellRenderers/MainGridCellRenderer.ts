@@ -21,6 +21,13 @@ import { useMaintenanceEventStore } from "@/features/maintenanceEvents/state/use
 import { useSubrentalEventStore } from "@/features/subrentals/state/useSubrentalEventStore";
 import { isBleacherAccessible } from "../ui/NoAccessFilter";
 import { SubrentalOverlayBody } from "../ui/event/SubrentalOverlayBody";
+import { hasCreateWorkTrackerModifier, isMacPlatform } from "@/lib/platform";
+import {
+  buildWorkTrackerDraft,
+  checkWorkTrackerOpenAccess,
+} from "@/features/workTrackers/util/createWorkTrackerDraft";
+import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { createErrorToast } from "@/components/toasts/ErrorToast";
 
 /** Column range where the damage overlay should be drawn */
 type DamageOverlayRange = { startCol: number; endCol: number; severity: DamageSeverity };
@@ -720,11 +727,25 @@ export class MainGridCellRenderer implements ICellRenderer {
 
       // Set up click listener for cell editing (after adding children)
       if (this.yAxis === "Bleachers") {
-        tile.on("cell:edit-request", (data: { row: number; col: number }) => {
-          // If the click originated from a truck icon interaction, the callback will already have fired.
-          // We rely on event stopping at the icon level; proceed with block load otherwise.
-          this.handleLoadBlock(data.row, data.col);
-        });
+        tile.on(
+          "cell:edit-request",
+          (data: {
+            row: number;
+            col: number;
+            metaKey: boolean;
+            ctrlKey: boolean;
+            button: number;
+          }) => {
+            // ⌘ (mac) / Ctrl (win) + click skips the cell editor popup and goes straight to a
+            // new work tracker with the addresses and POCs pre-filled.
+            if (hasCreateWorkTrackerModifier(data, isMacPlatform())) {
+              if (this.handleCreateWorkTrackerShortcut(data.row, data.col)) return;
+            }
+            // If the click originated from a truck icon interaction, the callback will already have fired.
+            // We rely on event stopping at the icon level; proceed with block load otherwise.
+            this.handleLoadBlock(data.row, data.col);
+          },
+        );
       }
     }
 
@@ -795,6 +816,53 @@ export class MainGridCellRenderer implements ICellRenderer {
     }
 
     return parent;
+  }
+
+  /**
+   * ⌘/Ctrl+click handler: open a brand-new work tracker for an empty cell.
+   *
+   * Returns false when the shortcut does not apply, so the caller falls back to the normal
+   * cell-editor popup. The "is the cell empty" test lives here rather than relying on
+   * `WorkTrackerGroup` swallowing the click: the group only stops `pointerdown`, and the exact
+   * pixi event ordering between the group and the tile underneath is too brittle to lean on.
+   */
+  private handleCreateWorkTrackerShortcut(rowIndex: number, columnIndex: number): boolean {
+    const bleacherUuid = this.rowBleacherUuids[rowIndex];
+    const bleacher = this.latestBleachersByUuid.get(bleacherUuid) ?? this.bleachers[rowIndex];
+    const date = this.dates[columnIndex];
+
+    if (!bleacher || !date) return false;
+
+    // Empty means "no work tracker on this date". A cell that only holds an event is still
+    // empty — that is the main case, since the event is where the POC gets copied from.
+    const hasWorkTracker = (bleacher.workTrackers ?? []).some((wt) => wt.date === date);
+    if (hasWorkTracker) return false;
+
+    const perms = usePermissionsStore.getState();
+    const access = checkWorkTrackerOpenAccess({
+      bleacherUuid: bleacher.bleacherUuid,
+      date,
+      workTrackerUuid: null,
+      perms: {
+        isAdmin: perms.isAdmin,
+        isAccountManager: perms.isAccountManager,
+        accountManagerZoneIds: perms.accountManagerZoneIds,
+      },
+      allBleachers: useDashboardBleachersStore.getState().data,
+    });
+
+    if (!access.allowed) {
+      createErrorToast(access.messages);
+      return true;
+    }
+
+    useWorkTrackerSelectionStore
+      .getState()
+      .openDraft(buildWorkTrackerDraft({ bleacherUuid: bleacher.bleacherUuid, date }), {
+        autoPopulate: true,
+      });
+
+    return true;
   }
 
   private handleLoadBlock(rowIndex: number, columnIndex: number) {

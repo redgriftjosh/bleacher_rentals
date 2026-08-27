@@ -35,6 +35,14 @@ type SearchableSelectProps = {
   emptyMessage?: string;
   disabled?: boolean;
   className?: string;
+  /**
+   * Pinned action rendered as the last row of the list — e.g. "+ Add new contact".
+   * Deliberately outside the filtered group so it stays reachable when the search
+   * matches nothing, which is exactly when it is most useful.
+   */
+  footerItem?: { label: string; onSelect: () => void };
+  /** Overrides the trigger text while `selected` is null (legacy free-text values). */
+  fallbackLabel?: string | null;
 };
 
 /**
@@ -52,10 +60,13 @@ export function SearchableSelect({
   emptyMessage = "No results found.",
   disabled = false,
   className,
+  footerItem,
+  fallbackLabel = null,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false);
 
   const selectedOption = options.find((o) => o.value === selected);
+  const triggerLabel = selectedOption?.label ?? fallbackLabel;
 
   const handleSelect = (value: string) => {
     onSelect(value === selected ? null : value);
@@ -71,17 +82,17 @@ export function SearchableSelect({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "w-full h-[40px] justify-between text-left font-normal disabled:opacity-100",
+            "w-full h-[40px] justify-between overflow-hidden text-left font-normal disabled:opacity-100",
             disabled && "bg-gray-50 text-gray-700 cursor-default",
             className,
           )}
         >
-          <span className={cn("truncate", !selectedOption && "text-gray-500")}>
-            {selectedOption ? selectedOption.label : placeholder}
+          <span className={cn("min-w-0 flex-1 truncate", !triggerLabel && "text-gray-500")}>
+            {triggerLabel ?? placeholder}
           </span>
           {!disabled && (
-            <div className="flex items-center gap-1">
-              {selected && (
+            <div className="flex shrink-0 items-center gap-1">
+              {(selected || fallbackLabel) && (
                 <span
                   role="button"
                   tabIndex={0}
@@ -124,6 +135,21 @@ export function SearchableSelect({
                 </CommandItem>
               ))}
             </CommandGroup>
+            {footerItem && (
+              <CommandGroup className="border-t" forceMount>
+                <CommandItem
+                  forceMount
+                  value="__footer_action__"
+                  onSelect={() => {
+                    setOpen(false);
+                    footerItem.onSelect();
+                  }}
+                  className="text-darkBlue font-medium"
+                >
+                  {footerItem.label}
+                </CommandItem>
+              </CommandGroup>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>

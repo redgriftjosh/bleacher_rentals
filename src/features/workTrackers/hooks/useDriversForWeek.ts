@@ -5,6 +5,7 @@ import { DateTime } from "luxon";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import type { DriverWithMeta } from "../db/db";
+import { applyDriverScope, resolveDriverScope, type DriverScope } from "../db/driverZoneScope";
 
 const NONE = "__none__";
 
@@ -100,11 +101,14 @@ function isUsaAddress(street: string | null): boolean {
 export function useDriversForWeek(
   startDate: string,
   showAllDrivers: boolean,
-  accountManagerUuid: string | null,
+  access: WorkTrackerAccess | null,
   enabled: boolean,
 ): { drivers: DriverWithMeta[]; isLoading: boolean } {
+  const isAdmin = access?.isAdmin ?? false;
+  const accountManagerUuid = access?.accountManagerUuid ?? null;
+
   const driversCompiled = useMemo(() => {
-    let q = db
+    const base = db
       .selectFrom("Drivers as d")
       .innerJoin("Users as u", "u.id", "d.user_uuid")
       .leftJoin("Addresses as a", "a.id", "d.address_uuid")
@@ -122,15 +126,13 @@ export function useDriversForWeek(
       ])
       .where("d.is_active", "=", 1);
 
-    if (!showAllDrivers) {
-      q = q.where("d.account_manager_uuid", "=", accountManagerUuid ?? NONE);
-    } else if (!enabled) {
-      // keep the query inert until access is resolved
-      q = q.where("d.id", "=", NONE);
-    }
+    // Keep the query inert until access is resolved.
+    const scope: DriverScope = enabled
+      ? resolveDriverScope({ isAdmin, accountManagerUuid, showAll: showAllDrivers })
+      : { kind: "none" };
 
-    return q.compile();
-  }, [showAllDrivers, accountManagerUuid, enabled]);
+    return applyDriverScope(base, scope).compile();
+  }, [showAllDrivers, isAdmin, accountManagerUuid, enabled]);
 
   const { data: driverRows, isLoading: driversLoading } = useTypedQuery(
     driversCompiled,

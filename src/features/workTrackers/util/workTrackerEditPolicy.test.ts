@@ -15,10 +15,12 @@ const baseWorkTracker = {
   bleacher_uuid: "b-1",
   date: "2026-08-01",
   driver_uuid: "d-1",
-  pickup_poc: null,
+  pickup_poc: "Jane Smith",
+  pickup_poc_contact_uuid: "contact-1",
   pickup_time: "08:00",
   pickup_instructions: null,
-  dropoff_poc: null,
+  dropoff_poc: "John Doe",
+  dropoff_poc_contact_uuid: "contact-2",
   dropoff_time: "12:00",
   dropoff_instructions: null,
   notes: "Driver note",
@@ -51,6 +53,27 @@ function cloneSnapshot(snapshot: WorkTrackerSnapshot): WorkTrackerSnapshot {
 
 describe("workTrackerEditPolicy", () => {
   const before = buildWorkTrackerSnapshot(baseWorkTracker, baseAddress, baseAddress)!;
+
+  it("un-accepts when the pickup POC contact changes behind an identical name", () => {
+    const after = cloneSnapshot(before);
+    after.pickup_poc_contact_uuid = "contact-99";
+
+    expect(classifyWorkTrackerChanges(before, after)).toBe("un-accept");
+  });
+
+  it("un-accepts when the dropoff POC contact changes behind an identical name", () => {
+    const after = cloneSnapshot(before);
+    after.dropoff_poc_contact_uuid = "contact-99";
+
+    expect(classifyWorkTrackerChanges(before, after)).toBe("un-accept");
+  });
+
+  it("un-accepts when a legacy free-text POC is linked to a contact record", () => {
+    const after = cloneSnapshot(before);
+    after.pickup_poc_contact_uuid = null;
+
+    expect(classifyWorkTrackerChanges(before, after)).toBe("un-accept");
+  });
 
   it("detects no changes", () => {
     expect(classifyWorkTrackerChanges(before, cloneSnapshot(before))).toBe("none");
@@ -143,5 +166,86 @@ describe("workTrackerEditPolicy", () => {
     expect(resolveEffectiveChangeType("none", true, false)).toBe("notify-only");
     expect(resolveEffectiveChangeType("none", false, false)).toBe("none");
     expect(resolveEffectiveChangeType("un-accept", true, false)).toBe("un-accept");
+  });
+});
+
+describe("actual bleacher corrections", () => {
+  it("captures the confirmed bleacher and its reason in the snapshot", () => {
+    const snapshot = buildWorkTrackerSnapshot(
+      {
+        ...baseWorkTracker,
+        actual_bleacher_uuid: "b-2",
+        bleacher_change_reason: "damaged",
+      } as Tables<"WorkTrackers">,
+      baseAddress,
+      baseAddress,
+    );
+
+    expect(snapshot?.actual_bleacher_uuid).toBe("b-2");
+    expect(snapshot?.bleacher_change_reason).toBe("damaged");
+  });
+
+  it("treats a manager correcting the actual bleacher as a silent change", () => {
+    // The driver already knows which bleacher they hitched up — pushing it back
+    // at them is noise, and it must not un-accept the trip either.
+    const before = buildWorkTrackerSnapshot(
+      {
+        ...baseWorkTracker,
+        actual_bleacher_uuid: "b-2",
+        bleacher_change_reason: "damaged",
+      } as Tables<"WorkTrackers">,
+      baseAddress,
+      baseAddress,
+    )!;
+    const after = buildWorkTrackerSnapshot(
+      {
+        ...baseWorkTracker,
+        actual_bleacher_uuid: "b-1",
+        bleacher_change_reason: null,
+      } as Tables<"WorkTrackers">,
+      baseAddress,
+      baseAddress,
+    )!;
+
+    expect(classifyWorkTrackerChanges(before, after)).toBe("silent");
+    expect(shouldSendDriverNotification("silent", "accepted", false, "accepted")).toBe(false);
+  });
+
+  it("treats a reason-only correction as a change worth saving", () => {
+    const before = buildWorkTrackerSnapshot(
+      {
+        ...baseWorkTracker,
+        actual_bleacher_uuid: "b-2",
+        bleacher_change_reason: "damaged",
+      } as Tables<"WorkTrackers">,
+      baseAddress,
+      baseAddress,
+    )!;
+    const after = buildWorkTrackerSnapshot(
+      {
+        ...baseWorkTracker,
+        actual_bleacher_uuid: "b-2",
+        bleacher_change_reason: "not_on_site",
+      } as Tables<"WorkTrackers">,
+      baseAddress,
+      baseAddress,
+    )!;
+
+    expect(classifyWorkTrackerChanges(before, after)).toBe("silent");
+  });
+
+  it("still reports no change when nothing about the swap moved", () => {
+    const snapshotOf = () =>
+      buildWorkTrackerSnapshot(
+        {
+          ...baseWorkTracker,
+          actual_bleacher_uuid: "b-2",
+          bleacher_change_reason: "damaged",
+        } as Tables<"WorkTrackers">,
+        baseAddress,
+        baseAddress,
+      )!;
+
+    expect(classifyWorkTrackerChanges(snapshotOf(), snapshotOf())).toBe("none");
   });
 });

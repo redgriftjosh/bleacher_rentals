@@ -89,7 +89,29 @@ export const PERMISSIONS: PermissionEntry[] = [
     },
   },
   {
+    label: "Companies & Contacts",
+    description:
+      "This applies to the Companies & Contacts page, and to the contact and company forms reached from the quote builder and the work tracker.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: full(
+        "Can create, edit and delete any company or contact, including setting the Quote Language that decides which language that contact's quotes are sent in.",
+      ),
+      account_manager: full(
+        "Contacts and companies are a shared address book, not owned records — account managers can create and edit any of them, including the Quote Language, because they are the ones speaking to the client and sending the quote.",
+      ),
+      developer: none(
+        "Unable to even access the page, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read(
+        "This user can see companies and contacts and every detail, but cannot create, edit or delete any of them. Enforced in the database by row-level security, so the block holds even though the page still shows the buttons — a write appears to succeed locally and is then rejected by the server.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
     label: "Work Trackers",
+
     description: "This applies to the Work Trackers Page and the Dashboard.",
     category: "Day to Day Operations",
     roles: {

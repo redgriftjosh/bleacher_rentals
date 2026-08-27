@@ -1,6 +1,7 @@
 import { LocateFixed, X, Trash2, Calculator, Pencil, AlertTriangle } from "lucide-react";
 import { AppTooltip } from "@/components/AppTooltip";
 import { Dropdown } from "@/components/DropDown";
+import { BleacherSwapPanel } from "@/features/workTrackers/components/BleacherSwapPanel";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { EditWorkTrackerTypesModal } from "./EditWorkTrackerTypesModal";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
@@ -72,17 +73,27 @@ import {
   isPickupTransportationMismatch,
 } from "@/features/alerts/util/workTrackerTransportation";
 import { getUpcomingWindowEnd } from "@/features/alerts/util/getUpcomingWindow";
+import { PocSelect } from "./PocSelect";
+import { getExpectedPocForWorkTracker, type PocDirection } from "../util/resolvePocContact";
+import { describePocPopulateResult, type PocValue } from "../util/pocField";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
   setSelectedWorkTracker: (block: Tables<"WorkTrackers"> | null) => void;
   setSelectedBlock: (block: EditBlock | null) => void;
+  /**
+   * Run the pickup/dropoff address + POC locators once when a NEW tracker opens. Set by the
+   * dashboard's ⌘/Ctrl+click shortcut, which has no popup where the user could press the
+   * locator buttons themselves.
+   */
+  autoPopulate?: boolean;
 };
 
 export default function WorkTrackerModal({
   selectedWorkTracker,
   setSelectedWorkTracker,
   setSelectedBlock,
+  autoPopulate = false,
 }: WorkTrackerModalProps) {
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
@@ -113,6 +124,8 @@ export default function WorkTrackerModal({
   const [showEditTypes, setShowEditTypes] = useState(false);
   const initialSnapshotRef = useRef<WorkTrackerSnapshot | null>(null);
   const pendingChangeTypeRef = useRef<WorkTrackerChangeType>("none");
+  // `${bleacher_uuid}|${date}` of the draft whose fields were already auto-populated.
+  const autoPopulatedKeyRef = useRef<string | null>(null);
   // ids of the auto-managed "Hauling" / "Deadhead" line items (if any) — their
   // amounts are kept in sync with pickup/dropoff/driver instead of being
   // hand-edited or button-triggered.
@@ -319,6 +332,46 @@ export default function WorkTrackerModal({
     }
   };
 
+  const setPickupPoc = (next: PocValue) =>
+    setWorkTracker((prev) => ({
+      ...prev!,
+      pickup_poc: next.pocText,
+      pickup_poc_contact_uuid: next.contactUuid,
+    }));
+
+  const setDropoffPoc = (next: PocValue) =>
+    setWorkTracker((prev) => ({
+      ...prev!,
+      dropoff_poc: next.pocText,
+      dropoff_poc_contact_uuid: next.contactUuid,
+    }));
+
+  // Populate a POC from the neighbouring event / work tracker, mirroring the address locate
+  // buttons above. A neighbour holding only legacy free text is refused rather than copied:
+  // the driver app dials the POC through Contacts, and free text carries no phone number.
+  const handlePopulatePoc = async (direction: PocDirection, options?: { silent?: boolean }) => {
+    if (!workTracker?.bleacher_uuid || !workTracker?.date) return;
+
+    const resolution = await getExpectedPocForWorkTracker({
+      bleacherUuid: workTracker.bleacher_uuid,
+      targetDate: workTracker.date,
+      excludeWorkTrackerUuid: workTracker.id,
+      direction,
+    });
+
+    const outcome = describePocPopulateResult(resolution, direction);
+
+    if (outcome.kind === "error") {
+      // Silent = auto-population: leave the field empty rather than greeting the user with two
+      // toasts they never asked for. The locator buttons stay loud.
+      if (!options?.silent) createErrorToast(outcome.messages);
+      return;
+    }
+
+    if (direction === "past") setPickupPoc(outcome.value);
+    else setDropoffPoc(outcome.value);
+  };
+
   // Pre-save in-memory transportation warning for pickup mismatch
   const { data: expectedPickupStreet } = useQuery({
     queryKey: [
@@ -437,11 +490,10 @@ export default function WorkTrackerModal({
       setPickUpAddress(null);
       setDropOffAddress(null);
       initialSnapshotRef.current = buildWorkTrackerSnapshot(selectedWorkTracker, null, null);
-      // Default to "Trip" type for new work trackers
-      const tripType = workTrackerTypes.find((t) => t.display_name === "Trip");
-      if (tripType) {
-        setWorkTracker((prev) => ({ ...prev!, work_tracker_type_uuid: tripType.id }));
-      }
+      // The "Trip" default is applied by the effect above once the types load — deliberately not
+      // duplicated here, so `workTrackerTypes` can stay out of this effect's deps. It re-emits
+      // while the PowerSync query settles, and re-running this would blank the addresses that
+      // auto-population just filled in.
     } else if (fetchedWorkTracker) {
       console.log("fetchedWorkTracker", fetchedWorkTracker);
       const nextPickupAddress = {
@@ -473,7 +525,38 @@ export default function WorkTrackerModal({
       setPickUpAddress(nextPickupAddress);
       setDropOffAddress(nextDropoffAddress);
     }
-  }, [selectedWorkTracker, fetchedWorkTracker, workTrackerTypes]);
+  }, [selectedWorkTracker, fetchedWorkTracker]);
+
+  /**
+   * ⌘/Ctrl+click on an empty dashboard cell opens this modal with no popup in between, so the
+   * four locators the user would otherwise press are run for them, once, on open.
+   *
+   * The guard is keyed on bleacher+date rather than a plain "already ran" flag: `workTracker`
+   * is seeded by the effect above, so on the first pass it can still hold the previously opened
+   * tracker — populating from that would silently fill in another bleacher's addresses.
+   */
+  useEffect(() => {
+    if (!selectedWorkTracker) {
+      autoPopulatedKeyRef.current = null;
+      return;
+    }
+    if (!autoPopulate || selectedWorkTracker.id !== "-1") return;
+
+    const key = `${selectedWorkTracker.bleacher_uuid}|${selectedWorkTracker.date}`;
+    if (autoPopulatedKeyRef.current === key) return;
+    // Wait until the local state has caught up with the tracker we were handed.
+    if (`${workTracker?.bleacher_uuid}|${workTracker?.date}` !== key) return;
+
+    autoPopulatedKeyRef.current = key;
+
+    void Promise.all([
+      handlePopulatePickupFromLastAddress(),
+      handlePopulateDropoffFromNextAddress(),
+      handlePopulatePoc("past", { silent: true }),
+      handlePopulatePoc("future", { silent: true }),
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPopulate, selectedWorkTracker, workTracker?.bleacher_uuid, workTracker?.date]);
 
   const handleSaveWorkTracker = async () => {
     if (isSaving) return;
@@ -786,7 +869,9 @@ export default function WorkTrackerModal({
         >
           <div
             onMouseDown={(e) => e.stopPropagation()} // 👈 prevent bubbling here
-            className=" p-4 rounded shadow w-[900px] transition-colors duration-200 bg-white"
+            // Only the form body scrolls: the title stays put and the footer
+            // (Delete, BoL, Save) stays reachable without hunting for it.
+            className=" p-4 rounded shadow w-[900px] max-h-[90vh] flex flex-col overflow-hidden transition-colors duration-200 bg-white"
           >
             <div className="flex flex-row justify-between items-start">
               <div className="flex items-center gap-2">
@@ -814,392 +899,448 @@ export default function WorkTrackerModal({
                 preserve their current workflow step.
               </div>
             )}
-            <Tabs defaultValue="details">
-              <TabsList>
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="line-items">Line Items</TabsTrigger>
-              </TabsList>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <Tabs defaultValue="details">
+                <TabsList>
+                  <TabsTrigger value="details">Details</TabsTrigger>
+                  <TabsTrigger value="line-items">Line Items</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="details">
-                <fieldset disabled={!canEditFields}>
-                  <div className="flex flex-row gap-4">
-                    {/* Column 1: Global Info */}
-                    <div className="flex-1">
-                      <div className="flex flex-row gap-2">
-                        <div className="flex-[2]">
-                          <label className={labelClassName}>Driver</label>
-                          <SelectDriver
-                            value={workTracker?.driver_uuid ?? null}
-                            onChange={(id) =>
-                              setWorkTracker((prev) => ({
-                                ...prev!,
-                                driver_uuid: id,
-                              }))
-                            }
-                            placeholder="Select Driver"
-                            date={workTracker?.date ?? null}
-                            disabled={!canEditFields}
-                            showAllDrivers={!canEditFields}
-                          />
+                <TabsContent value="details">
+                  {/*
+                  min-w-0 is load-bearing: browsers give <fieldset> a UA
+                  `min-inline-size: min-content`, so it refuses to shrink below its content and
+                  overflows the modal's fixed 900px width — no amount of min-w-0 on descendants
+                  can override that from the inside.
+                */}
+                  <fieldset className="min-w-0" disabled={!canEditFields}>
+                    <div className="flex flex-row gap-4">
+                      {/* Column 1: Global Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-row gap-2">
+                          <div className="flex-[2] min-w-0">
+                            <label className={labelClassName}>Driver</label>
+                            <SelectDriver
+                              value={workTracker?.driver_uuid ?? null}
+                              onChange={(id) =>
+                                setWorkTracker((prev) => ({
+                                  ...prev!,
+                                  driver_uuid: id,
+                                }))
+                              }
+                              placeholder="Select Driver"
+                              date={workTracker?.date ?? null}
+                              disabled={!canEditFields}
+                              showAllDrivers={!canEditFields}
+                            />
+                          </div>
+                          {/* Fixed width, not flex-1: a long driver name used to eat this
+                            column down to nothing and spill its label into Pickup Time. */}
+                          <div className="w-24 shrink-0" data-testid="assigned-bleacher-select">
+                            <label className={labelClassName}>Bleacher</label>
+                            <Dropdown
+                              options={(bleacherOptions ?? []).map((bleacher) => ({
+                                label: bleacher.label,
+                                value: bleacher.uuid,
+                              }))}
+                              selected={workTracker?.bleacher_uuid}
+                              onSelect={(id) =>
+                                setWorkTracker((prev) => ({
+                                  ...prev!,
+                                  bleacher_uuid: id,
+                                }))
+                              }
+                              placeholder={isBleachersLoading ? "Loading..." : "Select Bleacher"}
+                              disabled={!canEditFields}
+                            />
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <label className={labelClassName}>Bleacher</label>
+
+                        <BleacherSwapPanel
+                          assignedBleacherUuid={workTracker?.bleacher_uuid ?? null}
+                          actualBleacherUuid={workTracker?.actual_bleacher_uuid ?? null}
+                          reasonCode={workTracker?.bleacher_change_reason ?? null}
+                          bleacherOptions={bleacherOptions ?? []}
+                          canEdit={canEditFields}
+                          labelClassName={labelClassName}
+                          onChange={({ actualBleacherUuid, reasonCode }) =>
+                            setWorkTracker((prev) => ({
+                              ...prev!,
+                              actual_bleacher_uuid: actualBleacherUuid,
+                              bleacher_change_reason: reasonCode,
+                            }))
+                          }
+                        />
+
+                        {/* Work Tracker Type */}
+                        <div className="mt-1">
+                          <div className="flex items-center justify-between">
+                            <label className={labelClassName}>Type</label>
+                            {canEditFields && (
+                              <button
+                                type="button"
+                                onClick={() => setShowEditTypes(true)}
+                                className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 transition-colors mt-1"
+                              >
+                                <Pencil className="h-3 w-3" />
+                                Edit types
+                              </button>
+                            )}
+                          </div>
                           <Dropdown
-                            options={(bleacherOptions ?? []).map((bleacher) => ({
-                              label: bleacher.label,
-                              value: bleacher.uuid,
+                            options={workTrackerTypes.map((t) => ({
+                              label: t.display_name ?? "",
+                              value: t.id,
                             }))}
-                            selected={workTracker?.bleacher_uuid}
+                            selected={workTracker?.work_tracker_type_uuid ?? undefined}
                             onSelect={(id) =>
                               setWorkTracker((prev) => ({
                                 ...prev!,
-                                bleacher_uuid: id,
+                                work_tracker_type_uuid: id,
                               }))
                             }
-                            placeholder={isBleachersLoading ? "Loading..." : "Select Bleacher"}
+                            placeholder="Select Type"
                             disabled={!canEditFields}
                           />
                         </div>
-                      </div>
 
-                      {/* Work Tracker Type */}
-                      <div className="mt-1">
-                        <div className="flex items-center justify-between">
-                          <label className={labelClassName}>Type</label>
-                          {canEditFields && (
-                            <button
-                              type="button"
-                              onClick={() => setShowEditTypes(true)}
-                              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 transition-colors mt-1"
-                            >
-                              <Pencil className="h-3 w-3" />
-                              Edit types
-                            </button>
-                          )}
-                        </div>
-                        <Dropdown
-                          options={workTrackerTypes.map((t) => ({
-                            label: t.display_name ?? "",
-                            value: t.id,
-                          }))}
-                          selected={workTracker?.work_tracker_type_uuid ?? undefined}
-                          onSelect={(id) =>
+                        <label className={labelClassName}>Project Number</label>
+                        <input
+                          type="text"
+                          className={inputClassName}
+                          placeholder="Project Number"
+                          value={workTracker?.project_number ?? ""}
+                          onChange={(e) =>
                             setWorkTracker((prev) => ({
                               ...prev!,
-                              work_tracker_type_uuid: id,
+                              project_number: e.target.value || null,
                             }))
                           }
-                          placeholder="Select Type"
-                          disabled={!canEditFields}
                         />
-                      </div>
 
-                      <label className={labelClassName}>Project Number</label>
-                      <input
-                        type="text"
-                        className={inputClassName}
-                        placeholder="Project Number"
-                        value={workTracker?.project_number ?? ""}
-                        onChange={(e) =>
-                          setWorkTracker((prev) => ({
-                            ...prev!,
-                            project_number: e.target.value || null,
-                          }))
-                        }
-                      />
-
-                      <label className={labelClassName}>Date</label>
-                      <input
-                        type="date"
-                        className={inputClassName}
-                        value={workTracker?.date ?? ""}
-                        onChange={(e) =>
-                          setWorkTracker((prev) => ({
-                            ...prev!,
-                            date: e.target.value,
-                          }))
-                        }
-                      />
-                      {/* Status Badge - Account Manager can toggle between draft and released */}
-                      <div className="flex items-center gap-2">
-                        <label className={labelClassName}>Status</label>
-                        {showDraftWarning && (
-                          <AppTooltip content="This work tracker is still in draft and should be released soon.">
-                            <span className="mt-1 inline-flex text-amber-600">
-                              <AlertTriangle className="h-4 w-4" />
-                            </span>
-                          </AppTooltip>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-center p-3 bg-gray-50 rounded border">
-                        <WorkTrackerStatusBadge
-                          status={workTracker?.status ?? "draft"}
-                          onStatusChange={(newStatus) => {
+                        <label className={labelClassName}>Date</label>
+                        <input
+                          type="date"
+                          className={inputClassName}
+                          value={workTracker?.date ?? ""}
+                          onChange={(e) =>
                             setWorkTracker((prev) => ({
                               ...prev!,
-                              status: newStatus,
-                            }));
-                          }}
-                          canEdit={canEdit && canRelease}
-                          workTrackerId={workTracker?.id !== "-1" ? workTracker?.id : undefined}
-                          // Review-request disabled per boss feedback
-                          // onRequestReview={
-                          //   canEdit && !canRelease && !isNew ? () => handleRequestReview() : undefined
-                          // }
+                              date: e.target.value,
+                            }))
+                          }
                         />
-                      </div>
-                      <label className={labelClassName}>Driver Notes</label>
-                      <textarea
-                        className="w-full text-sm border p-1 rounded bg-white"
-                        value={workTracker?.notes ?? ""}
-                        placeholder="Driver Notes"
-                        onChange={(e) =>
-                          setWorkTracker((prev) => ({
-                            ...prev!,
-                            notes: e.target.value,
-                          }))
-                        }
-                        rows={4}
-                      />
-                      <label className={labelClassName}>Internal Notes</label>
-                      <textarea
-                        className="w-full text-sm border p-1 rounded bg-white"
-                        value={workTracker?.internal_notes ?? ""}
-                        placeholder="Internal Notes"
-                        onChange={(e) =>
-                          setWorkTracker((prev) => ({
-                            ...prev!,
-                            internal_notes: e.target.value,
-                          }))
-                        }
-                        rows={4}
-                      />
-                      <label className={labelClassName}>Pay</label>
-                      <div className="flex flex-row gap-2 items-center">
-                        <input
-                          type="number"
-                          className={inputClassName}
-                          step="0.01"
-                          min="0"
-                          value={payInput}
-                          onChange={handlePayChange}
-                          placeholder="0.00"
-                        />
-                        {canEditFields && (
-                          <AppTooltip
-                            content={`Set pay to line items total: $${(
-                              lineItemsTotalCents / 100
-                            ).toFixed(2)}`}
-                          >
-                            <Calculator
-                              className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer text-darkBlue hover:text-lightBlue"
-                              onClick={handleCalculatePay}
-                            />
-                          </AppTooltip>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Columns 2 & 3: Pickup, Dropoff, and Map */}
-                    <div className="flex-[2] flex flex-col gap-4">
-                      <div className="flex flex-row gap-4">
-                        {/* Column 2: Pickup */}
-                        <div className="flex-1">
-                          <label className={labelClassName}>Pickup Time</label>
-                          <input
-                            type="text"
-                            className={inputClassName}
-                            placeholder="Pickup Time"
-                            value={workTracker?.pickup_time ?? ""}
-                            onChange={(e) =>
-                              setWorkTracker((prev) => ({ ...prev!, pickup_time: e.target.value }))
-                            }
-                          />
-                          <label className={labelClassName}>Pickup POC</label>
-                          <input
-                            type="text"
-                            className={inputClassName}
-                            placeholder="Pickup POC"
-                            value={workTracker?.pickup_poc ?? ""}
-                            onChange={(e) =>
-                              setWorkTracker((prev) => ({ ...prev!, pickup_poc: e.target.value }))
-                            }
-                          />
-                          <div className="flex items-center gap-2">
-                            <label className={labelClassName}>Pickup Address</label>
-                            {showPickupTransportWarning && (
-                              <AppTooltip content="Pickup differs from last location. Use locate.">
-                                <span className="mt-1 inline-flex text-amber-600">
-                                  <AlertTriangle className="h-4 w-4" />
-                                </span>
-                              </AppTooltip>
-                            )}
-                          </div>
-                          <div className="flex flex-row gap-2 items-center">
-                            <AddressAutocomplete
-                              className="bg-white"
-                              onAddressSelect={(data) =>
-                                setPickUpAddress({
-                                  ...data,
-                                  addressUuid: pickUpAddress?.addressUuid ?? null,
-                                })
-                              }
-                              initialValue={pickUpAddress?.address || ""}
-                            />
-                            {canEditFields && (
-                              <AppTooltip content="Populate from last known bleacher location">
-                                <button
-                                  type="button"
-                                  onClick={handlePopulatePickupFromLastAddress}
-                                  className="text-gray-400 hover:text-darkBlue transition-colors"
-                                >
-                                  <LocateFixed className="h-5 w-5" />
-                                </button>
-                              </AppTooltip>
-                            )}
-                          </div>
-                          <label className={labelClassName}>Pickup Instructions</label>
-                          <textarea
-                            className="w-full text-sm border p-1 rounded bg-white"
-                            placeholder="Pickup Instructions"
-                            value={workTracker?.pickup_instructions ?? ""}
-                            onChange={(e) =>
-                              setWorkTracker((prev) => ({
-                                ...prev!,
-                                pickup_instructions: e.target.value || null,
-                              }))
-                            }
-                            rows={3}
-                          />
-                          <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={!!workTracker?.teardown_required}
-                              onChange={(e) =>
-                                setWorkTracker((prev) => ({
-                                  ...prev!,
-                                  teardown_required: e.target.checked,
-                                }))
-                              }
-                            />
-                            <span className="text-sm font-medium text-gray-700">
-                              Teardown Required
-                            </span>
-                          </label>
+                        {/* Status Badge - Account Manager can toggle between draft and released */}
+                        <div className="flex items-center gap-2">
+                          <label className={labelClassName}>Status</label>
+                          {showDraftWarning && (
+                            <AppTooltip content="This work tracker is still in draft and should be released soon.">
+                              <span className="mt-1 inline-flex text-amber-600">
+                                <AlertTriangle className="h-4 w-4" />
+                              </span>
+                            </AppTooltip>
+                          )}
                         </div>
-
-                        {/* Column 3: Dropoff */}
-                        <div className="flex-1">
-                          <label className={labelClassName}>Dropoff Time</label>
-                          <input
-                            type="text"
-                            className={inputClassName}
-                            placeholder="Dropoff Time"
-                            value={workTracker?.dropoff_time ?? ""}
-                            onChange={(e) =>
-                              setWorkTracker((prev) => ({ ...prev!, dropoff_time: e.target.value }))
-                            }
-                          />
-                          <label className={labelClassName}>Dropoff POC</label>
-                          <input
-                            type="text"
-                            className={inputClassName}
-                            placeholder="Dropoff POC"
-                            value={workTracker?.dropoff_poc ?? ""}
-                            onChange={(e) =>
-                              setWorkTracker((prev) => ({ ...prev!, dropoff_poc: e.target.value }))
-                            }
-                          />
-                          <label className={labelClassName}>Dropoff Address</label>
-                          <div className="flex flex-row gap-2 items-center">
-                            <AddressAutocomplete
-                              className="bg-white"
-                              onAddressSelect={(data) =>
-                                setDropOffAddress({
-                                  ...data,
-                                  addressUuid: dropOffAddress?.addressUuid ?? null,
-                                })
-                              }
-                              initialValue={dropOffAddress?.address || ""}
-                            />
-                            {canEditFields && (
-                              <AppTooltip content="Populate from next known bleacher location">
-                                <button
-                                  type="button"
-                                  onClick={handlePopulateDropoffFromNextAddress}
-                                  className="text-gray-400 hover:text-darkBlue transition-colors"
-                                >
-                                  <LocateFixed className="h-5 w-5" />
-                                </button>
-                              </AppTooltip>
-                            )}
-                          </div>
-                          <label className={labelClassName}>Dropoff Instructions</label>
-                          <textarea
-                            className="w-full text-sm border p-1 rounded bg-white"
-                            placeholder="Dropoff Instructions"
-                            value={workTracker?.dropoff_instructions ?? ""}
-                            onChange={(e) =>
+                        <div className="flex items-center justify-center p-3 bg-gray-50 rounded border">
+                          <WorkTrackerStatusBadge
+                            status={workTracker?.status ?? "draft"}
+                            onStatusChange={(newStatus) => {
                               setWorkTracker((prev) => ({
                                 ...prev!,
-                                dropoff_instructions: e.target.value || null,
-                              }))
-                            }
-                            rows={3}
+                                status: newStatus,
+                              }));
+                            }}
+                            canEdit={canEdit && canRelease}
+                            workTrackerId={workTracker?.id !== "-1" ? workTracker?.id : undefined}
+                            // Review-request disabled per boss feedback
+                            // onRequestReview={
+                            //   canEdit && !canRelease && !isNew ? () => handleRequestReview() : undefined
+                            // }
                           />
-                          <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={!!workTracker?.setup_required}
-                              onChange={(e) =>
-                                setWorkTracker((prev) => ({
-                                  ...prev!,
-                                  setup_required: e.target.checked,
-                                }))
-                              }
-                            />
-                            <span className="text-sm font-medium text-gray-700">
-                              Setup Required
-                            </span>
-                          </label>
+                        </div>
+                        <label className={labelClassName}>Driver Notes</label>
+                        <textarea
+                          className="w-full text-sm border p-1 rounded bg-white"
+                          value={workTracker?.notes ?? ""}
+                          placeholder="Driver Notes"
+                          onChange={(e) =>
+                            setWorkTracker((prev) => ({
+                              ...prev!,
+                              notes: e.target.value,
+                            }))
+                          }
+                          rows={4}
+                        />
+                        <label className={labelClassName}>Internal Notes</label>
+                        <textarea
+                          className="w-full text-sm border p-1 rounded bg-white"
+                          value={workTracker?.internal_notes ?? ""}
+                          placeholder="Internal Notes"
+                          onChange={(e) =>
+                            setWorkTracker((prev) => ({
+                              ...prev!,
+                              internal_notes: e.target.value,
+                            }))
+                          }
+                          rows={4}
+                        />
+                        <label className={labelClassName}>Pay</label>
+                        <div className="flex flex-row gap-2 items-center">
+                          <input
+                            type="number"
+                            className={inputClassName}
+                            step="0.01"
+                            min="0"
+                            value={payInput}
+                            onChange={handlePayChange}
+                            placeholder="0.00"
+                          />
+                          {canEditFields && (
+                            <AppTooltip
+                              content={`Set pay to line items total: $${(
+                                lineItemsTotalCents / 100
+                              ).toFixed(2)}`}
+                            >
+                              <Calculator
+                                className="h-5 w-5 hover:h-6 hover:w-6 transition-all cursor-pointer text-darkBlue hover:text-lightBlue"
+                                onClick={handleCalculatePay}
+                              />
+                            </AppTooltip>
+                          )}
                         </div>
                       </div>
 
-                      {/* Map - below both pickup and dropoff columns */}
-                      <div className="mt-2">
-                        <RouteMapPreview
-                          origin={origin}
-                          destination={dest}
-                          pickUpAddress={pickUpAddress}
-                          dropOffAddress={dropOffAddress}
-                          isLoading={isLegFetching}
-                          error={legErr}
-                          distanceData={leg ?? null}
-                        />
+                      {/* Columns 2 & 3: Pickup, Dropoff, and Map */}
+                      <div className="flex-[2] min-w-0 flex flex-col gap-4">
+                        <div className="flex flex-row gap-4">
+                          {/* Column 2: Pickup */}
+                          <div className="flex-1 min-w-0">
+                            <label className={labelClassName}>Pickup Time</label>
+                            <input
+                              type="text"
+                              className={inputClassName}
+                              placeholder="Pickup Time"
+                              value={workTracker?.pickup_time ?? ""}
+                              onChange={(e) =>
+                                setWorkTracker((prev) => ({
+                                  ...prev!,
+                                  pickup_time: e.target.value,
+                                }))
+                              }
+                            />
+                            <label className={labelClassName}>Pickup POC</label>
+                            <div className="flex flex-row gap-2 items-center">
+                              <div className="flex-1 min-w-0">
+                                <PocSelect
+                                  contactUuid={workTracker?.pickup_poc_contact_uuid ?? null}
+                                  pocText={workTracker?.pickup_poc ?? null}
+                                  onChange={setPickupPoc}
+                                  placeholder="Pickup POC"
+                                />
+                              </div>
+                              {canEditFields && (
+                                <AppTooltip content="Populate from previous event contact">
+                                  <button
+                                    type="button"
+                                    onClick={() => handlePopulatePoc("past")}
+                                    className="text-gray-400 hover:text-darkBlue transition-colors"
+                                  >
+                                    <LocateFixed className="h-5 w-5" />
+                                  </button>
+                                </AppTooltip>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <label className={labelClassName}>Pickup Address</label>
+                              {showPickupTransportWarning && (
+                                <AppTooltip content="Pickup differs from last location. Use locate.">
+                                  <span className="mt-1 inline-flex text-amber-600">
+                                    <AlertTriangle className="h-4 w-4" />
+                                  </span>
+                                </AppTooltip>
+                              )}
+                            </div>
+                            <div className="flex flex-row gap-2 items-center">
+                              <AddressAutocomplete
+                                className="bg-white"
+                                onAddressSelect={(data) =>
+                                  setPickUpAddress({
+                                    ...data,
+                                    addressUuid: pickUpAddress?.addressUuid ?? null,
+                                  })
+                                }
+                                initialValue={pickUpAddress?.address || ""}
+                              />
+                              {canEditFields && (
+                                <AppTooltip content="Populate from last known bleacher location">
+                                  <button
+                                    type="button"
+                                    onClick={handlePopulatePickupFromLastAddress}
+                                    className="text-gray-400 hover:text-darkBlue transition-colors"
+                                  >
+                                    <LocateFixed className="h-5 w-5" />
+                                  </button>
+                                </AppTooltip>
+                              )}
+                            </div>
+                            <label className={labelClassName}>Pickup Instructions</label>
+                            <textarea
+                              className="w-full text-sm border p-1 rounded bg-white"
+                              placeholder="Pickup Instructions"
+                              value={workTracker?.pickup_instructions ?? ""}
+                              onChange={(e) =>
+                                setWorkTracker((prev) => ({
+                                  ...prev!,
+                                  pickup_instructions: e.target.value || null,
+                                }))
+                              }
+                              rows={3}
+                            />
+                            <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={!!workTracker?.teardown_required}
+                                onChange={(e) =>
+                                  setWorkTracker((prev) => ({
+                                    ...prev!,
+                                    teardown_required: e.target.checked,
+                                  }))
+                                }
+                              />
+                              <span className="text-sm font-medium text-gray-700">
+                                Teardown Required
+                              </span>
+                            </label>
+                          </div>
+
+                          {/* Column 3: Dropoff */}
+                          <div className="flex-1 min-w-0">
+                            <label className={labelClassName}>Dropoff Time</label>
+                            <input
+                              type="text"
+                              className={inputClassName}
+                              placeholder="Dropoff Time"
+                              value={workTracker?.dropoff_time ?? ""}
+                              onChange={(e) =>
+                                setWorkTracker((prev) => ({
+                                  ...prev!,
+                                  dropoff_time: e.target.value,
+                                }))
+                              }
+                            />
+                            <label className={labelClassName}>Dropoff POC</label>
+                            <div className="flex flex-row gap-2 items-center">
+                              <div className="flex-1 min-w-0">
+                                <PocSelect
+                                  contactUuid={workTracker?.dropoff_poc_contact_uuid ?? null}
+                                  pocText={workTracker?.dropoff_poc ?? null}
+                                  onChange={setDropoffPoc}
+                                  placeholder="Dropoff POC"
+                                />
+                              </div>
+                              {canEditFields && (
+                                <AppTooltip content="Populate from next event contact">
+                                  <button
+                                    type="button"
+                                    onClick={() => handlePopulatePoc("future")}
+                                    className="text-gray-400 hover:text-darkBlue transition-colors"
+                                  >
+                                    <LocateFixed className="h-5 w-5" />
+                                  </button>
+                                </AppTooltip>
+                              )}
+                            </div>
+                            <label className={labelClassName}>Dropoff Address</label>
+                            <div className="flex flex-row gap-2 items-center">
+                              <AddressAutocomplete
+                                className="bg-white"
+                                onAddressSelect={(data) =>
+                                  setDropOffAddress({
+                                    ...data,
+                                    addressUuid: dropOffAddress?.addressUuid ?? null,
+                                  })
+                                }
+                                initialValue={dropOffAddress?.address || ""}
+                              />
+                              {canEditFields && (
+                                <AppTooltip content="Populate from next known bleacher location">
+                                  <button
+                                    type="button"
+                                    onClick={handlePopulateDropoffFromNextAddress}
+                                    className="text-gray-400 hover:text-darkBlue transition-colors"
+                                  >
+                                    <LocateFixed className="h-5 w-5" />
+                                  </button>
+                                </AppTooltip>
+                              )}
+                            </div>
+                            <label className={labelClassName}>Dropoff Instructions</label>
+                            <textarea
+                              className="w-full text-sm border p-1 rounded bg-white"
+                              placeholder="Dropoff Instructions"
+                              value={workTracker?.dropoff_instructions ?? ""}
+                              onChange={(e) =>
+                                setWorkTracker((prev) => ({
+                                  ...prev!,
+                                  dropoff_instructions: e.target.value || null,
+                                }))
+                              }
+                              rows={3}
+                            />
+                            <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={!!workTracker?.setup_required}
+                                onChange={(e) =>
+                                  setWorkTracker((prev) => ({
+                                    ...prev!,
+                                    setup_required: e.target.checked,
+                                  }))
+                                }
+                              />
+                              <span className="text-sm font-medium text-gray-700">
+                                Setup Required
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Map - below both pickup and dropoff columns */}
+                        <div className="mt-2">
+                          <RouteMapPreview
+                            origin={origin}
+                            destination={dest}
+                            pickUpAddress={pickUpAddress}
+                            dropOffAddress={dropOffAddress}
+                            isLoading={isLegFetching}
+                            error={legErr}
+                            distanceData={leg ?? null}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </fieldset>
-              </TabsContent>
+                  </fieldset>
+                </TabsContent>
 
-              <TabsContent value="line-items">
-                <WorkTrackerLineItemsTab
-                  lineItems={lineItems}
-                  onChange={(items) =>
-                    setLineItems(
-                      reconcileRequirementLineItems(items, {
-                        setupRequired: !!workTracker?.setup_required,
-                        teardownRequired: !!workTracker?.teardown_required,
-                      }),
-                    )
-                  }
-                  canEdit={canEditFields}
-                  isLoading={isLineItemsLoading}
-                />
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="line-items">
+                  <WorkTrackerLineItemsTab
+                    lineItems={lineItems}
+                    onChange={(items) =>
+                      setLineItems(
+                        reconcileRequirementLineItems(items, {
+                          setupRequired: !!workTracker?.setup_required,
+                          teardownRequired: !!workTracker?.teardown_required,
+                        }),
+                      )
+                    }
+                    canEdit={canEditFields}
+                    isLoading={isLineItemsLoading}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
 
-            <div className="mt-4 flex justify-between items-center gap-2">
+            <div className="mt-4 shrink-0 flex justify-between items-center gap-2">
               {canEditFields && !isInProgress && workTracker?.id && workTracker.id !== "-1" && (
                 <button
                   className="text-sm px-3 py-1 rounded bg-red-600 text-white cursor-pointer hover:bg-red-700 transition-all duration-200 flex items-center gap-1"
