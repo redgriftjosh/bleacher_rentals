@@ -13,11 +13,10 @@ const emptyFilters: QuotesBookingsFilters = {
   bookedFrom: null,
   bookedTo: null,
   accountManagerUserUuid: null,
+  inGoodShuffle: null,
 };
 
-export function useQuotesAndBookingsFilters(
-  initialOverrides?: Partial<QuotesBookingsFilters>,
-) {
+export function useQuotesAndBookingsFilters(initialOverrides?: Partial<QuotesBookingsFilters>) {
   const [filters, setFilters] = useState<QuotesBookingsFilters>(() => {
     if (!initialOverrides) return emptyFilters;
     return { ...emptyFilters, ...initialOverrides, isOpen: true };
@@ -47,6 +46,10 @@ export function useQuotesAndBookingsFilters(
     setFilters((prev) => ({ ...prev, accountManagerUserUuid: uuid }));
   }, []);
 
+  const setInGoodShuffle = useCallback((value: boolean | null) => {
+    setFilters((prev) => ({ ...prev, inGoodShuffle: value }));
+  }, []);
+
   const clearFilters = useCallback(() => {
     setFilters((prev) => ({
       ...prev,
@@ -58,6 +61,7 @@ export function useQuotesAndBookingsFilters(
       bookedFrom: null,
       bookedTo: null,
       accountManagerUserUuid: null,
+      inGoodShuffle: null,
     }));
   }, []);
 
@@ -69,6 +73,7 @@ export function useQuotesAndBookingsFilters(
     setEventRange,
     setBookedRange,
     setAccountManagerUserUuid,
+    setInGoodShuffle,
     clearFilters,
   };
 }
