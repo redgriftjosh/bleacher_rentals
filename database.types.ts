@@ -2763,6 +2763,7 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
+          deleted_at: string | null
           description: string | null
           id: string
           quarter_id: string
@@ -2773,6 +2774,7 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           id?: string
           quarter_id: string
@@ -2783,6 +2785,7 @@ export type Database = {
         Update: {
           completed_at?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           id?: string
           quarter_id?: string

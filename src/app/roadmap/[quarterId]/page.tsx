@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo } from "react";
-import { Plus, Calendar, Pencil, Inbox } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Plus, Calendar, Pencil, Inbox, Loader2 } from "lucide-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useQuarter } from "../_lib/hooks/useQuarters";
 import { useSprintsForQuarter } from "../_lib/hooks/useSprints";
@@ -16,6 +16,8 @@ import { QuarterFormModal } from "../_lib/components/QuarterFormModal";
 import { SprintFormModal } from "../_lib/components/SprintFormModal";
 import { quarterLabel, quarterDateRange, sprintLabel } from "../_lib/types";
 import { useRoadmapAccessLevel } from "../_lib/hooks/useRoadmapAccessLevel";
+import { useDraftCreator } from "../_lib/hooks/useDraftCreator";
+import { createDraftFeature } from "../_lib/db/features";
 
 function formatDateRange(start: string, end: string) {
   const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
@@ -43,14 +45,15 @@ export default function QuarterDetailPage() {
   }, [isDeveloper, accessLoading, router]);
 
   const featureParam = searchParams.get("feature");
-  const newFeature = searchParams.get("new") === "feature";
   const editQuarterModal = searchParams.get("edit") === "quarter";
   const newSprint = searchParams.get("new") === "sprint";
   const editSprint = searchParams.get("editSprint");
 
+  const [showDeletedFeatures, setShowDeletedFeatures] = useState(false);
+
   const { quarter } = useQuarter(quarterId);
   const { sprints } = useSprintsForQuarter(quarterId);
-  const { features } = useFeaturesForQuarter(quarterId);
+  const { features } = useFeaturesForQuarter(quarterId, showDeletedFeatures);
 
   const sprintMap = useMemo(() => new Map(sprints.map((s) => [s.id, s])), [sprints]);
   const editingSprint = useMemo(
@@ -64,8 +67,20 @@ export default function QuarterDetailPage() {
   const closeSprintModal = () => router.push(baseUrl);
   const closeQuarterModal = () => router.push(baseUrl);
 
-  const featureId = featureParam === "new" ? null : featureParam;
-  const featureModalOpen = newFeature || featureParam !== null;
+  const featureId = featureParam;
+  const featureModalOpen = featureParam !== null;
+
+  // "+ New Feature" inserts the row first, then opens its modal — everything typed
+  // from that point on autosaves. `replace` keeps the empty draft out of history.
+  const openFeature = useCallback(
+    (id: string) => router.replace(`${baseUrl}?feature=${id}`),
+    [router, baseUrl],
+  );
+  const { createDraft: createFeatureDraft, isCreating: creatingFeature } = useDraftCreator({
+    create: () => createDraftFeature(quarterId),
+    onCreated: openFeature,
+    errorMessage: "Couldn't create the feature",
+  });
 
   return (
     <main className="p-6 max-w-6xl mx-auto">
@@ -100,15 +115,32 @@ export default function QuarterDetailPage() {
       <section className="mb-8">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">Features</h2>
-          <PrimaryButton onClick={() => router.push(`${baseUrl}?new=feature`)}>
-            <Plus className="size-4" />
-            New Feature
-          </PrimaryButton>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowDeletedFeatures((v) => !v)}
+              className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${
+                showDeletedFeatures
+                  ? "border-red-300 bg-red-100 text-red-700"
+                  : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              {showDeletedFeatures ? "Showing Deleted" : "Show Deleted"}
+            </button>
+            <PrimaryButton onClick={createFeatureDraft} disabled={creatingFeature}>
+              {creatingFeature ? (
+                <Loader2 className="size-4 animate-spin motion-reduce:animate-none" />
+              ) : (
+                <Plus className="size-4" />
+              )}
+              New Feature
+            </PrimaryButton>
+          </div>
         </div>
 
         {features.length === 0 ? (
           <p className="text-sm text-gray-500 italic border border-dashed rounded p-6 text-center">
-            No features yet for this quarter.
+            {showDeletedFeatures ? "No deleted features." : "No features yet for this quarter."}
           </p>
         ) : (
           <div className="border rounded overflow-hidden">
@@ -129,7 +161,13 @@ export default function QuarterDetailPage() {
                       onClick={() => router.push(`${baseUrl}?feature=${f.id}`)}
                       className="border-b hover:bg-gray-50 cursor-pointer"
                     >
-                      <td className="px-3 py-2">{f.title}</td>
+                      <td className="px-3 py-2">
+                        {f.title.trim() ? (
+                          f.title
+                        ) : (
+                          <span className="text-gray-400 italic">Untitled feature</span>
+                        )}
+                      </td>
                       <td className="px-3 py-2">
                         <StatusPill label={meta.label} hex={meta.hex} />
                       </td>
@@ -229,12 +267,7 @@ export default function QuarterDetailPage() {
         )}
       </section>
 
-      <FeatureModal
-        open={featureModalOpen}
-        onClose={closeFeatureModal}
-        quarterId={quarterId}
-        featureId={featureId}
-      />
+      <FeatureModal open={featureModalOpen} onClose={closeFeatureModal} featureId={featureId} />
 
       <QuarterFormModal open={editQuarterModal} onClose={closeQuarterModal} existing={quarter} />
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { Plus, Calendar } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Plus, Calendar, Loader2 } from "lucide-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useQuarter } from "../../../_lib/hooks/useQuarters";
 import { useSprint } from "../../../_lib/hooks/useSprints";
@@ -19,6 +19,8 @@ import { quarterLabel, sprintLabel } from "../../../_lib/types";
 import { useRoadmapAccessLevel } from "../../../_lib/hooks/useRoadmapAccessLevel";
 import { useRoadmapCurrentUserUuid } from "../../../_lib/hooks/useRoadmapCurrentUserUuid";
 import { useAllTaskSubscriptionsMap } from "../../../_lib/hooks/useSubscriptions";
+import { useDraftCreator } from "../../../_lib/hooks/useDraftCreator";
+import { createDraftTask } from "../../../_lib/db/tasks";
 
 function formatDateRange(start: string, end: string) {
   const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
@@ -47,7 +49,6 @@ export default function SprintDetailPage() {
   }, [isDeveloper, accessLoading, router]);
 
   const taskParam = searchParams.get("task");
-  const newTask = searchParams.get("new") === "task";
 
   const [developerFilter, setDeveloperFilter] = useState<string | "all" | "unassigned">("all");
   const [showDeleted, setShowDeleted] = useState(false);
@@ -91,10 +92,22 @@ export default function SprintDetailPage() {
   const baseUrl = `/roadmap/${quarterId}/sprint/${sprintId}`;
   const quarterUrl = `/roadmap/${quarterId}`;
 
-  const taskId = taskParam === "new" ? null : taskParam;
-  const taskModalOpen = newTask || taskParam !== null;
+  const taskId = taskParam;
+  const taskModalOpen = taskParam !== null;
 
   const closeTaskModal = () => router.push(baseUrl);
+
+  // "+ New Task" inserts the row first, then opens its modal — from there on every
+  // edit autosaves. `replace` keeps the empty draft out of browser history.
+  const openTask = useCallback(
+    (id: string) => router.replace(`${baseUrl}?task=${id}`),
+    [router, baseUrl],
+  );
+  const { createDraft: createTaskDraft, isCreating: creatingTask } = useDraftCreator({
+    create: () => createDraftTask({ sprintId, isBacklog: false, createdByUserUuid: userUuid }),
+    onCreated: openTask,
+    errorMessage: "Couldn't create the task",
+  });
 
   return (
     <main className="p-6 max-w-6xl mx-auto">
@@ -109,8 +122,12 @@ export default function SprintDetailPage() {
         ]}
         description={sprint ? formatDateRange(sprint.start_date, sprint.end_date) : undefined}
         rightSlot={
-          <PrimaryButton onClick={() => router.push(`${baseUrl}?new=task`)}>
-            <Plus className="size-4" />
+          <PrimaryButton onClick={createTaskDraft} disabled={creatingTask}>
+            {creatingTask ? (
+              <Loader2 className="size-4 animate-spin motion-reduce:animate-none" />
+            ) : (
+              <Plus className="size-4" />
+            )}
             New Task
           </PrimaryButton>
         }
@@ -195,7 +212,13 @@ export default function SprintDetailPage() {
                     onClick={() => router.push(`${baseUrl}?task=${t.id}`)}
                     className="border-b hover:bg-gray-50 cursor-pointer"
                   >
-                    <td className="px-3 py-2">{t.title}</td>
+                    <td className="px-3 py-2">
+                      {t.title.trim() ? (
+                        t.title
+                      ) : (
+                        <span className="text-gray-400 italic">Untitled task</span>
+                      )}
+                    </td>
                     <td className="px-3 py-2">
                       <StatusPill label={meta.label} hex={meta.hex} />
                     </td>
@@ -237,7 +260,6 @@ export default function SprintDetailPage() {
       <TaskModal
         open={taskModalOpen}
         onClose={closeTaskModal}
-        sprintId={sprintId}
         quarterId={quarterId}
         taskId={taskId}
       />

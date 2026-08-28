@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
-import { Plus, Calendar } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { Plus, Calendar, Loader2 } from "lucide-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useBacklogTasks } from "../_lib/hooks/useBacklogTasks";
 import { useAllSprintsMap } from "../_lib/hooks/useSprints";
@@ -17,6 +17,8 @@ import { useRoadmapUsers } from "../_lib/hooks/useRoadmapUsers";
 import { useRoadmapAccessLevel } from "../_lib/hooks/useRoadmapAccessLevel";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { canEditRoadmapTasks } from "../_lib/util/canEditRoadmapTasks";
+import { useDraftCreator } from "../_lib/hooks/useDraftCreator";
+import { createDraftTask } from "../_lib/db/tasks";
 
 type FilterMode = "all" | "mine";
 
@@ -25,7 +27,6 @@ export default function BacklogPage() {
   const searchParams = useSearchParams();
 
   const ticketParam = searchParams.get("ticket");
-  const newTicket = searchParams.get("new") === "ticket";
 
   const [filter, setFilter] = useState<FilterMode>("all");
   const [showCompleted, setShowCompleted] = useState(false);
@@ -61,9 +62,21 @@ export default function BacklogPage() {
   }, [tasks, filter, showCompleted, myTaskIds]);
 
   const baseUrl = "/roadmap/backlog";
-  const ticketId = ticketParam === "new" ? null : ticketParam;
-  const ticketModalOpen = newTicket || ticketParam !== null;
+  const ticketId = ticketParam;
+  const ticketModalOpen = ticketParam !== null;
   const closeTicketModal = () => router.push(baseUrl);
+
+  // "+ Submit Ticket" inserts the row first, then opens its modal. Subscribers are only
+  // notified once the draft gets a title — see `announceTaskCreated`.
+  const openTicket = useCallback(
+    (id: string) => router.replace(`${baseUrl}?ticket=${id}`),
+    [router],
+  );
+  const { createDraft: createTicketDraft, isCreating: creatingTicket } = useDraftCreator({
+    create: () => createDraftTask({ sprintId: null, isBacklog: true, createdByUserUuid: userUuid }),
+    onCreated: openTicket,
+    errorMessage: "Couldn't create the ticket",
+  });
 
   return (
     <main className="p-6 max-w-5xl mx-auto">
@@ -72,8 +85,12 @@ export default function BacklogPage() {
         description="Submit ideas, bugs, and feature requests. Assign to a sprint when ready."
         rightSlot={
           canEditTasks ? (
-            <PrimaryButton onClick={() => router.push(`${baseUrl}?new=ticket`)}>
-              <Plus className="size-4" />
+            <PrimaryButton onClick={createTicketDraft} disabled={creatingTicket}>
+              {creatingTicket ? (
+                <Loader2 className="size-4 animate-spin motion-reduce:animate-none" />
+              ) : (
+                <Plus className="size-4" />
+              )}
               Submit Ticket
             </PrimaryButton>
           ) : undefined
@@ -152,7 +169,13 @@ export default function BacklogPage() {
                     onClick={() => router.push(`${baseUrl}?ticket=${t.id}`)}
                     className="border-b hover:bg-gray-50 cursor-pointer"
                   >
-                    <td className="px-3 py-2">{t.title}</td>
+                    <td className="px-3 py-2">
+                      {t.title.trim() ? (
+                        t.title
+                      ) : (
+                        <span className="text-gray-400 italic">Untitled ticket</span>
+                      )}
+                    </td>
                     <td className="px-3 py-2">
                       <StatusPill label={meta.label} hex={meta.hex} />
                     </td>
@@ -187,7 +210,6 @@ export default function BacklogPage() {
       <TaskModal
         open={ticketModalOpen}
         onClose={closeTicketModal}
-        sprintId={null}
         quarterId={null}
         taskId={ticketId}
         readOnly={!canEditTasks}

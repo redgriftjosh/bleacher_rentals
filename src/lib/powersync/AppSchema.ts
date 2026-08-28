@@ -633,6 +633,7 @@ const RoadmapSprints = new Table(RoadmapSprintsCols, {
 const RoadmapFeaturesCols = {
   created_at: column.text,
   completed_at: column.text,
+  deleted_at: column.text,
   quarter_id: column.text,
   title: column.text,
   description: column.text,
@@ -643,6 +644,7 @@ const RoadmapFeatures = new Table(RoadmapFeaturesCols, {
   indexes: {
     quarter_id: ["quarter_id"],
     status: ["status"],
+    deleted_at: ["deleted_at"],
   },
 });
 
