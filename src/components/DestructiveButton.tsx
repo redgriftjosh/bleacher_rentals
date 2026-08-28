@@ -19,8 +19,8 @@ export function DestructiveButton({ loading, disabled, children, className, ...p
       type="button"
       disabled={disabled || loading}
       className={cn(
-        "flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-[15px] font-medium text-[#FF3B30]",
-        "transition-colors hover:bg-[#FF3B30]/10 disabled:cursor-not-allowed disabled:opacity-40",
+        "flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-[15px] font-medium text-rm-danger",
+        "transition-colors hover:bg-rm-danger-soft disabled:cursor-not-allowed disabled:opacity-40",
         className,
       )}
       {...props}

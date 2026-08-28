@@ -64,19 +64,19 @@ export function ConfirmDialog({
     >
       <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px]" onClick={onCancel} />
 
-      <div className="relative w-full max-w-[270px] overflow-hidden rounded-[14px] bg-white/95 text-center shadow-[0_10px_40px_-10px_rgba(0,0,0,0.4)] backdrop-blur-xl">
+      <div className="relative w-full max-w-[270px] overflow-hidden rounded-[14px] bg-white/95 text-center shadow-rm-modal backdrop-blur-xl">
         <div className="px-4 pt-5 pb-4">
           <h2 className="text-[17px] leading-tight font-semibold text-gray-900">{title}</h2>
-          {message && <p className="mt-1.5 text-[13px] leading-snug text-[#3C3C43]">{message}</p>}
+          {message && <p className="mt-1.5 text-[13px] leading-snug text-rm-ink">{message}</p>}
         </div>
 
-        <div className="grid grid-cols-2 border-t border-[#E5E5EA]">
+        <div className="grid grid-cols-2 border-t border-rm-hairline">
           <button
             ref={cancelRef}
             type="button"
             onClick={onCancel}
             disabled={busy}
-            className="cursor-pointer border-r border-[#E5E5EA] py-3 text-[17px] text-[#007AFF] transition-colors hover:bg-black/5 disabled:opacity-50"
+            className="cursor-pointer border-r border-rm-hairline py-3 text-[17px] text-rm-accent transition-colors hover:bg-black/5 disabled:opacity-50"
           >
             {cancelLabel}
           </button>
@@ -86,7 +86,7 @@ export function ConfirmDialog({
             disabled={busy}
             className={cn(
               "cursor-pointer py-3 text-[17px] font-semibold transition-colors hover:bg-black/5 disabled:opacity-50",
-              destructive ? "text-[#FF3B30]" : "text-[#007AFF]",
+              destructive ? "text-rm-danger" : "text-rm-accent",
             )}
           >
             {confirmLabel}

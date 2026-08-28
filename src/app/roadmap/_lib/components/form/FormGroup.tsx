@@ -17,11 +17,11 @@ export function FormGroup({ label, children, className }: FormGroupProps) {
   return (
     <section className={className}>
       {label && (
-        <h3 className="mb-1.5 px-1 text-[13px] font-medium tracking-wide text-[#8E8E93] uppercase">
+        <h3 className="mb-1.5 px-1 text-[13px] font-medium tracking-wide text-rm-ink-muted uppercase">
           {label}
         </h3>
       )}
-      <div className="overflow-hidden rounded-xl bg-white ring-1 ring-black/[0.06] [&>*+*]:border-t [&>*+*]:border-[#E5E5EA]">
+      <div className="overflow-hidden rounded-xl bg-white ring-1 ring-black/[0.06] [&>*+*]:border-t [&>*+*]:border-rm-hairline">
         {children}
       </div>
     </section>
@@ -45,7 +45,7 @@ export function FormRow({ label, stacked, children, className }: FormRowProps) {
         <span
           className={cn(
             "text-[15px] text-gray-900",
-            stacked ? "block text-[13px] font-medium text-[#8E8E93]" : "w-32 shrink-0",
+            stacked ? "block text-[13px] font-medium text-rm-ink-muted" : "w-32 shrink-0",
           )}
         >
           {label}

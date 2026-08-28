@@ -22,7 +22,7 @@ export function SaveStatusIndicator({ state, onRetry, className }: Props) {
       <span
         role="status"
         aria-live="polite"
-        className={cn("flex items-center gap-1.5 text-[13px] text-[#FF3B30]", className)}
+        className={cn("flex items-center gap-1.5 text-[13px] text-rm-danger", className)}
       >
         <TriangleAlert className="size-3.5" aria-hidden="true" />
         Couldn&apos;t save
@@ -30,7 +30,7 @@ export function SaveStatusIndicator({ state, onRetry, className }: Props) {
           <button
             type="button"
             onClick={onRetry}
-            className="ml-0.5 cursor-pointer font-medium text-[#007AFF] underline-offset-2 hover:underline"
+            className="ml-0.5 cursor-pointer font-medium text-rm-accent underline-offset-2 hover:underline"
           >
             Retry
           </button>
@@ -44,7 +44,7 @@ export function SaveStatusIndicator({ state, onRetry, className }: Props) {
       role="status"
       aria-live="polite"
       className={cn(
-        "flex min-w-[68px] items-center gap-1.5 text-[13px] text-[#8E8E93] transition-opacity duration-200",
+        "flex min-w-[68px] items-center gap-1.5 text-[13px] text-rm-ink-muted transition-opacity duration-200",
         state === "idle" && "opacity-0",
         className,
       )}

@@ -34,8 +34,8 @@ export function TextField({
       autoFocus={autoFocus}
       aria-label={ariaLabel}
       className={cn(
-        "w-full bg-transparent text-gray-900 placeholder:text-[#C7C7CC] focus:outline-none",
-        "disabled:cursor-not-allowed disabled:text-[#8E8E93]",
+        "w-full bg-transparent text-gray-900 placeholder:text-rm-ink-faint focus:outline-none",
+        "disabled:cursor-not-allowed disabled:text-rm-ink-muted",
         variant === "title" ? "text-[22px] font-semibold tracking-tight" : "text-[15px]",
         className,
       )}

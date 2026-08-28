@@ -34,7 +34,7 @@ export default function RoadmapHomePage() {
   const editingQuarter = quarters.find((q) => q.id === editing) ?? null;
 
   return (
-    <main className="p-6 max-w-5xl mx-auto">
+    <div className="mx-auto max-w-5xl p-6">
       <RoadmapHeader
         crumbs={[{ label: "Roadmap" }]}
         description="Plan quarters, run sprints, and ship features."
@@ -113,6 +113,6 @@ export default function RoadmapHomePage() {
         onClose={closeModal}
         existing={editingQuarter}
       />
-    </main>
+    </div>
   );
 }

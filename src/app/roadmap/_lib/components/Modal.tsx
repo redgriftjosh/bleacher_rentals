@@ -58,20 +58,20 @@ export function Modal({
       <div
         className={cn(
           "relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl bg-white",
-          "shadow-[0_20px_60px_-20px_rgba(0,0,0,0.35)]",
+          "shadow-rm-modal",
           "motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200",
           SIZE_CLASS[size],
         )}
       >
-        <div className="flex items-start justify-between border-b border-[#E5E5EA] px-5 py-3.5">
+        <div className="flex items-start justify-between border-b border-rm-hairline px-5 py-3.5">
           <div>
             <h2 className="text-[17px] font-semibold tracking-tight text-gray-900">{title}</h2>
-            {description && <p className="mt-0.5 text-[13px] text-[#8E8E93]">{description}</p>}
+            {description && <p className="mt-0.5 text-[13px] text-rm-ink-muted">{description}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="ml-4 cursor-pointer rounded-full p-1 text-[#8E8E93] transition-colors hover:bg-[#F2F2F7] hover:text-gray-700"
+            className="ml-4 cursor-pointer rounded-full p-1 text-rm-ink-muted transition-colors hover:bg-rm-sunken hover:text-gray-700"
             aria-label="Close"
           >
             <XIcon className="size-5" />
@@ -81,7 +81,7 @@ export function Modal({
         <div
           className={cn(
             "min-h-0 flex-1 overflow-y-auto p-4",
-            bodyTone === "grouped" && "bg-[#F2F2F7]",
+            bodyTone === "grouped" && "bg-rm-sunken",
             contentClassName,
           )}
         >
@@ -89,7 +89,7 @@ export function Modal({
         </div>
 
         {(footer || footerLeft) && (
-          <div className="flex items-center justify-between gap-2 border-t border-[#E5E5EA] bg-white px-4 py-3">
+          <div className="flex items-center justify-between gap-2 border-t border-rm-hairline bg-white px-4 py-3">
             <div className="flex items-center gap-2">{footerLeft}</div>
             <div className="flex items-center gap-3">{footer}</div>
           </div>

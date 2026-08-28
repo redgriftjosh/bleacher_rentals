@@ -40,14 +40,14 @@ describe("ConfirmDialog", () => {
     expect(html).toContain("It can be restored later.");
   });
 
-  it("paints a destructive confirm in iOS red", () => {
+  it("paints a destructive confirm in the danger tone", () => {
     const html = renderToStaticMarkup(
       <ConfirmDialog open title="Delete?" onConfirm={noop} onCancel={noop} />,
     );
-    expect(html).toContain("#FF3B30");
+    expect(html).toContain("text-rm-danger");
   });
 
-  it("paints a non-destructive confirm in iOS blue", () => {
+  it("paints a non-destructive confirm in the accent tone", () => {
     const html = renderToStaticMarkup(
       <ConfirmDialog
         open
@@ -59,7 +59,7 @@ describe("ConfirmDialog", () => {
       />,
     );
     expect(html).toContain("Restore");
-    expect(html).not.toContain("#FF3B30");
+    expect(html).not.toContain("text-rm-danger");
   });
 
   it("uses custom action labels", () => {

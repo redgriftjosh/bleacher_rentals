@@ -38,6 +38,7 @@ describe("SaveStatusIndicator", () => {
   it("offers a retry on failure", () => {
     const html = render("error", () => {});
     expect(html).toContain("Couldn");
+    expect(html).toContain("text-rm-danger");
     expect(html).toContain("Retry");
   });
 

@@ -6,6 +6,7 @@ import { FormGroup, FormRow } from "./form/FormGroup";
 import { PillGroup } from "./form/PillGroup";
 import { TextField } from "./form/TextField";
 import { SaveStatusIndicator } from "@/components/SaveStatusIndicator";
+import { PrimaryButton } from "@/components/PrimaryButton";
 import { DestructiveButton } from "@/components/DestructiveButton";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Dropdown } from "@/components/DropDown";
@@ -182,7 +183,7 @@ export function TaskModal({ open, onClose, quarterId, taskId, readOnly }: Props)
             <button
               type="button"
               onClick={handleRestore}
-              className="cursor-pointer rounded-lg px-3 py-2 text-[15px] font-medium text-[#007AFF] transition-colors hover:bg-[#007AFF]/10"
+              className="cursor-pointer rounded-lg px-3 py-2 text-[15px] font-medium text-rm-accent transition-colors hover:bg-rm-accent-soft"
             >
               Restore
             </button>
@@ -193,13 +194,7 @@ export function TaskModal({ open, onClose, quarterId, taskId, readOnly }: Props)
         footer={
           <>
             {canEdit && <SaveStatusIndicator state={saveState} onRetry={retry} />}
-            <button
-              type="button"
-              onClick={handleClose}
-              className="cursor-pointer rounded-lg bg-[#007AFF] px-4 py-2 text-[15px] font-medium text-white transition-colors hover:bg-[#0066DB]"
-            >
-              Done
-            </button>
+            <PrimaryButton onClick={handleClose}>Done</PrimaryButton>
           </>
         }
       >
@@ -211,7 +206,7 @@ export function TaskModal({ open, onClose, quarterId, taskId, readOnly }: Props)
             ) : (
               <>
                 {isDeleted && (
-                  <p className="rounded-xl bg-[#FF3B30]/10 px-3.5 py-2.5 text-[13px] text-[#FF3B30]">
+                  <p className="rounded-xl bg-rm-danger-soft px-3.5 py-2.5 text-[13px] text-rm-danger">
                     This ticket is deleted. Restore it to bring it back.
                   </p>
                 )}
@@ -241,7 +236,7 @@ export function TaskModal({ open, onClose, quarterId, taskId, readOnly }: Props)
                 </FormGroup>
 
                 {readOnly ? (
-                  <p className="rounded-xl bg-white px-3.5 py-2.5 text-[13px] text-[#8E8E93] ring-1 ring-black/[0.06]">
+                  <p className="rounded-xl bg-white px-3.5 py-2.5 text-[13px] text-rm-ink-muted ring-1 ring-black/[0.06]">
                     You are viewing this ticket in read-only mode.
                   </p>
                 ) : isDeveloper ? (
@@ -291,14 +286,14 @@ export function TaskModal({ open, onClose, quarterId, taskId, readOnly }: Props)
                           type="checkbox"
                           checked={form.isBacklog}
                           onChange={(e) => patch({ isBacklog: e.target.checked })}
-                          className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-[#007AFF]"
+                          className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-rm-accent"
                         />
                         Keep this visible in the backlog
                       </label>
                     </FormRow>
                   </FormGroup>
                 ) : (
-                  <p className="rounded-xl bg-[#007AFF]/10 px-3.5 py-2.5 text-[13px] text-[#0066DB]">
+                  <p className="rounded-xl bg-rm-accent-soft px-3.5 py-2.5 text-[13px] text-rm-info-ink">
                     Your ticket will be added to the backlog for a developer to review and
                     prioritise.
                   </p>
@@ -336,7 +331,7 @@ export function TaskModal({ open, onClose, quarterId, taskId, readOnly }: Props)
 
           {/* Right: chat panel */}
           {showChat && (
-            <div className="flex min-h-0 w-[450px] flex-shrink-0 flex-col border-l border-[#E5E5EA] pl-6">
+            <div className="flex min-h-0 w-[450px] flex-shrink-0 flex-col border-l border-rm-hairline pl-6">
               <TaskChat taskId={taskId} compact />
             </div>
           )}

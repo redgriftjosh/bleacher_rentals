@@ -43,6 +43,48 @@
 } */
 
 @theme inline {
+  /* ---------------------------------------------------------------
+     Roadmap surfaces (/roadmap/**)
+     A pastel scale derived from the brand blues and green, so the
+     roadmap reads as the same product rather than a bolted-on tool.
+     Every fill/ink pair below is >= 4.5:1 contrast.
+     Keep these in this block: a second @theme block is not picked up.
+     --------------------------------------------------------------- */
+  /* Surfaces */
+  --color-rm-surface: #ffffff;
+  --color-rm-sunken: #f4f6fa;
+  --color-rm-hairline: #e3e8f0;
+
+  /* Text */
+  --color-rm-ink: #0f2a44;
+  --color-rm-ink-muted: #5a6b80;
+  --color-rm-ink-faint: #66768b;
+
+  /* Interactive — brand lightBlue */
+  --color-rm-accent: #1d62a3;
+  --color-rm-accent-hover: #17517f;
+  --color-rm-accent-soft: #dce9f7;
+
+  /* Destructive — desaturated to sit with the pastels */
+  --color-rm-danger: #b23c36;
+  --color-rm-danger-soft: #fbe7e5;
+  --color-rm-danger-ink: #a8403a;
+
+  /* Status tones: soft fill + matched ink */
+  --color-rm-neutral-soft: #eef1f6;
+  --color-rm-neutral-ink: #4f6178;
+  --color-rm-warn-soft: #fbf0da;
+  --color-rm-warn-ink: #8a6320;
+  --color-rm-info-soft: #dce9f7;
+  --color-rm-info-ink: #1a5892;
+  --color-rm-success-soft: #dcede2;
+  --color-rm-success-ink: #2f6b4c;
+
+  /* Elevation — tinted with the brand navy, never neutral black */
+  --shadow-rm-card: 0 1px 2px rgba(15, 42, 68, 0.05), 0 4px 12px -4px rgba(15, 42, 68, 0.1);
+  --shadow-rm-raised: 0 2px 6px rgba(15, 42, 68, 0.07), 0 14px 28px -8px rgba(15, 42, 68, 0.16);
+  --shadow-rm-modal: 0 8px 24px rgba(15, 42, 68, 0.12), 0 24px 64px -16px rgba(15, 42, 68, 0.24);
+
   --color-darkBlue: #10365a;
   --color-lightBlue: #1d62a3;
   --color-lighterBlue: #5392cf;

@@ -35,7 +35,7 @@ export function PillGroup({
     Array.isArray(selected) ? selected.includes(value) : selected === value;
 
   if (options.length === 0 && emptyHint) {
-    return <p className="text-[13px] text-[#8E8E93] italic">{emptyHint}</p>;
+    return <p className="text-[13px] text-rm-ink-muted italic">{emptyHint}</p>;
   }
 
   return (
@@ -54,12 +54,12 @@ export function PillGroup({
             disabled={disabled}
             onClick={() => onSelect(option.value)}
             className={cn(
-              "cursor-pointer rounded-full px-3 py-1 text-[13px] font-medium transition-all",
-              "focus-visible:ring-2 focus-visible:ring-[#007AFF] focus-visible:outline-none",
+              "cursor-pointer rounded-full px-3 py-1 text-[13px] font-medium whitespace-nowrap transition-all",
+              "focus-visible:ring-2 focus-visible:ring-rm-accent focus-visible:outline-none",
               "disabled:cursor-not-allowed disabled:opacity-40",
               active
-                ? "bg-[#007AFF] text-white shadow-sm"
-                : "bg-[#F2F2F7] text-[#3C3C43] hover:bg-[#E5E5EA]",
+                ? "bg-rm-accent text-white shadow-sm"
+                : "bg-rm-sunken text-rm-ink hover:bg-rm-hairline",
             )}
           >
             {option.label}

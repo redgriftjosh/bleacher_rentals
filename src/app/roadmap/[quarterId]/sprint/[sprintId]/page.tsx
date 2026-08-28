@@ -11,6 +11,9 @@ import { useFeaturesForQuarter } from "../../../_lib/hooks/useFeatures";
 import { useRoadmapUsers, displayName } from "../../../_lib/hooks/useRoadmapUsers";
 import { PageHeaderWithBreadCrumbs as RoadmapHeader } from "@/components/PageHeaderWithBreadCrumbs";
 import { StatusPill } from "../../../_lib/components/StatusPill";
+import { DataTable, Row, Cell, TitleCell } from "../../../_lib/components/list/DataTable";
+import { EmptyState } from "../../../_lib/components/list/Panel";
+import { FilterPill } from "../../../_lib/components/list/FilterPill";
 import { TaskModal } from "../../../_lib/components/TaskModal";
 import { TaskMessageBadge } from "../../../_lib/components/TaskMessageBadge";
 import { SubscriberAvatars } from "../../../_lib/components/SubscriberAvatars";
@@ -110,7 +113,7 @@ export default function SprintDetailPage() {
   });
 
   return (
-    <main className="p-6 max-w-6xl mx-auto">
+    <div className="mx-auto max-w-6xl p-6">
       <RoadmapHeader
         crumbs={[
           { label: "Roadmap", href: "/roadmap" },
@@ -133,128 +136,92 @@ export default function SprintDetailPage() {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <button
-          type="button"
-          onClick={() => setDeveloperFilter("all")}
-          className={`px-3 py-1 rounded-full text-xs border cursor-pointer ${
-            developerFilter === "all"
-              ? "bg-darkBlue text-white border-darkBlue"
-              : "bg-white border-gray-300 hover:bg-gray-50"
-          }`}
-        >
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <FilterPill active={developerFilter === "all"} onClick={() => setDeveloperFilter("all")}>
           All ({tasks.length})
-        </button>
-        <button
-          type="button"
+        </FilterPill>
+        <FilterPill
+          active={developerFilter === "unassigned"}
           onClick={() => setDeveloperFilter("unassigned")}
-          className={`px-3 py-1 rounded-full text-xs border cursor-pointer ${
-            developerFilter === "unassigned"
-              ? "bg-darkBlue text-white border-darkBlue"
-              : "bg-white border-gray-300 hover:bg-gray-50"
-          }`}
         >
           Unassigned ({tasks.filter((t) => !t.developer_uuid).length})
-        </button>
+        </FilterPill>
         {assignedDevelopers.map(({ uuid, name }) => (
-          <button
+          <FilterPill
             key={uuid}
-            type="button"
+            active={developerFilter === uuid}
             onClick={() => setDeveloperFilter(uuid)}
-            className={`px-3 py-1 rounded-full text-xs border cursor-pointer ${
-              developerFilter === uuid
-                ? "bg-darkBlue text-white border-darkBlue"
-                : "bg-white border-gray-300 hover:bg-gray-50"
-            }`}
           >
             {name} ({tasks.filter((t) => t.developer_uuid === uuid).length})
-          </button>
+          </FilterPill>
         ))}
         {isDeveloper && (
-          <button
-            type="button"
+          <FilterPill
+            tone="danger"
+            className="ml-auto"
+            active={showDeleted}
             onClick={() => setShowDeleted((v) => !v)}
-            className={`ml-auto px-3 py-1 rounded-full text-xs border cursor-pointer ${
-              showDeleted
-                ? "bg-red-100 text-red-700 border-red-300"
-                : "bg-white border-gray-300 hover:bg-gray-50 text-gray-500"
-            }`}
           >
             {showDeleted ? "Showing Deleted" : "Show Deleted"}
-          </button>
+          </FilterPill>
         )}
       </div>
 
       {filteredTasks.length === 0 ? (
-        <p className="text-sm text-gray-500 italic border border-dashed rounded p-6 text-center">
+        <EmptyState>
           {tasks.length === 0 ? "No tasks in this sprint yet." : "No tasks match this filter."}
-        </p>
+        </EmptyState>
       ) : (
-        <div className="border rounded overflow-hidden">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr className="border-b">
-                <th className="text-left px-3 py-2 font-medium">Title</th>
-                <th className="text-left px-3 py-2 font-medium w-44">Status</th>
-                <th className="text-left px-3 py-2 font-medium">Linked Feature</th>
-                <th className="text-left px-3 py-2 font-medium w-28">Subscribers</th>
-                <th className="text-left px-3 py-2 font-medium w-28">Created</th>
-                <th className="px-3 py-2 w-10"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTasks.map((t) => {
-                const meta = TASK_STATUS_META[t.status];
-                const feature = t.feature_id ? featureMap.get(t.feature_id) : null;
-                return (
-                  <tr
-                    key={t.id}
-                    onClick={() => router.push(`${baseUrl}?task=${t.id}`)}
-                    className="border-b hover:bg-gray-50 cursor-pointer"
-                  >
-                    <td className="px-3 py-2">
-                      {t.title.trim() ? (
-                        t.title
-                      ) : (
-                        <span className="text-gray-400 italic">Untitled task</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2">
-                      <StatusPill label={meta.label} hex={meta.hex} />
-                    </td>
-                    <td className="px-3 py-2 text-gray-700">
-                      {feature ? (
-                        feature.title
-                      ) : (
-                        <span className="text-xs text-gray-400 italic">none</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2">
-                      <SubscriberAvatars
-                        userUuids={subscriptionsMap.get(t.id) ?? []}
-                        userMap={userMap}
-                      />
-                    </td>
-                    <td className="px-3 py-2 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="size-3" />
-                        {t.created_at
-                          ? new Date(t.created_at).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                            })
-                          : "—"}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      <TaskMessageBadge taskId={t.id} userUuid={userUuid} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          headers={[
+            { label: "Title" },
+            { label: "Status", className: "w-44" },
+            { label: "Linked Feature" },
+            { label: "Subscribers", className: "w-28" },
+            { label: "Created", className: "w-28" },
+            { label: "", className: "w-10" },
+          ]}
+        >
+          {filteredTasks.map((t) => {
+            const meta = TASK_STATUS_META[t.status];
+            const feature = t.feature_id ? featureMap.get(t.feature_id) : null;
+            return (
+              <Row key={t.id} onClick={() => router.push(`${baseUrl}?task=${t.id}`)}>
+                <TitleCell title={t.title} fallback="Untitled task" />
+                <Cell>
+                  <StatusPill label={meta.label} tone={meta.tone} />
+                </Cell>
+                <Cell className="text-rm-ink-muted">
+                  {feature ? (
+                    feature.title || "Untitled feature"
+                  ) : (
+                    <span className="text-xs text-rm-ink-faint italic">none</span>
+                  )}
+                </Cell>
+                <Cell>
+                  <SubscriberAvatars
+                    userUuids={subscriptionsMap.get(t.id) ?? []}
+                    userMap={userMap}
+                  />
+                </Cell>
+                <Cell className="text-xs text-rm-ink-muted">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="size-3" />
+                    {t.created_at
+                      ? new Date(t.created_at).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "—"}
+                  </span>
+                </Cell>
+                <Cell>
+                  <TaskMessageBadge taskId={t.id} userUuid={userUuid} />
+                </Cell>
+              </Row>
+            );
+          })}
+        </DataTable>
       )}
 
       <TaskModal
@@ -263,6 +230,6 @@ export default function SprintDetailPage() {
         quarterId={quarterId}
         taskId={taskId}
       />
-    </main>
+    </div>
   );
 }

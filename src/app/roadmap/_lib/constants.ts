@@ -1,4 +1,5 @@
 import type { FeatureStatus, TaskStatus } from "./types";
+import type { StatusTone } from "./components/StatusPill";
 
 export const ATTACHMENTS_BUCKET = "roadmap-attachments";
 
@@ -9,11 +10,11 @@ export const FEATURE_STATUS_OPTIONS: { label: string; value: FeatureStatus }[] =
   { label: "Completed", value: "completed" },
 ];
 
-export const FEATURE_STATUS_META: Record<FeatureStatus, { label: string; hex: string }> = {
-  draft: { label: "Draft", hex: "#e5e7eb" },
-  locked_in: { label: "Locked In", hex: "#fcd34d" },
-  in_progress: { label: "In Progress", hex: "#7b9ee7" },
-  completed: { label: "Completed", hex: "#86efac" },
+export const FEATURE_STATUS_META: Record<FeatureStatus, { label: string; tone: StatusTone }> = {
+  draft: { label: "Draft", tone: "neutral" },
+  locked_in: { label: "Locked In", tone: "warn" },
+  in_progress: { label: "In Progress", tone: "info" },
+  completed: { label: "Completed", tone: "success" },
 };
 
 export const TASK_STATUS_OPTIONS: { label: string; value: TaskStatus }[] = [
@@ -22,10 +23,10 @@ export const TASK_STATUS_OPTIONS: { label: string; value: TaskStatus }[] = [
   { label: "Completed", value: "completed" },
 ];
 
-export const TASK_STATUS_META: Record<TaskStatus, { label: string; hex: string }> = {
-  to_do: { label: "To Do", hex: "#e5e7eb" },
-  in_progress: { label: "In Progress", hex: "#7b9ee7" },
-  completed: { label: "Completed", hex: "#86efac" },
+export const TASK_STATUS_META: Record<TaskStatus, { label: string; tone: StatusTone }> = {
+  to_do: { label: "To Do", tone: "neutral" },
+  in_progress: { label: "In Progress", tone: "info" },
+  completed: { label: "Completed", tone: "success" },
 };
 
 export const DEFAULT_FEATURE_STATUS: FeatureStatus = "draft";

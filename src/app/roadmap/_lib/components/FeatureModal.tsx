@@ -6,6 +6,7 @@ import { FormGroup, FormRow } from "./form/FormGroup";
 import { PillGroup } from "./form/PillGroup";
 import { TextField } from "./form/TextField";
 import { SaveStatusIndicator } from "@/components/SaveStatusIndicator";
+import { PrimaryButton } from "@/components/PrimaryButton";
 import { DestructiveButton } from "@/components/DestructiveButton";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
@@ -117,7 +118,7 @@ export function FeatureModal({ open, onClose, featureId }: Props) {
             <button
               type="button"
               onClick={handleRestore}
-              className="cursor-pointer rounded-lg px-3 py-2 text-[15px] font-medium text-[#007AFF] transition-colors hover:bg-[#007AFF]/10"
+              className="cursor-pointer rounded-lg px-3 py-2 text-[15px] font-medium text-rm-accent transition-colors hover:bg-rm-accent-soft"
             >
               Restore
             </button>
@@ -128,13 +129,7 @@ export function FeatureModal({ open, onClose, featureId }: Props) {
         footer={
           <>
             <SaveStatusIndicator state={saveState} onRetry={retry} />
-            <button
-              type="button"
-              onClick={handleClose}
-              className="cursor-pointer rounded-lg bg-[#007AFF] px-4 py-2 text-[15px] font-medium text-white transition-colors hover:bg-[#0066DB]"
-            >
-              Done
-            </button>
+            <PrimaryButton onClick={handleClose}>Done</PrimaryButton>
           </>
         }
       >
@@ -143,7 +138,7 @@ export function FeatureModal({ open, onClose, featureId }: Props) {
         ) : (
           <div className="space-y-5">
             {isDeleted && (
-              <p className="rounded-xl bg-[#FF3B30]/10 px-3.5 py-2.5 text-[13px] text-[#FF3B30]">
+              <p className="rounded-xl bg-rm-danger-soft px-3.5 py-2.5 text-[13px] text-rm-danger">
                 This feature is deleted. Restore it to bring it back to the quarter.
               </p>
             )}
