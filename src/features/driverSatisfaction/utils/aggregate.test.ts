@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  monthlyTrend,
-  summarize,
-  type SatisfactionRow,
-} from "@/features/driverSatisfaction/utils/aggregate";
+import { summarize, type SatisfactionRow } from "@/features/driverSatisfaction/utils/aggregate";
 
 const row = (partial: Partial<SatisfactionRow> = {}): SatisfactionRow => ({
   responseId: "r1",
@@ -95,41 +91,5 @@ describe("summarize", () => {
       row({ responseId: "c", driverUuid: "d2", score: 5, reason: "buggy" }),
     ]);
     expect(summary.driverCount).toBe(2);
-  });
-});
-
-describe("monthlyTrend", () => {
-  it("groups by calendar month, oldest first", () => {
-    const trend = monthlyTrend([
-      row({ responseId: "a", submittedAt: "2026-07-02T09:00:00.000Z", score: 6 }),
-      row({ responseId: "b", submittedAt: "2026-08-11T09:00:00.000Z", score: 8 }),
-      row({ responseId: "c", submittedAt: "2026-07-28T09:00:00.000Z", score: 8 }),
-    ]);
-    expect(trend).toEqual([
-      { month: "2026-07", average: 7, count: 2 },
-      { month: "2026-08", average: 8, count: 1 },
-    ]);
-  });
-
-  it("skips rows it cannot place in time rather than inventing a month", () => {
-    const trend = monthlyTrend([
-      row({ responseId: "a", submittedAt: null, score: 3 }),
-      row({ responseId: "b", submittedAt: "nonsense", score: 4 }),
-      row({ responseId: "c", submittedAt: "2026-08-11T09:00:00.000Z", score: 9 }),
-    ]);
-    expect(trend).toEqual([{ month: "2026-08", average: 9, count: 1 }]);
-  });
-
-  it("rounds the average to one decimal", () => {
-    const trend = monthlyTrend([
-      row({ responseId: "a", submittedAt: "2026-08-01T09:00:00.000Z", score: 8 }),
-      row({ responseId: "b", submittedAt: "2026-08-02T09:00:00.000Z", score: 9 }),
-      row({ responseId: "c", submittedAt: "2026-08-03T09:00:00.000Z", score: 9 }),
-    ]);
-    expect(trend[0].average).toBe(8.7);
-  });
-
-  it("has no month at all when nothing has been answered", () => {
-    expect(monthlyTrend([])).toEqual([]);
   });
 });

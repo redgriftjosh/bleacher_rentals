@@ -1,6 +1,6 @@
 /**
  * Turning survey answers into the four numbers the page leads with, and the
- * month-by-month line underneath them.
+ * week-by-week line underneath them.
  *
  * Pure and side-effect free: the reads are reactive PowerSync queries, and
  * everything that decides what a number *means* lives here where it can be
@@ -11,6 +11,8 @@
  * that came with a reason attached" describe the same people. That is what
  * makes the count something to act on rather than decoration.
  */
+
+import { DateTime } from "luxon";
 
 /** Highest score that still owes a written reason. Mirrors the seeded question. */
 export const DETRACTOR_MAX_SCORE = 6;
@@ -94,42 +96,91 @@ export function summarize(rows: readonly SatisfactionRow[]): SatisfactionSummary
   };
 }
 
+/** How wide one point on the trend line is. */
+export type Granularity = "day" | "week" | "month";
+
 export type TrendPoint = {
-  /** `YYYY-MM`, in the viewer's own timezone. */
-  month: string;
+  /** First day of the bucket, `YYYY-MM-DD`, in the viewer's own timezone. */
+  bucketStart: string;
+  /** `Aug 10 - Aug 16` or `Aug 2026` — the span, spelled out for the tooltip. */
+  label: string;
+  /** The short form that fits under an axis tick. */
+  axisLabel: string;
   average: number;
   count: number;
 };
 
+/** `Wed, Aug 12` · `Aug 10 - Aug 16` · `Aug 2026` — the tooltip's version. */
+function bucketLabel(bucket: DateTime, granularity: Granularity): string {
+  switch (granularity) {
+    case "day":
+      return bucket.toFormat("ccc, MMM d");
+    case "week":
+      return `${bucket.toFormat("MMM d")} - ${bucket.plus({ days: 6 }).toFormat("MMM d")}`;
+    case "month":
+    default:
+      return bucket.toFormat("MMM yyyy");
+  }
+}
+
+/** The short form that fits under an axis tick. */
+function bucketAxisLabel(bucket: DateTime, granularity: Granularity): string {
+  return granularity === "month" ? bucket.toFormat("MMM") : bucket.toFormat("MMM d");
+}
+
 /**
- * Average score per calendar month, oldest first.
+ * Average score per bucket, oldest first, at the granularity asked for.
+ *
+ * The week is the sales scorecard's week — Monday to Sunday, Luxon's
+ * `startOf("week")`, the same boundary `getPeriodBounds` snaps to. Two pages
+ * that both say "this week" and mean different days is a mismatch nobody
+ * notices until two numbers are compared out loud in a meeting. The month is
+ * the calendar month, and the day is the calendar day in the viewer's own
+ * timezone.
  *
  * Rows with no readable `submitted_at` are skipped rather than bucketed
- * somewhere: a survey answer whose date is unknown belongs to no month, and
- * quietly filing it under "now" would bend the trend the page exists to show.
+ * somewhere: an answer whose date is unknown belongs to no week, and quietly
+ * filing it under "now" would bend the trend the page exists to show.
  */
-export function monthlyTrend(rows: readonly SatisfactionRow[]): TrendPoint[] {
-  const buckets = new Map<string, { total: number; count: number }>();
+export function scoreTrend(
+  rows: readonly SatisfactionRow[],
+  granularity: Granularity,
+): TrendPoint[] {
+  const buckets = new Map<
+    string,
+    { total: number; count: number; label: string; axisLabel: string }
+  >();
 
   for (const row of rows) {
     if (row.score === null || !row.submittedAt) continue;
-    const at = new Date(row.submittedAt);
-    if (Number.isNaN(at.getTime())) continue;
+    const at = DateTime.fromISO(row.submittedAt);
+    if (!at.isValid) continue;
 
-    const month = `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, "0")}`;
-    const bucket = buckets.get(month);
-    if (bucket) {
-      bucket.total += row.score;
-      bucket.count += 1;
-    } else {
-      buckets.set(month, { total: row.score, count: 1 });
+    const bucket = at.startOf(granularity);
+    const bucketStart = bucket.toFormat("yyyy-MM-dd");
+    const existing = buckets.get(bucketStart);
+    if (existing) {
+      existing.total += row.score;
+      existing.count += 1;
+      continue;
     }
+
+    buckets.set(bucketStart, {
+      total: row.score,
+      count: 1,
+      label: bucketLabel(bucket, granularity),
+      // The axis gets the short form; the full span lives in the tooltip.
+      // The axis gets the short form; the full span lives in the tooltip.
+      axisLabel: bucketAxisLabel(bucket, granularity),
+    });
   }
 
   return [...buckets.entries()]
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-    .map(([month, { total, count }]) => ({
-      month,
+    .map(([bucketStart, { total, count, label, axisLabel }]) => ({
+      bucketStart,
+      label,
+      axisLabel,
       average: round1(total / count),
       count,
     }));
