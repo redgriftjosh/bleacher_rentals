@@ -27,6 +27,30 @@ export function driverPayFields(state: CurrentUserState) {
   };
 }
 
+/** `<input type="date">` yields "" when cleared; a Postgres `date` column needs null. */
+function nullableDate(value: string | null): string | null {
+  const trimmed = value?.trim() ?? "";
+  return trimmed === "" ? null : trimmed;
+}
+
+/**
+ * Document paths and expiry dates as Drivers columns.
+ *
+ * Sibling of `driverPayFields`: the three write sites (create, update, late
+ * insert) all spread this, so adding a document — or a fourth date — is a
+ * change in one place instead of three.
+ */
+export function driverDocumentFields(state: CurrentUserState) {
+  return {
+    license_photo_path: state.licensePhotoPath,
+    insurance_photo_path: state.insurancePhotoPath,
+    medical_card_photo_path: state.medicalCardPhotoPath,
+    license_expires_on: nullableDate(state.licenseExpiresOn),
+    insurance_expires_on: nullableDate(state.insuranceExpiresOn),
+    medical_card_expires_on: nullableDate(state.medicalCardExpiresOn),
+  };
+}
+
 // Resolves the current user's admin flag via the same mechanism the RLS policies use
 // (auth.jwt() -> 'sub'), so it stays consistent with the database's row-level security.
 async function currentUserIsAdmin(supabase: TypedSupabaseClient): Promise<boolean> {
@@ -198,9 +222,7 @@ export async function createUser(
         phone_number: state.phoneNumber,
         address_uuid: addressUuid,
         vehicle_uuid: vehicleUuid,
-        license_photo_path: state.licensePhotoPath,
-        insurance_photo_path: state.insurancePhotoPath,
-        medical_card_photo_path: state.medicalCardPhotoPath,
+        ...driverDocumentFields(state),
         is_active: true,
       });
 
@@ -328,9 +350,7 @@ export async function updateUser(
               phone_number: state.phoneNumber,
               address_uuid: addressUuid,
               vehicle_uuid: vehicleUuid,
-              license_photo_path: state.licensePhotoPath,
-              insurance_photo_path: state.insurancePhotoPath,
-              medical_card_photo_path: state.medicalCardPhotoPath,
+              ...driverDocumentFields(state),
               is_active: true,
             })
             .eq("user_uuid", userUuid);
@@ -350,9 +370,7 @@ export async function updateUser(
           phone_number: state.phoneNumber,
           address_uuid: addressUuid,
           vehicle_uuid: vehicleUuid,
-          license_photo_path: state.licensePhotoPath,
-          insurance_photo_path: state.insurancePhotoPath,
-          medical_card_photo_path: state.medicalCardPhotoPath,
+          ...driverDocumentFields(state),
           is_active: true,
         });
 
@@ -767,6 +785,9 @@ export async function fetchUserById(
       result.licensePhotoPath = driver.license_photo_path;
       result.insurancePhotoPath = driver.insurance_photo_path;
       result.medicalCardPhotoPath = driver.medical_card_photo_path;
+      result.licenseExpiresOn = driver.license_expires_on;
+      result.insuranceExpiresOn = driver.insurance_expires_on;
+      result.medicalCardExpiresOn = driver.medical_card_expires_on;
       result.driverId = driver.id;
       result.phoneNumber = driver.phone_number;
 

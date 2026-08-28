@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createUser, driverPayFields } from "./userOperations";
+import { createUser, driverDocumentFields, driverPayFields } from "./userOperations";
 import type { CurrentUserState } from "../state/useCurrentUserStore";
 
 const baseState: CurrentUserState = {
@@ -39,6 +39,9 @@ const baseState: CurrentUserState = {
   licensePhotoPath: null,
   insurancePhotoPath: null,
   medicalCardPhotoPath: null,
+  licenseExpiresOn: null,
+  insuranceExpiresOn: null,
+  medicalCardExpiresOn: null,
   driverId: null,
   assignedDriverUuids: [],
   assignedZoneEntries: [],
@@ -114,6 +117,54 @@ describe("driverPayFields", () => {
       teardown_cents: 6_789,
       pay_currency: "USD",
       pay_per_unit: "MI",
+    });
+  });
+});
+
+describe("driverDocumentFields", () => {
+  it("maps every document path and expiry to its Drivers column", () => {
+    expect(
+      driverDocumentFields({
+        ...baseState,
+        licensePhotoPath: "d1/license_1.jpg",
+        insurancePhotoPath: "d1/insurance_2.pdf",
+        medicalCardPhotoPath: "d1/medical_card_3.png",
+        licenseExpiresOn: "2027-01-31",
+        insuranceExpiresOn: "2026-11-01",
+        medicalCardExpiresOn: "2026-09-15",
+      }),
+    ).toEqual({
+      license_photo_path: "d1/license_1.jpg",
+      insurance_photo_path: "d1/insurance_2.pdf",
+      medical_card_photo_path: "d1/medical_card_3.png",
+      license_expires_on: "2027-01-31",
+      insurance_expires_on: "2026-11-01",
+      medical_card_expires_on: "2026-09-15",
+    });
+  });
+
+  it("writes null rather than an empty string when a date is cleared", () => {
+    // <input type="date"> hands back "" when emptied; a date column rejects it.
+    expect(
+      driverDocumentFields({
+        ...baseState,
+        licenseExpiresOn: "",
+        insuranceExpiresOn: "   ",
+      }),
+    ).toMatchObject({
+      license_expires_on: null,
+      insurance_expires_on: null,
+    });
+  });
+
+  it("leaves an unset document entirely null", () => {
+    expect(driverDocumentFields(baseState)).toEqual({
+      license_photo_path: null,
+      insurance_photo_path: null,
+      medical_card_photo_path: null,
+      license_expires_on: null,
+      insurance_expires_on: null,
+      medical_card_expires_on: null,
     });
   });
 });

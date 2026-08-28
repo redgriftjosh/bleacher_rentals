@@ -55,6 +55,12 @@ export type CurrentUserState = {
   licensePhotoPath: string | null;
   insurancePhotoPath: string | null;
   medicalCardPhotoPath: string | null;
+  /** Drivers.license_expires_on — `YYYY-MM-DD`, or null when unknown. */
+  licenseExpiresOn: string | null;
+  /** Drivers.insurance_expires_on — `YYYY-MM-DD`, or null when unknown. */
+  insuranceExpiresOn: string | null;
+  /** Drivers.medical_card_expires_on — `YYYY-MM-DD`, or null when unknown. */
+  medicalCardExpiresOn: string | null;
   /** Drivers.id — used as storage path prefix `{driverId}/license_ts.ext` */
   driverId: string | null;
 
@@ -116,6 +122,9 @@ const initialState: CurrentUserState = {
   licensePhotoPath: null,
   insurancePhotoPath: null,
   medicalCardPhotoPath: null,
+  licenseExpiresOn: null,
+  insuranceExpiresOn: null,
+  medicalCardExpiresOn: null,
   driverId: null,
   assignedDriverUuids: [],
   assignedZoneEntries: [],
