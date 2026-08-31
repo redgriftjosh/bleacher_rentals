@@ -6,7 +6,7 @@ const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 // session in playwright/.auth/<role>.json. A role's specs live in files named
 // *.<role>.spec.ts (e.g. dashboard.admin.spec.ts). Files without a role suffix
 // run on the default `chromium` project (the original E2E_CLERK_* user).
-const ROLES = ["admin", "am", "driver", "viewer"] as const;
+const ROLES = ["admin", "am", "driver", "viewer", "developer"] as const;
 
 const roleSpec = (role: string) => new RegExp(`\\.${role}\\.spec\\.ts$`);
 const anyRoleSpec = new RegExp(`\\.(${ROLES.join("|")})\\.spec\\.ts$`);
@@ -50,6 +50,10 @@ export default defineConfig({
     ...ROLES.map((role) => ({
       name: role,
       dependencies: ["setup"],
+      // Role specs live beside the feature they cover, not only in manageTeam/e2e.
+      // The filename suffix is what assigns them to a role, so scanning all of src
+      // is safe: testMatch still admits only *.<role>.spec.ts.
+      testDir: "src",
       testMatch: roleSpec(role),
       use: {
         ...devices["Desktop Chrome"],

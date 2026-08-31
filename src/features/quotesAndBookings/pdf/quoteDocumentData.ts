@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { resolveInvoiceDisplay, buildPublicQuoteUrl } from "../utils/invoiceNumber";
+import { toQuoteLanguage, type QuoteLanguage } from "./quoteLanguage";
 
 // ── The single source of truth for rendering a quote ──
 
@@ -27,6 +28,10 @@ export type QuoteDocumentData = {
   validUntil: string;
   status: string;
   currency: "USD" | "CAD";
+  // Language every client-facing surface renders in, resolved from the quote
+  // contact's Contacts.preferred_language. The single resolution point — no
+  // renderer looks it up again. See docs/specs/quote-preferred-language.md.
+  language: QuoteLanguage;
 
   // Company (the business sending the quote — from SalesOffice)
   company: {
@@ -158,7 +163,7 @@ export async function buildQuoteDocumentData(
         street, city, state_province, zip_postal
       ),
       Contacts!Events_contact_uuid_fkey (
-        first_name, last_name, email, phone
+        first_name, last_name, email, phone, preferred_language
       ),
       Users!Events_created_by_user_uuid_fkey (
         first_name, last_name, email
@@ -302,6 +307,7 @@ export async function buildQuoteDocumentData(
     validUntil: (event as any).quote_valid_till ?? "",
     status: event.event_status ?? "draft",
     currency,
+    language: toQuoteLanguage(contact?.preferred_language),
 
     company: {
       name: salesOffice?.name ?? "Bleacher Rentals",
@@ -358,4 +364,26 @@ export async function buildQuoteDocumentData(
     contentHash: (event as any).content_hash ?? "",
     contractHash: (event as any).contract_hash ?? "",
   } satisfies QuoteDocumentData;
+}
+
+/**
+ * Language for a quote, without building the whole document.
+ *
+ * Used by the payment-success page, which needs nothing else off the quote and
+ * shouldn't pay for six joins and four parallel queries to render one sentence.
+ * Falls back to English on any error — this page is on the customer's happy
+ * path right after they paid, and must always render.
+ */
+export async function resolveQuoteLanguage(eventId: string): Promise<QuoteLanguage> {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+      .from("Events")
+      .select("Contacts!Events_contact_uuid_fkey (preferred_language)")
+      .eq("id", eventId)
+      .maybeSingle();
+    return toQuoteLanguage((data?.Contacts as any)?.preferred_language);
+  } catch {
+    return "en";
+  }
 }

@@ -5,6 +5,7 @@ import { StatusMultiSelect } from "./filters/StatusMultiSelect";
 import { DateRangeInput } from "./filters/DateRangeInput";
 import { AccountManagerMultiSelect } from "./filters/AccountManagerMultiSelect";
 import { TimezoneSelect } from "./filters/TimezoneSelect";
+import { InGoodShuffleSelect } from "./filters/InGoodShuffleSelect";
 
 type FilterPanelProps = {
   filters: QuotesBookingsFilters;
@@ -13,6 +14,7 @@ type FilterPanelProps = {
   onEventRangeChange: (from: string | null, to: string | null) => void;
   onBookedRangeChange: (from: string | null, to: string | null) => void;
   onAccountManagerChange: (uuid: string | null) => void;
+  onInGoodShuffleChange: (value: boolean | null) => void;
   onClear: () => void;
 };
 
@@ -23,6 +25,7 @@ export function FilterPanel({
   onEventRangeChange,
   onBookedRangeChange,
   onAccountManagerChange,
+  onInGoodShuffleChange,
   onClear,
 }: FilterPanelProps) {
   return (
@@ -72,6 +75,11 @@ export function FilterPanel({
               selectedUserUuid={filters.accountManagerUserUuid}
               onChange={onAccountManagerChange}
             />
+          </div>
+
+          <div>
+            <div className="text-sm font-semibold text-gray-800 mb-2">In GoodShuffle</div>
+            <InGoodShuffleSelect value={filters.inGoodShuffle} onChange={onInGoodShuffleChange} />
           </div>
 
           <div>

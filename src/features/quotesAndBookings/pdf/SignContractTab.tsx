@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { QuoteDocumentData } from "./quoteDocumentData";
 import { TrackEvent } from "./useQuoteActivityTracker";
+import { formatQuoteDateTime } from "./quoteFormat";
+import { quoteText } from "./quoteStrings";
 
 type ContractData = {
   termsAndConditionsUuid: string | null;
@@ -13,23 +15,6 @@ type ContractData = {
     signedAt: string;
   } | null;
 };
-
-// `timeZone` defaults to the viewer's local zone (a signature timestamp is shown
-// in the reader's own time). It's parameterized only so tests can pin a zone and
-// assert the UTC→local conversion deterministically.
-export function formatSignedAt(iso: string, timeZone?: string): string {
-  const d = new Date(iso);
-  const options: Intl.DateTimeFormatOptions = {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-    ...(timeZone ? { timeZone } : {}),
-  };
-  return d.toLocaleString("en-US", options);
-}
 
 export function SignContractTab({
   data,
@@ -44,6 +29,7 @@ export function SignContractTab({
   const [loading, setLoading] = useState(true);
   const [signerName, setSignerName] = useState("");
   const [signing, setSigning] = useState(false);
+  const s = quoteText(data.language);
 
   useEffect(() => {
     fetch(`/api/contracts/${data.eventId}`)
@@ -100,7 +86,7 @@ export function SignContractTab({
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto py-12 px-4 text-center text-gray-500">
-        Loading contract...
+        {s.loadingContract}
       </div>
     );
   }
@@ -108,7 +94,7 @@ export function SignContractTab({
   if (!contract?.termsHtml) {
     return (
       <div className="max-w-4xl mx-auto py-12 px-4 text-center text-gray-400">
-        No contract template has been assigned to this quote.
+        {s.noContractTemplate}
       </div>
     );
   }
@@ -132,13 +118,13 @@ export function SignContractTab({
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Enter your full name to sign this contract
+                  {s.signPrompt}
                 </label>
                 <input
                   type="text"
                   value={signerName}
                   onChange={(e) => setSignerName(e.target.value)}
-                  placeholder="Full name"
+                  placeholder={s.fullNamePlaceholder}
                   className="w-full max-w-md border rounded px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
@@ -150,7 +136,7 @@ export function SignContractTab({
                     <tbody>
                       <tr className="border-b">
                         <td className="px-4 py-3 font-medium text-gray-600 w-36 bg-gray-50">
-                          Signature
+                          {s.signature}
                         </td>
                         <td className="px-4 py-3">
                           <span
@@ -163,15 +149,15 @@ export function SignContractTab({
                       </tr>
                       <tr className="border-b">
                         <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">
-                          Printed Name
+                          {s.printedName}
                         </td>
                         <td className="px-4 py-3">{signerName}</td>
                       </tr>
                       <tr className="border-b">
                         <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">
-                          Timestamp
+                          {s.timestamp}
                         </td>
-                        <td className="px-4 py-3 text-gray-400 italic">Will be recorded on sign</td>
+                        <td className="px-4 py-3 text-gray-400 italic">{s.recordedOnSign}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -183,7 +169,7 @@ export function SignContractTab({
                 disabled={signing || !signerName.trim()}
                 className="px-6 py-2.5 bg-[#405daa] text-white text-base font-semibold rounded hover:bg-[#10365a] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
               >
-                {signing ? "Signing..." : "Sign Contract"}
+                {signing ? s.signing : s.signContract}
               </button>
             </div>
           ) : (
@@ -192,7 +178,7 @@ export function SignContractTab({
                 <tbody>
                   <tr className="border-b">
                     <td className="px-4 py-3 font-medium text-gray-600 w-36 bg-gray-50">
-                      Signature
+                      {s.signature}
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -204,12 +190,18 @@ export function SignContractTab({
                     </td>
                   </tr>
                   <tr className="border-b">
-                    <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">Printed Name</td>
+                    <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">
+                      {s.printedName}
+                    </td>
                     <td className="px-4 py-3">{contract.signature!.signerName}</td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">Timestamp</td>
-                    <td className="px-4 py-3">{formatSignedAt(contract.signature!.signedAt)}</td>
+                    <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">
+                      {s.timestamp}
+                    </td>
+                    <td className="px-4 py-3">
+                      {formatQuoteDateTime(contract.signature!.signedAt, data.language)}
+                    </td>
                   </tr>
                 </tbody>
               </table>

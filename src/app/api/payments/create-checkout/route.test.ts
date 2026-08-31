@@ -115,6 +115,34 @@ describe("POST /api/payments/create-checkout", () => {
     expect((await res.json()).error).toMatch(/ready/i);
   });
 
+  it("opens Stripe's own checkout in French for a French quote", async () => {
+    // The client sends the language the quote is being read in. Without this the
+    // page switches to English mid-payment, which is where trust is thinnest.
+    seedHappyPath();
+    await POST(
+      makeRequest({ eventId: "evt-1", amountCents: 5000, payerName: "Marie", language: "fr" }),
+    );
+
+    expect(mockCheckoutCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ locale: "fr-CA" }),
+      expect.anything(),
+    );
+  });
+
+  it("lets Stripe detect the language for anything other than French", async () => {
+    seedHappyPath();
+    for (const language of ["en", undefined, "klingon"]) {
+      mockCheckoutCreate.mockClear();
+      await POST(
+        makeRequest({ eventId: "evt-1", amountCents: 5000, payerName: "Marie", language }),
+      );
+      expect(mockCheckoutCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ locale: "auto" }),
+        expect.anything(),
+      );
+    }
+  });
+
   it("creates the session on the office's connected account and returns URL", async () => {
     seedHappyPath();
     const res = await POST(

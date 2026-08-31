@@ -1,6 +1,6 @@
 {
   "name": "bleacher_rentals",
-  "version": "1.5.0",
+  "version": "1.7.0",
   "private": true,
   "scripts": {
     "generate-types-staging": "supabase gen types typescript --project-id \"sycrvbdpdbaczyfdwcnc\" --schema public > database.types.ts",
@@ -31,7 +31,7 @@
     "tc": "npm run type-check",
     "cron:alerts": "set -a && source .env.local && set +a && curl -s -X GET http://localhost:3000/api/cron/alerts -H \"Authorization: Bearer $CRON_SECRET\" | cat",
     "test:db:swap": "psql \"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" -v ON_ERROR_STOP=1 -f supabase/tests/actual_bleacher.test.sql",
-    "test:db:survey": "psql \"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" -v ON_ERROR_STOP=1 -f supabase/tests/driver_satisfaction.test.sql"
+    "preflight:sign": "tsx scripts/preflight/signPreflight.cli.ts"
   },
   "dependencies": {
     "@clerk/backend": "^2.30.0",
@@ -123,7 +123,7 @@
     "postcss": "^8.5.3",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
-    "supabase": "^2.101.0",
+    "supabase": "^2.116.0",
     "tailwindcss": "^4.1.1",
     "tsx": "^4.21.0",
     "typescript": "^5",

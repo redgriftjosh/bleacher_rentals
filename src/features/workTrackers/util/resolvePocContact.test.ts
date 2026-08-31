@@ -3,6 +3,11 @@ import { resolvePocContact, type PocEventRow, type PocWorkTrackerRow } from "./r
 
 type Source = Parameters<typeof resolvePocContact>[0];
 
+/**
+ * Events.event_start is a Postgres `date` — a bare "YYYY-MM-DD" with no time and
+ * no zone. Fixtures use that exact shape on purpose: timestamps here used to make
+ * the tie-break case pass in UTC and fail in every zone behind it.
+ */
 const ev = (
   eventStart: string,
   contactUuid: string,
@@ -62,9 +67,9 @@ describe("resolvePocContact", () => {
   describe('direction "past" — the Pickup POC button', () => {
     it("returns the contact of the latest booked event on or before the target date", () => {
       const s = source([
-        ev("2026-01-01T00:00:00Z", "c-old", "Old Olsen"),
-        ev("2026-03-10T00:00:00Z", "c-mid", "Mid Miller"),
-        ev("2026-09-01T00:00:00Z", "c-future", "Future Fox"),
+        ev("2026-01-01", "c-old", "Old Olsen"),
+        ev("2026-03-10", "c-mid", "Mid Miller"),
+        ev("2026-09-01", "c-future", "Future Fox"),
       ]);
 
       expect(resolvePocContact(s, TARGET, "past")).toEqual({
@@ -76,7 +81,7 @@ describe("resolvePocContact", () => {
     });
 
     it("includes an event falling on the target date itself", () => {
-      const s = source([ev("2026-06-15T09:00:00Z", "c-same", "Same Day Sam")]);
+      const s = source([ev("2026-06-15", "c-same", "Same Day Sam")]);
 
       expect(resolvePocContact(s, TARGET, "past")).toMatchObject({
         kind: "contact",
@@ -85,7 +90,7 @@ describe("resolvePocContact", () => {
     });
 
     it("ignores unbooked events", () => {
-      const s = source([ev("2026-06-10T00:00:00Z", "c-draft", "Draft Dave", false)]);
+      const s = source([ev("2026-06-10", "c-draft", "Draft Dave", false)]);
 
       expect(resolvePocContact(s, TARGET, "past")).toBeNull();
     });
@@ -111,7 +116,7 @@ describe("resolvePocContact", () => {
 
     it("prefers a nearer work tracker over an earlier event", () => {
       const s = source(
-        [ev("2026-06-01T00:00:00Z", "c-event", "Event Ellen")],
+        [ev("2026-06-01", "c-event", "Event Ellen")],
         [linkedWt("2026-06-12", "dropoff", "c-wt", "Tracker Tina")],
       );
 
@@ -123,7 +128,7 @@ describe("resolvePocContact", () => {
 
     it("prefers the event when an event and a work tracker share the same date", () => {
       const s = source(
-        [ev("2026-06-12T00:00:00Z", "c-event", "Event Ellen")],
+        [ev("2026-06-12", "c-event", "Event Ellen")],
         [linkedWt("2026-06-12", "dropoff", "c-wt", "Tracker Tina")],
       );
 
@@ -135,7 +140,7 @@ describe("resolvePocContact", () => {
 
     it("returns null when nothing falls on or before the target date", () => {
       const s = source(
-        [ev("2026-09-01T00:00:00Z", "c-future", "Future Fox")],
+        [ev("2026-09-01", "c-future", "Future Fox")],
         [linkedWt("2026-09-02", "dropoff", "c-wt", "Tracker Tina")],
       );
 
@@ -146,9 +151,9 @@ describe("resolvePocContact", () => {
   describe('direction "future" — the Dropoff POC button', () => {
     it("returns the contact of the earliest booked event on or after the target date", () => {
       const s = source([
-        ev("2026-01-01T00:00:00Z", "c-old", "Old Olsen"),
-        ev("2026-07-01T00:00:00Z", "c-next", "Next Nolan"),
-        ev("2026-09-01T00:00:00Z", "c-later", "Later Lane"),
+        ev("2026-01-01", "c-old", "Old Olsen"),
+        ev("2026-07-01", "c-next", "Next Nolan"),
+        ev("2026-09-01", "c-later", "Later Lane"),
       ]);
 
       expect(resolvePocContact(s, TARGET, "future")).toEqual({
@@ -180,7 +185,7 @@ describe("resolvePocContact", () => {
 
     it("prefers a nearer work tracker over a later event", () => {
       const s = source(
-        [ev("2026-08-01T00:00:00Z", "c-event", "Event Ellen")],
+        [ev("2026-08-01", "c-event", "Event Ellen")],
         [linkedWt("2026-06-20", "pickup", "c-wt", "Tracker Tina")],
       );
 
@@ -192,7 +197,7 @@ describe("resolvePocContact", () => {
 
     it("prefers the event when an event and a work tracker share the same date", () => {
       const s = source(
-        [ev("2026-06-20T00:00:00Z", "c-event", "Event Ellen")],
+        [ev("2026-06-20", "c-event", "Event Ellen")],
         [linkedWt("2026-06-20", "pickup", "c-wt", "Tracker Tina")],
       );
 
@@ -203,7 +208,7 @@ describe("resolvePocContact", () => {
     });
 
     it("returns null when nothing falls on or after the target date", () => {
-      const s = source([ev("2026-01-01T00:00:00Z", "c-old", "Old Olsen")]);
+      const s = source([ev("2026-01-01", "c-old", "Old Olsen")]);
 
       expect(resolvePocContact(s, TARGET, "future")).toBeNull();
     });
@@ -222,7 +227,7 @@ describe("resolvePocContact", () => {
 
     it("does NOT fall back to a more distant linked neighbour", () => {
       const s = source(
-        [ev("2026-01-01T00:00:00Z", "c-distant", "Distant Dana")],
+        [ev("2026-01-01", "c-distant", "Distant Dana")],
         [legacyWt("2026-06-12", "dropoff", "Bob from the school")],
       );
 
@@ -231,7 +236,7 @@ describe("resolvePocContact", () => {
 
     it("treats blank POC text as no POC at all", () => {
       const s = source(
-        [ev("2026-01-01T00:00:00Z", "c-distant", "Distant Dana")],
+        [ev("2026-01-01", "c-distant", "Distant Dana")],
         [legacyWt("2026-06-12", "dropoff", "   ")],
       );
 

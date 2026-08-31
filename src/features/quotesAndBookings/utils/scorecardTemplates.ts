@@ -117,6 +117,7 @@ export function filtersForTemplate(
     eventTo: null,
     bookedFrom: null,
     bookedTo: null,
+    inGoodShuffle: null,
     accountManagerUserUuid: accountManagerUserUuid ?? null,
   };
 

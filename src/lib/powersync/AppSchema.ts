@@ -789,6 +789,7 @@ const ContactsCols = {
   last_name: column.text,
   notes: column.text,
   phone: column.text,
+  preferred_language: column.text,
 } satisfies PowerSyncColsFor<"Contacts">;
 const Contacts = new Table(ContactsCols, {
   indexes: { company_uuid: ["company_uuid"] },

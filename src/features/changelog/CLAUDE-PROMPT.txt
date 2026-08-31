@@ -1,4 +1,9 @@
-Could you look through the entire PR https://github.com/joshbleacherrentals/bleacher_rentals/pull/329
+NOTE: In Claude Code, run `/changelog <PR number>` instead of copying this file.
+The command lives in .claude/commands/changelog.md and takes the PR number as
+an argument, so there is no URL to edit by hand. This copy is kept for pasting
+into other tools; replace <PR_NUMBER> below.
+
+Could you look through the entire PR https://github.com/joshbleacherrentals/bleacher_rentals/pull/<PR_NUMBER>
 and generate a full real changelog entry in (root)/versions for all the features and bugs and talk to the users of the software. This should be a new .md file labeled with an incremented version number. You will also need to update this version number in the package.json. The account managers who's day-to-day is booking events and coordinating drivers. The admins who are not technical but are running the company and care about maintenance, practicality and long term vision of the software making their jobs easier.
 
 Could you make it shorter. Make it more too the point and only focus on core the things that people will care about from this release.
