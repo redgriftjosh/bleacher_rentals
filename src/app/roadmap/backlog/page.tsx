@@ -1,13 +1,16 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
-import { Plus, Calendar } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { Plus, Calendar, Loader2 } from "lucide-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useBacklogTasks } from "../_lib/hooks/useBacklogTasks";
 import { useAllSprintsMap } from "../_lib/hooks/useSprints";
 import { PageHeaderWithBreadCrumbs as RoadmapHeader } from "@/components/PageHeaderWithBreadCrumbs";
-import { StatusPill } from "../_lib/components/StatusPill";
+import { StatusPill, type StatusTone } from "../_lib/components/StatusPill";
+import { DataTable, Row, Cell, TitleCell } from "../_lib/components/list/DataTable";
+import { EmptyState } from "../_lib/components/list/Panel";
+import { FilterPill } from "../_lib/components/list/FilterPill";
 import { TaskModal } from "../_lib/components/TaskModal";
 import { TaskMessageBadge } from "../_lib/components/TaskMessageBadge";
 import { SubscriberAvatars } from "../_lib/components/SubscriberAvatars";
@@ -17,6 +20,8 @@ import { useRoadmapUsers } from "../_lib/hooks/useRoadmapUsers";
 import { useRoadmapAccessLevel } from "../_lib/hooks/useRoadmapAccessLevel";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { canEditRoadmapTasks } from "../_lib/util/canEditRoadmapTasks";
+import { useDraftCreator } from "../_lib/hooks/useDraftCreator";
+import { createDraftTask } from "../_lib/db/tasks";
 
 type FilterMode = "all" | "mine";
 
@@ -25,7 +30,6 @@ export default function BacklogPage() {
   const searchParams = useSearchParams();
 
   const ticketParam = searchParams.get("ticket");
-  const newTicket = searchParams.get("new") === "ticket";
 
   const [filter, setFilter] = useState<FilterMode>("all");
   const [showCompleted, setShowCompleted] = useState(false);
@@ -41,15 +45,19 @@ export default function BacklogPage() {
   const subscriptionsMap = useAllTaskSubscriptionsMap();
   const { userMap } = useRoadmapUsers();
 
-  function getStatusMeta(status: string, sprintId: string | null): { label: string; hex: string } {
-    if (status === "in_progress") return { label: "In Progress", hex: "#7b9ee7" };
-    if (status === "completed") return { label: "Completed", hex: "#86efac" };
-    // to_do
+  function getStatusMeta(
+    status: string,
+    sprintId: string | null,
+  ): { label: string; tone: StatusTone } {
+    if (status === "in_progress") return { label: "In Progress", tone: "info" };
+    if (status === "completed") return { label: "Completed", tone: "success" };
+    // to_do — an assigned ticket is further along than a pending one, so it keeps
+    // the informational tone while "Pending" stays neutral.
     if (sprintId) {
       const sprintLabel = sprintsMap.get(sprintId);
-      return { label: `Assigned to ${sprintLabel ?? "Sprint"}`, hex: "#bfdbfe" };
+      return { label: `Assigned to ${sprintLabel ?? "Sprint"}`, tone: "info" };
     }
-    return { label: "Pending", hex: "#e5e7eb" };
+    return { label: "Pending", tone: "neutral" };
   }
 
   const visibleTasks = useMemo(() => {
@@ -61,137 +69,122 @@ export default function BacklogPage() {
   }, [tasks, filter, showCompleted, myTaskIds]);
 
   const baseUrl = "/roadmap/backlog";
-  const ticketId = ticketParam === "new" ? null : ticketParam;
-  const ticketModalOpen = newTicket || ticketParam !== null;
+  const ticketId = ticketParam;
+  const ticketModalOpen = ticketParam !== null;
   const closeTicketModal = () => router.push(baseUrl);
 
+  // "+ Submit Ticket" inserts the row first, then opens its modal. Subscribers are only
+  // notified once the draft gets a title — see `announceTaskCreated`.
+  const openTicket = useCallback(
+    (id: string) => router.replace(`${baseUrl}?ticket=${id}`),
+    [router],
+  );
+  const { createDraft: createTicketDraft, isCreating: creatingTicket } = useDraftCreator({
+    create: () => createDraftTask({ sprintId: null, isBacklog: true, createdByUserUuid: userUuid }),
+    onCreated: openTicket,
+    errorMessage: "Couldn't create the ticket",
+  });
+
   return (
-    <main className="p-6 max-w-5xl mx-auto">
+    <div className="mx-auto max-w-5xl p-6">
       <RoadmapHeader
         crumbs={[{ label: "Roadmap", href: "/roadmap" }, { label: "Backlog" }]}
         description="Submit ideas, bugs, and feature requests. Assign to a sprint when ready."
         rightSlot={
           canEditTasks ? (
-            <PrimaryButton onClick={() => router.push(`${baseUrl}?new=ticket`)}>
-              <Plus className="size-4" />
+            <PrimaryButton onClick={createTicketDraft} disabled={creatingTicket}>
+              {creatingTicket ? (
+                <Loader2 className="size-4 animate-spin motion-reduce:animate-none" />
+              ) : (
+                <Plus className="size-4" />
+              )}
               Submit Ticket
             </PrimaryButton>
           ) : undefined
         }
       />
 
-      <div className="flex items-center gap-2 mb-4">
+      <div className="mb-4 flex items-center gap-2">
         {(["all", "mine"] as FilterMode[]).map((mode) => (
-          <button
-            key={mode}
-            type="button"
-            onClick={() => setFilter(mode)}
-            className={`px-3 py-1 rounded-full text-xs border cursor-pointer ${
-              filter === mode
-                ? "bg-darkBlue text-white border-darkBlue"
-                : "bg-white border-gray-300 hover:bg-gray-50"
-            }`}
-          >
+          <FilterPill key={mode} active={filter === mode} onClick={() => setFilter(mode)}>
             {mode === "all" ? "All" : "My Tickets"}
-          </button>
+          </FilterPill>
         ))}
-        <button
-          type="button"
+        <FilterPill
+          className="ml-auto"
+          active={showCompleted}
           onClick={() => setShowCompleted((v) => !v)}
-          className={`ml-auto px-3 py-1 rounded-full text-xs border cursor-pointer ${
-            showCompleted
-              ? "bg-green-100 text-green-700 border-green-300"
-              : "bg-white border-gray-300 hover:bg-gray-50 text-gray-500"
-          }`}
         >
           {showCompleted ? "Hiding Completed" : "Show Completed"}
-        </button>
+        </FilterPill>
         {isDeveloper && (
-          <button
-            type="button"
-            onClick={() => setShowDeleted((v) => !v)}
-            className={`px-3 py-1 rounded-full text-xs border cursor-pointer ${
-              showDeleted
-                ? "bg-red-100 text-red-700 border-red-300"
-                : "bg-white border-gray-300 hover:bg-gray-50 text-gray-500"
-            }`}
-          >
+          <FilterPill tone="danger" active={showDeleted} onClick={() => setShowDeleted((v) => !v)}>
             {showDeleted ? "Showing Deleted" : "Show Deleted"}
-          </button>
+          </FilterPill>
         )}
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-gray-500">Loading backlog...</p>
+        <p className="text-sm text-rm-ink-muted">Loading backlog…</p>
       ) : visibleTasks.length === 0 ? (
-        <p className="text-sm text-gray-500 italic border border-dashed rounded p-6 text-center">
+        <EmptyState>
           {filter === "mine"
             ? "You're not subscribed to any backlog tickets."
             : tasks.length === 0
               ? "No backlog tickets yet — submit the first one."
               : "No tickets match this filter."}
-        </p>
+        </EmptyState>
       ) : (
-        <div className="border rounded overflow-hidden">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr className="border-b">
-                <th className="text-left px-3 py-2 font-medium">Title</th>
-                <th className="text-left px-3 py-2 font-medium w-36">Status</th>
-                <th className="text-left px-3 py-2 font-medium w-28">Submitted</th>
-                <th className="text-left px-3 py-2 font-medium w-28">Subscribers</th>
-                <th className="px-3 py-2 w-10"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleTasks.map((t) => {
-                const meta = getStatusMeta(t.status, t.sprint_id);
-                return (
-                  <tr
-                    key={t.id}
-                    onClick={() => router.push(`${baseUrl}?ticket=${t.id}`)}
-                    className="border-b hover:bg-gray-50 cursor-pointer"
-                  >
-                    <td className="px-3 py-2">{t.title}</td>
-                    <td className="px-3 py-2">
-                      <StatusPill label={meta.label} hex={meta.hex} />
-                    </td>
-                    <td className="px-3 py-2 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="size-3" />
-                        {t.created_at
-                          ? new Date(t.created_at).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                            })
-                          : "—"}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      <SubscriberAvatars
-                        userUuids={subscriptionsMap.get(t.id) ?? []}
-                        userMap={userMap}
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <TaskMessageBadge taskId={t.id} userUuid={userUuid} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          headers={[
+            { label: "Title" },
+            { label: "Status", className: "w-36" },
+            { label: "Submitted", className: "w-28" },
+            { label: "Subscribers", className: "w-28" },
+            { label: "", className: "w-10" },
+          ]}
+        >
+          {visibleTasks.map((t) => {
+            const meta = getStatusMeta(t.status, t.sprint_id);
+            return (
+              <Row key={t.id} onClick={() => router.push(`${baseUrl}?ticket=${t.id}`)}>
+                <TitleCell title={t.title} fallback="Untitled ticket" />
+                <Cell>
+                  <StatusPill label={meta.label} tone={meta.tone} />
+                </Cell>
+                <Cell className="text-xs text-rm-ink-muted">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="size-3" />
+                    {t.created_at
+                      ? new Date(t.created_at).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "—"}
+                  </span>
+                </Cell>
+                <Cell>
+                  <SubscriberAvatars
+                    userUuids={subscriptionsMap.get(t.id) ?? []}
+                    userMap={userMap}
+                  />
+                </Cell>
+                <Cell>
+                  <TaskMessageBadge taskId={t.id} userUuid={userUuid} />
+                </Cell>
+              </Row>
+            );
+          })}
+        </DataTable>
       )}
 
       <TaskModal
         open={ticketModalOpen}
         onClose={closeTicketModal}
-        sprintId={null}
         quarterId={null}
         taskId={ticketId}
         readOnly={!canEditTasks}
       />
-    </main>
+    </div>
   );
 }

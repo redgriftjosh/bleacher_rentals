@@ -25,6 +25,7 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
       "/all-work-trackers",
       "/scorecard",
       "/driver-scorecard",
+      "/driver-satisfaction",
       "/leaderboard",
       "/driver-calendar",
       "/zones",
@@ -60,6 +61,7 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
       "/all-work-trackers",
       "/scorecard",
       "/driver-scorecard",
+      "/driver-satisfaction",
       "/leaderboard",
       "/driver-calendar",
       "/event-dashboard",
@@ -74,7 +76,7 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
     showSidebar: true,
   },
   developer: {
-    allowedPaths: ["/roadmap", "/changelog"],
+    allowedPaths: ["/roadmap", "/changelog", "/driver-satisfaction"],
     showSidebar: true,
   },
   viewer: {
@@ -90,6 +92,7 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
       "/all-work-trackers",
       "/scorecard",
       "/driver-scorecard",
+      "/driver-satisfaction",
       "/leaderboard",
       "/driver-calendar",
       "/roadmap",
