@@ -1,6 +1,18 @@
 import { QuotesBookingsEvent, QuotesBookingsFilters } from "../types";
 import { isWithinRange } from "./dateRange";
 
+/**
+ * An event is in GoodShuffle when it carries a real URL. A blank string is a
+ * field someone opened and left empty — to a user that event is not in
+ * GoodShuffle, so it must not pass the "yes" filter.
+ *
+ * Exported so the table badge and the filter cannot disagree about what "in
+ * GoodShuffle" means.
+ */
+export function isInGoodShuffle(event: QuotesBookingsEvent): boolean {
+  return (event.goodshuffle_url ?? "").trim() !== "";
+}
+
 export function filterQuotesBookingsEvents(
   events: QuotesBookingsEvent[],
   filters: QuotesBookingsFilters,
@@ -21,6 +33,10 @@ export function filterQuotesBookingsEvents(
     }
 
     if (!isWithinRange(event.booked_at, filters.bookedFrom, filters.bookedTo, timezone)) {
+      return false;
+    }
+
+    if (filters.inGoodShuffle !== null && isInGoodShuffle(event) !== filters.inGoodShuffle) {
       return false;
     }
 

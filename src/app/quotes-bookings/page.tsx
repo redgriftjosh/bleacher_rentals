@@ -11,13 +11,14 @@ import { useQuotesAndBookingsFilters } from "@/features/quotesAndBookings/hooks/
 import { useQuotesAndBookingsData } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsData";
 import type { QuotesBookingsEvent } from "@/features/quotesAndBookings/types";
 import { searchEvents } from "@/features/quotesAndBookings/utils/searchEvents";
+import { isInGoodShuffle } from "@/features/quotesAndBookings/utils/filterEvents";
+import { GoodShuffleBadge } from "@/features/quotesAndBookings/components/GoodShuffleBadge";
 import {
   isScorecardTemplate,
   filtersForTemplate,
   SCORECARD_TEMPLATES,
 } from "@/features/quotesAndBookings/utils/scorecardTemplates";
 import { useRouter, useSearchParams } from "next/navigation";
-
 
 function formatCurrency(cents: number | null): string {
   if (cents === null) return "$0.00";
@@ -64,7 +65,13 @@ export default function QuotesBookingsPage() {
 
   const initialOverrides = useMemo(() => {
     if (!activeTemplate || !timeRangeParam) return undefined;
-    return filtersForTemplate(activeTemplate, timeRangeParam, "this", accountManagerParam, periodStartParam);
+    return filtersForTemplate(
+      activeTemplate,
+      timeRangeParam,
+      "this",
+      accountManagerParam,
+      periodStartParam,
+    );
   }, [activeTemplate, timeRangeParam, accountManagerParam, periodStartParam]);
 
   const {
@@ -75,6 +82,7 @@ export default function QuotesBookingsPage() {
     setEventRange,
     setBookedRange,
     setAccountManagerUserUuid,
+    setInGoodShuffle,
     clearFilters,
   } = useQuotesAndBookingsFilters(initialOverrides);
 
@@ -102,7 +110,16 @@ export default function QuotesBookingsPage() {
       header: `Event Name (${searchedData?.length ?? 0})`,
       render: (event) => (
         <div>
-          <CellText bold>{event.event_name && event.event_name.length > 70 ? `${event.event_name.slice(0, 70)}...` : event.event_name}</CellText>
+          <CellText bold>
+            <span className="inline-flex items-center gap-1.5">
+              {isInGoodShuffle(event) && <GoodShuffleBadge />}
+              <span>
+                {event.event_name && event.event_name.length > 70
+                  ? `${event.event_name.slice(0, 70)}...`
+                  : event.event_name}
+              </span>
+            </span>
+          </CellText>
           <CellSecondary>Created: {formatDate(event.created_at)}</CellSecondary>
         </div>
       ),
@@ -202,16 +219,16 @@ export default function QuotesBookingsPage() {
               <span className="text-indigo-600 ml-1">({periodLabel})</span>
             </div>
             <button
-              onClick={() => router.push("/scorecard" + (timeRangeParam ? `?timeRange=${timeRangeParam}` : ""))}
+              onClick={() =>
+                router.push("/scorecard" + (timeRangeParam ? `?timeRange=${timeRangeParam}` : ""))
+              }
               className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition"
             >
               <ArrowLeft className="h-3 w-3" />
               Back to Scorecard
             </button>
           </div>
-          <p className="mt-1 text-indigo-700">
-            {SCORECARD_TEMPLATES[activeTemplate].description}
-          </p>
+          <p className="mt-1 text-indigo-700">{SCORECARD_TEMPLATES[activeTemplate].description}</p>
         </div>
       )}
 
@@ -226,6 +243,7 @@ export default function QuotesBookingsPage() {
           onCreatedRangeChange={setCreatedRange}
           onEventRangeChange={setEventRange}
           onBookedRangeChange={setBookedRange}
+          onInGoodShuffleChange={setInGoodShuffle}
           onAccountManagerChange={setAccountManagerUserUuid}
           onClear={clearFilters}
         />
