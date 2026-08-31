@@ -8,7 +8,9 @@ import { DriverPayTrack } from "@/features/manageTeam/components/inputs/DriverPa
 import { VendorSelection } from "@/features/manageTeam/components/inputs/VendorSelection";
 import { useCurrentUserStore } from "@/features/manageTeam/state/useCurrentUserStore";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
-import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
+import { DriverDocumentCard } from "@/features/manageTeam/components/inputs/DriverDocumentCard";
+import { DRIVER_DOCUMENTS } from "@/features/manageTeam/logic/driverDocuments";
+import { useTodayIso } from "@/features/manageTeam/hooks/useTodayIso";
 import { useUserFormPaths } from "@/features/manageTeam/hooks/useUserFormPaths";
 import { CountryIndicator } from "@/features/manageTeam/components/CountryIndicator";
 import { useEditAccess } from "@/features/manageTeam/state/EditAccessContext";
@@ -125,7 +127,11 @@ export function DriverPageContent() {
   const licensePhotoPath = useCurrentUserStore((s) => s.licensePhotoPath);
   const insurancePhotoPath = useCurrentUserStore((s) => s.insurancePhotoPath);
   const medicalCardPhotoPath = useCurrentUserStore((s) => s.medicalCardPhotoPath);
+  const licenseExpiresOn = useCurrentUserStore((s) => s.licenseExpiresOn);
+  const insuranceExpiresOn = useCurrentUserStore((s) => s.insuranceExpiresOn);
+  const medicalCardExpiresOn = useCurrentUserStore((s) => s.medicalCardExpiresOn);
   const driverId = useCurrentUserStore((s) => s.driverId);
+  const todayIso = useTodayIso();
 
   // Detect USA states (normalized to lowercase for comparison)
   const usaStates = [
@@ -214,6 +220,17 @@ export function DriverPageContent() {
   }, [driverId, setField]);
 
   const driverStoragePath = driverId || "temp-driver";
+
+  // Indexed by the descriptor's field names so the document list can stay a map
+  // over DRIVER_DOCUMENTS instead of three hand-written blocks.
+  const documentValues = {
+    licensePhotoPath,
+    insurancePhotoPath,
+    medicalCardPhotoPath,
+    licenseExpiresOn,
+    insuranceExpiresOn,
+    medicalCardExpiresOn,
+  };
 
   return (
     <div className="space-y-6">
@@ -461,42 +478,40 @@ export function DriverPageContent() {
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-3">
-            <h3 className="mb-2 text-sm font-semibold text-gray-800">Document Uploads</h3>
-            <div className="space-y-3">
-              <FileUploadInput
-                label="License Photo"
-                bucket="driver-documents"
-                storagePath={`${driverStoragePath}/license`}
-                value={licensePhotoPath}
-                onChange={(path) => setField("licensePhotoPath", path)}
-              />
-
-              <FileUploadInput
-                label="Insurance Photo"
-                bucket="driver-documents"
-                storagePath={`${driverStoragePath}/insurance`}
-                value={insurancePhotoPath}
-                onChange={(path) => setField("insurancePhotoPath", path)}
-              />
-
-              {isUSADriver ? (
-                <FileUploadInput
-                  label="Medical Card Photo"
-                  bucket="driver-documents"
-                  storagePath={`${driverStoragePath}/medical_card`}
-                  value={medicalCardPhotoPath}
-                  onChange={(path) => setField("medicalCardPhotoPath", path)}
-                />
-              ) : (
-                <div className="rounded border-2 border-gray-300 bg-gray-50 p-4 text-center">
-                  <p className="text-sm font-medium text-gray-700">Medical Card Not Required</p>
-                  <p className="mt-1 text-xs text-gray-600">
-                    {isCanadaDriver
-                      ? "Canadian drivers do not need to upload a medical card."
-                      : "Medical card is only required for drivers with a USA address."}
-                  </p>
-                </div>
+          <div className="border-t border-gray-200 pt-4">
+            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <h3 className="text-sm font-semibold text-gray-800">Document Uploads</h3>
+              <p className="text-xs text-gray-500">JPG, PNG, HEIC, WebP or PDF · up to 5MB</p>
+            </div>
+            <div className="space-y-2">
+              {DRIVER_DOCUMENTS.map((doc) =>
+                doc.usaOnly && !isUSADriver ? (
+                  <div
+                    key={doc.type}
+                    className="rounded-lg border border-dashed border-gray-200 bg-gray-50/60 px-3 py-2.5"
+                  >
+                    <p className="text-sm font-medium text-gray-500">{doc.label} not required</p>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      {isCanadaDriver
+                        ? "Canadian drivers do not need to upload a medical card."
+                        : "Only required for drivers with a USA home address."}
+                    </p>
+                  </div>
+                ) : (
+                  <DriverDocumentCard
+                    key={doc.type}
+                    label={doc.label}
+                    hint={doc.hint}
+                    bucket="driver-documents"
+                    storagePath={`${driverStoragePath}/${doc.storageKey}`}
+                    value={documentValues[doc.pathField]}
+                    onChange={(path) => setField(doc.pathField, path)}
+                    expiresOn={documentValues[doc.expiryField]}
+                    onExpiresOnChange={(next) => setField(doc.expiryField, next)}
+                    todayIso={todayIso}
+                    disabled={zonesOnly}
+                  />
+                ),
               )}
             </div>
           </div>

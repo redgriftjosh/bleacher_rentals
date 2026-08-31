@@ -65,7 +65,9 @@ export const PERMISSIONS: PermissionEntry[] = [
       viewer: read(
         "This user will be able to see all the event and every detail but not able to create, edit, or delete any events.",
       ),
-      driver: none("Drivers only have access to the Driver Mobile App."),
+      driver: custom(
+        "Can file a ticket to the developers from the mobile app, and edit their own for a short window afterwards. Has no access to the rest of the roadmap — they cannot see, edit or comment on anyone else's work.",
+      ),
     },
   },
   {
@@ -408,6 +410,29 @@ export const PERMISSIONS: PermissionEntry[] = [
       ),
       viewer: none("Viewers do not have access to the development roadmap."),
       driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Driver Satisfaction",
+    description:
+      "This applies to the Driver Satisfaction page, and to the survey drivers answer in the mobile app.",
+    category: "Development Roadmap",
+    roles: {
+      admin: full(
+        "Sees every response, and can create surveys and questions as well as correct a submitted response.",
+      ),
+      account_manager: read(
+        "Can open the page and read every driver's responses and scores, but cannot change a survey, a question or a response.",
+      ),
+      developer: custom(
+        "Creates and edits the surveys and their questions, and reads every response. Cannot alter a response a driver has submitted.",
+      ),
+      viewer: read(
+        "Can open the page and read every driver's responses and scores, but cannot change anything.",
+      ),
+      driver: custom(
+        "(in the mobile app only) Answers the survey, and can see their own past answers. Cannot see any other driver's responses, and has no access to the web page.",
+      ),
     },
   },
   {
