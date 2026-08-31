@@ -1,182 +1,218 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Modal } from "./Modal";
+import { FormGroup, FormRow } from "./form/FormGroup";
+import { PillGroup } from "./form/PillGroup";
+import { TextField } from "./form/TextField";
+import { SaveStatusIndicator } from "@/components/SaveStatusIndicator";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { createSuccessToast } from "@/components/toasts/SuccessToast";
-import { Dropdown } from "@/components/DropDown";
+import { DestructiveButton } from "@/components/DestructiveButton";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
 import { RichTextEditor } from "./RichTextEditor";
 import { AttachmentList } from "./AttachmentList";
 import { useFeature } from "../hooks/useFeatures";
 import { useSprintsForQuarter } from "../hooks/useSprints";
 import { useRoadmapCurrentUserUuid } from "../hooks/useRoadmapCurrentUserUuid";
-import { saveFeature, deleteFeature } from "../db/features";
+import {
+  discardFeatureDraft,
+  restoreFeature,
+  softDeleteFeature,
+  updateFeature,
+} from "../db/features";
+import { hydrateFeatureForm, isEmptyFeatureDraft, type FeatureForm } from "../forms";
+import { useAutosavedRecord, type AutosaveAdapter } from "@/lib/autosave";
 import { sprintLabel } from "../types";
-import { DEFAULT_FEATURE_STATUS, FEATURE_STATUS_OPTIONS } from "../constants";
-import type { FeatureStatus } from "../types";
+import { FEATURE_STATUS_OPTIONS } from "../constants";
+import type { Feature, FeatureStatus } from "../types";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  quarterId: string;
   featureId: string | null;
 };
 
-export function FeatureModal({ open, onClose, quarterId, featureId }: Props) {
+/**
+ * The feature already exists by the time this opens — "+ New Feature" inserts a draft
+ * first. So there is no create path here: every edit is an autosaved update.
+ */
+export function FeatureModal({ open, onClose, featureId }: Props) {
   const { feature } = useFeature(featureId);
-  const { sprints } = useSprintsForQuarter(quarterId);
+  const { sprints } = useSprintsForQuarter(feature?.quarter_id ?? null);
   const { userUuid } = useRoadmapCurrentUserUuid();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<FeatureStatus>(DEFAULT_FEATURE_STATUS);
-  const [sprintIds, setSprintIds] = useState<string[]>([]);
-  const [submitting, setSubmitting] = useState(false);
+  const adapter = useMemo<AutosaveAdapter<FeatureForm>>(
+    () => ({
+      save: updateFeature,
+      isEmptyDraft: isEmptyFeatureDraft,
+      discard: discardFeatureDraft,
+      softDelete: softDeleteFeature,
+    }),
+    [],
+  );
 
-  useEffect(() => {
-    if (!open) return;
-    setTitle(feature?.title ?? "");
-    setDescription(feature?.description ?? "");
-    setStatus(feature?.status ?? DEFAULT_FEATURE_STATUS);
-    setSprintIds(feature?.sprint_ids ?? []);
-  }, [open, feature]);
+  const handleError = useCallback((error: unknown) => {
+    createErrorToastNoThrow([
+      "Couldn't save this feature",
+      error instanceof Error ? error.message : String(error),
+    ]);
+  }, []);
 
-  const toggleSprint = (sprintId: string) => {
-    setSprintIds((prev) =>
-      prev.includes(sprintId) ? prev.filter((id) => id !== sprintId) : [...prev, sprintId],
-    );
-  };
+  const { form, saveState, patch, retry, softDelete, finalize } = useAutosavedRecord<
+    Feature,
+    FeatureForm
+  >({
+    id: featureId,
+    row: feature,
+    hydrate: hydrateFeatureForm,
+    adapter,
+    open,
+    onError: handleError,
+  });
 
-  const handleSave = async () => {
-    if (!title.trim()) {
-      createErrorToast(["Title is required"]);
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await saveFeature({
-        featureId: featureId,
-        quarterId,
-        title: title.trim(),
-        description: description.trim() ? description : null,
-        status,
-        sprintIds,
-      });
-      createSuccessToast(["Feature saved"]);
-      onClose();
-    } catch (err: any) {
-      createErrorToast(["Save failed", err.message ?? String(err)]);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const handleClose = useCallback(async () => {
+    await finalize();
+    onClose();
+  }, [finalize, onClose]);
 
   const handleDelete = async () => {
+    await softDelete();
+    setConfirmDeleteOpen(false);
+    onClose();
+  };
+
+  const handleRestore = async () => {
     if (!featureId) return;
-    if (!confirm("Delete this feature?")) return;
-    setSubmitting(true);
-    try {
-      await deleteFeature(featureId);
-      createSuccessToast(["Feature deleted"]);
-      onClose();
-    } catch (err: any) {
-      createErrorToast(["Delete failed", err.message ?? String(err)]);
-    } finally {
-      setSubmitting(false);
-    }
+    await restoreFeature(featureId);
+  };
+
+  const isDeleted = !!feature?.deleted_at;
+
+  const sprintOptions = useMemo(
+    () => sprints.map((s) => ({ label: sprintLabel(s.sprint_number), value: s.id })),
+    [sprints],
+  );
+
+  const toggleSprint = (sprintId: string) => {
+    if (!form) return;
+    patch({
+      sprintIds: form.sprintIds.includes(sprintId)
+        ? form.sprintIds.filter((id) => id !== sprintId)
+        : [...form.sprintIds, sprintId],
+    });
   };
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={featureId ? "Edit Feature" : "New Feature"}
-      size="lg"
-      footer={
-        <>
-          {featureId && (
-            <PrimaryButton
-              className="bg-red-700 hover:bg-red-800"
-              loading={submitting}
-              onClick={handleDelete}
+    <>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        title="Feature"
+        size="lg"
+        bodyTone="grouped"
+        footerLeft={
+          featureId &&
+          (isDeleted ? (
+            <button
+              type="button"
+              onClick={handleRestore}
+              className="cursor-pointer rounded-lg px-3 py-2 text-[15px] font-medium text-rm-accent transition-colors hover:bg-rm-accent-soft"
             >
-              Delete
-            </PrimaryButton>
-          )}
-          <PrimaryButton loading={submitting} loadingText="Saving..." onClick={handleSave}>
-            Save
-          </PrimaryButton>
-        </>
-      }
-    >
-      <div className="space-y-4">
-        <label className="block text-sm">
-          <span className="font-medium">Title</span>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="What's this feature?"
-            className="mt-1 w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-greenAccent"
-          />
-        </label>
-
-        <div>
-          <span className="text-sm font-medium block mb-1">Status</span>
-          <Dropdown
-            options={FEATURE_STATUS_OPTIONS}
-            selected={status}
-            onSelect={(v) => setStatus(v as FeatureStatus)}
-            placeholder="Select Status"
-          />
-        </div>
-
-        <div>
-          <span className="text-sm font-medium block mb-1">Sprint labels</span>
-          <div className="flex flex-wrap gap-2">
-            {sprints.length === 0 && (
-              <p className="text-xs text-gray-400 italic">No sprints yet for this quarter.</p>
+              Restore
+            </button>
+          ) : (
+            <DestructiveButton onClick={() => setConfirmDeleteOpen(true)}>Delete</DestructiveButton>
+          ))
+        }
+        footer={
+          <>
+            <SaveStatusIndicator state={saveState} onRetry={retry} />
+            <PrimaryButton onClick={handleClose}>Done</PrimaryButton>
+          </>
+        }
+      >
+        {!form ? (
+          <FeatureFormSkeleton />
+        ) : (
+          <div className="space-y-5">
+            {isDeleted && (
+              <p className="rounded-xl bg-rm-danger-soft px-3.5 py-2.5 text-[13px] text-rm-danger">
+                This feature is deleted. Restore it to bring it back to the quarter.
+              </p>
             )}
-            {sprints.map((s) => {
-              const active = sprintIds.includes(s.id);
-              return (
-                <button
-                  type="button"
-                  key={s.id}
-                  onClick={() => toggleSprint(s.id)}
-                  className={`px-2 py-1 rounded text-xs border cursor-pointer ${
-                    active
-                      ? "bg-darkBlue text-white border-darkBlue"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  {sprintLabel(s.sprint_number)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
 
-        <div>
-          <span className="text-sm font-medium block mb-1">Description</span>
-          <RichTextEditor
-            value={description}
-            onChange={setDescription}
-            placeholder="Goals, acceptance criteria, links..."
-          />
-        </div>
+            <FormGroup>
+              <FormRow>
+                <TextField
+                  variant="title"
+                  value={form.title}
+                  onChange={(title) => patch({ title })}
+                  placeholder="Untitled feature"
+                  ariaLabel="Feature title"
+                  autoFocus
+                />
+              </FormRow>
+              <FormRow label="Status" stacked>
+                <PillGroup
+                  options={FEATURE_STATUS_OPTIONS}
+                  selected={form.status}
+                  onSelect={(status) => patch({ status: status as FeatureStatus })}
+                />
+              </FormRow>
+              <FormRow label="Sprint labels" stacked>
+                <PillGroup
+                  multiple
+                  options={sprintOptions}
+                  selected={form.sprintIds}
+                  onSelect={toggleSprint}
+                  emptyHint="No sprints yet for this quarter."
+                />
+              </FormRow>
+            </FormGroup>
 
-        {featureId && (
-          <div>
-            <AttachmentList
-              parentType="feature"
-              parentId={featureId}
-              uploadedByUserUuid={userUuid}
-            />
+            <FormGroup label="Description">
+              <FormRow stacked>
+                <RichTextEditor
+                  value={form.description}
+                  onChange={(description) => patch({ description })}
+                  placeholder="Goals, acceptance criteria, links…"
+                />
+              </FormRow>
+            </FormGroup>
+
+            {featureId && (
+              <FormGroup label="Attachments">
+                <FormRow stacked>
+                  <AttachmentList
+                    parentType="feature"
+                    parentId={featureId}
+                    uploadedByUserUuid={userUuid}
+                  />
+                </FormRow>
+              </FormGroup>
+            )}
           </div>
         )}
-      </div>
-    </Modal>
+      </Modal>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        title="Delete this feature?"
+        message="It stays recoverable — you can restore it from the deleted list."
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDeleteOpen(false)}
+      />
+    </>
+  );
+}
+
+function FeatureFormSkeleton() {
+  return (
+    <div className="space-y-3" aria-hidden="true">
+      <div className="h-11 animate-pulse rounded-xl bg-white motion-reduce:animate-none" />
+      <div className="h-28 animate-pulse rounded-xl bg-white motion-reduce:animate-none" />
+    </div>
   );
 }

@@ -107,6 +107,7 @@ const ALL_ITEMS: SidebarItemConfig[] = [
     children: [
       { label: "Sales Scorecard", href: "/scorecard" },
       { label: "Driver Scorecard", href: "/driver-scorecard" },
+      { label: "Driver Satisfaction", href: "/driver-satisfaction" },
     ],
   },
   {

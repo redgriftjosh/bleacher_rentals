@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "./Modal";
+import { FormGroup, FormRow } from "./form/FormGroup";
+import { PillGroup } from "./form/PillGroup";
+import { TextField } from "./form/TextField";
+import { SaveStatusIndicator } from "@/components/SaveStatusIndicator";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { DestructiveButton } from "@/components/DestructiveButton";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Dropdown } from "@/components/DropDown";
-import { createErrorToast } from "@/components/toasts/ErrorToast";
-import { createSuccessToast } from "@/components/toasts/SuccessToast";
+import { createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
 import { RichTextEditor } from "./RichTextEditor";
 import { AttachmentList } from "./AttachmentList";
 import { TaskChat } from "./TaskChat";
@@ -16,352 +21,339 @@ import { useSprint, useSprintsForQuarter } from "../hooks/useSprints";
 import { useRoadmapCurrentUserUuid } from "../hooks/useRoadmapCurrentUserUuid";
 import { useRoadmapAccessLevel } from "../hooks/useRoadmapAccessLevel";
 import { useRoadmapDevelopers } from "../hooks/useRoadmapDevelopers";
-import { saveTask, deleteTask, restoreTask } from "../db/tasks";
-import { subscribeToTask } from "../db/subscriptions";
-import { sendTaskMessage } from "../db/messages";
 import { useRoadmapUsers, displayName } from "../hooks/useRoadmapUsers";
-import { useSubscriptionsForTask } from "../hooks/useSubscriptions";
-import { DEFAULT_TASK_STATUS, TASK_STATUS_OPTIONS } from "../constants";
-import type { TaskStatus } from "../types";
+import { deleteTask, discardTaskDraft, restoreTask, updateTask } from "../db/tasks";
+import { announceTaskChanged, announceTaskCreated } from "../db/taskActivity";
+import {
+  applyTaskPermissions,
+  hydrateTaskForm,
+  isEmptyTaskDraft,
+  visibleTaskChanges,
+  type TaskForm,
+} from "../forms";
+import { useAutosavedRecord, type AutosaveAdapter } from "@/lib/autosave";
+import { TASK_STATUS_OPTIONS } from "../constants";
+import type { TaskRow, TaskStatus } from "../types";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  sprintId: string | null;
+  /** Quarter of the page the modal was opened from, used to seed the sprint picker. */
   quarterId: string | null;
   taskId: string | null;
   readOnly?: boolean;
 };
 
-export function TaskModal({ open, onClose, sprintId, quarterId, taskId, readOnly }: Props) {
+/**
+ * The task already exists by the time this opens — "+ New Task" / "+ Submit Ticket"
+ * insert a draft first. Every edit autosaves; the notification side effects are
+ * deliberately not per-save (see `db/taskActivity`).
+ */
+export function TaskModal({ open, onClose, quarterId, taskId, readOnly }: Props) {
   const { task } = useTask(taskId);
   const { userUuid } = useRoadmapCurrentUserUuid();
   const { isDeveloper } = useRoadmapAccessLevel();
   const developers = useRoadmapDevelopers();
   const { userMap } = useRoadmapUsers();
-  const { subscriptions } = useSubscriptionsForTask(taskId);
   const { quarters } = useQuarters();
-  // Look up the quarter for an existing task's sprint
   const { sprint: taskSprint } = useSprint(task?.sprint_id ?? null);
 
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
+  // The quarter is a picker for narrowing sprints, not a stored field.
   const [selectedQuarterId, setSelectedQuarterId] = useState(quarterId ?? "");
-  const [selectedSprintId, setSelectedSprintId] = useState(sprintId ?? "");
-  const [isBacklog, setIsBacklog] = useState(true);
+  useEffect(() => {
+    if (!open) return;
+    setSelectedQuarterId(taskSprint?.quarter_id ?? quarterId ?? "");
+  }, [open, taskSprint?.quarter_id, quarterId]);
 
   const { sprints } = useSprintsForQuarter(selectedQuarterId || null);
   const { features } = useFeaturesForQuarter(selectedQuarterId || null);
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<TaskStatus>(DEFAULT_TASK_STATUS);
-  const [featureId, setFeatureId] = useState<string | "">("");
-  const [developerUuid, setDeveloperUuid] = useState<string | "">("");
-  const [submitting, setSubmitting] = useState(false);
+  const actor = useMemo(
+    () => ({ uuid: userUuid, name: displayName(userUuid ? userMap.get(userUuid) : undefined) }),
+    [userUuid, userMap],
+  );
 
-  const isBacklogContext = !sprintId && !task?.sprint_id;
-  const initializedForRef = useRef<string | null>(null);
+  const adapter = useMemo<AutosaveAdapter<TaskForm>>(
+    () => ({
+      save: (id, form) => updateTask(id, applyTaskPermissions(form, isDeveloper)),
+      isEmptyDraft: isEmptyTaskDraft,
+      discard: discardTaskDraft,
+      softDelete: deleteTask,
+      onFirstCommit: (id, form) =>
+        announceTaskCreated({
+          taskId: id,
+          actor,
+          isBacklog: applyTaskPermissions(form, isDeveloper).isBacklog,
+        }),
+    }),
+    [isDeveloper, actor],
+  );
 
-  useEffect(() => {
-    if (!open) {
-      initializedForRef.current = null;
-      return;
+  const handleError = useCallback((error: unknown) => {
+    createErrorToastNoThrow([
+      "Couldn't save this ticket",
+      error instanceof Error ? error.message : String(error),
+    ]);
+  }, []);
+
+  const { form, saveState, patch, retry, softDelete, finalize } = useAutosavedRecord<
+    TaskRow,
+    TaskForm
+  >({
+    id: taskId,
+    row: task,
+    hydrate: hydrateTaskForm,
+    adapter,
+    open,
+    onError: handleError,
+  });
+
+  const handleClose = useCallback(async () => {
+    const { discarded, firstCommitted, changedKeys } = await finalize();
+
+    // One notice per editing session, and never on top of the "created" notice.
+    if (taskId && !discarded && !firstCommitted && visibleTaskChanges(changedKeys).length > 0) {
+      await announceTaskChanged({ taskId, actor });
     }
-    const key = taskId ?? "__new__";
-    if (taskId && !task) return;
-    if (initializedForRef.current === key) return;
-    initializedForRef.current = key;
-
-    setTitle(task?.title ?? "");
-    setDescription(task?.description ?? "");
-    setStatus(task?.status ?? DEFAULT_TASK_STATUS);
-    setFeatureId(task?.feature_id ?? "");
-    setDeveloperUuid(task?.developer_uuid ?? "");
-    const derivedQuarterId = taskSprint?.quarter_id ?? quarterId ?? "";
-    setSelectedQuarterId(derivedQuarterId);
-    setSelectedSprintId(task?.sprint_id ?? sprintId ?? "");
-    setIsBacklog(task ? task.is_backlog : isBacklogContext);
-  }, [open, task, taskSprint]);
-
-  const handleSave = async () => {
-    if (!title.trim()) {
-      createErrorToast(["Title is required"]);
-      return;
-    }
-    setSubmitting(true);
-    try {
-      // Non-developers always submit as backlog tickets with to_do status
-      const effectiveIsBacklog = !isDeveloper ? true : isBacklog;
-      const effectiveStatus: TaskStatus = !isDeveloper ? "to_do" : status;
-      const effectiveSprintId = !isDeveloper ? null : selectedSprintId || null;
-
-      const savedId = await saveTask({
-        taskId,
-        sprintId: effectiveSprintId,
-        featureId: featureId || null,
-        title: title.trim(),
-        description: description.trim() ? description : null,
-        status: effectiveStatus,
-        createdByUserUuid: userUuid,
-        isBacklog: effectiveIsBacklog,
-        developerUuid: isDeveloper ? developerUuid || null : null,
-      });
-      // Auto-subscribe the creator on new tickets
-      if (!taskId && userUuid) {
-        await subscribeToTask(savedId, userUuid);
-      }
-
-      // Post a system message and notify subscribers
-      if (userUuid) {
-        const actorName = displayName(userMap.get(userUuid));
-        const messageBody = taskId
-          ? `${actorName} made changes to the ticket.`
-          : `${actorName} created a ticket.`;
-        await sendTaskMessage({ taskId: savedId, userUuid, body: messageBody });
-
-        const recipientUuids = subscriptions
-          .map((s) => s.user_uuid)
-          .filter((uuid): uuid is string => !!uuid && uuid !== userUuid);
-        if (recipientUuids.length > 0) {
-          fetch("/api/roadmap/task-message-notify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              taskId: savedId,
-              senderUserUuid: userUuid,
-              senderName: actorName,
-              messageBody,
-            }),
-          }).catch(() => {});
-        }
-      }
-
-      createSuccessToast(["Task saved"]);
-      onClose();
-    } catch (err: any) {
-      createErrorToast(["Save failed", err.message ?? String(err)]);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    onClose();
+  }, [finalize, onClose, taskId, actor]);
 
   const handleDelete = async () => {
-    if (!taskId) return;
-    if (!confirm("Delete this task?")) return;
-    setSubmitting(true);
-    try {
-      await deleteTask(taskId);
-      createSuccessToast(["Task deleted"]);
-      onClose();
-    } catch (err: any) {
-      createErrorToast(["Delete failed", err.message ?? String(err)]);
-    } finally {
-      setSubmitting(false);
-    }
+    await softDelete();
+    setConfirmDeleteOpen(false);
+    onClose();
   };
 
   const handleRestore = async () => {
     if (!taskId) return;
-    setSubmitting(true);
-    try {
-      await restoreTask(taskId);
-      createSuccessToast(["Task restored"]);
-      onClose();
-    } catch (err: any) {
-      createErrorToast(["Restore failed", err.message ?? String(err)]);
-    } finally {
-      setSubmitting(false);
-    }
+    await restoreTask(taskId);
   };
 
-  const quarterOptions = [
-    { label: "(none)", value: "" },
-    ...quarters.map((q) => ({ label: `Q${q.quarter} ${q.year}`, value: q.id })),
-  ];
+  const isDeleted = !!task?.deleted_at;
+  const isBacklogContext = !form?.sprintId;
+  const canEdit = !readOnly;
 
-  const sprintOptions = [
-    { label: "(none)", value: "" },
-    ...sprints.map((s) => ({ label: `Sprint ${s.sprint_number}`, value: s.id })),
-  ];
-
-  const featureOptions = [
-    { label: "(none)", value: "" },
-    ...features.map((f) => ({ label: f.title, value: f.id })),
-  ];
-
-  const developerOptions = [
-    { label: "(unassigned)", value: "" },
-    ...developers.map((d) => ({ label: d.label, value: d.userUuid })),
-  ];
-
-  const modalTitle = taskId
-    ? isBacklogContext
-      ? "Edit Backlog Ticket"
-      : "Edit Task"
-    : isBacklogContext
-      ? "Submit a Backlog Ticket"
-      : "New Task";
+  const quarterOptions = useMemo(
+    () => [
+      { label: "(none)", value: "" },
+      ...quarters.map((q) => ({ label: `Q${q.quarter} ${q.year}`, value: q.id })),
+    ],
+    [quarters],
+  );
+  const sprintOptions = useMemo(
+    () => [
+      { label: "(none)", value: "" },
+      ...sprints.map((s) => ({ label: `Sprint ${s.sprint_number}`, value: s.id })),
+    ],
+    [sprints],
+  );
+  const featureOptions = useMemo(
+    () => [
+      { label: "(none)", value: "" },
+      ...features.map((f) => ({ label: f.title || "Untitled feature", value: f.id })),
+    ],
+    [features],
+  );
+  const developerOptions = useMemo(
+    () => [
+      { label: "(unassigned)", value: "" },
+      ...developers.map((d) => ({ label: d.label, value: d.userUuid })),
+    ],
+    [developers],
+  );
 
   const showChat = !!taskId;
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={modalTitle}
-      size={showChat ? "2xl" : "lg"}
-      contentClassName={showChat ? "overflow-hidden flex flex-col" : undefined}
-      footer={
-        readOnly ? undefined : (
-          <>
-            {taskId &&
-              isDeveloper &&
-              (task?.deleted_at ? (
-                <PrimaryButton
-                  className="bg-green-700 hover:bg-green-800"
-                  loading={submitting}
-                  onClick={handleRestore}
-                >
-                  Restore
-                </PrimaryButton>
-              ) : (
-                <PrimaryButton
-                  className="bg-red-700 hover:bg-red-800"
-                  loading={submitting}
-                  onClick={handleDelete}
-                >
-                  Delete
-                </PrimaryButton>
-              ))}
-            <PrimaryButton loading={submitting} loadingText="Saving..." onClick={handleSave}>
-              Save
-            </PrimaryButton>
-          </>
-        )
-      }
-    >
-      <div className={`flex gap-6 ${showChat ? "flex-1 min-h-0 overflow-hidden" : ""}`}>
-        {/* Left: form */}
-        <div className={`flex-1 space-y-4 min-w-0 ${showChat ? "overflow-y-auto pr-1" : ""}`}>
-          <label className="block text-sm">
-            <span className="font-medium">Title</span>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={isBacklog ? "Short summary of the request" : "What needs doing?"}
-              className="mt-1 w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-greenAccent"
-              disabled={readOnly}
-            />
-          </label>
-
-          {readOnly ? (
-            <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
-              You are viewing this ticket in read-only mode.
-            </div>
-          ) : isDeveloper ? (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <span className="text-sm font-medium block mb-1">Status</span>
-                  <Dropdown
-                    options={TASK_STATUS_OPTIONS}
-                    selected={status}
-                    onSelect={(v) => setStatus(v as TaskStatus)}
-                    placeholder="Select Status"
-                  />
-                </div>
-                <div>
-                  <span className="text-sm font-medium block mb-1">Linked feature</span>
-                  <Dropdown
-                    options={featureOptions}
-                    selected={featureId}
-                    onSelect={(v) => setFeatureId(v)}
-                    placeholder="(none)"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <span className="text-sm font-medium block mb-1">Quarter</span>
-                  <Dropdown
-                    options={quarterOptions}
-                    selected={selectedQuarterId}
-                    onSelect={(v) => {
-                      setSelectedQuarterId(v);
-                      setSelectedSprintId("");
-                    }}
-                    placeholder="(none)"
-                  />
-                </div>
-                <div>
-                  <span className="text-sm font-medium block mb-1">Sprint</span>
-                  <Dropdown
-                    options={sprintOptions}
-                    selected={selectedSprintId}
-                    onSelect={(v) => setSelectedSprintId(v)}
-                    placeholder={selectedQuarterId ? "(none)" : "Select a quarter first"}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  id="show-in-backlog"
-                  type="checkbox"
-                  checked={isBacklog}
-                  onChange={(e) => setIsBacklog(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 cursor-pointer"
-                />
-                <label htmlFor="show-in-backlog" className="text-sm text-gray-700 cursor-pointer">
-                  Show in backlog
-                </label>
-              </div>
-            </>
+    <>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        title={isBacklogContext ? "Backlog Ticket" : "Task"}
+        size={showChat ? "2xl" : "lg"}
+        bodyTone="grouped"
+        contentClassName={showChat ? "overflow-hidden flex flex-col" : undefined}
+        footerLeft={
+          canEdit &&
+          taskId &&
+          isDeveloper &&
+          (isDeleted ? (
+            <button
+              type="button"
+              onClick={handleRestore}
+              className="cursor-pointer rounded-lg px-3 py-2 text-[15px] font-medium text-rm-accent transition-colors hover:bg-rm-accent-soft"
+            >
+              Restore
+            </button>
           ) : (
-            <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
-              Your ticket will be added to the backlog for a developer to review and prioritise.
-            </div>
-          )}
+            <DestructiveButton onClick={() => setConfirmDeleteOpen(true)}>Delete</DestructiveButton>
+          ))
+        }
+        footer={
+          <>
+            {canEdit && <SaveStatusIndicator state={saveState} onRetry={retry} />}
+            <PrimaryButton onClick={handleClose}>Done</PrimaryButton>
+          </>
+        }
+      >
+        <div className={`flex gap-6 ${showChat ? "min-h-0 flex-1 overflow-hidden" : ""}`}>
+          {/* Left: form */}
+          <div className={`min-w-0 flex-1 space-y-5 ${showChat ? "overflow-y-auto pr-1" : ""}`}>
+            {!form ? (
+              <TaskFormSkeleton />
+            ) : (
+              <>
+                {isDeleted && (
+                  <p className="rounded-xl bg-rm-danger-soft px-3.5 py-2.5 text-[13px] text-rm-danger">
+                    This ticket is deleted. Restore it to bring it back.
+                  </p>
+                )}
 
-          {isDeveloper && developers.length > 0 && (
-            <div>
-              <span className="text-sm font-medium block mb-1">Assigned developer</span>
-              <Dropdown
-                options={developerOptions}
-                selected={developerUuid}
-                onSelect={(v) => setDeveloperUuid(v)}
-                placeholder="(unassigned)"
-              />
-            </div>
-          )}
+                <FormGroup>
+                  <FormRow>
+                    <TextField
+                      variant="title"
+                      value={form.title}
+                      onChange={(title) => patch({ title })}
+                      placeholder={isBacklogContext ? "Untitled ticket" : "Untitled task"}
+                      ariaLabel="Task title"
+                      disabled={readOnly}
+                      autoFocus={canEdit}
+                    />
+                  </FormRow>
 
-          <div>
-            <span className="text-sm font-medium block mb-1">Description</span>
-            <RichTextEditor
-              value={description}
-              onChange={setDescription}
-              placeholder={
-                isBacklog
-                  ? "What's needed? Steps to reproduce, screenshots, etc."
-                  : "Notes, links, acceptance criteria..."
-              }
-              disabled={readOnly}
-            />
+                  {isDeveloper && canEdit && (
+                    <FormRow label="Status" stacked>
+                      <PillGroup
+                        options={TASK_STATUS_OPTIONS}
+                        selected={form.status}
+                        onSelect={(status) => patch({ status: status as TaskStatus })}
+                      />
+                    </FormRow>
+                  )}
+                </FormGroup>
+
+                {readOnly ? (
+                  <p className="rounded-xl bg-white px-3.5 py-2.5 text-[13px] text-rm-ink-muted ring-1 ring-black/[0.06]">
+                    You are viewing this ticket in read-only mode.
+                  </p>
+                ) : isDeveloper ? (
+                  <FormGroup label="Placement">
+                    <FormRow label="Quarter">
+                      <Dropdown
+                        options={quarterOptions}
+                        selected={selectedQuarterId}
+                        onSelect={(v) => {
+                          setSelectedQuarterId(v);
+                          patch({ sprintId: null });
+                        }}
+                        placeholder="(none)"
+                      />
+                    </FormRow>
+                    <FormRow label="Sprint">
+                      <Dropdown
+                        options={sprintOptions}
+                        selected={form.sprintId ?? ""}
+                        onSelect={(v) =>
+                          patch({ sprintId: v || null, isBacklog: v ? form.isBacklog : true })
+                        }
+                        placeholder={selectedQuarterId ? "(none)" : "Select a quarter first"}
+                      />
+                    </FormRow>
+                    <FormRow label="Linked feature">
+                      <Dropdown
+                        options={featureOptions}
+                        selected={form.featureId ?? ""}
+                        onSelect={(v) => patch({ featureId: v || null })}
+                        placeholder="(none)"
+                      />
+                    </FormRow>
+                    {developers.length > 0 && (
+                      <FormRow label="Developer">
+                        <Dropdown
+                          options={developerOptions}
+                          selected={form.developerUuid ?? ""}
+                          onSelect={(v) => patch({ developerUuid: v || null })}
+                          placeholder="(unassigned)"
+                        />
+                      </FormRow>
+                    )}
+                    <FormRow label="Show in backlog">
+                      <label className="flex cursor-pointer items-center gap-2 text-[15px] text-gray-900">
+                        <input
+                          type="checkbox"
+                          checked={form.isBacklog}
+                          onChange={(e) => patch({ isBacklog: e.target.checked })}
+                          className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-rm-accent"
+                        />
+                        Keep this visible in the backlog
+                      </label>
+                    </FormRow>
+                  </FormGroup>
+                ) : (
+                  <p className="rounded-xl bg-rm-accent-soft px-3.5 py-2.5 text-[13px] text-rm-info-ink">
+                    Your ticket will be added to the backlog for a developer to review and
+                    prioritise.
+                  </p>
+                )}
+
+                <FormGroup label="Description">
+                  <FormRow stacked>
+                    <RichTextEditor
+                      value={form.description}
+                      onChange={(description) => patch({ description })}
+                      placeholder={
+                        isBacklogContext
+                          ? "What's needed? Steps to reproduce, screenshots, etc."
+                          : "Notes, links, acceptance criteria…"
+                      }
+                      disabled={readOnly}
+                    />
+                  </FormRow>
+                </FormGroup>
+
+                {taskId && (
+                  <FormGroup label="Attachments">
+                    <FormRow stacked>
+                      <AttachmentList
+                        parentType="task"
+                        parentId={taskId}
+                        uploadedByUserUuid={userUuid}
+                      />
+                    </FormRow>
+                  </FormGroup>
+                )}
+              </>
+            )}
           </div>
 
-          {taskId && (
-            <AttachmentList parentType="task" parentId={taskId} uploadedByUserUuid={userUuid} />
+          {/* Right: chat panel */}
+          {showChat && (
+            <div className="flex min-h-0 w-[450px] flex-shrink-0 flex-col border-l border-rm-hairline pl-6">
+              <TaskChat taskId={taskId} compact />
+            </div>
           )}
         </div>
+      </Modal>
 
-        {/* Right: chat panel */}
-        {showChat && (
-          <div className="w-[450px] flex-shrink-0 flex flex-col border-l pl-6 min-h-0">
-            <TaskChat taskId={taskId} compact />
-          </div>
-        )}
-      </div>
-    </Modal>
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        title={isBacklogContext ? "Delete this ticket?" : "Delete this task?"}
+        message="It stays recoverable — you can restore it from the deleted list."
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDeleteOpen(false)}
+      />
+    </>
+  );
+}
+
+function TaskFormSkeleton() {
+  return (
+    <div className="space-y-3" aria-hidden="true">
+      <div className="h-11 animate-pulse rounded-xl bg-white motion-reduce:animate-none" />
+      <div className="h-28 animate-pulse rounded-xl bg-white motion-reduce:animate-none" />
+    </div>
   );
 }

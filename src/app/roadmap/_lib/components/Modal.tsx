@@ -10,8 +10,13 @@ type ModalProps = {
   title: string;
   description?: string;
   children: React.ReactNode;
+  /** Footer content aligned right — status, primary actions. */
   footer?: React.ReactNode;
+  /** Footer content aligned left — destructive actions, kept away from the primary ones. */
+  footerLeft?: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl" | "2xl";
+  /** `grouped` paints the iOS grey backdrop that `FormGroup` cards sit on. */
+  bodyTone?: "plain" | "grouped";
   contentClassName?: string;
 };
 
@@ -30,7 +35,9 @@ export function Modal({
   description,
   children,
   footer,
+  footerLeft,
   size = "md",
+  bodyTone = "plain",
   contentClassName,
 }: ModalProps) {
   useEffect(() => {
@@ -46,32 +53,47 @@ export function Modal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/25 backdrop-blur-sm" onClick={onClose} />
 
       <div
         className={cn(
-          "relative w-full bg-white rounded-lg shadow-xl flex flex-col max-h-[90vh]",
+          "relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl bg-white",
+          "shadow-rm-modal",
+          "motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200",
           SIZE_CLASS[size],
         )}
       >
-        <div className="flex items-start justify-between border-b p-4">
+        <div className="flex items-start justify-between border-b border-rm-hairline px-5 py-3.5">
           <div>
-            <h2 className="text-lg font-semibold">{title}</h2>
-            {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
+            <h2 className="text-[17px] font-semibold tracking-tight text-gray-900">{title}</h2>
+            {description && <p className="mt-0.5 text-[13px] text-rm-ink-muted">{description}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 ml-4 cursor-pointer"
+            className="ml-4 cursor-pointer rounded-full p-1 text-rm-ink-muted transition-colors hover:bg-rm-sunken hover:text-gray-700"
             aria-label="Close"
           >
             <XIcon className="size-5" />
           </button>
         </div>
 
-        <div className={cn("flex-1 min-h-0 overflow-y-auto p-4", contentClassName)}>{children}</div>
+        <div
+          className={cn(
+            "min-h-0 flex-1 overflow-y-auto p-4",
+            bodyTone === "grouped" && "bg-rm-sunken",
+            contentClassName,
+          )}
+        >
+          {children}
+        </div>
 
-        {footer && <div className="border-t p-4 flex justify-end gap-2">{footer}</div>}
+        {(footer || footerLeft) && (
+          <div className="flex items-center justify-between gap-2 border-t border-rm-hairline bg-white px-4 py-3">
+            <div className="flex items-center gap-2">{footerLeft}</div>
+            <div className="flex items-center gap-3">{footer}</div>
+          </div>
+        )}
       </div>
     </div>
   );
