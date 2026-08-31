@@ -40,6 +40,10 @@ export function filterQuotesBookingsEvents(
       return false;
     }
 
+    if (filters.salesOfficeUuid && event.sales_office_uuid !== filters.salesOfficeUuid) {
+      return false;
+    }
+
     if (filters.accountManagerUserUuid) {
       const owner = event.created_by_user_uuid ?? "";
       if (filters.accountManagerUserUuid !== owner) return false;

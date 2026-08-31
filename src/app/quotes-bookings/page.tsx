@@ -83,6 +83,7 @@ export default function QuotesBookingsPage() {
     setBookedRange,
     setAccountManagerUserUuid,
     setInGoodShuffle,
+    setSalesOfficeUuid,
     clearFilters,
   } = useQuotesAndBookingsFilters(initialOverrides);
 
@@ -244,6 +245,7 @@ export default function QuotesBookingsPage() {
           onEventRangeChange={setEventRange}
           onBookedRangeChange={setBookedRange}
           onInGoodShuffleChange={setInGoodShuffle}
+          onSalesOfficeChange={setSalesOfficeUuid}
           onAccountManagerChange={setAccountManagerUserUuid}
           onClear={clearFilters}
         />

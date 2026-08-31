@@ -9,6 +9,7 @@ export type QuotesBookingsEvent = {
   booked_at: string | null;
   created_by_user_uuid: string | null;
   goodshuffle_url: string | null;
+  sales_office_uuid: string | null;
   deleted: number | null;
   account_manager_first_name: string | null;
   account_manager_last_name: string | null;
@@ -34,4 +35,6 @@ export type QuotesBookingsFilters = {
   accountManagerUserUuid: string | null;
   /** null = no filter, true = only events in GoodShuffle, false = only those not in it. */
   inGoodShuffle: boolean | null;
+  /** null = every office; otherwise only events belonging to that one office. */
+  salesOfficeUuid: string | null;
 };

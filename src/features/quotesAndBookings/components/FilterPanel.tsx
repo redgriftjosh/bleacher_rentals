@@ -6,6 +6,7 @@ import { DateRangeInput } from "./filters/DateRangeInput";
 import { AccountManagerMultiSelect } from "./filters/AccountManagerMultiSelect";
 import { TimezoneSelect } from "./filters/TimezoneSelect";
 import { InGoodShuffleSelect } from "./filters/InGoodShuffleSelect";
+import { SalesOfficeSelect } from "./filters/SalesOfficeSelect";
 
 type FilterPanelProps = {
   filters: QuotesBookingsFilters;
@@ -15,6 +16,7 @@ type FilterPanelProps = {
   onBookedRangeChange: (from: string | null, to: string | null) => void;
   onAccountManagerChange: (uuid: string | null) => void;
   onInGoodShuffleChange: (value: boolean | null) => void;
+  onSalesOfficeChange: (uuid: string | null) => void;
   onClear: () => void;
 };
 
@@ -26,6 +28,7 @@ export function FilterPanel({
   onBookedRangeChange,
   onAccountManagerChange,
   onInGoodShuffleChange,
+  onSalesOfficeChange,
   onClear,
 }: FilterPanelProps) {
   return (
@@ -75,6 +78,11 @@ export function FilterPanel({
               selectedUserUuid={filters.accountManagerUserUuid}
               onChange={onAccountManagerChange}
             />
+          </div>
+
+          <div>
+            <div className="text-sm font-semibold text-gray-800 mb-2">Sales Office</div>
+            <SalesOfficeSelect value={filters.salesOfficeUuid} onChange={onSalesOfficeChange} />
           </div>
 
           <div>

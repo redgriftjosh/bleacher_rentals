@@ -86,6 +86,7 @@ export function ScorecardStatsProvider({ children }: { children: ReactNode }) {
           "e.booked_at as booked_at",
           "e.created_by_user_uuid as created_by_user_uuid",
           "e.goodshuffle_url as goodshuffle_url",
+          "e.sales_office_uuid as sales_office_uuid",
           "u.first_name as account_manager_first_name",
           "u.last_name as account_manager_last_name",
           "u.email as account_manager_email",
