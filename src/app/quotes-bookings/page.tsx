@@ -166,7 +166,7 @@ export default function QuotesBookingsPage() {
     },
     {
       key: "subtotal",
-      header: `Total ($${Math.round(sumSubtotalCents(searchedData) / 100).toLocaleString()})`,
+      header: `Subtotal ($${Math.round(sumSubtotalCents(searchedData) / 100).toLocaleString()})`,
       align: "right",
       render: (event) => <CellText bold>{formatCurrency(eventSubtotalCents(event))}</CellText>,
     },
