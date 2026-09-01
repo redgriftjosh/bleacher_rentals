@@ -188,6 +188,7 @@ const EventsCols = {
   sales_office_uuid: column.text,
   deleted: column.integer,
   invoice_number: column.integer,
+  is_qbo: column.integer,
   po_number: column.text,
   quote_valid_till: column.text,
   terms_and_conditions_uuid: column.text,

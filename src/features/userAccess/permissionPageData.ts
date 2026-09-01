@@ -71,6 +71,23 @@ export const PERMISSIONS: PermissionEntry[] = [
     },
   },
   {
+    label: "QuickBooks Invoice Flag",
+    description:
+      "The 'QuickBooks Invoice' checkbox on the Billing tab of a quote or booking, which records by hand that the event has been invoiced in QuickBooks. It is bookkeeping only — it does not push anything to QuickBooks.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: full("Can tick or untick the flag on any quote or booking."),
+      account_manager: custom(
+        "Can tick or untick the flag only on quotes they can already edit — the ones they created. On everyone else's quotes the checkbox is visible but disabled.",
+      ),
+      developer: none(
+        "Unable to even access the pages where they can see quotes, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read("Can see whether the flag is set, but the checkbox is disabled."),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
     label: "Dashboard Cells",
     description: "This applies to the Dashboard page.",
     category: "Day to Day Operations",

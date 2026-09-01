@@ -2005,6 +2005,7 @@ export type Database = {
           id: string
           internal_notes: string | null
           invoice_number: number | null
+          is_qbo: boolean
           lenient: boolean
           must_be_clean: boolean
           notes: string | null
@@ -2043,6 +2044,7 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           invoice_number?: number | null
+          is_qbo?: boolean
           lenient: boolean
           must_be_clean?: boolean
           notes?: string | null
@@ -2081,6 +2083,7 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           invoice_number?: number | null
+          is_qbo?: boolean
           lenient?: boolean
           must_be_clean?: boolean
           notes?: string | null
