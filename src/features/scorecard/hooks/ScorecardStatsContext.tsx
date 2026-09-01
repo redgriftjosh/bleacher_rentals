@@ -82,6 +82,7 @@ export function ScorecardStatsProvider({ children }: { children: ReactNode }) {
           "e.event_end as event_end",
           "e.event_status as event_status",
           "e.contract_revenue_cents as contract_revenue_cents",
+          "e.tax_amount_cents as tax_amount_cents",
           "e.created_at as created_at",
           "e.booked_at as booked_at",
           "e.created_by_user_uuid as created_by_user_uuid",

@@ -11,6 +11,12 @@ import { useQuotesAndBookingsFilters } from "@/features/quotesAndBookings/hooks/
 import { useQuotesAndBookingsData } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsData";
 import type { QuotesBookingsEvent } from "@/features/quotesAndBookings/types";
 import { searchEvents } from "@/features/quotesAndBookings/utils/searchEvents";
+import {
+  eventSubtotalCents,
+  eventTaxCents,
+  sumSubtotalCents,
+  sumTaxCents,
+} from "@/features/quotesAndBookings/utils/eventAmounts";
 import { isInGoodShuffle } from "@/features/quotesAndBookings/utils/filterEvents";
 import { GoodShuffleBadge } from "@/features/quotesAndBookings/components/GoodShuffleBadge";
 import {
@@ -110,14 +116,12 @@ export default function QuotesBookingsPage() {
       key: "event_name",
       header: `Event Name (${searchedData?.length ?? 0})`,
       render: (event) => (
-        <div>
+        <div className="max-w-[240px] 2xl:max-w-[320px]">
           <CellText bold>
-            <span className="inline-flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5">
               {isInGoodShuffle(event) && <GoodShuffleBadge />}
-              <span>
-                {event.event_name && event.event_name.length > 70
-                  ? `${event.event_name.slice(0, 70)}...`
-                  : event.event_name}
+              <span className="truncate" title={event.event_name ?? undefined}>
+                {event.event_name}
               </span>
             </span>
           </CellText>
@@ -161,9 +165,16 @@ export default function QuotesBookingsPage() {
       ),
     },
     {
-      key: "amount",
-      header: `Amount ($${Math.round((searchedData?.reduce((sum, e) => sum + (e.contract_revenue_cents ?? 0), 0) ?? 0) / 100).toLocaleString()})`,
-      render: (event) => <CellText bold>{formatCurrency(event.contract_revenue_cents)}</CellText>,
+      key: "subtotal",
+      header: `Total ($${Math.round(sumSubtotalCents(searchedData) / 100).toLocaleString()})`,
+      align: "right",
+      render: (event) => <CellText bold>{formatCurrency(eventSubtotalCents(event))}</CellText>,
+    },
+    {
+      key: "tax",
+      header: `Tax ($${Math.round(sumTaxCents(searchedData) / 100).toLocaleString()})`,
+      align: "right",
+      render: (event) => <CellText bold>{formatCurrency(eventTaxCents(event))}</CellText>,
     },
   ];
 

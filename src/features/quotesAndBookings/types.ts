@@ -5,6 +5,7 @@ export type QuotesBookingsEvent = {
   event_end: string | null;
   event_status: string | null;
   contract_revenue_cents: number | null;
+  tax_amount_cents: number | null;
   created_at: string | null;
   booked_at: string | null;
   created_by_user_uuid: string | null;
