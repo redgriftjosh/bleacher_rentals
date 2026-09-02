@@ -1,3 +1,7 @@
+import {
+  getCanadianTaxLabel,
+  getCanadianTaxPercent,
+} from "@/features/quotesAndBookings/utils/canadianTaxRates";
 import { getBaseUrl, getQboAccessTokenAndRealmId } from "@/features/quickbooks-integration/util";
 import { requireAdminOrAccountManager } from "@/features/userAccess/logic/requireAdminOrAccountManager";
 import { NextRequest, NextResponse } from "next/server";
@@ -5,8 +9,14 @@ import { NextRequest, NextResponse } from "next/server";
 /**
  * GET /api/quickbooks/tax-percent
  *
- * Creates a temporary QBO Estimate to leverage the Automated Sales Tax (AST)
- * engine, reads back the calculated tax, then deletes the estimate.
+ * Canadian addresses are resolved from a static per-province table. QBO Canada
+ * files have no Automated Sales Tax engine and will not accept a transaction
+ * without being told the tax code up front, so an Estimate cannot discover the
+ * rate there — see utils/canadianTaxRates.ts.
+ *
+ * For US addresses, creates a temporary QBO Estimate to leverage the Automated
+ * Sales Tax (AST) engine, reads back the calculated tax, then deletes the
+ * estimate.
  *
  * For non-AST (manual tax) companies, falls back to the company's default
  * tax code — the rate won't be address-specific in that case.
@@ -39,6 +49,25 @@ export async function GET(req: NextRequest) {
         { error: "At least one address field is required (line1, city, state, postalCode)" },
         { status: 400 },
       );
+    }
+
+    // ── Canada: flat per-province rate, no QBO round trip ──
+    // Must come before any QBO call: a Canadian file cannot calculate this for
+    // us, and creating an estimate against one fails outright.
+    const canadianTaxPercent = getCanadianTaxPercent(state);
+    if (canadianTaxPercent !== null) {
+      const totalTax = Math.round(subtotal * (canadianTaxPercent / 100) * 100) / 100;
+      return NextResponse.json({
+        taxPercent: canadianTaxPercent,
+        totalTax,
+        subtotal,
+        totalWithTax: subtotal + totalTax,
+        taxLines: [],
+        address: { line1, city, state, postalCode },
+        customerUsed: null,
+        taxMode: "canada_static",
+        taxModeNote: `Canadian rate for ${state} (${getCanadianTaxLabel(state)}), from the static province table. QBO Canada has no address-based tax engine.`,
+      });
     }
 
     const { accessToken, realmId } = await getQboAccessTokenAndRealmId(connectionId);

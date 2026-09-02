@@ -46,7 +46,7 @@ export function CreateQuoteForm() {
   const canSendDirectly = perms.isAdmin || perms.isAccountManager;
 
   // Auto-fetch tax from QBO when office + address are set
-  const { qboError } = useAutoTax();
+  const { qboError, countryMismatch } = useAutoTax();
 
   const isEditing = !!editingEventId;
 
@@ -245,9 +245,23 @@ export function CreateQuoteForm() {
         </button>
       </div>
 
+      {countryMismatch && (
+        <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 mb-4">
+          <span className="font-semibold">
+            Sales Office and event address are in different countries.
+          </span>{" "}
+          {countryMismatch === "cad-office-us-address"
+            ? "This is a Canadian (CAD) Sales Office, but the event address is in the US."
+            : "This is a US (USD) Sales Office, but the event address is in Canada."}{" "}
+          Tax cannot be calculated — pick a Sales Office in the same country as the event, or enter
+          the tax manually.
+        </div>
+      )}
+
       {qboError && (
         <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 mb-4">
-          Failed to load tax data from QuickBooks. Make sure QuickBooks is connected to this Sales Office. If you have access,{" "}
+          Failed to load tax data from QuickBooks. Make sure QuickBooks is connected to this Sales
+          Office. If you have access,{" "}
           <a href="/quickbooks" className="underline font-semibold hover:text-red-800">
             go to the QuickBooks page
           </a>{" "}
