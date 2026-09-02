@@ -87,9 +87,15 @@ export function TotalsDisplay() {
   const taxableAmount = subtotal + discountTotal;
   const effectiveTotal = taxableAmount + effectiveTaxCents;
 
-  const taxLabel = taxPercent !== null
-    ? `Tax (${taxPercent.toFixed(2)}%)${taxOverrideCents !== null ? " — overridden" : ""}`
-    : "Tax";
+  // Keeps the usual two decimals but does not truncate rates that need a third,
+  // such as Quebec's combined GST + QST of 14.975%.
+  const taxLabel =
+    taxPercent !== null
+      ? `Tax (${taxPercent.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 3,
+        })}%)${taxOverrideCents !== null ? " — overridden" : ""}`
+      : "Tax";
 
   return (
     <div className="flex justify-end">
