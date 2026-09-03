@@ -56,7 +56,13 @@ export function QuotePublicTabs({ data }: { data: QuoteDocumentData }) {
     pay: quoteText("en").tabPayInvoice,
   };
   const track = useQuoteActivityTracker(data.eventId);
-  const { isStale, refresh } = useQuoteFreshness(data.eventId, data.contentHash);
+  // The freshness baseline moves when the client changes the page themselves —
+  // signing is such a change. Anything else that differs is someone else's edit
+  // and still raises the modal. See
+  // docs/specs/payment-does-not-invalidate-signature.md §8.
+  const [contentBaseline, setContentBaseline] = useState(data.contentHash);
+  useEffect(() => setContentBaseline(data.contentHash), [data.contentHash]);
+  const { isStale, refresh } = useQuoteFreshness(data.eventId, contentBaseline);
   const { promptPresence, confirmPresent } = usePresenceCheck();
   // Set when the sign endpoint rejects with 409 (quote changed at sign time).
   const [signConflict, setSignConflict] = useState(false);
@@ -154,6 +160,7 @@ export function QuotePublicTabs({ data }: { data: QuoteDocumentData }) {
           data={localized}
           track={track}
           onQuoteChanged={() => setSignConflict(true)}
+          onSigned={setContentBaseline}
         />
       </div>
       <div className={activeTab === "pay" ? undefined : "hidden"}>

@@ -84,6 +84,19 @@ export async function POST(req: NextRequest) {
     .update({ event_status: "booked", booked_at: signedAt })
     .eq("id", eventId);
 
+  // Signing is part of what the public page shows — the signature and the new
+  // event status both feed content_hash, which a trigger has just recomputed.
+  // Read it here, immediately after the last write that can move it and before
+  // the slow PDF/email work: the page adopts this as its staleness baseline, so
+  // every millisecond between the write and this read is a window in which
+  // someone else's edit would be adopted as the client's own.
+  // See docs/specs/payment-does-not-invalidate-signature.md §8.
+  const { data: freshened } = await supabase
+    .from("Events")
+    .select("content_hash")
+    .eq("id", eventId)
+    .single();
+
   await logSingleChange(supabase, eventId, null, "signature", null, signerName.trim(), "sign");
   await logSingleChange(
     supabase,
@@ -154,5 +167,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     signatureId: data.id,
     signedAt: data.signed_at,
+    contentHash: freshened?.content_hash ?? null,
   });
 }
