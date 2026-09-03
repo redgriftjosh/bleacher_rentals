@@ -10,7 +10,7 @@ type TaxPercentResponse = {
   taxPercent: number;
   totalTax: number;
   subtotal: number;
-  taxMode: "automated" | "manual";
+  taxMode: "automated" | "manual" | "canada_static";
 };
 
 /**

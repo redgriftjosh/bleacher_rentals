@@ -7,6 +7,7 @@ import { SelectAccountManager } from "@/features/manageTeam/components/inputs/Se
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { useAccountManagers } from "@/features/manageTeam/hooks/useAccountManagers";
 import { useSalesOffices, isCanadianProvince } from "../../../hooks/useSalesOffices";
+import { isCompanyEmail, COMPANY_EMAIL_DOMAIN } from "../../../utils/companyEmail";
 
 export function QuoteDetailsSection() {
   const quoteNumber = useCreateQuoteStore((s) => s.quoteNumber);
@@ -45,6 +46,15 @@ export function QuoteDetailsSection() {
     },
     [accountManagers, setField],
   );
+
+  // Quotes are sent from the account manager's own address, so one outside the
+  // company domain blocks sending. Warn at selection time rather than letting
+  // the user find out when they try to send.
+  const selectedAccountManager = accountManagers.find(
+    (a) => a.accountManagerUuid === accountManagerId,
+  );
+  const accountManagerEmailInvalid =
+    !!accountManagerId && !!selectedAccountManager && !isCompanyEmail(selectedAccountManager.email);
 
   const salesOfficeOptions = salesOffices.map((o) => {
     const cur = isCanadianProvince(o.stateProvince) ? "CAD" : "USD";
@@ -107,7 +117,9 @@ export function QuoteDetailsSection() {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Sales Office <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Sales Office <span className="text-red-500">*</span>
+          </label>
           <Dropdown
             options={salesOfficeOptions}
             selected={salesOfficeId}
@@ -118,10 +130,21 @@ export function QuoteDetailsSection() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Account Manager</label>
-          <SelectAccountManager
-            value={accountManagerId}
-            onChange={handleAccountManagerChange}
-          />
+          <SelectAccountManager value={accountManagerId} onChange={handleAccountManagerChange} />
+          {accountManagerEmailInvalid && (
+            <p className="mt-1 text-sm text-red-600">
+              {selectedAccountManager?.email ? (
+                <>
+                  <span className="font-semibold">{selectedAccountManager.email}</span> is not a{" "}
+                  {COMPANY_EMAIL_DOMAIN} address.
+                </>
+              ) : (
+                "This Account Manager has no email address."
+              )}{" "}
+              This quote will not be able to be sent to the client until an Account Manager with a
+              company email is selected.
+            </p>
+          )}
         </div>
       </div>
     </section>

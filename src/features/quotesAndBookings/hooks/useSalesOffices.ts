@@ -3,6 +3,10 @@
 import { useMemo } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
+import { isCanadianProvince } from "../utils/canadianTaxRates";
+
+// Re-exported for the existing callers that import it from here.
+export { isCanadianProvince };
 
 export type SalesOfficeRow = {
   id: string;
@@ -19,40 +23,6 @@ export type SalesOfficeOption = {
   stripeConnectionUuid: string | null;
   stateProvince: string | null;
 };
-
-const CANADIAN_PROVINCES = new Set([
-  "AB",
-  "BC",
-  "MB",
-  "NB",
-  "NL",
-  "NS",
-  "NT",
-  "NU",
-  "ON",
-  "PE",
-  "QC",
-  "SK",
-  "YT",
-  "Alberta",
-  "British Columbia",
-  "Manitoba",
-  "New Brunswick",
-  "Newfoundland and Labrador",
-  "Nova Scotia",
-  "Northwest Territories",
-  "Nunavut",
-  "Ontario",
-  "Prince Edward Island",
-  "Quebec",
-  "Saskatchewan",
-  "Yukon",
-]);
-
-export function isCanadianProvince(stateProvince: string | null): boolean {
-  if (!stateProvince) return false;
-  return CANADIAN_PROVINCES.has(stateProvince);
-}
 
 export function useSalesOffices(): { salesOffices: SalesOfficeOption[]; isLoading: boolean } {
   const compiled = useMemo(
