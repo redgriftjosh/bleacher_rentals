@@ -344,11 +344,13 @@ unmarked Canadian amount sitting next to an American one in a list is a
 implementations, and column totals in the quote list are summed per currency
 rather than added together.
 
-**Still open.** An office whose QuickBooks connection changes currency after a
-quote was written now changes that quote's displayed _and_ charged currency
-together — consistent, but it does re-price history. Whether an issued quote
-should instead be frozen in the currency it was written in is a product
-decision, and it is not settled here.
+**Settled (owner's call, 2026-09-03): a quote is never frozen in the currency it
+was written in.** An office whose QuickBooks connection changes currency also
+changes the currency of the quotes it has already issued — displayed and charged
+together. The office is the truth at read time, not at write time, and nobody has
+to remember which quote was priced when. An office changing currency is a
+once-ever event for a franchise location, so re-pricing existing quotes is the
+cheaper of the two wrong answers.
 
 ### 3.7 `PaymentInstallments.status` is a derived cache (Q8) — binding
 
