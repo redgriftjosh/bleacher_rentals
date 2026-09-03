@@ -224,7 +224,7 @@ export function PayInvoiceTab({
                 {/* Overdue summary */}
                 {hasSchedule && overdueOwedCents > 0 && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-800">
-                    <strong>{formatMoney(overdueOwedCents)}</strong> {s.overdueNoticeSuffix}
+                    <strong>{formatMoney(overdueOwedCents)}</strong> {s.dueNoticeSuffix}
                   </div>
                 )}
 
@@ -380,7 +380,7 @@ export function PayInvoiceTab({
                             </p>
                           )}
                           {isOverdue && !isPartial && (
-                            <p className="text-xs text-red-600">{s.overdue}</p>
+                            <p className="text-xs text-red-600">{s.due}</p>
                           )}
                         </div>
                       </div>

@@ -88,3 +88,26 @@ describe("statusLabel / paymentMethodLabel", () => {
     expect(paymentMethodLabel("fr", "acss_debit")).toBe("acss_debit");
   });
 });
+
+describe("no word tells a client they are late", () => {
+  /**
+   * An installment is flagged the moment its due date arrives, so the client
+   * sees this wording on day one — while they are perfectly on time. Say what
+   * is owed, never that it is late.
+   *
+   * noHardcodedText.test.ts guarantees every customer-facing word comes from
+   * this dictionary, so checking the dictionary checks the whole quote.
+   */
+  const BANNED = ["overdue", "en souffrance", "en retard"];
+
+  it.each(BANNED)("never says %s", (word) => {
+    const offenders = entries
+      .filter(([, entry]) =>
+        (["en", "fr"] as const).some(
+          (lang) => typeof entry[lang] === "string" && entry[lang].toLowerCase().includes(word),
+        ),
+      )
+      .map(([key]) => key);
+    expect(offenders).toEqual([]);
+  });
+});

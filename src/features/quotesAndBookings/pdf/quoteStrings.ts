@@ -133,11 +133,11 @@ export const quoteStrings = {
   },
   amountDue: { en: "Amount Due", fr: "Montant dû" },
   paidInFull: { en: "Paid in Full", fr: "Payé en totalité" },
-  // Rendered after the overdue amount, which is bolded on its own:
-  //   "<b>$500.00</b> is overdue based on your payment schedule."
-  overdueNoticeSuffix: {
-    en: "is overdue based on your payment schedule.",
-    fr: "est en souffrance selon votre calendrier de paiement.",
+  // Rendered after the due amount, which is bolded on its own:
+  //   "<b>$500.00</b> is due based on your payment schedule."
+  dueNoticeSuffix: {
+    en: "is due based on your payment schedule.",
+    fr: "est à payer selon votre calendrier de paiement.",
   },
   yourNameRequired: { en: "Your Name *", fr: "Votre nom *" },
   email: { en: "Email", fr: "Courriel" },
@@ -173,7 +173,7 @@ export const quoteStrings = {
   // ── Pay Invoice tab: schedule + history ──────────────────────────────
   paymentSchedule: { en: "Payment Schedule", fr: "Calendrier de paiement" },
   paid: { en: "Paid", fr: "Payé" },
-  overdue: { en: "Overdue", fr: "En souffrance" },
+  due: { en: "Due", fr: "À payer" },
   totalScheduled: { en: "Total Scheduled", fr: "Total prévu" },
   paymentHistory: { en: "Payment History", fr: "Historique des paiements" },
   loading: { en: "Loading...", fr: "Chargement..." },
