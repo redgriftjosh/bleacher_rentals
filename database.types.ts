@@ -2476,6 +2476,7 @@ export type Database = {
           event_uuid: string
           id: string
           installment_id: string | null
+          intended_installment_id: string | null
           notes: string | null
           paid_at: string | null
           payer_email: string | null
@@ -2494,6 +2495,7 @@ export type Database = {
           event_uuid: string
           id?: string
           installment_id?: string | null
+          intended_installment_id?: string | null
           notes?: string | null
           paid_at?: string | null
           payer_email?: string | null
@@ -2512,6 +2514,7 @@ export type Database = {
           event_uuid?: string
           id?: string
           installment_id?: string | null
+          intended_installment_id?: string | null
           notes?: string | null
           paid_at?: string | null
           payer_email?: string | null

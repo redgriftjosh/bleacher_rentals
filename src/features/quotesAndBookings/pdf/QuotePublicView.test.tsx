@@ -51,8 +51,20 @@ function quote(language: QuoteLanguage): QuoteDocumentData {
     taxAmountCents: 4500,
     totalCents: 94500,
     paymentSchedule: [
-      { id: "pi-1", dueDate: "2026-01-10", amountCents: 47250, status: "pending" },
-      { id: "pi-2", dueDate: "2026-01-25", amountCents: 47250, status: "pending" },
+      {
+        id: "pi-1",
+        dueDate: "2026-01-10",
+        amountCents: 47250,
+        status: "unpaid",
+        allocatedCents: 0,
+      },
+      {
+        id: "pi-2",
+        dueDate: "2026-01-25",
+        amountCents: 47250,
+        status: "unpaid",
+        allocatedCents: 0,
+      },
     ],
     clientNotes: "Merci!",
     internalNotes: "",
@@ -89,7 +101,10 @@ describe("QuotePublicView — English (regression guard)", () => {
   });
 
   it("renders English dates and money in the original format", () => {
-    expect(html).toContain("$1,000.00");
+    // This quote is Canadian, so every amount on it carries the C$ marker —
+    // an unmarked "$1,000.00" would read as a US price a third cheaper.
+    expect(html).toContain("C$1,000.00");
+    expect(html).not.toMatch(/[^C]\$1,000\.00/);
     expect(html).toContain("Sunday, Jan 18 - Monday, Jan 19, 2026");
     expect(html).toContain("Tax (5%)");
     expect(html).toContain("Invoice #INV-1042");
@@ -114,7 +129,7 @@ describe("QuotePublicView — French", () => {
   });
 
   it("renders fr-CA dates and money", () => {
-    expect(html).toContain(`1${NBSP}000,00${NBSP}$`);
+    expect(html).toContain(`1${NBSP}000,00${NBSP}$${NBSP}CA`);
     expect(html).toContain("dimanche 18 janv. - lundi 19 janv. 2026");
     expect(html).toContain("Taxes (5 %)");
   });

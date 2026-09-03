@@ -8,6 +8,7 @@ const {
   mockEmailLogInsert,
   mockUpdateEq,
   mockMaybeSingle,
+  mockSelectRows,
 } = vi.hoisted(() => ({
   mockConstructEvent: vi.fn(),
   mockRetrieve: vi.fn(),
@@ -19,6 +20,8 @@ const {
   mockEmailLogInsert: vi.fn(),
   mockUpdateEq: vi.fn(),
   mockMaybeSingle: vi.fn(),
+  // Rows served to the reconciler, per table.
+  mockSelectRows: vi.fn(),
 }));
 
 vi.mock("stripe", () => ({
@@ -31,12 +34,25 @@ vi.mock("stripe", () => ({
 vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({
     from: (table: string) => ({
-      // Idempotency existence check: select(...).eq(...).maybeSingle()
-      select: () => ({ eq: () => ({ maybeSingle: mockMaybeSingle }) }),
+      // Three shapes share this chain: the idempotency check ends in
+      // .maybeSingle(), the reconciler awaits .eq() directly, and the currency
+      // lookup (event -> office -> QBO connection) ends in .single().
+      select: () => {
+        const rows = () => (mockSelectRows(table) ?? []) as Record<string, unknown>[];
+        const first = () => Promise.resolve({ data: rows()[0] ?? null, error: null });
+        const chain: any = Object.assign(Promise.resolve({ data: rows(), error: null }), {
+          maybeSingle: table === "PaymentHistory" ? mockMaybeSingle : first,
+          single: first,
+          eq: () => chain,
+        });
+        return { eq: () => chain };
+      },
       // Route inserts by table so the automatic-email log rows don't inflate the
       // PaymentHistory insert count that the idempotency test asserts on.
       insert: table === "PaymentHistory" ? mockInsert : mockEmailLogInsert,
-      update: () => ({ eq: mockUpdateEq }),
+      update: (values: Record<string, unknown>) => ({
+        eq: (column: string, id: string) => mockUpdateEq(column, id, values),
+      }),
     }),
   }),
 }));
@@ -81,6 +97,47 @@ function checkoutEvent(over: { session?: object; account?: string; type?: string
   };
 }
 
+/**
+ * Serves one installment and one payment row to the reconciler, plus the
+ * event -> office -> QuickBooks chain the currency lookup walks.
+ */
+function serveSchedule(installment: object, payment: object, officeCurrency = "USD") {
+  mockSelectRows.mockImplementation((table: string) =>
+    table === "Events"
+      ? [{ sales_office_uuid: "office-1" }]
+      : table === "SalesOffices"
+        ? [{ quickbook_uuid: "qbo-1", address_uuid: "addr-1" }]
+        : table === "QboConnections"
+          ? [{ currency: officeCurrency }]
+          : table === "Addresses"
+            ? [{ state_province: "Florida" }]
+            : table === "PaymentInstallments"
+              ? [
+                  {
+                    id: "inst-9",
+                    due_date: "2026-08-31",
+                    amount_cents: 15000,
+                    currency: "USD",
+                    status: "unpaid",
+                    paid_at: null,
+                    ...installment,
+                  },
+                ]
+              : [
+                  {
+                    id: "ph-1",
+                    installment_id: null,
+                    amount_cents: 15000,
+                    currency: "USD",
+                    status: "succeeded",
+                    paid_at: "2026-08-31T19:02:05.114+00:00",
+                    created_at: "2026-08-31T19:02:05.198+00:00",
+                    ...payment,
+                  },
+                ],
+  );
+}
+
 describe("POST /api/stripe/webhook", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -88,6 +145,7 @@ describe("POST /api/stripe/webhook", () => {
     mockUpdateEq.mockResolvedValue({ error: null });
     mockPiUpdate.mockResolvedValue({});
     mockMaybeSingle.mockResolvedValue({ data: null }); // no prior PaymentHistory row
+    mockSelectRows.mockReturnValue([]); // no schedule, no payment rows by default
     mockRetrieve.mockResolvedValue({
       latest_charge: { receipt_url: "https://receipt.stripe.com/r1" },
     });
@@ -186,6 +244,19 @@ describe("POST /api/stripe/webhook", () => {
     expect(mockInsert).toHaveBeenCalledOnce();
   });
 
+  it("records what the client was paying for, separately from the live link", async () => {
+    // installment_id can be re-pointed when a schedule is rebuilt;
+    // intended_installment_id is the historical fact and never changes.
+    mockConstructEvent.mockReturnValue(
+      checkoutEvent({ session: { metadata: { eventId: "evt-1", installmentId: "inst-9" } } }),
+    );
+    await POST(makeRequest("{}", { signature: "sig" }));
+
+    const insert = mockInsert.mock.calls[0][0];
+    expect(insert.installment_id).toBe("inst-9");
+    expect(insert.intended_installment_id).toBe("inst-9");
+  });
+
   it("skips the receipt email when the customer provided no email", async () => {
     mockConstructEvent.mockReturnValue(
       checkoutEvent({ session: { customer_email: null, customer_details: { email: null } } }),
@@ -197,19 +268,88 @@ describe("POST /api/stripe/webhook", () => {
     expect(mockInsert.mock.calls[0][0].payer_email).toBeNull();
   });
 
-  it("marks the installment paid when installmentId is present", async () => {
+  it("marks the installment paid when the payment covers it in full", async () => {
     mockConstructEvent.mockReturnValue(
       checkoutEvent({ session: { metadata: { eventId: "evt-1", installmentId: "inst-9" } } }),
     );
+    serveSchedule({ amount_cents: 15000 }, { amount_cents: 15000, installment_id: "inst-9" });
+
     await POST(makeRequest("{}", { signature: "sig" }));
 
-    expect(mockUpdateEq).toHaveBeenCalledWith("id", "inst-9");
+    expect(mockUpdateEq).toHaveBeenCalledWith("id", "inst-9", {
+      status: "paid",
+      paid_at: "2026-08-31T19:02:05.114+00:00",
+    });
   });
 
-  it("does not touch installments when there is no installmentId", async () => {
+  it("does NOT close a whole installment for a partial payment (Bug 1)", async () => {
+    // $1.00 against a $2,700.00 installment — the production bug.
+    mockConstructEvent.mockReturnValue(
+      checkoutEvent({
+        session: { amount_total: 100, metadata: { eventId: "evt-1", installmentId: "inst-9" } },
+      }),
+    );
+    serveSchedule({ amount_cents: 270000 }, { amount_cents: 100, installment_id: "inst-9" });
+
+    await POST(makeRequest("{}", { signature: "sig" }));
+
+    expect(mockUpdateEq).not.toHaveBeenCalled();
+  });
+
+  it("closes an installment covered by an untargeted payment", async () => {
+    // No installmentId in the metadata: today nothing would be updated at all.
+    mockConstructEvent.mockReturnValue(checkoutEvent());
+    serveSchedule({ amount_cents: 15000 }, { amount_cents: 15000, installment_id: null });
+
+    await POST(makeRequest("{}", { signature: "sig" }));
+
+    expect(mockUpdateEq).toHaveBeenCalledWith(
+      "id",
+      "inst-9",
+      expect.objectContaining({
+        status: "paid",
+      }),
+    );
+  });
+
+  it("reconciles in the office's currency, not the one stored on the schedule", async () => {
+    // The office sells in CAD and the payment arrived in CAD; the schedule rows
+    // still carry a stale "USD". Reading the currency off those rows would
+    // discard a real payment as foreign and leave the installment unpaid.
+    mockConstructEvent.mockReturnValue(
+      checkoutEvent({ session: { currency: "cad", metadata: { eventId: "evt-1" } } }),
+    );
+    serveSchedule(
+      { amount_cents: 15000, currency: "USD" },
+      { amount_cents: 15000, installment_id: null, currency: "CAD" },
+      "CAD",
+    );
+
+    await POST(makeRequest("{}", { signature: "sig" }));
+
+    expect(mockUpdateEq).toHaveBeenCalledWith(
+      "id",
+      "inst-9",
+      expect.objectContaining({ status: "paid" }),
+    );
+  });
+
+  it("does not touch installments when the event has no schedule", async () => {
     mockConstructEvent.mockReturnValue(checkoutEvent());
     await POST(makeRequest("{}", { signature: "sig" }));
     expect(mockUpdateEq).not.toHaveBeenCalled();
+  });
+
+  it("still returns 200 when reconciliation fails", async () => {
+    // The money is recorded; Stripe must not retry over a cache-refresh failure.
+    mockConstructEvent.mockReturnValue(checkoutEvent());
+    serveSchedule({ amount_cents: 15000 }, { amount_cents: 15000, installment_id: null });
+    mockUpdateEq.mockResolvedValue({ error: { message: "permission denied" } });
+
+    const res = await POST(makeRequest("{}", { signature: "sig" }));
+
+    expect(res.status).toBe(200);
+    expect(mockInsert).toHaveBeenCalledOnce();
   });
 
   it("acknowledges with 200 when the insert races into a unique violation (23505)", async () => {

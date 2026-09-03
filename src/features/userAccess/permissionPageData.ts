@@ -88,6 +88,25 @@ export const PERMISSIONS: PermissionEntry[] = [
     },
   },
   {
+    label: "Payment History",
+    description:
+      "The payments and balances on the Billing tab of a quote or booking. Amounts come from what Stripe actually collected, so a partial payment shows as partial rather than closing the whole installment.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: read(
+        "Can see every payment on any quote — amount, payer, method and the Stripe receipt. Nobody can record a payment by hand yet; payments appear on their own once the client pays.",
+      ),
+      account_manager: read(
+        "Exactly the same view as an administrator, on every quote, including ones they did not create.",
+      ),
+      developer: none(
+        "Unable to even access the pages where they can see quotes, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read("Can see payments and balances but cannot change anything."),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
     label: "Dashboard Cells",
     description: "This applies to the Dashboard page.",
     category: "Day to Day Operations",

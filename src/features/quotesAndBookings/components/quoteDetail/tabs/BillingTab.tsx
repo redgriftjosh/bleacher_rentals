@@ -1,17 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { QuoteDetail } from "../../../db/fetchQuoteDetail";
 import { setEventIsQbo } from "../../../db/setEventIsQbo";
 import { useEventIsQbo } from "../../../hooks/useEventIsQbo";
-import {
-  usePaymentInstallments,
-  PaymentInstallmentRow,
-} from "../../../hooks/usePaymentInstallments";
+import { usePaymentInstallments } from "../../../hooks/usePaymentInstallments";
+import { usePaymentHistory, PaymentHistoryRow } from "../../../hooks/usePaymentHistory";
 import { useEventCurrency } from "../../../hooks/useEventCurrency";
+import { allocatePayments, type Allocation } from "../../../utils/allocatePayments";
 import { formatMoney } from "../../../utils/formatMoney";
 import { Currency } from "../../../types/quoteTypes";
 import { DateTime } from "luxon";
@@ -28,14 +27,22 @@ function formatDateTime(d: string | null): string {
   return dt.isValid ? dt.toFormat("MMM d, yyyy 'at' h:mm a") : "—";
 }
 
+const STATUS_STYLES = {
+  paid: "bg-green-100 text-green-800",
+  partial: "bg-amber-100 text-amber-800",
+  unpaid: "bg-yellow-100 text-yellow-800",
+} as const;
+
+const STATUS_LABELS = { paid: "Paid", partial: "Partial", unpaid: "Unpaid" } as const;
+
 function PaymentScheduleTable({
-  installments,
+  allocation,
   currency,
 }: {
-  installments: PaymentInstallmentRow[];
+  allocation: Allocation;
   currency: Currency;
 }) {
-  if (installments.length === 0) {
+  if (allocation.installments.length === 0) {
     return (
       <p className="text-sm text-gray-400 py-4 text-center border rounded">
         No payment schedule set. Edit the quote to add installments.
@@ -43,10 +50,7 @@ function PaymentScheduleTable({
     );
   }
 
-  const totalCents = installments.reduce((sum, i) => sum + i.amountCents, 0);
-  const paidCents = installments
-    .filter((i) => i.status === "paid")
-    .reduce((sum, i) => sum + i.amountCents, 0);
+  const totalCents = allocation.installments.reduce((sum, i) => sum + i.amountCents, 0);
 
   return (
     <div>
@@ -61,23 +65,25 @@ function PaymentScheduleTable({
           </tr>
         </thead>
         <tbody>
-          {installments.map((inst, i) => (
-            <tr key={inst.id} className="border-b">
+          {allocation.installments.map((inst, i) => (
+            <tr key={inst.installmentId} className="border-b">
               <td className="py-2 text-gray-400">{i + 1}</td>
               <td className="py-2">{formatDate(inst.dueDate)}</td>
               <td className="py-2 text-right font-medium">
                 {formatMoney(inst.amountCents, currency)}
               </td>
               <td className="py-2 text-center">
-                <span
-                  className={`text-xs px-2 py-0.5 rounded ${
-                    inst.status === "paid"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {inst.status === "paid" ? "Paid" : "Unpaid"}
+                <span className={`text-xs px-2 py-0.5 rounded ${STATUS_STYLES[inst.status]}`}>
+                  {STATUS_LABELS[inst.status]}
                 </span>
+                {/* A partial row must say how far it actually got — this is the
+                    number a $1.00 payment used to hide. */}
+                {inst.status === "partial" && (
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {formatMoney(inst.allocatedCents, currency)} of{" "}
+                    {formatMoney(inst.amountCents, currency)}
+                  </div>
+                )}
               </td>
               <td className="py-2 text-gray-500">
                 {inst.paidAt ? formatDateTime(inst.paidAt) : "—"}
@@ -93,17 +99,72 @@ function PaymentScheduleTable({
           <span className="font-medium w-24 text-right">{formatMoney(totalCents, currency)}</span>
         </div>
         <div className="flex gap-8 text-green-600">
-          <span>Paid</span>
-          <span className="font-medium w-24 text-right">{formatMoney(paidCents, currency)}</span>
+          <span>Covered</span>
+          <span className="font-medium w-24 text-right">
+            {formatMoney(allocation.allocatedCents, currency)}
+          </span>
         </div>
         <div className="flex gap-8 border-t pt-1 mt-1">
           <span className="font-semibold">Remaining</span>
           <span className="font-bold w-24 text-right">
-            {formatMoney(totalCents - paidCents, currency)}
+            {formatMoney(totalCents - allocation.allocatedCents, currency)}
           </span>
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Where a payment's money actually sits now — not the installment it was
+ * originally aimed at, which a schedule edit can leave pointing at nothing.
+ */
+function AppliedTo({
+  payment,
+  allocation,
+  currency,
+}: {
+  payment: PaymentHistoryRow;
+  allocation: Allocation;
+  currency: Currency;
+}) {
+  const detail = allocation.byPayment.find((p) => p.paymentId === payment.id);
+
+  if (detail?.excluded === "currency") {
+    return <span className="text-amber-700">Not counted ({payment.currency})</span>;
+  }
+  if (detail?.excluded === "status") {
+    return <span className="text-gray-400">Not counted ({payment.status})</span>;
+  }
+  if (!detail || detail.parts.length === 0) {
+    return <span className="text-gray-400">Unapplied</span>;
+  }
+
+  const dueDates = new Map(
+    allocation.installments.map((i) => [i.installmentId, formatDate(i.dueDate)]),
+  );
+
+  // Split money, or money the schedule cannot absorb, has to name its pieces —
+  // otherwise "Due Aug 31" would quietly stand for a payment twice that size.
+  const leftover = detail.unallocatedCents;
+  const showAmounts = detail.parts.length > 1 || leftover > 0;
+
+  return (
+    <span>
+      {detail.parts.map((part, i) => (
+        <span key={part.installmentId}>
+          {i > 0 && " · "}
+          Due {dueDates.get(part.installmentId) ?? "—"}
+          {showAmounts && ` (${formatMoney(part.cents, currency)})`}
+        </span>
+      ))}
+      {leftover > 0 && (
+        <span className="text-gray-400">
+          {detail.parts.length > 0 && " · "}
+          Unapplied ({formatMoney(leftover, currency)})
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -117,9 +178,28 @@ export function BillingTab({
   canEdit: boolean;
 }) {
   const { installments, isLoading } = usePaymentInstallments(quote.id);
+  const { payments, isLoading: paymentsLoading } = usePaymentHistory(quote.id);
   const currency = useEventCurrency(quote.id);
   const storedIsQbo = useEventIsQbo(quote.id);
   const perms = usePermissionsStore();
+
+  // Every figure on this tab comes from the money in PaymentHistory, never from
+  // PaymentInstallments.status — that flag is a cache of this same computation.
+  // See docs/specs/payment-accounting-truth.md.
+  const allocation = useMemo(
+    () => allocatePayments(installments, payments, currency),
+    [installments, payments, currency],
+  );
+
+  // The schedule claims something was paid, but no payment rows reached us —
+  // the PowerSync sync-rule failure mode. Reporting "$0.00 received" here would
+  // be a confident lie, so the tab declines to answer instead.
+  const paymentDataMissing =
+    !paymentsLoading && payments.length === 0 && installments.some((i) => i.status === "paid");
+
+  const receivedCents = allocation.totalReceivedCents;
+  const balanceDueCents = Math.max(0, contractTotalCents - receivedCents);
+  const overpaidCents = Math.max(0, receivedCents - contractTotalCents);
 
   // Optimistic value: the write goes to the local DB and only then comes back
   // through the reactive query, which is enough of a round trip to look laggy.
@@ -152,12 +232,25 @@ export function BillingTab({
       });
   };
 
-  const paidCents = installments
-    .filter((i) => i.status === "paid")
-    .reduce((sum, i) => sum + i.amountCents, 0);
-
   return (
     <div className="space-y-6">
+      {paymentDataMissing && (
+        <div className="border border-red-200 bg-red-50 text-red-800 text-sm rounded p-3">
+          <span className="font-semibold">Payment data unavailable.</span> This event has paid
+          installments but no payment records reached this device, so the amounts below cannot be
+          trusted. Check your connection, or contact a developer if it persists.
+        </div>
+      )}
+
+      {allocation.foreignCurrencyPayments.length > 0 && (
+        <div className="border border-amber-200 bg-amber-50 text-amber-800 text-sm rounded p-3">
+          {allocation.foreignCurrencyPayments.length === 1 ? "1 payment" : "Some payments"} in{" "}
+          {[...new Set(allocation.foreignCurrencyPayments.map((p) => p.currency))].join(", ")}{" "}
+          {allocation.foreignCurrencyPayments.length === 1 ? "is" : "are"} not included in this
+          balance, which is in {currency}. Reconcile them by hand.
+        </div>
+      )}
+
       {/* Payment Summary */}
       <div>
         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">
@@ -181,14 +274,18 @@ export function BillingTab({
           </div>
           <div className="flex justify-between text-green-600">
             <span>Payments Received</span>
-            <span className="font-semibold">{formatMoney(paidCents, currency)}</span>
+            <span className="font-semibold">{formatMoney(receivedCents, currency)}</span>
           </div>
           <div className="flex justify-between text-red-600 border-t pt-2">
             <span className="font-medium">Balance Due</span>
-            <span className="font-bold">
-              {formatMoney(contractTotalCents - paidCents, currency)}
-            </span>
+            <span className="font-bold">{formatMoney(balanceDueCents, currency)}</span>
           </div>
+          {overpaidCents > 0 && (
+            <div className="flex justify-between text-amber-700">
+              <span className="font-medium">Overpaid by</span>
+              <span className="font-bold">{formatMoney(overpaidCents, currency)}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -213,7 +310,7 @@ export function BillingTab({
         {isLoading ? (
           <p className="text-sm text-gray-400 py-4 text-center">Loading payment schedule...</p>
         ) : (
-          <PaymentScheduleTable installments={installments} currency={currency} />
+          <PaymentScheduleTable allocation={allocation} currency={currency} />
         )}
       </div>
 
@@ -223,31 +320,60 @@ export function BillingTab({
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide">
             Payment History
           </h3>
-          <button className="text-xs font-medium text-darkBlue border border-darkBlue rounded px-2 py-1 hover:bg-blue-50 transition cursor-pointer">
+          {/* Manual entry has no write path yet: PaymentHistory grants INSERT to
+              nobody but the service role. A live-looking button that does
+              nothing is worse than a disabled one. */}
+          <button
+            disabled
+            title="Recording a payment by hand isn't available yet — payments arrive from Stripe."
+            className="text-xs font-medium text-gray-400 border border-gray-300 rounded px-2 py-1 cursor-not-allowed"
+          >
             + Record Payment
           </button>
         </div>
-        {installments.filter((i) => i.status === "paid").length > 0 ? (
+        {paymentsLoading ? (
+          <p className="text-sm text-gray-400 py-4 text-center">Loading payments...</p>
+        ) : payments.length > 0 ? (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-gray-500 text-xs uppercase tracking-wide">
                 <th className="py-2 font-medium">Date</th>
                 <th className="py-2 font-medium text-right">Amount</th>
-                <th className="py-2 font-medium">Installment</th>
+                <th className="py-2 font-medium">Payer</th>
+                <th className="py-2 font-medium">Applied To</th>
+                <th className="py-2 font-medium">Receipt</th>
               </tr>
             </thead>
             <tbody>
-              {installments
-                .filter((i) => i.status === "paid")
-                .map((inst, i) => (
-                  <tr key={inst.id} className="border-b">
-                    <td className="py-2">{formatDateTime(inst.paidAt)}</td>
-                    <td className="py-2 text-right font-medium text-green-600">
-                      {formatMoney(inst.amountCents, currency)}
-                    </td>
-                    <td className="py-2 text-gray-500">Due {formatDate(inst.dueDate)}</td>
-                  </tr>
-                ))}
+              {payments.map((p) => (
+                <tr key={p.id} className="border-b">
+                  <td className="py-2">{formatDateTime(p.paidAt ?? p.createdAt)}</td>
+                  <td className="py-2 text-right font-medium text-green-600">
+                    {formatMoney(p.amountCents, p.currency as Currency)}
+                  </td>
+                  <td className="py-2 text-gray-500">
+                    {p.payerName}
+                    {p.paymentMethodType ? ` · ${p.paymentMethodType}` : ""}
+                  </td>
+                  <td className="py-2 text-gray-500">
+                    <AppliedTo payment={p} allocation={allocation} currency={currency} />
+                  </td>
+                  <td className="py-2">
+                    {p.receiptUrl ? (
+                      <a
+                        href={p.receiptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-darkBlue underline"
+                      >
+                        View
+                      </a>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         ) : (

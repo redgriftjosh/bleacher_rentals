@@ -73,6 +73,11 @@ describe("statusLabel / paymentMethodLabel", () => {
     expect(statusLabel("fr", "paid")).toBe("payé");
   });
 
+  it("translates the partial status a part-paid installment renders", () => {
+    expect(statusLabel("en", "partial")).toBe("partial");
+    expect(statusLabel("fr", "partial")).toBe("partiel");
+  });
+
   it("passes unknown statuses through rather than rendering blank", () => {
     expect(statusLabel("fr", "requires_action")).toBe("requires_action");
     expect(statusLabel("en", "")).toBe("");

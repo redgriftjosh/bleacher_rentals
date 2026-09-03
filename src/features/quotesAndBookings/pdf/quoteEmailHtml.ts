@@ -1,10 +1,5 @@
 import { QuoteDocumentData } from "./quoteDocumentData";
-
-function formatMoney(cents: number, currency: "USD" | "CAD"): string {
-  const symbol = "$";
-  const formatted = (Math.abs(cents) / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return cents < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
-}
+import { formatMoney } from "../utils/formatMoney";
 
 function formatDate(d: string): string {
   if (!d) return "—";

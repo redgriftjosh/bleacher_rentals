@@ -72,9 +72,8 @@ export function QuoteDetailsSection() {
     if (!salesOfficeId) return;
     const office = salesOffices.find((o) => o.id === salesOfficeId);
     if (!office) return;
-    const newCurrency = isCanadianProvince(office.stateProvince) ? "CAD" : "USD";
-    if (currency !== newCurrency) {
-      setField("currency", newCurrency);
+    if (currency !== office.currency) {
+      setField("currency", office.currency);
     }
   }, [salesOfficeId, salesOffices]);
 

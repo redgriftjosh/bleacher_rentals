@@ -7,6 +7,7 @@
     "generate-types-local": "supabase gen types typescript --local --schema public > database.types.ts",
     "gtl": "npm run generate-types-local",
     "generate:events": "tsx scripts/generate-sample-events.mts",
+    "simulate:payment": "tsx scripts/simulate-payment.mts",
     "postinstall": "powersync-web copy-assets -o public",
     "dev": "next dev",
     "dev:tunnel:josh": "concurrently \"next dev\" \"ngrok http --url=up-marmot-tops.ngrok-free.app 3000\"",

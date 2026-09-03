@@ -4,6 +4,13 @@ import Stripe from "stripe";
 import { stripeForAccount } from "@/features/stripe-integration/util";
 import { sendTriggerEmail } from "@/features/automaticEmails/server/sendTriggerEmail";
 import { PAYMENT_MADE_CLIENT, PAYMENT_MADE_AM } from "@/features/automaticEmails/triggers";
+import {
+  reconcileEventInstallments,
+  type ReconcileClient,
+} from "@/features/quotesAndBookings/server/reconcileInstallments";
+import { resolveEventCurrencyByEventId } from "@/features/quotesAndBookings/server/eventPaymentContext";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../../../../database.types";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -113,6 +120,9 @@ export async function POST(req: NextRequest) {
     const { error: insertError } = await supabase.from("PaymentHistory").insert({
       event_uuid: eventId,
       installment_id: installmentId || null,
+      // The live link can be re-pointed as a schedule changes; this one records
+      // what the client actually paid for and is never rewritten.
+      intended_installment_id: installmentId || null,
       amount_cents: session.amount_total ?? 0,
       currency: (session.currency ?? "usd").toUpperCase(),
       status: "succeeded",
@@ -156,17 +166,40 @@ export async function POST(req: NextRequest) {
       session.amount_total,
     );
 
-    if (installmentId) {
-      const { error: updateError } = await supabase
-        .from("PaymentInstallments")
-        .update({ status: "paid", paid_at: new Date().toISOString() })
-        .eq("id", installmentId);
+    // Bring the schedule back in line with the money actually recorded. This
+    // runs for every payment, not just targeted ones: an untargeted payment can
+    // still complete an installment (FIFO), and a partial one must NOT close a
+    // whole installment the way this route used to do unconditionally.
+    //
+    // Best-effort — the payment is already recorded and Stripe must not retry.
+    // `status` / `paid_at` are a cache, and every screen recomputes the real
+    // numbers from PaymentHistory at read time, so a failure here is visible
+    // nowhere but the log, and the next payment repairs it.
+    try {
+      // Which currency this event is priced in — its sales office's, the same
+      // one the Checkout session was charged in. A payment in any other
+      // currency is reported, never subtracted (spec §3.6). Best-effort: if the
+      // office cannot be read, the reconciler falls back to the currency stored
+      // on the schedule rows.
+      const eventCurrency = await resolveEventCurrencyByEventId(
+        supabase as unknown as SupabaseClient<Database>,
+        eventId,
+      ).catch((err) => {
+        console.error("[Stripe Webhook] Could not resolve the event currency:", err);
+        return null;
+      });
 
-      if (updateError) {
-        console.error("[Stripe Webhook] Installment update failed:", updateError);
-      } else {
-        console.log("[Stripe Webhook] Installment marked paid:", installmentId);
-      }
+      // The service-role client here is untyped (`createClient()` with no
+      // Database generic); matching its generics against the reconciler's
+      // structural type sends tsc into a depth blow-up, so narrow it directly.
+      const reconciled = await reconcileEventInstallments(
+        supabase as unknown as ReconcileClient,
+        eventId,
+        eventCurrency ?? undefined,
+      );
+      console.log("[Stripe Webhook] Installments reconciled for event:", eventId, reconciled);
+    } catch (err) {
+      console.error("[Stripe Webhook] Installment reconciliation failed:", err);
     }
 
     // Fire the "payment made" automatic emails to the client and account

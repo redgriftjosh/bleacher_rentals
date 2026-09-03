@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { DateTime } from "luxon";
 import { Search, ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -11,12 +11,14 @@ import { useQuotesAndBookingsFilters } from "@/features/quotesAndBookings/hooks/
 import { useQuotesAndBookingsData } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsData";
 import type { QuotesBookingsEvent } from "@/features/quotesAndBookings/types";
 import { searchEvents } from "@/features/quotesAndBookings/utils/searchEvents";
+import { eventSubtotalCents, eventTaxCents } from "@/features/quotesAndBookings/utils/eventAmounts";
 import {
-  eventSubtotalCents,
-  eventTaxCents,
-  sumSubtotalCents,
-  sumTaxCents,
-} from "@/features/quotesAndBookings/utils/eventAmounts";
+  pickEventCurrency,
+  sumByCurrency,
+  formatTotalsLabel,
+} from "@/features/quotesAndBookings/utils/eventCurrency";
+import { formatMoney } from "@/features/quotesAndBookings/utils/formatMoney";
+import { useOfficeCurrencies } from "@/features/quotesAndBookings/hooks/useOfficeCurrencies";
 import { isInGoodShuffle } from "@/features/quotesAndBookings/utils/filterEvents";
 import { GoodShuffleBadge } from "@/features/quotesAndBookings/components/GoodShuffleBadge";
 import {
@@ -25,11 +27,6 @@ import {
   SCORECARD_TEMPLATES,
 } from "@/features/quotesAndBookings/utils/scorecardTemplates";
 import { useRouter, useSearchParams } from "next/navigation";
-
-function formatCurrency(cents: number | null): string {
-  if (cents === null) return "$0.00";
-  return `$${(cents / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
-}
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return "N/A";
@@ -102,6 +99,14 @@ export default function QuotesBookingsPage() {
     return searchEvents(data, searchQuery);
   }, [data, searchQuery]);
 
+  // Money columns are per-office: a quote out of a Canadian office is shown in
+  // C$, and the column totals keep the two currencies apart.
+  const { currencyByOfficeId } = useOfficeCurrencies();
+  const currencyOf = useCallback(
+    (event: QuotesBookingsEvent) => pickEventCurrency(event.sales_office_uuid, currencyByOfficeId),
+    [currencyByOfficeId],
+  );
+
   const router = useRouter();
 
   const periodLabel =
@@ -166,15 +171,22 @@ export default function QuotesBookingsPage() {
     },
     {
       key: "subtotal",
-      header: `Subtotal ($${Math.round(sumSubtotalCents(searchedData) / 100).toLocaleString()})`,
+      header: formatTotalsLabel(
+        "Subtotal",
+        sumByCurrency(searchedData, eventSubtotalCents, currencyOf),
+      ),
       align: "right",
-      render: (event) => <CellText bold>{formatCurrency(eventSubtotalCents(event))}</CellText>,
+      render: (event) => (
+        <CellText bold>{formatMoney(eventSubtotalCents(event), currencyOf(event))}</CellText>
+      ),
     },
     {
       key: "tax",
-      header: `Tax ($${Math.round(sumTaxCents(searchedData) / 100).toLocaleString()})`,
+      header: formatTotalsLabel("Tax", sumByCurrency(searchedData, eventTaxCents, currencyOf)),
       align: "right",
-      render: (event) => <CellText bold>{formatCurrency(eventTaxCents(event))}</CellText>,
+      render: (event) => (
+        <CellText bold>{formatMoney(eventTaxCents(event), currencyOf(event))}</CellText>
+      ),
     },
   ];
 

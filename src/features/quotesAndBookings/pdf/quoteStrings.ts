@@ -192,6 +192,8 @@ export const quoteStrings = {
   statusFailed: { en: "failed", fr: "échoué" },
   statusPaid: { en: "paid", fr: "payé" },
   statusUnpaid: { en: "unpaid", fr: "impayé" },
+  // An installment that has received some money but is not covered yet.
+  statusPartial: { en: "partial", fr: "partiel" },
 
   // Payment method types from Stripe.
   methodCard: { en: "card", fr: "carte" },
@@ -298,6 +300,7 @@ const STATUS_KEYS = {
   failed: "statusFailed",
   paid: "statusPaid",
   unpaid: "statusUnpaid",
+  partial: "statusPartial",
 } as const satisfies Record<string, QuoteStringKey>;
 
 const METHOD_KEYS = {

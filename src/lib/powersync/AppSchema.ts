@@ -949,6 +949,9 @@ const TermsAndConditions = new Table(TermsAndConditionsCols);
 const PaymentHistoryCols = {
   event_uuid: column.text,
   installment_id: column.text,
+  // What the client was paying for, as of the payment. Historical: unlike
+  // installment_id it is never re-pointed when a schedule is rebuilt.
+  intended_installment_id: column.text,
   amount_cents: column.integer,
   currency: column.text,
   status: column.text,
