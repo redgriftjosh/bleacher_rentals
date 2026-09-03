@@ -13,7 +13,6 @@ import {
 } from "./logEventChanges";
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute, typedGetAll, expect } from "@/lib/powersync/typedQuery";
-import { subscribeToEvent } from "@/features/eventChat/db/subscriptions";
 
 type OldEventRow = {
   event_name: string | null;
@@ -172,10 +171,9 @@ export async function updateQuoteEvent(
 
   await typedExecute(db.updateTable("Events").set(updates).where("id", "=", eventId).compile());
 
-  const newOwnerUuid = (state.ownerUserUuid ?? currentUserUuid ?? null) as string | null;
-  if (newOwnerUuid && newOwnerUuid !== oldEvent?.created_by_user_uuid) {
-    await subscribeToEvent(eventId, newOwnerUuid);
-  }
+  // A new owner's subscription is the server's job, not ours: the same trigger
+  // fires on `UPDATE OF created_by_user_uuid`. Subscribing from here raced it
+  // and got the whole write discarded — see the note in createQuoteEvent.ts.
 
   // 4. Log field changes + line item changes in parallel
   if (oldEvent) {
