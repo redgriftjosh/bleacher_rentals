@@ -137,7 +137,7 @@ export const quoteStrings = {
   //   "<b>$500.00</b> is due based on your payment schedule."
   dueNoticeSuffix: {
     en: "is due based on your payment schedule.",
-    fr: "est en souffrance selon votre calendrier de paiement.",
+    fr: "est à payer selon votre calendrier de paiement.",
   },
   yourNameRequired: { en: "Your Name *", fr: "Votre nom *" },
   email: { en: "Email", fr: "Courriel" },
@@ -173,7 +173,7 @@ export const quoteStrings = {
   // ── Pay Invoice tab: schedule + history ──────────────────────────────
   paymentSchedule: { en: "Payment Schedule", fr: "Calendrier de paiement" },
   paid: { en: "Paid", fr: "Payé" },
-  due: { en: "Due", fr: "En souffrance" },
+  due: { en: "Due", fr: "À payer" },
   totalScheduled: { en: "Total Scheduled", fr: "Total prévu" },
   paymentHistory: { en: "Payment History", fr: "Historique des paiements" },
   loading: { en: "Loading...", fr: "Chargement..." },
