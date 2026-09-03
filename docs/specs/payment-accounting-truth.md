@@ -572,6 +572,10 @@ The raw `installment_id` stays in the database as the record of intent; it is no
 shown, because a stale intent next to a live allocation is exactly the kind of
 two-numbers-one-question problem this spec removes.
 
+> **Superseded 2026-09-03** by [manual-payment-entry.md](./manual-payment-entry.md):
+> the button now works, for admins and account managers. The disabled state
+> below was the honest interim, and it shipped; it is no longer current.
+
 `+ Record Payment` becomes **disabled** with a title saying manual entry is not
 available yet — today it is a live-looking button with no handler.
 

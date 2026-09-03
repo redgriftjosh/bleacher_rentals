@@ -186,6 +186,22 @@ describe("POST /api/stripe/webhook", () => {
     expect(insert.stripe_connection_uuid).toBe("conn-1");
   });
 
+  it("marks the row as Stripe's, and keeps the instrument as detail", async () => {
+    mockConstructEvent.mockReturnValue(checkoutEvent());
+
+    await POST(makeRequest("{}", { signature: "sig" }));
+
+    const insert = mockInsert.mock.calls[0][0];
+    // The webhook is the only writer that may claim this — the RLS insert
+    // policy refuses entry_source 'stripe' from any client.
+    expect(insert.entry_source).toBe("stripe");
+    // One of the four types the Billing tab lists, not whatever Stripe called
+    // the instrument. That detail is still recorded, just not as the type.
+    expect(insert.payment_method_type).toBe("stripe");
+    expect(insert.reference).toBe("card");
+    expect(insert.recorded_by_user_uuid).toBeUndefined();
+  });
+
   it("does not double-insert when the same session is delivered twice", async () => {
     mockConstructEvent.mockReturnValue(checkoutEvent());
     // A PaymentHistory row for this session already exists (a prior delivery).

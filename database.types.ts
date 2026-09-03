@@ -2473,6 +2473,7 @@ export type Database = {
           amount_cents: number
           created_at: string
           currency: string
+          entry_source: string
           event_uuid: string
           id: string
           installment_id: string | null
@@ -2482,6 +2483,8 @@ export type Database = {
           payer_email: string | null
           payer_name: string
           payment_method_type: string | null
+          recorded_by_user_uuid: string | null
+          reference: string | null
           status: string
           stripe_checkout_session_id: string | null
           stripe_connection_uuid: string | null
@@ -2492,6 +2495,7 @@ export type Database = {
           amount_cents: number
           created_at?: string
           currency?: string
+          entry_source?: string
           event_uuid: string
           id?: string
           installment_id?: string | null
@@ -2501,6 +2505,8 @@ export type Database = {
           payer_email?: string | null
           payer_name: string
           payment_method_type?: string | null
+          recorded_by_user_uuid?: string | null
+          reference?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
           stripe_connection_uuid?: string | null
@@ -2511,6 +2517,7 @@ export type Database = {
           amount_cents?: number
           created_at?: string
           currency?: string
+          entry_source?: string
           event_uuid?: string
           id?: string
           installment_id?: string | null
@@ -2520,6 +2527,8 @@ export type Database = {
           payer_email?: string | null
           payer_name?: string
           payment_method_type?: string | null
+          recorded_by_user_uuid?: string | null
+          reference?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
           stripe_connection_uuid?: string | null
@@ -2539,6 +2548,13 @@ export type Database = {
             columns: ["installment_id"]
             isOneToOne: false
             referencedRelation: "PaymentInstallments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "PaymentHistory_recorded_by_user_uuid_fkey"
+            columns: ["recorded_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
             referencedColumns: ["id"]
           },
           {

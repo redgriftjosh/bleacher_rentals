@@ -15204,6 +15204,33 @@ INSERT INTO "public"."AccountManagerZones" ("id", "account_manager_uuid", "zone_
 VALUES
   ('a1b2c3d4-0000-4000-8000-000000000001', '8d5473b1-269a-4e28-9420-dc98e9442e1b', '27633341-400b-4f18-a567-85e6de7ad65d', true);
 
+-- E2E: a booked quote with a payment schedule, so the Billing tab has something
+-- to record a payment against. Used by recordPayment.*.spec.ts.
+--
+-- The event's created_by_user_uuid is NULL, which is the point: a junior account
+-- manager did not create it and must find the button disabled, while a lead AM
+-- (the seeded E2E AM is one) must not. Two installments, one already paid by
+-- Stripe, so the history table shows both entry sources side by side.
+INSERT INTO "public"."PaymentInstallments"
+  ("id", "event_uuid", "due_date", "amount_cents", "currency")
+VALUES
+  ('9c1f0a10-0000-4000-8000-000000000001', '85b35a1c-8992-41c5-b051-409f33ee7fc5',
+   '2026-08-31', 270000, 'USD'),
+  ('9c1f0a10-0000-4000-8000-000000000002', '85b35a1c-8992-41c5-b051-409f33ee7fc5',
+   '2026-09-16', 270000, 'USD')
+ON CONFLICT ("id") DO NOTHING;
+
+INSERT INTO "public"."PaymentHistory"
+  ("id", "event_uuid", "installment_id", "intended_installment_id", "amount_cents",
+   "currency", "status", "payment_method_type", "entry_source", "payer_name",
+   "reference", "paid_at", "created_at")
+VALUES
+  ('9c1f0a10-1111-4000-8000-000000000001', '85b35a1c-8992-41c5-b051-409f33ee7fc5',
+   '9c1f0a10-0000-4000-8000-000000000001', '9c1f0a10-0000-4000-8000-000000000001',
+   270000, 'USD', 'succeeded', 'stripe', 'stripe', 'Baton Rouge Rodeo',
+   'card', '2026-08-20 15:00:00+00', '2026-08-20 15:00:00+00')
+ON CONFLICT ("id") DO NOTHING;
+
 -- E2E: two changelog releases. Ordering, markdown rendering and the unread
 -- indicator are asserted against these in changelog.admin.spec.ts.
 INSERT INTO "public"."ChangeLog" ("version", "released_at", "body_md") VALUES

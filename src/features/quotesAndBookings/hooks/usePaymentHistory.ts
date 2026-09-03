@@ -3,6 +3,7 @@
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { useMemo } from "react";
+import type { EntrySource } from "../types/paymentTypes";
 
 /**
  * The payments an event actually received. This — not
@@ -22,6 +23,10 @@ type Row = {
   stripe_receipt_url: string | null;
   paid_at: string | null;
   created_at: string | null;
+  intended_installment_id: string | null;
+  entry_source: string | null;
+  recorded_by_user_uuid: string | null;
+  reference: string | null;
 };
 
 export type PaymentHistoryRow = {
@@ -36,6 +41,11 @@ export type PaymentHistoryRow = {
   receiptUrl: string | null;
   paidAt: string | null;
   createdAt: string;
+  /** What the payment was made against, as of the payment; never re-pointed. */
+  intendedInstallmentId: string | null;
+  entrySource: EntrySource;
+  recordedByUserUuid: string | null;
+  reference: string | null;
 };
 
 export function usePaymentHistory(eventId: string | null) {
@@ -55,6 +65,10 @@ export function usePaymentHistory(eventId: string | null) {
           "stripe_receipt_url",
           "paid_at",
           "created_at",
+          "intended_installment_id",
+          "entry_source",
+          "recorded_by_user_uuid",
+          "reference",
         ])
         .where("event_uuid", "=", eventId ?? "")
         .orderBy("created_at", "desc")
@@ -79,6 +93,12 @@ export function usePaymentHistory(eventId: string | null) {
         receiptUrl: r.stripe_receipt_url,
         paidAt: r.paid_at,
         createdAt: r.created_at ?? "",
+        intendedInstallmentId: r.intended_installment_id,
+        // Every row that predates manual entry was written by the webhook, and
+        // the column defaults to 'stripe' for exactly that reason.
+        entrySource: r.entry_source === "manual" ? "manual" : "stripe",
+        recordedByUserUuid: r.recorded_by_user_uuid,
+        reference: r.reference,
       })),
     [data],
   );

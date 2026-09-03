@@ -13,19 +13,17 @@ import { useEventCurrency } from "../../../hooks/useEventCurrency";
 import { allocatePayments, type Allocation } from "../../../utils/allocatePayments";
 import { formatMoney } from "../../../utils/formatMoney";
 import { Currency } from "../../../types/quoteTypes";
-import { DateTime } from "luxon";
+import { formatDate, formatDateTime } from "../../../utils/formatDate";
+import { paymentMethodLabel } from "../../../types/paymentTypes";
+import { useUserNames } from "../../../hooks/useUserNames";
+import dynamic from "next/dynamic";
 
-function formatDate(d: string | null): string {
-  if (!d) return "—";
-  const dt = DateTime.fromISO(d);
-  return dt.isValid ? dt.toFormat("MMM d, yyyy") : "—";
-}
-
-function formatDateTime(d: string | null): string {
-  if (!d) return "—";
-  const dt = DateTime.fromISO(d);
-  return dt.isValid ? dt.toFormat("MMM d, yyyy 'at' h:mm a") : "—";
-}
+// A modal most visits to this tab never open, carrying a date control and its
+// own form state. It has no business in the tab's bundle.
+const RecordPaymentDialog = dynamic(
+  () => import("./RecordPaymentDialog").then((m) => m.RecordPaymentDialog),
+  { ssr: false },
+);
 
 const STATUS_STYLES = {
   paid: "bg-green-100 text-green-800",
@@ -146,8 +144,10 @@ function AppliedTo({
 
   // Split money, or money the schedule cannot absorb, has to name its pieces —
   // otherwise "Due Aug 31" would quietly stand for a payment twice that size.
+  // A refund's pieces are negative: it names the installment it reopened, and
+  // `!== 0` rather than `> 0` is what keeps that visible instead of blank.
   const leftover = detail.unallocatedCents;
-  const showAmounts = detail.parts.length > 1 || leftover > 0;
+  const showAmounts = detail.parts.length > 1 || leftover !== 0 || payment.amountCents < 0;
 
   return (
     <span>
@@ -158,7 +158,7 @@ function AppliedTo({
           {showAmounts && ` (${formatMoney(part.cents, currency)})`}
         </span>
       ))}
-      {leftover > 0 && (
+      {leftover !== 0 && (
         <span className="text-gray-400">
           {detail.parts.length > 0 && " · "}
           Unapplied ({formatMoney(leftover, currency)})
@@ -182,6 +182,14 @@ export function BillingTab({
   const currency = useEventCurrency(quote.id);
   const storedIsQbo = useEventIsQbo(quote.id);
   const perms = usePermissionsStore();
+  const staffNames = useUserNames();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  // A viewer is anyone who can read the page but holds neither of the roles the
+  // RLS insert policy names. Showing them a button the server would refuse is
+  // worse than showing nothing.
+  const isViewer = !perms.isAdmin && !perms.isAccountManager;
 
   // Every figure on this tab comes from the money in PaymentHistory. The
   // schedule supplies only the terms — what is owed, and when.
@@ -306,16 +314,28 @@ export function BillingTab({
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide">
             Payment History
           </h3>
-          {/* Manual entry has no write path yet: PaymentHistory grants INSERT to
-              nobody but the service role. A live-looking button that does
-              nothing is worse than a disabled one. */}
-          <button
-            disabled
-            title="Recording a payment by hand isn't available yet — payments arrive from Stripe."
-            className="text-xs font-medium text-gray-400 border border-gray-300 rounded px-2 py-1 cursor-not-allowed"
-          >
-            + Record Payment
-          </button>
+          {/* A viewer is not shown a control they could never use. Everyone
+              else sees it, enabled on the same terms as every other edit on
+              this page — which means a lead AM may record a payment on a quote
+              they did not create. */}
+          {!isViewer && (
+            <button
+              onClick={() => setDialogOpen(true)}
+              disabled={!canEdit}
+              title={
+                canEdit
+                  ? "Record a check, ACH or manual card payment"
+                  : "You can only record a payment on quotes you created."
+              }
+              className={
+                canEdit
+                  ? "text-xs font-medium text-darkBlue border border-darkBlue rounded px-2 py-1 hover:bg-blue-50"
+                  : "text-xs font-medium text-gray-400 border border-gray-300 rounded px-2 py-1 cursor-not-allowed"
+              }
+            >
+              + Record Payment
+            </button>
+          )}
         </div>
         {paymentsLoading ? (
           <p className="text-sm text-gray-400 py-4 text-center">Loading payments...</p>
@@ -325,7 +345,9 @@ export function BillingTab({
               <tr className="border-b text-left text-gray-500 text-xs uppercase tracking-wide">
                 <th className="py-2 font-medium">Date</th>
                 <th className="py-2 font-medium text-right">Amount</th>
+                <th className="py-2 font-medium">Type</th>
                 <th className="py-2 font-medium">Payer</th>
+                <th className="py-2 font-medium">Recorded by</th>
                 <th className="py-2 font-medium">Applied To</th>
                 <th className="py-2 font-medium">Receipt</th>
               </tr>
@@ -334,12 +356,26 @@ export function BillingTab({
               {payments.map((p) => (
                 <tr key={p.id} className="border-b">
                   <td className="py-2">{formatDateTime(p.paidAt ?? p.createdAt)}</td>
-                  <td className="py-2 text-right font-medium text-green-600">
+                  {/* Money out is red with an explicit minus sign — never bare
+                      parentheses, which are easy to miss at a glance. */}
+                  <td
+                    className={`py-2 text-right font-medium ${
+                      p.amountCents < 0 ? "text-red-600" : "text-green-600"
+                    }`}
+                  >
                     {formatMoney(p.amountCents, p.currency as Currency)}
                   </td>
                   <td className="py-2 text-gray-500">
-                    {p.payerName}
-                    {p.paymentMethodType ? ` · ${p.paymentMethodType}` : ""}
+                    {paymentMethodLabel(p.paymentMethodType, p.entrySource)}
+                    {p.reference && (
+                      <span className="block text-xs text-gray-400">{p.reference}</span>
+                    )}
+                  </td>
+                  <td className="py-2 text-gray-500">{p.payerName}</td>
+                  <td className="py-2 text-gray-500">
+                    {p.entrySource === "stripe"
+                      ? "Stripe"
+                      : (staffNames.get(p.recordedByUserUuid ?? "") ?? "Staff")}
                   </td>
                   <td className="py-2 text-gray-500">
                     <AppliedTo payment={p} allocation={allocation} currency={currency} />
@@ -367,7 +403,27 @@ export function BillingTab({
             No payments recorded yet.
           </p>
         )}
+        {/* Said once, plainly, because it will be the first question: there is
+            no edit or delete on a payment row, on purpose. */}
+        <p className="text-xs text-gray-400 mt-2">
+          Payments cannot be edited or deleted. To correct one, record a negative amount — both
+          entries stay visible.
+        </p>
       </div>
+
+      {dialogOpen && (
+        <RecordPaymentDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          eventId={quote.id}
+          currency={currency}
+          installments={allocation.installments}
+          defaultPayerName={
+            [quote.contact?.firstName, quote.contact?.lastName].filter(Boolean).join(" ") || ""
+          }
+          recordedByUserUuid={perms.userId}
+        />
+      )}
     </div>
   );
 }

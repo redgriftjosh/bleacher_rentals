@@ -963,6 +963,13 @@ const PaymentHistoryCols = {
   notes: column.text,
   paid_at: column.text,
   created_at: column.text,
+  // Who wrote the row — the webhook or a person. Not inferred from
+  // payment_method_type, which says "card" on every legacy Stripe row.
+  entry_source: column.text,
+  recorded_by_user_uuid: column.text,
+  // Check number, ACH trace, terminal auth code; for Stripe rows, the method
+  // Stripe reported.
+  reference: column.text,
 } satisfies PowerSyncColsFor<"PaymentHistory">;
 const PaymentHistory = new Table(PaymentHistoryCols, {
   indexes: { event_uuid: ["event_uuid"], installment_id: ["installment_id"] },

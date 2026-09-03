@@ -94,7 +94,7 @@ export const PERMISSIONS: PermissionEntry[] = [
     category: "Day to Day Operations",
     roles: {
       admin: read(
-        "Can see every payment on any quote — amount, payer, method and the Stripe receipt. Nobody can record a payment by hand yet; payments appear on their own once the client pays.",
+        "Can see every payment on any quote — amount, payer, method and the Stripe receipt. Payments from Stripe appear on their own once the client pays; anything paid another way is entered by hand (see Record a Payment).",
       ),
       account_manager: read(
         "Exactly the same view as an administrator, on every quote, including ones they did not create.",
@@ -103,6 +103,25 @@ export const PERMISSIONS: PermissionEntry[] = [
         "Unable to even access the pages where they can see quotes, and developer is only meant to work on the developer roadmap.",
       ),
       viewer: read("Can see payments and balances but cannot change anything."),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Record a Payment",
+    description:
+      "Entering a payment that did not come through Stripe — a check, an ACH transfer, or a card run by hand on a terminal — from the Billing tab of a quote or booking. A recorded payment can never be edited or deleted; a mistake is corrected by recording the same amount as a negative, so both entries stay on the record.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: full(
+        "Can record a card, ACH or check payment on any quote or booking, including a negative amount for a refund, a bounced check or a correction. Recording a refund here does not send money back through Stripe — that is done in Stripe.",
+      ),
+      account_manager: custom(
+        "A lead account manager can do all of that on any quote or booking, including ones they did not create. Everyone else can only do it on the quotes they created — on other people's quotes the button is disabled. The same rule as every other edit on the page.",
+      ),
+      developer: none(
+        "Unable to even access the pages where they can see quotes, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read("Can read the payment history but sees no button — there is nothing to press."),
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },

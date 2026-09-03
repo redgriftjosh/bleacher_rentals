@@ -378,3 +378,229 @@ describe("allocatePayments — edge cases", () => {
     assertInvariants(result);
   });
 });
+
+// ── Negative amounts (docs/specs/manual-payment-entry.md §3.3, §3.4, T2) ──
+//
+// A refund, a bounced check and a corrected typo are all one thing: a payment
+// with a negative amount. The allocator used to clamp those to zero, which
+// made them invisible in every total on the page.
+
+describe("allocatePayments — negative amounts", () => {
+  it("S3: a refund targeted at an installment reopens it", () => {
+    const installments = [inst("i1", "2026-08-31", 270000), inst("i2", "2026-09-16", 270000)];
+    const result = allocatePayments(
+      installments,
+      [
+        pay(270000, { id: "a", installmentId: "i1", paidAt: "2026-06-01T12:00:00.000+00:00" }),
+        pay(-270000, { id: "b", installmentId: "i1", paidAt: "2026-06-05T12:00:00.000+00:00" }),
+      ],
+      "USD",
+    );
+
+    expect(result.installments[0]).toMatchObject({
+      installmentId: "i1",
+      allocatedCents: 0,
+      status: "unpaid",
+      paidAt: null,
+    });
+    expect(result.totalReceivedCents).toBe(0);
+    assertInvariants(result);
+  });
+
+  it("S3: the refund's breakdown names the installment it reopened, signed (§3.4)", () => {
+    const result = allocatePayments(
+      [inst("i1", "2026-08-31", 270000)],
+      [
+        pay(270000, { id: "a", installmentId: "i1", paidAt: "2026-06-01T12:00:00.000+00:00" }),
+        pay(-270000, { id: "b", installmentId: "i1", paidAt: "2026-06-05T12:00:00.000+00:00" }),
+      ],
+      "USD",
+    );
+
+    const refund = result.byPayment.find((p) => p.paymentId === "b")!;
+    expect(refund.parts).toEqual([{ installmentId: "i1", cents: -270000 }]);
+    expect(refund.unallocatedCents).toBe(0);
+    expect(refund.excluded).toBeNull();
+  });
+
+  it("S4: a typo corrected by an offsetting row leaves only the intended money", () => {
+    const result = allocatePayments(
+      [inst("i1", "2026-08-31", 270000)],
+      [
+        pay(150000, { id: "typo", paidAt: "2026-06-01T12:00:00.000+00:00" }),
+        pay(-150000, { id: "reversal", paidAt: "2026-06-02T12:00:00.000+00:00" }),
+        pay(15000, { id: "correct", paidAt: "2026-06-03T12:00:00.000+00:00" }),
+      ],
+      "USD",
+    );
+
+    expect(result.totalReceivedCents).toBe(15000);
+    expect(result.installments[0]).toMatchObject({ allocatedCents: 15000, status: "partial" });
+    assertInvariants(result);
+  });
+
+  it("S5: an untargeted refund un-fills in reverse — the newest obligation reopens first", () => {
+    const installments = [inst("i1", "2026-08-31", 270000), inst("i2", "2026-09-16", 270000)];
+    const result = allocatePayments(
+      installments,
+      [
+        pay(540000, { id: "a", paidAt: "2026-06-01T12:00:00.000+00:00" }),
+        pay(-100000, { id: "b", paidAt: "2026-06-05T12:00:00.000+00:00" }),
+      ],
+      "USD",
+    );
+
+    expect(result.installments[0]).toMatchObject({ allocatedCents: 270000, status: "paid" });
+    expect(result.installments[1]).toMatchObject({ allocatedCents: 170000, status: "partial" });
+    expect(result.totalReceivedCents).toBe(440000);
+    assertInvariants(result);
+  });
+
+  it("un-fills strictly by due date descending, not by insertion order", () => {
+    const installments = [
+      inst("late", "2026-12-01", 100000),
+      inst("early", "2026-01-01", 100000),
+      inst("middle", "2026-06-01", 100000),
+    ];
+    const result = allocatePayments(
+      installments,
+      [pay(300000, { id: "a" }), pay(-150000, { id: "b" })],
+      "USD",
+    );
+
+    const byId = new Map(result.installments.map((i) => [i.installmentId, i.allocatedCents]));
+    expect(byId.get("early")).toBe(100000);
+    expect(byId.get("middle")).toBe(50000);
+    expect(byId.get("late")).toBe(0);
+    assertInvariants(result);
+  });
+
+  it("E2: a refund on an empty installment spills into the pool, never going negative", () => {
+    const installments = [inst("i1", "2026-08-31", 100000), inst("i2", "2026-09-16", 100000)];
+    const result = allocatePayments(
+      installments,
+      [
+        pay(200000, { id: "a", installmentId: "i2" }),
+        pay(-50000, { id: "b", installmentId: "i1" }),
+      ],
+      "USD",
+    );
+
+    for (const i of result.installments) {
+      expect(i.allocatedCents).toBeGreaterThanOrEqual(0);
+    }
+    expect(result.totalReceivedCents).toBe(150000);
+    assertInvariants(result);
+  });
+
+  it("E1: a refund larger than everything received goes negative, and is not clamped", () => {
+    const result = allocatePayments(
+      [inst("i1", "2026-08-31", 100000)],
+      [pay(50000, { id: "a" }), pay(-120000, { id: "b" })],
+      "USD",
+    );
+
+    expect(result.totalReceivedCents).toBe(-70000);
+    expect(result.unallocatedCents).toBe(-70000);
+    expect(result.allocatedCents).toBe(0);
+    expect(result.installments[0]).toMatchObject({ allocatedCents: 0, status: "unpaid" });
+    assertInvariants(result);
+  });
+
+  it("reports a negative total with no schedule at all", () => {
+    const result = allocatePayments([], [pay(-25000, { id: "b" })], "USD");
+    expect(result.totalReceivedCents).toBe(-25000);
+    expect(result.unallocatedCents).toBe(-25000);
+    assertInvariants(result);
+  });
+
+  it("clears paidAt on an installment a refund reopened (§3.3 step 9)", () => {
+    const result = allocatePayments(
+      [inst("i1", "2026-08-31", 100000)],
+      [
+        pay(100000, { id: "a", installmentId: "i1" }),
+        pay(-1, { id: "b", installmentId: "i1", paidAt: "2026-07-01T12:00:00.000+00:00" }),
+      ],
+      "USD",
+    );
+
+    expect(result.installments[0].status).toBe("partial");
+    expect(result.installments[0].paidAt).toBeNull();
+  });
+
+  it("E11: a negative payment in another currency is excluded and un-fills nothing", () => {
+    const result = allocatePayments(
+      [inst("i1", "2026-08-31", 100000)],
+      [pay(100000, { id: "a" }), pay(-100000, { id: "b", currency: "CAD" })],
+      "USD",
+    );
+
+    expect(result.installments[0]).toMatchObject({ allocatedCents: 100000, status: "paid" });
+    expect(result.totalReceivedCents).toBe(100000);
+    expect(result.byPayment.find((p) => p.paymentId === "b")!.excluded).toBe("currency");
+    expect(result.foreignCurrencyPayments).toEqual([
+      { paymentId: "b", currency: "CAD", amountCents: -100000 },
+    ]);
+    assertInvariants(result);
+  });
+
+  it("ignores a negative payment that never succeeded", () => {
+    const result = allocatePayments(
+      [inst("i1", "2026-08-31", 100000)],
+      [pay(100000, { id: "a" }), pay(-100000, { id: "b", status: "failed" })],
+      "USD",
+    );
+
+    expect(result.totalReceivedCents).toBe(100000);
+    expect(result.byPayment.find((p) => p.paymentId === "b")!.excluded).toBe("status");
+  });
+
+  it("is order-independent with mixed signs", () => {
+    const installments = [inst("i1", "2026-08-31", 270000), inst("i2", "2026-09-16", 270000)];
+    const payments = [
+      pay(270000, { id: "a", installmentId: "i1", paidAt: "2026-06-01T12:00:00.000+00:00" }),
+      pay(-100000, { id: "b", paidAt: "2026-06-02T12:00:00.000+00:00" }),
+      pay(200000, { id: "c", paidAt: "2026-06-03T12:00:00.000+00:00" }),
+      pay(-50000, { id: "d", installmentId: "i1", paidAt: "2026-06-04T12:00:00.000+00:00" }),
+    ];
+
+    const forwards = allocatePayments(installments, payments, "USD");
+    const backwards = allocatePayments(installments, [...payments].reverse(), "USD");
+
+    expect(backwards.installments).toEqual(forwards.installments);
+    expect(backwards.totalReceivedCents).toBe(forwards.totalReceivedCents);
+    expect(backwards.unallocatedCents).toBe(forwards.unallocatedCents);
+    assertInvariants(forwards);
+  });
+
+  it("does not mutate the caller's arrays when signs are mixed", () => {
+    const installments = [inst("i2", "2026-09-16", 270000), inst("i1", "2026-08-31", 270000)];
+    const payments = [pay(300000, { id: "a" }), pay(-100000, { id: "b" })];
+    const installmentsCopy = structuredClone(installments);
+    const paymentsCopy = structuredClone(payments);
+
+    allocatePayments(installments, payments, "USD");
+
+    expect(installments).toEqual(installmentsCopy);
+    expect(payments).toEqual(paymentsCopy);
+  });
+
+  it("every payment's breakdown still accounts for its whole amount", () => {
+    const result = allocatePayments(
+      [inst("i1", "2026-08-31", 100000), inst("i2", "2026-09-16", 100000)],
+      [
+        pay(250000, { id: "a" }),
+        pay(-30000, { id: "b" }),
+        pay(-90000, { id: "c", installmentId: "i1" }),
+      ],
+      "USD",
+    );
+
+    for (const detail of result.byPayment) {
+      const source = [250000, -30000, -90000][["a", "b", "c"].indexOf(detail.paymentId)];
+      const summed = detail.parts.reduce((s, p) => s + p.cents, 0) + detail.unallocatedCents;
+      expect(summed).toBe(source);
+    }
+    assertInvariants(result);
+  });
+});

@@ -1,0 +1,89 @@
+import { db } from "@/components/providers/SystemProvider";
+import { typedExecute } from "@/lib/powersync/typedQuery";
+import { Currency } from "../types/quoteTypes";
+import { ManualPaymentMethod } from "../types/paymentTypes";
+import { MAX_PAYMENT_CENTS } from "../utils/parseAmountInput";
+
+/**
+ * Records money that never touched Stripe: a check, an ACH transfer, a card
+ * run by hand on a terminal.
+ *
+ * Local-first, and that matters more here than usual. The row goes into the
+ * PowerSync DB and appears in the history table immediately; the upload
+ * connector replays it to PostgREST under the user's Clerk JWT, where the RLS
+ * INSERT policy — not this function — decides whether it is allowed.
+ *
+ * **The upload's verdict never comes back.** `typedExecute` resolves once the
+ * row is in the local database. If PostgREST later refuses it, the connector
+ * treats the code as fatal and discards the transaction with a console error
+ * (BackendConnector.ts:110). So a resolved promise here means "written
+ * locally", not "accepted" — which is why the guards below run before the
+ * write rather than trusting the CHECK constraints to catch a bad row. A
+ * constraint violation is code 23514, and that is in the fatal set too: it
+ * would take the payment down silently.
+ *
+ * Amounts are signed. A negative row is a refund, a bounced check or the
+ * correction of a typo, and it is the only way to undo anything in an
+ * append-only ledger.
+ *
+ * See docs/specs/manual-payment-entry.md §3.1, §4.3, §5, T0, T4.
+ */
+
+export type RecordManualPaymentInput = {
+  eventId: string;
+  /** Writes BOTH installment columns; null means unapplied. §4.3 */
+  installmentId: string | null;
+  /** Non-zero. Negative is a refund / correction. */
+  amountCents: number;
+  /** Always the event's currency — another one is excluded from every total. */
+  currency: Currency;
+  method: ManualPaymentMethod;
+  payerName: string;
+  /** Check number, ACH trace, terminal auth code. */
+  reference: string | null;
+  notes: string | null;
+  /** ISO. The date the money moved, not "now". */
+  paidAt: string;
+  recordedByUserUuid: string;
+};
+
+export async function recordManualPayment(input: RecordManualPaymentInput): Promise<void> {
+  if (input.amountCents === 0) {
+    throw new Error("A payment cannot be zero.");
+  }
+  if (Math.abs(input.amountCents) > MAX_PAYMENT_CENTS) {
+    throw new Error("That amount is too large to record.");
+  }
+  if (!input.recordedByUserUuid) {
+    throw new Error("A manual payment must say who recorded it.");
+  }
+
+  await typedExecute(
+    db
+      .insertInto("PaymentHistory")
+      .values({
+        // Generated here so a retried upload upserts the same row rather than
+        // recording the payment twice.
+        id: crypto.randomUUID(),
+        event_uuid: input.eventId,
+        // The live link the allocation reads, and the historical fact that
+        // survives a schedule rebuild. One choice, both columns.
+        installment_id: input.installmentId,
+        intended_installment_id: input.installmentId,
+        amount_cents: input.amountCents,
+        currency: input.currency,
+        // Manual rows are money that has already arrived. There is no pending
+        // state: a transfer that later fails is a negative row.
+        status: "succeeded",
+        entry_source: "manual",
+        payment_method_type: input.method,
+        payer_name: input.payerName,
+        reference: input.reference,
+        notes: input.notes,
+        recorded_by_user_uuid: input.recordedByUserUuid,
+        paid_at: input.paidAt,
+        created_at: new Date().toISOString(),
+      } as any)
+      .compile(),
+  );
+}
