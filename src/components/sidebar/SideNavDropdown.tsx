@@ -28,22 +28,22 @@ export const SideNavDropdown = ({ label, icon: Icon, children }: SideNavDropdown
     <div>
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`w-full flex items-center text-base px-4 py-1 rounded m-1 space-x-3 cursor-pointer ${
+        className={`min-w-0 flex items-center text-base px-4 py-1 rounded m-1 space-x-3 cursor-pointer ${
           isAnyChildSelected
             ? "font-medium text-darkBlue bg-gray-200"
             : "text-gray-500 hover:bg-gray-200"
         }`}
       >
-        <Icon className="h-4 w-4" />
-        <span className="flex-1 text-left">{label}</span>
+        <Icon className="h-4 w-4 shrink-0" />
+        <span className="flex-1 truncate text-left">{label}</span>
         {isOpen ? (
-          <ChevronDown className="h-3.5 w-3.5" />
+          <ChevronDown className="h-3.5 w-3.5 shrink-0" />
         ) : (
-          <ChevronRight className="h-3.5 w-3.5" />
+          <ChevronRight className="h-3.5 w-3.5 shrink-0" />
         )}
       </button>
       {isOpen && (
-        <div className="ml-6">
+        <div className="ml-6 min-w-0">
           {children.map((child) => {
             const isSelected = pathname.startsWith(child.href);
             return (
@@ -51,13 +51,13 @@ export const SideNavDropdown = ({ label, icon: Icon, children }: SideNavDropdown
                 key={child.href}
                 href={child.href}
                 prefetch={true}
-                className={`flex items-center text-sm px-4 py-1 rounded m-1 ${
+                className={`flex items-center min-w-0 text-sm px-4 py-1 rounded m-1 ${
                   isSelected
                     ? "font-medium text-darkBlue bg-gray-200"
                     : "text-gray-500 hover:bg-gray-200"
                 }`}
               >
-                <span>{child.label}</span>
+                <span className="truncate">{child.label}</span>
               </Link>
             );
           })}
