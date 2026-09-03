@@ -162,6 +162,7 @@ export function QuotePublicView({
                 <p className="whitespace-pre-line">{companyFullAddress(data.company)}</p>
               )}
               <p className="italic mt-2 text-gray-500">{s.memoInvoice(data.quoteNumber)}</p>
+              <p className="italic mt-2 text-gray-500">{s.eTransferNote}</p>
             </div>
 
             {/* Right: Totals box */}
