@@ -6,7 +6,8 @@ import { Dropdown } from "@/components/DropDown";
 import { SelectAccountManager } from "@/features/manageTeam/components/inputs/SelectAccountManager";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { useAccountManagers } from "@/features/manageTeam/hooks/useAccountManagers";
-import { useSalesOffices, isCanadianProvince } from "../../../hooks/useSalesOffices";
+import { useSalesOffices } from "../../../hooks/useSalesOffices";
+import { salesOfficeLabel } from "../../../utils/salesOfficeLabel";
 import { isCompanyEmail, COMPANY_EMAIL_DOMAIN } from "../../../utils/companyEmail";
 
 export function QuoteDetailsSection() {
@@ -56,10 +57,10 @@ export function QuoteDetailsSection() {
   const accountManagerEmailInvalid =
     !!accountManagerId && !!selectedAccountManager && !isCompanyEmail(selectedAccountManager.email);
 
-  const salesOfficeOptions = salesOffices.map((o) => {
-    const cur = isCanadianProvince(o.stateProvince) ? "CAD" : "USD";
-    return { label: `${o.name} (${cur})`, value: o.id };
-  });
+  const salesOfficeOptions = salesOffices.map((o) => ({
+    label: salesOfficeLabel(o),
+    value: o.id,
+  }));
 
   const statusOptions = [
     { label: "Draft", value: "draft" as const },
