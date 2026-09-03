@@ -9,6 +9,14 @@ import { FilterButton } from "@/features/quotesAndBookings/components/FilterButt
 import { FilterPanel } from "@/features/quotesAndBookings/components/FilterPanel";
 import { useQuotesAndBookingsFilters } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsFilters";
 import { useQuotesAndBookingsData } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsData";
+import {
+  useCreateQuoteStore,
+  hasUnsavedChanges,
+} from "@/features/quotesAndBookings/state/useCreateQuoteStore";
+import {
+  NEW_QUOTE_CLIENT_NOTES,
+  shouldPrefillNewQuoteNotes,
+} from "@/features/quotesAndBookings/utils/newQuoteNotes";
 import type { QuotesBookingsEvent } from "@/features/quotesAndBookings/types";
 import { searchEvents } from "@/features/quotesAndBookings/utils/searchEvents";
 import { eventSubtotalCents, eventTaxCents } from "@/features/quotesAndBookings/utils/eventAmounts";
@@ -226,7 +234,20 @@ export default function QuotesBookingsPage() {
               </span>
             </button>
             <FilterButton isOpen={filters.isOpen} onClick={toggleOpen} />
-            <PrimaryButton onClick={() => router.push("/quotes-bookings/new")}>
+            <PrimaryButton
+              onClick={() => {
+                const store = useCreateQuoteStore.getState();
+                if (
+                  shouldPrefillNewQuoteNotes({
+                    editingEventId: store.editingEventId,
+                    hasUnsavedChanges: hasUnsavedChanges(),
+                  })
+                ) {
+                  store.setField("clientFacingNotes", NEW_QUOTE_CLIENT_NOTES);
+                }
+                router.push("/quotes-bookings/new");
+              }}
+            >
               + Create Quote
             </PrimaryButton>
           </div>
