@@ -219,7 +219,7 @@ export async function buildQuoteDocumentData(
       // Payment installments
       supabase
         .from("PaymentInstallments")
-        .select("id, due_date, amount_cents, status")
+        .select("id, due_date, amount_cents")
         .eq("event_uuid", eventId)
         .order("due_date"),
 

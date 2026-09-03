@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
+  addPaymentSchedule,
   createQuote,
   bumpLineItemPrice,
   assignTerms,
@@ -155,6 +156,32 @@ test.describe("Public quote — staleness & presence", () => {
       await expect(page.getByText("This quote has been updated")).toHaveCount(0);
     } finally {
       if (quote) await cleanupQuote(quote.eventId, termsId);
+    }
+  });
+
+  test("the Pay tab lists the payment schedule", async ({ page }) => {
+    // The client cannot plan around instalments they cannot see. The schedule is
+    // built server-side in buildQuoteDocumentData, so a bad column in that query
+    // fails silently: an empty schedule renders as no section at all.
+    let quote: CreatedQuote | null = null;
+    try {
+      quote = await createQuote();
+      await addPaymentSchedule(quote.eventId);
+
+      await page.goto(`/quote/${quote.eventId}`);
+      await page.getByRole("button", { name: "Pay Invoice" }).click();
+
+      // Tabs stay mounted while hidden, so scope to the visible Pay tab.
+      const schedule = page
+        .locator("div")
+        .filter({ has: page.getByRole("heading", { name: "Payment Schedule" }) })
+        .last();
+
+      await expect(schedule).toBeVisible();
+      await expect(schedule.getByText("$600.00").first()).toBeVisible();
+      await expect(schedule.getByText("$400.00").first()).toBeVisible();
+    } finally {
+      if (quote) await cleanupQuote(quote.eventId);
     }
   });
 
