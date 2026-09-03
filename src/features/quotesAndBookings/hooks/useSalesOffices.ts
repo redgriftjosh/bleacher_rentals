@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
-import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import type { Currency } from "../types/quoteTypes";
-import { resolveOfficeCurrency } from "./resolveOfficeCurrency";
+import { pickEventCurrency } from "../utils/eventCurrency";
+import { useOfficeCurrencies } from "./useOfficeCurrencies";
 
 // Re-exported for the existing callers that import them from here.
 export { isCanadianProvince } from "../utils/canadianTaxRates";
-export { resolveOfficeCurrency } from "./resolveOfficeCurrency";
+export { resolveOfficeCurrency } from "../utils/resolveOfficeCurrency";
 
 export type SalesOfficeRow = {
   id: string;
@@ -30,8 +30,6 @@ export type SalesOfficeOption = {
 };
 
 export function useSalesOffices(): { salesOffices: SalesOfficeOption[]; isLoading: boolean } {
-  const supabase = useClerkSupabaseClient();
-
   const compiled = useMemo(
     () =>
       db
@@ -52,29 +50,8 @@ export function useSalesOffices(): { salesOffices: SalesOfficeOption[]; isLoadin
 
   const { data, isLoading } = useTypedQuery(compiled, expect<SalesOfficeRow>());
 
-  // QboConnections aren't synced to PowerSync (tokens stay server-side), so the
-  // currency each connection reports is fetched online instead.
-  const [qboCurrencyById, setQboCurrencyById] = useState<Map<string, string | null>>(new Map());
-
-  useEffect(() => {
-    let cancelled = false;
-
-    supabase
-      .from("QboConnections")
-      .select("id, currency")
-      .then(({ data: rows, error }) => {
-        if (cancelled) return;
-        if (error) {
-          console.error("Failed to fetch QBO connection currencies:", error);
-          return;
-        }
-        setQboCurrencyById(new Map((rows ?? []).map((r) => [r.id, r.currency])));
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [supabase]);
+  // One resolution for the whole app — see useOfficeCurrencies.
+  const { currencyByOfficeId } = useOfficeCurrencies();
 
   const salesOffices = useMemo(
     () =>
@@ -84,12 +61,9 @@ export function useSalesOffices(): { salesOffices: SalesOfficeOption[]; isLoadin
         quickbookUuid: o.quickbook_uuid,
         stripeConnectionUuid: o.stripe_connection_uuid,
         stateProvince: o.address_state_province,
-        currency: resolveOfficeCurrency(
-          o.quickbook_uuid ? qboCurrencyById.get(o.quickbook_uuid) : null,
-          o.address_state_province,
-        ),
+        currency: pickEventCurrency(o.id, currencyByOfficeId),
       })),
-    [data, qboCurrencyById],
+    [data, currencyByOfficeId],
   );
 
   return { salesOffices, isLoading };

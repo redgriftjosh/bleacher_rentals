@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../../../database.types";
 import type { Currency } from "../types/quoteTypes";
-import { resolveOfficeCurrency } from "../hooks/resolveOfficeCurrency";
+import { resolveOfficeCurrency } from "../utils/resolveOfficeCurrency";
 import { allocatePayments, type AllocatablePayment } from "../utils/allocatePayments";
 import { computeAmountDue } from "../utils/computeAmountDue";
 

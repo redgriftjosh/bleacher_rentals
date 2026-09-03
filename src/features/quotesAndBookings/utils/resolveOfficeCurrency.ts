@@ -1,5 +1,5 @@
 import type { Currency } from "../types/quoteTypes";
-import { isCanadianProvince } from "../utils/canadianTaxRates";
+import { isCanadianProvince } from "./canadianTaxRates";
 
 /**
  * An office's currency is whatever its linked QuickBooks connection reports —
