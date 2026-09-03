@@ -2,13 +2,13 @@
  * Works out how much of an event's money has actually arrived, and where it sits.
  *
  * `PaymentHistory` is the source of truth: it holds the amounts that really
- * moved. `PaymentInstallments.status` is only a cache of the answer this
- * function gives — reading that flag to decide how much was paid is what let a
- * $1.00 payment close a $3,600.00 installment in production.
+ * moved. An installment carries no payment state of its own — it used to cache
+ * one, and reading that flag to decide how much was paid is what let a $1.00
+ * payment close a $3,600.00 installment in production. The columns are gone;
+ * every screen asks this function instead, so they cannot disagree.
  *
  * Pure and deterministic: no clock, no I/O, no mutation of the caller's arrays.
- * Both UIs and the Stripe webhook run this same function, so they cannot
- * disagree. See docs/specs/payment-accounting-truth.md.
+ * See docs/specs/payment-accounting-truth.md.
  */
 
 export type AllocatablePayment = {

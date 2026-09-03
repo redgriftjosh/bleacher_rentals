@@ -78,27 +78,6 @@ export async function resolveEventCurrency(
   return resolveOfficeCurrency(qbo.data?.currency ?? null, address.data?.state_province ?? null);
 }
 
-/**
- * The currency of one event, by id — for callers that need nothing else off the
- * quote (the Stripe webhook, reconciling a schedule).
- *
- * Returns null when the event cannot be read, so a caller can tell "no office,
- * so USD" apart from "I could not find out" and fall back accordingly.
- */
-export async function resolveEventCurrencyByEventId(
-  supabase: SupabaseClient<Database>,
-  eventId: string,
-): Promise<Currency | null> {
-  const { data: event } = await supabase
-    .from("Events")
-    .select("sales_office_uuid")
-    .eq("id", eventId)
-    .single();
-
-  if (!event) return null;
-  return resolveEventCurrency(supabase, event.sales_office_uuid);
-}
-
 export async function loadEventPaymentContext(
   supabase: SupabaseClient<Database>,
   eventId: string,
