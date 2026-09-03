@@ -354,6 +354,13 @@ cheaper of the two wrong answers.
 
 ### 3.7 `PaymentInstallments.status` is a derived cache (Q8) — binding
 
+> **Superseded 2026-09-03: the columns are gone.** `status` and `paid_at` were dropped
+> from `PaymentInstallments`, and the webhook's reconcile step with them. A cache no
+> caller may read is not worth keeping correct, and writing it made a paid quote look
+> edited to the hash guarding the contract signature. The rule below now holds by
+> construction — there is nothing left to read. See
+> [payment-does-not-invalidate-signature.md](./payment-does-not-invalidate-signature.md).
+
 **Rule: no financial calculation may read `PaymentInstallments.status` directly.**
 The only permitted readers are (a) the webhook, when comparing before a write, and
 (b) diagnostics. Everything user-facing derives status from `allocatePayments`.
@@ -386,6 +393,10 @@ different session).
 - **Reconciles can interleave.** Both may read before either writes, so the loser can
   write a slightly stale `status`. The damage is bounded: a _cache_ row is briefly
   stale. It self-corrects on the next payment or webhook redelivery.
+
+  > **Retired 2026-09-03.** With the cache columns dropped, the webhook performs a single
+  > insert and no reconcile, so there is no second write left to interleave.
+
 - **Decision: eventual consistency is sufficient, and no transaction is added.**
   This is only acceptable _because_ of §3.7 — every screen recomputes from
   `PaymentHistory` at read time, so a stale cache row cannot produce a wrong number
