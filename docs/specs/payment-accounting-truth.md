@@ -1,6 +1,8 @@
 # Spec: Payment Accounting — PaymentHistory as the source of truth
 
-Status: **DRAFT (rev. 3) — awaiting "Approved"**
+Status: **Implemented** (rev. 4, shipped 2026-09-03) — §3.2 and §3.7 partly
+superseded by [payment-does-not-invalidate-signature.md](./payment-does-not-invalidate-signature.md);
+see the dated notes inline
 Owner: quotesAndBookings / payments
 Routes affected:
 
@@ -191,9 +193,10 @@ Rules, in order:
 7. **`paidAt` invariant (Q2).** `paidAt` is non-null **if and only if** status is
    `paid`, and it is the effective time of the payment that completed it (the last
    one applied). A recomputation that drops an installment out of `paid` sets
-   `paidAt` back to `null` — in the allocation result and in the DB write (§3.2).
-   A lingering `paid_at` on an unpaid row is exactly the kind of half-truth this
-   spec exists to remove.
+   `paidAt` back to `null`. A lingering `paid_at` on an unpaid row is exactly the
+   kind of half-truth this spec exists to remove — and since 2026-09-03 it cannot
+   linger anywhere but in memory: `paidAt` lives only in the allocation result,
+   the stored column is gone (§3.2).
 
 Deterministic and side-effect free: same inputs → same output, no clock, no I/O.
 Both input arrays are `readonly` and sorted with `toSorted()`
@@ -201,6 +204,15 @@ Both input arrays are `readonly` and sorted with `toSorted()`
 sorting in place would corrupt shared state and silently break memoization.
 
 ### 3.2 Webhook
+
+> **Superseded 2026-09-03: there is no write-back step.** The reconcile described
+> below shipped, then went away with the columns it maintained — the webhook now
+> performs the `PaymentHistory` insert and nothing else
+> ([route.ts](../../src/app/api/stripe/webhook/route.ts)). The properties this
+> section argued for still hold, more cheaply: a single idempotent insert, guarded
+> by a unique constraint on `stripe_checkout_session_id`, cannot leave a wrong row
+> behind for a later delivery to heal. Kept for the reasoning; see §3.7 and
+> [payment-does-not-invalidate-signature.md](./payment-does-not-invalidate-signature.md).
 
 [`src/app/api/stripe/webhook/route.ts`](../../src/app/api/stripe/webhook/route.ts):
 the insert into `PaymentHistory` is unchanged. The unconditional update is replaced by:
@@ -322,12 +334,21 @@ need its own spec.
 **One currency source (done).** The sales office is now the single answer to
 "what is this quote priced in", on every surface:
 
-| Surface                                              | Resolves through                                                          |
-| ---------------------------------------------------- | ------------------------------------------------------------------------- |
-| Quote list, quote detail, Billing, Contract, create  | `useEventCurrency` -> `useOfficeCurrencies` -> `resolveOfficeCurrency`    |
-| Public quote, PDF, quote email (`quoteDocumentData`) | `resolveEventCurrency` (server, same rule)                                |
-| Checkout session (`create-checkout`)                 | `loadEventPaymentContext`                                                 |
-| Webhook reconciliation                               | `resolveEventCurrencyByEventId`, passed into `reconcileEventInstallments` |
+| Surface                                                 | Resolves through                                                       |
+| ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Quote list, quote detail, Billing, Contract, create     | `useEventCurrency` -> `useOfficeCurrencies` -> `resolveOfficeCurrency` |
+| Public quote, PDF, quote email (`quoteDocumentData`)    | `resolveEventCurrency` (server, same rule)                             |
+| Checkout session (`create-checkout`)                    | `loadEventPaymentContext`                                              |
+| Sales-office picker on create/edit (`salesOfficeLabel`) | `useSalesOffices` -> `useOfficeCurrencies` -> `resolveOfficeCurrency`  |
+
+> **Amended 2026-09-03.** Two rows moved. The webhook resolved a currency only to
+> feed the reconcile, and both are gone. The office picker is new to the table but
+> was always a currency surface: it re-derived `(CAD)` / `(USD)` from the address
+> province — the _fallback_ half of `resolveOfficeCurrency` — so Ontario Office,
+> which carries no province and takes CAD from its QuickBooks connection, was
+> offered as USD while the quote it produced was priced, invoiced and charged in
+> CAD. The rule is the one this section states: a label follows the resolution,
+> never the address.
 
 `EventLineItems.currency` and `PaymentInstallments.currency` are now read as
 what they always were — a copy written when the quote was priced — and serve
@@ -367,19 +388,28 @@ The only permitted readers are (a) the webhook, when comparing before a write, a
 
 Call sites to migrate as part of this task:
 
-| Call site                                                    | Today                        | After                                     |
-| ------------------------------------------------------------ | ---------------------------- | ----------------------------------------- |
-| `BillingTab` summary / schedule / history                    | reads `status`               | allocation                                |
-| `PayInvoiceTab` `paidCents`, `overdueCents`, schedule badges | reads `status`               | allocation                                |
-| **`QuotePdfDocument.tsx:343` + `statusLabel`**               | reads `status`               | allocation                                |
-| `QuotePublicView` schedule                                   | reads `status`               | allocation                                |
-| `quoteDocumentData.paymentSchedule`                          | passes `status` through      | carries `allocatedCents` + derived status |
-| `fetchPaymentInstallments`, `syncPaymentInstallments`        | write/read `status`          | unchanged (cache maintenance)             |
-| `buildDefaultPaymentSchedule`, `EditPaymentScheduleModal`    | write `"unpaid"` on new rows | unchanged                                 |
+| Call site                                                    | Today                        | After                                      |
+| ------------------------------------------------------------ | ---------------------------- | ------------------------------------------ |
+| `BillingTab` summary / schedule / history                    | reads `status`               | allocation                                 |
+| `PayInvoiceTab` `paidCents`, `overdueCents`, schedule badges | reads `status`               | allocation                                 |
+| **`QuotePdfDocument.tsx:343` + `statusLabel`**               | reads `status`               | allocation                                 |
+| `QuotePublicView` schedule                                   | reads `status`               | allocation                                 |
+| `quoteDocumentData.paymentSchedule`                          | passes `status` through      | carries `allocatedCents` + derived status  |
+| `fetchPaymentInstallments`, `syncPaymentInstallments`        | write/read `status`          | stopped touching it — the columns are gone |
+| `buildDefaultPaymentSchedule`, `EditPaymentScheduleModal`    | write `"unpaid"` on new rows | unchanged                                  |
 
 The PDF is the sharpest case: it is a document sent to a client, and today it can
 state that a $3,600 installment is "paid" because $1 arrived. `quoteStrings` needs a
 `statusPartial` entry (`en: "partial"`, `fr: "partiel"`) for `statusLabel`.
+
+> **The reader this table missed (2026-09-03).** `buildQuoteDocumentData` selects
+> its installments with a raw PostgREST string that named `status` among the
+> columns. A string is invisible to `tsc`, so dropping the column
+> did not break the build — it broke the request at runtime, the installments came
+> back `null`, and the Pay tab, which renders its schedule only when it has one,
+> silently stopped showing the client what they had agreed to pay and when. When
+> a column leaves, grep the raw selects; the type checker will not. Covered now by
+> an e2e that reads the schedule off the rendered public page.
 
 ### 3.8 Concurrency (Q11)
 
@@ -552,6 +582,13 @@ three-state badge, so a client who paid $1 against a $3,600 installment stops
 receiving a document that calls it paid. `overdueCents` subtracts allocated amounts
 per installment instead of one global `paidCents`, removing the existing
 double-subtraction when a targeted payment exists.
+
+> **Shipped as `overdueOwedCents`, and the client never reads the word (2026-09-03).**
+> The figure covers every installment whose due date has _arrived_, which includes
+> today's. Calling that "overdue" on the morning it falls due accuses a customer of
+> being late when they are not, so the copy says "Due" / "À payer"
+> (`quoteStrings.due`, `dueNoticeSuffix`) and a guard test keeps the old wording out
+> of the dictionary. The field name still says overdue; the badge does not.
 
 ---
 

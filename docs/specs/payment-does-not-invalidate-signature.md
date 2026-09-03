@@ -1,6 +1,7 @@
 # Spec: Paying an installment must not invalidate the contract signature
 
-Status: **DRAFT — awaiting "Approved"**
+Status: **Implemented** (2026-09-03) — migrations applied, columns dropped,
+`reconcileInstallments.ts` deleted
 Owner: quotesAndBookings / payments + quote staleness
 Routes affected:
 
@@ -23,7 +24,8 @@ The chain, confirmed in code:
 
 1. `checkout.session.completed` → the webhook inserts into `PaymentHistory`, then calls
    `reconcileEventInstallments`, which writes `PaymentInstallments.status` / `paid_at`
-   ([reconcileInstallments.ts:143](../../src/features/quotesAndBookings/server/reconcileInstallments.ts)).
+   (`server/reconcileInstallments.ts:143`, deleted by this spec —
+   [a5c5088](https://github.com/joshbleacherrentals/bleacher_rentals/commit/a5c5088)).
 2. `recompute_quote_hashes_installments` fires. The canonical document for **both**
    hashes serializes each installment as `{due, amount, status}`
    ([20260804120000_quote_content_hash.sql](../../supabase/migrations/20260804120000_quote_content_hash.sql)),
