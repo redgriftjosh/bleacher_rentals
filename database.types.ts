@@ -2558,8 +2558,6 @@ export type Database = {
           due_date: string
           event_uuid: string
           id: string
-          paid_at: string | null
-          status: Database["public"]["Enums"]["payment_installment_status"]
         }
         Insert: {
           amount_cents: number
@@ -2568,8 +2566,6 @@ export type Database = {
           due_date: string
           event_uuid: string
           id?: string
-          paid_at?: string | null
-          status?: Database["public"]["Enums"]["payment_installment_status"]
         }
         Update: {
           amount_cents?: number
@@ -2578,8 +2574,6 @@ export type Database = {
           due_date?: string
           event_uuid?: string
           id?: string
-          paid_at?: string | null
-          status?: Database["public"]["Enums"]["payment_installment_status"]
         }
         Relationships: [
           {

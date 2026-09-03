@@ -6,16 +6,14 @@ const inst = (id: string, dueDate: string, amountCents: number): PaymentInstallm
   id,
   dueDate,
   amountCents,
-  status: "unpaid",
 });
 
-const existing = (
-  id: string,
-  dueDate: string,
-  amountCents: number,
-  status = "unpaid",
-  currency = "USD",
-) => ({ id, dueDate, amountCents, status, currency });
+const existing = (id: string, dueDate: string, amountCents: number, currency = "USD") => ({
+  id,
+  dueDate,
+  amountCents,
+  currency,
+});
 
 const paid = (installmentId: string, amountCents: number, status = "succeeded") => ({
   installmentId,
@@ -64,7 +62,7 @@ describe("diffSchedule", () => {
 
   it("rewrites rows when the quote currency changes, even if nothing else did", () => {
     const next = [inst("a", "2026-08-31", 100000)];
-    const diff = diffSchedule([existing("a", "2026-08-31", 100000, "unpaid", "USD")], next, "CAD");
+    const diff = diffSchedule([existing("a", "2026-08-31", 100000, "USD")], next, "CAD");
 
     expect(diff.toUpdate).toEqual(next);
     expect(diff.toDelete).toEqual([]);
@@ -104,21 +102,6 @@ describe("describeBlockedRemovals", () => {
 
   it("ignores payments that never succeeded", () => {
     expect(describeBlockedRemovals(["a"], rows, [paid("a", 100000, "failed")], "USD")).toBeNull();
-  });
-
-  it("still refuses when the row is marked paid but no payment rows are local", () => {
-    // PaymentHistory may not have synced to this device. Allowing the delete
-    // here would fail on upload and stall the sync queue instead of telling
-    // anyone, so the cached flag is treated as evidence of money.
-    const message = describeBlockedRemovals(
-      ["a"],
-      [existing("a", "2026-08-31", 100000, "paid")],
-      [],
-      "USD",
-    );
-
-    expect(message).toMatch(/marked paid/i);
-    expect(message).toMatch(/cannot be removed/i);
   });
 
   it("names every blocked installment, not just the first", () => {

@@ -45,7 +45,7 @@ export function buildDefaultPaymentSchedule(
   }
 
   return [
-    { id: idFn(), dueDate: today, amountCents: firstHalf, status: "unpaid" },
-    { id: idFn(), dueDate: secondDate, amountCents: secondHalf, status: "unpaid" },
+    { id: idFn(), dueDate: today, amountCents: firstHalf },
+    { id: idFn(), dueDate: secondDate, amountCents: secondHalf },
   ];
 }

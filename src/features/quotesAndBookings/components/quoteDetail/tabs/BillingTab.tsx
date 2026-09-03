@@ -183,19 +183,13 @@ export function BillingTab({
   const storedIsQbo = useEventIsQbo(quote.id);
   const perms = usePermissionsStore();
 
-  // Every figure on this tab comes from the money in PaymentHistory, never from
-  // PaymentInstallments.status — that flag is a cache of this same computation.
+  // Every figure on this tab comes from the money in PaymentHistory. The
+  // schedule supplies only the terms — what is owed, and when.
   // See docs/specs/payment-accounting-truth.md.
   const allocation = useMemo(
     () => allocatePayments(installments, payments, currency),
     [installments, payments, currency],
   );
-
-  // The schedule claims something was paid, but no payment rows reached us —
-  // the PowerSync sync-rule failure mode. Reporting "$0.00 received" here would
-  // be a confident lie, so the tab declines to answer instead.
-  const paymentDataMissing =
-    !paymentsLoading && payments.length === 0 && installments.some((i) => i.status === "paid");
 
   const receivedCents = allocation.totalReceivedCents;
   const balanceDueCents = Math.max(0, contractTotalCents - receivedCents);
@@ -234,14 +228,6 @@ export function BillingTab({
 
   return (
     <div className="space-y-6">
-      {paymentDataMissing && (
-        <div className="border border-red-200 bg-red-50 text-red-800 text-sm rounded p-3">
-          <span className="font-semibold">Payment data unavailable.</span> This event has paid
-          installments but no payment records reached this device, so the amounts below cannot be
-          trusted. Check your connection, or contact a developer if it persists.
-        </div>
-      )}
-
       {allocation.foreignCurrencyPayments.length > 0 && (
         <div className="border border-amber-200 bg-amber-50 text-amber-800 text-sm rounded p-3">
           {allocation.foreignCurrencyPayments.length === 1 ? "1 payment" : "Some payments"} in{" "}

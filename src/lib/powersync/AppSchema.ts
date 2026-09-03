@@ -902,8 +902,6 @@ const PaymentInstallmentsCols = {
   currency: column.text,
   due_date: column.text,
   event_uuid: column.text,
-  paid_at: column.text,
-  status: column.text,
 } satisfies PowerSyncColsFor<"PaymentInstallments">;
 const PaymentInstallments = new Table(PaymentInstallmentsCols, {
   indexes: { event_uuid: ["event_uuid"] },

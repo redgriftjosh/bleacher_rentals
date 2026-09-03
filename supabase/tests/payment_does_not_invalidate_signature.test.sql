@@ -110,22 +110,10 @@ BEGIN
   ASSERT h_content_2 = h_content, 'a completing payment leaves content_hash unchanged';
   ASSERT v_status = 'active', 'a completing payment leaves the signature active';
 
-  -- The write that actually caused the bug. Recording a payment does not touch
-  -- PaymentInstallments by itself — the webhook's reconcile step did, setting
-  -- status/paid_at, and THAT is what moved the hash. Until Migration B removes
-  -- the columns, reproduce that write directly.
-  --
-  -- TEMPORARY: delete this block together with the columns (Migration B); at
-  -- that point the guarantee is structural — there is nothing left to write.
-  UPDATE "PaymentInstallments" SET status = 'paid', paid_at = now() WHERE id = v_inst_a;
-
-  SELECT contract_hash, content_hash INTO h_contract_2, h_content_2
-  FROM "Events" WHERE id = v_event;
-  SELECT status INTO v_status FROM "ContractSignatures" WHERE id = v_sig;
-
-  ASSERT h_contract_2 = h_contract, 'writing installment status leaves contract_hash unchanged';
-  ASSERT h_content_2 = h_content, 'writing installment status leaves content_hash unchanged';
-  ASSERT v_status = 'active', 'writing installment status leaves the signature active';
+  -- The write that actually caused the bug was the webhook's reconcile step
+  -- setting PaymentInstallments.status / paid_at. Those columns no longer
+  -- exist, so the guarantee above is now structural: there is nothing on the
+  -- schedule row for a payment to write.
 
   -- ── T3: the real contract terms still invalidate ─────────────────────────
   -- Guard against over-fixing. Each of these is a term the client agreed to.

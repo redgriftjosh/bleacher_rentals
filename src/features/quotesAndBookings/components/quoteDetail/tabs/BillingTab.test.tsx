@@ -37,8 +37,6 @@ function installment(over: object = {}) {
     dueDate: "2026-08-31",
     amountCents: 270000,
     currency: "USD",
-    status: "unpaid",
-    paidAt: null,
     ...over,
   };
 }
@@ -82,6 +80,20 @@ describe("BillingTab", () => {
     expect(html).toContain("$4,998.00"); // balance due
     expect(html).not.toContain("No payments recorded yet");
     expect(html).toContain("Krista Timmermans");
+  });
+
+  it("shows an installment nobody has paid as unpaid", () => {
+    // The schedule row carries no payment state of its own any more — only the
+    // term. "Unpaid" here is derived from PaymentHistory having nothing in it.
+    // See docs/specs/payment-does-not-invalidate-signature.md §6.
+    mockInstallments.mockReturnValue([installment({ amountCents: 270000 })]);
+    mockPayments.mockReturnValue([]);
+
+    const html = render(270000);
+
+    expect(html).toContain("Unpaid");
+    expect(html).not.toContain("Partial");
+    expect(html).toContain("$2,700.00"); // the whole balance is still owed
   });
 
   it("shows a partial payment as partial, not paid (Bug 1)", () => {
@@ -150,17 +162,6 @@ describe("BillingTab", () => {
     expect(html).toContain("not included in this balance");
     expect(html).toContain("CAD");
     expect(html).toContain("$1,000.00"); // full balance still due
-  });
-
-  it("declines to answer when payment data has not synced (E8)", () => {
-    // Installments say something was paid, but no payment rows arrived — the
-    // sync-rule failure mode. Reporting $0.00 received would be a confident lie.
-    mockInstallments.mockReturnValue([installment({ status: "paid", paidAt: "2026-08-31" })]);
-    mockPayments.mockReturnValue([]);
-
-    const html = render(270000);
-
-    expect(html).toContain("Payment data unavailable");
   });
 
   it("keeps Record Payment visibly disabled until manual entry exists", () => {

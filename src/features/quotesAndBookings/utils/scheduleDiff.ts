@@ -5,8 +5,7 @@ import { formatMoney } from "./formatMoney";
 /**
  * Saving a quote used to delete every installment of the event and re-insert
  * the set, even when one date had changed. The rows came back with the same
- * ids, but the delete still fired — breaking the payments that point at them
- * and wiping the paid cache on rows nobody touched.
+ * ids, but the delete still fired — breaking the payments that point at them.
  *
  * These two functions decide what a save should actually do, and when it must
  * refuse. See docs/specs/payment-accounting-truth.md §4.
@@ -16,7 +15,6 @@ export type ExistingInstallment = {
   id: string;
   dueDate: string;
   amountCents: number;
-  status: string | null;
   currency: string | null;
 };
 
@@ -114,9 +112,6 @@ export function describeBlockedRemovals(
       if (cents) {
         return [`${formatDueDate(row.dueDate)} (${formatMoney(cents, currency)} in payments)`];
       }
-      // PaymentHistory may not have reached this device. A cached "paid" flag is
-      // still evidence that money exists, so it blocks too.
-      if (row.status === "paid") return [`${formatDueDate(row.dueDate)} (marked paid)`];
       return [];
     });
 

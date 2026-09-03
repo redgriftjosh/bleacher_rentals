@@ -9,17 +9,18 @@ type Row = {
   due_date: string | null;
   amount_cents: number | null;
   currency: string | null;
-  status: string | null;
-  paid_at: string | null;
 };
 
+/**
+ * One row of the payment schedule: what is owed and when, nothing about what
+ * has arrived. Paid/due is derived from PaymentHistory by `allocatePayments`
+ * wherever it is shown — see docs/specs/payment-accounting-truth.md §3.7.
+ */
 export type PaymentInstallmentRow = {
   id: string;
   dueDate: string;
   amountCents: number;
   currency: string;
-  status: "unpaid" | "paid";
-  paidAt: string | null;
 };
 
 export function usePaymentInstallments(eventId: string | null) {
@@ -27,7 +28,7 @@ export function usePaymentInstallments(eventId: string | null) {
     () =>
       db
         .selectFrom("PaymentInstallments")
-        .select(["id", "due_date", "amount_cents", "currency", "status", "paid_at"])
+        .select(["id", "due_date", "amount_cents", "currency"])
         .where("event_uuid", "=", eventId ?? "")
         .orderBy("due_date", "asc")
         .compile(),
@@ -43,8 +44,6 @@ export function usePaymentInstallments(eventId: string | null) {
         dueDate: r.due_date ?? "",
         amountCents: r.amount_cents ?? 0,
         currency: r.currency ?? "USD",
-        status: (r.status as "unpaid" | "paid") ?? "unpaid",
-        paidAt: r.paid_at,
       })),
     [data],
   );

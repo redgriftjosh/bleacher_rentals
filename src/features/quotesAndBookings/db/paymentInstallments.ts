@@ -14,7 +14,6 @@ type StoredInstallmentRow = {
   due_date: string | null;
   amount_cents: number | null;
   currency: string | null;
-  status: string | null;
 };
 
 type StoredPaymentRow = {
@@ -27,7 +26,7 @@ async function loadExisting(eventUuid: string): Promise<ExistingInstallment[]> {
   const rows = await typedGetAll(
     db
       .selectFrom("PaymentInstallments")
-      .select(["id", "due_date", "amount_cents", "currency", "status"])
+      .select(["id", "due_date", "amount_cents", "currency"])
       .where("event_uuid", "=", eventUuid)
       .compile(),
     expect<StoredInstallmentRow>(),
@@ -38,7 +37,6 @@ async function loadExisting(eventUuid: string): Promise<ExistingInstallment[]> {
     dueDate: r.due_date ?? "",
     amountCents: r.amount_cents ?? 0,
     currency: r.currency,
-    status: r.status,
   }));
 }
 
@@ -46,8 +44,8 @@ async function loadExisting(eventUuid: string): Promise<ExistingInstallment[]> {
  * Sync payment installments for an event via PowerSync.
  *
  * A save writes only what actually changed. It used to delete every installment
- * and re-insert the set, which broke the payments pointing at those rows and
- * reset `paid_at` on rows nobody had touched. Removing an installment that has
+ * and re-insert the set, which broke the payments pointing at those rows.
+ * Removing an installment that has
  * money against it is refused outright — see
  * docs/specs/payment-accounting-truth.md §4.
  *
@@ -92,8 +90,6 @@ export async function syncPaymentInstallments(
   }
 
   for (const inst of diff.toUpdate) {
-    // Deliberately not `status` or `paid_at`: those are a cache of the money in
-    // PaymentHistory, and editing a due date must not claim anything about it.
     await typedExecute(
       db
         .updateTable("PaymentInstallments")
@@ -117,8 +113,6 @@ export async function syncPaymentInstallments(
           due_date: inst.dueDate || null,
           amount_cents: inst.amountCents,
           currency: currency,
-          status: inst.status,
-          paid_at: null,
           created_at: new Date().toISOString(),
         })
         .compile(),
@@ -130,7 +124,6 @@ type InstallmentRow = {
   id: string;
   due_date: string | null;
   amount_cents: number | null;
-  status: string | null;
 };
 
 /**
@@ -139,7 +132,7 @@ type InstallmentRow = {
 export async function fetchPaymentInstallments(eventUuid: string): Promise<PaymentInstallment[]> {
   const compiled = db
     .selectFrom("PaymentInstallments")
-    .select(["id", "due_date", "amount_cents", "status"])
+    .select(["id", "due_date", "amount_cents"])
     .where("event_uuid", "=", eventUuid)
     .orderBy("due_date", "asc")
     .compile();
@@ -150,6 +143,5 @@ export async function fetchPaymentInstallments(eventUuid: string): Promise<Payme
     id: r.id,
     dueDate: r.due_date ?? "",
     amountCents: r.amount_cents ?? 0,
-    status: (r.status as "unpaid" | "paid") ?? "unpaid",
   }));
 }
