@@ -316,6 +316,41 @@ describe("POST /api/stripe/webhook", () => {
     expect(mockUpdateEq).not.toHaveBeenCalled();
   });
 
+  // `amount_cents <> 0` (20260904120000) made zero unwritable. A session that
+  // moved no money has nothing to record, and returning 500 for it would ask
+  // Stripe to retry a delivery that can never succeed — for three days.
+  describe("a session that moved no money", () => {
+    it.each([
+      ["zero", 0],
+      ["null", null],
+      ["absent", undefined],
+    ])("acknowledges a %s amount_total instead of failing forever", async (_label, amount) => {
+      mockConstructEvent.mockReturnValue(checkoutEvent({ session: { amount_total: amount } }));
+
+      const res = await POST(makeRequest("{}", { signature: "sig" }));
+
+      expect(res.status).toBe(200);
+      expect((await res.json()).received).toBe(true);
+      expect(mockInsert).not.toHaveBeenCalled();
+    });
+
+    it("sends no payment-made emails for it", async () => {
+      mockConstructEvent.mockReturnValue(checkoutEvent({ session: { amount_total: 0 } }));
+
+      await POST(makeRequest("{}", { signature: "sig" }));
+
+      expect(mockSendTriggerEmail).not.toHaveBeenCalled();
+    });
+
+    it("still records an ordinary amount", async () => {
+      mockConstructEvent.mockReturnValue(checkoutEvent({ session: { amount_total: 15000 } }));
+
+      await POST(makeRequest("{}", { signature: "sig" }));
+
+      expect(mockInsert).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("returns 500 on a non-duplicate insert error so Stripe retries", async () => {
     mockConstructEvent.mockReturnValue(checkoutEvent());
     mockInsert.mockResolvedValue({ error: { code: "08006", message: "connection failure" } });

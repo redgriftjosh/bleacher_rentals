@@ -34,6 +34,11 @@ export type RecordPaymentDialogProps = {
   onOpenChange: (open: boolean) => void;
   eventId: string;
   currency: Currency;
+  /**
+   * Whether `currency` is the office's real answer yet (§3.5, E5). Required, so
+   * a caller cannot let the fallback through by omission.
+   */
+  currencyResolved: boolean;
   installments: InstallmentAllocation[];
   defaultPayerName: string;
   recordedByUserUuid: string | null;
@@ -52,6 +57,7 @@ export function RecordPaymentDialog({
   onOpenChange,
   eventId,
   currency,
+  currencyResolved,
   installments,
   defaultPayerName,
   recordedByUserUuid,
@@ -60,7 +66,7 @@ export function RecordPaymentDialog({
   const [draft, setDraft] = useState(() => emptyDraft({ payerName: defaultPayerName, today }));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const state = evaluateRecordPaymentForm(draft, today, { isSubmitting });
+  const state = evaluateRecordPaymentForm(draft, today, { currencyResolved, isSubmitting });
 
   // Chained, like the QuickBooks flag on the tab behind this dialog: a second
   // click cannot overtake the first and record the payment twice.
@@ -158,6 +164,11 @@ export function RecordPaymentDialog({
               autoComplete="off"
             />
             {state.amountError && <p className="text-xs text-red-600 mt-1">{state.amountError}</p>}
+            {/* Not an error the user made, so it is not styled as one — they are
+                waiting on the office's currency and can only wait. */}
+            {state.currencyError && (
+              <p className="text-xs text-amber-700 mt-1">{state.currencyError}</p>
+            )}
             {state.isNegative && (
               <p className="text-xs text-red-700 mt-1 border border-red-200 bg-red-50 rounded p-2">
                 This records money going <strong>out</strong> (refund, bounced check, or

@@ -83,7 +83,7 @@ export async function recordManualPayment(input: RecordManualPaymentInput): Prom
         recorded_by_user_uuid: input.recordedByUserUuid,
         paid_at: input.paidAt,
         created_at: new Date().toISOString(),
-      } as any)
+      })
       .compile(),
   );
 }

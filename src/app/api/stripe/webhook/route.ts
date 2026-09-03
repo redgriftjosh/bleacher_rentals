@@ -56,6 +56,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No eventId in metadata" }, { status: 400 });
     }
 
+    // A session that moved no money has no payment to record, and since
+    // `payment_history_amount_nonzero_check` (20260904120000) the row would be
+    // refused anyway. Ending in the generic 500 below would be the worst of both:
+    // Stripe would retry a delivery whose payload cannot change, for three days,
+    // and eventually disable the endpoint. Acknowledge and stop.
+    const amountCents = session.amount_total ?? 0;
+    if (amountCents === 0) {
+      console.log(
+        "[Stripe Webhook] Session",
+        session.id,
+        "completed with no amount — nothing to record",
+      );
+      return NextResponse.json({ received: true });
+    }
+
     const supabase = getSupabaseAdmin();
 
     // Idempotency: Stripe retries webhook deliveries, so the same checkout
@@ -116,7 +131,7 @@ export async function POST(req: NextRequest) {
       // The live link can be re-pointed as a schedule changes; this one records
       // what the client actually paid for and is never rewritten.
       intended_installment_id: installmentId || null,
-      amount_cents: session.amount_total ?? 0,
+      amount_cents: amountCents,
       currency: (session.currency ?? "usd").toUpperCase(),
       status: "succeeded",
       stripe_payment_intent_id:
@@ -167,7 +182,7 @@ export async function POST(req: NextRequest) {
 
     // Fire the "payment made" automatic emails to the client and account
     // manager (best-effort — never fail the webhook on an email problem).
-    const payment = { amountPaidCents: session.amount_total ?? 0 };
+    const payment = { amountPaidCents: amountCents };
     for (const trigger of [PAYMENT_MADE_CLIENT, PAYMENT_MADE_AM]) {
       try {
         await sendTriggerEmail({

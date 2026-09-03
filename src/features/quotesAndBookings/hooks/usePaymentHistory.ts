@@ -20,6 +20,7 @@ type Row = {
   payment_method_type: string | null;
   payer_name: string | null;
   payer_email: string | null;
+  notes: string | null;
   stripe_receipt_url: string | null;
   paid_at: string | null;
   created_at: string | null;
@@ -38,6 +39,7 @@ export type PaymentHistoryRow = {
   paymentMethodType: string | null;
   payerName: string;
   payerEmail: string | null;
+  notes: string | null;
   receiptUrl: string | null;
   paidAt: string | null;
   createdAt: string;
@@ -62,6 +64,7 @@ export function usePaymentHistory(eventId: string | null) {
           "payment_method_type",
           "payer_name",
           "payer_email",
+          "notes",
           "stripe_receipt_url",
           "paid_at",
           "created_at",
@@ -90,6 +93,7 @@ export function usePaymentHistory(eventId: string | null) {
         paymentMethodType: r.payment_method_type,
         payerName: r.payer_name ?? "Unknown",
         payerEmail: r.payer_email,
+        notes: r.notes,
         receiptUrl: r.stripe_receipt_url,
         paidAt: r.paid_at,
         createdAt: r.created_at ?? "",

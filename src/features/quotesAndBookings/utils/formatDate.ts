@@ -20,3 +20,14 @@ export function formatDateTime(d: string | null): string {
   const dt = DateTime.fromISO(d);
   return dt.isValid ? dt.toFormat("MMM d, yyyy 'at' h:mm a") : "—";
 }
+
+/**
+ * The clock part on its own, for a two-line date cell whose first line is
+ * already `formatDate`. Same parse, same locale rules — so the two lines
+ * cannot disagree with `formatDateTime` elsewhere on the page.
+ */
+export function formatTime(d: string | null): string {
+  if (!d) return "";
+  const dt = DateTime.fromISO(d);
+  return dt.isValid ? dt.toFormat("h:mm a") : "";
+}

@@ -9,11 +9,12 @@ import { setEventIsQbo } from "../../../db/setEventIsQbo";
 import { useEventIsQbo } from "../../../hooks/useEventIsQbo";
 import { usePaymentInstallments } from "../../../hooks/usePaymentInstallments";
 import { usePaymentHistory, PaymentHistoryRow } from "../../../hooks/usePaymentHistory";
-import { useEventCurrency } from "../../../hooks/useEventCurrency";
+import { useEventCurrencyState } from "../../../hooks/useEventCurrency";
 import { allocatePayments, type Allocation } from "../../../utils/allocatePayments";
 import { formatMoney } from "../../../utils/formatMoney";
 import { Currency } from "../../../types/quoteTypes";
-import { formatDate, formatDateTime } from "../../../utils/formatDate";
+import { formatDate, formatDateTime, formatTime } from "../../../utils/formatDate";
+import { describeAppliedTo } from "../../../utils/describeAppliedTo";
 import { paymentMethodLabel } from "../../../types/paymentTypes";
 import { useUserNames } from "../../../hooks/useUserNames";
 import dynamic from "next/dynamic";
@@ -22,6 +23,13 @@ import dynamic from "next/dynamic";
 // own form state. It has no business in the tab's bundle.
 const RecordPaymentDialog = dynamic(
   () => import("./RecordPaymentDialog").then((m) => m.RecordPaymentDialog),
+  { ssr: false },
+);
+
+// Same reasoning as above: a read-only detail view nobody opens until they
+// click a row.
+const PaymentDetailDialog = dynamic(
+  () => import("./PaymentDetailDialog").then((m) => m.PaymentDetailDialog),
   { ssr: false },
 );
 
@@ -114,10 +122,17 @@ function PaymentScheduleTable({
 }
 
 /**
- * Where a payment's money actually sits now — not the installment it was
- * originally aimed at, which a schedule edit can leave pointing at nothing.
+ * The compact reading of where a payment's money sits, for the ledger row.
+ *
+ * Stacked rather than run together on one line: "Due Sep 10 (C$11,675.00) ·
+ * Due Sep 3 (C$662.50) · Unapplied (C$662.50)" is what forced the Applied To
+ * column wide enough to squash every other column on the tab. Beyond two
+ * pieces it stops enumerating and says how many are left — the full breakdown
+ * is one click away in PaymentDetailDialog.
  */
-function AppliedTo({
+const APPLIED_TO_PREVIEW_PARTS = 2;
+
+function AppliedToCell({
   payment,
   allocation,
   currency,
@@ -126,45 +141,51 @@ function AppliedTo({
   allocation: Allocation;
   currency: Currency;
 }) {
-  const detail = allocation.byPayment.find((p) => p.paymentId === payment.id);
+  const applied = describeAppliedTo(payment, allocation);
 
-  if (detail?.excluded === "currency") {
-    return <span className="text-amber-700">Not counted ({payment.currency})</span>;
+  if (applied.kind === "excluded") {
+    return applied.reason === "currency" ? (
+      <span className="text-amber-700">Not counted ({payment.currency})</span>
+    ) : (
+      <span className="text-gray-400">Not counted ({payment.status})</span>
+    );
   }
-  if (detail?.excluded === "status") {
-    return <span className="text-gray-400">Not counted ({payment.status})</span>;
-  }
-  if (!detail || detail.parts.length === 0) {
+  if (applied.kind === "unapplied") {
     return <span className="text-gray-400">Unapplied</span>;
   }
 
-  const dueDates = new Map(
-    allocation.installments.map((i) => [i.installmentId, formatDate(i.dueDate)]),
-  );
+  const lines: { key: string; label: string; cents: number | null; muted: boolean }[] =
+    applied.parts.map((part) => ({
+      key: part.installmentId,
+      label: `Due ${formatDate(part.dueDate)}`,
+      cents: applied.showAmounts ? part.cents : null,
+      muted: false,
+    }));
 
-  // Split money, or money the schedule cannot absorb, has to name its pieces —
-  // otherwise "Due Aug 31" would quietly stand for a payment twice that size.
-  // A refund's pieces are negative: it names the installment it reopened, and
-  // `!== 0` rather than `> 0` is what keeps that visible instead of blank.
-  const leftover = detail.unallocatedCents;
-  const showAmounts = detail.parts.length > 1 || leftover !== 0 || payment.amountCents < 0;
+  if (applied.unallocatedCents !== 0) {
+    lines.push({
+      key: "unapplied",
+      label: "Unapplied",
+      cents: applied.unallocatedCents,
+      muted: true,
+    });
+  }
+
+  const shown = lines.slice(0, APPLIED_TO_PREVIEW_PARTS);
+  const hidden = lines.length - shown.length;
 
   return (
-    <span>
-      {detail.parts.map((part, i) => (
-        <span key={part.installmentId}>
-          {i > 0 && " · "}
-          Due {dueDates.get(part.installmentId) ?? "—"}
-          {showAmounts && ` (${formatMoney(part.cents, currency)})`}
+    <div className="flex flex-col gap-0.5">
+      {shown.map((line) => (
+        <span key={line.key} className={line.muted ? "text-gray-400" : "text-gray-600"}>
+          {line.label}
+          {line.cents !== null && (
+            <span className="text-gray-400"> · {formatMoney(line.cents, currency)}</span>
+          )}
         </span>
       ))}
-      {leftover !== 0 && (
-        <span className="text-gray-400">
-          {detail.parts.length > 0 && " · "}
-          Unapplied ({formatMoney(leftover, currency)})
-        </span>
-      )}
-    </span>
+      {hidden > 0 && <span className="text-gray-400">+{hidden} more</span>}
+    </div>
   );
 }
 
@@ -179,12 +200,15 @@ export function BillingTab({
 }) {
   const { installments, isLoading } = usePaymentInstallments(quote.id);
   const { payments, isLoading: paymentsLoading } = usePaymentHistory(quote.id);
-  const currency = useEventCurrency(quote.id);
+  // Two answers, deliberately: the value paints the tab, the flag gates the
+  // one place that writes it (§3.5, E5).
+  const { currency, isResolved: currencyResolved } = useEventCurrencyState(quote.id);
   const storedIsQbo = useEventIsQbo(quote.id);
   const perms = usePermissionsStore();
   const staffNames = useUserNames();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [openPaymentId, setOpenPaymentId] = useState<string | null>(null);
 
   // A viewer is anyone who can read the page but holds neither of the roles the
   // RLS insert policy names. Showing them a button the server would refuse is
@@ -198,6 +222,13 @@ export function BillingTab({
     () => allocatePayments(installments, payments, currency),
     [installments, payments, currency],
   );
+
+  // Held by id, not by value: the row keeps showing live data while the dialog
+  // is open, and a payment that syncs away closes it instead of freezing a copy.
+  const openPayment = payments.find((p) => p.id === openPaymentId) ?? null;
+
+  const recordedByName = (p: PaymentHistoryRow) =>
+    p.entrySource === "stripe" ? "Stripe" : (staffNames.get(p.recordedByUserUuid ?? "") ?? "Staff");
 
   const receivedCents = allocation.totalReceivedCents;
   const balanceDueCents = Math.max(0, contractTotalCents - receivedCents);
@@ -266,7 +297,12 @@ export function BillingTab({
               </span>
             </div>
           </div>
-          <div className="flex justify-between text-green-600">
+          {/* Never clamped (§6.5), so it has to be legible going the other
+              way: refunds exceeding receipts is a real state, and a minus sign
+              inside a green figure is not how anyone reads money. */}
+          <div
+            className={`flex justify-between ${receivedCents < 0 ? "text-red-600" : "text-green-600"}`}
+          >
             <span>Payments Received</span>
             <span className="font-semibold">{formatMoney(receivedCents, currency)}</span>
           </div>
@@ -340,64 +376,90 @@ export function BillingTab({
         {paymentsLoading ? (
           <p className="text-sm text-gray-400 py-4 text-center">Loading payments...</p>
         ) : payments.length > 0 ? (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-gray-500 text-xs uppercase tracking-wide">
-                <th className="py-2 font-medium">Date</th>
-                <th className="py-2 font-medium text-right">Amount</th>
-                <th className="py-2 font-medium">Type</th>
-                <th className="py-2 font-medium">Payer</th>
-                <th className="py-2 font-medium">Recorded by</th>
-                <th className="py-2 font-medium">Applied To</th>
-                <th className="py-2 font-medium">Receipt</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments.map((p) => (
-                <tr key={p.id} className="border-b">
-                  <td className="py-2">{formatDateTime(p.paidAt ?? p.createdAt)}</td>
-                  {/* Money out is red with an explicit minus sign — never bare
-                      parentheses, which are easy to miss at a glance. */}
-                  <td
-                    className={`py-2 text-right font-medium ${
-                      p.amountCents < 0 ? "text-red-600" : "text-green-600"
-                    }`}
-                  >
-                    {formatMoney(p.amountCents, p.currency as Currency)}
-                  </td>
-                  <td className="py-2 text-gray-500">
-                    {paymentMethodLabel(p.paymentMethodType, p.entrySource)}
-                    {p.reference && (
-                      <span className="block text-xs text-gray-400">{p.reference}</span>
-                    )}
-                  </td>
-                  <td className="py-2 text-gray-500">{p.payerName}</td>
-                  <td className="py-2 text-gray-500">
-                    {p.entrySource === "stripe"
-                      ? "Stripe"
-                      : (staffNames.get(p.recordedByUserUuid ?? "") ?? "Staff")}
-                  </td>
-                  <td className="py-2 text-gray-500">
-                    <AppliedTo payment={p} allocation={allocation} currency={currency} />
-                  </td>
-                  <td className="py-2">
-                    {p.receiptUrl ? (
-                      <a
-                        href={p.receiptUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-darkBlue underline"
-                      >
-                        View
-                      </a>
-                    ) : (
-                      <span className="text-gray-400">—</span>
-                    )}
-                  </td>
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-gray-500 text-xs uppercase tracking-wide">
+                  <th className="px-3 py-2 font-medium">Date</th>
+                  <th className="px-3 py-2 font-medium text-right">Amount</th>
+                  <th className="px-3 py-2 font-medium">Method</th>
+                  <th className="px-3 py-2 font-medium">Payer</th>
+                  <th className="px-3 py-2 font-medium">Applied To</th>
+                  <th className="px-3 py-2 font-medium text-right">Receipt</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {payments.map((p) => (
+                  /* The whole row is the affordance — a payment has more to it
+                     than fits here, and there is nothing else a click could
+                     mean on a ledger nobody may edit. */
+                  <tr
+                    key={p.id}
+                    tabIndex={0}
+                    aria-label={`Payment details for ${formatMoney(p.amountCents, p.currency as Currency)} from ${p.payerName}`}
+                    onClick={() => setOpenPaymentId(p.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setOpenPaymentId(p.id);
+                      }
+                    }}
+                    className="cursor-pointer align-top hover:bg-blue-50/50 focus:bg-blue-50/50 focus:outline-none"
+                  >
+                    <td className="px-3 py-2.5 whitespace-nowrap">
+                      <span className="block text-gray-900">
+                        {formatDate(p.paidAt ?? p.createdAt)}
+                      </span>
+                      <span className="block text-xs text-gray-400">
+                        {formatTime(p.paidAt ?? p.createdAt)}
+                      </span>
+                    </td>
+                    {/* Money out is red with an explicit minus sign — never bare
+                        parentheses, which are easy to miss at a glance. */}
+                    <td
+                      className={`px-3 py-2.5 text-right font-medium tabular-nums whitespace-nowrap ${
+                        p.amountCents < 0 ? "text-red-600" : "text-green-600"
+                      }`}
+                    >
+                      {formatMoney(p.amountCents, p.currency as Currency)}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className="block text-gray-700 whitespace-nowrap">
+                        {paymentMethodLabel(p.paymentMethodType, p.entrySource)}
+                      </span>
+                      {p.reference && (
+                        <span className="block text-xs text-gray-400">{p.reference}</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className="block text-gray-700">{p.payerName}</span>
+                      {/* Who keyed it in is a footnote to the payer, not a
+                          column of its own — it cost width the amounts needed. */}
+                      <span className="block text-xs text-gray-400">via {recordedByName(p)}</span>
+                    </td>
+                    <td className="px-3 py-2.5 text-xs">
+                      <AppliedToCell payment={p} allocation={allocation} currency={currency} />
+                    </td>
+                    <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                      {p.receiptUrl ? (
+                        <a
+                          href={p.receiptUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-darkBlue underline"
+                        >
+                          View
+                        </a>
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <p className="text-sm text-gray-400 py-4 text-center border rounded">
             No payments recorded yet.
@@ -411,12 +473,24 @@ export function BillingTab({
         </p>
       </div>
 
+      {openPayment && (
+        <PaymentDetailDialog
+          open={true}
+          onOpenChange={(open) => !open && setOpenPaymentId(null)}
+          payment={openPayment}
+          allocation={allocation}
+          currency={currency}
+          recordedBy={recordedByName(openPayment)}
+        />
+      )}
+
       {dialogOpen && (
         <RecordPaymentDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           eventId={quote.id}
           currency={currency}
+          currencyResolved={currencyResolved}
           installments={allocation.installments}
           defaultPayerName={
             [quote.contact?.firstName, quote.contact?.lastName].filter(Boolean).join(" ") || ""

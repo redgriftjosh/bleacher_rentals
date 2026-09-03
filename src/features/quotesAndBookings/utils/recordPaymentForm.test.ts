@@ -13,7 +13,7 @@ const draft = (over: Partial<RecordPaymentDraft> = {}): RecordPaymentDraft => ({
 });
 
 const evaluate = (over: Partial<RecordPaymentDraft> = {}) =>
-  evaluateRecordPaymentForm(draft(over), TODAY);
+  evaluateRecordPaymentForm(draft(over), TODAY, { currencyResolved: true });
 
 describe("evaluateRecordPaymentForm", () => {
   it("starts unsubmittable, and does not scold anyone for not having typed yet", () => {
@@ -124,6 +124,7 @@ describe("evaluateRecordPaymentForm", () => {
   describe("E6: a submission already in flight", () => {
     it("cannot be sent twice", () => {
       const state = evaluateRecordPaymentForm(draft({ amountRaw: "50" }), TODAY, {
+        currencyResolved: true,
         isSubmitting: true,
       });
       expect(state.canSubmit).toBe(false);
@@ -132,6 +133,36 @@ describe("evaluateRecordPaymentForm", () => {
 
   it("is pure — evaluating twice changes nothing", () => {
     const d = draft({ amountRaw: "-1,234.56" });
-    expect(evaluateRecordPaymentForm(d, TODAY)).toEqual(evaluateRecordPaymentForm(d, TODAY));
+    const opts = { currencyResolved: true };
+    expect(evaluateRecordPaymentForm(d, TODAY, opts)).toEqual(
+      evaluateRecordPaymentForm(d, TODAY, opts),
+    );
+  });
+
+  // E5 / §3.5: the event's currency is not a preference, it is a correctness
+  // rule. A row written in the wrong one is excluded from every total and
+  // raises a banner blaming the person who entered it — and the ledger is
+  // append-only, so there is no taking it back. Until the office currency has
+  // actually resolved, this form does not know what it would be writing.
+  describe("E5: a currency that has not resolved yet", () => {
+    const unresolved = (over: Partial<RecordPaymentDraft> = {}) =>
+      evaluateRecordPaymentForm(draft(over), TODAY, { currencyResolved: false });
+
+    it("blocks submission of an otherwise complete form", () => {
+      expect(evaluate({ amountRaw: "50" }).canSubmit).toBe(true);
+      expect(unresolved({ amountRaw: "50" }).canSubmit).toBe(false);
+    });
+
+    it("says why, rather than leaving a dead button", () => {
+      expect(unresolved({ amountRaw: "50" }).currencyError).toMatch(/currency/i);
+    });
+
+    it("blocks a refund just the same — a negative row in the wrong currency is worse", () => {
+      expect(unresolved({ amountRaw: "-50" }).canSubmit).toBe(false);
+    });
+
+    it("says nothing once the currency is known", () => {
+      expect(evaluate({ amountRaw: "50" }).currencyError).toBeNull();
+    });
   });
 });

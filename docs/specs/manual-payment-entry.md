@@ -260,25 +260,32 @@ keep one invariant true for all rows instead of two rules the reader must rememb
 and because the "Applied To" cell can then say _which_ installment a refund reopened
 — which is the question accounting asks.
 
-**Correction, from the implementation (2026-09-03).** A refund names an installment
-only when it was **targeted** at one. An _untargeted_ refund reads
-"Unapplied (−$1,000)" even when the balance visibly moved, and that is correct
-rather than a gap:
+**Correction, from the implementation (2026-09-04 — supersedes the 09-03 note,
+which described behaviour the code does not have).** A refund names the
+installment it reopened, **whether or not it was targeted at one**.
+
+`distributePool` hands each pool movement back to the payments that funded it, in
+canonical order and against the same per-installment deltas the walk produced. So
+an untargeted refund that un-fills installment 2 gets `parts: [{ i2, −100000 }]`,
+not an empty `parts` and a leftover. Verified against S5, whose −$1,000 is
+untargeted and still names installment 2.
+
+The 09-03 note claimed the opposite ("an untargeted refund reads
+'Unapplied (−$1,000)'"). Its _reasoning_ survives and is the rule that still
+holds:
 
 - Placement is computed from aggregates so that a refund and the payment it
-  reverses commute (§3.3). When the pool nets out **positive**, there is no
+  reverses commute (§3.3). When the pool nets out **positive** there is no
   un-fill step at all — the later installments were simply never filled as far.
-  Nothing was reopened, so there is nothing for the refund to name.
-- Attributing one anyway would mean rewriting the _other_ payment's breakdown to
-  claim money it never placed. A payment's parts describe what it did; a
-  scheme that edits them after the fact to make a second row read better is
-  exactly the kind of retrospective re-allocation rev. 4 of the dependency
-  settled against.
+  Nothing was reopened, so there is nothing for the refund to name, and it reads
+  as unapplied. That is the case the note was really about.
+- What is never done is rewriting the _other_ payment's breakdown to claim money
+  it never placed. A payment's parts describe what it did. Attribution flows from
+  the movement a payment funded, not from re-allocating a neighbour's.
 
-Rev. 2's S12 asserted this against S5's untargeted refund, which was the wrong
-scenario for the claim. It now names S3's targeted one, where the behaviour holds
-and is tested. Accounting that wants a refund to name an installment should target
-it in the dialog's **Apply To** — which is exactly what that field is for.
+So the distinction is **whether an installment actually moved**, not whether the
+refund named one. S12 asserts the targeted case (S3); S5 covers the untargeted
+one at unit level.
 
 `AppliedTo` needs two consequent edits: its `leftover > 0` and
 `showAmounts = parts.length > 1 || leftover > 0` conditions become `!== 0`, or a
@@ -724,8 +731,26 @@ Unchanged in shape — they read the allocation, which now accounts for negative
   in another currency would be **excluded from every total** and raise the
   foreign-currency banner (§3.5), so this is a correctness rule, not a preference.
 - **E6 — double submit.** The submit button is disabled for the duration of the
-  write, writes are chained (§6.2), and the insert carries a client-generated `id`,
-  so a retried upload is an idempotent upsert rather than a second payment.
+  write, writes are chained (§6.2), and the insert carries a client-generated
+  `id`, so a **duplicated row is impossible** — a retried upload addresses the
+  same primary key rather than recording a second payment.
+
+  **Corrected 2026-09-04.** This used to say the retry was "an idempotent
+  upsert". It is not, and the reason is worth keeping: the connector replays a
+  `PUT` as `.upsert()`, which is `INSERT … ON CONFLICT DO UPDATE`, and Postgres
+  judges that conflict branch against the table's **UPDATE** policies — of which
+  §3.2 and §4.4 deliberately create none. So a retry of a row that already
+  reached Postgres is refused `42501`, which is fatal to the connector: the local
+  row is discarded and the user is told the change could not be saved, on a
+  payment that was in fact saved.
+
+  No money is lost or doubled, and the server row is correct — the defect is a
+  false alarm, and it is a property of the connector's write shape rather than of
+  this feature. Tracked as D3 in
+  [manual-payment-entry-defects.md](./manual-payment-entry-defects.md); fixing it
+  means teaching the connector that a conflict on an append-only table is "already
+  applied", which is shared infrastructure and a separate decision.
+
 - **E7 — ACH that later fails.** Out of scope as a lifecycle; expressed as a
   negative row. The dialog's ACH hint says so, so accounting is not left guessing.
 - **E8 — PowerSync upload rejected by RLS.** The connector treats a `42501` as

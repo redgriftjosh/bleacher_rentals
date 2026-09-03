@@ -4,10 +4,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 // The tab is a client component wired to PowerSync, Clerk permissions and
 // toasts. Everything except the money logic is stubbed — what is under test is
 // what the numbers say.
-const { mockInstallments, mockPayments, mockPerms } = vi.hoisted(() => ({
+const { mockInstallments, mockPayments, mockPerms, mockCurrencyResolved } = vi.hoisted(() => ({
   mockInstallments: vi.fn(),
   mockPayments: vi.fn(),
   mockPerms: vi.fn(),
+  mockCurrencyResolved: vi.fn(),
 }));
 
 vi.mock("../../../hooks/usePaymentInstallments", () => ({
@@ -16,7 +17,10 @@ vi.mock("../../../hooks/usePaymentInstallments", () => ({
 vi.mock("../../../hooks/usePaymentHistory", () => ({
   usePaymentHistory: () => ({ payments: mockPayments(), isLoading: false }),
 }));
-vi.mock("../../../hooks/useEventCurrency", () => ({ useEventCurrency: () => "USD" }));
+vi.mock("../../../hooks/useEventCurrency", () => ({
+  useEventCurrency: () => "USD",
+  useEventCurrencyState: () => ({ currency: "USD", isResolved: mockCurrencyResolved() }),
+}));
 vi.mock("../../../hooks/useEventIsQbo", () => ({ useEventIsQbo: () => false }));
 vi.mock("../../../db/setEventIsQbo", () => ({ setEventIsQbo: vi.fn() }));
 vi.mock("@/components/toasts/ErrorToast", () => ({ createErrorToast: vi.fn() }));
@@ -62,6 +66,7 @@ function payment(over: object = {}) {
     entrySource: "stripe",
     recordedByUserUuid: null,
     reference: null,
+    notes: null,
     ...over,
   };
 }
@@ -70,6 +75,18 @@ function render(contractTotalCents = 500000, canEdit = true) {
   return renderToStaticMarkup(
     <BillingTab quote={quote} contractTotalCents={contractTotalCents} canEdit={canEdit} />,
   );
+}
+
+/**
+ * Just the "Payments Received" line of the summary.
+ *
+ * The page is full of deliberate green and red — Balance Due is always red, a
+ * history row is coloured by its own sign — so asserting a colour against the
+ * whole document proves nothing about this figure.
+ */
+function paymentsReceivedRow(html: string): string {
+  const start = html.lastIndexOf("<div", html.indexOf("Payments Received"));
+  return html.slice(start, html.indexOf("</div>", html.indexOf("Payments Received")));
 }
 
 /** The three identities the button distinguishes. */
@@ -84,6 +101,7 @@ describe("BillingTab", () => {
     mockInstallments.mockReturnValue([]);
     mockPayments.mockReturnValue([]);
     mockPerms.mockReturnValue(ADMIN);
+    mockCurrencyResolved.mockReturnValue(true);
   });
 
   it("counts a payment made against a quote with no schedule (Bug 2)", () => {
@@ -142,6 +160,41 @@ describe("BillingTab", () => {
     expect(html).toContain("Overpaid by");
     expect(html).toContain("$1,000.00");
     expect(html).not.toContain("-$");
+  });
+
+  // §6.5: the received total is never clamped, so it has to be readable when it
+  // goes the other way. Green money that starts with a minus sign is the one
+  // reading of this figure nobody should have to do twice.
+  describe("a received total that has gone negative (E1)", () => {
+    const refunded = () =>
+      mockPayments.mockReturnValue([
+        payment({ id: "a", amountCents: 100000 }),
+        payment({ id: "b", amountCents: -250000 }),
+      ]);
+
+    it("is shown in red rather than green", () => {
+      refunded();
+
+      const summary = paymentsReceivedRow(render(500000));
+
+      expect(summary).toContain("text-red-600");
+      expect(summary).not.toContain("text-green-600");
+    });
+
+    it("still shows the real figure, unclamped", () => {
+      refunded();
+
+      expect(paymentsReceivedRow(render(500000))).toContain("-$1,500.00");
+    });
+
+    it("leaves the ordinary case green", () => {
+      mockPayments.mockReturnValue([payment({ amountCents: 100000 })]);
+
+      const summary = paymentsReceivedRow(render(500000));
+
+      expect(summary).toContain("text-green-600");
+      expect(summary).not.toContain("text-red-600");
+    });
   });
 
   it("names every installment a split payment landed on", () => {
@@ -276,6 +329,34 @@ describe("BillingTab", () => {
 
       expect(html).toContain("Dana Whitfield");
       expect(html).toContain("check 1041");
+    });
+
+    it("offers every row for opening, since a row cannot show a whole payment", () => {
+      mockPayments.mockReturnValue([payment({ id: "a", amountCents: 200 })]);
+
+      const html = render(500000);
+
+      expect(html).toContain("cursor-pointer");
+      expect(html).toContain("Payment details for $2.00 from Krista Timmermans");
+    });
+
+    it("stops enumerating Applied To past two pieces instead of widening the column", () => {
+      mockInstallments.mockReturnValue([
+        installment({ id: "i1", dueDate: "2026-08-31", amountCents: 100000 }),
+        installment({ id: "i2", dueDate: "2026-09-16", amountCents: 100000 }),
+        installment({ id: "i3", dueDate: "2026-10-01", amountCents: 100000 }),
+      ]);
+      mockPayments.mockReturnValue([payment({ amountCents: 350000 })]);
+
+      const html = render(300000);
+
+      // Two pieces named, the rest counted: the third installment and the
+      // $500 leftover are in the dialog, not in the cell.
+      const cell = html.slice(html.indexOf("Payment History"));
+      expect(cell).toContain("Due Aug 31, 2026");
+      expect(cell).toContain("Due Sep 16, 2026");
+      expect(cell).not.toContain("Due Oct 1, 2026");
+      expect(cell).toContain("+2 more");
     });
 
     it("says corrections are entered as negatives, since nothing can be deleted", () => {

@@ -90,7 +90,7 @@ export const PERMISSIONS: PermissionEntry[] = [
   {
     label: "Payment History",
     description:
-      "The payments and balances on the Billing tab of a quote or booking. Amounts come from what Stripe actually collected, so a partial payment shows as partial rather than closing the whole installment.",
+      "The payments and balances on the Billing tab of a quote or booking. Amounts come from what Stripe actually collected, so a partial payment shows as partial rather than closing the whole installment. Clicking a row opens the full record of that payment — every installment it was applied to, the reference and the notes.",
     category: "Day to Day Operations",
     roles: {
       admin: read(
@@ -102,7 +102,9 @@ export const PERMISSIONS: PermissionEntry[] = [
       developer: none(
         "Unable to even access the pages where they can see quotes, and developer is only meant to work on the developer roadmap.",
       ),
-      viewer: read("Can see payments and balances but cannot change anything."),
+      viewer: read(
+        "Can see payments and balances, and open any payment to read it in full, but cannot change anything.",
+      ),
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },
@@ -121,7 +123,9 @@ export const PERMISSIONS: PermissionEntry[] = [
       developer: none(
         "Unable to even access the pages where they can see quotes, and developer is only meant to work on the developer roadmap.",
       ),
-      viewer: read("Can read the payment history but sees no button — there is nothing to press."),
+      viewer: none(
+        "No. Reading the payment history is a separate thing, and they can still do that.",
+      ),
       driver: none("Drivers only have access to the Driver Mobile App."),
     },
   },
