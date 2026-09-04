@@ -45,57 +45,79 @@ SELECT is(
 );
 
 -- ── The trigger ─────────────────────────────────────────────────────────────
+--
+-- Plain top-level statements + psql's \gset, not a DO block: pgTAP's is()
+-- returns the TAP output line as its result row, and PERFORM (the only way to
+-- call a value-returning function inside plpgsql) throws that return value
+-- away. A PERFORM is() runs the assertion but never emits it, so the plan
+-- count silently drifts from what pg_prove actually sees.
 
-DO $$
-DECLARE
-  user_a    UUID;
-  user_b    UUID;
-  driver_a  UUID;
-  driver_b  UUID;
-  v_tax     INTEGER;
-  v_tax_dec NUMERIC;
-BEGIN
-  INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer)
-  VALUES ('Tax', 'Quebec', 'tax_dec_qc@test.com', 'clerk_tax_dec_qc', false, false)
-  RETURNING id INTO user_a;
+INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer)
+VALUES ('Tax', 'Quebec', 'tax_dec_qc@test.com', 'clerk_tax_dec_qc', false, false)
+RETURNING id AS user_a \gset
 
-  INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer)
-  VALUES ('Tax', 'Legacy', 'tax_dec_legacy@test.com', 'clerk_tax_dec_legacy', false, false)
-  RETURNING id INTO user_b;
+INSERT INTO public."Users" (first_name, last_name, email, clerk_user_id, is_admin, is_viewer)
+VALUES ('Tax', 'Legacy', 'tax_dec_legacy@test.com', 'clerk_tax_dec_legacy', false, false)
+RETURNING id AS user_b \gset
 
-  -- Insert writing the decimal rate: the deprecated column follows, rounded.
-  INSERT INTO public."Drivers" (user_uuid, tax_dec, is_active)
-  VALUES (user_a, 14.975, true)
-  RETURNING id INTO driver_a;
+-- Insert writing the decimal rate: the deprecated column follows, rounded.
+INSERT INTO public."Drivers" (user_uuid, tax_dec, is_active)
+VALUES (:'user_a', 14.975, true)
+RETURNING id AS driver_a \gset
 
-  SELECT tax, tax_dec INTO v_tax, v_tax_dec FROM public."Drivers" WHERE id = driver_a;
-  PERFORM is(v_tax_dec, 14.975::numeric, 'insert keeps the full decimal rate');
-  PERFORM is(v_tax, 15, 'insert rounds 14.975 into the deprecated tax column');
+SELECT is(
+  (SELECT tax_dec FROM public."Drivers" WHERE id = :'driver_a'),
+  14.975::numeric,
+  'insert keeps the full decimal rate'
+);
+SELECT is(
+  (SELECT tax FROM public."Drivers" WHERE id = :'driver_a'),
+  15::smallint,
+  'insert rounds 14.975 into the deprecated tax column'
+);
 
-  -- Update writing the decimal rate: half-down stays down.
-  UPDATE public."Drivers" SET tax_dec = 9.4 WHERE id = driver_a;
-  SELECT tax, tax_dec INTO v_tax, v_tax_dec FROM public."Drivers" WHERE id = driver_a;
-  PERFORM is(v_tax_dec, 9.4::numeric, 'update keeps the new decimal rate');
-  PERFORM is(v_tax, 9, 'update rounds 9.4 down in the deprecated column');
+-- Update writing the decimal rate: half-down stays down.
+UPDATE public."Drivers" SET tax_dec = 9.4 WHERE id = :'driver_a';
 
-  -- A shipped driver app - or a hand-written SQL update - writes only `tax`.
-  -- tax_dec has to follow, or the deprecated column becomes the only truth.
-  INSERT INTO public."Drivers" (user_uuid, tax, is_active)
-  VALUES (user_b, 13, true)
-  RETURNING id INTO driver_b;
+SELECT is(
+  (SELECT tax_dec FROM public."Drivers" WHERE id = :'driver_a'),
+  9.4::numeric,
+  'update keeps the new decimal rate'
+);
+SELECT is(
+  (SELECT tax FROM public."Drivers" WHERE id = :'driver_a'),
+  9::smallint,
+  'update rounds 9.4 down in the deprecated column'
+);
 
-  SELECT tax_dec INTO v_tax_dec FROM public."Drivers" WHERE id = driver_b;
-  PERFORM is(v_tax_dec, 13::numeric, 'a legacy insert of tax back-fills tax_dec');
+-- A shipped driver app - or a hand-written SQL update - writes only `tax`.
+-- tax_dec has to follow, or the deprecated column becomes the only truth.
+INSERT INTO public."Drivers" (user_uuid, tax, is_active)
+VALUES (:'user_b', 13, true)
+RETURNING id AS driver_b \gset
 
-  UPDATE public."Drivers" SET tax = 7 WHERE id = driver_b;
-  SELECT tax_dec INTO v_tax_dec FROM public."Drivers" WHERE id = driver_b;
-  PERFORM is(v_tax_dec, 7::numeric, 'a legacy update of tax back-fills tax_dec');
+SELECT is(
+  (SELECT tax_dec FROM public."Drivers" WHERE id = :'driver_b'),
+  13::numeric,
+  'a legacy insert of tax back-fills tax_dec'
+);
 
-  -- An unrelated edit must not disturb either column.
-  UPDATE public."Drivers" SET pay_rate_cents = 123 WHERE id = driver_a;
-  SELECT tax, tax_dec INTO v_tax, v_tax_dec FROM public."Drivers" WHERE id = driver_a;
-  PERFORM is(v_tax_dec, 9.4::numeric, 'an unrelated update leaves the rate alone');
-END $$;
+UPDATE public."Drivers" SET tax = 7 WHERE id = :'driver_b';
+
+SELECT is(
+  (SELECT tax_dec FROM public."Drivers" WHERE id = :'driver_b'),
+  7::numeric,
+  'a legacy update of tax back-fills tax_dec'
+);
+
+-- An unrelated edit must not disturb either column.
+UPDATE public."Drivers" SET pay_rate_cents = 123 WHERE id = :'driver_a';
+
+SELECT is(
+  (SELECT tax_dec FROM public."Drivers" WHERE id = :'driver_a'),
+  9.4::numeric,
+  'an unrelated update leaves the rate alone'
+);
 
 SELECT * FROM finish();
 ROLLBACK;

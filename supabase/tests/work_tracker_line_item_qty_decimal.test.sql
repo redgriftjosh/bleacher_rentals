@@ -52,63 +52,85 @@ SELECT is(
 );
 
 -- ── The trigger ─────────────────────────────────────────────────────────────
+--
+-- Plain top-level statements + psql's \gset, not a DO block: pgTAP's is()
+-- returns the TAP output line as its result row, and PERFORM (the only way to
+-- call a value-returning function inside plpgsql) throws that return value
+-- away. A PERFORM is() runs the assertion but never emits it, so the plan
+-- count silently drifts from what pg_prove actually sees.
 
-DO $$
-DECLARE
-  tracker_a UUID;
-  item_a    UUID;
-  item_b    UUID;
-  v_qty     INTEGER;
-  v_qty_dec NUMERIC;
-BEGIN
-  INSERT INTO public."WorkTrackers" DEFAULT VALUES RETURNING id INTO tracker_a;
+INSERT INTO public."WorkTrackers" DEFAULT VALUES RETURNING id AS tracker_a \gset
 
-  -- Insert writing the decimal quantity: the deprecated column follows, rounded.
-  INSERT INTO public."WorkTrackerLineItems" (work_tracker_uuid, type, qty_decimal, unit_amt_cents)
-  VALUES (tracker_a, 'maintenance', 2.5, 1999)
-  RETURNING id INTO item_a;
+-- Insert writing the decimal quantity: the deprecated column follows, rounded.
+INSERT INTO public."WorkTrackerLineItems" (work_tracker_uuid, type, qty_decimal, unit_amt_cents)
+VALUES (:'tracker_a', 'maintenance', 2.5, 1999)
+RETURNING id AS item_a \gset
 
-  SELECT quantity, qty_decimal INTO v_qty, v_qty_dec
-    FROM public."WorkTrackerLineItems" WHERE id = item_a;
-  PERFORM is(v_qty_dec, 2.5::numeric, 'insert keeps the full decimal quantity');
-  PERFORM is(v_qty, 3, 'insert rounds 2.5 up into the deprecated quantity column');
+SELECT is(
+  (SELECT qty_decimal FROM public."WorkTrackerLineItems" WHERE id = :'item_a'),
+  2.5::numeric,
+  'insert keeps the full decimal quantity'
+);
+SELECT is(
+  (SELECT quantity FROM public."WorkTrackerLineItems" WHERE id = :'item_a'),
+  3,
+  'insert rounds 2.5 up into the deprecated quantity column'
+);
 
-  -- Update writing the decimal quantity: half-down stays down.
-  UPDATE public."WorkTrackerLineItems" SET qty_decimal = 9.4 WHERE id = item_a;
-  SELECT quantity, qty_decimal INTO v_qty, v_qty_dec
-    FROM public."WorkTrackerLineItems" WHERE id = item_a;
-  PERFORM is(v_qty_dec, 9.4::numeric, 'update keeps the new decimal quantity');
-  PERFORM is(v_qty, 9, 'update rounds 9.4 down in the deprecated column');
+-- Update writing the decimal quantity: half-down stays down.
+UPDATE public."WorkTrackerLineItems" SET qty_decimal = 9.4 WHERE id = :'item_a';
 
-  -- A shipped driver app - or a hand-written SQL update - writes only `quantity`.
-  -- qty_decimal has to follow, or the deprecated column becomes the only truth.
-  INSERT INTO public."WorkTrackerLineItems" (work_tracker_uuid, type, quantity, unit_amt_cents)
-  VALUES (tracker_a, 'hauling', 4, 500)
-  RETURNING id INTO item_b;
+SELECT is(
+  (SELECT qty_decimal FROM public."WorkTrackerLineItems" WHERE id = :'item_a'),
+  9.4::numeric,
+  'update keeps the new decimal quantity'
+);
+SELECT is(
+  (SELECT quantity FROM public."WorkTrackerLineItems" WHERE id = :'item_a'),
+  9,
+  'update rounds 9.4 down in the deprecated column'
+);
 
-  SELECT qty_decimal INTO v_qty_dec
-    FROM public."WorkTrackerLineItems" WHERE id = item_b;
-  PERFORM is(v_qty_dec, 4::numeric, 'a legacy insert of quantity back-fills qty_decimal');
+-- A shipped driver app - or a hand-written SQL update - writes only `quantity`.
+-- qty_decimal has to follow, or the deprecated column becomes the only truth.
+INSERT INTO public."WorkTrackerLineItems" (work_tracker_uuid, type, quantity, unit_amt_cents)
+VALUES (:'tracker_a', 'hauling', 4, 500)
+RETURNING id AS item_b \gset
 
-  UPDATE public."WorkTrackerLineItems" SET quantity = 7 WHERE id = item_b;
-  SELECT qty_decimal INTO v_qty_dec
-    FROM public."WorkTrackerLineItems" WHERE id = item_b;
-  PERFORM is(v_qty_dec, 7::numeric, 'a legacy update of quantity back-fills qty_decimal');
+SELECT is(
+  (SELECT qty_decimal FROM public."WorkTrackerLineItems" WHERE id = :'item_b'),
+  4::numeric,
+  'a legacy insert of quantity back-fills qty_decimal'
+);
 
-  -- A row that names neither column still gets a consistent pair from the defaults.
-  PERFORM is(
-    (SELECT quantity FROM public."WorkTrackerLineItems" WHERE id = item_a) IS NOT NULL,
-    true,
-    'quantity is never left null'
-  );
+UPDATE public."WorkTrackerLineItems" SET quantity = 7 WHERE id = :'item_b';
 
-  -- An unrelated edit must not disturb either column.
-  UPDATE public."WorkTrackerLineItems" SET description = 'note' WHERE id = item_a;
-  SELECT quantity, qty_decimal INTO v_qty, v_qty_dec
-    FROM public."WorkTrackerLineItems" WHERE id = item_a;
-  PERFORM is(v_qty_dec, 9.4::numeric, 'an unrelated update leaves the decimal quantity alone');
-  PERFORM is(v_qty, 9, 'an unrelated update leaves the deprecated column alone');
-END $$;
+SELECT is(
+  (SELECT qty_decimal FROM public."WorkTrackerLineItems" WHERE id = :'item_b'),
+  7::numeric,
+  'a legacy update of quantity back-fills qty_decimal'
+);
+
+-- A row that names neither column still gets a consistent pair from the defaults.
+SELECT is(
+  (SELECT quantity FROM public."WorkTrackerLineItems" WHERE id = :'item_a') IS NOT NULL,
+  true,
+  'quantity is never left null'
+);
+
+-- An unrelated edit must not disturb either column.
+UPDATE public."WorkTrackerLineItems" SET description = 'note' WHERE id = :'item_a';
+
+SELECT is(
+  (SELECT qty_decimal FROM public."WorkTrackerLineItems" WHERE id = :'item_a'),
+  9.4::numeric,
+  'an unrelated update leaves the decimal quantity alone'
+);
+SELECT is(
+  (SELECT quantity FROM public."WorkTrackerLineItems" WHERE id = :'item_a'),
+  9,
+  'an unrelated update leaves the deprecated column alone'
+);
 
 -- ── The non-negative check ──────────────────────────────────────────────────
 
