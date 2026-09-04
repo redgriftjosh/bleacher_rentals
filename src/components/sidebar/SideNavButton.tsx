@@ -23,12 +23,12 @@ export const SideNavButton = ({
     <Link
       href={href}
       prefetch={true}
-      className={`flex items-center text-base px-4 py-1 rounded m-1 space-x-3 ${
+      className={`flex items-center min-w-0 text-base px-4 py-1 rounded m-1 space-x-3 ${
         isSelected ? " font-medium text-darkBlue bg-gray-200" : "text-gray-500 hover:bg-gray-200"
       }`}
     >
-      <Icon className="h-4 w-4" />
-      <span>{label}</span>
+      <Icon className="h-4 w-4 shrink-0" />
+      <span className="truncate">{label}</span>
       {showIndicator && (
         <span
           data-testid="sidebar-unread-indicator"

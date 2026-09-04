@@ -32,6 +32,7 @@ import { triage } from "@/features/alerts/triage";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
 import { useNavigationGuard } from "../../hooks/useNavigationGuard";
 import { UnsavedChangesDialog } from "./modals/UnsavedChangesDialog";
+import { draftSaveDefaults, validateQuoteForSend } from "../../utils/quoteValidation";
 
 export function CreateQuoteForm() {
   const router = useRouter();
@@ -50,42 +51,11 @@ export function CreateQuoteForm() {
 
   const isEditing = !!editingEventId;
 
+  // Full completeness check — required before a quote can be sent or previewed.
   const validateRequiredFields = (): boolean => {
-    const state = useCreateQuoteStore.getState();
-    const missing: string[] = [];
-
-    if (!state.salesOfficeId) missing.push("Sales Office");
-    if (!state.contactId) missing.push("Contact");
-    if (!state.eventName.trim()) missing.push("Event Name");
-    if (!state.eventAddressData) missing.push("Event Address");
-    if (!state.eventTypeId) missing.push("Event Type");
-    if (!state.eventStart) missing.push("Event Start");
-    if (!state.eventEnd) missing.push("Event End");
-    if (state.lineItems.length === 0) missing.push("Line Items");
-    if (!state.termsDocumentId) missing.push("Terms and Conditions");
-
-    if (missing.length > 0) {
-      createErrorToast([`Required fields missing: ${missing.join(", ")}`]);
-      return false;
-    }
-
-    const today = new Date().toISOString().split("T")[0];
-    const dateErrors: string[] = [];
-    if (state.eventStart < today) dateErrors.push("Event Start cannot be in the past");
-    if (state.eventEnd < today) dateErrors.push("Event End cannot be in the past");
-    if (state.quoteValidTill && state.quoteValidTill < today)
-      dateErrors.push("Quote Valid Till cannot be in the past");
-    if (state.eventEnd < state.eventStart)
-      dateErrors.push("Event End cannot be before Event Start");
-    if (state.quoteValidTill && state.eventStart && state.quoteValidTill > state.eventStart)
-      dateErrors.push("Quote Valid Till cannot be after Event Start");
-
-    if (dateErrors.length > 0) {
-      createErrorToast(dateErrors);
-      return false;
-    }
-
-    return true;
+    const result = validateQuoteForSend(useCreateQuoteStore.getState());
+    if (!result.ok) createErrorToast(result.errors);
+    return result.ok;
   };
 
   const handleCancel = () => {
@@ -99,15 +69,19 @@ export function CreateQuoteForm() {
   };
 
   /**
-   * Validate + persist the quote without navigating. Returns the event id on
-   * success (used by the Save button and the unsaved-changes guard), or null
-   * on validation failure / error.
+   * Persist the quote without navigating — a draft has no required fields,
+   * so this always succeeds unless the write itself fails. Returns the event
+   * id on success (used by the Save button and the unsaved-changes guard),
+   * or null on error.
    */
   const persistQuote = async (): Promise<string | null> => {
-    if (!validateRequiredFields()) return null;
     setSaving(true);
     try {
-      const state = useCreateQuoteStore.getState();
+      // event_name/start/end are NOT NULL columns — default a blank one so an
+      // otherwise-empty draft can still be saved. Only affects what's written;
+      // the visible form fields are left alone.
+      const formState = useCreateQuoteStore.getState();
+      const state = { ...formState, ...draftSaveDefaults(formState) };
       let eventId: string;
       if (isEditing) {
         await updateQuoteEvent(editingEventId, state, supabase, currentUserUuid ?? perms.userId);

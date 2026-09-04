@@ -20,10 +20,18 @@ export function SignContractTab({
   data,
   track,
   onQuoteChanged,
+  onSigned,
 }: {
   data: QuoteDocumentData;
   track: (e: TrackEvent) => void;
   onQuoteChanged?: () => void;
+  /**
+   * The content hash the signature produced. Signing changes what the page
+   * shows, so the freshness baseline has to move with it — otherwise the client
+   * is told their own signature updated the quote.
+   * See docs/specs/payment-does-not-invalidate-signature.md §8.
+   */
+  onSigned?: (contentHash: string) => void;
 }) {
   const [contract, setContract] = useState<ContractData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,6 +85,9 @@ export function SignContractTab({
               }
             : prev,
         );
+        if (typeof result.contentHash === "string" && result.contentHash) {
+          onSigned?.(result.contentHash);
+        }
       }
     } finally {
       setSigning(false);

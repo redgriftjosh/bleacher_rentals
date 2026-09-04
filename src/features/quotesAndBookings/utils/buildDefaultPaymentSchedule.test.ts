@@ -18,8 +18,8 @@ describe("buildDefaultPaymentSchedule", () => {
   it("splits 50/50 with signing today and remaining 7 days before a far-out event", () => {
     const s = buildDefaultPaymentSchedule(100000, "2026-08-01", today, idFn);
     expect(s).toHaveLength(2);
-    expect(s[0]).toMatchObject({ dueDate: today, amountCents: 50000, status: "unpaid" });
-    expect(s[1]).toMatchObject({ dueDate: "2026-07-25", amountCents: 50000, status: "unpaid" });
+    expect(s[0]).toMatchObject({ dueDate: today, amountCents: 50000 });
+    expect(s[1]).toMatchObject({ dueDate: "2026-07-25", amountCents: 50000 });
   });
 
   it("always balances to the total (odd cents go to the second half)", () => {

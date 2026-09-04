@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { DateTime } from "luxon";
 import { Search, ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -9,8 +9,24 @@ import { FilterButton } from "@/features/quotesAndBookings/components/FilterButt
 import { FilterPanel } from "@/features/quotesAndBookings/components/FilterPanel";
 import { useQuotesAndBookingsFilters } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsFilters";
 import { useQuotesAndBookingsData } from "@/features/quotesAndBookings/hooks/useQuotesAndBookingsData";
+import {
+  useCreateQuoteStore,
+  hasUnsavedChanges,
+} from "@/features/quotesAndBookings/state/useCreateQuoteStore";
+import {
+  NEW_QUOTE_CLIENT_NOTES,
+  shouldPrefillNewQuoteNotes,
+} from "@/features/quotesAndBookings/utils/newQuoteNotes";
 import type { QuotesBookingsEvent } from "@/features/quotesAndBookings/types";
 import { searchEvents } from "@/features/quotesAndBookings/utils/searchEvents";
+import { eventSubtotalCents, eventTaxCents } from "@/features/quotesAndBookings/utils/eventAmounts";
+import {
+  pickEventCurrency,
+  sumByCurrency,
+  formatTotalsLabel,
+} from "@/features/quotesAndBookings/utils/eventCurrency";
+import { formatMoney } from "@/features/quotesAndBookings/utils/formatMoney";
+import { useOfficeCurrencies } from "@/features/quotesAndBookings/hooks/useOfficeCurrencies";
 import { isInGoodShuffle } from "@/features/quotesAndBookings/utils/filterEvents";
 import { GoodShuffleBadge } from "@/features/quotesAndBookings/components/GoodShuffleBadge";
 import {
@@ -19,11 +35,6 @@ import {
   SCORECARD_TEMPLATES,
 } from "@/features/quotesAndBookings/utils/scorecardTemplates";
 import { useRouter, useSearchParams } from "next/navigation";
-
-function formatCurrency(cents: number | null): string {
-  if (cents === null) return "$0.00";
-  return `$${(cents / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
-}
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return "N/A";
@@ -83,6 +94,8 @@ export default function QuotesBookingsPage() {
     setBookedRange,
     setAccountManagerUserUuid,
     setInGoodShuffle,
+    setInQuickBooks,
+    setSalesOfficeUuid,
     clearFilters,
   } = useQuotesAndBookingsFilters(initialOverrides);
 
@@ -94,6 +107,14 @@ export default function QuotesBookingsPage() {
     if (!data) return data;
     return searchEvents(data, searchQuery);
   }, [data, searchQuery]);
+
+  // Money columns are per-office: a quote out of a Canadian office is shown in
+  // C$, and the column totals keep the two currencies apart.
+  const { currencyByOfficeId } = useOfficeCurrencies();
+  const currencyOf = useCallback(
+    (event: QuotesBookingsEvent) => pickEventCurrency(event.sales_office_uuid, currencyByOfficeId),
+    [currencyByOfficeId],
+  );
 
   const router = useRouter();
 
@@ -109,14 +130,12 @@ export default function QuotesBookingsPage() {
       key: "event_name",
       header: `Event Name (${searchedData?.length ?? 0})`,
       render: (event) => (
-        <div>
+        <div className="max-w-[240px] 2xl:max-w-[320px]">
           <CellText bold>
-            <span className="inline-flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5">
               {isInGoodShuffle(event) && <GoodShuffleBadge />}
-              <span>
-                {event.event_name && event.event_name.length > 70
-                  ? `${event.event_name.slice(0, 70)}...`
-                  : event.event_name}
+              <span className="truncate" title={event.event_name ?? undefined}>
+                {event.event_name}
               </span>
             </span>
           </CellText>
@@ -160,9 +179,23 @@ export default function QuotesBookingsPage() {
       ),
     },
     {
-      key: "amount",
-      header: `Amount ($${Math.round((searchedData?.reduce((sum, e) => sum + (e.contract_revenue_cents ?? 0), 0) ?? 0) / 100).toLocaleString()})`,
-      render: (event) => <CellText bold>{formatCurrency(event.contract_revenue_cents)}</CellText>,
+      key: "subtotal",
+      header: formatTotalsLabel(
+        "Subtotal",
+        sumByCurrency(searchedData, eventSubtotalCents, currencyOf),
+      ),
+      align: "right",
+      render: (event) => (
+        <CellText bold>{formatMoney(eventSubtotalCents(event), currencyOf(event))}</CellText>
+      ),
+    },
+    {
+      key: "tax",
+      header: formatTotalsLabel("Tax", sumByCurrency(searchedData, eventTaxCents, currencyOf)),
+      align: "right",
+      render: (event) => (
+        <CellText bold>{formatMoney(eventTaxCents(event), currencyOf(event))}</CellText>
+      ),
     },
   ];
 
@@ -202,7 +235,20 @@ export default function QuotesBookingsPage() {
               </span>
             </button>
             <FilterButton isOpen={filters.isOpen} onClick={toggleOpen} />
-            <PrimaryButton onClick={() => router.push("/quotes-bookings/new")}>
+            <PrimaryButton
+              onClick={() => {
+                const store = useCreateQuoteStore.getState();
+                if (
+                  shouldPrefillNewQuoteNotes({
+                    editingEventId: store.editingEventId,
+                    hasUnsavedChanges: hasUnsavedChanges(),
+                  })
+                ) {
+                  store.setField("clientFacingNotes", NEW_QUOTE_CLIENT_NOTES);
+                }
+                router.push("/quotes-bookings/new");
+              }}
+            >
               + Create Quote
             </PrimaryButton>
           </div>
@@ -244,6 +290,8 @@ export default function QuotesBookingsPage() {
           onEventRangeChange={setEventRange}
           onBookedRangeChange={setBookedRange}
           onInGoodShuffleChange={setInGoodShuffle}
+          onInQuickBooksChange={setInQuickBooks}
+          onSalesOfficeChange={setSalesOfficeUuid}
           onAccountManagerChange={setAccountManagerUserUuid}
           onClear={clearFilters}
         />

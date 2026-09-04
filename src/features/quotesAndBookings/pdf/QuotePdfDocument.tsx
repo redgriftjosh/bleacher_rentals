@@ -338,12 +338,21 @@ export function QuotePdfDocument({ data }: { data: QuoteDocumentData }) {
                 <Text style={{ width: 80, textAlign: "right" }}>{formatMoney(p.amountCents)}</Text>
                 <Text
                   style={{
-                    width: 60,
+                    width: 90,
                     textAlign: "right",
-                    color: p.status === "paid" ? "#16a34a" : "#6b7280",
+                    color:
+                      p.status === "paid"
+                        ? "#16a34a"
+                        : p.status === "partial"
+                          ? "#b45309"
+                          : "#6b7280",
                   }}
                 >
                   {statusLabel(language, p.status)}
+                  {/* A part-paid row must say how far it got — "paid" on a
+                      $3,600 installment covered by $1 is a false statement in a
+                      document the client keeps. */}
+                  {p.status === "partial" && ` (${formatMoney(p.allocatedCents)})`}
                 </Text>
               </View>
             ))}

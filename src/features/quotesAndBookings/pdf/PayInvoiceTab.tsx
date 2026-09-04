@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   CreditCard,
   FileText,
@@ -15,9 +15,13 @@ import { QuoteDocumentData } from "./quoteDocumentData";
 import { TrackEvent } from "./useQuoteActivityTracker";
 import { formatQuoteDate, formatQuoteMoney } from "./quoteFormat";
 import { quoteText, paymentMethodLabel, statusLabel } from "./quoteStrings";
+import { allocatePayments } from "../utils/allocatePayments";
+import { currencySymbol } from "../utils/formatMoney";
+import { computeAmountDue } from "../utils/computeAmountDue";
 
 type PaymentHistoryRow = {
   id: string;
+  installment_id: string | null;
   amount_cents: number;
   currency: string;
   status: string;
@@ -75,27 +79,40 @@ export function PayInvoiceTab({
     fetchPayments();
   }, [fetchPayments]);
 
-  const paidCents = payments
-    .filter((p) => p.status === "succeeded")
-    .reduce((sum, p) => sum + p.amount_cents, 0);
+  // One allocation feeds every figure below, so the amount due, the schedule
+  // badges and the history table cannot contradict each other.
+  // See docs/specs/payment-accounting-truth.md.
+  const allocation = useMemo(
+    () =>
+      allocatePayments(
+        data.paymentSchedule,
+        payments.map((p) => ({
+          id: p.id,
+          installmentId: p.installment_id ?? null,
+          amountCents: p.amount_cents,
+          currency: p.currency ?? "USD",
+          status: p.status,
+          paidAt: p.paid_at,
+          createdAt: p.created_at,
+        })),
+        currency,
+      ),
+    [data.paymentSchedule, payments, currency],
+  );
 
-  const totalDue = data.totalCents;
-  const remainingCents = Math.max(totalDue - paidCents, 0);
-
-  // Smart calculation: sum overdue installments (due today or earlier), subtract paid
   const today = todayDate();
+  const { paidCents, remainingCents, overdueOwedCents, defaultPayCents } = useMemo(
+    () => computeAmountDue({ allocation, totalCents: data.totalCents, today }),
+    [allocation, data.totalCents, today],
+  );
+
   const hasSchedule = data.paymentSchedule.length > 0;
+  const totalDue = data.totalCents;
 
-  const overdueCents = hasSchedule
-    ? data.paymentSchedule
-        .filter((i) => i.status !== "paid" && i.dueDate <= today)
-        .reduce((sum, i) => sum + i.amountCents, 0)
-    : 0;
-
-  const overdueOwedCents = Math.max(hasSchedule ? overdueCents - paidCents : remainingCents, 0);
-
-  // Default pay amount: overdue balance, or full remaining if no schedule
-  const defaultPayCents = hasSchedule ? Math.min(overdueOwedCents, remainingCents) : remainingCents;
+  const allocationById = useMemo(
+    () => new Map(allocation.installments.map((i) => [i.installmentId, i])),
+    [allocation],
+  );
 
   // Custom amount in cents
   const customCents = Math.round((parseFloat(customAmountInput) || 0) * 100);
@@ -117,7 +134,8 @@ export function PayInvoiceTab({
           eventId: data.eventId,
           installmentId: nextUnpaidInstallment?.id ?? undefined,
           amountCents: payAmountCents,
-          currency,
+          // No currency: the server resolves it from the quote's sales office
+          // and ignores anything sent here. See payment-accounting-truth.md §3.6.
           payerName: payerName.trim(),
           payerEmail: payerEmail.trim() || undefined,
           // Stripe renders its own checkout chrome — keep it in the client's language.
@@ -206,7 +224,7 @@ export function PayInvoiceTab({
                 {/* Overdue summary */}
                 {hasSchedule && overdueOwedCents > 0 && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-800">
-                    <strong>{formatMoney(overdueOwedCents)}</strong> {s.overdueNoticeSuffix}
+                    <strong>{formatMoney(overdueOwedCents)}</strong> {s.dueNoticeSuffix}
                   </div>
                 )}
 
@@ -262,7 +280,9 @@ export function PayInvoiceTab({
 
                   {useCustomAmount && (
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-700">{"$"}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        {currencySymbol(currency)}
+                      </span>
                       <input
                         type="text"
                         inputMode="decimal"
@@ -313,7 +333,10 @@ export function PayInvoiceTab({
               <h3 className="font-semibold text-lg mb-4">{s.paymentSchedule}</h3>
               <div className="space-y-3">
                 {data.paymentSchedule.map((inst, i) => {
-                  const isPaid = inst.status === "paid";
+                  const covered = allocationById.get(inst.id);
+                  const status = covered?.status ?? inst.status;
+                  const isPaid = status === "paid";
+                  const isPartial = status === "partial";
                   const isOverdue = !isPaid && inst.dueDate <= today;
                   const isFirst = i === 0;
                   const isLast = i === data.paymentSchedule.length - 1;
@@ -327,14 +350,18 @@ export function PayInvoiceTab({
                       className={`flex items-center justify-between p-3 rounded-lg border ${
                         isPaid
                           ? "bg-green-50 border-green-200"
-                          : isOverdue
-                            ? "bg-red-50 border-red-200"
-                            : "bg-gray-50 border-gray-200"
+                          : isPartial
+                            ? "bg-amber-50 border-amber-200"
+                            : isOverdue
+                              ? "bg-red-50 border-red-200"
+                              : "bg-gray-50 border-gray-200"
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         {isPaid ? (
                           <CheckCircle className="w-5 h-5 text-green-600" />
+                        ) : isPartial ? (
+                          <Clock className="w-5 h-5 text-amber-600" />
                         ) : isOverdue ? (
                           <AlertCircle className="w-5 h-5 text-red-500" />
                         ) : (
@@ -343,7 +370,18 @@ export function PayInvoiceTab({
                         <div>
                           <p className="text-sm font-medium">{label}</p>
                           {isPaid && <p className="text-xs text-green-600">{s.paid}</p>}
-                          {isOverdue && <p className="text-xs text-red-600">{s.overdue}</p>}
+                          {/* Part-paid rows say how much actually arrived; the
+                              old badge called a $1 payment "paid". */}
+                          {isPartial && (
+                            <p className="text-xs text-amber-700">
+                              {statusLabel(language, "partial")} —{" "}
+                              {formatMoney(covered?.allocatedCents ?? 0)} /{" "}
+                              {formatMoney(inst.amountCents)}
+                            </p>
+                          )}
+                          {isOverdue && !isPartial && (
+                            <p className="text-xs text-red-600">{s.due}</p>
+                          )}
                         </div>
                       </div>
                       <span

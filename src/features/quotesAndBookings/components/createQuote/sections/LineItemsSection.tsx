@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { X, Lock, Unlock, CheckCircle, TriangleAlert } from "lucide-react";
+import { formatMoney } from "../../../utils/formatMoney";
 import { useCreateQuoteStore } from "../../../state/useCreateQuoteStore";
 import { usePriceLookup } from "../../../hooks/usePriceLookup";
 import { Dropdown } from "@/components/DropDown";
@@ -21,15 +22,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   logistics: "Logistics",
   custom_service: "Services",
 };
-
-function formatCents(cents: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(cents / 100);
-}
 
 function recalcLineTotal(item: LineItem, subtotalCents: number): number {
   if (item.category === "discounts") {
@@ -65,7 +57,8 @@ export function LineItemsSection() {
     [editingEventId],
   );
   const { data: assignedRows } = useTypedQuery(
-    assignedBleachersQuery ?? db.selectFrom("Bleachers").select(["bleacher_type_uuid"]).where("id", "=", "").compile(),
+    assignedBleachersQuery ??
+      db.selectFrom("Bleachers").select(["bleacher_type_uuid"]).where("id", "=", "").compile(),
     expect<{ bleacher_type_uuid: string | null }>(),
   );
 
@@ -88,9 +81,19 @@ export function LineItemsSection() {
     for (const item of lineItems) {
       if (item.category !== "bleachers" || !item.bleacherTypeUuid || item.overridePrice) continue;
 
-      const priceCents = lookupPrice(item.bleacherTypeUuid, eventTypeId, eventStart, eventEnd, currency);
+      const priceCents = lookupPrice(
+        item.bleacherTypeUuid,
+        eventTypeId,
+        eventStart,
+        eventEnd,
+        currency,
+      );
       if (priceCents !== null && priceCents !== item.unitPriceCents) {
-        const updated = { ...item, unitPriceCents: priceCents, lineTotalCents: priceCents * item.qty };
+        const updated = {
+          ...item,
+          unitPriceCents: priceCents,
+          lineTotalCents: priceCents * item.qty,
+        };
         updateLineItem(item.id, updated);
       }
     }
@@ -113,7 +116,13 @@ export function LineItemsSection() {
     if (item.overridePrice) {
       // Unlocking — try to restore price from matrix
       if (item.bleacherTypeUuid && eventTypeId && eventStart && eventEnd) {
-        const priceCents = lookupPrice(item.bleacherTypeUuid, eventTypeId, eventStart, eventEnd, currency);
+        const priceCents = lookupPrice(
+          item.bleacherTypeUuid,
+          eventTypeId,
+          eventStart,
+          eventEnd,
+          currency,
+        );
         if (priceCents !== null) {
           const updated = {
             ...item,
@@ -144,9 +153,7 @@ export function LineItemsSection() {
 
   return (
     <section>
-      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">
-        Line Items
-      </h2>
+      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Line Items</h2>
 
       {lineItems.length === 0 ? (
         <p className="py-4 text-center text-gray-400 text-sm border-t border-b">
@@ -220,34 +227,35 @@ export function LineItemsSection() {
                                 className="w-full h-8 px-2 border rounded text-sm text-center"
                               />
                             </td>
-                            {editingEventId && (() => {
-                              const assigned = item.bleacherTypeUuid
-                                ? (assignedCountByType[item.bleacherTypeUuid] ?? 0)
-                                : 0;
-                              const met = assigned === item.qty;
-                              return (
-                                <td className="py-2 px-1 text-center">
-                                  <AppTooltip
-                                    content={
-                                      met
-                                        ? `${assigned} of ${item.qty} bleachers assigned — requirement met.`
-                                        : `${assigned} of ${item.qty} bleachers assigned — go to the dashboard to assign the rest.`
-                                    }
-                                  >
-                                    <span className="inline-flex items-center gap-1 tabular-nums text-sm font-medium cursor-default">
-                                      <span className={met ? "text-green-700" : "text-red-600"}>
-                                        {assigned}/{item.qty}
+                            {editingEventId &&
+                              (() => {
+                                const assigned = item.bleacherTypeUuid
+                                  ? (assignedCountByType[item.bleacherTypeUuid] ?? 0)
+                                  : 0;
+                                const met = assigned === item.qty;
+                                return (
+                                  <td className="py-2 px-1 text-center">
+                                    <AppTooltip
+                                      content={
+                                        met
+                                          ? `${assigned} of ${item.qty} bleachers assigned — requirement met.`
+                                          : `${assigned} of ${item.qty} bleachers assigned — go to the dashboard to assign the rest.`
+                                      }
+                                    >
+                                      <span className="inline-flex items-center gap-1 tabular-nums text-sm font-medium cursor-default">
+                                        <span className={met ? "text-green-700" : "text-red-600"}>
+                                          {assigned}/{item.qty}
+                                        </span>
+                                        {met ? (
+                                          <CheckCircle className="w-4 h-4 text-green-600" />
+                                        ) : (
+                                          <TriangleAlert className="w-4 h-4 text-red-500" />
+                                        )}
                                       </span>
-                                      {met ? (
-                                        <CheckCircle className="w-4 h-4 text-green-600" />
-                                      ) : (
-                                        <TriangleAlert className="w-4 h-4 text-red-500" />
-                                      )}
-                                    </span>
-                                  </AppTooltip>
-                                </td>
-                              );
-                            })()}
+                                    </AppTooltip>
+                                  </td>
+                                );
+                              })()}
                             <td className="py-2 px-1">
                               <input
                                 type="number"
@@ -343,7 +351,9 @@ export function LineItemsSection() {
                                 onChange={(e) => {
                                   const raw = parseFloat(e.target.value) || 0;
                                   const value =
-                                    item.discountType === "percentage" ? raw : Math.round(raw * 100);
+                                    item.discountType === "percentage"
+                                      ? raw
+                                      : Math.round(raw * 100);
                                   handleUpdate(item.id, { discountValue: value });
                                 }}
                                 className="w-full h-8 px-2 border rounded text-sm text-right"
@@ -353,7 +363,7 @@ export function LineItemsSection() {
                         )}
 
                         <td className="py-2 pl-2 text-right font-medium whitespace-nowrap">
-                          {formatCents(item.lineTotalCents, currency)}
+                          {formatMoney(item.lineTotalCents, currency)}
                         </td>
                         <td className="py-2 text-center">
                           <button

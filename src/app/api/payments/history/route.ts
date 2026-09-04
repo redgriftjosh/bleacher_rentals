@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await supabase
     .from("PaymentHistory")
     .select(
-      "id, amount_cents, currency, status, payment_method_type, payer_name, payer_email, stripe_receipt_url, paid_at, created_at",
+      "id, installment_id, amount_cents, currency, status, payment_method_type, payer_name, payer_email, stripe_receipt_url, paid_at, created_at",
     )
     .eq("event_uuid", eventId)
     .order("created_at", { ascending: false });

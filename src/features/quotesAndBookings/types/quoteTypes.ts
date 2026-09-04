@@ -52,13 +52,15 @@ export type QuoteContact = {
   notes: string;
 };
 
-export type PaymentInstallmentStatus = "unpaid" | "paid";
-
+/**
+ * A term of the quote: how much is due, and when. Whether it has been paid is
+ * not stored here — `allocatePayments` derives that from PaymentHistory at read
+ * time. See docs/specs/payment-accounting-truth.md §3.7.
+ */
 export type PaymentInstallment = {
   id: string;
   dueDate: string; // YYYY-MM-DD
   amountCents: number;
-  status: PaymentInstallmentStatus;
 };
 
 export type DiscountTemplate = {

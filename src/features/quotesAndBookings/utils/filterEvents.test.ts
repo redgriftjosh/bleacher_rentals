@@ -13,6 +13,8 @@ const noFilters: QuotesBookingsFilters = {
   bookedTo: null,
   accountManagerUserUuid: null,
   inGoodShuffle: null,
+  inQuickBooks: null,
+  salesOfficeUuid: null,
 };
 
 const event = (id: string, goodshuffle_url: string | null): QuotesBookingsEvent =>
@@ -56,6 +58,90 @@ describe("In GoodShuffle filter", () => {
       ...noFilters,
       statuses: ["quoted"],
       inGoodShuffle: true,
+    });
+    expect(result.map((e) => e.id)).toEqual(["quoted"]);
+  });
+});
+
+const officeEvent = (id: string, sales_office_uuid: string | null): QuotesBookingsEvent =>
+  ({ id, sales_office_uuid }) as QuotesBookingsEvent;
+
+describe("Sales Office filter", () => {
+  const north = officeEvent("north", "office-north");
+  const south = officeEvent("south", "office-south");
+  const unassigned = officeEvent("unassigned", null);
+
+  const officeIds = (filters: Partial<QuotesBookingsFilters>) =>
+    filterQuotesBookingsEvents([north, south, unassigned], {
+      ...noFilters,
+      ...filters,
+    }).map((e) => e.id);
+
+  it("shows every event when no office is picked", () => {
+    expect(officeIds({ salesOfficeUuid: null })).toEqual(["north", "south", "unassigned"]);
+  });
+
+  it("shows only the events belonging to the picked office", () => {
+    expect(officeIds({ salesOfficeUuid: "office-north" })).toEqual(["north"]);
+  });
+
+  it("hides events with no office once one is picked", () => {
+    // An event without an office belongs to no office, so it cannot pass a
+    // filter that asks for a specific one.
+    expect(officeIds({ salesOfficeUuid: "office-south" })).not.toContain("unassigned");
+  });
+
+  it("combines with the other filters rather than replacing them", () => {
+    const quoted = { ...officeEvent("quoted", "office-north"), event_status: "quoted" };
+    const booked = { ...officeEvent("booked", "office-north"), event_status: "booked" };
+    const result = filterQuotesBookingsEvents([quoted, booked, south], {
+      ...noFilters,
+      statuses: ["quoted"],
+      salesOfficeUuid: "office-north",
+    });
+    expect(result.map((e) => e.id)).toEqual(["quoted"]);
+  });
+});
+
+const qboEvent = (id: string, is_qbo: number | null): QuotesBookingsEvent =>
+  ({ id, is_qbo }) as QuotesBookingsEvent;
+
+const inQbo = qboEvent("in-qbo", 1);
+const notInQbo = qboEvent("not-in-qbo", 0);
+const unsetQbo = qboEvent("unset-qbo", null);
+
+const qboIds = (filters: Partial<QuotesBookingsFilters>) =>
+  filterQuotesBookingsEvents([inQbo, notInQbo, unsetQbo], {
+    ...noFilters,
+    ...filters,
+  }).map((e) => e.id);
+
+describe("In QuickBooks filter", () => {
+  it("shows everything when the filter is off", () => {
+    expect(qboIds({ inQuickBooks: null })).toEqual(["in-qbo", "not-in-qbo", "unset-qbo"]);
+  });
+
+  it("shows only events flagged as entered in QuickBooks", () => {
+    expect(qboIds({ inQuickBooks: true })).toEqual(["in-qbo"]);
+  });
+
+  it("shows only events not flagged", () => {
+    expect(qboIds({ inQuickBooks: false })).toEqual(["not-in-qbo", "unset-qbo"]);
+  });
+
+  it("treats a missing flag as not in QuickBooks", () => {
+    // The column defaults to false, and older rows sync as null — to a user
+    // neither one has been entered in QuickBooks.
+    expect(qboIds({ inQuickBooks: true })).not.toContain("unset-qbo");
+  });
+
+  it("combines with the other filters rather than replacing them", () => {
+    const quoted = { ...qboEvent("quoted", 1), event_status: "quoted" };
+    const booked = { ...qboEvent("booked", 1), event_status: "booked" };
+    const result = filterQuotesBookingsEvents([quoted, booked, notInQbo], {
+      ...noFilters,
+      statuses: ["quoted"],
+      inQuickBooks: true,
     });
     expect(result.map((e) => e.id)).toEqual(["quoted"]);
   });

@@ -5,6 +5,8 @@ export type Column<T> = {
   key: string;
   header: string;
   render: (row: T) => ReactNode;
+  /** Horizontal alignment of the header and cells. Defaults to "left". */
+  align?: "left" | "right";
 };
 
 type DataTableProps<T> = {
@@ -43,7 +45,9 @@ export function DataTable<T>({
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                    column.align === "right" ? "text-right" : "text-left"
+                  }`}
                 >
                   {column.header}
                 </th>
@@ -65,7 +69,12 @@ export function DataTable<T>({
                   onClick={() => onRowClick?.(row)}
                 >
                   {columns.map((column) => (
-                    <td key={column.key} className="px-4 py-4 whitespace-nowrap">
+                    <td
+                      key={column.key}
+                      className={`px-4 py-4 whitespace-nowrap ${
+                        column.align === "right" ? "text-right" : ""
+                      }`}
+                    >
                       {column.render(row)}
                     </td>
                   ))}
