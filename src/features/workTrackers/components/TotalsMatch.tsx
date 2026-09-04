@@ -9,14 +9,14 @@ type Props = {
 };
 
 export function TotalsMatch({ driver }: Props) {
-  const { workTrackerGroup, totalPayCents, qbo_connection_uuid, tax } = driver;
+  const { workTrackerGroup, totalPayCents, qbo_connection_uuid, taxDec } = driver;
   const billId = workTrackerGroup?.qbo_bill_id;
 
   const [isLoading, setIsLoading] = useState(false);
   const [match, setMatch] = useState<boolean | null>(null);
   const [qboTotal, setQboTotal] = useState<number | null>(null);
 
-  const expectedTotal = (totalPayCents / 100) * (1 + tax / 100);
+  const expectedTotal = (totalPayCents / 100) * (1 + taxDec / 100);
 
   useEffect(() => {
     if (!billId || !qbo_connection_uuid) return;
@@ -45,7 +45,7 @@ export function TotalsMatch({ driver }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [billId, qbo_connection_uuid, totalPayCents, tax]);
+  }, [billId, qbo_connection_uuid, totalPayCents, taxDec]);
 
   if (!billId || !qbo_connection_uuid) return null;
 

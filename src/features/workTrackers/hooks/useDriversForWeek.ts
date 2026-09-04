@@ -63,7 +63,7 @@ type DriverRow = {
   driver_uuid: string;
   pay_currency: string | null;
   pay_per_unit: string | null;
-  tax: number | null;
+  taxDec: number | null;
   driver_street: string | null;
   qbo_connection_uuid: string | null;
   user_id: string;
@@ -119,7 +119,7 @@ export function useDriversForWeek(
         "d.id as driver_uuid",
         "d.pay_currency as pay_currency",
         "d.pay_per_unit as pay_per_unit",
-        "d.tax as tax",
+        "d.tax_dec as taxDec",
         "a.street as driver_street",
         "v.qbo_connection_uuid as qbo_connection_uuid",
         "u.id as user_id",
@@ -231,7 +231,7 @@ export function useDriversForWeek(
           totalDriveMinutes: driveMinutes.get(driver.driver_uuid) ?? 0,
           hasCrossBorderTrips: region === "CAN" && usaDropoffDriverIds.has(driver.driver_uuid),
           region,
-          tax: driver.tax ?? 0,
+          taxDec: driver.taxDec ?? 0,
           qbo_connection_uuid: driver.qbo_connection_uuid ?? null,
           workTrackerGroup: group
             ? {

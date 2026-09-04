@@ -10,7 +10,7 @@ import { SelectAccountManager } from "../inputs/SelectAccountManager";
 
 export function DriverSection() {
   const isDriver = useCurrentUserStore((s) => s.isDriver);
-  const tax = useCurrentUserStore((s) => s.tax);
+  const taxDec = useCurrentUserStore((s) => s.taxDec);
   const payRateCents = useCurrentUserStore((s) => s.payRateCents);
   const payCurrency = useCurrentUserStore((s) => s.payCurrency);
   const payPerUnit = useCurrentUserStore((s) => s.payPerUnit);
@@ -102,7 +102,11 @@ export function DriverSection() {
               </TooltipProvider>
             </div>
             <div className="col-span-3">
-              <InputPercents value={tax ?? 0} setValue={(value) => setField("tax", value)} />
+              <InputPercents
+                value={taxDec ?? 0}
+                setValue={(value) => setField("taxDec", value)}
+                ariaLabel="Tax rate percent"
+              />
             </div>
           </div>
 
@@ -171,7 +175,7 @@ export function DriverSection() {
               <p className="text-sm text-gray-700">
                 <strong>Preview:</strong> ${(payRateCents / 100).toFixed(2)} {payCurrency} per{" "}
                 {payPerUnit}
-                {` + ${tax}% tax`}
+                {` + ${taxDec}% tax`}
               </p>
             </div>
           )}

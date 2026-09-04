@@ -1,40 +1,45 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { sanitizePercentInput } from "./InputPercents.logic";
 
 export default function InputPercents({
   value,
   setValue,
   placeholder,
+  ariaLabel,
 }: {
   value: number;
   setValue: (value: number) => void;
   placeholder?: string;
+  /** For fields whose visible <label> is not wired to this input. */
+  ariaLabel?: string;
 }) {
-  const [valueRaw, setValueRaw] = useState<string>(value.toString() + "%");
+  const [valueRaw, setValueRaw] = useState<string>(`${value}%`);
+
+  // The store is the source of truth between edits, but not during one: a
+  // half-typed "14." has no number to round-trip through, so it lives here.
   useEffect(() => {
-    setValueRaw(`${value}%`);
+    setValueRaw((previous) =>
+      sanitizePercentInput(previous).value === value ? previous : `${value}%`,
+    );
   }, [value]);
+
   return (
     <input
       type="string"
+      aria-label={ariaLabel}
       className="col-span-3 px-3 py-2 border rounded text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-greenAccent focus:border-0"
-      step="1"
-      min="0"
-      max="100"
+      inputMode="decimal"
       value={valueRaw}
       onChange={(e) => {
-        let value = e.target.value.replace(/[^0-9]/g, ""); // remove non-digits
-        value = value.replace(/^0+(?!$)/, ""); // Remove leading zeros
-        if (value === "") value = "0";
-        let number = Math.min(100, Math.max(0, Number(value))); // Clamp to 0–100
-        setValueRaw(`${number}%`);
-        setValue(number);
+        const { display, value: parsed } = sanitizePercentInput(e.target.value);
+        setValueRaw(`${display}%`);
+        setValue(parsed);
         // Move cursor just before the %
         requestAnimationFrame(() => {
           const input = e.target;
-          const cursorPos = `${number}`.length;
-          input.setSelectionRange(cursorPos, cursorPos);
+          input.setSelectionRange(display.length, display.length);
         });
       }}
       onFocus={(e) => {
@@ -48,7 +53,7 @@ export default function InputPercents({
         const pos = input.value.length - 1;
         input.setSelectionRange(pos, pos);
       }}
-      placeholder="0%"
+      placeholder={placeholder ?? "0%"}
     />
   );
 }

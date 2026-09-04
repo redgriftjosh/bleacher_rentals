@@ -1,17 +1,19 @@
 import { describe, it, expect } from "vitest";
 import {
   calculateDriverPay,
+  calculateFinancialTotals,
   describeDriverPay,
   type DistanceData,
   type DriverPaymentData,
 } from "./util";
+import type { WorkTrackersResult } from "./db/db";
 import type { DriverPayRange } from "@/features/manageTeam/logic/driverPayRanges";
 
 const MI = 1609.34;
 
 function driver(overrides: Partial<DriverPaymentData> = {}): DriverPaymentData {
   return {
-    tax: 0,
+    taxDec: 0,
     payRateCents: 300,
     payCurrency: "CAD",
     payPerUnit: "MI",
@@ -199,5 +201,40 @@ describe("calculateDriverPay", () => {
 
   it("still returns null when there is nothing to calculate", () => {
     expect(calculateDriverPay(driver(), trip())).toBeNull();
+  });
+});
+
+describe("calculateFinancialTotals", () => {
+  /** Two legs, $100.00 and $100.00, so the tax line is the rate in dollars. */
+  function week(driverTax: number): WorkTrackersResult {
+    return {
+      workTrackers: [
+        { workTracker: { pay_cents: 10_000 } },
+        { workTracker: { pay_cents: 10_000 } },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ] as any,
+      driverTax,
+      driverAddress: null,
+    };
+  }
+
+  it("charges a fractional provincial rate in full — Quebec is 14.975 %", () => {
+    // 20000 * 0.14975 = 2995 cents. Under the old integer column the rate
+    // arrived as 14, and the driver was short $19.50 on a $200 week.
+    expect(calculateFinancialTotals(week(14.975))).toEqual({
+      subtotal: 20_000,
+      tax: 2_995,
+      taxPercent: 14.975,
+      total: 22_995,
+    });
+  });
+
+  it("still handles a whole-percent rate", () => {
+    expect(calculateFinancialTotals(week(13))).toEqual({
+      subtotal: 20_000,
+      tax: 2_600,
+      taxPercent: 13,
+      total: 22_600,
+    });
   });
 });

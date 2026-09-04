@@ -23,7 +23,8 @@ export type CurrentUserState = {
   roleTabs: TeamRoleTab[];
 
   // Driver-specific fields
-  tax: number | undefined;
+  /** Tax rate in percent, 3 decimals — `Drivers.tax_dec`. Quebec is 14.975. */
+  taxDec: number | undefined;
   payRateCents: number | null;
   /** Amount paid per payPerUnit for deadhead travel — flat, no tiers. */
   deadheadRateCents: number | null;
@@ -97,7 +98,7 @@ const initialState: CurrentUserState = {
   isViewer: false,
   autoSubscribeToNewTickets: true,
   roleTabs: [],
-  tax: undefined,
+  taxDec: undefined,
   payRateCents: null,
   deadheadRateCents: null,
   setupCents: null,

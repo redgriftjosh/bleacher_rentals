@@ -124,7 +124,7 @@ export type DriverWithMeta = Tables<"Users"> & {
   hasCrossBorderTrips: boolean;
   region: "US" | "CAN" | null;
   qbo_connection_uuid: string | null;
-  tax: number;
+  taxDec: number;
   workTrackerGroup?: {
     id: string;
     status: Database["public"]["Enums"]["worktracker_group_status"];
@@ -150,7 +150,7 @@ export async function fetchDriverWithMetaForWeek(
       id,
       pay_currency,
       pay_per_unit,
-      tax,
+      tax_dec,
       address:Addresses!Drivers_address_uuid_fkey(street),
       vendor:Vendors(qbo_connection_uuid),
       user:Users!Drivers_user_uuid_fkey(*)
@@ -199,7 +199,7 @@ export async function fetchDriverWithMetaForWeek(
     totalDriveMinutes,
     hasCrossBorderTrips: false,
     region: deriveRegion(driver.address?.street),
-    tax: driver.tax ?? 0,
+    taxDec: driver.tax_dec ?? 0,
     qbo_connection_uuid:
       (Array.isArray(driver.vendor) ? driver.vendor[0] : driver.vendor)?.qbo_connection_uuid ??
       null,
@@ -225,7 +225,7 @@ async function fetchDriverTaxByUuidServer(
 ): Promise<number> {
   const { data, error } = await supabaseClient
     .from("Drivers")
-    .select("tax")
+    .select("tax_dec")
     .eq("user_uuid", userUuid)
     .maybeSingle();
 
@@ -235,18 +235,18 @@ async function fetchDriverTaxByUuidServer(
   }
 
   if (error) return 0;
-  return data.tax ?? 0;
+  return data.tax_dec ?? 0;
 }
 
 async function insertDriverServer(
   userUuid: string,
-  tax: number,
+  taxDec: number,
   supabaseClient: SupabaseClient<Database>,
 ) {
   const { error } = await supabaseClient.from("Drivers").upsert(
     {
       user_uuid: userUuid,
-      tax,
+      tax_dec: taxDec,
     },
     { onConflict: "user_uuid", ignoreDuplicates: true },
   );
@@ -268,7 +268,7 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
 
   const { data: driverData, error: driverError } = await supabase
     .from("Drivers")
-    .select("id, tax, address:Addresses!Drivers_address_uuid_fkey(*)")
+    .select("id, tax_dec, address:Addresses!Drivers_address_uuid_fkey(*)")
     .eq("user_uuid", userUuid)
     .single();
 
@@ -284,7 +284,7 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
   }
 
   const driverUuid = driverData.id;
-  const driverTax: number = driverData.tax ?? 0;
+  const driverTax: number = driverData.tax_dec ?? 0;
   const driverAddress = (driverData.address as Tables<"Addresses"> | null) ?? null;
 
   type WorkTrackerWithBleacher = Tables<"WorkTrackers"> & {

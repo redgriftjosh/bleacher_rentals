@@ -128,8 +128,8 @@ export function DriverList({ showInactive = false }: { showInactive?: boolean })
                       ${formatAmount(driver.payRateCents)}
                       {driver.payPerUnit && `/${driver.payPerUnit.toLowerCase()}`}
                     </div>
-                    {driver.tax !== null && (
-                      <div className="text-xs text-gray-500">Tax: {driver.tax}%</div>
+                    {driver.taxDec !== null && (
+                      <div className="text-xs text-gray-500">Tax: {driver.taxDec}%</div>
                     )}
                   </div>
                 </td>

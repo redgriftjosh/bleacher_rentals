@@ -39,7 +39,8 @@ export type DistanceData = {
 };
 
 export type DriverPaymentData = {
-  tax: number;
+  /** Tax rate in percent, 3 decimals — `Drivers.tax_dec`. */
+  taxDec: number;
   payRateCents: number;
   /** Flat amount paid per payPerUnit for deadhead travel — no tiers. */
   deadheadRateCents?: number;

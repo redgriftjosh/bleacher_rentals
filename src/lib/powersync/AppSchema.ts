@@ -213,7 +213,10 @@ const HomeBases = new Table(HomeBasesCols);
 
 const DriversCols = {
   created_at: column.text,
+  /** @deprecated Whole-percent mirror of `tax_dec`, kept for shipped br_driver builds. */
   tax: column.integer,
+  /** Tax rate in percent with 3 decimals (Quebec is 14.975). Postgres `numeric` -> SQLite real. */
+  tax_dec: column.real,
   pay_rate_cents: column.integer,
   deadhead_cents: column.integer,
   setup_cents: column.integer,
