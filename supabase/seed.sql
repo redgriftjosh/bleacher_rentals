@@ -15303,3 +15303,163 @@ WHERE photos_uploaded IS DISTINCT FROM true;
 UPDATE public."DamageReportPhotos"
 SET upload_status = 'uploaded'
 WHERE upload_status IS DISTINCT FROM 'uploaded';
+
+--
+-- Demo data for /work-trackers: drivers with trips, week by week.
+--
+-- Generated relative to CURRENT_DATE instead of hard-coded dates, because the
+-- weeks page only lists WorkTrackerGroups from last Monday to +12 weeks — any
+-- fixed date in this file falls out of that window as soon as it ages, and the
+-- page renders empty. Ids are md5-derived so a re-run is idempotent.
+--
+-- Covers both pay currencies (the CAD/USD filter on /work-trackers/<week> needs
+-- drivers on either side) and gives a couple of Canadian drivers a US dropoff so
+-- the cross-border highlight has something to show.
+--
+DO $seed_work_trackers$
+DECLARE
+  this_monday date := (date_trunc('week', CURRENT_DATE))::date;
+  can_addresses uuid[];
+  usa_addresses uuid[];
+  bleacher_ids uuid[];
+  trip_type_uuid uuid;
+  drv record;
+  week_offset int;
+  week_start date;
+  week_end date;
+  group_uuid uuid;
+  tracker_uuid uuid;
+  trip_index int;
+  trips_this_week int;
+  is_canadian boolean;
+  cross_border boolean;
+  pickup_uuid uuid;
+  dropoff_uuid uuid;
+  tracker_status public.worktracker_status;
+  group_status public.worktracker_group_status;
+BEGIN
+  SELECT id INTO trip_type_uuid
+  FROM public."WorkTrackerTypes"
+  WHERE display_name = 'Trip' AND is_deleted = false
+  ORDER BY created_at DESC
+  LIMIT 1;
+
+  SELECT array_agg(id) INTO can_addresses
+  FROM (SELECT id FROM public."Addresses" WHERE street ILIKE '%Canada' ORDER BY id LIMIT 25) a;
+
+  SELECT array_agg(id) INTO usa_addresses
+  FROM (SELECT id FROM public."Addresses" WHERE street ILIKE '%USA' ORDER BY id LIMIT 25) a;
+
+  SELECT array_agg(id) INTO bleacher_ids
+  FROM (SELECT id FROM public."Bleachers" WHERE deleted = false ORDER BY id LIMIT 25) b;
+
+  IF trip_type_uuid IS NULL
+     OR can_addresses IS NULL
+     OR usa_addresses IS NULL
+     OR bleacher_ids IS NULL THEN
+    RAISE NOTICE 'Skipping work tracker demo data: missing types, addresses or bleachers.';
+    RETURN;
+  END IF;
+
+  -- Six drivers per currency, so "See All Drivers" stays readable and both
+  -- options of the currency filter return a non-trivial list.
+  FOR drv IN
+    SELECT *
+    FROM (
+      SELECT
+        d.id AS driver_uuid,
+        COALESCE(d.pay_currency, 'USD') AS pay_currency,
+        ROW_NUMBER() OVER (
+          PARTITION BY COALESCE(d.pay_currency, 'USD')
+          ORDER BY d.id
+        )::int AS rn
+      FROM public."Drivers" d
+      JOIN public."Users" u ON u.id = d.user_uuid
+      WHERE d.is_active = true
+    ) ranked
+    WHERE ranked.rn <= 6
+  LOOP
+    is_canadian := drv.pay_currency = 'CAD';
+
+    -- Four past weeks (history + the yearly view) through three future weeks.
+    FOR week_offset IN -4..3 LOOP
+      -- Leave a few driver/week pairs empty so the list is not uniform.
+      CONTINUE WHEN (drv.rn + week_offset + 8) % 5 = 0;
+
+      week_start := this_monday + (week_offset * 7);
+      week_end := week_start + 6;
+      trips_this_week := 1 + ((drv.rn + week_offset + 8) % 4);
+
+      IF week_offset < 0 THEN
+        tracker_status := 'completed';
+        group_status := CASE WHEN week_offset < -2 THEN 'no_bill_ready_for_payment' ELSE 'draft' END;
+      ELSIF week_offset = 0 THEN
+        tracker_status := 'accepted';
+        group_status := 'draft';
+      ELSE
+        tracker_status := 'released';
+        group_status := 'draft';
+      END IF;
+
+      group_uuid := md5('wt-group:' || drv.driver_uuid || ':' || week_start)::uuid;
+
+      INSERT INTO public."WorkTrackerGroups"
+        (id, created_at, week_start, week_end, driver_uuid, qbo_bill_id, status)
+      VALUES
+        (group_uuid, now(), week_start, week_end, drv.driver_uuid, NULL, group_status)
+      ON CONFLICT (id) DO NOTHING;
+
+      FOR trip_index IN 1..trips_this_week LOOP
+        -- Every third trip of a Canadian driver drops off in the US, which is
+        -- what DriverListForWeek highlights as a cross-border week.
+        cross_border := is_canadian AND trip_index % 3 = 0;
+
+        IF is_canadian THEN
+          pickup_uuid := can_addresses[1 + ((drv.rn * 3 + trip_index) % array_length(can_addresses, 1))];
+        ELSE
+          pickup_uuid := usa_addresses[1 + ((drv.rn * 3 + trip_index) % array_length(usa_addresses, 1))];
+        END IF;
+
+        IF is_canadian AND NOT cross_border THEN
+          dropoff_uuid := can_addresses[1 + ((drv.rn * 5 + trip_index + 7) % array_length(can_addresses, 1))];
+        ELSE
+          dropoff_uuid := usa_addresses[1 + ((drv.rn * 5 + trip_index + 7) % array_length(usa_addresses, 1))];
+        END IF;
+
+        tracker_uuid := md5('wt:' || drv.driver_uuid || ':' || week_start || ':' || trip_index)::uuid;
+
+        INSERT INTO public."WorkTrackers"
+          (id, created_at, updated_at, date, pickup_time, dropoff_time, pickup_poc, dropoff_poc,
+           pay_cents, distance_meters, drive_minutes, pickup_address_uuid, dropoff_address_uuid,
+           bleacher_uuid, driver_uuid, status, released_at, accepted_at, completed_at,
+           worktracker_group_uuid, work_tracker_type_uuid, setup_required, teardown_required)
+        VALUES
+          (tracker_uuid,
+           now(),
+           now(),
+           week_start + ((trip_index + drv.rn) % 6),
+           '08:00',
+           '16:00',
+           'Site contact',
+           'Venue contact',
+           25000 + (trip_index * 7500) + (drv.rn * 1100),
+           120000 + (trip_index * 45000) + (drv.rn * 9000),
+           95 + (trip_index * 40) + (drv.rn * 7),
+           pickup_uuid,
+           dropoff_uuid,
+           bleacher_ids[1 + ((drv.rn * 2 + trip_index) % array_length(bleacher_ids, 1))],
+           drv.driver_uuid,
+           tracker_status,
+           CASE WHEN week_offset <= 0 THEN now() ELSE NULL END,
+           CASE WHEN week_offset <= 0 THEN now() ELSE NULL END,
+           CASE WHEN week_offset < 0 THEN now() ELSE NULL END,
+           group_uuid,
+           trip_type_uuid,
+           trip_index % 2 = 0,
+           trip_index % 2 = 1)
+        ON CONFLICT (id) DO NOTHING;
+      END LOOP;
+    END LOOP;
+  END LOOP;
+END
+$seed_work_trackers$;

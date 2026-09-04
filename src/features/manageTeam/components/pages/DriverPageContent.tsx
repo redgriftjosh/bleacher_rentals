@@ -108,7 +108,7 @@ export function DriverPageContent() {
     }
   };
 
-  const tax = useCurrentUserStore((s) => s.tax);
+  const taxDec = useCurrentUserStore((s) => s.taxDec);
   const payRateCents = useCurrentUserStore((s) => s.payRateCents);
   const deadheadRateCents = useCurrentUserStore((s) => s.deadheadRateCents);
   const setupCents = useCurrentUserStore((s) => s.setupCents);
@@ -319,7 +319,11 @@ export function DriverPageContent() {
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">Tax</label>
               <div style={{ height: "calc(2.5rem + 0px)" }}>
-                <InputPercents value={tax ?? 0} setValue={(value) => setField("tax", value)} />
+                <InputPercents
+                  value={taxDec ?? 0}
+                  setValue={(value) => setField("taxDec", value)}
+                  ariaLabel="Tax rate percent"
+                />
               </div>
             </div>
           </div>
@@ -337,7 +341,7 @@ export function DriverPageContent() {
             />
             <p className="mt-1 text-xs text-gray-500">
               Rates are in {payCurrency} per {payPerUnit}
-              {tax ? `, plus ${tax}% tax` : ""}.
+              {taxDec ? `, plus ${taxDec}% tax` : ""}.
             </p>
           </div>
 

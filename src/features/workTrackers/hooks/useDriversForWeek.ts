@@ -6,6 +6,7 @@ import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import type { DriverWithMeta } from "../db/db";
 import { applyDriverScope, resolveDriverScope, type DriverScope } from "../db/driverZoneScope";
+import { matchesPayCurrency, type PayCurrencyFilter } from "../util/payCurrencyFilter";
 
 const NONE = "__none__";
 
@@ -62,7 +63,7 @@ type DriverRow = {
   driver_uuid: string;
   pay_currency: string | null;
   pay_per_unit: string | null;
-  tax: number | null;
+  taxDec: number | null;
   driver_street: string | null;
   qbo_connection_uuid: string | null;
   user_id: string;
@@ -103,6 +104,7 @@ export function useDriversForWeek(
   showAllDrivers: boolean,
   access: WorkTrackerAccess | null,
   enabled: boolean,
+  payCurrencyFilter: PayCurrencyFilter = "ALL",
 ): { drivers: DriverWithMeta[]; isLoading: boolean } {
   const isAdmin = access?.isAdmin ?? false;
   const accountManagerUuid = access?.accountManagerUuid ?? null;
@@ -117,7 +119,7 @@ export function useDriversForWeek(
         "d.id as driver_uuid",
         "d.pay_currency as pay_currency",
         "d.pay_per_unit as pay_per_unit",
-        "d.tax as tax",
+        "d.tax_dec as taxDec",
         "a.street as driver_street",
         "v.qbo_connection_uuid as qbo_connection_uuid",
         "u.id as user_id",
@@ -211,35 +213,37 @@ export function useDriversForWeek(
       if (g.driver_uuid) groupsByDriver.set(g.driver_uuid, g);
     }
 
-    const result = driverRows.map((driver) => {
-      const region = deriveRegion(driver.driver_street);
-      const group = groupsByDriver.get(driver.driver_uuid);
-      return {
-        id: driver.user_id,
-        first_name: driver.first_name,
-        last_name: driver.last_name,
-        driver_uuid: driver.driver_uuid,
-        tripCount: tripCounts.get(driver.driver_uuid) ?? 0,
-        totalPayCents: payCents.get(driver.driver_uuid) ?? 0,
-        payCurrency: driver.pay_currency ?? "USD",
-        payPerUnit: driver.pay_per_unit ?? "KM",
-        totalDistanceMeters: distanceMeters.get(driver.driver_uuid) ?? 0,
-        totalDriveMinutes: driveMinutes.get(driver.driver_uuid) ?? 0,
-        hasCrossBorderTrips: region === "CAN" && usaDropoffDriverIds.has(driver.driver_uuid),
-        region,
-        tax: driver.tax ?? 0,
-        qbo_connection_uuid: driver.qbo_connection_uuid ?? null,
-        workTrackerGroup: group
-          ? {
-              id: group.id,
-              status: group.status,
-              qbo_bill_id: group.qbo_bill_id,
-              week_start: group.week_start,
-              week_end: group.week_end,
-            }
-          : null,
-      } as unknown as DriverWithMeta;
-    });
+    const result = driverRows
+      .filter((driver) => matchesPayCurrency(driver.pay_currency, payCurrencyFilter))
+      .map((driver) => {
+        const region = deriveRegion(driver.driver_street);
+        const group = groupsByDriver.get(driver.driver_uuid);
+        return {
+          id: driver.user_id,
+          first_name: driver.first_name,
+          last_name: driver.last_name,
+          driver_uuid: driver.driver_uuid,
+          tripCount: tripCounts.get(driver.driver_uuid) ?? 0,
+          totalPayCents: payCents.get(driver.driver_uuid) ?? 0,
+          payCurrency: driver.pay_currency ?? "USD",
+          payPerUnit: driver.pay_per_unit ?? "KM",
+          totalDistanceMeters: distanceMeters.get(driver.driver_uuid) ?? 0,
+          totalDriveMinutes: driveMinutes.get(driver.driver_uuid) ?? 0,
+          hasCrossBorderTrips: region === "CAN" && usaDropoffDriverIds.has(driver.driver_uuid),
+          region,
+          taxDec: driver.taxDec ?? 0,
+          qbo_connection_uuid: driver.qbo_connection_uuid ?? null,
+          workTrackerGroup: group
+            ? {
+                id: group.id,
+                status: group.status,
+                qbo_bill_id: group.qbo_bill_id,
+                week_start: group.week_start,
+                week_end: group.week_end,
+              }
+            : null,
+        } as unknown as DriverWithMeta;
+      });
 
     result.sort((a, b) => {
       if (b.tripCount !== a.tripCount) return b.tripCount - a.tripCount;
@@ -247,7 +251,7 @@ export function useDriversForWeek(
     });
 
     return result;
-  }, [enabled, driverRows, trackerRows, groupRows]);
+  }, [enabled, driverRows, trackerRows, groupRows, payCurrencyFilter]);
 
   return {
     drivers,
