@@ -401,7 +401,10 @@ const WorkTrackerLineItemsCols = {
   created_at: column.text,
   work_tracker_uuid: column.text,
   type: column.text,
+  /** DEPRECATED - whole-unit mirror of qty_decimal, maintained by a Postgres trigger. */
   quantity: column.integer,
+  /** SQLite has no DECIMAL; PowerSync casts the Postgres numeric(10,1) into a real. */
+  qty_decimal: column.real,
   unit_amt_cents: column.integer,
   description: column.text,
   is_automatically_managed: column.integer,

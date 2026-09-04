@@ -3819,6 +3819,7 @@ export type Database = {
           description: string | null
           id: string
           is_automatically_managed: boolean
+          qty_decimal: number
           quantity: number
           type: Database["public"]["Enums"]["work_tracker_line_item_type"]
           unit_amt_cents: number
@@ -3829,6 +3830,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_automatically_managed?: boolean
+          qty_decimal?: number
           quantity?: number
           type: Database["public"]["Enums"]["work_tracker_line_item_type"]
           unit_amt_cents?: number
@@ -3839,6 +3841,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_automatically_managed?: boolean
+          qty_decimal?: number
           quantity?: number
           type?: Database["public"]["Enums"]["work_tracker_line_item_type"]
           unit_amt_cents?: number
