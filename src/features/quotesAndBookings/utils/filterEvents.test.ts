@@ -13,6 +13,7 @@ const noFilters: QuotesBookingsFilters = {
   bookedTo: null,
   accountManagerUserUuid: null,
   inGoodShuffle: null,
+  inQuickBooks: null,
   salesOfficeUuid: null,
 };
 
@@ -97,6 +98,50 @@ describe("Sales Office filter", () => {
       ...noFilters,
       statuses: ["quoted"],
       salesOfficeUuid: "office-north",
+    });
+    expect(result.map((e) => e.id)).toEqual(["quoted"]);
+  });
+});
+
+const qboEvent = (id: string, is_qbo: number | null): QuotesBookingsEvent =>
+  ({ id, is_qbo }) as QuotesBookingsEvent;
+
+const inQbo = qboEvent("in-qbo", 1);
+const notInQbo = qboEvent("not-in-qbo", 0);
+const unsetQbo = qboEvent("unset-qbo", null);
+
+const qboIds = (filters: Partial<QuotesBookingsFilters>) =>
+  filterQuotesBookingsEvents([inQbo, notInQbo, unsetQbo], {
+    ...noFilters,
+    ...filters,
+  }).map((e) => e.id);
+
+describe("In QuickBooks filter", () => {
+  it("shows everything when the filter is off", () => {
+    expect(qboIds({ inQuickBooks: null })).toEqual(["in-qbo", "not-in-qbo", "unset-qbo"]);
+  });
+
+  it("shows only events flagged as entered in QuickBooks", () => {
+    expect(qboIds({ inQuickBooks: true })).toEqual(["in-qbo"]);
+  });
+
+  it("shows only events not flagged", () => {
+    expect(qboIds({ inQuickBooks: false })).toEqual(["not-in-qbo", "unset-qbo"]);
+  });
+
+  it("treats a missing flag as not in QuickBooks", () => {
+    // The column defaults to false, and older rows sync as null — to a user
+    // neither one has been entered in QuickBooks.
+    expect(qboIds({ inQuickBooks: true })).not.toContain("unset-qbo");
+  });
+
+  it("combines with the other filters rather than replacing them", () => {
+    const quoted = { ...qboEvent("quoted", 1), event_status: "quoted" };
+    const booked = { ...qboEvent("booked", 1), event_status: "booked" };
+    const result = filterQuotesBookingsEvents([quoted, booked, notInQbo], {
+      ...noFilters,
+      statuses: ["quoted"],
+      inQuickBooks: true,
     });
     expect(result.map((e) => e.id)).toEqual(["quoted"]);
   });

@@ -13,6 +13,14 @@ export function isInGoodShuffle(event: QuotesBookingsEvent): boolean {
   return (event.goodshuffle_url ?? "").trim() !== "";
 }
 
+/**
+ * QuickBooks is a manual flag stored locally as 0/1, so anything that is not a
+ * literal 1 (including a missing row) means "not in QuickBooks".
+ */
+export function isInQuickBooks(event: QuotesBookingsEvent): boolean {
+  return event.is_qbo === 1;
+}
+
 export function filterQuotesBookingsEvents(
   events: QuotesBookingsEvent[],
   filters: QuotesBookingsFilters,
@@ -37,6 +45,10 @@ export function filterQuotesBookingsEvents(
     }
 
     if (filters.inGoodShuffle !== null && isInGoodShuffle(event) !== filters.inGoodShuffle) {
+      return false;
+    }
+
+    if (filters.inQuickBooks !== null && isInQuickBooks(event) !== filters.inQuickBooks) {
       return false;
     }
 

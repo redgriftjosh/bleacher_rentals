@@ -6,6 +6,7 @@ import { DateRangeInput } from "./filters/DateRangeInput";
 import { AccountManagerMultiSelect } from "./filters/AccountManagerMultiSelect";
 import { TimezoneSelect } from "./filters/TimezoneSelect";
 import { InGoodShuffleSelect } from "./filters/InGoodShuffleSelect";
+import { InQuickBooksSelect } from "./filters/InQuickBooksSelect";
 import { SalesOfficeSelect } from "./filters/SalesOfficeSelect";
 
 type FilterPanelProps = {
@@ -16,6 +17,7 @@ type FilterPanelProps = {
   onBookedRangeChange: (from: string | null, to: string | null) => void;
   onAccountManagerChange: (uuid: string | null) => void;
   onInGoodShuffleChange: (value: boolean | null) => void;
+  onInQuickBooksChange: (value: boolean | null) => void;
   onSalesOfficeChange: (uuid: string | null) => void;
   onClear: () => void;
 };
@@ -28,6 +30,7 @@ export function FilterPanel({
   onBookedRangeChange,
   onAccountManagerChange,
   onInGoodShuffleChange,
+  onInQuickBooksChange,
   onSalesOfficeChange,
   onClear,
 }: FilterPanelProps) {
@@ -88,6 +91,11 @@ export function FilterPanel({
           <div>
             <div className="text-sm font-semibold text-gray-800 mb-2">In GoodShuffle</div>
             <InGoodShuffleSelect value={filters.inGoodShuffle} onChange={onInGoodShuffleChange} />
+          </div>
+
+          <div>
+            <div className="text-sm font-semibold text-gray-800 mb-2">In QuickBooks</div>
+            <InQuickBooksSelect value={filters.inQuickBooks} onChange={onInQuickBooksChange} />
           </div>
 
           <div>
