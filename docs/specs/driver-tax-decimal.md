@@ -139,12 +139,5 @@ no logic of its own; `br_driver`'s existing suite covers the screen around it.
 - **Old client writes `tax`** — covered by the reverse branch of the trigger.
 - **Rounding** — `round()` is half-up: `14.5 → 15`, `14.4 → 14`. Old apps see a
   whole percent and are, by design, slightly wrong; that is why they are legacy.
-- **The form re-hydrates over an unsaved edit** — pre-existing, and not fixed
-  here. `useRealtimeHydrateCurrentUserStore` copies the `Drivers` row into the
-  store on every emission of its reactive query, so a value typed after a
-  previous save can be replaced by the one syncing back down. It bit the
-  Playwright spec (a second edit in the same test snapped back to the first
-  saved value) and it can bite a person editing quickly. Worth its own fix; it
-  predates `tax_dec` and affects every field on the page, not just the rate.
 - **Existing rows** — back-filled from `tax`; the `where tax_dec = 0` guard makes
   the migration re-runnable.
