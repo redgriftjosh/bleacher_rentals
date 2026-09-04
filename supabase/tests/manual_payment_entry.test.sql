@@ -48,11 +48,14 @@ BEGIN
 
   INSERT INTO public."AccountManagers" (user_uuid, is_active) VALUES (v_am_id, true);
 
-  -- Any event will do; the policy never looks at it. That is the point of T2.
-  SELECT id INTO v_event FROM public."Events" LIMIT 1;
-  IF v_event IS NULL THEN
-    RAISE EXCEPTION 'no Events row to hang a payment off — seed the database first';
-  END IF;
+  -- The policy never looks at the event; that is the point of T2. It is built
+  -- here rather than borrowed from the seed, because CI runs the suite against
+  -- migrations only (`supabase db reset --no-seed`).
+  INSERT INTO public."Events" (id, event_name, event_start, event_end, lenient,
+                               must_be_clean, event_status, tax_percent, tax_amount_cents)
+  VALUES (gen_random_uuid(), 'ManualPaymentEntry probe', '2026-07-01', '2026-07-02',
+          false, false, 'booked', 0, 0)
+  RETURNING id INTO v_event;
 
   GRANT INSERT, SELECT, UPDATE, DELETE ON public."PaymentHistory" TO authenticated;
 
@@ -119,7 +122,7 @@ DECLARE
   v_event UUID;
   v_user  UUID;
 BEGIN
-  SELECT id INTO v_event FROM public."Events" LIMIT 1;
+  SELECT id INTO v_event FROM public."Events" WHERE event_name = 'ManualPaymentEntry probe';
   SELECT id INTO v_user FROM public."Users" WHERE clerk_user_id = p_sub;
 
   SET LOCAL ROLE authenticated;
