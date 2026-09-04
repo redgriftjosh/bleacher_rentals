@@ -213,7 +213,10 @@ const HomeBases = new Table(HomeBasesCols);
 
 const DriversCols = {
   created_at: column.text,
+  /** @deprecated Whole-percent mirror of `tax_dec`, kept for shipped br_driver builds. */
   tax: column.integer,
+  /** Tax rate in percent with 3 decimals (Quebec is 14.975). Postgres `numeric` -> SQLite real. */
+  tax_dec: column.real,
   pay_rate_cents: column.integer,
   deadhead_cents: column.integer,
   setup_cents: column.integer,
@@ -398,7 +401,10 @@ const WorkTrackerLineItemsCols = {
   created_at: column.text,
   work_tracker_uuid: column.text,
   type: column.text,
+  /** DEPRECATED - whole-unit mirror of qty_decimal, maintained by a Postgres trigger. */
   quantity: column.integer,
+  /** SQLite has no DECIMAL; PowerSync casts the Postgres numeric(10,1) into a real. */
+  qty_decimal: column.real,
   unit_amt_cents: column.integer,
   description: column.text,
   is_automatically_managed: column.integer,

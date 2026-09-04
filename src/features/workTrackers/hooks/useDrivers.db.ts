@@ -10,7 +10,7 @@ import { applyDriverScope, NO_DRIVER_MATCH, resolveDriverScope } from "../db/dri
 type Compiled = {
   driver_uuid: string;
   user_uuid: string | null;
-  tax: number | null;
+  taxDec: number | null;
   pay_rate_cents: number | null;
   setup_cents: number | null;
   teardown_cents: number | null;
@@ -26,7 +26,7 @@ type Compiled = {
 export type DriverWithUser = {
   driver_uuid: string;
   user_uuid: string;
-  tax: number;
+  taxDec: number;
   pay_rate_cents: number;
   setup_cents: number | null;
   teardown_cents: number | null;
@@ -77,7 +77,7 @@ export function useDrivers(options?: { showAll?: boolean }): {
         .select([
           "d.id as driver_uuid",
           "d.user_uuid as user_uuid",
-          "d.tax as tax",
+          "d.tax_dec as taxDec",
           "d.pay_rate_cents as pay_rate_cents",
           "d.setup_cents as setup_cents",
           "d.teardown_cents as teardown_cents",
@@ -99,7 +99,7 @@ export function useDrivers(options?: { showAll?: boolean }): {
       .select([
         "d.id as driver_uuid",
         "d.user_uuid as user_uuid",
-        "d.tax as tax",
+        "d.tax_dec as taxDec",
         "d.pay_rate_cents as pay_rate_cents",
         "d.setup_cents as setup_cents",
         "d.teardown_cents as teardown_cents",

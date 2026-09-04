@@ -86,7 +86,7 @@ export function WorkTrackerGroupModal({
             id,
             user_uuid,
             vendor_uuid,
-            tax,
+            tax_dec,
             vendor:Vendors(display_name, qbo_vendor_id)
           `,
           )
@@ -99,7 +99,7 @@ export function WorkTrackerGroupModal({
 
         // Store user_uuid for navigation
         setUserUuid(driver.user_uuid);
-        setDriverTaxRate((driver as any).tax ?? 0);
+        setDriverTaxRate(driver.tax_dec ?? 0);
 
         // Check vendor status
         if (!driver.vendor_uuid || !driver.vendor) {

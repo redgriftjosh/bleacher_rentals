@@ -12,6 +12,7 @@ import {
   WorkTrackerLineItemType,
   DraftWorkTrackerLineItem,
 } from "../db/workTrackerLineItems";
+import { sanitizeQuantityInput } from "./quantityInput.logic";
 
 const TYPE_OPTIONS = WORK_TRACKER_LINE_ITEM_TYPES.map((t) => ({
   label: WORK_TRACKER_LINE_ITEM_TYPE_LABELS[t],
@@ -42,10 +43,10 @@ function LineItemRow({
   onUpdate: (patch: Partial<DraftWorkTrackerLineItem>) => void;
   onRemove: () => void;
 }) {
-  const [quantityInput, setQuantityInput] = useState(String(item.quantity));
+  const [quantityInput, setQuantityInput] = useState(String(item.qtyDecimal));
   const [amountDisplay, setAmountDisplay] = useState(centsToDollars(item.unitAmtCents));
 
-  const lineTotalCents = Math.round(item.quantity * item.unitAmtCents);
+  const lineTotalCents = Math.round(item.qtyDecimal * item.unitAmtCents);
 
   return (
     <tr className="border-b last:border-b-0">
@@ -59,19 +60,20 @@ function LineItemRow({
       </td>
       <td className="py-2 pr-2">
         <input
-          type="number"
-          min="0"
-          step="1"
+          type="text"
+          inputMode="decimal"
+          aria-label="Quantity"
           className="w-24 p-1.5 border rounded bg-white text-sm"
           value={quantityInput}
           disabled={!canEdit}
-          onChange={(e) => setQuantityInput(e.target.value)}
-          onBlur={() => {
-            const parsed = parseInt(quantityInput, 10);
-            const next = isNaN(parsed) || parsed < 0 ? item.quantity : parsed;
-            setQuantityInput(String(next));
-            if (next !== item.quantity) onUpdate({ quantity: next });
+          onChange={(e) => {
+            const { display, value } = sanitizeQuantityInput(e.target.value);
+            setQuantityInput(display);
+            if (value !== item.qtyDecimal) onUpdate({ qtyDecimal: value });
           }}
+          // A half-typed "2." or an emptied field is fine to hold while typing,
+          // but on the way out it should read back as the number that was stored.
+          onBlur={() => setQuantityInput(String(item.qtyDecimal))}
         />
       </td>
       <td className="py-2 pr-2">
@@ -131,15 +133,15 @@ function AddLineItemRow({ onAdd }: { onAdd: (item: DraftWorkTrackerLineItem) => 
   };
 
   const handleAdd = () => {
-    const quantity = parseInt(quantityInput, 10);
-    if (isNaN(quantity) || quantity < 0) {
+    const { display, value: qtyDecimal } = sanitizeQuantityInput(quantityInput);
+    if (display === "") {
       createErrorToast(["Enter a valid quantity."]);
       return;
     }
     onAdd({
       id: crypto.randomUUID(),
       type,
-      quantity,
+      qtyDecimal,
       unitAmtCents: amountCents ?? 0,
       description: description.trim() === "" ? null : description.trim(),
       isAutomaticallyManaged: false,
@@ -158,12 +160,12 @@ function AddLineItemRow({ onAdd }: { onAdd: (item: DraftWorkTrackerLineItem) => 
       </td>
       <td className="py-2 pr-2">
         <input
-          type="number"
-          min="0"
-          step="1"
+          type="text"
+          inputMode="decimal"
+          aria-label="New line item quantity"
           className="w-24 p-1.5 border rounded bg-white text-sm"
           value={quantityInput}
-          onChange={(e) => setQuantityInput(e.target.value)}
+          onChange={(e) => setQuantityInput(sanitizeQuantityInput(e.target.value).display)}
         />
       </td>
       <td className="py-2 pr-2">

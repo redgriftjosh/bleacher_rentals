@@ -14,7 +14,7 @@ const baseState: CurrentUserState = {
   isViewer: false,
   autoSubscribeToNewTickets: true,
   roleTabs: [],
-  tax: undefined,
+  taxDec: undefined,
   payRateCents: null,
   deadheadRateCents: null,
   setupCents: null,
@@ -101,7 +101,7 @@ describe("driverPayFields", () => {
     expect(
       driverPayFields({
         ...baseState,
-        tax: 13,
+        taxDec: 13,
         payRateCents: 250,
         deadheadRateCents: 75,
         setupCents: 12_345,
@@ -110,7 +110,7 @@ describe("driverPayFields", () => {
         payPerUnit: "MI",
       }),
     ).toEqual({
-      tax: 13,
+      tax_dec: 13,
       pay_rate_cents: 250,
       deadhead_cents: 75,
       setup_cents: 12_345,
@@ -118,6 +118,17 @@ describe("driverPayFields", () => {
       pay_currency: "USD",
       pay_per_unit: "MI",
     });
+  });
+});
+
+describe("driverPayFields — fractional rates", () => {
+  it("writes the decimal rate to tax_dec, and never to the deprecated tax column", () => {
+    const fields = driverPayFields({ ...baseState, taxDec: 14.975 });
+
+    expect(fields.tax_dec).toBe(14.975);
+    // `tax` is maintained by the sync_driver_tax() trigger; writing it here
+    // would race the trigger and re-truncate the rate we just saved.
+    expect(fields).not.toHaveProperty("tax");
   });
 });
 

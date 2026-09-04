@@ -9,7 +9,7 @@ import type { WorkTrackersResult } from "../db/db";
 
 type DriverRow = {
   driver_uuid: string;
-  tax: number | null;
+  taxDec: number | null;
   address_id: string | null;
   address_created_at: string | null;
   address_street: string | null;
@@ -34,7 +34,7 @@ export function useWorkTrackersForWeek(
       .leftJoin("Addresses as a", "a.id", "d.address_uuid")
       .select([
         "d.id as driver_uuid",
-        "d.tax as tax",
+        "d.tax_dec as taxDec",
         "a.id as address_id",
         "a.created_at as address_created_at",
         "a.street as address_street",
@@ -134,7 +134,7 @@ export function useWorkTrackersForWeek(
         : null,
     }));
 
-    return { workTrackers, driverTax: driver.tax ?? 0, driverAddress };
+    return { workTrackers, driverTax: driver.taxDec ?? 0, driverAddress };
   }, [driver, trackerRows]);
 
   return {

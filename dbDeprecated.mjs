@@ -46,5 +46,11 @@ export const DEPRECATED_CONFIG = {
       column: "user_id",
       reason: "Use driver_id instead (WorkTrackers now links to Drivers table).",
     },
+    {
+      table: "WorkTrackerLineItems",
+      column: "quantity",
+      reason:
+        "Use qty_decimal instead. `quantity` is a whole-unit mirror kept only for shipped br_driver builds, maintained by the sync_work_tracker_line_item_qty() trigger.",
+    },
   ],
 };
