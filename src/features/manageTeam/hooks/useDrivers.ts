@@ -7,7 +7,7 @@ import { useSearchQueryStore } from "../state/useSearchQueryStore";
 
 type Driver = {
   driverUuid: string;
-  tax: number | null;
+  taxDec: number | null;
   payRateCents: number | null;
   payPerUnit: string | null;
   payCurrency: string | null;
@@ -33,7 +33,7 @@ export function useDrivers(): Driver[] {
     .where("d.is_active", "=", 1)
     .select([
       "d.id as driverUuid",
-      "d.tax as tax",
+      "d.tax_dec as taxDec",
       "d.pay_rate_cents as payRateCents",
       "d.pay_per_unit as payPerUnit",
       "d.pay_currency as payCurrency",

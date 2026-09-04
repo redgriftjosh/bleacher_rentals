@@ -17,7 +17,9 @@ type TypedSupabaseClient = SupabaseClient<Database>;
 
 export function driverPayFields(state: CurrentUserState) {
   return {
-    tax: state.tax ?? 0,
+    // `tax` is deliberately absent: the sync_driver_tax() trigger derives the
+    // deprecated whole-percent column from this one.
+    tax_dec: state.taxDec ?? 0,
     pay_rate_cents: state.payRateCents ?? 0,
     deadhead_cents: state.deadheadRateCents ?? 0,
     setup_cents: state.setupCents ?? 0,
@@ -773,7 +775,7 @@ export async function fetchUserById(
         result.isDriver = true;
       }
       // Always load driver data so re-enabling restores saved values
-      result.tax = driver.tax;
+      result.taxDec = driver.tax_dec;
       result.payRateCents = driver.pay_rate_cents;
       result.deadheadRateCents = driver.deadhead_cents;
       result.setupCents = driver.setup_cents;

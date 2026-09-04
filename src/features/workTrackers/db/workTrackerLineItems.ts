@@ -33,7 +33,12 @@ export const WORK_TRACKER_LINE_ITEM_TYPE_LABELS: Record<WorkTrackerLineItemType,
 export type DraftWorkTrackerLineItem = {
   id: string;
   type: WorkTrackerLineItemType;
-  quantity: number;
+  /**
+   * The line's quantity, one decimal. Backed by `qty_decimal`, not the
+   * deprecated integer `quantity` column - a Postgres trigger keeps that one
+   * updated for shipped driver-app builds, so nothing here ever writes it.
+   */
+  qtyDecimal: number;
   unitAmtCents: number;
   description: string | null;
   isAutomaticallyManaged: boolean;
@@ -41,13 +46,13 @@ export type DraftWorkTrackerLineItem = {
 
 /** Returns the sum of every line total, in cents. */
 export function calculateWorkTrackerLineItemsTotalCents(items: DraftWorkTrackerLineItem[]): number {
-  return items.reduce((sum, item) => sum + Math.round(item.quantity * item.unitAmtCents), 0);
+  return items.reduce((sum, item) => sum + Math.round(item.qtyDecimal * item.unitAmtCents), 0);
 }
 
 type Row = {
   id: string;
   type: string | null;
-  quantity: number | null;
+  qty_decimal: number | null;
   unit_amt_cents: number | null;
   description: string | null;
   is_automatically_managed: number | null;
@@ -62,7 +67,14 @@ export async function fetchWorkTrackerLineItems(
 ): Promise<DraftWorkTrackerLineItem[]> {
   const compiled = db
     .selectFrom("WorkTrackerLineItems")
-    .select(["id", "type", "quantity", "unit_amt_cents", "description", "is_automatically_managed"])
+    .select([
+      "id",
+      "type",
+      "qty_decimal",
+      "unit_amt_cents",
+      "description",
+      "is_automatically_managed",
+    ])
     .where("work_tracker_uuid", "=", workTrackerUuid)
     .orderBy("created_at", "asc")
     .compile();
@@ -72,7 +84,7 @@ export async function fetchWorkTrackerLineItems(
   return rows.map((r) => ({
     id: r.id,
     type: (r.type ?? "custom") as WorkTrackerLineItemType,
-    quantity: r.quantity ?? 0,
+    qtyDecimal: r.qty_decimal ?? 0,
     unitAmtCents: r.unit_amt_cents ?? 0,
     description: r.description,
     isAutomaticallyManaged: !!r.is_automatically_managed,
@@ -111,7 +123,7 @@ export function reconcileRequirementLineItems(
         {
           id: createId(),
           type,
-          quantity: 1,
+          qtyDecimal: 1,
           unitAmtCents:
             (type === "setup" ? requirements.setupCents : requirements.teardownCents) ?? 0,
           description: null,
@@ -154,7 +166,7 @@ export async function syncWorkTrackerLineItems(
           created_at: new Date().toISOString(),
           work_tracker_uuid: workTrackerUuid,
           type: item.type,
-          quantity: item.quantity,
+          qty_decimal: item.qtyDecimal,
           unit_amt_cents: item.unitAmtCents,
           description: item.description,
           is_automatically_managed: item.isAutomaticallyManaged ? 1 : 0,

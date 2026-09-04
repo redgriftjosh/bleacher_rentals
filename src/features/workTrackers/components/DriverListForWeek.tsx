@@ -9,6 +9,11 @@ import { useState } from "react";
 import { PaymentStatusButton } from "./PaymentStatusButton";
 import { TotalsMatch } from "./TotalsMatch";
 import { DateTime } from "luxon";
+import {
+  PAY_CURRENCIES,
+  parsePayCurrencyFilter,
+  type PayCurrencyFilter,
+} from "../util/payCurrencyFilter";
 
 type Props = {
   startDate: string;
@@ -52,10 +57,10 @@ function formatUnitTotal(
 
 export function DriverListForWeek({ startDate }: Props) {
   const router = useRouter();
-  ``;
   const { user } = useUser();
   const users = useUsersStore((s) => s.users);
   const [showAllDrivers, setShowAllDrivers] = useState(false);
+  const [payCurrencyFilter, setPayCurrencyFilter] = useState<PayCurrencyFilter>("ALL");
 
   // Calculate week end date (6 days after start)
   const weekEnd = DateTime.fromISO(startDate).plus({ days: 6 }).toISODate() || startDate;
@@ -80,6 +85,7 @@ export function DriverListForWeek({ startDate }: Props) {
     showAllDrivers,
     accessData ?? null,
     hasAccess,
+    payCurrencyFilter,
   );
 
   if (accessLoading) {
@@ -126,12 +132,33 @@ export function DriverListForWeek({ startDate }: Props) {
       <tbody>
         <tr>
           <td className="p-3">
-            <button
-              onClick={() => setShowAllDrivers(!showAllDrivers)}
-              className="px-4 py-2 bg-darkBlue text-white text-sm font-semibold rounded shadow-md hover:bg-lightBlue transition cursor-pointer"
-            >
-              {showAllDrivers ? "See My Drivers Only" : "See All Drivers"}
-            </button>
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                onClick={() => setShowAllDrivers(!showAllDrivers)}
+                className="px-4 py-2 bg-darkBlue text-white text-sm font-semibold rounded shadow-md hover:bg-lightBlue transition cursor-pointer"
+              >
+                {showAllDrivers ? "See My Drivers Only" : "See All Drivers"}
+              </button>
+
+              <div className="flex items-center gap-2">
+                <label htmlFor="pay-currency-filter" className="text-sm font-medium text-gray-600">
+                  Currency:
+                </label>
+                <select
+                  id="pay-currency-filter"
+                  value={payCurrencyFilter}
+                  onChange={(e) => setPayCurrencyFilter(parsePayCurrencyFilter(e.target.value))}
+                  className="px-3 py-1.5 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-darkBlue focus:border-0"
+                >
+                  <option value="ALL">All Currencies</option>
+                  {PAY_CURRENCIES.map((currency) => (
+                    <option key={currency} value={currency}>
+                      {currency}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -182,9 +209,11 @@ export function DriverListForWeek({ startDate }: Props) {
         {drivers.length === 0 && (
           <tr>
             <td className="py-4 px-3 text-center text-gray-500">
-              {showAllDrivers
-                ? "No drivers found in the system."
-                : "No drivers are assigned to your zones."}
+              {payCurrencyFilter !== "ALL"
+                ? `No ${payCurrencyFilter} drivers found.`
+                : showAllDrivers
+                  ? "No drivers found in the system."
+                  : "No drivers are assigned to your zones."}
             </td>
           </tr>
         )}

@@ -20,7 +20,7 @@ type UserRealtimeRow = {
   devIsActive: number | null;
   autoSubscribeToNewTickets: number | null;
 
-  tax: number | null;
+  taxDec: number | null;
   payRateCents: number | null;
   payCurrency: string | null;
   payPerUnit: string | null;
@@ -66,7 +66,7 @@ export function useRealtimeHydrateCurrentUserStore() {
           "autoSubscribeToNewTickets",
         ),
 
-        "d.tax as tax",
+        "d.tax_dec as taxDec",
         "d.pay_rate_cents as payRateCents",
         "d.pay_currency as payCurrency",
         "d.pay_per_unit as payPerUnit",
@@ -98,7 +98,7 @@ export function useRealtimeHydrateCurrentUserStore() {
       isDeveloper: Boolean(row.isDeveloper),
       autoSubscribeToNewTickets: Boolean(row.autoSubscribeToNewTickets ?? true),
 
-      tax: row.tax ?? undefined,
+      taxDec: row.taxDec ?? undefined,
       payRateCents: row.payRateCents,
       payCurrency: (row.payCurrency as "CAD" | "USD") ?? "CAD",
       payPerUnit: (row.payPerUnit as "KM" | "MI" | "HR") ?? "KM",

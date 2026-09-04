@@ -20,7 +20,7 @@ export async function fetchDriverTaxById(
   // const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from("Drivers")
-    .select("tax")
+    .select("tax_dec")
     .eq("user_uuid", userUuid)
     .maybeSingle();
 
@@ -35,11 +35,12 @@ export async function fetchDriverTaxById(
     return 0;
   }
 
-  return data.tax ?? 0;
+  return data.tax_dec ?? 0;
 }
 
 export type DriverPaymentData = {
-  tax: number;
+  /** Tax rate in percent, 3 decimals — `Drivers.tax_dec`. */
+  taxDec: number;
   payRateCents: number;
   /** Flat amount paid per payPerUnit for deadhead travel — no tiers. */
   deadheadRateCents: number;
@@ -50,7 +51,7 @@ export type DriverPaymentData = {
 };
 
 const EMPTY_DRIVER_PAYMENT_DATA: DriverPaymentData = {
-  tax: 0,
+  taxDec: 0,
   payRateCents: 0,
   deadheadRateCents: 0,
   payCurrency: "CAD",
@@ -68,7 +69,7 @@ export async function fetchDriverPaymentData(
   // const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from("Drivers")
-    .select("id, tax, pay_rate_cents, deadhead_cents, pay_currency, pay_per_unit")
+    .select("id, tax_dec, pay_rate_cents, deadhead_cents, pay_currency, pay_per_unit")
     .eq("user_uuid", userUuid)
     .maybeSingle();
 
@@ -95,7 +96,7 @@ export async function fetchDriverPaymentData(
   }
 
   return {
-    tax: data.tax ?? 0,
+    taxDec: data.tax_dec ?? 0,
     payRateCents: data.pay_rate_cents ?? 0,
     deadheadRateCents: data.deadhead_cents ?? 0,
     payCurrency: (data.pay_currency as "CAD" | "USD") ?? "CAD",
@@ -106,7 +107,7 @@ export async function fetchDriverPaymentData(
 
 async function ensureDriverExists(
   userUuid: string,
-  tax: number,
+  taxDec: number,
   payRateCents: number,
   payCurrency: Database["public"]["Enums"]["pay_currency_type"],
   payPerUnit: Database["public"]["Enums"]["pay_per_unit_type"],
@@ -117,7 +118,7 @@ async function ensureDriverExists(
   const { error } = await supabaseClient.from("Drivers").upsert(
     {
       user_uuid: userUuid,
-      tax,
+      tax_dec: taxDec,
       pay_rate_cents: payRateCents,
       pay_currency: payCurrency,
       pay_per_unit: payPerUnit,

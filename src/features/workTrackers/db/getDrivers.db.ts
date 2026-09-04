@@ -4,7 +4,7 @@ import { Database } from "../../../../database.types";
 export type DriverWithUser = {
   driver_uuid: string;
   user_uuid: string;
-  tax: number;
+  taxDec: number;
   pay_rate_cents: number;
   pay_currency: string;
   pay_per_unit: string;
@@ -26,7 +26,7 @@ export async function getDriversWithUsers(
       `
       id,
       user_uuid,
-      tax,
+      tax_dec,
       pay_rate_cents,
       pay_currency,
       pay_per_unit,
@@ -48,7 +48,7 @@ export async function getDriversWithUsers(
   return (data as any[]).map((driver) => ({
     driver_uuid: driver.id,
     user_uuid: driver.user_uuid,
-    tax: driver.tax,
+    taxDec: driver.tax_dec,
     pay_rate_cents: driver.pay_rate_cents,
     pay_currency: driver.pay_currency,
     pay_per_unit: driver.pay_per_unit,

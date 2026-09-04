@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { DateTime } from "luxon";
 import { Search, ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -34,7 +34,12 @@ import {
   filtersForTemplate,
   SCORECARD_TEMPLATES,
 } from "@/features/quotesAndBookings/utils/scorecardTemplates";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  filtersToSearchParams,
+  searchParamsToFilters,
+  hasUrlSyncedFilterParams,
+} from "@/features/quotesAndBookings/utils/filterUrlSync";
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return "N/A";
@@ -62,7 +67,18 @@ function capitalizeStatus(status: string | null): string {
 }
 
 export default function QuotesBookingsPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Filters/search/showDeleted round-trip through the URL so the browser
+  // back button restores them (e.g. after clicking into a quote). Read once
+  // on mount — subsequent user edits are pushed back out via the effect below.
+  // eslint/exhaustive-deps note: intentionally read once on mount, not on every
+  // searchParams change (that would fight the sync effect below).
+  const urlState = useMemo(() => searchParamsToFilters(searchParams), []);
+  const hasUrlFilters = useMemo(() => hasUrlSyncedFilterParams(searchParams), []);
+
   const templateParam = searchParams.get("template");
   const timeRangeParam = searchParams.get("timeRange") as
     | "weekly"
@@ -97,11 +113,32 @@ export default function QuotesBookingsPage() {
     setInQuickBooks,
     setSalesOfficeUuid,
     clearFilters,
-  } = useQuotesAndBookingsFilters(initialOverrides);
+  } = useQuotesAndBookingsFilters(initialOverrides, hasUrlFilters ? urlState.filters : undefined);
 
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(urlState.showDeleted);
   const { data, isLoading, error } = useQuotesAndBookingsData(filters, showDeleted);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(urlState.searchQuery);
+
+  // Push filter/search/showDeleted state into the URL (replace, not push, so
+  // each edit doesn't grow browser history — only "open a quote" should).
+  // Search is debounced so we're not replacing history on every keystroke.
+  const isFirstSyncRef = useRef(true);
+  useEffect(() => {
+    const delay = isFirstSyncRef.current ? 0 : 300;
+    isFirstSyncRef.current = false;
+    const timeout = setTimeout(() => {
+      const nextParams = filtersToSearchParams(
+        { filters, searchQuery, showDeleted },
+        new URLSearchParams(searchParams.toString()),
+      );
+      const nextQs = nextParams.toString();
+      const currentQs = searchParams.toString();
+      if (nextQs === currentQs) return;
+      router.replace(nextQs ? `${pathname}?${nextQs}` : pathname, { scroll: false });
+    }, delay);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, searchQuery, showDeleted]);
 
   const searchedData = useMemo(() => {
     if (!data) return data;
@@ -115,8 +152,6 @@ export default function QuotesBookingsPage() {
     (event: QuotesBookingsEvent) => pickEventCurrency(event.sales_office_uuid, currencyByOfficeId),
     [currencyByOfficeId],
   );
-
-  const router = useRouter();
 
   const periodLabel =
     timeRangeParam === "quarterly"

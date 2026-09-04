@@ -247,7 +247,7 @@ export default function WorkTrackerModal({
         {
           id: haulingId,
           type: "hauling",
-          quantity: 1,
+          qtyDecimal: 1,
           unitAmtCents: 0,
           description: null,
           isAutomaticallyManaged: false,
@@ -255,7 +255,7 @@ export default function WorkTrackerModal({
         {
           id: deadheadId,
           type: "deadhead",
-          quantity: 1,
+          qtyDecimal: 1,
           unitAmtCents: 0,
           description: null,
           isAutomaticallyManaged: false,
@@ -720,7 +720,7 @@ export default function WorkTrackerModal({
         if (item.id === haulingId && payBreakdown) {
           return {
             ...item,
-            quantity: 1,
+            qtyDecimal: 1,
             unitAmtCents: Math.round(payBreakdown.amount * 100),
             description: payBreakdown.text,
           };
@@ -728,7 +728,7 @@ export default function WorkTrackerModal({
         if (item.id === deadheadId && deadheadBreakdown) {
           return {
             ...item,
-            quantity: 1,
+            qtyDecimal: 1,
             unitAmtCents: Math.round(deadheadBreakdown.amount * 100),
             description: deadheadBreakdown.text,
           };

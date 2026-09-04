@@ -1074,6 +1074,7 @@ export type Database = {
           phone_number: string | null
           setup_cents: number
           tax: number
+          tax_dec: number
           teardown_cents: number
           user_uuid: string | null
           vehicle_uuid: string | null
@@ -1101,6 +1102,7 @@ export type Database = {
           phone_number?: string | null
           setup_cents?: number
           tax?: number
+          tax_dec?: number
           teardown_cents?: number
           user_uuid?: string | null
           vehicle_uuid?: string | null
@@ -1128,6 +1130,7 @@ export type Database = {
           phone_number?: string | null
           setup_cents?: number
           tax?: number
+          tax_dec?: number
           teardown_cents?: number
           user_uuid?: string | null
           vehicle_uuid?: string | null
@@ -3816,6 +3819,7 @@ export type Database = {
           description: string | null
           id: string
           is_automatically_managed: boolean
+          qty_decimal: number
           quantity: number
           type: Database["public"]["Enums"]["work_tracker_line_item_type"]
           unit_amt_cents: number
@@ -3826,6 +3830,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_automatically_managed?: boolean
+          qty_decimal?: number
           quantity?: number
           type: Database["public"]["Enums"]["work_tracker_line_item_type"]
           unit_amt_cents?: number
@@ -3836,6 +3841,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_automatically_managed?: boolean
+          qty_decimal?: number
           quantity?: number
           type?: Database["public"]["Enums"]["work_tracker_line_item_type"]
           unit_amt_cents?: number

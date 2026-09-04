@@ -12,7 +12,7 @@ const item = (
 ): DraftWorkTrackerLineItem => ({
   id,
   type,
-  quantity: 1,
+  qtyDecimal: 1,
   unitAmtCents: 0,
   description: null,
   isAutomaticallyManaged,
@@ -21,10 +21,10 @@ const item = (
 describe("calculateWorkTrackerLineItemsTotalCents", () => {
   it("totals every line item, including automatically managed setup and teardown", () => {
     const lines = [
-      { ...item("haul", "hauling"), quantity: 2, unitAmtCents: 10_050 },
+      { ...item("haul", "hauling"), qtyDecimal: 2, unitAmtCents: 10_050 },
       { ...item("setup", "setup", true), unitAmtCents: 12_345 },
       { ...item("teardown", "teardown", true), unitAmtCents: 6_789 },
-      { ...item("custom", "custom"), quantity: 3, unitAmtCents: 250 },
+      { ...item("custom", "custom"), qtyDecimal: 3, unitAmtCents: 250 },
     ];
 
     expect(calculateWorkTrackerLineItemsTotalCents(lines)).toBe(39_984);
@@ -32,6 +32,19 @@ describe("calculateWorkTrackerLineItemsTotalCents", () => {
 
   it("returns zero when there are no line items", () => {
     expect(calculateWorkTrackerLineItemsTotalCents([])).toBe(0);
+  });
+
+  it("bills a fractional quantity — 2.5 hours at $19.99 is $49.98", () => {
+    const lines = [{ ...item("maint", "maintenance"), qtyDecimal: 2.5, unitAmtCents: 1_999 }];
+
+    expect(calculateWorkTrackerLineItemsTotalCents(lines)).toBe(4_998);
+  });
+
+  it("rounds float dust out of the cents total rather than storing it", () => {
+    // 0.3 * 1000 is 299.99999999999994 in IEEE 754; the stored total is cents.
+    const lines = [{ ...item("dust", "custom"), qtyDecimal: 0.3, unitAmtCents: 1_000 }];
+
+    expect(calculateWorkTrackerLineItemsTotalCents(lines)).toBe(300);
   });
 });
 
