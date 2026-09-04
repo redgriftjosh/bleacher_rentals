@@ -109,6 +109,10 @@ describe("QuotePublicView — English (regression guard)", () => {
     expect(html).toContain("Tax (5%)");
     expect(html).toContain("Invoice #INV-1042");
   });
+
+  it("tells the client where to send an e-transfer", () => {
+    expect(html).toContain("e-transfers to payments@bleacherrentals.com");
+  });
 });
 
 describe("QuotePublicView — French", () => {
@@ -132,6 +136,10 @@ describe("QuotePublicView — French", () => {
     expect(html).toContain(`1${NBSP}000,00${NBSP}$${NBSP}CA`);
     expect(html).toContain("dimanche 18 janv. - lundi 19 janv. 2026");
     expect(html).toContain("Taxes (5 %)");
+  });
+
+  it("gives the e-transfer address in French", () => {
+    expect(html).toContain("Virements Interac à payments@bleacherrentals.com");
   });
 
   it("leaves no English chrome behind", () => {

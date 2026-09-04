@@ -23,6 +23,7 @@
 
 BEGIN;
 SET search_path TO extensions, public, "$user";
+SELECT plan(1);
 
 DO $$
 DECLARE
@@ -182,7 +183,9 @@ BEGIN
   RAISE NOTICE 'append-only: OK';
 END $$;
 
--- Every check above raises on failure, so reaching here under
--- ON_ERROR_STOP=1 is the pass condition.
-SELECT 'manual payment entry: constraints and RLS behave as specified' AS result;
+-- Every check above raises on failure, so reaching here is the pass condition.
+SELECT ok(true, 'manual payment entry: constraints and RLS behave as specified');
+
+SELECT * FROM finish();
+
 ROLLBACK;

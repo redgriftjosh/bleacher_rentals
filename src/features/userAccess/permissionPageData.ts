@@ -130,6 +130,25 @@ export const PERMISSIONS: PermissionEntry[] = [
     },
   },
   {
+    label: "Event Chat",
+    description:
+      "The internal chat on a quote, booking or event — the conversation staff have among themselves. Clients never see it. The person who owns the event is added to its chat automatically when the event is created and if the event changes hands; anyone else joins with the Join button. Someone who leaves a chat stays out until they rejoin, including the owner.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: full(
+        "Can read every event chat, post, join or leave, and delete or edit any message, including other people's.",
+      ),
+      account_manager: custom(
+        "Can read every event chat, post in it, and join or leave. Can edit or delete only their own messages. Can also remove someone else from a chat they are themselves part of.",
+      ),
+      developer: none(
+        "Unable to even access the pages where the chat lives, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read("Can read event chats and who is in them, but cannot post, join or leave."),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
     label: "Dashboard Cells",
     description: "This applies to the Dashboard page.",
     category: "Day to Day Operations",
