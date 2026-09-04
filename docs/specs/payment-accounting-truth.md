@@ -665,6 +665,28 @@ category "Day to Day Operations", next to "QuickBooks Invoice Flag":
 `read` for all three staff roles because nobody can write payments from the UI —
 writes come only from the Stripe webhook via the service role.
 
+> **Note (2026-09-03) — superseded in part.** Manual entry now exists; the
+> `PaymentHistory` write rules live in
+> [manual-payment-entry.md](./manual-payment-entry.md) §6.1 and the matrix has
+> been updated accordingly.
+
+### 9.1 The QuickBooks Invoice flag — owner's call, 2026-09-03
+
+`Events.is_qbo` is writable by **any** admin or account manager, on any quote or
+booking, including one they did not create.
+
+The flag first shipped gated on the tab's `canEdit`, i.e. on quote ownership.
+That was wrong twice over. It promised a limit the database never kept —
+`events_update` is role-only (`{admin,account_manager}`), with no ownership
+clause — and it described the wrong job: entering an invoice into QuickBooks is
+bookkeeping, done by whoever does the books, not by whoever sold the event. The
+checkbox is now gated on role alone
+([BillingTab.tsx](../../src/features/quotesAndBookings/components/quoteDetail/tabs/BillingTab.tsx)),
+which is what the RLS policy already enforced.
+
+Viewers still see the flag's state with the box disabled; `developer` and
+`driver` cannot reach the page.
+
 ---
 
 ## 10. TDD plan (implementation order)

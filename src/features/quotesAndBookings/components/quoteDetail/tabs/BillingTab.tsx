@@ -322,13 +322,21 @@ export function BillingTab({
       {/* QuickBooks */}
       <div>
         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">QuickBooks</h3>
+        {/*
+          Gated on role, not on `canEdit`. Bookkeeping is not the quote owner's
+          job: whoever enters the invoice into QuickBooks ticks the box, on
+          anyone's quote (owner's call, 2026-09-03). That matches `events_update`,
+          which already lets any admin or account manager write this column, so
+          the box no longer promises a limit the database does not keep.
+          Viewers still see the state and cannot change it.
+        */}
         <label className="flex items-center gap-2 text-sm cursor-pointer w-fit">
           <Checkbox
             checked={isQbo}
-            disabled={!canEdit}
+            disabled={isViewer}
             onCheckedChange={(checked) => handleQboChange(checked === true)}
           />
-          <span className={!canEdit ? "text-gray-400" : ""}>QuickBooks Invoice</span>
+          <span className={isViewer ? "text-gray-400" : ""}>QuickBooks Invoice</span>
         </label>
       </div>
 

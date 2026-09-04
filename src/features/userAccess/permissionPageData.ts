@@ -77,8 +77,8 @@ export const PERMISSIONS: PermissionEntry[] = [
     category: "Day to Day Operations",
     roles: {
       admin: full("Can tick or untick the flag on any quote or booking."),
-      account_manager: custom(
-        "Can tick or untick the flag only on quotes they can already edit — the ones they created. On everyone else's quotes the checkbox is visible but disabled.",
+      account_manager: full(
+        "Can tick or untick the flag on any quote or booking, including ones they did not create. Bookkeeping is not the quote owner's job — whoever entered the invoice into QuickBooks is the one who marks it.",
       ),
       developer: none(
         "Unable to even access the pages where they can see quotes, and developer is only meant to work on the developer roadmap.",
