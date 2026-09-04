@@ -95,7 +95,7 @@ Each `Events` row carries two, because two different questions need two differen
 *sees*: `status, currency, sales-office (name/address/phone), contact (name/email/phone),
 po_number, event_name + resolved event address, event_start, event_end, line items (header,
 description, quantity, value_cents, currency — ordered), subtotal/discounts, tax_percent,
-tax_amount_cents, total, payment schedule (due_date, amount_cents, status — ordered),
+tax_amount_cents, total, payment schedule (due_date, amount_cents — ordered),
 client-facing notes, terms_and_conditions_uuid + terms html, quote_valid_till, signed-state
 (signer/signed_at)`. Excludes `internal_notes, account manager, publicUrl, eventId,
 created_at`.
@@ -109,6 +109,11 @@ invoice_number` — those must not invalidate a signature.
 
 > Client-notes edit → flips `content_hash` (refresh) but not `contract_hash` (no re-sign). A
 > price edit flips **both**.
+
+> **Amended 2026-09-03** — the payment schedule contributes `due_date` and `amount_cents`
+> only. Installment payment state used to be in both documents, which made a client's own
+> payment read as changed terms and invalidated their signature. See
+> [payment-does-not-invalidate-signature.md](./payment-does-not-invalidate-signature.md).
 
 ---
 
@@ -193,6 +198,11 @@ Hook `useQuoteFreshness(eventId, initialContentHash)`:
   `contentHash` to `initialContentHash`; different ⇒ `isStale = true`.
 - **Stops** once stale; aborts the in-flight request and removes listeners on unmount.
 - **(D1)** Suppressed entirely when `useAuth().userId` is set (manager preview).
+- **Amended 2026-09-03 — the baseline moves.** `initialContentHash` is a prop, not a
+  constant: an action the client performs on their own quote (signing) returns the hash it
+  produced and the page rebases onto it. A new baseline also clears `isStale` — signing takes
+  seconds, so a poll can latch the modal before the response arrives. See
+  [payment-does-not-invalidate-signature.md](./payment-does-not-invalidate-signature.md) §8.
 
 ### Cross-browser requirement (explicit)
 Page-Visibility semantics differ between engines (background-timer throttling, iOS Safari
@@ -309,8 +319,10 @@ function computePresence(input: { lastActiveAt: number; now: number; idleMs: num
   "This quote changed — the contract must be re-signed to stay valid" and set the signature
   `status = 'invalidated'`, `invalidated_at = now()` server-side.
 - `contract_hash` already encodes exactly the material terms listed — Event Type, Event
-  Address, Start/End, Line Items (add/more/delete/price/discount), Payment Schedule, Terms &
-  Conditions, Taxes, Sales Office — so only those trigger a re-sign. This spec ships the
+  Address, Start/End, Line Items (add/more/delete/price/discount), Payment Schedule (its
+  amounts and due dates, never its payment state — amended 2026-09-03, see
+  [payment-does-not-invalidate-signature.md](./payment-does-not-invalidate-signature.md)),
+  Terms & Conditions, Taxes, Sales Office — so only those trigger a re-sign. This spec ships the
   columns + hash + signing snapshot; the invalidation UI is a follow-up.
 
 ---

@@ -1,20 +1,13 @@
 import { Currency } from "../types/quoteTypes";
+import { currencySymbol, formatMoney } from "./formatMoney";
 
-const CURRENCY_CONFIG: Record<Currency, { symbol: string; locale: string }> = {
-  USD: { symbol: "$", locale: "en-US" },
-  CAD: { symbol: "$", locale: "en-CA" },
-};
-
+/**
+ * Same money, given in dollars rather than cents — the create-quote screens keep
+ * their working amounts that way. One implementation, so a CAD quote cannot be
+ * marked "C$" on one screen and left bare on the next.
+ */
 export function formatCurrency(amount: number, currency: Currency): string {
-  const config = CURRENCY_CONFIG[currency];
-  const formatted = Math.abs(amount).toLocaleString(config.locale, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  const sign = amount < 0 ? "-" : "";
-  return `${sign}${config.symbol}${formatted}`;
+  return formatMoney(Math.round(amount * 100), currency);
 }
 
-export function currencySymbol(currency: Currency): string {
-  return CURRENCY_CONFIG[currency].symbol;
-}
+export { currencySymbol };

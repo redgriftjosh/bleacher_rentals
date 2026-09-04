@@ -56,6 +56,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No eventId in metadata" }, { status: 400 });
     }
 
+    // A session that moved no money has no payment to record, and since
+    // `payment_history_amount_nonzero_check` (20260904120000) the row would be
+    // refused anyway. Ending in the generic 500 below would be the worst of both:
+    // Stripe would retry a delivery whose payload cannot change, for three days,
+    // and eventually disable the endpoint. Acknowledge and stop.
+    const amountCents = session.amount_total ?? 0;
+    if (amountCents === 0) {
+      console.log(
+        "[Stripe Webhook] Session",
+        session.id,
+        "completed with no amount — nothing to record",
+      );
+      return NextResponse.json({ received: true });
+    }
+
     const supabase = getSupabaseAdmin();
 
     // Idempotency: Stripe retries webhook deliveries, so the same checkout
@@ -113,7 +128,10 @@ export async function POST(req: NextRequest) {
     const { error: insertError } = await supabase.from("PaymentHistory").insert({
       event_uuid: eventId,
       installment_id: installmentId || null,
-      amount_cents: session.amount_total ?? 0,
+      // The live link can be re-pointed as a schedule changes; this one records
+      // what the client actually paid for and is never rewritten.
+      intended_installment_id: installmentId || null,
+      amount_cents: amountCents,
       currency: (session.currency ?? "usd").toUpperCase(),
       status: "succeeded",
       stripe_payment_intent_id:
@@ -121,7 +139,13 @@ export async function POST(req: NextRequest) {
       stripe_checkout_session_id: session.id,
       stripe_connection_uuid: stripeConnectionId || null,
       stripe_receipt_url: receiptUrl,
-      payment_method_type: session.payment_method_types?.[0] ?? "card",
+      // Stripe is one of four payment types the Billing tab lists, and this
+      // column is what names it. The instrument Stripe actually used (card,
+      // us_bank_account) is detail, not a type, so it moves to `reference`
+      // where it stays visible without competing with the manual types.
+      payment_method_type: "stripe",
+      entry_source: "stripe",
+      reference: session.payment_method_types?.[0] ?? null,
       payer_name: payerName ?? "Unknown",
       payer_email: customerEmail,
       paid_at: new Date().toISOString(),
@@ -156,22 +180,9 @@ export async function POST(req: NextRequest) {
       session.amount_total,
     );
 
-    if (installmentId) {
-      const { error: updateError } = await supabase
-        .from("PaymentInstallments")
-        .update({ status: "paid", paid_at: new Date().toISOString() })
-        .eq("id", installmentId);
-
-      if (updateError) {
-        console.error("[Stripe Webhook] Installment update failed:", updateError);
-      } else {
-        console.log("[Stripe Webhook] Installment marked paid:", installmentId);
-      }
-    }
-
     // Fire the "payment made" automatic emails to the client and account
     // manager (best-effort — never fail the webhook on an email problem).
-    const payment = { amountPaidCents: session.amount_total ?? 0 };
+    const payment = { amountPaidCents: amountCents };
     for (const trigger of [PAYMENT_MADE_CLIENT, PAYMENT_MADE_AM]) {
       try {
         await sendTriggerEmail({

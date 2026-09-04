@@ -2776,8 +2776,8 @@ INSERT INTO "public"."EventTypes" ("id", "name", "deleted", "created_by_user_uui
 --
 
 INSERT INTO "public"."QboConnections" ("id", "display_name", "encrypted_token_value", "realm_id", "qbo_tax_code_id", "currency") VALUES
-	('d035695c-f298-4a95-885f-5ff4982ce4a3', 'Bleacher Rentals CAN', 'qHYkT9WKiW4bsG0oP4njSA==:pba9Nv3BJJFGheKOmeZZubRqD/HZr0z6ckbHx4m+jquJSsKsj/A3Z9gosbMh5he50a814IZHLBDW1Yu+KFRL4v5NODlo5hEz1XU2MTUJc3uxu9MS9JpLLfl2pQimrk6Ieh3OFkLRcJQOazJkFKN0nJ4mcMaCzzEnb3htlsaOqBEkpUeBelzXOhaVU0bfqPc2sNI5Gh+WR1mfg/fXAVXVxXGos7mXRyrMVWA+Y4iYNCZxbxuVqoCL3lGEOCOX/9X305XBJAtQlbfTwJcPPSSWR7axKeBNtVH0B8e4kWwbxEluCcl9XPQhlGSIfKXcyb0R95CR9JHcRglQcerrRatg0Rf7j53CGraqPBB+RaNuBg3Zb1LgHDZ4OPHUHY8rj1u6FuGPY+H3EefCirN7ROnvIHoZi0k/I+4ccYxvTgAssQAexnWiQPtwNZQsDCJayd6OE8Y2kA8tZWkyUVO0gViggmuUWWMU35h9BFBQPK6tW/PsUiQ/feS6yhHWYd9YxsEzCfmlR7Jd9qyQSKKcBQLnSsQho1GgOlXPgYGlzv3VnJPdY6thPvBHbc+tSt/0fUgYmCGsV2ftz/HVTJcAaXECSQkqwyIyqpUD4IKjA+q/I6/O5oNXTdkKetlLcmKb4KlntABCGNRb3InD8PgwyyCuMYSRfoJebgcD9JoGIZ01Wge9PczAf5sq+BT8ZHPxnupaMjw0vOrd6vh53+2UgMjWLdQVHB/tcT59KPHGsBYZjwXXpxQ4zxM3aCtKJF+jvp0v0YYwFBnZQl0mgGUlxp+iGU2q98jqXyFt20HMAFuxfp+MdQodC8rEktSSjV+TFhYgZgw6UVWBhl6ofoTSZXt3KtGrqT9ILoDbAn8YmwhC6VjYDBw5PeovtNQoxvtMlv/TmOJKIbkdLgh80r8t6ts1XBCjKYDEvx1iSOnHY31HTBAYFuPjnRqogXtap7iF/qnaNl7flx1kXz8QKcMQDG/GLqstlZ16srOydiswQfmThfHM5NGb0ScIHhbEcyGzyB362BaOaJ4d305VlDGiSLjRV5Az1680pSTHjgZuYGBxVTUU0ZommNxR5abdahiw1Th3', '123146520825274', '7', NULL),
-	('01ee7d08-f79c-4c21-878a-e5f63990b465', 'Bleacher Rentals Florida LLC', 'hqcaNCiq0e0e9CSB7iEZgg==:9Vr3I+UwJP1/hEdf+cN0C/wUj3l5ERACpBw05cgllsxNxvlPuIOMpz3qt1Sn2cSTX06BtPEZ23/LaBLKLZbzA+2B1liVG17rRPn8FnASuEFwyYmaYitiOGx3YAF81vo+55jkiGqnV9CnSk5Fh9gDTcBsF1DoKSvyQ0tvGX85qHq6lg6/6ab+RbV2bt1QSzDPUxQ3Z/5jFDV/8H5TjvuqgmxSmN5AU8IzzvU14xUIdXDPhwISwqXXOH/D/NwMy7nh25gTLuh95cxLoUxNO9ZbAQqv6vbVq1WZ9YVC7l47117LLJzTMZ7ciyU6srTErbXfAiUVrOwhTRP/eecBc6358dVcL18uEnIhAnie/9wUy3xxfUzBuD7w4kej7s6UCdtAs/6pnfwE+JA68jOouCfvkp+eS/Ie37Dj9QWjh6FRCiav/VlJY0TW/qH3GfDmVMigwL9UEgQw/SgayOXerozdGQ1Jm2AeRmjpVEWyB5qmWnJ6HE0R+Z6XKU7oOe7hNanHQcp1IFCtHKWzeFKowzcxb5K+/2b/3qPPGMna9RFhUcQU2NYyDI7mYDwIPmUed3KPueRw4aF8LivmNiMTa8bERLG3Ngd8JrIvyD1oLGRu4UEl88Yd+GvfdyjzHn0sTIDlm+9O+pQ3oT3Z+G6XKXQ8rlYBvybCociB6MTIvRsjD+Mp/HuBpHEMl+v45LdTA7+weHs4hMVqscBs6rcLWfHMkf0eTy2Xcl1/w14y+lDu430cIVkmitkohDSl/zXsf5U2bPFgRFR0tjSY3s5GpQ1hstOd9izGsn1HIzoI6u0HZWhJtxQBoOGg8UxTs11H32TfoVM6NhnOncGSyikcZjKsnSwXpFA+eACmU3p32kdgAoWnKlbuS65F8cxXDSL586ssaNNlgj5/lDaLZMGNDbGfW8jiRg98jcB0KzdsqXWSMHCdx97ZSW5OoUcDT392KmhP3ZqT9W5fUMC9nk4zJv4AuVRb7rKeRHsyA+Fd3UqPk01EMOUw+FnhrUyyk9Li5w8RJqA2BEwn9Rfk4GwQn57AM5mB1IuGiosNp5f+rV1KO68IiJebtAri5oRWoHbRn5fC', '9130348661150546', NULL, NULL);
+	('d035695c-f298-4a95-885f-5ff4982ce4a3', 'Bleacher Rentals CAN', 'qHYkT9WKiW4bsG0oP4njSA==:pba9Nv3BJJFGheKOmeZZubRqD/HZr0z6ckbHx4m+jquJSsKsj/A3Z9gosbMh5he50a814IZHLBDW1Yu+KFRL4v5NODlo5hEz1XU2MTUJc3uxu9MS9JpLLfl2pQimrk6Ieh3OFkLRcJQOazJkFKN0nJ4mcMaCzzEnb3htlsaOqBEkpUeBelzXOhaVU0bfqPc2sNI5Gh+WR1mfg/fXAVXVxXGos7mXRyrMVWA+Y4iYNCZxbxuVqoCL3lGEOCOX/9X305XBJAtQlbfTwJcPPSSWR7axKeBNtVH0B8e4kWwbxEluCcl9XPQhlGSIfKXcyb0R95CR9JHcRglQcerrRatg0Rf7j53CGraqPBB+RaNuBg3Zb1LgHDZ4OPHUHY8rj1u6FuGPY+H3EefCirN7ROnvIHoZi0k/I+4ccYxvTgAssQAexnWiQPtwNZQsDCJayd6OE8Y2kA8tZWkyUVO0gViggmuUWWMU35h9BFBQPK6tW/PsUiQ/feS6yhHWYd9YxsEzCfmlR7Jd9qyQSKKcBQLnSsQho1GgOlXPgYGlzv3VnJPdY6thPvBHbc+tSt/0fUgYmCGsV2ftz/HVTJcAaXECSQkqwyIyqpUD4IKjA+q/I6/O5oNXTdkKetlLcmKb4KlntABCGNRb3InD8PgwyyCuMYSRfoJebgcD9JoGIZ01Wge9PczAf5sq+BT8ZHPxnupaMjw0vOrd6vh53+2UgMjWLdQVHB/tcT59KPHGsBYZjwXXpxQ4zxM3aCtKJF+jvp0v0YYwFBnZQl0mgGUlxp+iGU2q98jqXyFt20HMAFuxfp+MdQodC8rEktSSjV+TFhYgZgw6UVWBhl6ofoTSZXt3KtGrqT9ILoDbAn8YmwhC6VjYDBw5PeovtNQoxvtMlv/TmOJKIbkdLgh80r8t6ts1XBCjKYDEvx1iSOnHY31HTBAYFuPjnRqogXtap7iF/qnaNl7flx1kXz8QKcMQDG/GLqstlZ16srOydiswQfmThfHM5NGb0ScIHhbEcyGzyB362BaOaJ4d305VlDGiSLjRV5Az1680pSTHjgZuYGBxVTUU0ZommNxR5abdahiw1Th3', '123146520825274', '7', 'CAD'),
+	('01ee7d08-f79c-4c21-878a-e5f63990b465', 'Bleacher Rentals Florida LLC', 'hqcaNCiq0e0e9CSB7iEZgg==:9Vr3I+UwJP1/hEdf+cN0C/wUj3l5ERACpBw05cgllsxNxvlPuIOMpz3qt1Sn2cSTX06BtPEZ23/LaBLKLZbzA+2B1liVG17rRPn8FnASuEFwyYmaYitiOGx3YAF81vo+55jkiGqnV9CnSk5Fh9gDTcBsF1DoKSvyQ0tvGX85qHq6lg6/6ab+RbV2bt1QSzDPUxQ3Z/5jFDV/8H5TjvuqgmxSmN5AU8IzzvU14xUIdXDPhwISwqXXOH/D/NwMy7nh25gTLuh95cxLoUxNO9ZbAQqv6vbVq1WZ9YVC7l47117LLJzTMZ7ciyU6srTErbXfAiUVrOwhTRP/eecBc6358dVcL18uEnIhAnie/9wUy3xxfUzBuD7w4kej7s6UCdtAs/6pnfwE+JA68jOouCfvkp+eS/Ie37Dj9QWjh6FRCiav/VlJY0TW/qH3GfDmVMigwL9UEgQw/SgayOXerozdGQ1Jm2AeRmjpVEWyB5qmWnJ6HE0R+Z6XKU7oOe7hNanHQcp1IFCtHKWzeFKowzcxb5K+/2b/3qPPGMna9RFhUcQU2NYyDI7mYDwIPmUed3KPueRw4aF8LivmNiMTa8bERLG3Ngd8JrIvyD1oLGRu4UEl88Yd+GvfdyjzHn0sTIDlm+9O+pQ3oT3Z+G6XKXQ8rlYBvybCociB6MTIvRsjD+Mp/HuBpHEMl+v45LdTA7+weHs4hMVqscBs6rcLWfHMkf0eTy2Xcl1/w14y+lDu430cIVkmitkohDSl/zXsf5U2bPFgRFR0tjSY3s5GpQ1hstOd9izGsn1HIzoI6u0HZWhJtxQBoOGg8UxTs11H32TfoVM6NhnOncGSyikcZjKsnSwXpFA+eACmU3p32kdgAoWnKlbuS65F8cxXDSL586ssaNNlgj5/lDaLZMGNDbGfW8jiRg98jcB0KzdsqXWSMHCdx97ZSW5OoUcDT392KmhP3ZqT9W5fUMC9nk4zJv4AuVRb7rKeRHsyA+Fd3UqPk01EMOUw+FnhrUyyk9Li5w8RJqA2BEwn9Rfk4GwQn57AM5mB1IuGiosNp5f+rV1KO68IiJebtAri5oRWoHbRn5fC', '9130348661150546', NULL, 'USD');
 
 
 --
@@ -15203,6 +15203,33 @@ VALUES (0, 400, 'CAD', 'KM', true, '0fcf50a1-f0ae-4f98-8565-1fe0eb588017', 'cb6b
 INSERT INTO "public"."AccountManagerZones" ("id", "account_manager_uuid", "zone_uuid", "is_lead")
 VALUES
   ('a1b2c3d4-0000-4000-8000-000000000001', '8d5473b1-269a-4e28-9420-dc98e9442e1b', '27633341-400b-4f18-a567-85e6de7ad65d', true);
+
+-- E2E: a booked quote with a payment schedule, so the Billing tab has something
+-- to record a payment against. Used by recordPayment.*.spec.ts.
+--
+-- The event's created_by_user_uuid is NULL, which is the point: a junior account
+-- manager did not create it and must find the button disabled, while a lead AM
+-- (the seeded E2E AM is one) must not. Two installments, one already paid by
+-- Stripe, so the history table shows both entry sources side by side.
+INSERT INTO "public"."PaymentInstallments"
+  ("id", "event_uuid", "due_date", "amount_cents", "currency")
+VALUES
+  ('9c1f0a10-0000-4000-8000-000000000001', '85b35a1c-8992-41c5-b051-409f33ee7fc5',
+   '2026-08-31', 270000, 'USD'),
+  ('9c1f0a10-0000-4000-8000-000000000002', '85b35a1c-8992-41c5-b051-409f33ee7fc5',
+   '2026-09-16', 270000, 'USD')
+ON CONFLICT ("id") DO NOTHING;
+
+INSERT INTO "public"."PaymentHistory"
+  ("id", "event_uuid", "installment_id", "intended_installment_id", "amount_cents",
+   "currency", "status", "payment_method_type", "entry_source", "payer_name",
+   "reference", "paid_at", "created_at")
+VALUES
+  ('9c1f0a10-1111-4000-8000-000000000001', '85b35a1c-8992-41c5-b051-409f33ee7fc5',
+   '9c1f0a10-0000-4000-8000-000000000001', '9c1f0a10-0000-4000-8000-000000000001',
+   270000, 'USD', 'succeeded', 'stripe', 'stripe', 'Baton Rouge Rodeo',
+   'card', '2026-08-20 15:00:00+00', '2026-08-20 15:00:00+00')
+ON CONFLICT ("id") DO NOTHING;
 
 -- E2E: two changelog releases. Ordering, markdown rendering and the unread
 -- indicator are asserted against these in changelog.admin.spec.ts.

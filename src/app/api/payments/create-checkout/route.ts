@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import { Database } from "../../../../../database.types";
 import { getEventStripeConfiguration } from "@/features/stripe-integration/getEventStripeConfiguration";
 import { stripeForAccount } from "@/features/stripe-integration/util";
+import { loadEventPaymentContext } from "@/features/quotesAndBookings/server/eventPaymentContext";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -16,9 +17,18 @@ function getSupabaseAdmin() {
   );
 }
 
+/** Plain-English money for an error a client reads on the public quote page. */
+function formatMoney(cents: number, currency: string): string {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { eventId, installmentId, amountCents, currency, payerName, language } = body;
+  // `currency` is deliberately NOT read from the body. This endpoint sits behind
+  // the public /quote/[id] page, so everything that decides what is charged —
+  // the currency and the ceiling on the amount — is resolved server-side from
+  // the quote itself. See docs/specs/payment-accounting-truth.md §3.6.
+  const { eventId, installmentId, amountCents, payerName, language } = body;
 
   if (!eventId || !amountCents || !payerName) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -47,8 +57,30 @@ export async function POST(req: NextRequest) {
   const origin = req.nextUrl.origin;
   const invoiceLabel = event.invoice_number ? `#${event.invoice_number}` : event.id.slice(0, 8);
 
-  if (amountCents < 50) {
+  if (typeof amountCents !== "number" || !Number.isInteger(amountCents) || amountCents < 50) {
     return NextResponse.json({ error: "Payment amount must be at least $0.50." }, { status: 400 });
+  }
+
+  // The quote's own currency and outstanding balance, read through the same
+  // allocation the Pay tab renders — so the server cannot be talked into a
+  // currency or an amount the client was never offered.
+  const payment = await loadEventPaymentContext(supabase, eventId);
+  if (!payment) {
+    return NextResponse.json({ error: "Event not found" }, { status: 404 });
+  }
+  if (payment.remainingCents <= 0) {
+    return NextResponse.json({ error: "This invoice is already paid in full." }, { status: 400 });
+  }
+  if (amountCents > payment.remainingCents) {
+    return NextResponse.json(
+      {
+        error: `Payment amount exceeds the balance due of ${formatMoney(
+          payment.remainingCents,
+          payment.currency,
+        )}.`,
+      },
+      { status: 400 },
+    );
   }
 
   const stripe = getStripe();
@@ -66,7 +98,7 @@ export async function POST(req: NextRequest) {
       line_items: [
         {
           price_data: {
-            currency: (currency ?? "USD").toLowerCase(),
+            currency: payment.currency.toLowerCase(),
             unit_amount: amountCents,
             product_data: {
               name: `Invoice ${invoiceLabel} — ${event.event_name ?? "Bleacher Rental"}`,

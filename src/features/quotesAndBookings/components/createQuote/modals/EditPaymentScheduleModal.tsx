@@ -88,7 +88,6 @@ export function EditPaymentScheduleModal() {
         id: crypto.randomUUID(),
         dueDate: "",
         amountCents: remainCents,
-        status: "unpaid" as const,
         pctDisplay: centsToPct(remainCents),
         dollarDisplay: (remainCents / 100).toFixed(2),
       },

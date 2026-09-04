@@ -118,6 +118,8 @@ export function filtersForTemplate(
     bookedFrom: null,
     bookedTo: null,
     inGoodShuffle: null,
+    inQuickBooks: null,
+    salesOfficeUuid: null,
     accountManagerUserUuid: accountManagerUserUuid ?? null,
   };
 

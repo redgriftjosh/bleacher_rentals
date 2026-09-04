@@ -6,6 +6,7 @@ import {
   UpdateType,
 } from "@powersync/web";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createErrorToastNoThrow } from "@/components/toasts/ErrorToast";
 
 /// Postgres Response codes that we cannot recover from by retrying.
 const FATAL_RESPONSE_CODES = [
@@ -115,10 +116,26 @@ export class BackendConnector implements PowerSyncBackendConnector {
          * discard the (rest of the) transaction.
          *
          * Note that these errors typically indicate a bug in the application.
-         * If protecting against data loss is important, save the failing records
-         * elsewhere instead of discarding, and/or notify the user.
          */
         console.error("Data upload error - discarding:", lastOp, ex);
+
+        /**
+         * Discarding is silent by design, and that is only tolerable while the
+         * lost row is cosmetic. It is not: `PaymentHistory` is written from the
+         * app now, and a discarded insert means a payment that the user watched
+         * appear, and which then never existed. RLS refusals (42501) and CHECK
+         * violations (23514) both land here.
+         *
+         * The user cannot fix this — it means a bug — but they must not be left
+         * believing the money was recorded. Telling them costs nothing and is
+         * the difference between a reported bug and a reconciliation mystery.
+         */
+        createErrorToastNoThrow([
+          "A change could not be saved and has been discarded.",
+          `${lastOp?.op ?? "change"} on ${lastOp?.table ?? "unknown table"} — ${ex?.message ?? "rejected by the server"}`,
+          "Reload and check whether it is there; if not, please report this.",
+        ]);
+
         await transaction.complete();
       } else {
         // Error may be retryable - e.g. network error or temporary server error.

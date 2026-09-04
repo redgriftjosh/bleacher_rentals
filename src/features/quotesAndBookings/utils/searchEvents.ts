@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import { QuotesBookingsEvent } from "../types";
+import { eventSubtotalCents, eventTaxCents } from "./eventAmounts";
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return "";
@@ -13,10 +14,7 @@ function formatCurrency(cents: number | null): string {
   return `$${(cents / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 }
 
-export function searchEvents(
-  events: QuotesBookingsEvent[],
-  query: string,
-): QuotesBookingsEvent[] {
+export function searchEvents(events: QuotesBookingsEvent[], query: string): QuotesBookingsEvent[] {
   if (!query.trim()) return events;
   const q = query.toLowerCase();
 
@@ -47,15 +45,13 @@ export function searchEvents(
       e.contact_first_name,
       e.contact_last_name,
       e.contact_email,
-      e.contact_first_name
-        ? `${e.contact_first_name} ${e.contact_last_name ?? ""}`.trim()
-        : null,
+      e.contact_first_name ? `${e.contact_first_name} ${e.contact_last_name ?? ""}`.trim() : null,
       // Company
       e.company_name,
-      // Amount
-      e.contract_revenue_cents !== null
-        ? formatCurrency(e.contract_revenue_cents)
-        : null,
+      // Amounts — total, plus the subtotal and tax shown in the table
+      e.contract_revenue_cents !== null ? formatCurrency(e.contract_revenue_cents) : null,
+      e.contract_revenue_cents !== null ? formatCurrency(eventSubtotalCents(e)) : null,
+      e.tax_amount_cents !== null ? formatCurrency(eventTaxCents(e)) : null,
     ];
 
     return fields.some((f) => f && String(f).toLowerCase().includes(q));

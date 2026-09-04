@@ -94,17 +94,20 @@ export function formatQuoteDateRange(start: string, end: string, lang: QuoteLang
 }
 
 /**
- * Money, from cents.
- * en: "$1,234.56" / "-$1,234.56"   (leading symbol — unchanged from before)
- * fr: "1 234,56 $" / "-1 234,56 $" (trailing symbol, comma decimal)
+ * Money, from cents, in the reader's language.
  *
- * Deliberately not `Intl` currency style: that renders CAD as "CA$1,234.56" in
- * English, which is not what these quotes have ever shown. Both currencies use
- * a bare "$"; the quote states its currency elsewhere.
+ * en: "$1,234.56" / "C$1,234.56" / "-C$1,234.56"
+ * fr: "1 234,56 $" / "1 234,56 $ CA" / "-1 234,56 $ CA"
+ *
+ * Deliberately not `Intl`'s currency style: that renders CAD as "CA$1,234.56"
+ * in English and prints "$ US" on every American amount in French, neither of
+ * which is what these quotes show. USD keeps the bare "$" it has always had;
+ * only CAD is marked, because a Canadian amount that reads as American is a
+ * quote the client can misprice by a third without noticing.
  */
 export function formatQuoteMoney(
   cents: number,
-  _currency: "USD" | "CAD",
+  currency: "USD" | "CAD",
   lang: QuoteLanguage,
 ): string {
   const sign = cents < 0 ? "-" : "";
@@ -113,7 +116,9 @@ export function formatQuoteMoney(
 
   if (lang === "fr") {
     const formatted = normalizeSpaces(amount.toLocaleString("fr-CA", digits));
-    return `${sign}${formatted}\u00A0$`;
+    const suffix = currency === "CAD" ? "$\u00A0CA" : "$";
+    return `${sign}${formatted}\u00A0${suffix}`;
   }
-  return `${sign}$${amount.toLocaleString("en-US", digits)}`;
+  const symbol = currency === "CAD" ? "C$" : "$";
+  return `${sign}${symbol}${amount.toLocaleString("en-US", digits)}`;
 }

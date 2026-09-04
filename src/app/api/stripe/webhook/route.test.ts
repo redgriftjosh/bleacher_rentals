@@ -8,6 +8,8 @@ const {
   mockEmailLogInsert,
   mockUpdateEq,
   mockMaybeSingle,
+  mockSelectRows,
+  mockSendTriggerEmail,
 } = vi.hoisted(() => ({
   mockConstructEvent: vi.fn(),
   mockRetrieve: vi.fn(),
@@ -19,6 +21,13 @@ const {
   mockEmailLogInsert: vi.fn(),
   mockUpdateEq: vi.fn(),
   mockMaybeSingle: vi.fn(),
+  // Rows served per table to the selects this route makes.
+  mockSelectRows: vi.fn(),
+  mockSendTriggerEmail: vi.fn(),
+}));
+
+vi.mock("@/features/automaticEmails/server/sendTriggerEmail", () => ({
+  sendTriggerEmail: mockSendTriggerEmail,
 }));
 
 vi.mock("stripe", () => ({
@@ -31,12 +40,27 @@ vi.mock("stripe", () => ({
 vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({
     from: (table: string) => ({
-      // Idempotency existence check: select(...).eq(...).maybeSingle()
-      select: () => ({ eq: () => ({ maybeSingle: mockMaybeSingle }) }),
+      // Three shapes share this chain: the idempotency check ends in
+      // .maybeSingle(), the reconciler awaits .eq() directly, and the currency
+      // lookup (event -> office -> QBO connection) ends in .single().
+      select: () => {
+        const rows = () => (mockSelectRows(table) ?? []) as Record<string, unknown>[];
+        const first = () => Promise.resolve({ data: rows()[0] ?? null, error: null });
+        const chain: any = Object.assign(Promise.resolve({ data: rows(), error: null }), {
+          maybeSingle: table === "PaymentHistory" ? mockMaybeSingle : first,
+          single: first,
+          eq: () => chain,
+        });
+        return { eq: () => chain };
+      },
       // Route inserts by table so the automatic-email log rows don't inflate the
       // PaymentHistory insert count that the idempotency test asserts on.
       insert: table === "PaymentHistory" ? mockInsert : mockEmailLogInsert,
-      update: () => ({ eq: mockUpdateEq }),
+      // The table is recorded too: this route must not write to
+      // PaymentInstallments at all, and that is asserted by table name.
+      update: (values: Record<string, unknown>) => ({
+        eq: (column: string, id: string) => mockUpdateEq(table, column, id, values),
+      }),
     }),
   }),
 }));
@@ -88,6 +112,8 @@ describe("POST /api/stripe/webhook", () => {
     mockUpdateEq.mockResolvedValue({ error: null });
     mockPiUpdate.mockResolvedValue({});
     mockMaybeSingle.mockResolvedValue({ data: null }); // no prior PaymentHistory row
+    mockSelectRows.mockReturnValue([]);
+    mockSendTriggerEmail.mockResolvedValue(undefined);
     mockRetrieve.mockResolvedValue({
       latest_charge: { receipt_url: "https://receipt.stripe.com/r1" },
     });
@@ -160,6 +186,22 @@ describe("POST /api/stripe/webhook", () => {
     expect(insert.stripe_connection_uuid).toBe("conn-1");
   });
 
+  it("marks the row as Stripe's, and keeps the instrument as detail", async () => {
+    mockConstructEvent.mockReturnValue(checkoutEvent());
+
+    await POST(makeRequest("{}", { signature: "sig" }));
+
+    const insert = mockInsert.mock.calls[0][0];
+    // The webhook is the only writer that may claim this — the RLS insert
+    // policy refuses entry_source 'stripe' from any client.
+    expect(insert.entry_source).toBe("stripe");
+    // One of the four types the Billing tab lists, not whatever Stripe called
+    // the instrument. That detail is still recorded, just not as the type.
+    expect(insert.payment_method_type).toBe("stripe");
+    expect(insert.reference).toBe("card");
+    expect(insert.recorded_by_user_uuid).toBeUndefined();
+  });
+
   it("does not double-insert when the same session is delivered twice", async () => {
     mockConstructEvent.mockReturnValue(checkoutEvent());
     // A PaymentHistory row for this session already exists (a prior delivery).
@@ -186,6 +228,19 @@ describe("POST /api/stripe/webhook", () => {
     expect(mockInsert).toHaveBeenCalledOnce();
   });
 
+  it("records what the client was paying for, separately from the live link", async () => {
+    // installment_id can be re-pointed when a schedule is rebuilt;
+    // intended_installment_id is the historical fact and never changes.
+    mockConstructEvent.mockReturnValue(
+      checkoutEvent({ session: { metadata: { eventId: "evt-1", installmentId: "inst-9" } } }),
+    );
+    await POST(makeRequest("{}", { signature: "sig" }));
+
+    const insert = mockInsert.mock.calls[0][0];
+    expect(insert.installment_id).toBe("inst-9");
+    expect(insert.intended_installment_id).toBe("inst-9");
+  });
+
   it("skips the receipt email when the customer provided no email", async () => {
     mockConstructEvent.mockReturnValue(
       checkoutEvent({ session: { customer_email: null, customer_details: { email: null } } }),
@@ -197,19 +252,54 @@ describe("POST /api/stripe/webhook", () => {
     expect(mockInsert.mock.calls[0][0].payer_email).toBeNull();
   });
 
-  it("marks the installment paid when installmentId is present", async () => {
+  it("does not write to PaymentInstallments — the schedule holds terms, not payment state", async () => {
+    // The route used to reconcile status/paid_at onto the schedule after every
+    // payment. Those columns are gone: paid/due is derived from PaymentHistory
+    // wherever it is shown, and writing the schedule made the quote look
+    // changed, which invalidated the client's contract signature.
+    // See docs/specs/payment-does-not-invalidate-signature.md.
     mockConstructEvent.mockReturnValue(
       checkoutEvent({ session: { metadata: { eventId: "evt-1", installmentId: "inst-9" } } }),
     );
+    // A schedule the old reconcile step would have written to: one installment,
+    // fully covered by one succeeded payment.
+    mockSelectRows.mockImplementation((table: string) =>
+      table === "PaymentInstallments"
+        ? [{ id: "inst-9", due_date: "2026-08-31", amount_cents: 15000, currency: "USD" }]
+        : table === "PaymentHistory"
+          ? [
+              {
+                id: "ph-1",
+                installment_id: "inst-9",
+                amount_cents: 15000,
+                currency: "USD",
+                status: "succeeded",
+                paid_at: "2026-08-31T19:02:05.114+00:00",
+                created_at: "2026-08-31T19:02:05.198+00:00",
+              },
+            ]
+          : [],
+    );
+
     await POST(makeRequest("{}", { signature: "sig" }));
 
-    expect(mockUpdateEq).toHaveBeenCalledWith("id", "inst-9");
+    expect(mockInsert).toHaveBeenCalledOnce();
+    expect(mockUpdateEq).not.toHaveBeenCalledWith(
+      "PaymentInstallments",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
   });
 
-  it("does not touch installments when there is no installmentId", async () => {
+  it("still sends both payment-made emails", async () => {
+    // Removing the reconcile step must not take the rest of the route with it.
     mockConstructEvent.mockReturnValue(checkoutEvent());
-    await POST(makeRequest("{}", { signature: "sig" }));
-    expect(mockUpdateEq).not.toHaveBeenCalled();
+
+    const res = await POST(makeRequest("{}", { signature: "sig" }));
+
+    expect(res.status).toBe(200);
+    expect(mockSendTriggerEmail).toHaveBeenCalledTimes(2);
   });
 
   it("acknowledges with 200 when the insert races into a unique violation (23505)", async () => {
@@ -224,6 +314,41 @@ describe("POST /api/stripe/webhook", () => {
     expect((await res.json()).received).toBe(true);
     // The winning delivery handles the installment; the loser must not re-touch it.
     expect(mockUpdateEq).not.toHaveBeenCalled();
+  });
+
+  // `amount_cents <> 0` (20260904120000) made zero unwritable. A session that
+  // moved no money has nothing to record, and returning 500 for it would ask
+  // Stripe to retry a delivery that can never succeed — for three days.
+  describe("a session that moved no money", () => {
+    it.each([
+      ["zero", 0],
+      ["null", null],
+      ["absent", undefined],
+    ])("acknowledges a %s amount_total instead of failing forever", async (_label, amount) => {
+      mockConstructEvent.mockReturnValue(checkoutEvent({ session: { amount_total: amount } }));
+
+      const res = await POST(makeRequest("{}", { signature: "sig" }));
+
+      expect(res.status).toBe(200);
+      expect((await res.json()).received).toBe(true);
+      expect(mockInsert).not.toHaveBeenCalled();
+    });
+
+    it("sends no payment-made emails for it", async () => {
+      mockConstructEvent.mockReturnValue(checkoutEvent({ session: { amount_total: 0 } }));
+
+      await POST(makeRequest("{}", { signature: "sig" }));
+
+      expect(mockSendTriggerEmail).not.toHaveBeenCalled();
+    });
+
+    it("still records an ordinary amount", async () => {
+      mockConstructEvent.mockReturnValue(checkoutEvent({ session: { amount_total: 15000 } }));
+
+      await POST(makeRequest("{}", { signature: "sig" }));
+
+      expect(mockInsert).toHaveBeenCalledTimes(1);
+    });
   });
 
   it("returns 500 on a non-duplicate insert error so Stripe retries", async () => {

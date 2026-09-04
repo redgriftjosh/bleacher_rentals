@@ -392,7 +392,7 @@ export function QuoteDetailView({ eventId }: { eventId: string }) {
             <ContractTab quote={quote} />
           </TabsContent>
           <TabsContent value="billing">
-            <BillingTab quote={quote} contractTotalCents={contractTotalCents} />
+            <BillingTab quote={quote} contractTotalCents={contractTotalCents} canEdit={canEditQuote} />
           </TabsContent>
           <TabsContent value="files">
             <FilesTab quoteId={quote.id} />
