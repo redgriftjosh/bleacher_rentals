@@ -2005,6 +2005,7 @@ export type Database = {
           id: string
           internal_notes: string | null
           invoice_number: number | null
+          is_qbo: boolean
           lenient: boolean
           must_be_clean: boolean
           notes: string | null
@@ -2043,6 +2044,7 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           invoice_number?: number | null
+          is_qbo?: boolean
           lenient: boolean
           must_be_clean?: boolean
           notes?: string | null
@@ -2081,6 +2083,7 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           invoice_number?: number | null
+          is_qbo?: boolean
           lenient?: boolean
           must_be_clean?: boolean
           notes?: string | null
@@ -2470,14 +2473,18 @@ export type Database = {
           amount_cents: number
           created_at: string
           currency: string
+          entry_source: string
           event_uuid: string
           id: string
           installment_id: string | null
+          intended_installment_id: string | null
           notes: string | null
           paid_at: string | null
           payer_email: string | null
           payer_name: string
           payment_method_type: string | null
+          recorded_by_user_uuid: string | null
+          reference: string | null
           status: string
           stripe_checkout_session_id: string | null
           stripe_connection_uuid: string | null
@@ -2488,14 +2495,18 @@ export type Database = {
           amount_cents: number
           created_at?: string
           currency?: string
+          entry_source?: string
           event_uuid: string
           id?: string
           installment_id?: string | null
+          intended_installment_id?: string | null
           notes?: string | null
           paid_at?: string | null
           payer_email?: string | null
           payer_name: string
           payment_method_type?: string | null
+          recorded_by_user_uuid?: string | null
+          reference?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
           stripe_connection_uuid?: string | null
@@ -2506,14 +2517,18 @@ export type Database = {
           amount_cents?: number
           created_at?: string
           currency?: string
+          entry_source?: string
           event_uuid?: string
           id?: string
           installment_id?: string | null
+          intended_installment_id?: string | null
           notes?: string | null
           paid_at?: string | null
           payer_email?: string | null
           payer_name?: string
           payment_method_type?: string | null
+          recorded_by_user_uuid?: string | null
+          reference?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
           stripe_connection_uuid?: string | null
@@ -2536,6 +2551,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "PaymentHistory_recorded_by_user_uuid_fkey"
+            columns: ["recorded_by_user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "PaymentHistory_stripe_connection_uuid_fkey"
             columns: ["stripe_connection_uuid"]
             isOneToOne: false
@@ -2552,8 +2574,6 @@ export type Database = {
           due_date: string
           event_uuid: string
           id: string
-          paid_at: string | null
-          status: Database["public"]["Enums"]["payment_installment_status"]
         }
         Insert: {
           amount_cents: number
@@ -2562,8 +2582,6 @@ export type Database = {
           due_date: string
           event_uuid: string
           id?: string
-          paid_at?: string | null
-          status?: Database["public"]["Enums"]["payment_installment_status"]
         }
         Update: {
           amount_cents?: number
@@ -2572,8 +2590,6 @@ export type Database = {
           due_date?: string
           event_uuid?: string
           id?: string
-          paid_at?: string | null
-          status?: Database["public"]["Enums"]["payment_installment_status"]
         }
         Relationships: [
           {

@@ -14,6 +14,8 @@ const emptyFilters: QuotesBookingsFilters = {
   bookedTo: null,
   accountManagerUserUuid: null,
   inGoodShuffle: null,
+  inQuickBooks: null,
+  salesOfficeUuid: null,
 };
 
 export function useQuotesAndBookingsFilters(initialOverrides?: Partial<QuotesBookingsFilters>) {
@@ -50,6 +52,14 @@ export function useQuotesAndBookingsFilters(initialOverrides?: Partial<QuotesBoo
     setFilters((prev) => ({ ...prev, inGoodShuffle: value }));
   }, []);
 
+  const setInQuickBooks = useCallback((value: boolean | null) => {
+    setFilters((prev) => ({ ...prev, inQuickBooks: value }));
+  }, []);
+
+  const setSalesOfficeUuid = useCallback((uuid: string | null) => {
+    setFilters((prev) => ({ ...prev, salesOfficeUuid: uuid }));
+  }, []);
+
   const clearFilters = useCallback(() => {
     setFilters((prev) => ({
       ...prev,
@@ -62,6 +72,8 @@ export function useQuotesAndBookingsFilters(initialOverrides?: Partial<QuotesBoo
       bookedTo: null,
       accountManagerUserUuid: null,
       inGoodShuffle: null,
+      inQuickBooks: null,
+      salesOfficeUuid: null,
     }));
   }, []);
 
@@ -74,6 +86,8 @@ export function useQuotesAndBookingsFilters(initialOverrides?: Partial<QuotesBoo
     setBookedRange,
     setAccountManagerUserUuid,
     setInGoodShuffle,
+    setInQuickBooks,
+    setSalesOfficeUuid,
     clearFilters,
   };
 }

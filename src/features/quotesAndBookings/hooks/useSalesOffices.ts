@@ -3,10 +3,13 @@
 import { useMemo } from "react";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
-import { isCanadianProvince } from "../utils/canadianTaxRates";
+import type { Currency } from "../types/quoteTypes";
+import { pickEventCurrency } from "../utils/eventCurrency";
+import { useOfficeCurrencies } from "./useOfficeCurrencies";
 
-// Re-exported for the existing callers that import it from here.
-export { isCanadianProvince };
+// Re-exported for the existing callers that import them from here.
+export { isCanadianProvince } from "../utils/canadianTaxRates";
+export { resolveOfficeCurrency } from "../utils/resolveOfficeCurrency";
 
 export type SalesOfficeRow = {
   id: string;
@@ -22,6 +25,8 @@ export type SalesOfficeOption = {
   quickbookUuid: string | null;
   stripeConnectionUuid: string | null;
   stateProvince: string | null;
+  /** Inherited from the office's QuickBooks connection. */
+  currency: Currency;
 };
 
 export function useSalesOffices(): { salesOffices: SalesOfficeOption[]; isLoading: boolean } {
@@ -45,6 +50,9 @@ export function useSalesOffices(): { salesOffices: SalesOfficeOption[]; isLoadin
 
   const { data, isLoading } = useTypedQuery(compiled, expect<SalesOfficeRow>());
 
+  // One resolution for the whole app — see useOfficeCurrencies.
+  const { currencyByOfficeId } = useOfficeCurrencies();
+
   const salesOffices = useMemo(
     () =>
       (data ?? []).map((o) => ({
@@ -53,8 +61,9 @@ export function useSalesOffices(): { salesOffices: SalesOfficeOption[]; isLoadin
         quickbookUuid: o.quickbook_uuid,
         stripeConnectionUuid: o.stripe_connection_uuid,
         stateProvince: o.address_state_province,
+        currency: pickEventCurrency(o.id, currencyByOfficeId),
       })),
-    [data],
+    [data, currencyByOfficeId],
   );
 
   return { salesOffices, isLoading };

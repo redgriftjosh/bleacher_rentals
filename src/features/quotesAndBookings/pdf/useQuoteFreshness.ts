@@ -41,6 +41,14 @@ export function useQuoteFreshness(eventId: string, initialContentHash: string): 
   isStaleRef.current = isStale;
 
   useEffect(() => {
+    // A new baseline is a new definition of "current", so any staleness reported
+    // against the old one is spent. This is what lets the page adopt a change the
+    // client made themselves — signing — without carrying the modal it raised in
+    // the seconds before the response came back.
+    // See docs/specs/payment-does-not-invalidate-signature.md §8.
+    setIsStale(false);
+    isStaleRef.current = false;
+
     if (!isLoaded || userId || !initialContentHash) return;
 
     let cancelled = false;

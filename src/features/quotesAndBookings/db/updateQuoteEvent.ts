@@ -3,6 +3,7 @@ import { Database } from "../../../../database.types";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { CreateQuoteState } from "../state/useCreateQuoteStore";
 import { syncPaymentInstallments } from "./paymentInstallments";
+import { ScheduleBlockedError } from "../utils/scheduleDiff";
 import { calculateTotals } from "../utils/calculateTotals";
 import {
   logEventChanges,
@@ -12,7 +13,6 @@ import {
 } from "./logEventChanges";
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute, typedGetAll, expect } from "@/lib/powersync/typedQuery";
-import { subscribeToEvent } from "@/features/eventChat/db/subscriptions";
 
 type OldEventRow = {
   event_name: string | null;
@@ -54,12 +54,7 @@ export async function updateQuoteEvent(
 
   if (state.eventAddressData) {
     const existingRows = await typedGetAll(
-      db
-        .selectFrom("Events")
-        .select(["address_uuid"])
-        .where("id", "=", eventId)
-        .limit(1)
-        .compile(),
+      db.selectFrom("Events").select(["address_uuid"]).where("id", "=", eventId).limit(1).compile(),
       expect<AddressUuidRow>(),
     );
     const existingAddressUuid = existingRows[0]?.address_uuid ?? null;
@@ -100,12 +95,25 @@ export async function updateQuoteEvent(
     db
       .selectFrom("Events")
       .select([
-        "event_name", "event_start", "event_end", "event_status",
-        "event_type_uuid", "contact_uuid", "finance_contact_uuid",
-        "address_uuid", "sales_office_uuid", "terms_and_conditions_uuid",
-        "quote_valid_till", "notes", "internal_notes", "external_notes",
-        "tax_percent", "tax_amount_cents", "contract_revenue_cents",
-        "po_number", "created_by_user_uuid",
+        "event_name",
+        "event_start",
+        "event_end",
+        "event_status",
+        "event_type_uuid",
+        "contact_uuid",
+        "finance_contact_uuid",
+        "address_uuid",
+        "sales_office_uuid",
+        "terms_and_conditions_uuid",
+        "quote_valid_till",
+        "notes",
+        "internal_notes",
+        "external_notes",
+        "tax_percent",
+        "tax_amount_cents",
+        "contract_revenue_cents",
+        "po_number",
+        "created_by_user_uuid",
       ])
       .where("id", "=", eventId)
       .limit(1)
@@ -161,18 +169,11 @@ export async function updateQuoteEvent(
     updates.address_uuid = addressUuid;
   }
 
-  await typedExecute(
-    db
-      .updateTable("Events")
-      .set(updates)
-      .where("id", "=", eventId)
-      .compile(),
-  );
+  await typedExecute(db.updateTable("Events").set(updates).where("id", "=", eventId).compile());
 
-  const newOwnerUuid = (state.ownerUserUuid ?? currentUserUuid ?? null) as string | null;
-  if (newOwnerUuid && newOwnerUuid !== oldEvent?.created_by_user_uuid) {
-    await subscribeToEvent(eventId, newOwnerUuid);
-  }
+  // A new owner's subscription is the server's job, not ours: the same trigger
+  // fires on `UPDATE OF created_by_user_uuid`. Subscribing from here raced it
+  // and got the whole write discarded — see the note in createQuoteEvent.ts.
 
   // 4. Log field changes + line item changes in parallel
   if (oldEvent) {
@@ -234,6 +235,13 @@ export async function updateQuoteEvent(
   try {
     await syncPaymentInstallments(eventId, state.paymentInstallments, state.currency);
   } catch (e) {
-    console.error("Payment installments sync failed (quote still saved):", e);
+    // Removing an installment that holds money is a refusal, not a failure: the
+    // person needs to read it. Everything else stays a logged non-event, since
+    // the quote itself is already saved by this point.
+    if (e instanceof ScheduleBlockedError) {
+      createErrorToast(["The payment schedule was not changed.", e.message]);
+    } else {
+      console.error("Payment installments sync failed (quote still saved):", e);
+    }
   }
 }

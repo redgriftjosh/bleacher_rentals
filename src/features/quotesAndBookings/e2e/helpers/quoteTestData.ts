@@ -123,6 +123,16 @@ export async function assignTerms(eventId: string): Promise<string> {
   return terms.id as string;
 }
 
+/** Give the quote a two-part payment schedule, so the Pay tab has one to render. */
+export async function addPaymentSchedule(eventId: string): Promise<void> {
+  const db = admin();
+  const { error } = await db.from("PaymentInstallments").insert([
+    { event_uuid: eventId, due_date: "2026-09-01", amount_cents: 60_000, currency: "USD" },
+    { event_uuid: eventId, due_date: "2026-09-20", amount_cents: 40_000, currency: "USD" },
+  ]);
+  if (error) throw new Error(`addPaymentSchedule: insert failed: ${error.message}`);
+}
+
 /** Count active signatures for an event (asserting the guard created none). */
 export async function activeSignatureCount(eventId: string): Promise<number> {
   const db = admin();

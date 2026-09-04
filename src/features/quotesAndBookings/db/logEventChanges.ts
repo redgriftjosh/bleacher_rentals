@@ -48,6 +48,7 @@ export const FIELD_LABELS: Record<string, string> = {
   line_item: "Line Item",
   signature: "Contract Signature",
   email_sent: "Email Sent",
+  is_qbo: "QuickBooks Invoice",
   deleted: "Deleted",
 };
 

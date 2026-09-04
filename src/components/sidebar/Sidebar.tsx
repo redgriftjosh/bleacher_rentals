@@ -17,10 +17,10 @@ const SideBar = () => {
 
   return (
     <div
-      className="w-56 bg-gray-100 border-r border-gray-200 flex flex-col h-full"
+      className="w-56 shrink-0 bg-gray-100 border-r border-gray-200 flex flex-col h-full overflow-x-hidden"
       data-testid="sidebar"
     >
-      <nav className="flex-1 overflow-auto pt-2">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden pt-2">
         {items.map((item) => renderItem(item, pathname, hasUnreadChangelog))}
       </nav>
     </div>
@@ -47,12 +47,12 @@ const SideNavSection = ({
     <div className="mt-2 border-t border-gray-200 pt-2">
       <button
         onClick={() => setIsOpen((o) => !o)}
-        className="flex items-center w-full px-4 py-1 m-1 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-600 cursor-pointer"
+        className="flex items-center min-w-0 px-4 py-1 m-1 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-600 cursor-pointer"
       >
-        <Icon className="h-3.5 w-3.5 mr-2" />
-        <span>{item.label}</span>
+        <Icon className="h-3.5 w-3.5 mr-2 shrink-0" />
+        <span className="truncate">{item.label}</span>
         <ChevronDown
-          className={`h-3.5 w-3.5 ml-auto transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`h-3.5 w-3.5 ml-auto shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
       {isOpen && <div>{children}</div>}

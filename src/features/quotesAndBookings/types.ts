@@ -5,10 +5,14 @@ export type QuotesBookingsEvent = {
   event_end: string | null;
   event_status: string | null;
   contract_revenue_cents: number | null;
+  tax_amount_cents: number | null;
+  tax_percent: number | null;
   created_at: string | null;
   booked_at: string | null;
   created_by_user_uuid: string | null;
   goodshuffle_url: string | null;
+  is_qbo: number | null;
+  sales_office_uuid: string | null;
   deleted: number | null;
   account_manager_first_name: string | null;
   account_manager_last_name: string | null;
@@ -34,4 +38,8 @@ export type QuotesBookingsFilters = {
   accountManagerUserUuid: string | null;
   /** null = no filter, true = only events in GoodShuffle, false = only those not in it. */
   inGoodShuffle: boolean | null;
+  /** null = no filter, true = only events with is_qbo set, false = only those without. */
+  inQuickBooks: boolean | null;
+  /** null = every office; otherwise only events belonging to that one office. */
+  salesOfficeUuid: string | null;
 };

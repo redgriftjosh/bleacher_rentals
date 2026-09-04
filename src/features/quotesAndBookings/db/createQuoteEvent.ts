@@ -6,7 +6,6 @@ import { syncPaymentInstallments } from "./paymentInstallments";
 import { calculateTotals } from "../utils/calculateTotals";
 import { db } from "@/components/providers/SystemProvider";
 import { typedExecute } from "@/lib/powersync/typedQuery";
-import { subscribeToEvent } from "@/features/eventChat/db/subscriptions";
 
 export async function createQuoteEvent(
   state: CreateQuoteState,
@@ -72,9 +71,16 @@ export async function createQuoteEvent(
       .compile(),
   );
 
-  if (ownerUserUuid) {
-    await subscribeToEvent(eventUuid, ownerUserUuid);
-  }
+  // The owner's chat subscription is NOT created here. `events_auto_subscribe_owner`
+  // (20260709120000) does it server-side on this INSERT, with
+  // ON CONFLICT (event_uuid, user_uuid) DO NOTHING.
+  //
+  // Doing it from here as well used to lose a race with that trigger: PowerSync
+  // uploads the Events row first, the trigger inserts the subscription with its
+  // own gen_random_uuid(), and the client row — which conflicts on the natural
+  // key but not on the primary key the upsert resolves — came back 23505. That
+  // code is fatal to the connector, so the write was discarded and the user was
+  // told their change could not be saved, on a quote that had saved perfectly.
 
   // Generate unique 9-digit invoice number (must use Supabase RPC)
   const { data: invoiceData } = await (supabase.rpc as any)("generate_invoice_number");

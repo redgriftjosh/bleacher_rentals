@@ -71,6 +71,84 @@ export const PERMISSIONS: PermissionEntry[] = [
     },
   },
   {
+    label: "QuickBooks Invoice Flag",
+    description:
+      "The 'QuickBooks Invoice' checkbox on the Billing tab of a quote or booking, which records by hand that the event has been invoiced in QuickBooks. It is bookkeeping only — it does not push anything to QuickBooks.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: full("Can tick or untick the flag on any quote or booking."),
+      account_manager: full(
+        "Can tick or untick the flag on any quote or booking, including ones they did not create. Bookkeeping is not the quote owner's job — whoever entered the invoice into QuickBooks is the one who marks it.",
+      ),
+      developer: none(
+        "Unable to even access the pages where they can see quotes, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read("Can see whether the flag is set, but the checkbox is disabled."),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Payment History",
+    description:
+      "The payments and balances on the Billing tab of a quote or booking. Amounts come from what Stripe actually collected, so a partial payment shows as partial rather than closing the whole installment. Clicking a row opens the full record of that payment — every installment it was applied to, the reference and the notes.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: read(
+        "Can see every payment on any quote — amount, payer, method and the Stripe receipt. Payments from Stripe appear on their own once the client pays; anything paid another way is entered by hand (see Record a Payment).",
+      ),
+      account_manager: read(
+        "Exactly the same view as an administrator, on every quote, including ones they did not create.",
+      ),
+      developer: none(
+        "Unable to even access the pages where they can see quotes, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read(
+        "Can see payments and balances, and open any payment to read it in full, but cannot change anything.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Record a Payment",
+    description:
+      "Entering a payment that did not come through Stripe — a check, an ACH transfer, or a card run by hand on a terminal — from the Billing tab of a quote or booking. A recorded payment can never be edited or deleted; a mistake is corrected by recording the same amount as a negative, so both entries stay on the record.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: full(
+        "Can record a card, ACH or check payment on any quote or booking, including a negative amount for a refund, a bounced check or a correction. Recording a refund here does not send money back through Stripe — that is done in Stripe.",
+      ),
+      account_manager: custom(
+        "A lead account manager can do all of that on any quote or booking, including ones they did not create. Everyone else can only do it on the quotes they created — on other people's quotes the button is disabled. The same rule as every other edit on the page.",
+      ),
+      developer: none(
+        "Unable to even access the pages where they can see quotes, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: none(
+        "No. Reading the payment history is a separate thing, and they can still do that.",
+      ),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
+    label: "Event Chat",
+    description:
+      "The internal chat on a quote, booking or event — the conversation staff have among themselves. Clients never see it. The person who owns the event is added to its chat automatically when the event is created and if the event changes hands; anyone else joins with the Join button. Someone who leaves a chat stays out until they rejoin, including the owner.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: full(
+        "Can read every event chat, post, join or leave, and delete or edit any message, including other people's.",
+      ),
+      account_manager: custom(
+        "Can read every event chat, post in it, and join or leave. Can edit or delete only their own messages. Can also remove someone else from a chat they are themselves part of.",
+      ),
+      developer: none(
+        "Unable to even access the pages where the chat lives, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read("Can read event chats and who is in them, but cannot post, join or leave."),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+    },
+  },
+  {
     label: "Dashboard Cells",
     description: "This applies to the Dashboard page.",
     category: "Day to Day Operations",

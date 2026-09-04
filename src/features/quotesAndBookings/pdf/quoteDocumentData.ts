@@ -1,6 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "../../../../database.types";
 import { resolveInvoiceDisplay, buildPublicQuoteUrl } from "../utils/invoiceNumber";
 import { toQuoteLanguage, type QuoteLanguage } from "./quoteLanguage";
+import { allocatePayments } from "../utils/allocatePayments";
+import { resolveEventCurrency } from "../server/eventPaymentContext";
 
 // ── The single source of truth for rendering a quote ──
 
@@ -16,7 +19,10 @@ export type QuotePaymentInstallment = {
   id: string;
   dueDate: string;
   amountCents: number;
-  status: string;
+  /** Derived from the money in PaymentHistory, never the stored flag. */
+  status: "unpaid" | "partial" | "paid";
+  /** How much of `amountCents` the payments actually cover. */
+  allocatedCents: number;
 };
 
 export type QuoteDocumentData = {
@@ -118,7 +124,7 @@ function formatCents(cents: number): number {
 }
 
 function getSupabaseAdmin() {
-  return createClient(
+  return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
@@ -183,58 +189,65 @@ export async function buildQuoteDocumentData(
   const user = event.Users as any;
 
   // Parallel fetch: salesOffice, lineItems, installments, terms, signature
-  const [soResult, lineItemResult, installmentResult, termsResult, sigResult] = await Promise.all([
-    // SalesOffice
-    event.sales_office_uuid
-      ? supabase
-          .from("SalesOffices")
-          .select(
-            `
+  const [soResult, lineItemResult, installmentResult, paymentResult, termsResult, sigResult] =
+    await Promise.all([
+      // SalesOffice
+      event.sales_office_uuid
+        ? supabase
+            .from("SalesOffices")
+            .select(
+              `
               name,
               phone,
               Addresses!SalesOffices_address_uuid_fkey (
                 street, city, state_province, zip_postal
               )
             `,
-          )
-          .eq("id", event.sales_office_uuid)
-          .single()
-      : Promise.resolve({ data: null }),
+            )
+            .eq("id", event.sales_office_uuid)
+            .single()
+        : Promise.resolve({ data: null }),
 
-    // Line items
-    supabase
-      .from("EventLineItems")
-      .select("header, description, quantity, value_cents, currency")
-      .eq("event_uuid", eventId)
-      .eq("deleted", false)
-      .order("created_at"),
+      // Line items
+      supabase
+        .from("EventLineItems")
+        .select("header, description, quantity, value_cents, currency")
+        .eq("event_uuid", eventId)
+        .eq("deleted", false)
+        .order("created_at"),
 
-    // Payment installments
-    supabase
-      .from("PaymentInstallments")
-      .select("id, due_date, amount_cents, status")
-      .eq("event_uuid", eventId)
-      .order("due_date"),
+      // Payment installments
+      supabase
+        .from("PaymentInstallments")
+        .select("id, due_date, amount_cents")
+        .eq("event_uuid", eventId)
+        .order("due_date"),
 
-    // Terms & Conditions
-    (event as any).terms_and_conditions_uuid
-      ? supabase
-          .from("TermsAndConditions")
-          .select("html_content")
-          .eq("id", (event as any).terms_and_conditions_uuid)
-          .single()
-      : Promise.resolve({ data: null }),
+      // Payments actually received — the source of truth for every status below.
+      supabase
+        .from("PaymentHistory")
+        .select("id, installment_id, amount_cents, currency, status, paid_at, created_at")
+        .eq("event_uuid", eventId),
 
-    // Contract signature
-    (event as any).terms_and_conditions_uuid
-      ? supabase
-          .from("ContractSignatures")
-          .select("signer_name, signed_at")
-          .eq("event_uuid", eventId)
-          .eq("status", "active")
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-  ]);
+      // Terms & Conditions
+      (event as any).terms_and_conditions_uuid
+        ? supabase
+            .from("TermsAndConditions")
+            .select("html_content")
+            .eq("id", (event as any).terms_and_conditions_uuid)
+            .single()
+        : Promise.resolve({ data: null }),
+
+      // Contract signature
+      (event as any).terms_and_conditions_uuid
+        ? supabase
+            .from("ContractSignatures")
+            .select("signer_name, signed_at")
+            .eq("event_uuid", eventId)
+            .eq("status", "active")
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
 
   // Process SalesOffice
   let salesOffice: {
@@ -268,15 +281,39 @@ export async function buildQuoteDocumentData(
     total: (li.quantity ?? 1) * li.value_cents,
   }));
 
-  // Process installments
-  const paymentSchedule: QuotePaymentInstallment[] = (installmentResult.data ?? []).map(
-    (pi: any) => ({
+  // Process installments. The status a client reads on this document is derived
+  // from the payments, not from PaymentInstallments.status — that flag is a
+  // cache, and it once told a client a $3,600 installment was paid for $1.
+  // See docs/specs/payment-accounting-truth.md.
+  // The quote's currency comes from its sales office — the same resolution the
+  // checkout endpoint charges in — so the document can never state one currency
+  // while Stripe collects another. Line items only carry a copy of it.
+  const scheduleCurrency = await resolveEventCurrency(supabase, event.sales_office_uuid);
+  const allocation = allocatePayments(
+    (installmentResult.data ?? []).map((pi: any) => ({
       id: pi.id,
-      dueDate: pi.due_date,
-      amountCents: pi.amount_cents,
-      status: pi.status,
-    }),
+      dueDate: pi.due_date ?? "",
+      amountCents: pi.amount_cents ?? 0,
+    })),
+    ((paymentResult as any).data ?? []).map((ph: any) => ({
+      id: ph.id,
+      installmentId: ph.installment_id,
+      amountCents: ph.amount_cents ?? 0,
+      currency: ph.currency ?? "",
+      status: ph.status ?? "",
+      paidAt: ph.paid_at,
+      createdAt: ph.created_at ?? "",
+    })),
+    scheduleCurrency,
   );
+
+  const paymentSchedule: QuotePaymentInstallment[] = allocation.installments.map((i) => ({
+    id: i.installmentId,
+    dueDate: i.dueDate,
+    amountCents: i.amountCents,
+    status: i.status,
+    allocatedCents: i.allocatedCents,
+  }));
 
   // Calculate totals
   const subtotalCents = lineItems
@@ -291,7 +328,7 @@ export async function buildQuoteDocumentData(
     (event as any).tax_amount_cents ?? Math.round(taxableAmount * (taxPercent / 100));
   const totalCents = taxableAmount + taxAmountCents;
 
-  const currency = (lineItemRows?.[0]?.currency as "USD" | "CAD") ?? "USD";
+  const currency = scheduleCurrency;
 
   const appOrigin = origin ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://app.bleacherrentals.com";
   const invoiceNum = resolveInvoiceDisplay(event.invoice_number, eventId);

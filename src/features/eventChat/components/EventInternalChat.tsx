@@ -44,7 +44,6 @@ import { EventMessageBody } from "./EventMessageBody";
 import { EventMessageReplyQuote, replyQuotePreview } from "./EventMessageReplyQuote";
 import { NewMessagesDivider } from "./NewMessagesDivider";
 import { ScrollToBottomButton } from "./ScrollToBottomButton";
-import { useAutoSubscribeEventOwner } from "../hooks/useAutoSubscribeEventOwner";
 
 import { cn } from "@/lib/utils";
 
@@ -72,7 +71,12 @@ export function EventInternalChat({
   const { typingUserUuids } = useEventTypingIndicators(eventUuid, userUuid);
   const { emitTyping, stopTyping } = useEventTypingEmitter(eventUuid, userUuid);
 
-  useAutoSubscribeEventOwner(eventUuid);
+  // The owner's subscription is created and kept by `events_auto_subscribe_owner`
+  // (20260709120000), on insert, on owner change, and by that migration's
+  // backfill. Re-asserting it from the client raced the trigger into a 23505 the
+  // connector treats as fatal, and it also quietly undid "leave chat" for the
+  // one person most likely to want it. An owner who left rejoins with the Join
+  // button like anyone else.
 
   const [membersOpen, setMembersOpen] = useState(false);
   const [readReceiptsDialog, setReadReceiptsDialog] = useState<EventReadReceipt[] | null>(null);

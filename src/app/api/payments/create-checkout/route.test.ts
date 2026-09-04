@@ -11,18 +11,30 @@ vi.mock("stripe", () => ({
   },
 }));
 
-// Table-aware mock: from(table).select().eq().single() resolves whatever the
-// test put in tableData[table]. Both the route (event display) and the helper
-// (event -> office -> connection) read through this.
+// Table-aware mock: from(table)... resolves whatever the test put in
+// tableData[table] — an object for `.single()` reads, an array for list reads.
+// The route (event display), the Stripe helper (event -> office -> connection)
+// and the payment context (currency + balance) all read through this.
 vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({
-    from: (table: string) => ({
-      select: () => ({
-        eq: () => ({
-          single: () => Promise.resolve({ data: tableData[table] ?? null }),
-        }),
-      }),
-    }),
+    from: (table: string) => {
+      const value = tableData[table] as any;
+      const one = () =>
+        Promise.resolve({
+          data: Array.isArray(value) ? (value[0] ?? null) : (value ?? null),
+          error: null,
+        });
+      const chain: any = {
+        select: () => chain,
+        eq: () => chain,
+        order: () => chain,
+        single: one,
+        maybeSingle: one,
+        then: (resolve: (r: { data: unknown[]; error: null }) => unknown) =>
+          resolve({ data: Array.isArray(value) ? value : value ? [value] : [], error: null }),
+      };
+      return chain;
+    },
   }),
 }));
 
@@ -37,16 +49,37 @@ function makeRequest(body: Record<string, unknown>) {
   });
 }
 
-/** A fully-configured event -> office -> active connection chain. */
-function seedHappyPath(over: { event?: object; office?: object; connection?: object } = {}) {
+/**
+ * A fully-configured event -> office -> active connection chain, priced at
+ * $1,000.00 in a USD office with nothing paid yet.
+ */
+function seedHappyPath(
+  over: {
+    event?: object;
+    office?: object;
+    connection?: object;
+    qbo?: object | null;
+    address?: object | null;
+    lineItems?: object[];
+    installments?: object[];
+    payments?: object[];
+  } = {},
+) {
   tableData.Events = {
     id: "evt-1",
     event_name: "Game Day",
     invoice_number: 12345,
     sales_office_uuid: "office-1",
+    tax_percent: 0,
+    tax_amount_cents: null,
     ...over.event,
   };
-  tableData.SalesOffices = { stripe_connection_uuid: "conn-1", ...over.office };
+  tableData.SalesOffices = {
+    stripe_connection_uuid: "conn-1",
+    quickbook_uuid: "qbo-1",
+    address_uuid: "addr-1",
+    ...over.office,
+  };
   tableData.StripeConnections = {
     id: "conn-1",
     stripe_account_id: "acct_office1",
@@ -54,14 +87,31 @@ function seedHappyPath(over: { event?: object; office?: object; connection?: obj
     charges_enabled: true,
     ...over.connection,
   };
+  tableData.QboConnections = over.qbo === undefined ? { currency: "USD" } : over.qbo;
+  tableData.Addresses = over.address === undefined ? { state_province: "Florida" } : over.address;
+  tableData.EventLineItems = over.lineItems ?? [{ quantity: 1, value_cents: 100000 }];
+  tableData.PaymentInstallments = over.installments ?? [];
+  tableData.PaymentHistory = over.payments ?? [];
+}
+
+/** A succeeded USD payment on the seeded event. */
+function succeededPayment(over: Record<string, unknown> = {}) {
+  return {
+    id: "pay-1",
+    installment_id: null,
+    amount_cents: 5000,
+    currency: "USD",
+    status: "succeeded",
+    paid_at: "2026-09-01T10:00:00Z",
+    created_at: "2026-09-01T10:00:00Z",
+    ...over,
+  };
 }
 
 describe("POST /api/payments/create-checkout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    tableData.Events = undefined;
-    tableData.SalesOffices = undefined;
-    tableData.StripeConnections = undefined;
+    for (const table of Object.keys(tableData)) tableData[table] = undefined;
     mockCheckoutCreate.mockResolvedValue({ url: "https://checkout.stripe.com/session_123" });
   });
 
@@ -172,18 +222,66 @@ describe("POST /api/payments/create-checkout", () => {
     expect(requestOpts).toEqual({ stripeAccount: "acct_office1" });
   });
 
-  it("uses CAD currency when specified", async () => {
+  it("charges in the office's currency, ignoring the currency in the request body", async () => {
+    // /quote/[id] is public, so the body is attacker-controlled: a request that
+    // asks for CAD on a USD quote must still be charged in USD.
     seedHappyPath();
     await POST(
       makeRequest({ eventId: "evt-1", amountCents: 10000, currency: "CAD", payerName: "Bob" }),
     );
+    expect(mockCheckoutCreate.mock.calls[0][0].line_items[0].price_data.currency).toBe("usd");
+  });
+
+  it("charges in CAD when the office's QuickBooks connection reports CAD", async () => {
+    seedHappyPath({ qbo: { currency: "CAD" } });
+    await POST(
+      makeRequest({ eventId: "evt-1", amountCents: 10000, currency: "USD", payerName: "Bob" }),
+    );
     expect(mockCheckoutCreate.mock.calls[0][0].line_items[0].price_data.currency).toBe("cad");
   });
 
-  it("defaults to USD when currency not specified", async () => {
-    seedHappyPath({ event: { invoice_number: null } });
-    await POST(makeRequest({ eventId: "evt-1", amountCents: 5000, payerName: "Bob" }));
-    expect(mockCheckoutCreate.mock.calls[0][0].line_items[0].price_data.currency).toBe("usd");
+  it("falls back to the office province when the QBO connection reports no currency", async () => {
+    seedHappyPath({ qbo: { currency: null }, address: { state_province: "Ontario" } });
+    await POST(makeRequest({ eventId: "evt-1", amountCents: 10000, payerName: "Bob" }));
+    expect(mockCheckoutCreate.mock.calls[0][0].line_items[0].price_data.currency).toBe("cad");
+  });
+
+  it("rejects an amount above the outstanding balance", async () => {
+    seedHappyPath({ payments: [succeededPayment({ amount_cents: 60000 })] });
+    const res = await POST(makeRequest({ eventId: "evt-1", amountCents: 50000, payerName: "Bob" }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/balance/i);
+    expect(mockCheckoutCreate).not.toHaveBeenCalled();
+  });
+
+  it("allows an amount exactly equal to the outstanding balance", async () => {
+    seedHappyPath({ payments: [succeededPayment({ amount_cents: 60000 })] });
+    const res = await POST(makeRequest({ eventId: "evt-1", amountCents: 40000, payerName: "Bob" }));
+    expect(res.status).toBe(200);
+  });
+
+  it("rejects a payment on an invoice that is already paid in full", async () => {
+    seedHappyPath({ payments: [succeededPayment({ amount_cents: 100000 })] });
+    const res = await POST(makeRequest({ eventId: "evt-1", amountCents: 5000, payerName: "Bob" }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/paid in full/i);
+    expect(mockCheckoutCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects an amount below Stripe's 50-cent minimum", async () => {
+    seedHappyPath();
+    const res = await POST(makeRequest({ eventId: "evt-1", amountCents: 49, payerName: "Bob" }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/0\.50/);
+  });
+
+  it("rejects an amount that is not a whole number of cents", async () => {
+    seedHappyPath();
+    for (const amountCents of [1000.5, "5000", Number.NaN, Number.MAX_SAFE_INTEGER + 2]) {
+      const res = await POST(makeRequest({ eventId: "evt-1", amountCents, payerName: "Bob" }));
+      expect(res.status).toBe(400);
+    }
+    expect(mockCheckoutCreate).not.toHaveBeenCalled();
   });
 
   it("uses eventId in success_url/cancel_url when invoice_number is null", async () => {

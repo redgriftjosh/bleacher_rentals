@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
+  addPaymentSchedule,
   createQuote,
   bumpLineItemPrice,
   assignTerms,
@@ -116,6 +117,71 @@ test.describe("Public quote — staleness & presence", () => {
       expect(await activeSignatureCount(quote.eventId)).toBe(0);
     } finally {
       if (quote) await cleanupQuote(quote.eventId, termsId);
+    }
+  });
+
+  test("signing does not tell the client their own signature changed the quote", async ({
+    page,
+  }) => {
+    // Signing moves content_hash — the signed state is part of the page — so the
+    // poll used to report the client's own action as someone else's edit.
+    // See docs/specs/payment-does-not-invalidate-signature.md §8.
+    let quote: CreatedQuote | null = null;
+    let termsId: string | undefined;
+    try {
+      quote = await createQuote();
+      termsId = await assignTerms(quote.eventId);
+
+      await page.goto(`/quote/${quote.eventId}?pollMs=400`);
+      await page.getByRole("button", { name: "Signed Contract" }).click();
+      await page.locator('input[placeholder="Full name"]:visible').fill("Jane Client");
+
+      // Signing renders a PDF and sends two emails, so wait for the response
+      // itself rather than racing the button back out of "Signing...".
+      const signed = page.waitForResponse(
+        (r) => r.url().includes("/api/contracts/sign") && r.request().method() === "POST",
+      );
+      await page.getByRole("button", { name: "Sign Contract" }).click();
+      const signResponse = await signed;
+
+      // The signature is recorded, and the response carries the fresh hash the
+      // page rebases onto.
+      expect(signResponse.status()).toBe(200);
+      expect(typeof (await signResponse.json()).contentHash).toBe("string");
+      expect(await activeSignatureCount(quote.eventId)).toBe(1);
+
+      // ...and several real poll cycles later the client is still not being
+      // asked to refresh a page nobody else touched.
+      await page.waitForTimeout(2500);
+      await expect(page.getByText("This quote has been updated")).toHaveCount(0);
+    } finally {
+      if (quote) await cleanupQuote(quote.eventId, termsId);
+    }
+  });
+
+  test("the Pay tab lists the payment schedule", async ({ page }) => {
+    // The client cannot plan around instalments they cannot see. The schedule is
+    // built server-side in buildQuoteDocumentData, so a bad column in that query
+    // fails silently: an empty schedule renders as no section at all.
+    let quote: CreatedQuote | null = null;
+    try {
+      quote = await createQuote();
+      await addPaymentSchedule(quote.eventId);
+
+      await page.goto(`/quote/${quote.eventId}`);
+      await page.getByRole("button", { name: "Pay Invoice" }).click();
+
+      // Tabs stay mounted while hidden, so scope to the visible Pay tab.
+      const schedule = page
+        .locator("div")
+        .filter({ has: page.getByRole("heading", { name: "Payment Schedule" }) })
+        .last();
+
+      await expect(schedule).toBeVisible();
+      await expect(schedule.getByText("$600.00").first()).toBeVisible();
+      await expect(schedule.getByText("$400.00").first()).toBeVisible();
+    } finally {
+      if (quote) await cleanupQuote(quote.eventId);
     }
   });
 

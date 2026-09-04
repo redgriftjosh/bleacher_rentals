@@ -91,22 +91,29 @@ describe("formatQuoteMoney", () => {
     expect(formatQuoteMoney(0, "USD", "en")).toBe("$0.00");
   });
 
-  it("renders CAD identically to USD in English (bare $, no CA prefix)", () => {
-    expect(formatQuoteMoney(123456, "CAD", "en")).toBe("$1,234.56");
+  it("marks CAD in English so it cannot be read as a US amount", () => {
+    expect(formatQuoteMoney(123456, "CAD", "en")).toBe("C$1,234.56");
+    expect(formatQuoteMoney(50, "CAD", "en")).toBe("C$0.50");
   });
 
   it("renders French with a comma decimal and a trailing dollar sign", () => {
-    expect(formatQuoteMoney(123456, "CAD", "fr")).toBe(`1${NBSP}234,56${NBSP}$`);
-    expect(formatQuoteMoney(50, "CAD", "fr")).toBe(`0,50${NBSP}$`);
+    expect(formatQuoteMoney(123456, "USD", "fr")).toBe(`1${NBSP}234,56${NBSP}$`);
+    expect(formatQuoteMoney(50, "USD", "fr")).toBe(`0,50${NBSP}$`);
+  });
+
+  it("marks CAD in French the Canadian way, with $ CA", () => {
+    expect(formatQuoteMoney(123456, "CAD", "fr")).toBe(`1${NBSP}234,56${NBSP}$${NBSP}CA`);
   });
 
   it("keeps the minus sign in front in both languages", () => {
     expect(formatQuoteMoney(-123456, "USD", "en")).toBe("-$1,234.56");
-    expect(formatQuoteMoney(-123456, "CAD", "fr")).toBe(`-1${NBSP}234,56${NBSP}$`);
+    expect(formatQuoteMoney(-123456, "CAD", "fr")).toBe(`-1${NBSP}234,56${NBSP}$${NBSP}CA`);
   });
 
   it("groups amounts over a million", () => {
     expect(formatQuoteMoney(123456789, "USD", "en")).toBe("$1,234,567.89");
-    expect(formatQuoteMoney(123456789, "CAD", "fr")).toBe(`1${NBSP}234${NBSP}567,89${NBSP}$`);
+    expect(formatQuoteMoney(123456789, "CAD", "fr")).toBe(
+      `1${NBSP}234${NBSP}567,89${NBSP}$${NBSP}CA`,
+    );
   });
 });

@@ -188,6 +188,7 @@ const EventsCols = {
   sales_office_uuid: column.text,
   deleted: column.integer,
   invoice_number: column.integer,
+  is_qbo: column.integer,
   po_number: column.text,
   quote_valid_till: column.text,
   terms_and_conditions_uuid: column.text,
@@ -901,8 +902,6 @@ const PaymentInstallmentsCols = {
   currency: column.text,
   due_date: column.text,
   event_uuid: column.text,
-  paid_at: column.text,
-  status: column.text,
 } satisfies PowerSyncColsFor<"PaymentInstallments">;
 const PaymentInstallments = new Table(PaymentInstallmentsCols, {
   indexes: { event_uuid: ["event_uuid"] },
@@ -948,6 +947,9 @@ const TermsAndConditions = new Table(TermsAndConditionsCols);
 const PaymentHistoryCols = {
   event_uuid: column.text,
   installment_id: column.text,
+  // What the client was paying for, as of the payment. Historical: unlike
+  // installment_id it is never re-pointed when a schedule is rebuilt.
+  intended_installment_id: column.text,
   amount_cents: column.integer,
   currency: column.text,
   status: column.text,
@@ -961,6 +963,13 @@ const PaymentHistoryCols = {
   notes: column.text,
   paid_at: column.text,
   created_at: column.text,
+  // Who wrote the row — the webhook or a person. Not inferred from
+  // payment_method_type, which says "card" on every legacy Stripe row.
+  entry_source: column.text,
+  recorded_by_user_uuid: column.text,
+  // Check number, ACH trace, terminal auth code; for Stripe rows, the method
+  // Stripe reported.
+  reference: column.text,
 } satisfies PowerSyncColsFor<"PaymentHistory">;
 const PaymentHistory = new Table(PaymentHistoryCols, {
   indexes: { event_uuid: ["event_uuid"], installment_id: ["installment_id"] },

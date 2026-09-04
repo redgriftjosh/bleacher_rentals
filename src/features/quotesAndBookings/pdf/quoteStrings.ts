@@ -65,6 +65,10 @@ export const quoteStrings = {
     en: (n: string) => `Memo: Invoice #${n}`,
     fr: (n: string) => `Mention : facture nº ${n}`,
   },
+  eTransferNote: {
+    en: "e-transfers to payments@bleacherrentals.com",
+    fr: "Virements Interac à payments@bleacherrentals.com",
+  },
 
   // ── Totals ───────────────────────────────────────────────────────────
   totalsHeading: { en: "Totals", fr: "Totaux" },
@@ -133,11 +137,11 @@ export const quoteStrings = {
   },
   amountDue: { en: "Amount Due", fr: "Montant dû" },
   paidInFull: { en: "Paid in Full", fr: "Payé en totalité" },
-  // Rendered after the overdue amount, which is bolded on its own:
-  //   "<b>$500.00</b> is overdue based on your payment schedule."
-  overdueNoticeSuffix: {
-    en: "is overdue based on your payment schedule.",
-    fr: "est en souffrance selon votre calendrier de paiement.",
+  // Rendered after the due amount, which is bolded on its own:
+  //   "<b>$500.00</b> is due based on your payment schedule."
+  dueNoticeSuffix: {
+    en: "is due based on your payment schedule.",
+    fr: "est à payer selon votre calendrier de paiement.",
   },
   yourNameRequired: { en: "Your Name *", fr: "Votre nom *" },
   email: { en: "Email", fr: "Courriel" },
@@ -173,7 +177,7 @@ export const quoteStrings = {
   // ── Pay Invoice tab: schedule + history ──────────────────────────────
   paymentSchedule: { en: "Payment Schedule", fr: "Calendrier de paiement" },
   paid: { en: "Paid", fr: "Payé" },
-  overdue: { en: "Overdue", fr: "En souffrance" },
+  due: { en: "Due", fr: "À payer" },
   totalScheduled: { en: "Total Scheduled", fr: "Total prévu" },
   paymentHistory: { en: "Payment History", fr: "Historique des paiements" },
   loading: { en: "Loading...", fr: "Chargement..." },
@@ -192,6 +196,8 @@ export const quoteStrings = {
   statusFailed: { en: "failed", fr: "échoué" },
   statusPaid: { en: "paid", fr: "payé" },
   statusUnpaid: { en: "unpaid", fr: "impayé" },
+  // An installment that has received some money but is not covered yet.
+  statusPartial: { en: "partial", fr: "partiel" },
 
   // Payment method types from Stripe.
   methodCard: { en: "card", fr: "carte" },
@@ -298,6 +304,7 @@ const STATUS_KEYS = {
   failed: "statusFailed",
   paid: "statusPaid",
   unpaid: "statusUnpaid",
+  partial: "statusPartial",
 } as const satisfies Record<string, QuoteStringKey>;
 
 const METHOD_KEYS = {
