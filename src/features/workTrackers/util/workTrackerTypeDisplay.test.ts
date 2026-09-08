@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getSelectableWorkTrackerTypes } from "./workTrackerTypeDisplay";
+import { getSelectableWorkTrackerTypes, isSingleFieldSetType } from "./workTrackerTypeDisplay";
 
 const ALL_TYPES = [
   { id: "trip-1", display_name: "Trip", code: "trip" },
@@ -69,5 +69,25 @@ describe("getSelectableWorkTrackerTypes", () => {
     expect(
       getSelectableWorkTrackerTypes([{ id: "x", display_name: "Random", code: null }]),
     ).toEqual([]);
+  });
+});
+
+describe("isSingleFieldSetType", () => {
+  it("is false for trip", () => {
+    expect(isSingleFieldSetType("trip")).toBe(false);
+  });
+
+  it("is true for repair_maintenance and site_visit_cleaning_other", () => {
+    expect(isSingleFieldSetType("repair_maintenance")).toBe(true);
+    expect(isSingleFieldSetType("site_visit_cleaning_other")).toBe(true);
+  });
+
+  it("defaults to false (the full Trip-style layout) when there is no code at all", () => {
+    expect(isSingleFieldSetType(null)).toBe(false);
+    expect(isSingleFieldSetType(undefined)).toBe(false);
+  });
+
+  it("treats any non-null code other than trip as single-field-set", () => {
+    expect(isSingleFieldSetType("some_future_code")).toBe(true);
   });
 });

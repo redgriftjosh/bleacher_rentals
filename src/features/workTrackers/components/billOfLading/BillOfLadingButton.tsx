@@ -9,6 +9,7 @@ import { expect, typedGetAll, typedExecute } from "@/lib/powersync/typedQuery";
 import { createErrorToast } from "@/components/toasts/ErrorToast";
 import { BillOfLadingDocument, BOLBleacherData } from "./BillOfLadingDocument";
 import { AddressData } from "../../../eventConfiguration/state/useCurrentEventStore";
+import { isSingleFieldSetType } from "../../util/workTrackerTypeDisplay";
 
 type BillOfLadingButtonProps = {
   workTracker: Tables<"WorkTrackers"> | null;
@@ -127,7 +128,7 @@ export default function BillOfLadingButton({
 
       // ── Resolve the work tracker's type code, to know whether Pickup and
       // Delivery collapse into one generic panel (see BillOfLadingDocument) ─
-      let isSingleFieldSetType = false;
+      let trackerIsSingleFieldSetType = false;
       if (workTracker.work_tracker_type_uuid) {
         const rows = await typedGetAll(
           db
@@ -138,7 +139,7 @@ export default function BillOfLadingButton({
             .compile(),
           expect<{ code: string | null }>(),
         );
-        isSingleFieldSetType = Boolean(rows[0]?.code && rows[0].code !== "trip");
+        trackerIsSingleFieldSetType = isSingleFieldSetType(rows[0]?.code);
       }
 
       // ── Fetch full address rows if we only have UUIDs ────────────────────
@@ -177,7 +178,7 @@ export default function BillOfLadingButton({
           dropoffAddress={dropoffRow}
           bleacher={bleacher}
           bolNumber={bolNumber}
-          isSingleFieldSetType={isSingleFieldSetType}
+          isSingleFieldSetType={trackerIsSingleFieldSetType}
         />,
       ).toBlob();
 

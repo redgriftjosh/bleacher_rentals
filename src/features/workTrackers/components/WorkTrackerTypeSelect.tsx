@@ -46,6 +46,7 @@ export function WorkTrackerTypeSelect({
       <DropdownMenuTrigger asChild disabled={disabled}>
         <button
           type="button"
+          data-testid="work-tracker-type-select-trigger"
           className={`flex items-center gap-1.5 rounded border px-2.5 py-1 text-sm font-medium transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${selectedStyle.bg} ${selectedStyle.border} ${selectedStyle.text}`}
         >
           <SelectedIcon className="h-3.5 w-3.5" />

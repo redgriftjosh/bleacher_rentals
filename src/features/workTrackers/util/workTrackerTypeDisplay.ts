@@ -47,3 +47,17 @@ export function getSelectableWorkTrackerTypes(
 
   return result;
 }
+
+/**
+ * Whether a work tracker of this type uses the single-field-set layout
+ * (Repair/Maintenance, Site Visit/Cleaning/Other) instead of Trip's separate
+ * Pickup/Dropoff sections. `code == null` (a legacy type, or the type row
+ * hasn't loaded yet) defaults to `false` — the full Trip-style layout — same
+ * as an unrecognized/unset type would today.
+ *
+ * Shared by WorkTrackerModal (the live form) and BillOfLadingButton (the PDF)
+ * so the two never drift on what counts as "single field set".
+ */
+export function isSingleFieldSetType(code: string | null | undefined): boolean {
+  return Boolean(code && code !== "trip");
+}

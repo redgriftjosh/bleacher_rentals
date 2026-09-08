@@ -76,7 +76,10 @@ import { getUpcomingWindowEnd } from "@/features/alerts/util/getUpcomingWindow";
 import { PocSelect } from "./PocSelect";
 import { getExpectedPocForWorkTracker, type PocDirection } from "../util/resolvePocContact";
 import { describePocPopulateResult, type PocValue } from "../util/pocField";
-import { getSelectableWorkTrackerTypes } from "../util/workTrackerTypeDisplay";
+import {
+  getSelectableWorkTrackerTypes,
+  isSingleFieldSetType as computeIsSingleFieldSetType,
+} from "../util/workTrackerTypeDisplay";
 import { WorkTrackerTypeSelect } from "./WorkTrackerTypeSelect";
 
 type WorkTrackerModalProps = {
@@ -144,12 +147,9 @@ export default function WorkTrackerModal({
     (t) => t.id === workTracker?.work_tracker_type_uuid,
   );
   // Every type other than "trip" uses a single set of fields (written to the
-  // dropoff_* columns) instead of separate Pickup/Dropoff sections. Keyed off
-  // the stable `code`, not the freely-editable `display_name`.
+  // dropoff_* columns) instead of separate Pickup/Dropoff sections.
   // See docs/specs/work-tracker-fixed-types.md.
-  const isSingleFieldSetType = Boolean(
-    selectedWorkTrackerType && selectedWorkTrackerType.code !== "trip",
-  );
+  const isSingleFieldSetType = computeIsSingleFieldSetType(selectedWorkTrackerType?.code);
 
   // The Type dropdown only ever offers the 3 canonical types, regardless of what
   // else exists in the database — see workTrackerTypeDisplay.ts.
@@ -894,6 +894,7 @@ export default function WorkTrackerModal({
             // Only the form body scrolls: the title stays put and the footer
             // (Delete, BoL, Save) stays reachable without hunting for it.
             className=" p-4 rounded shadow w-[900px] max-h-[90vh] flex flex-col overflow-hidden transition-colors duration-200 bg-white"
+            data-testid="work-tracker-modal"
           >
             <div className="flex flex-row justify-between items-start">
               <div className="flex items-center gap-2">
