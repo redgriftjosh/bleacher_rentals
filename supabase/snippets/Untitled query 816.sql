@@ -1,5 +1,4 @@
-SELECT
-  *,
-  NOW() AS current_date_time
-FROM public."WorkTrackers"
-WHERE created_at > '2026-06-14';
+select wt.*, a.*
+from public."WorkTrackers" wt
+join public."Addresses" a on a.id = wt.pickup_address_uuid
+where wt.notes = 'uniquesearchquery';
