@@ -31,6 +31,7 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
       "/zones",
       "/inspection-questions",
       "/quickbooks",
+      "/work-tracker-types",
       "/event-dashboard",
       "/roadmap",
       "/permissions",

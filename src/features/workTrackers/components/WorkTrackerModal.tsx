@@ -3,7 +3,7 @@ import { AppTooltip } from "@/components/AppTooltip";
 import { Dropdown } from "@/components/DropDown";
 import { BleacherSwapPanel } from "@/features/workTrackers/components/BleacherSwapPanel";
 import { useEffect, useMemo, useState, useRef } from "react";
-import { EditWorkTrackerTypesModal } from "./EditWorkTrackerTypesModal";
+import { useRouter } from "next/navigation";
 import AddressAutocomplete from "@/components/AddressAutoComplete";
 import {
   getAddressFromUuid,
@@ -99,6 +99,7 @@ export default function WorkTrackerModal({
 }: WorkTrackerModalProps) {
   const supabase = useClerkSupabaseClient();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   // Fetch drivers with user data using PowerSync
   const { data: drivers = [] } = useDrivers();
@@ -123,7 +124,9 @@ export default function WorkTrackerModal({
   // Line items live in memory until the work tracker itself is saved (see
   // `syncWorkTrackerLineItems`) — this lets them be added before the tracker exists.
   const [lineItems, setLineItems] = useState<DraftWorkTrackerLineItem[]>([]);
-  const [showEditTypes, setShowEditTypes] = useState(false);
+  // Confirms leaving this modal (and losing unsaved changes) to go edit work
+  // tracker types' QuickBooks accounts on their own admin-only page.
+  const [showLeaveToEditTypesConfirm, setShowLeaveToEditTypesConfirm] = useState(false);
   const initialSnapshotRef = useRef<WorkTrackerSnapshot | null>(null);
   const pendingChangeTypeRef = useRef<WorkTrackerChangeType>("none");
   // `${bleacher_uuid}|${date}` of the draft whose fields were already auto-populated.
@@ -941,10 +944,12 @@ export default function WorkTrackerModal({
                       }
                       disabled={!canEditFields}
                     />
-                    {canEditFields && (
+                    {/* QBO account assignment for the 3 fixed types now lives on its
+                      own admin-only page, not a modal here. */}
+                    {permissions.isAdmin && (
                       <button
                         type="button"
-                        onClick={() => setShowEditTypes(true)}
+                        onClick={() => setShowLeaveToEditTypesConfirm(true)}
                         className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 transition-colors"
                       >
                         <Pencil className="h-3 w-3" />
@@ -1405,7 +1410,30 @@ export default function WorkTrackerModal({
         </div>
       )}
 
-      <EditWorkTrackerTypesModal isOpen={showEditTypes} onClose={() => setShowEditTypes(false)} />
+      <Dialog open={showLeaveToEditTypesConfirm} onOpenChange={setShowLeaveToEditTypesConfirm}>
+        <DialogContent className="max-w-md z-[2101]">
+          <DialogHeader>
+            <DialogTitle>Leave to edit types?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">
+            Any unsaved changes to this work tracker will be lost.
+          </p>
+          <DialogFooter className="gap-2 mt-4">
+            <button
+              onClick={() => setShowLeaveToEditTypesConfirm(false)}
+              className="px-4 py-2 text-sm font-medium rounded border border-gray-300 hover:bg-gray-50 transition cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => router.push("/work-tracker-types")}
+              className="px-4 py-2 text-sm font-semibold rounded text-white bg-blue-600 hover:bg-blue-700 transition cursor-pointer"
+            >
+              Continue
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={showSaveConfirmModal}
