@@ -71,6 +71,22 @@ const Bleachers = new Table(BleachersCols, {
   },
 });
 
+const BleacherAnnualInspectionsCols = {
+  created_at: column.text,
+  created_by: column.text,
+  bleacher_uuid: column.text,
+  inspected_on: column.text,
+  next_due_on: column.text,
+  document_path: column.text,
+  notes: column.text,
+} satisfies PowerSyncColsFor<"BleacherAnnualInspections">;
+const BleacherAnnualInspections = new Table(BleacherAnnualInspectionsCols, {
+  indexes: {
+    bleacher_uuid: ["bleacher_uuid"],
+    next_due_on: ["next_due_on"],
+  },
+});
+
 const StorageLocationsCols = {
   created_at: column.text,
   name: column.text,
@@ -305,6 +321,7 @@ const UsersCols = {
   created_at: column.text,
   expo_push_token: column.text,
   changelog_last_read_at: column.text,
+  inspection_queue_last_seen_at: column.text,
 } satisfies PowerSyncColsFor<"Users">;
 
 const ChangeLogCols = {
@@ -1173,6 +1190,7 @@ export const AppSchema = new Schema({
   DriverUnavailability,
   Tasks,
   Bleachers,
+  BleacherAnnualInspections,
   BleacherEvents,
   BleacherUsers,
   Blocks,
@@ -1270,6 +1288,7 @@ export type NotificationRecord = PowerSyncDB["Notifications"];
 export type DriverUnavailabilityRecord = PowerSyncDB["DriverUnavailability"];
 export type WorkTrackerInspectionsRecord = PowerSyncDB["WorkTrackerInspections"];
 export type InspectionQuestionsRecord = PowerSyncDB["InspectionQuestions"];
+export type BleacherAnnualInspectionsRecord = PowerSyncDB["BleacherAnnualInspections"];
 export type DamageReportsRecord = PowerSyncDB["DamageReports"];
 export type DamageReportPhotosRecord = PowerSyncDB["DamageReportPhotos"];
 export type MaintenanceEventsRecord = PowerSyncDB["MaintenanceEvents"];

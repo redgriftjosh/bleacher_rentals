@@ -19,6 +19,7 @@ type SetStaleFn = () => void;
 
 export const setStaleByTable: Record<TableName, SetStaleFn> = {
   Addresses: () => useAddressesStore.getState().setStale(true),
+  BleacherAnnualInspections: () => {},
   BleacherEvents: () => useBleacherEventsStore.getState().setStale(true),
   Bleachers: () => useBleachersStore.getState().setStale(true),
   Blocks: () => useBlocksStore.getState().setStale(true),

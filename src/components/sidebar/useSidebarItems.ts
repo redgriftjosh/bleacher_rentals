@@ -89,6 +89,7 @@ const ALL_ITEMS: SidebarItemConfig[] = [
     children: [
       { label: "Damage Reports", href: "/damage-reports" },
       { label: "Inspections", href: "/inspections" },
+      { label: "Annual Inspections", href: "/annual-inspections" },
       { label: "Repairs", href: "/repairs" },
     ],
   },

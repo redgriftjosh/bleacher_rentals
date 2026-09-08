@@ -271,6 +271,29 @@ export const PERMISSIONS: PermissionEntry[] = [
       ),
     },
   },
+  {
+    label: "Annual Inspections",
+    description:
+      "The annual inspection due date on every bleacher, the certificate PDF that goes with it, and the Annual Inspections queue under Quality Assurance. Bleachers are flagged yellow 30 days before the date, red 7 days before, and red again once the date has passed.",
+    category: "Day to Day Operations",
+    roles: {
+      admin: full(
+        "Can record an inspection on any bleacher, correct an earlier record, upload or replace the certificate, and edit the notes.",
+      ),
+      account_manager: full(
+        "Same as an administrator for inspections: they can record one on any bleacher and correct earlier records. Note this is deliberately wider than their read-only access to the Assets page — an inspection is an operational record like a damage report, not a change to the bleacher itself.",
+      ),
+      developer: none(
+        "Unable to even access the pages where inspections are shown; developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: read(
+        "Can open the queue and read every inspection, its notes and its certificate, but cannot record or change one.",
+      ),
+      driver: none(
+        "Drivers only have access to the Driver Mobile App, which has no screen for annual inspections. The pre-trip and post-trip inspections they do fill in are a separate thing entirely.",
+      ),
+    },
+  },
 
   // Configuration
   {

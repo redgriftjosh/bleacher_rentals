@@ -170,6 +170,54 @@ export type Database = {
         }
         Relationships: []
       }
+      BleacherAnnualInspections: {
+        Row: {
+          bleacher_uuid: string
+          created_at: string
+          created_by: string | null
+          document_path: string | null
+          id: string
+          inspected_on: string | null
+          next_due_on: string
+          notes: string | null
+        }
+        Insert: {
+          bleacher_uuid: string
+          created_at?: string
+          created_by?: string | null
+          document_path?: string | null
+          id?: string
+          inspected_on?: string | null
+          next_due_on: string
+          notes?: string | null
+        }
+        Update: {
+          bleacher_uuid?: string
+          created_at?: string
+          created_by?: string | null
+          document_path?: string | null
+          id?: string
+          inspected_on?: string | null
+          next_due_on?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bleacher_annual_inspections_bleacher_uuid_fkey"
+            columns: ["bleacher_uuid"]
+            isOneToOne: false
+            referencedRelation: "Bleachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bleacher_annual_inspections_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       BleacherEvents: {
         Row: {
           bleacher_uuid: string | null
@@ -3599,6 +3647,7 @@ export type Database = {
           expo_push_token: string | null
           first_name: string | null
           id: string
+          inspection_queue_last_seen_at: string | null
           is_admin: boolean
           is_viewer: boolean
           last_name: string | null
@@ -3615,6 +3664,7 @@ export type Database = {
           expo_push_token?: string | null
           first_name?: string | null
           id?: string
+          inspection_queue_last_seen_at?: string | null
           is_admin?: boolean
           is_viewer?: boolean
           last_name?: string | null
@@ -3631,6 +3681,7 @@ export type Database = {
           expo_push_token?: string | null
           first_name?: string | null
           id?: string
+          inspection_queue_last_seen_at?: string | null
           is_admin?: boolean
           is_viewer?: boolean
           last_name?: string | null
