@@ -21,6 +21,13 @@ export type BillOfLadingDocumentProps = {
   dropoffAddress: Tables<"Addresses"> | null;
   bleacher: BOLBleacherData | null;
   bolNumber: string;
+  /**
+   * Trip's separate Pickup/Delivery panels collapse into a single generic
+   * panel for every other type (Repair/Maintenance, Site Visit/Cleaning/
+   * Other) — mirrors WorkTrackerModal's isSingleFieldSetType.
+   * See docs/specs/work-tracker-fixed-types.md.
+   */
+  isSingleFieldSetType: boolean;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -187,6 +194,7 @@ export const BillOfLadingDocument: React.FC<BillOfLadingDocumentProps> = ({
   dropoffAddress,
   bleacher,
   bolNumber,
+  isSingleFieldSetType,
 }) => {
   const pickupFull = formatAddress(pickupAddress);
   const dropoffFull = formatAddress(dropoffAddress);
@@ -313,59 +321,80 @@ export const BillOfLadingDocument: React.FC<BillOfLadingDocumentProps> = ({
           </Text>
         </View>
 
-        {/* ── Pickup / Delivery ── */}
+        {/* ── Pickup / Delivery — collapses to a single generic panel for
+          single-field-set types (everything but Trip), mirroring
+          WorkTrackerModal. All values live in the dropoff_* columns either
+          way. ── */}
         <View style={s.pdRow}>
-          <View style={s.pdCol}>
-            <Text style={s.pdTitle}>PICKUP INFORMATION (Trailer Origin)</Text>
+          {!isSingleFieldSetType && (
+            <View style={s.pdCol}>
+              <Text style={s.pdTitle}>PICKUP INFORMATION (Trailer Origin)</Text>
+              <View style={s.pdLine}>
+                <Text style={s.pdLabel}>Pick up date:</Text>
+                <Text style={s.pdVal}>{v(workTracker.date)}</Text>
+              </View>
+              <View style={s.pdLine}>
+                <Text style={s.pdLabel}>Pick up time:</Text>
+                <Text style={s.pdVal}>{v(workTracker.pickup_time)}</Text>
+              </View>
+              <View style={s.pdLine}>
+                <Text style={s.pdLabel}>Pick up address:</Text>
+                <Text style={s.pdVal}>{pickupFull}</Text>
+              </View>
+              <View style={s.pdLine}>
+                <Text style={s.pdLabel}>On site POC at pick up:</Text>
+                <Text style={s.pdVal}>{v(workTracker.pickup_poc)}</Text>
+              </View>
+              <View style={s.pdLine}>
+                <Text style={s.pdLabel}>Tear Down Required:</Text>
+                <Text style={s.pdVal}>{boolLabel(workTracker.teardown_required)}</Text>
+              </View>
+              <View style={s.pdLine}>
+                <Text style={s.pdLabel}>Pick up Instructions:</Text>
+                <Text style={s.pdVal}>{v(workTracker.pickup_instructions)}</Text>
+              </View>
+            </View>
+          )}
+          <View style={isSingleFieldSetType ? s.pdCol : s.pdColBorder}>
+            <Text style={s.pdTitle}>
+              {isSingleFieldSetType
+                ? "SHIPMENT INFORMATION"
+                : "DELIVERY INFORMATION (Trailer Destination)"}
+            </Text>
             <View style={s.pdLine}>
-              <Text style={s.pdLabel}>Pick up date:</Text>
+              <Text style={s.pdLabel}>{isSingleFieldSetType ? "Date:" : "Delivery date:"}</Text>
               <Text style={s.pdVal}>{v(workTracker.date)}</Text>
             </View>
             <View style={s.pdLine}>
-              <Text style={s.pdLabel}>Pick up time:</Text>
-              <Text style={s.pdVal}>{v(workTracker.pickup_time)}</Text>
-            </View>
-            <View style={s.pdLine}>
-              <Text style={s.pdLabel}>Pick up address:</Text>
-              <Text style={s.pdVal}>{pickupFull}</Text>
-            </View>
-            <View style={s.pdLine}>
-              <Text style={s.pdLabel}>On site POC at pick up:</Text>
-              <Text style={s.pdVal}>{v(workTracker.pickup_poc)}</Text>
-            </View>
-            <View style={s.pdLine}>
-              <Text style={s.pdLabel}>Tear Down Required:</Text>
-              <Text style={s.pdVal}>{boolLabel(workTracker.teardown_required)}</Text>
-            </View>
-            <View style={s.pdLine}>
-              <Text style={s.pdLabel}>Pick up Instructions:</Text>
-              <Text style={s.pdVal}>{v(workTracker.pickup_instructions)}</Text>
-            </View>
-          </View>
-          <View style={s.pdColBorder}>
-            <Text style={s.pdTitle}>DELIVERY INFORMATION (Trailer Destination)</Text>
-            <View style={s.pdLine}>
-              <Text style={s.pdLabel}>Delivery date:</Text>
-              <Text style={s.pdVal}>{v(workTracker.date)}</Text>
-            </View>
-            <View style={s.pdLine}>
-              <Text style={s.pdLabel}>Delivery time:</Text>
+              <Text style={s.pdLabel}>{isSingleFieldSetType ? "Time:" : "Delivery time:"}</Text>
               <Text style={s.pdVal}>{v(workTracker.dropoff_time)}</Text>
             </View>
             <View style={s.pdLine}>
-              <Text style={s.pdLabel}>Delivery address:</Text>
+              <Text style={s.pdLabel}>
+                {isSingleFieldSetType ? "Address:" : "Delivery address:"}
+              </Text>
               <Text style={s.pdVal}>{dropoffFull}</Text>
             </View>
             <View style={s.pdLine}>
-              <Text style={s.pdLabel}>On site POC at delivery (Consignee):</Text>
+              <Text style={s.pdLabel}>
+                {isSingleFieldSetType ? "POC:" : "On site POC at delivery (Consignee):"}
+              </Text>
               <Text style={s.pdVal}>{v(workTracker.dropoff_poc)}</Text>
             </View>
+            {isSingleFieldSetType && (
+              <View style={s.pdLine}>
+                <Text style={s.pdLabel}>Teardown Required:</Text>
+                <Text style={s.pdVal}>{boolLabel(workTracker.teardown_required)}</Text>
+              </View>
+            )}
             <View style={s.pdLine}>
               <Text style={s.pdLabel}>Set Up Required:</Text>
               <Text style={s.pdVal}>{boolLabel(workTracker.setup_required)}</Text>
             </View>
             <View style={s.pdLine}>
-              <Text style={s.pdLabel}>Delivery Instructions:</Text>
+              <Text style={s.pdLabel}>
+                {isSingleFieldSetType ? "Instructions:" : "Delivery Instructions:"}
+              </Text>
               <Text style={s.pdVal}>{v(workTracker.dropoff_instructions)}</Text>
             </View>
           </View>

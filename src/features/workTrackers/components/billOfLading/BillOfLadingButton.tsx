@@ -125,6 +125,22 @@ export default function BillOfLadingButton({
         if (rows[0]) bleacher = rows[0];
       }
 
+      // ── Resolve the work tracker's type code, to know whether Pickup and
+      // Delivery collapse into one generic panel (see BillOfLadingDocument) ─
+      let isSingleFieldSetType = false;
+      if (workTracker.work_tracker_type_uuid) {
+        const rows = await typedGetAll(
+          db
+            .selectFrom("WorkTrackerTypes as t")
+            .select(["t.code as code"])
+            .where("t.id", "=", workTracker.work_tracker_type_uuid)
+            .limit(1)
+            .compile(),
+          expect<{ code: string | null }>(),
+        );
+        isSingleFieldSetType = Boolean(rows[0]?.code && rows[0].code !== "trip");
+      }
+
       // ── Fetch full address rows if we only have UUIDs ────────────────────
       let pickupRow: Tables<"Addresses"> | null = toAddressRow(pickUpAddress);
       let dropoffRow: Tables<"Addresses"> | null = toAddressRow(dropOffAddress);
@@ -161,6 +177,7 @@ export default function BillOfLadingButton({
           dropoffAddress={dropoffRow}
           bleacher={bleacher}
           bolNumber={bolNumber}
+          isSingleFieldSetType={isSingleFieldSetType}
         />,
       ).toBlob();
 
