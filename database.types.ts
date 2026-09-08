@@ -82,6 +82,8 @@ export type Database = {
           city: string
           created_at: string
           id: string
+          latitude: number | null
+          longitude: number | null
           state_province: string
           street: string
           zip_postal: string | null
@@ -90,6 +92,8 @@ export type Database = {
           city: string
           created_at?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           state_province: string
           street: string
           zip_postal?: string | null
@@ -98,6 +102,8 @@ export type Database = {
           city?: string
           created_at?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           state_province?: string
           street?: string
           zip_postal?: string | null
@@ -3872,19 +3878,23 @@ export type Database = {
           drive_minutes: number | null
           driver_uuid: string | null
           dropoff_address_uuid: string | null
+          dropoff_at: string | null
           dropoff_instructions: string | null
           dropoff_poc: string | null
           dropoff_poc_contact_uuid: string | null
           dropoff_time: string | null
+          dropoff_timezone: string | null
           id: string
           internal_notes: string | null
           notes: string | null
           pay_cents: number | null
           pickup_address_uuid: string | null
+          pickup_at: string | null
           pickup_instructions: string | null
           pickup_poc: string | null
           pickup_poc_contact_uuid: string | null
           pickup_time: string | null
+          pickup_timezone: string | null
           post_inspection_uuid: string | null
           pre_inspection_uuid: string | null
           project_number: string | null
@@ -3912,19 +3922,23 @@ export type Database = {
           drive_minutes?: number | null
           driver_uuid?: string | null
           dropoff_address_uuid?: string | null
+          dropoff_at?: string | null
           dropoff_instructions?: string | null
           dropoff_poc?: string | null
           dropoff_poc_contact_uuid?: string | null
           dropoff_time?: string | null
+          dropoff_timezone?: string | null
           id?: string
           internal_notes?: string | null
           notes?: string | null
           pay_cents?: number | null
           pickup_address_uuid?: string | null
+          pickup_at?: string | null
           pickup_instructions?: string | null
           pickup_poc?: string | null
           pickup_poc_contact_uuid?: string | null
           pickup_time?: string | null
+          pickup_timezone?: string | null
           post_inspection_uuid?: string | null
           pre_inspection_uuid?: string | null
           project_number?: string | null
@@ -3952,19 +3966,23 @@ export type Database = {
           drive_minutes?: number | null
           driver_uuid?: string | null
           dropoff_address_uuid?: string | null
+          dropoff_at?: string | null
           dropoff_instructions?: string | null
           dropoff_poc?: string | null
           dropoff_poc_contact_uuid?: string | null
           dropoff_time?: string | null
+          dropoff_timezone?: string | null
           id?: string
           internal_notes?: string | null
           notes?: string | null
           pay_cents?: number | null
           pickup_address_uuid?: string | null
+          pickup_at?: string | null
           pickup_instructions?: string | null
           pickup_poc?: string | null
           pickup_poc_contact_uuid?: string | null
           pickup_time?: string | null
+          pickup_timezone?: string | null
           post_inspection_uuid?: string | null
           pre_inspection_uuid?: string | null
           project_number?: string | null

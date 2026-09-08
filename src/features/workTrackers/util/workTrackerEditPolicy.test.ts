@@ -79,6 +79,39 @@ describe("workTrackerEditPolicy", () => {
     expect(classifyWorkTrackerChanges(before, cloneSnapshot(before))).toBe("none");
   });
 
+  it("un-accepts when only pickup_at changes via the new time picker", () => {
+    const after = cloneSnapshot(before);
+    after.pickup_at = "2026-08-01T13:00:00.000Z";
+    after.pickup_timezone = "America/Toronto";
+
+    expect(classifyWorkTrackerChanges(before, after)).toBe("un-accept");
+  });
+
+  it("un-accepts when only dropoff_at changes via the new time picker", () => {
+    const after = cloneSnapshot(before);
+    after.dropoff_at = "2026-08-01T20:00:00.000Z";
+    after.dropoff_timezone = "America/Chicago";
+
+    expect(classifyWorkTrackerChanges(before, after)).toBe("un-accept");
+  });
+
+  it("un-accepts when only the timezone changes (a Sync from WorkTrackerTimeField), same instant", () => {
+    const after = cloneSnapshot(before);
+    after.pickup_timezone = "America/Vancouver";
+
+    expect(before.pickup_timezone).not.toBe(after.pickup_timezone);
+    expect(classifyWorkTrackerChanges(before, after)).toBe("un-accept");
+  });
+
+  it("does not flag a change when pickup_at is the same instant in a different string format", () => {
+    const after = cloneSnapshot(before);
+    after.pickup_at = "2026-08-01T12:00:00.000Z";
+    const beforeWithInstant = cloneSnapshot(before);
+    beforeWithInstant.pickup_at = "2026-08-01 12:00:00+00"; // Postgres-style formatting
+
+    expect(classifyWorkTrackerChanges(beforeWithInstant, after)).toBe("none");
+  });
+
   it("classifies internal notes only as silent", () => {
     const after = cloneSnapshot(before);
     after.internal_notes = "Updated internal";

@@ -28,6 +28,8 @@ const AddressesCols = {
   city: column.text,
   state_province: column.text,
   zip_postal: column.text,
+  latitude: column.real,
+  longitude: column.real,
 } satisfies PowerSyncColsFor<"Addresses">;
 const Addresses = new Table(AddressesCols);
 
@@ -359,6 +361,10 @@ const WorkTrackersCols = {
   project_number: column.text,
   bol_number: column.text,
   created_by_user_uuid: column.text,
+  pickup_at: column.text,
+  pickup_timezone: column.text,
+  dropoff_at: column.text,
+  dropoff_timezone: column.text,
 } satisfies PowerSyncColsFor<"WorkTrackers">;
 const WorkTrackers = new Table(WorkTrackersCols, {
   indexes: {

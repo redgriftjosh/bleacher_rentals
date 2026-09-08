@@ -81,6 +81,8 @@ import {
   isSingleFieldSetType as computeIsSingleFieldSetType,
 } from "../util/workTrackerTypeDisplay";
 import { WorkTrackerTypeSelect } from "./WorkTrackerTypeSelect";
+import { WorkTrackerTimeField } from "./WorkTrackerTimeField";
+import { deriveTimezone } from "../util/deriveTimezone";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -115,6 +117,19 @@ export default function WorkTrackerModal({
   const dropoffAddress = getAddressFromUuid(selectedWorkTracker?.dropoff_address_uuid ?? null);
   const [pickUpAddress, setPickUpAddress] = useState<AddressData | null>(pickupAddress);
   const [dropOffAddress, setDropOffAddress] = useState<AddressData | null>(dropoffAddress);
+
+  // Derived from the address's lat/lng (see deriveTimezone.ts) — never picked
+  // by hand, so there's no manual-selection mistake to make. Null until an
+  // address with coordinates is set, in which case WorkTrackerTimeField falls
+  // back to the browser's own zone rather than being unusable.
+  const pickupAddressTimezone = useMemo(
+    () => deriveTimezone(pickUpAddress?.lat, pickUpAddress?.lng),
+    [pickUpAddress?.lat, pickUpAddress?.lng],
+  );
+  const dropoffAddressTimezone = useMemo(
+    () => deriveTimezone(dropOffAddress?.lat, dropOffAddress?.lng),
+    [dropOffAddress?.lat, dropOffAddress?.lng],
+  );
 
   const [payInput, setPayInput] = useState(
     selectedWorkTracker?.pay_cents != null ? (selectedWorkTracker?.pay_cents / 100).toFixed(2) : "",
@@ -1140,17 +1155,19 @@ export default function WorkTrackerModal({
                           {!isSingleFieldSetType && (
                             <div className="flex-1 min-w-0">
                               <label className={labelClassName}>Pickup Time</label>
-                              <input
-                                type="text"
-                                className={inputClassName}
-                                placeholder="Pickup Time"
-                                value={workTracker?.pickup_time ?? ""}
-                                onChange={(e) =>
+                              <WorkTrackerTimeField
+                                date={workTracker?.date}
+                                value={workTracker?.pickup_at}
+                                storedTimezone={workTracker?.pickup_timezone}
+                                addressTimezone={pickupAddressTimezone}
+                                onChange={(isoValue, tz) =>
                                   setWorkTracker((prev) => ({
                                     ...prev!,
-                                    pickup_time: e.target.value,
+                                    pickup_at: isoValue,
+                                    pickup_timezone: tz,
                                   }))
                                 }
+                                disabled={!canEditFields}
                               />
                               <label className={labelClassName}>Pickup POC</label>
                               <div className="flex flex-row gap-2 items-center">
@@ -1246,17 +1263,19 @@ export default function WorkTrackerModal({
                             <label className={labelClassName}>
                               {isSingleFieldSetType ? "Time" : "Dropoff Time"}
                             </label>
-                            <input
-                              type="text"
-                              className={inputClassName}
-                              placeholder={isSingleFieldSetType ? "Time" : "Dropoff Time"}
-                              value={workTracker?.dropoff_time ?? ""}
-                              onChange={(e) =>
+                            <WorkTrackerTimeField
+                              date={workTracker?.date}
+                              value={workTracker?.dropoff_at}
+                              storedTimezone={workTracker?.dropoff_timezone}
+                              addressTimezone={dropoffAddressTimezone}
+                              onChange={(isoValue, tz) =>
                                 setWorkTracker((prev) => ({
                                   ...prev!,
-                                  dropoff_time: e.target.value,
+                                  dropoff_at: isoValue,
+                                  dropoff_timezone: tz,
                                 }))
                               }
+                              disabled={!canEditFields}
                             />
                             <label className={labelClassName}>
                               {isSingleFieldSetType ? "POC" : "Dropoff POC"}

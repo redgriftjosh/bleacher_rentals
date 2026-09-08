@@ -4,6 +4,7 @@ import { useCurrentEventStore } from "@/features/eventConfiguration/state/useCur
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import usePlacesAutocomplete, { getGeocode, getLatLng } from "use-places-autocomplete";
+import { parseGoogleAddressComponents } from "./parseGoogleAddressComponents";
 
 interface AddressData {
   address: string;
@@ -13,12 +14,6 @@ interface AddressData {
   lat?: number;
   lng?: number;
   placeId?: string;
-}
-
-interface AddressComponent {
-  long_name: string;
-  short_name: string;
-  types: string[];
 }
 
 interface AddressAutocompleteProps {
@@ -66,29 +61,24 @@ export default function AddressAutocomplete({
     }
   }, [status]);
 
-  const handleSelect = async (address: string) => {
-    setValue(address, false);
+  const handleSelect = async (description: string, placeId: string) => {
+    setValue(description, false);
     clearSuggestions();
 
     try {
-      const results = await getGeocode({ address });
+      // Geocode the specific place the user picked, not the raw suggestion
+      // text — forward-geocoding a compound string like "Business Name,
+      // Street, City, Province, Country" leaves Google guessing at which
+      // part is which, and it guesses wrong often enough (a rural/business
+      // result's county ending up in `city` instead of its actual town).
+      const results = await getGeocode({ placeId });
       const { lat, lng } = await getLatLng(results[0]);
-      const placeId = results[0].place_id;
-      const components = results[0].address_components;
+      const { address, city, state, postalCode } = parseGoogleAddressComponents(
+        results[0].address_components,
+        description,
+      );
 
-      const state = components.find((comp: AddressComponent) =>
-        comp.types.includes("administrative_area_level_1"),
-      )?.long_name;
-
-      const city = components.find((comp: AddressComponent) =>
-        comp.types.includes("locality"),
-      )?.long_name;
-
-      const postalCode = components.find((comp: AddressComponent) =>
-        comp.types.includes("postal_code"),
-      )?.long_name;
-
-      onAddressSelect({ address, city, state, postalCode });
+      onAddressSelect({ address, city, state, postalCode, lat, lng, placeId });
     } catch (error) {
       console.error("Error fetching address details:", error);
     }
@@ -124,7 +114,7 @@ export default function AddressAutocomplete({
                 <li
                   key={place_id}
                   className="p-2 cursor-pointer hover:bg-gray-200 text-sm"
-                  onClick={() => handleSelect(description)}
+                  onClick={() => handleSelect(description, place_id)}
                 >
                   {description}
                 </li>
