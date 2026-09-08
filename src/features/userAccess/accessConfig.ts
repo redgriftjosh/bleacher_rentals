@@ -57,7 +57,6 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
       "/team",
       "/damage-reports",
       "/inspections",
-      "/annual-inspections",
       "/repairs",
       "/work-trackers",
       "/all-work-trackers",
@@ -105,6 +104,14 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
       "/companies-contacts",
       "/changelog",
     ],
+    showSidebar: true,
+  },
+  maintainer: {
+    // The annual inspection queue is the whole of this role's job. /permissions
+    // so they can read what they are allowed to do, and /changelog so a release
+    // note is not invisible to them; without a dashboard, defaultRedirect falls
+    // through to the first path here, which is the queue.
+    allowedPaths: ["/annual-inspections", "/permissions", "/changelog"],
     showSidebar: true,
   },
   driver: {

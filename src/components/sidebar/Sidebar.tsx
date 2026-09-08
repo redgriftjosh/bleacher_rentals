@@ -19,7 +19,17 @@ const SideBar = () => {
   // subscribing it to the queue itself would redraw the sidebar whenever any
   // inspection anywhere changed.
   const unseenInspections = useUnseenInspectionCount();
-  const badges = { "/annual-inspections": unseenInspections };
+  // Account managers still sync the inspections — they render them inside the
+  // bleacher modal — but they have no queue page to open, so a badge for them
+  // would point at a link they do not have. Read that from the rendered items
+  // rather than re-deciding it here, so there is only one answer to who sees
+  // the page.
+  const showsInspections = items.some(
+    (item) =>
+      item.type === "dropdown" &&
+      item.children.some((child) => child.href === "/annual-inspections"),
+  );
+  const badges = { "/annual-inspections": showsInspections ? unseenInspections : 0 };
 
   return (
     <div

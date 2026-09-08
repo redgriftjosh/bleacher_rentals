@@ -14,6 +14,13 @@ const AccountManagersCols = {
 } satisfies PowerSyncColsFor<"AccountManagers">;
 const AccountManagers = new Table(AccountManagersCols, { indexes: { user_uuid: ["user_uuid"] } });
 
+const MaintainersCols = {
+  created_at: column.text,
+  user_uuid: column.text,
+  is_active: column.integer,
+} satisfies PowerSyncColsFor<"Maintainers">;
+const Maintainers = new Table(MaintainersCols, { indexes: { user_uuid: ["user_uuid"] } });
+
 const DevelopersCols = {
   created_at: column.text,
   is_active: column.integer,
@@ -1191,6 +1198,7 @@ export const AppSchema = new Schema({
   Tasks,
   Bleachers,
   BleacherAnnualInspections,
+  Maintainers,
   BleacherEvents,
   BleacherUsers,
   Blocks,
@@ -1289,6 +1297,7 @@ export type DriverUnavailabilityRecord = PowerSyncDB["DriverUnavailability"];
 export type WorkTrackerInspectionsRecord = PowerSyncDB["WorkTrackerInspections"];
 export type InspectionQuestionsRecord = PowerSyncDB["InspectionQuestions"];
 export type BleacherAnnualInspectionsRecord = PowerSyncDB["BleacherAnnualInspections"];
+export type MaintainersRecord = PowerSyncDB["Maintainers"];
 export type DamageReportsRecord = PowerSyncDB["DamageReports"];
 export type DamageReportPhotosRecord = PowerSyncDB["DamageReportPhotos"];
 export type MaintenanceEventsRecord = PowerSyncDB["MaintenanceEvents"];

@@ -2404,6 +2404,35 @@ export type Database = {
         }
         Relationships: []
       }
+      Maintainers: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          user_uuid: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          user_uuid: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          user_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintainers_user_uuid_fkey"
+            columns: ["user_uuid"]
+            isOneToOne: false
+            referencedRelation: "Users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       MaintenanceEvents: {
         Row: {
           address_uuid: string | null

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { X, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { FileUploadInput } from "@/features/manageTeam/components/inputs/FileUploadInput";
-import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
+import { useUserAccess } from "@/features/userAccess/client";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
 import {
   recordInspection,
@@ -12,6 +12,7 @@ import {
   useInspectionHistory,
   type AnnualInspectionRow,
 } from "../db/annualInspections";
+import { canRecordInspection } from "../logic/canRecordInspection";
 import { nextDueFromInspected } from "../logic/nextDueFromInspected";
 import { inspectionStatus } from "../logic/inspectionStatus";
 import { InspectionStatusPill } from "./InspectionStatusPill";
@@ -45,8 +46,10 @@ export function InspectionSheet({
   today: string;
   onClose: () => void;
 }) {
-  const { isAdmin, isAccountManager, userId } = useTeamPermissions();
-  const canEdit = isAdmin || isAccountManager;
+  const access = useUserAccess();
+  const roles = access.status === "active" ? access.roles : [];
+  const userId = access.status === "active" ? access.userId : null;
+  const canEdit = canRecordInspection(roles);
 
   const history = useInspectionHistory(bleacherUuid);
   const [editingId, setEditingId] = useState<string | null>(null);
