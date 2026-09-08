@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { AlertTriangle } from "lucide-react";
 import { DateInput, DateSegment, TimeField } from "react-aria-components";
 import { getBrowserTimezone } from "../util/deriveTimezone";
+import { ANY_TIME_LABEL } from "../util";
 import {
   isNearDstTransition,
   needsTimezoneSync,
@@ -45,6 +46,12 @@ type WorkTrackerTimeFieldProps = {
  *   8:00 stays 8:00, onto the correct zone)
  * - the trip date falls within 2 weeks of a daylight-saving change
  *
+ * A pickup/dropoff can also carry no time at all — "Any Time" — which is
+ * exactly `value == null`. There's no backfill and nothing to fall back to
+ * display: every existing work tracker starts out this way, and a user can
+ * toggle back to it deliberately. Switching off Any Time seeds a default
+ * time (8:00 AM on the trip's date) to start editing from.
+ *
  * See docs/specs (pickup/dropoff timezone).
  */
 export function WorkTrackerTimeField({
@@ -61,10 +68,11 @@ export function WorkTrackerTimeField({
     addressTimezone,
     browserTimezone,
   );
+  const isAnyTime = value == null;
   const zonedValue = resolveWorkTrackerTimeFieldValue(value, effectiveTimezone, date);
 
-  const showSyncWarning = needsTimezoneSync(storedTimezone, addressTimezone);
-  const showDstWarning = isNearDstTransition(date, effectiveTimezone);
+  const showSyncWarning = !isAnyTime && needsTimezoneSync(storedTimezone, addressTimezone);
+  const showDstWarning = !isAnyTime && isNearDstTransition(date, effectiveTimezone);
 
   const handleSync = () => {
     if (!storedTimezone || !addressTimezone) return;
@@ -74,24 +82,49 @@ export function WorkTrackerTimeField({
     );
   };
 
+  const handleAnyTimeToggle = (checked: boolean) => {
+    if (checked) {
+      onChange(null, effectiveTimezone);
+      return;
+    }
+    const defaultValue = resolveWorkTrackerTimeFieldValue(null, effectiveTimezone, date);
+    onChange(workTrackerTimeFieldValueToIso(defaultValue), effectiveTimezone);
+  };
+
   return (
     <div className="space-y-1">
-      <TimeField
-        value={zonedValue}
-        onChange={(next) => onChange(workTrackerTimeFieldValueToIso(next), effectiveTimezone)}
-        isDisabled={disabled}
-        hourCycle={12}
-        granularity="minute"
-      >
-        <DateInput className="flex items-center w-full p-2 border rounded bg-white text-sm">
-          {(segment) => (
-            <DateSegment
-              segment={segment}
-              className="px-0.5 tabular-nums outline-none rounded focus:bg-darkBlue focus:text-white data-[type=literal]:px-0 data-[placeholder]:text-gray-400"
-            />
-          )}
-        </DateInput>
-      </TimeField>
+      {isAnyTime ? (
+        <div className="flex items-center w-full p-2 border rounded bg-gray-50 text-sm text-gray-500">
+          {ANY_TIME_LABEL}
+        </div>
+      ) : (
+        <TimeField
+          value={zonedValue}
+          onChange={(next) => onChange(workTrackerTimeFieldValueToIso(next), effectiveTimezone)}
+          isDisabled={disabled}
+          hourCycle={12}
+          granularity="minute"
+        >
+          <DateInput className="flex items-center w-full p-2 border rounded bg-white text-sm">
+            {(segment) => (
+              <DateSegment
+                segment={segment}
+                className="px-0.5 tabular-nums outline-none rounded focus:bg-darkBlue focus:text-white data-[type=literal]:px-0 data-[placeholder]:text-gray-400"
+              />
+            )}
+          </DateInput>
+        </TimeField>
+      )}
+
+      <label className="flex items-center gap-1.5 text-xs text-gray-600">
+        <input
+          type="checkbox"
+          checked={isAnyTime}
+          disabled={disabled}
+          onChange={(e) => handleAnyTimeToggle(e.target.checked)}
+        />
+        {ANY_TIME_LABEL}
+      </label>
 
       {showSyncWarning && (
         <div className="flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800">

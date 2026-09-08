@@ -2,7 +2,7 @@ import { Page, Text, View, Document, StyleSheet } from "@react-pdf/renderer";
 import { Color } from "@/types/Color";
 import { Tables } from "../../../../database.types";
 import { DriverHeaderInfo } from "../db/db";
-import { formatDriveTime, formatMileage } from "../util";
+import { formatDriveTime, formatMileage, formatWorkTrackerTime } from "../util";
 const darkBlue = Color.DARK_BLUE;
 
 const styles = StyleSheet.create({
@@ -240,7 +240,7 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
                 {row.workTracker.pickup_poc}
               </Text>
               <Text style={[styles.bodyCell, { width: columnWidths[5] }]}>
-                {row.workTracker.pickup_time}
+                {formatWorkTrackerTime(row.workTracker.pickup_at, row.workTracker.pickup_timezone)}
               </Text>
               <Text style={[styles.bodyCell, { width: columnWidths[6] }]}>
                 {row.dropoff_address?.street ?? ""}
@@ -249,7 +249,10 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
                 {row.workTracker.dropoff_poc}
               </Text>
               <Text style={[styles.bodyCell, { width: columnWidths[8] }]}>
-                {row.workTracker.dropoff_time}
+                {formatWorkTrackerTime(
+                  row.workTracker.dropoff_at,
+                  row.workTracker.dropoff_timezone,
+                )}
               </Text>
               <Text style={[styles.bodyCell, { width: columnWidths[9] }]}>
                 {formatDriveTime(row.workTracker.drive_minutes)}

@@ -7,6 +7,7 @@ import {
   calculateTravelTotals,
   formatDriveTime,
   formatMileage,
+  formatWorkTrackerTime,
 } from "../util";
 import { useWorkTrackersForWeek } from "../hooks/useWorkTrackersForWeek";
 import WorkTrackerStatusBadge from "./WorkTrackerStatusBadge";
@@ -81,10 +82,14 @@ export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
             <th className={`w-[7%] whitespace-normal ${className}`}>{row.activityType ?? ""}</th>
             <th className={`w-[10%] ${className}`}>{row.pickup_address?.street ?? ""}</th>
             <th className={`w-[7%] ${className}`}>{row.workTracker.pickup_poc}</th>
-            <th className={`w-[6%] ${className}`}>{row.workTracker.pickup_time}</th>
+            <th className={`w-[6%] ${className}`}>
+              {formatWorkTrackerTime(row.workTracker.pickup_at, row.workTracker.pickup_timezone)}
+            </th>
             <th className={`w-[10%] ${className}`}>{row.dropoff_address?.street ?? ""}</th>
             <th className={`w-[7%] ${className}`}>{row.workTracker.dropoff_poc}</th>
-            <th className={`w-[6%] ${className}`}>{row.workTracker.dropoff_time}</th>
+            <th className={`w-[6%] ${className}`}>
+              {formatWorkTrackerTime(row.workTracker.dropoff_at, row.workTracker.dropoff_timezone)}
+            </th>
             <th className={`w-[6%] ${className}`}>
               {formatDriveTime(row.workTracker.drive_minutes)}
             </th>

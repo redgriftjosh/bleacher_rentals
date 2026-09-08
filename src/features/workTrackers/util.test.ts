@@ -6,6 +6,8 @@ import {
   describeDriverPay,
   formatDriveTime,
   formatMileage,
+  formatWorkTrackerTime,
+  ANY_TIME_LABEL,
   type DistanceData,
   type DriverPaymentData,
 } from "./util";
@@ -308,5 +310,28 @@ describe("calculateTravelTotals", () => {
       totalDistanceMeters: 0,
       totalDriveMinutes: 0,
     });
+  });
+});
+
+describe("formatWorkTrackerTime", () => {
+  it("formats a stored instant in its zone, matching sync_work_tracker_time_text()", () => {
+    expect(formatWorkTrackerTime("2026-07-15T14:00:00Z", "America/Toronto")).toBe("10:00 AM (EDT)");
+  });
+
+  it("zero-pads the hour, matching the DB trigger's HH12 format", () => {
+    // 14:00 UTC is 9:00 AM Central — should read "09:00 AM", not "9:00 AM".
+    expect(formatWorkTrackerTime("2026-07-15T14:00:00Z", "America/Chicago")).toBe("09:00 AM (CDT)");
+  });
+
+  it("the same instant formats differently in a different zone", () => {
+    expect(formatWorkTrackerTime("2026-07-15T14:00:00Z", "America/Vancouver")).toBe(
+      "07:00 AM (PDT)",
+    );
+  });
+
+  it("is Any Time when there's no stored instant — no legacy text fallback anymore", () => {
+    expect(formatWorkTrackerTime(null, null)).toBe(ANY_TIME_LABEL);
+    expect(formatWorkTrackerTime(null, "America/Toronto")).toBe(ANY_TIME_LABEL);
+    expect(formatWorkTrackerTime("2026-07-15T14:00:00Z", null)).toBe(ANY_TIME_LABEL);
   });
 });

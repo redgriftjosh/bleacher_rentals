@@ -326,6 +326,11 @@ const UserStatuses = new Table(UserStatusesCols);
 const WorkTrackersCols = {
   created_at: column.text,
   date: column.text,
+  // pickup_time/dropoff_time: legacy free-text columns, still required here because
+  // PowerSyncColsFor is generated from the live Postgres schema and the column hasn't
+  // been dropped yet. The web app no longer reads or writes them anywhere — only the
+  // driver app still depends on them (kept in sync by the sync_work_tracker_time_text()
+  // DB trigger). Safe to remove once that Postgres column is actually dropped.
   pickup_time: column.text,
   pickup_poc: column.text,
   pickup_poc_contact_uuid: column.text,

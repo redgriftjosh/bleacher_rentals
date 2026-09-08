@@ -399,10 +399,9 @@ export async function saveWorkTracker(
     pickup_address_uuid: pickUpAddressUuid,
     pickup_poc: workTracker.pickup_poc,
     pickup_poc_contact_uuid: workTracker.pickup_poc_contact_uuid,
-    // pickup_time/dropoff_time are kept in sync from these by
-    // sync_work_tracker_time_text() (a DB trigger) — still sent here as a
-    // fallback for rows that have never gotten a real pickup_at/dropoff_at.
-    pickup_time: workTracker.pickup_time,
+    // pickup_time/dropoff_time (legacy free-text columns, kept only for the
+    // driver app) are no longer written from the web app — they're kept in
+    // sync from pickup_at/dropoff_at by the sync_work_tracker_time_text() DB trigger.
     pickup_at: workTracker.pickup_at,
     pickup_timezone: workTracker.pickup_timezone,
     pickup_instructions: workTracker.pickup_instructions,
@@ -410,7 +409,6 @@ export async function saveWorkTracker(
     dropoff_address_uuid: dropOffAddressUuid,
     dropoff_poc: workTracker.dropoff_poc,
     dropoff_poc_contact_uuid: workTracker.dropoff_poc_contact_uuid,
-    dropoff_time: workTracker.dropoff_time,
     dropoff_at: workTracker.dropoff_at,
     dropoff_timezone: workTracker.dropoff_timezone,
     dropoff_instructions: workTracker.dropoff_instructions,

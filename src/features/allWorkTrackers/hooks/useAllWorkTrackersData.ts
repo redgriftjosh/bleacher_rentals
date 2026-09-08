@@ -21,8 +21,6 @@ const compiled = db
     "wt.date as date",
     "wt.status as status",
     "wt.pay_cents as pay_cents",
-    "wt.pickup_time as pickup_time",
-    "wt.dropoff_time as dropoff_time",
     "wt.created_at as created_at",
     "wt.completed_at as completed_at",
     "wt.project_number as project_number",

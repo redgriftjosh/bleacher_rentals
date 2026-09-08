@@ -1,6 +1,7 @@
 import { Page, Text, View, Document, StyleSheet, Image } from "@react-pdf/renderer";
 import { Tables } from "../../../../../database.types";
 import { formatInches } from "@/app/assets/bleachers/_lib/functions";
+import { formatWorkTrackerTime } from "../../util";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type BOLBleacherData = {
@@ -335,7 +336,9 @@ export const BillOfLadingDocument: React.FC<BillOfLadingDocumentProps> = ({
               </View>
               <View style={s.pdLine}>
                 <Text style={s.pdLabel}>Pick up time:</Text>
-                <Text style={s.pdVal}>{v(workTracker.pickup_time)}</Text>
+                <Text style={s.pdVal}>
+                  {v(formatWorkTrackerTime(workTracker.pickup_at, workTracker.pickup_timezone))}
+                </Text>
               </View>
               <View style={s.pdLine}>
                 <Text style={s.pdLabel}>Pick up address:</Text>
@@ -367,7 +370,9 @@ export const BillOfLadingDocument: React.FC<BillOfLadingDocumentProps> = ({
             </View>
             <View style={s.pdLine}>
               <Text style={s.pdLabel}>{isSingleFieldSetType ? "Time:" : "Delivery time:"}</Text>
-              <Text style={s.pdVal}>{v(workTracker.dropoff_time)}</Text>
+              <Text style={s.pdVal}>
+                {v(formatWorkTrackerTime(workTracker.dropoff_at, workTracker.dropoff_timezone))}
+              </Text>
             </View>
             <View style={s.pdLine}>
               <Text style={s.pdLabel}>

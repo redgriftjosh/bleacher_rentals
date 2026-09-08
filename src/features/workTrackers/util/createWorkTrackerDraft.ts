@@ -80,7 +80,9 @@ export function checkWorkTrackerOpenAccess(input: WorkTrackerAccessInput): WorkT
  *
  * `id` is the sentinel `"-1"` that `WorkTrackerModal` reads as "this one does not exist yet";
  * every column is spelled out so TypeScript breaks here — not at runtime in the modal — when the
- * table gains a column.
+ * table gains a column. The exceptions are `pickup_time`/`dropoff_time`: the legacy free-text
+ * columns are no longer initialized (or used anywhere) by the web app, only kept alive in
+ * Postgres for the driver app, so the object below is cast rather than widened to include them.
  */
 export function buildWorkTrackerDraft(params: {
   bleacherUuid: string;
@@ -102,7 +104,6 @@ export function buildWorkTrackerDraft(params: {
     dropoff_address_uuid: null,
     dropoff_poc: null,
     dropoff_poc_contact_uuid: null,
-    dropoff_time: null,
     dropoff_at: null,
     dropoff_timezone: null,
     dropoff_instructions: null,
@@ -111,7 +112,6 @@ export function buildWorkTrackerDraft(params: {
     pickup_address_uuid: null,
     pickup_poc: null,
     pickup_poc_contact_uuid: null,
-    pickup_time: null,
     pickup_at: null,
     pickup_timezone: null,
     pickup_instructions: null,
@@ -132,5 +132,5 @@ export function buildWorkTrackerDraft(params: {
     project_number: null,
     setup_required: false,
     teardown_required: false,
-  };
+  } as unknown as Tables<"WorkTrackers">;
 }

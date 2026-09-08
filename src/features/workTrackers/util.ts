@@ -43,6 +43,50 @@ export function formatDriveTime(driveMinutes: number | null | undefined): string
   return `${hours.toFixed(1)} hrs`;
 }
 
+/** Shown for a pickup/dropoff with no set instant — including every pre-existing
+ * work tracker, since pickup_at/dropoff_at were never backfilled from the old
+ * free-text columns and never will be. Also the explicit "no specific time"
+ * state a user can pick going forward (see WorkTrackerTimeField's Any Time
+ * toggle) — pickup_at/dropoff_at null always means this, deliberately. */
+export const ANY_TIME_LABEL = "Any Time";
+
+/**
+ * e.g. "10:00 AM (EDT)" — the same format `sync_work_tracker_time_text()`
+ * writes into the legacy pickup_time/dropoff_time text columns (kept only
+ * for the driver app; the web app no longer reads them anywhere), computed
+ * client-side instead of waiting on that DB trigger's write to sync back.
+ */
+export function formatWorkTrackerTime(
+  isoValue: string | null | undefined,
+  timezone: string | null | undefined,
+): string {
+  if (isoValue && timezone) {
+    const date = new Date(isoValue);
+    if (!Number.isNaN(date.getTime())) {
+      try {
+        const parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: timezone,
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+          timeZoneName: "short",
+        }).formatToParts(date);
+        const part = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+        const hour = part("hour");
+        const minute = part("minute");
+        const dayPeriod = part("dayPeriod").toUpperCase();
+        const zone = part("timeZoneName");
+        if (hour && minute && dayPeriod && zone) {
+          return `${hour}:${minute} ${dayPeriod} (${zone})`;
+        }
+      } catch {
+        // Fall through to Any Time below.
+      }
+    }
+  }
+  return ANY_TIME_LABEL;
+}
+
 /** Sums of the Drive Time / Milage columns, for the week's SubTotal row. */
 export function calculateTravelTotals(WorkTrackersResult: WorkTrackersResult) {
   const workTrackers = WorkTrackersResult.workTrackers;

@@ -131,8 +131,6 @@ export function ScorecardStatsProvider({ children }: { children: ReactNode }) {
           "wt.date as date",
           "wt.status as status",
           "wt.pay_cents as pay_cents",
-          "wt.pickup_time as pickup_time",
-          "wt.dropoff_time as dropoff_time",
           "wt.created_at as created_at",
           "wt.completed_at as completed_at",
           "wt.project_number as project_number",
@@ -181,7 +179,8 @@ export function ScorecardStatsProvider({ children }: { children: ReactNode }) {
       const total = targets.reduce((sum, target) => {
         if (targetType === "gross_margin_percent") {
           if (activeRange === "weekly") return sum + (target.gross_margin_percent_weekly ?? 0);
-          if (activeRange === "quarterly") return sum + (target.gross_margin_percent_quarterly ?? 0);
+          if (activeRange === "quarterly")
+            return sum + (target.gross_margin_percent_quarterly ?? 0);
           return sum + (target.gross_margin_percent_annually ?? 0);
         }
         if (targetType === "quotes") {
@@ -195,12 +194,14 @@ export function ScorecardStatsProvider({ children }: { children: ReactNode }) {
           return sum + (target.sales_annually ?? 0);
         }
         if (targetType === "value_of_sales") {
-          if (activeRange === "weekly") return sum + (target.value_of_sales_weekly_cents ?? 0) / 100;
+          if (activeRange === "weekly")
+            return sum + (target.value_of_sales_weekly_cents ?? 0) / 100;
           if (activeRange === "quarterly")
             return sum + (target.value_of_sales_quarterly_cents ?? 0) / 100;
           return sum + (target.value_of_sales_annually_cents ?? 0) / 100;
         }
-        if (activeRange === "weekly") return sum + (target.value_of_revenue_weekly_cents ?? 0) / 100;
+        if (activeRange === "weekly")
+          return sum + (target.value_of_revenue_weekly_cents ?? 0) / 100;
         if (activeRange === "quarterly")
           return sum + (target.value_of_revenue_quarterly_cents ?? 0) / 100;
         return sum + (target.value_of_revenue_annually_cents ?? 0) / 100;
@@ -242,9 +243,7 @@ export function ScorecardStatsProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  return (
-    <ScorecardStatsContext.Provider value={value}>{children}</ScorecardStatsContext.Provider>
-  );
+  return <ScorecardStatsContext.Provider value={value}>{children}</ScorecardStatsContext.Provider>;
 }
 
 export function useScorecardStatsContext() {

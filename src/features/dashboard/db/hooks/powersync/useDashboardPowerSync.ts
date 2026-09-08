@@ -22,6 +22,7 @@ import { usePsZones } from "./usePsZones";
 import { usePsStorageLocations } from "./usePsStorageLocations";
 import { usePsSubrentalEvents } from "./usePsSubrentalEvents";
 import { usePermissionsStore } from "@/features/userAccess/state/usePermissionsStore";
+import { formatWorkTrackerTime } from "@/features/workTrackers/util";
 
 function toBool(v: number | null | boolean): boolean {
   if (typeof v === "boolean") return v;
@@ -227,8 +228,8 @@ export function useDashboardPowerSync(opts?: {
           workTrackerUuid: wt.id,
           date: wt.date ?? "",
           status: (wt.status ?? "draft") as Database["public"]["Enums"]["worktracker_status"],
-          pickupTime: wt.pickup_time ?? null,
-          dropoffTime: wt.dropoff_time ?? null,
+          pickupTime: formatWorkTrackerTime(wt.pickup_at, wt.pickup_timezone),
+          dropoffTime: formatWorkTrackerTime(wt.dropoff_at, wt.dropoff_timezone),
           driverUuid: wt.driver_uuid ?? null,
           driverFirstName: driverUser?.first_name ?? null,
           driverLastName: driverUser?.last_name ?? null,
