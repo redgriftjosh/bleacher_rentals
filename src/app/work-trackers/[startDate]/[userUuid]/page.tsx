@@ -169,7 +169,9 @@ export default function WorkTrackersForUserPage() {
             onClick={() => setShowReleaseModal(true)}
             className={`rounded px-4 py-2 flex items-center gap-2 ${WORKTRACKER_STATUS_COLORS.released.bg} border ${WORKTRACKER_STATUS_COLORS.released.border} ${WORKTRACKER_STATUS_COLORS.released.text} font-semibold shadow-md hover:opacity-80 transition cursor-pointer`}
           >
-            <span className={`text-sm ${WORKTRACKER_STATUS_COLORS.released.text}`}>Release All</span>
+            <span className={`text-sm ${WORKTRACKER_STATUS_COLORS.released.text}`}>
+              Release All
+            </span>
             <Send className={`h-4 w-4 ${WORKTRACKER_STATUS_COLORS.released.text}`} />
           </button>
         )}
@@ -240,17 +242,19 @@ export default function WorkTrackersForUserPage() {
         <thead className="bg-gray-100">
           <tr>
             <th className={`w-0 whitespace-nowrap ${className}`}>Status</th>
-            <th className={`w-[8%] ${className}`}>Date</th>
-            <th className={`w-[8%] ${className}`}>Bleacher</th>
-            <th className={`w-[8%] ${className}`}>Activity Type</th>
-            <th className={`w-[12%] ${className}`}>Pickup Location</th>
-            <th className={`w-[8%] ${className}`}>POC at P/U</th>
-            <th className={`w-[7%] ${className}`}>Time</th>
-            <th className={`w-[12%] ${className}`}>Dropoff Location</th>
-            <th className={`w-[8%] ${className}`}>POC at D/O</th>
-            <th className={`w-[7%] ${className}`}>Time</th>
-            <th className={`w-[8%] ${className}`}>Pay</th>
-            <th className={` ${className}`}>Notes</th>
+            <th className={`w-[7%] ${className}`}>Date</th>
+            <th className={`w-[6%] ${className}`}>Bleacher</th>
+            <th className={`w-[7%] ${className}`}>Activity Type</th>
+            <th className={`w-[10%] ${className}`}>Pickup Location</th>
+            <th className={`w-[7%] ${className}`}>POC at P/U</th>
+            <th className={`w-[6%] ${className}`}>Time</th>
+            <th className={`w-[10%] ${className}`}>Dropoff Location</th>
+            <th className={`w-[7%] ${className}`}>POC at D/O</th>
+            <th className={`w-[6%] ${className}`}>Time</th>
+            <th className={`w-[6%] ${className}`}>Drive Time</th>
+            <th className={`w-[7%] ${className}`}>Milage</th>
+            <th className={`w-[7%] ${className}`}>Pay</th>
+            <th className={`w-[14%] ${className}`}>Notes</th>
           </tr>
         </thead>
         <TripList

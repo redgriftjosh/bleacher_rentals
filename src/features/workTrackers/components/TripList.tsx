@@ -2,7 +2,12 @@
 
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tables } from "../../../../database.types";
-import { calculateFinancialTotals } from "../util";
+import {
+  calculateFinancialTotals,
+  calculateTravelTotals,
+  formatDriveTime,
+  formatMileage,
+} from "../util";
 import { useWorkTrackersForWeek } from "../hooks/useWorkTrackersForWeek";
 import WorkTrackerStatusBadge from "./WorkTrackerStatusBadge";
 
@@ -25,8 +30,10 @@ function isUSA(street: string | null | undefined): boolean {
 export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
   const { data, isLoading, error } = useWorkTrackersForWeek(userUuid, startDate);
   let financialTotals;
+  let travelTotals;
   if (data) {
     financialTotals = calculateFinancialTotals(data);
+    travelTotals = calculateTravelTotals(data);
   }
 
   if (error) {
@@ -69,69 +76,85 @@ export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
             <th className={`w-0 whitespace-nowrap px-2 ${className}`}>
               <WorkTrackerStatusBadge status={row.workTracker.status} showText={false} />
             </th>
-            <th className={`w-[8%] ${className}`}>{row.workTracker.date}</th>
-            <th className={`w-[8%] ${className}`}>{row.bleacherNumber}</th>
-            <th className={`w-[8%] whitespace-normal ${className}`}>{row.activityType ?? ""}</th>
-            <th className={`w-[12%] ${className}`}>{row.pickup_address?.street ?? ""}</th>
-            <th className={`w-[8%] ${className}`}>{row.workTracker.pickup_poc}</th>
-            <th className={`w-[7%] ${className}`}>{row.workTracker.pickup_time}</th>
-            <th className={`w-[12%] ${className}`}>{row.dropoff_address?.street ?? ""}</th>
-            <th className={`w-[8%] ${className}`}>{row.workTracker.dropoff_poc}</th>
-            <th className={`w-[7%] ${className}`}>{row.workTracker.dropoff_time}</th>
-            <th className={`w-[8%] ${className}`}>
+            <th className={`w-[7%] ${className}`}>{row.workTracker.date}</th>
+            <th className={`w-[6%] ${className}`}>{row.bleacherNumber}</th>
+            <th className={`w-[7%] whitespace-normal ${className}`}>{row.activityType ?? ""}</th>
+            <th className={`w-[10%] ${className}`}>{row.pickup_address?.street ?? ""}</th>
+            <th className={`w-[7%] ${className}`}>{row.workTracker.pickup_poc}</th>
+            <th className={`w-[6%] ${className}`}>{row.workTracker.pickup_time}</th>
+            <th className={`w-[10%] ${className}`}>{row.dropoff_address?.street ?? ""}</th>
+            <th className={`w-[7%] ${className}`}>{row.workTracker.dropoff_poc}</th>
+            <th className={`w-[6%] ${className}`}>{row.workTracker.dropoff_time}</th>
+            <th className={`w-[6%] ${className}`}>
+              {formatDriveTime(row.workTracker.drive_minutes)}
+            </th>
+            <th className={`w-[7%] ${className}`}>
+              {formatMileage(row.workTracker.distance_meters)}
+            </th>
+            <th className={`w-[7%] ${className}`}>
               {row.workTracker.pay_cents ? `$${(row.workTracker.pay_cents / 100).toFixed(2)}` : ""}
             </th>
-            <th className={` ${className}`}>{row.workTracker.notes}</th>
+            <th className={`w-[14%] ${className}`}>{row.workTracker.notes}</th>
           </tr>
         );
       })}
       <tr className="border-b h-12 border-gray-200 ">
         <th className={`w-0 ${className}`}></th>
-        <th className={`w-[8%] ${classNameBold}`}>SubTotal</th>
-        <th className={`w-[8%] ${className}`}></th>
-        <th className={`w-[8%] ${className}`}></th>
-        <th className={`w-[12%] ${className}`}></th>
-        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[7%] ${classNameBold}`}>SubTotal</th>
+        <th className={`w-[6%] ${className}`}></th>
         <th className={`w-[7%] ${className}`}></th>
-        <th className={`w-[12%] ${className}`}></th>
-        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[10%] ${className}`}></th>
         <th className={`w-[7%] ${className}`}></th>
-        <th className={`w-[8%] ${className}`}>
+        <th className={`w-[6%] ${className}`}></th>
+        <th className={`w-[10%] ${className}`}></th>
+        <th className={`w-[7%] ${className}`}></th>
+        <th className={`w-[6%] ${className}`}></th>
+        <th className={`w-[6%] ${className}`}>
+          {travelTotals ? formatDriveTime(travelTotals.totalDriveMinutes) : ""}
+        </th>
+        <th className={`w-[7%] ${className}`}>
+          {travelTotals ? formatMileage(travelTotals.totalDistanceMeters) : ""}
+        </th>
+        <th className={`w-[7%] ${className}`}>
           {financialTotals ? `$${(financialTotals.subtotal / 100).toFixed(2)}` : ""}
         </th>
-        <th className={` ${className}`}></th>
+        <th className={`w-[14%] ${className}`}></th>
       </tr>
       <tr className="border-b h-12 border-gray-200 ">
         <th className={`w-0 ${className}`}></th>
-        <th className={`w-[8%] ${classNameBold}`}>{`HST (${data?.driverTax}%)`}</th>
-        <th className={`w-[8%] ${className}`}></th>
-        <th className={`w-[8%] ${className}`}></th>
-        <th className={`w-[12%] ${className}`}></th>
-        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[7%] ${classNameBold}`}>{`HST (${data?.driverTax}%)`}</th>
+        <th className={`w-[6%] ${className}`}></th>
         <th className={`w-[7%] ${className}`}></th>
-        <th className={`w-[12%] ${className}`}></th>
-        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[10%] ${className}`}></th>
         <th className={`w-[7%] ${className}`}></th>
-        <th className={`w-[8%] ${className}`}>
+        <th className={`w-[6%] ${className}`}></th>
+        <th className={`w-[10%] ${className}`}></th>
+        <th className={`w-[7%] ${className}`}></th>
+        <th className={`w-[6%] ${className}`}></th>
+        <th className={`w-[6%] ${className}`}></th>
+        <th className={`w-[7%] ${className}`}></th>
+        <th className={`w-[7%] ${className}`}>
           {financialTotals ? `$${(financialTotals.tax / 100).toFixed(2)}` : ""}
         </th>
-        <th className={` ${className}`}></th>
+        <th className={`w-[14%] ${className}`}></th>
       </tr>
       <tr className="border-b h-12 border-gray-200 ">
         <th className={`w-0 ${className}`}></th>
-        <th className={`w-[8%] ${classNameBold}`}>Total Amount To Be Paid</th>
-        <th className={`w-[8%] ${className}`}></th>
-        <th className={`w-[8%] ${className}`}></th>
-        <th className={`w-[12%] ${className}`}></th>
-        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[7%] ${classNameBold}`}>Total Amount To Be Paid</th>
+        <th className={`w-[6%] ${className}`}></th>
         <th className={`w-[7%] ${className}`}></th>
-        <th className={`w-[12%] ${className}`}></th>
-        <th className={`w-[8%] ${className}`}></th>
+        <th className={`w-[10%] ${className}`}></th>
         <th className={`w-[7%] ${className}`}></th>
-        <th className={`w-[8%] ${className}`}>
+        <th className={`w-[6%] ${className}`}></th>
+        <th className={`w-[10%] ${className}`}></th>
+        <th className={`w-[7%] ${className}`}></th>
+        <th className={`w-[6%] ${className}`}></th>
+        <th className={`w-[6%] ${className}`}></th>
+        <th className={`w-[7%] ${className}`}></th>
+        <th className={`w-[7%] ${className}`}>
           {financialTotals ? `$${(financialTotals.total / 100).toFixed(2)}` : ""}
         </th>
-        <th className={` ${className}`}></th>
+        <th className={`w-[14%] ${className}`}></th>
       </tr>
     </tbody>
   );

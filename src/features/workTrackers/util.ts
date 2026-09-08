@@ -25,6 +25,39 @@ export function calculateFinancialTotals(WorkTrackersResult: WorkTrackersResult)
   return { subtotal, tax, taxPercent, total };
 }
 
+/** Meters per mile — matches the conversion already used for driver pay (tripValue). */
+const METERS_PER_MILE = 1609.34;
+
+/** e.g. "21.4 mi (34.4 km)". Empty string when there is nothing to show. */
+export function formatMileage(distanceMeters: number | null | undefined): string {
+  if (distanceMeters == null) return "";
+  const miles = distanceMeters / METERS_PER_MILE;
+  const km = distanceMeters / 1000;
+  return `${miles.toFixed(1)} mi (${km.toFixed(1)} km)`;
+}
+
+/** e.g. "2.4 hrs". Empty string when there is nothing to show. */
+export function formatDriveTime(driveMinutes: number | null | undefined): string {
+  if (driveMinutes == null) return "";
+  const hours = driveMinutes / 60;
+  return `${hours.toFixed(1)} hrs`;
+}
+
+/** Sums of the Drive Time / Milage columns, for the week's SubTotal row. */
+export function calculateTravelTotals(WorkTrackersResult: WorkTrackersResult) {
+  const workTrackers = WorkTrackersResult.workTrackers;
+  const totalDistanceMeters = workTrackers.reduce(
+    (acc, row) => acc + (row.workTracker.distance_meters ?? 0),
+    0,
+  );
+  const totalDriveMinutes = workTrackers.reduce(
+    (acc, row) => acc + (row.workTracker.drive_minutes ?? 0),
+    0,
+  );
+
+  return { totalDistanceMeters, totalDriveMinutes };
+}
+
 export function toLatLngString(a?: { lat?: number; lng?: number }) {
   return a?.lat != null && a?.lng != null ? `${a.lat},${a.lng}` : "";
 }

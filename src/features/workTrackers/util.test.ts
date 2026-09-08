@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   calculateDriverPay,
   calculateFinancialTotals,
+  calculateTravelTotals,
   describeDriverPay,
+  formatDriveTime,
+  formatMileage,
   type DistanceData,
   type DriverPaymentData,
 } from "./util";
@@ -235,6 +238,75 @@ describe("calculateFinancialTotals", () => {
       tax: 2_600,
       taxPercent: 13,
       total: 22_600,
+    });
+  });
+});
+
+describe("formatMileage", () => {
+  it("formats miles with kilometers alongside", () => {
+    // 34,439m ≈ 21.4mi ≈ 34.4km
+    expect(formatMileage(34_439)).toBe("21.4 mi (34.4 km)");
+  });
+
+  it("is blank for null or undefined", () => {
+    expect(formatMileage(null)).toBe("");
+    expect(formatMileage(undefined)).toBe("");
+  });
+
+  it("is not blank for zero", () => {
+    expect(formatMileage(0)).toBe("0.0 mi (0.0 km)");
+  });
+});
+
+describe("formatDriveTime", () => {
+  it("formats minutes as hours to one decimal", () => {
+    expect(formatDriveTime(144)).toBe("2.4 hrs");
+  });
+
+  it("is blank for null or undefined", () => {
+    expect(formatDriveTime(null)).toBe("");
+    expect(formatDriveTime(undefined)).toBe("");
+  });
+
+  it("is not blank for zero", () => {
+    expect(formatDriveTime(0)).toBe("0.0 hrs");
+  });
+});
+
+describe("calculateTravelTotals", () => {
+  function week(
+    rows: { distance_meters?: number | null; drive_minutes?: number | null }[],
+  ): WorkTrackersResult {
+    return {
+      workTrackers: rows.map((r) => ({ workTracker: r })) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      driverTax: 0,
+      driverAddress: null,
+    };
+  }
+
+  it("sums distance and drive time across every leg", () => {
+    expect(
+      calculateTravelTotals(
+        week([
+          { distance_meters: 10_000, drive_minutes: 30 },
+          { distance_meters: 5_000, drive_minutes: 15 },
+        ]),
+      ),
+    ).toEqual({ totalDistanceMeters: 15_000, totalDriveMinutes: 45 });
+  });
+
+  it("treats a missing value on any leg as 0 rather than dropping the total", () => {
+    expect(
+      calculateTravelTotals(
+        week([{ distance_meters: 10_000, drive_minutes: null }, { distance_meters: null }]),
+      ),
+    ).toEqual({ totalDistanceMeters: 10_000, totalDriveMinutes: 0 });
+  });
+
+  it("is all zeros for an empty week", () => {
+    expect(calculateTravelTotals(week([]))).toEqual({
+      totalDistanceMeters: 0,
+      totalDriveMinutes: 0,
     });
   });
 });
