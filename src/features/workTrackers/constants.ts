@@ -35,19 +35,19 @@ export type WorkTrackerTypeStyle = {
 
 /**
  * Icon + color for each of the 3 canonical work tracker types, keyed by the
- * *final* display label (see workTrackerTypeDisplay.ts) rather than the
- * database's current display_name — this stays correct across the eventual
- * rename migration without needing an update here.
+ * stable `code` column (see workTrackerTypeDisplay.ts) rather than the
+ * database's freely-editable display_name — renaming a type's label never
+ * silently falls back to the gray "unknown" style.
  */
 export const WORK_TRACKER_TYPE_STYLES: Record<string, WorkTrackerTypeStyle> = {
-  Trip: { icon: Truck, bg: "bg-blue-500/10", border: "border-blue-600", text: "text-blue-700" },
-  "Repair / Maintenance": {
+  trip: { icon: Truck, bg: "bg-blue-500/10", border: "border-blue-600", text: "text-blue-700" },
+  repair_maintenance: {
     icon: Wrench,
     bg: "bg-amber-500/10",
     border: "border-amber-600",
     text: "text-amber-700",
   },
-  "Site Visit / Cleaning / Other": {
+  site_visit_cleaning_other: {
     icon: Sparkles,
     bg: "bg-purple-500/10",
     border: "border-purple-600",
@@ -55,7 +55,7 @@ export const WORK_TRACKER_TYPE_STYLES: Record<string, WorkTrackerTypeStyle> = {
   },
 };
 
-/** Used for a legacy type outside the canonical 3 (see getSelectableWorkTrackerTypes). */
+/** Used for a legacy type with no code (see getSelectableWorkTrackerTypes). */
 export const WORK_TRACKER_TYPE_STYLE_FALLBACK: WorkTrackerTypeStyle = {
   icon: HelpCircle,
   bg: "bg-gray-500/10",

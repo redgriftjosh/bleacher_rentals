@@ -4113,6 +4113,7 @@ export type Database = {
       }
       WorkTrackerTypes: {
         Row: {
+          code: Database["public"]["Enums"]["work_tracker_type_code"] | null
           created_at: string
           display_name: string
           id: string
@@ -4120,6 +4121,7 @@ export type Database = {
           sort_order: number
         }
         Insert: {
+          code?: Database["public"]["Enums"]["work_tracker_type_code"] | null
           created_at?: string
           display_name: string
           id?: string
@@ -4127,6 +4129,7 @@ export type Database = {
           sort_order?: number
         }
         Update: {
+          code?: Database["public"]["Enums"]["work_tracker_type_code"] | null
           created_at?: string
           display_name?: string
           id?: string
@@ -4312,6 +4315,10 @@ export type Database = {
         | "maintenance"
         | "per_diem"
         | "custom"
+      work_tracker_type_code:
+        | "trip"
+        | "repair_maintenance"
+        | "site_visit_cleaning_other"
       worktracker_group_status:
         | "draft"
         | "qbo_bill_creating"
@@ -4495,6 +4502,11 @@ export const Constants = {
         "maintenance",
         "per_diem",
         "custom",
+      ],
+      work_tracker_type_code: [
+        "trip",
+        "repair_maintenance",
+        "site_visit_cleaning_other",
       ],
       worktracker_group_status: [
         "draft",

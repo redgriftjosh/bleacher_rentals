@@ -143,11 +143,12 @@ export default function WorkTrackerModal({
   const selectedWorkTrackerType = workTrackerTypes.find(
     (t) => t.id === workTracker?.work_tracker_type_uuid,
   );
-  // Every type other than "Trip" uses a single set of fields (written to the
-  // dropoff_* columns) instead of separate Pickup/Dropoff sections.
+  // Every type other than "trip" uses a single set of fields (written to the
+  // dropoff_* columns) instead of separate Pickup/Dropoff sections. Keyed off
+  // the stable `code`, not the freely-editable `display_name`.
   // See docs/specs/work-tracker-fixed-types.md.
   const isSingleFieldSetType = Boolean(
-    selectedWorkTrackerType && selectedWorkTrackerType.display_name !== "Trip",
+    selectedWorkTrackerType && selectedWorkTrackerType.code !== "trip",
   );
 
   // The Type dropdown only ever offers the 3 canonical types, regardless of what
@@ -499,8 +500,7 @@ export default function WorkTrackerModal({
       !workTracker?.work_tracker_type_uuid &&
       workTrackerTypes.length > 0
     ) {
-      const tripType =
-        workTrackerTypes.find((t) => t.display_name === "Trip") ?? workTrackerTypes[0];
+      const tripType = workTrackerTypes.find((t) => t.code === "trip") ?? workTrackerTypes[0];
       setWorkTracker((prev) => (prev ? { ...prev, work_tracker_type_uuid: tripType.id } : prev));
     }
   }, [workTrackerTypes, workTracker?.id, workTracker?.work_tracker_type_uuid]);

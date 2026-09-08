@@ -1,36 +1,34 @@
 import type { WorkTrackerTypeOption } from "../hooks/useWorkTrackerTypes";
 
+/** The stable identifier for each of the 3 canonical work tracker types. */
+export type WorkTrackerTypeCode = "trip" | "repair_maintenance" | "site_visit_cleaning_other";
+
 /**
  * The exact 3 work tracker types the product should ever offer, in the exact
- * order they should appear, with their final display labels — hardcoded rather
- * than derived from the DB's row order or count. Production data still has extra
- * legacy types (e.g. "Site Visit", "Set up", "Deadhead") that a migration will
- * eventually merge away — see docs/specs/work-tracker-fixed-types.md — but until
- * that migration runs, the dropdown is pinned to this list regardless of what
- * else exists in `WorkTrackerTypes` or what order it comes back in.
- *
- * `dbName` is the *current* `WorkTrackerTypes.display_name` — used only to look up
- * that row's real id (a hard FK on `WorkTrackers.work_tracker_type_uuid`, so the
- * saved value always has to be a real row). `label` is the final name from the
- * spec, shown ahead of the rename migration.
+ * order they should appear, keyed by their stable `code` (a real Postgres enum
+ * column — see supabase/migrations/20260908202341_work_tracker_type_codes.sql)
+ * rather than the freely-editable `display_name` text column. Any other row
+ * (legacy types merged away by that migration, or anything with `code` still
+ * null) is invisible here regardless of what order the DB returns it in.
+ * See docs/specs/work-tracker-fixed-types.md.
  */
-const CANONICAL_TYPES = [
-  { dbName: "Trip", label: "Trip" },
-  { dbName: "Repair/Maintenance", label: "Repair / Maintenance" },
-  { dbName: "Cleaning", label: "Site Visit / Cleaning / Other" },
-] as const;
+const CANONICAL_TYPE_CODES: WorkTrackerTypeCode[] = [
+  "trip",
+  "repair_maintenance",
+  "site_visit_cleaning_other",
+];
 
 /**
  * Builds the Type dropdown's option list: always exactly the 3 canonical types
- * above, in that fixed order, each relabeled to its final name — never more,
- * never fewer, and never reordered by whatever the DB's `sort_order` happens to
- * be. A canonical type missing from `types` (shouldn't happen; it's seeded) is
- * silently skipped rather than shown as broken.
+ * above, in that fixed order — never more, never fewer, and never reordered by
+ * whatever the DB's `sort_order` happens to be. A canonical code missing from
+ * `types` (shouldn't happen; the migration backfills all 3) is silently
+ * skipped rather than shown as broken.
  *
- * If `selectedTypeId` points at a type outside the canonical 3 (an existing work
- * tracker saved under a legacy type before the migration ran), that type is
- * appended at the end — as its raw display_name, unrelabeled — so the dropdown
- * doesn't silently show a blank/invalid selection for it.
+ * If `selectedTypeId` points at a type with no code (an existing work tracker
+ * saved under a legacy type before the migration ran, or before it merges into
+ * one of the 3), that type is appended at the end so the dropdown doesn't
+ * silently show a blank/invalid selection for it.
  */
 export function getSelectableWorkTrackerTypes(
   types: WorkTrackerTypeOption[],
@@ -38,9 +36,9 @@ export function getSelectableWorkTrackerTypes(
 ): WorkTrackerTypeOption[] {
   const result: WorkTrackerTypeOption[] = [];
 
-  for (const canonical of CANONICAL_TYPES) {
-    const match = types.find((t) => t.display_name === canonical.dbName);
-    if (match) result.push({ ...match, display_name: canonical.label });
+  for (const code of CANONICAL_TYPE_CODES) {
+    const match = types.find((t) => t.code === code);
+    if (match) result.push(match);
   }
 
   const selected = types.find((t) => t.id === selectedTypeId);

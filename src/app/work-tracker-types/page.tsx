@@ -147,8 +147,7 @@ export default function WorkTrackerTypesPage() {
         <div className="space-y-3">
           {types.map((t) => {
             const style =
-              (t.display_name && WORK_TRACKER_TYPE_STYLES[t.display_name]) ||
-              WORK_TRACKER_TYPE_STYLE_FALLBACK;
+              (t.code && WORK_TRACKER_TYPE_STYLES[t.code]) || WORK_TRACKER_TYPE_STYLE_FALLBACK;
             const Icon = style.icon;
             return (
               <div key={t.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">

@@ -13,8 +13,8 @@ import {
 } from "@/features/workTrackers/constants";
 import type { WorkTrackerTypeOption } from "../hooks/useWorkTrackerTypes";
 
-function getStyle(displayName: string | null | undefined) {
-  return (displayName && WORK_TRACKER_TYPE_STYLES[displayName]) || WORK_TRACKER_TYPE_STYLE_FALLBACK;
+function getStyle(code: string | null | undefined) {
+  return (code && WORK_TRACKER_TYPE_STYLES[code]) || WORK_TRACKER_TYPE_STYLE_FALLBACK;
 }
 
 type WorkTrackerTypeSelectProps = {
@@ -38,7 +38,7 @@ export function WorkTrackerTypeSelect({
   disabled,
 }: WorkTrackerTypeSelectProps) {
   const selected = types.find((t) => t.id === selectedId);
-  const selectedStyle = getStyle(selected?.display_name);
+  const selectedStyle = getStyle(selected?.code);
   const SelectedIcon = selectedStyle.icon;
 
   return (
@@ -59,7 +59,7 @@ export function WorkTrackerTypeSelect({
         modal's own nested Save-confirm dialog. */}
       <DropdownMenuContent align="end" className="z-[2101]">
         {types.map((t) => {
-          const style = getStyle(t.display_name);
+          const style = getStyle(t.code);
           const Icon = style.icon;
           const isSelected = t.id === selectedId;
           return (

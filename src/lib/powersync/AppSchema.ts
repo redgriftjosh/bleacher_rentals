@@ -394,6 +394,7 @@ const WorkTrackerTypesCols = {
   display_name: column.text,
   is_deleted: column.integer,
   sort_order: column.integer,
+  code: column.text,
 } satisfies PowerSyncColsFor<"WorkTrackerTypes">;
 const WorkTrackerTypes = new Table(WorkTrackerTypesCols);
 
