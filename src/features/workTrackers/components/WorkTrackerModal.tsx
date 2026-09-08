@@ -76,6 +76,8 @@ import { getUpcomingWindowEnd } from "@/features/alerts/util/getUpcomingWindow";
 import { PocSelect } from "./PocSelect";
 import { getExpectedPocForWorkTracker, type PocDirection } from "../util/resolvePocContact";
 import { describePocPopulateResult, type PocValue } from "../util/pocField";
+import { getSelectableWorkTrackerTypes } from "../util/workTrackerTypeDisplay";
+import { WorkTrackerTypeSelect } from "./WorkTrackerTypeSelect";
 
 type WorkTrackerModalProps = {
   selectedWorkTracker: Tables<"WorkTrackers"> | null;
@@ -135,6 +137,23 @@ export default function WorkTrackerModal({
   // Fetch available work tracker types (local-first via PowerSync)
   const { types: workTrackerTypes } = useWorkTrackerTypes();
 
+  const selectedWorkTrackerType = workTrackerTypes.find(
+    (t) => t.id === workTracker?.work_tracker_type_uuid,
+  );
+  // Every type other than "Trip" uses a single set of fields (written to the
+  // dropoff_* columns) instead of separate Pickup/Dropoff sections.
+  // See docs/specs/work-tracker-fixed-types.md.
+  const isSingleFieldSetType = Boolean(
+    selectedWorkTrackerType && selectedWorkTrackerType.display_name !== "Trip",
+  );
+
+  // The Type dropdown only ever offers the 3 canonical types, regardless of what
+  // else exists in the database — see workTrackerTypeDisplay.ts.
+  const selectableWorkTrackerTypes = useMemo(
+    () => getSelectableWorkTrackerTypes(workTrackerTypes, workTracker?.work_tracker_type_uuid),
+    [workTrackerTypes, workTracker?.work_tracker_type_uuid],
+  );
+
   // Helper to format address for Distance Matrix API
   const formatAddressString = (addr: AddressData | null): string => {
     if (!addr) return "";
@@ -156,7 +175,7 @@ export default function WorkTrackerModal({
   const origin = toLatLngString(pickUpAddress ?? undefined) || formatAddressString(pickUpAddress);
   const dest = toLatLngString(dropOffAddress ?? undefined) || formatAddressString(dropOffAddress);
 
-  const distanceQueryEnabled = Boolean(origin && dest);
+  const distanceQueryEnabled = Boolean(origin && dest) && !isSingleFieldSetType;
 
   // Debug logging (disabled — was noisy on every render)
   // console.log("Distance Query Debug:", {
@@ -901,10 +920,39 @@ export default function WorkTrackerModal({
             )}
             <div className="flex-1 min-h-0 overflow-y-auto">
               <Tabs defaultValue="details">
-                <TabsList>
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="line-items">Line Items</TabsTrigger>
-                </TabsList>
+                <div className="flex items-center justify-between">
+                  <TabsList>
+                    <TabsTrigger value="details">Details</TabsTrigger>
+                    <TabsTrigger value="line-items">Line Items</TabsTrigger>
+                  </TabsList>
+                  {/* Work Tracker Type — its own color-coded switch rather than a form
+                    field, since the choice drives which fields the Details tab shows
+                    (Trip's separate Pickup/Dropoff sections vs. everything else's
+                    single field set). */}
+                  <div className="flex items-center gap-2">
+                    <WorkTrackerTypeSelect
+                      types={selectableWorkTrackerTypes}
+                      selectedId={workTracker?.work_tracker_type_uuid}
+                      onSelect={(id) =>
+                        setWorkTracker((prev) => ({
+                          ...prev!,
+                          work_tracker_type_uuid: id,
+                        }))
+                      }
+                      disabled={!canEditFields}
+                    />
+                    {canEditFields && (
+                      <button
+                        type="button"
+                        onClick={() => setShowEditTypes(true)}
+                        className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 transition-colors"
+                      >
+                        <Pencil className="h-3 w-3" />
+                        Edit types
+                      </button>
+                    )}
+                  </div>
+                </div>
 
                 <TabsContent value="details">
                   {/*
@@ -971,38 +1019,6 @@ export default function WorkTrackerModal({
                             }))
                           }
                         />
-
-                        {/* Work Tracker Type */}
-                        <div className="mt-1">
-                          <div className="flex items-center justify-between">
-                            <label className={labelClassName}>Type</label>
-                            {canEditFields && (
-                              <button
-                                type="button"
-                                onClick={() => setShowEditTypes(true)}
-                                className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 transition-colors mt-1"
-                              >
-                                <Pencil className="h-3 w-3" />
-                                Edit types
-                              </button>
-                            )}
-                          </div>
-                          <Dropdown
-                            options={workTrackerTypes.map((t) => ({
-                              label: t.display_name ?? "",
-                              value: t.id,
-                            }))}
-                            selected={workTracker?.work_tracker_type_uuid ?? undefined}
-                            onSelect={(id) =>
-                              setWorkTracker((prev) => ({
-                                ...prev!,
-                                work_tracker_type_uuid: id,
-                              }))
-                            }
-                            placeholder="Select Type"
-                            disabled={!canEditFields}
-                          />
-                        </div>
 
                         <label className={labelClassName}>Project Number</label>
                         <input
@@ -1113,113 +1129,121 @@ export default function WorkTrackerModal({
                       {/* Columns 2 & 3: Pickup, Dropoff, and Map */}
                       <div className="flex-[2] min-w-0 flex flex-col gap-4">
                         <div className="flex flex-row gap-4">
-                          {/* Column 2: Pickup */}
-                          <div className="flex-1 min-w-0">
-                            <label className={labelClassName}>Pickup Time</label>
-                            <input
-                              type="text"
-                              className={inputClassName}
-                              placeholder="Pickup Time"
-                              value={workTracker?.pickup_time ?? ""}
-                              onChange={(e) =>
-                                setWorkTracker((prev) => ({
-                                  ...prev!,
-                                  pickup_time: e.target.value,
-                                }))
-                              }
-                            />
-                            <label className={labelClassName}>Pickup POC</label>
-                            <div className="flex flex-row gap-2 items-center">
-                              <div className="flex-1 min-w-0">
-                                <PocSelect
-                                  contactUuid={workTracker?.pickup_poc_contact_uuid ?? null}
-                                  pocText={workTracker?.pickup_poc ?? null}
-                                  onChange={setPickupPoc}
-                                  placeholder="Pickup POC"
-                                />
-                              </div>
-                              {canEditFields && (
-                                <AppTooltip content="Populate from previous event contact">
-                                  <button
-                                    type="button"
-                                    onClick={() => handlePopulatePoc("past")}
-                                    className="text-gray-400 hover:text-darkBlue transition-colors"
-                                  >
-                                    <LocateFixed className="h-5 w-5" />
-                                  </button>
-                                </AppTooltip>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <label className={labelClassName}>Pickup Address</label>
-                              {showPickupTransportWarning && (
-                                <AppTooltip content="Pickup differs from last location. Use locate.">
-                                  <span className="mt-1 inline-flex text-amber-600">
-                                    <AlertTriangle className="h-4 w-4" />
-                                  </span>
-                                </AppTooltip>
-                              )}
-                            </div>
-                            <div className="flex flex-row gap-2 items-center">
-                              <AddressAutocomplete
-                                className="bg-white"
-                                onAddressSelect={(data) =>
-                                  setPickUpAddress({
-                                    ...data,
-                                    addressUuid: pickUpAddress?.addressUuid ?? null,
-                                  })
-                                }
-                                initialValue={pickUpAddress?.address || ""}
-                              />
-                              {canEditFields && (
-                                <AppTooltip content="Populate from last known bleacher location">
-                                  <button
-                                    type="button"
-                                    onClick={handlePopulatePickupFromLastAddress}
-                                    className="text-gray-400 hover:text-darkBlue transition-colors"
-                                  >
-                                    <LocateFixed className="h-5 w-5" />
-                                  </button>
-                                </AppTooltip>
-                              )}
-                            </div>
-                            <label className={labelClassName}>Pickup Instructions</label>
-                            <textarea
-                              className="w-full text-sm border p-1 rounded bg-white"
-                              placeholder="Pickup Instructions"
-                              value={workTracker?.pickup_instructions ?? ""}
-                              onChange={(e) =>
-                                setWorkTracker((prev) => ({
-                                  ...prev!,
-                                  pickup_instructions: e.target.value || null,
-                                }))
-                              }
-                              rows={3}
-                            />
-                            <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                          {/* Column 2: Pickup — only shown for "Trip", which is the
+                            only type that needs a separate pickup leg. */}
+                          {!isSingleFieldSetType && (
+                            <div className="flex-1 min-w-0">
+                              <label className={labelClassName}>Pickup Time</label>
                               <input
-                                type="checkbox"
-                                checked={!!workTracker?.teardown_required}
+                                type="text"
+                                className={inputClassName}
+                                placeholder="Pickup Time"
+                                value={workTracker?.pickup_time ?? ""}
                                 onChange={(e) =>
                                   setWorkTracker((prev) => ({
                                     ...prev!,
-                                    teardown_required: e.target.checked,
+                                    pickup_time: e.target.value,
                                   }))
                                 }
                               />
-                              <span className="text-sm font-medium text-gray-700">
-                                Teardown Required
-                              </span>
-                            </label>
-                          </div>
+                              <label className={labelClassName}>Pickup POC</label>
+                              <div className="flex flex-row gap-2 items-center">
+                                <div className="flex-1 min-w-0">
+                                  <PocSelect
+                                    contactUuid={workTracker?.pickup_poc_contact_uuid ?? null}
+                                    pocText={workTracker?.pickup_poc ?? null}
+                                    onChange={setPickupPoc}
+                                    placeholder="Pickup POC"
+                                  />
+                                </div>
+                                {canEditFields && (
+                                  <AppTooltip content="Populate from previous event contact">
+                                    <button
+                                      type="button"
+                                      onClick={() => handlePopulatePoc("past")}
+                                      className="text-gray-400 hover:text-darkBlue transition-colors"
+                                    >
+                                      <LocateFixed className="h-5 w-5" />
+                                    </button>
+                                  </AppTooltip>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <label className={labelClassName}>Pickup Address</label>
+                                {showPickupTransportWarning && (
+                                  <AppTooltip content="Pickup differs from last location. Use locate.">
+                                    <span className="mt-1 inline-flex text-amber-600">
+                                      <AlertTriangle className="h-4 w-4" />
+                                    </span>
+                                  </AppTooltip>
+                                )}
+                              </div>
+                              <div className="flex flex-row gap-2 items-center">
+                                <AddressAutocomplete
+                                  className="bg-white"
+                                  onAddressSelect={(data) =>
+                                    setPickUpAddress({
+                                      ...data,
+                                      addressUuid: pickUpAddress?.addressUuid ?? null,
+                                    })
+                                  }
+                                  initialValue={pickUpAddress?.address || ""}
+                                />
+                                {canEditFields && (
+                                  <AppTooltip content="Populate from last known bleacher location">
+                                    <button
+                                      type="button"
+                                      onClick={handlePopulatePickupFromLastAddress}
+                                      className="text-gray-400 hover:text-darkBlue transition-colors"
+                                    >
+                                      <LocateFixed className="h-5 w-5" />
+                                    </button>
+                                  </AppTooltip>
+                                )}
+                              </div>
+                              <label className={labelClassName}>Pickup Instructions</label>
+                              <textarea
+                                className="w-full text-sm border p-1 rounded bg-white"
+                                placeholder="Pickup Instructions"
+                                value={workTracker?.pickup_instructions ?? ""}
+                                onChange={(e) =>
+                                  setWorkTracker((prev) => ({
+                                    ...prev!,
+                                    pickup_instructions: e.target.value || null,
+                                  }))
+                                }
+                                rows={3}
+                              />
+                              <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={!!workTracker?.teardown_required}
+                                  onChange={(e) =>
+                                    setWorkTracker((prev) => ({
+                                      ...prev!,
+                                      teardown_required: e.target.checked,
+                                    }))
+                                  }
+                                />
+                                <span className="text-sm font-medium text-gray-700">
+                                  Teardown Required
+                                </span>
+                              </label>
+                            </div>
+                          )}
 
-                          {/* Column 3: Dropoff */}
+                          {/* Column 3: Dropoff — for single-field-set types (everything
+                            but "Trip") this is the only column shown, so its labels
+                            drop the "Dropoff" prefix. The values still live in the
+                            dropoff_* columns either way. */}
                           <div className="flex-1 min-w-0">
-                            <label className={labelClassName}>Dropoff Time</label>
+                            <label className={labelClassName}>
+                              {isSingleFieldSetType ? "Time" : "Dropoff Time"}
+                            </label>
                             <input
                               type="text"
                               className={inputClassName}
-                              placeholder="Dropoff Time"
+                              placeholder={isSingleFieldSetType ? "Time" : "Dropoff Time"}
                               value={workTracker?.dropoff_time ?? ""}
                               onChange={(e) =>
                                 setWorkTracker((prev) => ({
@@ -1228,14 +1252,16 @@ export default function WorkTrackerModal({
                                 }))
                               }
                             />
-                            <label className={labelClassName}>Dropoff POC</label>
+                            <label className={labelClassName}>
+                              {isSingleFieldSetType ? "POC" : "Dropoff POC"}
+                            </label>
                             <div className="flex flex-row gap-2 items-center">
                               <div className="flex-1 min-w-0">
                                 <PocSelect
                                   contactUuid={workTracker?.dropoff_poc_contact_uuid ?? null}
                                   pocText={workTracker?.dropoff_poc ?? null}
                                   onChange={setDropoffPoc}
-                                  placeholder="Dropoff POC"
+                                  placeholder={isSingleFieldSetType ? "POC" : "Dropoff POC"}
                                 />
                               </div>
                               {canEditFields && (
@@ -1250,7 +1276,9 @@ export default function WorkTrackerModal({
                                 </AppTooltip>
                               )}
                             </div>
-                            <label className={labelClassName}>Dropoff Address</label>
+                            <label className={labelClassName}>
+                              {isSingleFieldSetType ? "Address" : "Dropoff Address"}
+                            </label>
                             <div className="flex flex-row gap-2 items-center">
                               <AddressAutocomplete
                                 className="bg-white"
@@ -1274,10 +1302,14 @@ export default function WorkTrackerModal({
                                 </AppTooltip>
                               )}
                             </div>
-                            <label className={labelClassName}>Dropoff Instructions</label>
+                            <label className={labelClassName}>
+                              {isSingleFieldSetType ? "Instructions" : "Dropoff Instructions"}
+                            </label>
                             <textarea
                               className="w-full text-sm border p-1 rounded bg-white"
-                              placeholder="Dropoff Instructions"
+                              placeholder={
+                                isSingleFieldSetType ? "Instructions" : "Dropoff Instructions"
+                              }
                               value={workTracker?.dropoff_instructions ?? ""}
                               onChange={(e) =>
                                 setWorkTracker((prev) => ({
@@ -1305,18 +1337,21 @@ export default function WorkTrackerModal({
                           </div>
                         </div>
 
-                        {/* Map - below both pickup and dropoff columns */}
-                        <div className="mt-2">
-                          <RouteMapPreview
-                            origin={origin}
-                            destination={dest}
-                            pickUpAddress={pickUpAddress}
-                            dropOffAddress={dropOffAddress}
-                            isLoading={isLegFetching}
-                            error={legErr}
-                            distanceData={leg ?? null}
-                          />
-                        </div>
+                        {/* Map - below both pickup and dropoff columns. Only "Trip" has
+                          two legs to plot a route between. */}
+                        {!isSingleFieldSetType && (
+                          <div className="mt-2">
+                            <RouteMapPreview
+                              origin={origin}
+                              destination={dest}
+                              pickUpAddress={pickUpAddress}
+                              dropOffAddress={dropOffAddress}
+                              isLoading={isLegFetching}
+                              error={legErr}
+                              distanceData={leg ?? null}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </fieldset>
