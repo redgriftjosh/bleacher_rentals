@@ -1339,6 +1339,26 @@ export default function WorkTrackerModal({
                                 Setup Required
                               </span>
                             </label>
+                            {/* Teardown Required normally lives in the Pickup column, which
+                              single-field-set types don't show — surface it here instead so
+                              it isn't lost. */}
+                            {isSingleFieldSetType && (
+                              <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={!!workTracker?.teardown_required}
+                                  onChange={(e) =>
+                                    setWorkTracker((prev) => ({
+                                      ...prev!,
+                                      teardown_required: e.target.checked,
+                                    }))
+                                  }
+                                />
+                                <span className="text-sm font-medium text-gray-700">
+                                  Teardown Required
+                                </span>
+                              </label>
+                            )}
                           </div>
                         </div>
 
