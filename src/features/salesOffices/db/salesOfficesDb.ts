@@ -30,6 +30,10 @@ export type SalesOfficeAddress = {
   city: string;
   stateProvince: string;
   zipPostal: string;
+  lat?: number;
+  lng?: number;
+  placeId?: string;
+  country?: string;
 };
 
 export type SalesOfficeInput = {
@@ -124,6 +128,10 @@ export async function upsertSalesOfficeAddress(
     city: address.city,
     state_province: address.stateProvince,
     zip_postal: address.zipPostal || null,
+    latitude: address.lat ?? null,
+    longitude: address.lng ?? null,
+    country: address.country ?? null,
+    place_id: address.placeId ?? null,
   };
 
   if (existingAddressUuid) {

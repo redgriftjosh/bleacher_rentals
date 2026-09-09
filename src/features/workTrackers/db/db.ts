@@ -4,6 +4,7 @@ import { USER_ROLES } from "@/types/Constants";
 import { DateTime } from "luxon";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { fetchAddressFromUuid } from "@/features/dashboard/db/client/db";
+import { deriveRegion } from "../util/addressCountry";
 
 export async function fetchDriverName(
   userUuid: string,
@@ -107,12 +108,6 @@ export async function fetchUserByUuid(
   return name;
 }
 
-function deriveRegion(street: string | null | undefined): "US" | "CAN" | null {
-  if (!street) return null;
-  const country = street.split(",").pop()?.trim();
-  return country === "USA" ? "US" : country === "Canada" ? "CAN" : null;
-}
-
 export type DriverWithMeta = Tables<"Users"> & {
   driver_uuid: string;
   tripCount: number;
@@ -151,7 +146,7 @@ export async function fetchDriverWithMetaForWeek(
       pay_currency,
       pay_per_unit,
       tax_dec,
-      address:Addresses!Drivers_address_uuid_fkey(street),
+      address:Addresses!Drivers_address_uuid_fkey(street, country),
       vendor:Vendors(qbo_connection_uuid),
       user:Users!Drivers_user_uuid_fkey(*)
     `,
@@ -198,7 +193,7 @@ export async function fetchDriverWithMetaForWeek(
     totalDistanceMeters,
     totalDriveMinutes,
     hasCrossBorderTrips: false,
-    region: deriveRegion(driver.address?.street),
+    region: deriveRegion(driver.address?.country, driver.address?.street),
     taxDec: driver.tax_dec ?? 0,
     qbo_connection_uuid:
       (Array.isArray(driver.vendor) ? driver.vendor[0] : driver.vendor)?.qbo_connection_uuid ??
@@ -304,7 +299,11 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
     .eq("driver_uuid", driverUuid)
     .gte("date", startDate)
     .lt("date", DateTime.fromISO(startDate).plus({ days: 7 }).toISODate())
-    .order("date", { ascending: true });
+    .order("date", { ascending: true })
+    // Same-day trackers by pickup time — matches useWorkTrackersForWeek (the
+    // trip-list view this PDF mirrors). Any Time (null) trackers sort last
+    // within their date.
+    .order("pickup_time_start", { ascending: true, nullsFirst: false });
 
   if (error) {
     if (!isServer) {

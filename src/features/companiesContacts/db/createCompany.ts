@@ -25,6 +25,10 @@ async function insertAddress(addr: AddressFields): Promise<string | null> {
         city: addr.city || null,
         state_province: addr.stateProvince || null,
         zip_postal: addr.zipPostal || null,
+        latitude: addr.lat ?? null,
+        longitude: addr.lng ?? null,
+        country: addr.country ?? null,
+        place_id: addr.placeId ?? null,
       })
       .compile(),
   );

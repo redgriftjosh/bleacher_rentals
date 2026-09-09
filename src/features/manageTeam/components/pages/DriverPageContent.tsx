@@ -418,6 +418,10 @@ export function DriverPageContent() {
                     setField("homeCity", data.city ?? null);
                     setField("homeState", data.state ?? null);
                     setField("homePostalCode", data.postalCode ?? null);
+                    setField("homeLat", data.lat ?? null);
+                    setField("homeLng", data.lng ?? null);
+                    setField("homePlaceId", data.placeId ?? null);
+                    setField("homeCountry", data.country ?? null);
                   }}
                   initialValue={homeAddress ?? ""}
                 />

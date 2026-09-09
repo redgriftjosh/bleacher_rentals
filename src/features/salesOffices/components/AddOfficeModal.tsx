@@ -165,6 +165,10 @@ export function AddOfficeModal({ open, onClose, onSaved, editing }: Props) {
                   city: data.city ?? "",
                   stateProvince: data.state ?? "",
                   zipPostal: data.postalCode ?? "",
+                  lat: data.lat,
+                  lng: data.lng,
+                  placeId: data.placeId,
+                  country: data.country,
                 })
               }
               className="h-[40px] px-3 border rounded text-sm"

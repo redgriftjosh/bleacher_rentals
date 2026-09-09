@@ -13,6 +13,7 @@ export type AddressData = {
   lat?: number;
   lng?: number;
   placeId?: string;
+  country?: string;
 };
 
 import { EventStatus } from "@/features/dashboard/types";
