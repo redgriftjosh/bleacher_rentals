@@ -18,20 +18,24 @@ create unique index "WorkTrackerTypes_code_key" on public."WorkTrackerTypes" ("c
 
 -- Assign codes to production's 3 existing canonical rows by id, and rename 2
 -- of them to their final display names. These ids are production data as
--- captured 2026-09-08 — this step is a no-op against a fresh `supabase db
--- reset` (migrations run before seed.sql loads its own copy of these rows;
--- seed.sql carries the post-migration state directly instead).
-update public."WorkTrackerTypes"
-  set code = 'trip'
-  where id = 'e3c00371-897d-4a80-93da-66f374deaa2d';
+-- captured 2026-09-08. Idempotent upserts, not plain UPDATEs: against a real
+-- database the row already exists and this only sets code (+ renames 2 of
+-- them); against a fresh database — including CI, which runs
+-- `supabase db reset --no-seed` and so never loads seed.sql's own copy of
+-- these rows — this creates the 3 canonical rows outright, so the invariants
+-- below hold either way. seed.sql's own INSERT of the same 3 ids is
+-- ON CONFLICT DO NOTHING for exactly this reason (see seed.sql).
+insert into public."WorkTrackerTypes" (id, display_name, code)
+  values ('e3c00371-897d-4a80-93da-66f374deaa2d', 'Trip', 'trip')
+  on conflict (id) do update set code = excluded.code;
 
-update public."WorkTrackerTypes"
-  set code = 'repair_maintenance', display_name = 'Repair / Maintenance'
-  where id = '42726bce-e191-45b1-8082-c297a9ca128a';
+insert into public."WorkTrackerTypes" (id, display_name, code)
+  values ('42726bce-e191-45b1-8082-c297a9ca128a', 'Repair / Maintenance', 'repair_maintenance')
+  on conflict (id) do update set code = excluded.code, display_name = excluded.display_name;
 
-update public."WorkTrackerTypes"
-  set code = 'site_visit_cleaning_other', display_name = 'Site Visit / Cleaning / Other'
-  where id = 'cbffa6a5-d397-48d3-8bda-c50c6dfe0151';
+insert into public."WorkTrackerTypes" (id, display_name, code)
+  values ('cbffa6a5-d397-48d3-8bda-c50c6dfe0151', 'Site Visit / Cleaning / Other', 'site_visit_cleaning_other')
+  on conflict (id) do update set code = excluded.code, display_name = excluded.display_name;
 
 -- Every work tracker on a legacy type (Set up, Hotel/ Per Diem, Tear down,
 -- Deadhead, Site Visit) merges into "Site Visit / Cleaning / Other" per Josh.

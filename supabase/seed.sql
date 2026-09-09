@@ -13754,7 +13754,12 @@ INSERT INTO "public"."WorkTrackerTypes" ("id", "created_at", "display_name", "so
 	('393accac-fc6b-44ad-b9f1-a7f6e293959f', '2026-03-17 17:29:23.996695+00', 'Set up', 4, true, NULL),
 	('6aa577f4-aa93-498e-a128-bc5d7fd1fa71', '2026-03-19 12:36:31.170443+00', 'Hotel/ Per Diem', 5, true, NULL),
 	('ac251f2c-e17e-4dfd-99e4-78a322babf00', '2026-04-01 17:15:10.775873+00', 'Tear down', 6, true, NULL),
-	('2e927e1b-bace-41d9-abb1-628b27efd3dc', '2026-04-02 19:41:15.186284+00', 'Deadhead', 7, true, NULL);
+	('2e927e1b-bace-41d9-abb1-628b27efd3dc', '2026-04-02 19:41:15.186284+00', 'Deadhead', 7, true, NULL)
+-- The 3 canonical rows (e3c00371.../42726bce.../cbffa6a5...) are also
+-- created by 20260908202341_work_tracker_type_codes.sql itself now, so this
+-- insert no longer owns creating them exclusively — ON CONFLICT DO NOTHING
+-- keeps this file loadable regardless of which ran first.
+ON CONFLICT (id) DO NOTHING;
 
 
 --
