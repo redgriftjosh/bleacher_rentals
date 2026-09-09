@@ -3,8 +3,6 @@ export type WorkTrackerRow = {
   date: string | null;
   status: string | null;
   pay_cents: number | null;
-  pickup_time: string | null;
-  dropoff_time: string | null;
   created_at: string | null;
   completed_at: string | null;
   project_number: string | null;

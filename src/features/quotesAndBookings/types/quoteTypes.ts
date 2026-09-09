@@ -27,6 +27,10 @@ export type AddressFields = {
   city: string;
   stateProvince: string;
   zipPostal: string;
+  lat?: number;
+  lng?: number;
+  placeId?: string;
+  country?: string;
 };
 
 // Matches public."Companies" table

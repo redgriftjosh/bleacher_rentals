@@ -69,6 +69,10 @@ export async function updateQuoteEvent(
             city: state.eventAddressData.city ?? "",
             state_province: state.eventAddressData.stateProvince ?? "",
             zip_postal: state.eventAddressData.zipPostal || null,
+            latitude: state.eventAddressData.lat ?? null,
+            longitude: state.eventAddressData.lng ?? null,
+            country: state.eventAddressData.country ?? null,
+            place_id: state.eventAddressData.placeId ?? null,
           })
           .where("id", "=", existingAddressUuid)
           .compile(),
@@ -84,6 +88,10 @@ export async function updateQuoteEvent(
             city: state.eventAddressData.city ?? "",
             state_province: state.eventAddressData.stateProvince ?? "",
             zip_postal: state.eventAddressData.zipPostal || null,
+            latitude: state.eventAddressData.lat ?? null,
+            longitude: state.eventAddressData.lng ?? null,
+            country: state.eventAddressData.country ?? null,
+            place_id: state.eventAddressData.placeId ?? null,
           })
           .compile(),
       );

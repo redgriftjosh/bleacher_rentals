@@ -2,6 +2,7 @@ import { Page, Text, View, Document, StyleSheet } from "@react-pdf/renderer";
 import { Color } from "@/types/Color";
 import { Tables } from "../../../../database.types";
 import { DriverHeaderInfo } from "../db/db";
+import { formatDriveTime, formatMileage, formatWorkTrackerTime } from "../util";
 const darkBlue = Color.DARK_BLUE;
 
 const styles = StyleSheet.create({
@@ -90,16 +91,18 @@ const styles = StyleSheet.create({
 // Define column widths
 const columnWidths = [
   "8%", // Date
-  "8%", // Bleacher
+  "7%", // Bleacher
   "7%", // Activity Type
-  "11%", // Pickup Location
-  "7%", // POC at P/U
-  "7%", // Pickup Time
-  "11%", // Dropoff Location
-  "7%", // POC at D/O
-  "7%", // Dropoff Time
-  "8%", // Pay
-  "19%", // Notes
+  "10%", // Pickup Location
+  "6%", // POC at P/U
+  "6%", // Pickup Time
+  "10%", // Dropoff Location
+  "6%", // POC at D/O
+  "6%", // Dropoff Time
+  "6%", // Drive Time
+  "7%", // Milage
+  "7%", // Pay
+  "14%", // Notes
 ];
 
 type MyDocumentProps = {
@@ -120,6 +123,10 @@ type MyDocumentProps = {
     taxPercent: number;
     total: number;
   };
+  travelTotals: {
+    totalDistanceMeters: number;
+    totalDriveMinutes: number;
+  };
   driverHeaderInfo: DriverHeaderInfo;
 };
 
@@ -127,6 +134,7 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
   workTrackers,
   header,
   financialTotals,
+  travelTotals,
   driverHeaderInfo,
 }) => {
   const { vendor, address, driverPhone, driverEmail } = driverHeaderInfo;
@@ -195,6 +203,8 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
               "Dropoff Location",
               "POC at D/O",
               "Time",
+              "Drive Time",
+              "Milage",
               "Pay",
               "Notes",
             ].map((label, index) => (
@@ -230,7 +240,11 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
                 {row.workTracker.pickup_poc}
               </Text>
               <Text style={[styles.bodyCell, { width: columnWidths[5] }]}>
-                {row.workTracker.pickup_time}
+                {formatWorkTrackerTime(
+                  row.workTracker.pickup_time_mode,
+                  row.workTracker.pickup_time_start,
+                  row.workTracker.pickup_time_end,
+                )}
               </Text>
               <Text style={[styles.bodyCell, { width: columnWidths[6] }]}>
                 {row.dropoff_address?.street ?? ""}
@@ -239,14 +253,24 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
                 {row.workTracker.dropoff_poc}
               </Text>
               <Text style={[styles.bodyCell, { width: columnWidths[8] }]}>
-                {row.workTracker.dropoff_time}
+                {formatWorkTrackerTime(
+                  row.workTracker.dropoff_time_mode,
+                  row.workTracker.dropoff_time_start,
+                  row.workTracker.dropoff_time_end,
+                )}
               </Text>
               <Text style={[styles.bodyCell, { width: columnWidths[9] }]}>
+                {formatDriveTime(row.workTracker.drive_minutes)}
+              </Text>
+              <Text style={[styles.bodyCell, { width: columnWidths[10] }]}>
+                {formatMileage(row.workTracker.distance_meters)}
+              </Text>
+              <Text style={[styles.bodyCell, { width: columnWidths[11] }]}>
                 {row.workTracker.pay_cents != null
                   ? `$${(row.workTracker.pay_cents / 100).toFixed(2)}`
                   : ""}
               </Text>
-              <Text style={[styles.bodyCell, { width: columnWidths[10] }, styles.lastCell]}>
+              <Text style={[styles.bodyCell, { width: columnWidths[12] }, styles.lastCell]}>
                 {row.workTracker.notes}
               </Text>
             </View>
@@ -263,9 +287,15 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
             <Text style={[styles.bodyCell, { width: columnWidths[7] }]}></Text>
             <Text style={[styles.bodyCell, { width: columnWidths[8] }]}></Text>
             <Text style={[styles.bodyCell, { width: columnWidths[9] }]}>
+              {formatDriveTime(travelTotals.totalDriveMinutes)}
+            </Text>
+            <Text style={[styles.bodyCell, { width: columnWidths[10] }]}>
+              {formatMileage(travelTotals.totalDistanceMeters)}
+            </Text>
+            <Text style={[styles.bodyCell, { width: columnWidths[11] }]}>
               {`$${(financialTotals.subtotal / 100).toFixed(2)}`}
             </Text>
-            <Text style={[styles.bodyCell, { width: columnWidths[10] }, styles.lastCell]}></Text>
+            <Text style={[styles.bodyCell, { width: columnWidths[12] }, styles.lastCell]}></Text>
           </View>
           {/* HST row */}
           <View style={styles.tableRow}>
@@ -280,10 +310,12 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
             <Text style={[styles.bodyCell, { width: columnWidths[6] }]}></Text>
             <Text style={[styles.bodyCell, { width: columnWidths[7] }]}></Text>
             <Text style={[styles.bodyCell, { width: columnWidths[8] }]}></Text>
-            <Text style={[styles.bodyCell, { width: columnWidths[9] }]}>
+            <Text style={[styles.bodyCell, { width: columnWidths[9] }]}></Text>
+            <Text style={[styles.bodyCell, { width: columnWidths[10] }]}></Text>
+            <Text style={[styles.bodyCell, { width: columnWidths[11] }]}>
               {`$${(financialTotals.tax / 100).toFixed(2)}`}
             </Text>
-            <Text style={[styles.bodyCell, { width: columnWidths[10] }, styles.lastCell]}></Text>
+            <Text style={[styles.bodyCell, { width: columnWidths[12] }, styles.lastCell]}></Text>
           </View>
           {/* Total row */}
           <View style={styles.tableRow}>
@@ -298,10 +330,12 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
             <Text style={[styles.bodyCell, { width: columnWidths[6] }]}></Text>
             <Text style={[styles.bodyCell, { width: columnWidths[7] }]}></Text>
             <Text style={[styles.bodyCell, { width: columnWidths[8] }]}></Text>
-            <Text style={[styles.bodyCell, { width: columnWidths[9] }]}>
+            <Text style={[styles.bodyCell, { width: columnWidths[9] }]}></Text>
+            <Text style={[styles.bodyCell, { width: columnWidths[10] }]}></Text>
+            <Text style={[styles.bodyCell, { width: columnWidths[11] }]}>
               {`$${(financialTotals.total / 100).toFixed(2)}`}
             </Text>
-            <Text style={[styles.bodyCell, { width: columnWidths[10] }, styles.lastCell]}></Text>
+            <Text style={[styles.bodyCell, { width: columnWidths[12] }, styles.lastCell]}></Text>
           </View>
         </View>
       </Page>

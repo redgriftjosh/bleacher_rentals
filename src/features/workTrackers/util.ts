@@ -4,6 +4,9 @@ import {
   resolveDriverPayRateCents,
   type DriverPayRange,
 } from "@/features/manageTeam/logic/driverPayRanges";
+import type { Enums } from "../../../database.types";
+
+export type WorkTrackerTimeMode = Enums<"work_tracker_time_mode">;
 
 export function getDateRange(startDate: string): string {
   const start = DateTime.fromISO(startDate, { zone: "utc" });
@@ -23,6 +26,84 @@ export function calculateFinancialTotals(WorkTrackersResult: WorkTrackersResult)
   const taxPercent = WorkTrackersResult.driverTax;
 
   return { subtotal, tax, taxPercent, total };
+}
+
+/** Meters per mile — matches the conversion already used for driver pay (tripValue). */
+const METERS_PER_MILE = 1609.34;
+
+/** e.g. "21.4 mi (34.4 km)". Empty string when there is nothing to show. */
+export function formatMileage(distanceMeters: number | null | undefined): string {
+  if (distanceMeters == null) return "";
+  const miles = distanceMeters / METERS_PER_MILE;
+  const km = distanceMeters / 1000;
+  return `${miles.toFixed(1)} mi (${km.toFixed(1)} km)`;
+}
+
+/** e.g. "2.4 hrs". Empty string when there is nothing to show. */
+export function formatDriveTime(driveMinutes: number | null | undefined): string {
+  if (driveMinutes == null) return "";
+  const hours = driveMinutes / 60;
+  return `${hours.toFixed(1)} hrs`;
+}
+
+/** Shown for a pickup/dropoff in `any_time` mode — including every
+ * pre-existing work tracker, since nothing was backfilled from the old
+ * free-text columns. Also the explicit "no specific time" state a user can
+ * pick going forward (see WorkTrackerTimeField's mode toggle). */
+export const ANY_TIME_LABEL = "Any Time";
+
+/**
+ * Postgres `time` comes back as "HH:MM:SS" (or "HH:MM"). Parsed as plain
+ * text — never through `Date`, which would silently apply the browser's own
+ * timezone to a value that was never zoned in the first place.
+ */
+function formatPlainTime(value: string): string | null {
+  const match = /^(\d{1,2}):(\d{2})/.exec(value);
+  if (!match) return null;
+  const hour24 = Number(match[1]);
+  const minute = match[2];
+  if (hour24 < 0 || hour24 > 23) return null;
+  const dayPeriod = hour24 < 12 ? "AM" : "PM";
+  const hour12 = String(hour24 % 12 === 0 ? 12 : hour24 % 12).padStart(2, "0");
+  return `${hour12}:${minute} ${dayPeriod}`;
+}
+
+/**
+ * e.g. "10:00 AM" (exact), "10:00 AM - 12:00 PM" (flexible), "Any Time" —
+ * the same text `sync_work_tracker_time_text()` writes into the legacy
+ * pickup_time/dropoff_time columns (kept only for the driver app), computed
+ * client-side instead of waiting on that DB trigger's write to sync back.
+ */
+export function formatWorkTrackerTime(
+  mode: WorkTrackerTimeMode | null | undefined,
+  start: string | null | undefined,
+  end: string | null | undefined,
+): string {
+  if (mode === "exact" && start) {
+    const formatted = formatPlainTime(start);
+    if (formatted) return formatted;
+  }
+  if (mode === "flexible" && start && end) {
+    const startFormatted = formatPlainTime(start);
+    const endFormatted = formatPlainTime(end);
+    if (startFormatted && endFormatted) return `${startFormatted} - ${endFormatted}`;
+  }
+  return ANY_TIME_LABEL;
+}
+
+/** Sums of the Drive Time / Milage columns, for the week's SubTotal row. */
+export function calculateTravelTotals(WorkTrackersResult: WorkTrackersResult) {
+  const workTrackers = WorkTrackersResult.workTrackers;
+  const totalDistanceMeters = workTrackers.reduce(
+    (acc, row) => acc + (row.workTracker.distance_meters ?? 0),
+    0,
+  );
+  const totalDriveMinutes = workTrackers.reduce(
+    (acc, row) => acc + (row.workTracker.drive_minutes ?? 0),
+    0,
+  );
+
+  return { totalDistanceMeters, totalDriveMinutes };
 }
 
 export function toLatLngString(a?: { lat?: number; lng?: number }) {

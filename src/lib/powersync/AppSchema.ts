@@ -28,6 +28,10 @@ const AddressesCols = {
   city: column.text,
   state_province: column.text,
   zip_postal: column.text,
+  latitude: column.real,
+  longitude: column.real,
+  country: column.text,
+  place_id: column.text,
 } satisfies PowerSyncColsFor<"Addresses">;
 const Addresses = new Table(AddressesCols);
 
@@ -324,6 +328,11 @@ const UserStatuses = new Table(UserStatusesCols);
 const WorkTrackersCols = {
   created_at: column.text,
   date: column.text,
+  // pickup_time/dropoff_time: legacy free-text columns, still required here because
+  // PowerSyncColsFor is generated from the live Postgres schema and the column hasn't
+  // been dropped yet. The web app no longer reads or writes them anywhere — only the
+  // driver app still depends on them (kept in sync by the sync_work_tracker_time_text()
+  // DB trigger). Safe to remove once that Postgres column is actually dropped.
   pickup_time: column.text,
   pickup_poc: column.text,
   pickup_poc_contact_uuid: column.text,
@@ -359,6 +368,12 @@ const WorkTrackersCols = {
   project_number: column.text,
   bol_number: column.text,
   created_by_user_uuid: column.text,
+  pickup_time_mode: column.text,
+  pickup_time_start: column.text,
+  pickup_time_end: column.text,
+  dropoff_time_mode: column.text,
+  dropoff_time_start: column.text,
+  dropoff_time_end: column.text,
 } satisfies PowerSyncColsFor<"WorkTrackers">;
 const WorkTrackers = new Table(WorkTrackersCols, {
   indexes: {
@@ -394,6 +409,7 @@ const WorkTrackerTypesCols = {
   display_name: column.text,
   is_deleted: column.integer,
   sort_order: column.integer,
+  code: column.text,
 } satisfies PowerSyncColsFor<"WorkTrackerTypes">;
 const WorkTrackerTypes = new Table(WorkTrackerTypesCols);
 

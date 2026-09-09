@@ -27,7 +27,9 @@ export function EventDetailsSection() {
         Event Details
       </h2>
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Event Name <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Event Name <span className="text-red-500">*</span>
+        </label>
         <input
           type="text"
           value={eventName}
@@ -37,7 +39,9 @@ export function EventDetailsSection() {
         />
       </div>
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Event Type <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Event Type <span className="text-red-500">*</span>
+        </label>
         <Dropdown
           options={eventTypeOptions}
           selected={eventTypeId}
@@ -46,7 +50,9 @@ export function EventDetailsSection() {
         />
       </div>
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Event Address <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Event Address <span className="text-red-500">*</span>
+        </label>
         <AddressAutocomplete
           initialValue={eventAddress}
           onAddressSelect={(data) => {
@@ -56,6 +62,10 @@ export function EventDetailsSection() {
               city: data.city ?? "",
               stateProvince: data.state ?? "",
               zipPostal: data.postalCode ?? "",
+              lat: data.lat,
+              lng: data.lng,
+              placeId: data.placeId,
+              country: data.country,
             });
           }}
           className="h-[40px] px-3 border rounded text-sm"
@@ -70,7 +80,9 @@ export function EventDetailsSection() {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Event Start <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Event Start <span className="text-red-500">*</span>
+          </label>
           <input
             type="date"
             value={eventStart}
@@ -86,7 +98,9 @@ export function EventDetailsSection() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Event End <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Event End <span className="text-red-500">*</span>
+          </label>
           <input
             type="date"
             value={eventEnd}

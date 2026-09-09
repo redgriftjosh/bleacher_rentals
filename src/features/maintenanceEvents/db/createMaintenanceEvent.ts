@@ -65,6 +65,10 @@ export async function createMaintenanceEvent(
       state_province: state.addressData.state ?? "",
       street: state.addressData.address ?? "",
       zip_postal: state.addressData.postalCode ?? "",
+      latitude: state.addressData.lat ?? null,
+      longitude: state.addressData.lng ?? null,
+      country: state.addressData.country ?? null,
+      place_id: state.addressData.placeId ?? null,
     };
     const { data: addressData, error: addressError } = await supabase
       .from("Addresses")

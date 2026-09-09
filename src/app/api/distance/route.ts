@@ -1,6 +1,7 @@
 // app/api/distance/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/features/userAccess/logic/requireAuth";
+import { buildRoutesWaypoint } from "./waypoint";
 
 export async function GET(req: NextRequest) {
   try {
@@ -22,14 +23,13 @@ export async function GET(req: NextRequest) {
   // Use the new Routes API (compute routes)
   const url = `https://routes.googleapis.com/directions/v2:computeRoutes`;
 
-  // Build the request body
+  // Build the request body. origin/dest are either a "lat,lng" string (when
+  // the address has real coordinates) or address text (the fallback when it
+  // doesn't) — the Routes API needs a different Waypoint shape for each; see
+  // buildRoutesWaypoint.
   const requestBody = {
-    origin: {
-      address: origin,
-    },
-    destination: {
-      address: dest,
-    },
+    origin: buildRoutesWaypoint(origin),
+    destination: buildRoutesWaypoint(dest),
     travelMode: "DRIVE",
     routingPreference: "TRAFFIC_AWARE",
     computeAlternativeRoutes: false,
