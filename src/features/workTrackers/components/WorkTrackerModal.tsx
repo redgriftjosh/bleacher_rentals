@@ -1154,6 +1154,7 @@ export default function WorkTrackerModal({
                                   }))
                                 }
                                 disabled={!canEditFields}
+                                testIdPrefix="pickup"
                               />
                               <label className={labelClassName}>Pickup POC</label>
                               <div className="flex flex-row gap-2 items-center">
@@ -1262,6 +1263,7 @@ export default function WorkTrackerModal({
                                 }))
                               }
                               disabled={!canEditFields}
+                              testIdPrefix="dropoff"
                             />
                             <label className={labelClassName}>
                               {isSingleFieldSetType ? "POC" : "Dropoff POC"}

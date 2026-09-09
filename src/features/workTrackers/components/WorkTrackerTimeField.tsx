@@ -14,6 +14,9 @@ type WorkTrackerTimeFieldProps = {
   end: string | null | undefined;
   onChange: (next: WorkTrackerTimeFieldState) => void;
   disabled?: boolean;
+  /** "pickup" or "dropoff" — disambiguates this field's test ids from its
+   * counterpart, since both render in the same modal for a Trip. */
+  testIdPrefix: string;
 };
 
 const MODE_OPTIONS: { value: WorkTrackerTimeMode; label: string }[] = [
@@ -41,6 +44,7 @@ export function WorkTrackerTimeField({
   end,
   onChange,
   disabled,
+  testIdPrefix,
 }: WorkTrackerTimeFieldProps) {
   const current: WorkTrackerTimeFieldState = {
     mode: mode ?? "any_time",
@@ -75,6 +79,7 @@ export function WorkTrackerTimeField({
             role="radio"
             aria-checked={current.mode === option.value}
             disabled={disabled}
+            data-testid={`${testIdPrefix}-time-mode-${option.value}`}
             onClick={() => handleModeChange(option.value)}
             className={`flex-1 py-1.5 cursor-pointer disabled:cursor-not-allowed ${
               current.mode === option.value
@@ -93,6 +98,7 @@ export function WorkTrackerTimeField({
           className={inputClassName}
           value={toInputTimeValue(current.start)}
           disabled={disabled}
+          data-testid={`${testIdPrefix}-time-start`}
           onChange={(e) => handleStartChange(e.target.value)}
         />
       )}
@@ -105,6 +111,7 @@ export function WorkTrackerTimeField({
             className={inputClassName}
             value={toInputTimeValue(current.start)}
             disabled={disabled}
+            data-testid={`${testIdPrefix}-time-start`}
             onChange={(e) => handleStartChange(e.target.value)}
           />
           <span className="text-xs text-gray-500 shrink-0">to</span>
@@ -114,6 +121,7 @@ export function WorkTrackerTimeField({
             className={inputClassName}
             value={toInputTimeValue(current.end)}
             disabled={disabled}
+            data-testid={`${testIdPrefix}-time-end`}
             onChange={(e) => handleEndChange(e.target.value)}
           />
         </div>
