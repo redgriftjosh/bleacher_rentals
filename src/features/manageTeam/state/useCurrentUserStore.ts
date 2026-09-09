@@ -48,6 +48,10 @@ export type CurrentUserState = {
   homeCity: string | null;
   homeState: string | null;
   homePostalCode: string | null;
+  homeLat: number | null;
+  homeLng: number | null;
+  homePlaceId: string | null;
+  homeCountry: string | null;
   vehicleUuid: string | null;
   vehicleMake: string | null;
   vehicleModel: string | null;
@@ -115,6 +119,10 @@ const initialState: CurrentUserState = {
   homeCity: null,
   homeState: null,
   homePostalCode: null,
+  homeLat: null,
+  homeLng: null,
+  homePlaceId: null,
+  homeCountry: null,
   vehicleUuid: null,
   vehicleMake: null,
   vehicleModel: null,

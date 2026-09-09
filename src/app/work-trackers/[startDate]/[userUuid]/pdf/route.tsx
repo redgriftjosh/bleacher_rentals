@@ -7,7 +7,11 @@ import { headers } from "next/headers";
 import React from "react";
 import { renderToStream } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
-import { calculateFinancialTotals, getDateRange } from "@/features/workTrackers/util";
+import {
+  calculateFinancialTotals,
+  calculateTravelTotals,
+  getDateRange,
+} from "@/features/workTrackers/util";
 import { MyDocument } from "@/features/workTrackers/components/PdfComponent";
 import { createServerSupabaseClient } from "@/utils/supabase/getClerkSupabaseServerClient";
 
@@ -26,6 +30,7 @@ export async function GET(
   const supabase = createServerSupabaseClient();
   const data = await fetchWorkTrackersForUserUuidAndStartDate(supabase, userUuid, startDate, true);
   const financialTotals = calculateFinancialTotals(data);
+  const travelTotals = calculateTravelTotals(data);
   console.log("financialTotals", financialTotals);
   const dateRange = getDateRange(startDate);
   const [driverName, driverHeaderInfo] = await Promise.all([
@@ -38,6 +43,7 @@ export async function GET(
       workTrackers={data.workTrackers}
       header={{ dateRange, driverName }}
       financialTotals={financialTotals}
+      travelTotals={travelTotals}
       driverHeaderInfo={driverHeaderInfo}
     />,
   );
