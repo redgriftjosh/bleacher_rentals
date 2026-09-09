@@ -28,6 +28,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { DamageReportResolveMaintenanceModal } from "./DamageReportResolveMaintenanceModal";
+import { useAcknowledgements } from "./_lib/acknowledgements";
 import {
   buildRemoveFixedMarkUpdate,
   buildResolveWithoutMaintenanceUpdate,
@@ -149,6 +150,13 @@ export function DamageReportModal({
   const [resolveMaintenanceOpen, setResolveMaintenanceOpen] = useState(false);
 
   const isReportResolved = !!editReport?.resolved_at;
+
+  // Who else has seen this damage. Drivers now confirm an open report instead
+  // of filing a second one about it, so this is where those confirmations
+  // surface — without it the change looks like fewer reports rather than more
+  // agreement.
+  const { byReport } = useAcknowledgements(editReport ? [editReport.id] : []);
+  const acknowledgements = editReport ? byReport[editReport.id] : undefined;
 
   // Populate form when editing
   useEffect(() => {
@@ -550,6 +558,24 @@ export function DamageReportModal({
                     </span>
                   </span>
                 )}
+              </div>
+            )}
+
+            {acknowledgements && (
+              <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+                <p className="font-semibold">
+                  Confirmed by {acknowledgements.count}{" "}
+                  {acknowledgements.count === 1 ? "driver" : "drivers"}
+                </p>
+                <ul className="mt-1 space-y-0.5 text-xs">
+                  {acknowledgements.entries.map((entry) => (
+                    <li key={entry.id}>
+                      {entry.name}
+                      {entry.at ? ` · ${new Date(entry.at).toLocaleDateString()}` : ""}
+                      {entry.source === "inspection" ? " · during an inspection" : ""}
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 
