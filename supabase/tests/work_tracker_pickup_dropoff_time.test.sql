@@ -17,7 +17,7 @@
 
 BEGIN;
 SET search_path TO extensions, public, "$user";
-SELECT plan(10);
+SELECT plan(9);
 
 -- ── Shape of the columns ────────────────────────────────────────────────────
 
@@ -67,41 +67,34 @@ SELECT is(
   'flexible mode renders a range'
 );
 
--- ── any_time never overwrites the mirror ────────────────────────────────────
+-- ── any_time writes the literal "Any Time", including the default on a brand-new row ──
 
-INSERT INTO public."WorkTrackers" (pickup_time_mode)
-VALUES ('any_time')
+INSERT INTO public."WorkTrackers" DEFAULT VALUES
 RETURNING id AS wt_b \gset
 
 SELECT is(
-  (SELECT pickup_time FROM public."WorkTrackers" WHERE id = :'wt_b'),
-  NULL,
-  'any_time leaves pickup_time unset'
+  (SELECT pickup_time || ' / ' || dropoff_time FROM public."WorkTrackers" WHERE id = :'wt_b'),
+  'Any Time / Any Time',
+  'a brand-new row (mode defaults to any_time) gets "Any Time" on both sides'
 );
 
--- ── Historical free-text rows are left alone ────────────────────────────────
+-- ── A pre-existing free-text row is normalized to "Any Time" the next time it's
+-- saved for any reason — never migrated off the any_time default, so any save
+-- (even one unrelated to time) now overwrites the legacy text. ─────────────────
 
 INSERT INTO public."WorkTrackers" (pickup_time, dropoff_time)
 VALUES ('anytime', '-')
 RETURNING id AS wt_c \gset
 
-SELECT is(
-  (SELECT pickup_time FROM public."WorkTrackers" WHERE id = :'wt_c'),
-  'anytime',
-  'a row with mode any_time keeps its historical free-text pickup_time'
-);
-
--- An unrelated update on that same row must not touch the free text either —
--- this is the exact failure mode a naive "always overwrite" trigger would hit.
 UPDATE public."WorkTrackers" SET notes = 'unrelated update' WHERE id = :'wt_c';
 
 SELECT is(
-  (SELECT pickup_time FROM public."WorkTrackers" WHERE id = :'wt_c'),
-  'anytime',
-  'an unrelated update does not blank out historical free-text pickup_time'
+  (SELECT pickup_time || ' / ' || dropoff_time FROM public."WorkTrackers" WHERE id = :'wt_c'),
+  'Any Time / Any Time',
+  'an unrelated update normalizes legacy free text to "Any Time" once the row is untouched-mode'
 );
 
--- ── Setting an exact pickup later starts the mirror, without disturbing dropoff ──
+-- ── Setting an exact pickup later starts the mirror, dropoff stays Any Time ────
 
 UPDATE public."WorkTrackers"
    SET pickup_time_mode = 'exact', pickup_time_start = '10:00', pickup_time_end = '10:00'
@@ -109,8 +102,8 @@ UPDATE public."WorkTrackers"
 
 SELECT is(
   (SELECT pickup_time || ' / ' || dropoff_time FROM public."WorkTrackers" WHERE id = :'wt_c'),
-  '10:00 AM / -',
-  'pickup_time starts following once set to exact, dropoff_time (still unset) is untouched'
+  '10:00 AM / Any Time',
+  'pickup_time follows once set to exact, dropoff_time stays Any Time'
 );
 
 SELECT is(

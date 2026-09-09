@@ -15,11 +15,14 @@
 --   any_time:  unset               (time_start = time_end = null)
 --
 -- `pickup_time`/`dropoff_time` stay as-is and keep working for anything that
--- still reads them (the driver app) — this migration does not backfill them.
--- Once a work tracker's pickup_time_mode/start/end are set through the new
--- picker, sync_work_tracker_time_text() keeps pickup_time following along as
--- a readable mirror (e.g. "10:00 AM" or "10:00 AM - 12:00 PM"). Same shape as
--- sync_driver_tax() / qty_decimal's trigger, but one-directional.
+-- still reads them (the driver app) — this migration does not backfill them
+-- directly, but sync_work_tracker_time_text() keeps pickup_time/dropoff_time
+-- following the structured columns on every insert/update, for all three
+-- modes: "10:00 AM" (exact), "10:00 AM - 12:00 PM" (flexible), "Any Time"
+-- (any_time — including the default on a brand-new row, and any existing row
+-- the next time it's saved for any reason, since it was never migrated off
+-- the default). Same shape as sync_driver_tax() / qty_decimal's trigger, but
+-- one-directional.
 -- ============================================================================
 
 create type public.work_tracker_time_mode as enum ('exact', 'flexible', 'any_time');
@@ -52,14 +55,18 @@ comment on column public."WorkTrackers".dropoff_time_end is
   'Equals dropoff_time_start for exact. Window end for flexible. Null for any_time.';
 
 comment on column public."WorkTrackers".pickup_time is
-  'Readable mirror of pickup_time_mode/start/end (e.g. "10:00 AM" or "10:00 AM - 12:00 PM") once those are set, maintained by sync_work_tracker_time_text(). Historical free-text rows predating this are untouched. Kept for the driver app; write pickup_time_mode/start/end instead.';
+  'Readable mirror of pickup_time_mode/start/end ("10:00 AM", "10:00 AM - 12:00 PM", or "Any Time"), maintained by sync_work_tracker_time_text() on every save. Kept for the driver app; write pickup_time_mode/start/end instead.';
 comment on column public."WorkTrackers".dropoff_time is
-  'Readable mirror of dropoff_time_mode/start/end, maintained by sync_work_tracker_time_text(). Historical free-text rows predating this are untouched. Kept for the driver app; write dropoff_time_mode/start/end instead.';
+  'Readable mirror of dropoff_time_mode/start/end, maintained by sync_work_tracker_time_text() on every save. Kept for the driver app; write dropoff_time_mode/start/end instead.';
 
 -- ----------------------------------------------------------------------------
 -- Keep pickup_time/dropoff_time following the structured columns, one
--- direction only. any_time never overwrites — a row with nothing set keeps
--- whatever free text it already had, matching today's behavior.
+-- direction only. Always in sync with the current mode — including
+-- any_time, which writes the literal "Any Time" rather than leaving
+-- whatever free text was there before. That means any pre-existing row
+-- (never migrated off the any_time default) gets its legacy free text
+-- replaced with "Any Time" the next time it's saved for any reason, not
+-- just when its own time fields change.
 -- ----------------------------------------------------------------------------
 create or replace function public.sync_work_tracker_time_text()
 returns trigger
@@ -73,6 +80,8 @@ begin
     and NEW.pickup_time_start is not null and NEW.pickup_time_end is not null then
     NEW.pickup_time := to_char(NEW.pickup_time_start, 'HH12:MI AM')
       || ' - ' || to_char(NEW.pickup_time_end, 'HH12:MI AM');
+  else
+    NEW.pickup_time := 'Any Time';
   end if;
 
   if NEW.dropoff_time_mode = 'exact' and NEW.dropoff_time_start is not null then
@@ -81,6 +90,8 @@ begin
     and NEW.dropoff_time_start is not null and NEW.dropoff_time_end is not null then
     NEW.dropoff_time := to_char(NEW.dropoff_time_start, 'HH12:MI AM')
       || ' - ' || to_char(NEW.dropoff_time_end, 'HH12:MI AM');
+  else
+    NEW.dropoff_time := 'Any Time';
   end if;
 
   return NEW;
