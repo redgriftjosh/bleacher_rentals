@@ -17,19 +17,10 @@ const SideBar = () => {
   const hasUnreadChangelog = useHasUnreadChangelog();
   // A count, not the rows: the shell re-renders on every navigation, and
   // subscribing it to the queue itself would redraw the sidebar whenever any
-  // inspection anywhere changed.
+  // inspection anywhere changed. The hook answers 0 for anyone who is not a
+  // maintainer, so who is nagged is decided in one place, not here.
   const unseenInspections = useUnseenInspectionCount();
-  // Account managers still sync the inspections — they render them inside the
-  // bleacher modal — but they have no queue page to open, so a badge for them
-  // would point at a link they do not have. Read that from the rendered items
-  // rather than re-deciding it here, so there is only one answer to who sees
-  // the page.
-  const showsInspections = items.some(
-    (item) =>
-      item.type === "dropdown" &&
-      item.children.some((child) => child.href === "/annual-inspections"),
-  );
-  const badges = { "/annual-inspections": showsInspections ? unseenInspections : 0 };
+  const badges = { "/annual-inspections": unseenInspections };
 
   return (
     <div

@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import {
   daysFromToday,
   seedBleachersWithInspections,
+  setInspectionQueueLastSeen,
   type InspectionFixture,
 } from "./helpers/inspectionFixtures";
 
@@ -12,6 +13,8 @@ import {
  * rejection silently, so an offered-then-discarded write is the worst version
  * of this bug.
  */
+const VIEWER_EMAIL = process.env.E2E_VIEWER_EMAIL ?? "";
+
 test.describe("Annual inspections (viewer)", () => {
   let fixture: InspectionFixture | null = null;
 
@@ -21,6 +24,10 @@ test.describe("Annual inspections (viewer)", () => {
   });
 
   test("can read the queue but is offered no way to record an inspection", async ({ page }) => {
+    // Rewound to "has never opened the queue", so a bleacher three days out is
+    // exactly the state that would raise a badge for a maintainer. The viewer
+    // must still see none.
+    await setInspectionQueueLastSeen(VIEWER_EMAIL, null);
     fixture = await seedBleachersWithInspections([daysFromToday(3)]);
     const [bleacher] = fixture.bleachers;
 
@@ -30,6 +37,11 @@ test.describe("Annual inspections (viewer)", () => {
     );
     await expect(row).toBeVisible({ timeout: 30_000 });
     await expect(row).toHaveAttribute("data-status", "critical");
+
+    // A viewer reads the queue; it does not chase them. The counter and the
+    // highlight belong to the Maintainer.
+    await expect(row).toHaveAttribute("data-new", "false");
+    await expect(page.locator("[data-testid=sidebar-badge]")).toHaveCount(0);
 
     await row.click();
     await expect(page.getByRole("dialog")).toBeVisible({ timeout: 15_000 });

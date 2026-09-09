@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import {
   daysFromToday,
   seedBleachersWithInspections,
+  setInspectionQueueLastSeen,
   type InspectionFixture,
 } from "./helpers/inspectionFixtures";
 
@@ -18,7 +19,14 @@ import {
  *
  * Spec: docs/specs/maintainer-role.md §2.3, §7.5
  */
+const MAINTAINER_EMAIL = process.env.E2E_MAINTAINER_EMAIL ?? "";
+
 test.describe("Annual inspections (maintainer)", () => {
+  // Serial: every test here is the same user, and the highlight is measured
+  // against that user's `inspection_queue_last_seen_at` — a parallel test that
+  // opens the queue would stamp it out from under the notification test.
+  test.describe.configure({ mode: "serial" });
+
   let fixture: InspectionFixture | null = null;
 
   test.afterEach(async () => {
@@ -80,5 +88,37 @@ test.describe("Annual inspections (maintainer)", () => {
     });
     await expect(page.getByRole("link", { name: "Damage Reports" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Repairs" })).toHaveCount(0);
+  });
+
+  test("is told what changed, once: the badge raises, opening clears it, the next visit is quiet", async ({
+    page,
+  }) => {
+    // Never opened the queue, and one bleacher has just gone critical.
+    await setInspectionQueueLastSeen(MAINTAINER_EMAIL, null);
+    fixture = await seedBleachersWithInspections([daysFromToday(3), daysFromToday(300)]);
+    const [flagged, quiet] = fixture.bleachers;
+
+    // The sidebar says so before the page is ever opened — that is the whole
+    // point of putting it there rather than in Alerts.
+    await page.goto("/annual-inspections");
+    await expect(page.locator("[data-testid=sidebar-badge]").first()).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const flaggedRow = page.locator(
+      `[data-testid=inspection-row][data-bleacher="${flagged.bleacherNumber}"]`,
+    );
+    const quietRow = page.locator(
+      `[data-testid=inspection-row][data-bleacher="${quiet.bleacherNumber}"]`,
+    );
+    await expect(flaggedRow).toHaveAttribute("data-new", "true", { timeout: 30_000 });
+    await expect(quietRow).toHaveAttribute("data-new", "false");
+
+    // Opening the page is what marks it read: the badge goes while they are
+    // still reading, and the next visit does not nag about the same bleacher.
+    await expect(page.locator("[data-testid=sidebar-badge]")).toHaveCount(0, { timeout: 30_000 });
+
+    await page.reload();
+    await expect(flaggedRow).toHaveAttribute("data-new", "false", { timeout: 30_000 });
   });
 });

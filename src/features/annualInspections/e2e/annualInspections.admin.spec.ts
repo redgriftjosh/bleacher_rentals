@@ -109,36 +109,30 @@ test.describe("Annual inspections (admin)", () => {
     await expect(row).toContainText(typed);
   });
 
-  test("highlights what changed since the last visit, once", async ({ page }) => {
+  test("is not chased by the queue — no badge, no highlight, even with one overdue", async ({
+    page,
+  }) => {
     test.skip(!ADMIN_EMAIL, "E2E_ADMIN_EMAIL is not set");
 
-    // Nobody has looked at the queue yet, and one bleacher is already flagged.
+    // Nobody has looked at the queue yet, and one bleacher is already flagged:
+    // for a maintainer this is exactly the state that raises a badge.
     await setInspectionQueueLastSeen(ADMIN_EMAIL, null);
     fixture = await seedBleachersWithInspections([daysFromToday(3), daysFromToday(300)]);
-    const [flagged, quiet] = fixture.bleachers;
+    const [flagged] = fixture.bleachers;
 
-    // The sidebar says so before the page is ever opened.
     await page.goto("/assets/bleachers");
-    await expect(page.locator("[data-testid=sidebar-badge]").first()).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(page.locator("[data-testid=sidebar]")).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator("[data-testid=sidebar-badge]")).toHaveCount(0);
 
+    // The page still opens and still reads correctly — an administrator loses
+    // the nagging, not the queue.
     await page.goto("/annual-inspections");
     const flaggedRow = page.locator(
       `[data-testid=inspection-row][data-bleacher="${flagged.bleacherNumber}"]`,
     );
-    const quietRow = page.locator(
-      `[data-testid=inspection-row][data-bleacher="${quiet.bleacherNumber}"]`,
-    );
-    await expect(flaggedRow).toHaveAttribute("data-new", "true", { timeout: 30_000 });
-    await expect(quietRow).toHaveAttribute("data-new", "false");
-
-    // Opening the page is what marks it seen: the badge goes, and the next
-    // visit starts clean rather than nagging about the same bleacher again.
-    await expect(page.locator("[data-testid=sidebar-badge]")).toHaveCount(0, { timeout: 30_000 });
-
-    await page.reload();
-    await expect(flaggedRow).toHaveAttribute("data-new", "false", { timeout: 30_000 });
+    await expect(flaggedRow).toHaveAttribute("data-status", "critical", { timeout: 30_000 });
+    await expect(flaggedRow).toHaveAttribute("data-new", "false");
+    await expect(page.locator("[data-testid=sidebar-badge]")).toHaveCount(0);
   });
 
   test("shows the same due date on the bleacher itself", async ({ page }) => {

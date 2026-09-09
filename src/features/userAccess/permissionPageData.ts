@@ -321,7 +321,7 @@ export const PERMISSIONS: PermissionEntry[] = [
     category: "Day to Day Operations",
     roles: {
       admin: full(
-        "Can record an inspection on any bleacher, correct an earlier record, upload or replace the certificate, and edit the notes.",
+        "Can record an inspection on any bleacher, correct an earlier record, upload or replace the certificate, and edit the notes. Gets no unread counter in the sidebar and no highlight on the queue — those belong to the Maintainer, who is the one being chased about the dates.",
       ),
       account_manager: custom(
         "Account managers do not have the Annual Inspections page — it belongs to the Maintainer role. They still see the annual inspection of a bleacher on the bleacher itself, in the Assets page, and can record one from there.",
@@ -330,13 +330,13 @@ export const PERMISSIONS: PermissionEntry[] = [
         "Unable to even access the pages where inspections are shown; developer is only meant to work on the developer roadmap.",
       ),
       viewer: read(
-        "Can open the queue and read every inspection, its notes and its certificate, but cannot record or change one.",
+        "Can open the queue and read every inspection, its notes and its certificate, but cannot record or change one. Reads it without being notified: no counter in the sidebar and no highlight on the rows.",
       ),
       driver: none(
         "Drivers only have access to the Driver Mobile App, which has no screen for annual inspections. The pre-trip and post-trip inspections they do fill in are a separate thing entirely.",
       ),
       maintainer: full(
-        "This is the role's whole job. Can record an inspection on any bleacher, correct an earlier record, upload or replace the certificate, and edit the notes.",
+        "This is the role's whole job. Can record an inspection on any bleacher, correct an earlier record, upload or replace the certificate, and edit the notes. The only role that is notified: a counter in the sidebar on Annual Inspections, and a highlight on the bleachers that crossed a date since the last visit. Opening the page marks them all read, so the next visit highlights only what is new since then.",
       ),
     },
   },

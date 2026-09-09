@@ -5,8 +5,10 @@ import { sql, type CompiledQuery } from "kysely";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, typedExecute, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { useCurrentUser } from "@/hooks/db/useCurrentUser";
+import { useUserAccess } from "@/features/userAccess/client";
 import { todayLocal } from "../logic/dateOnly";
 import { countUnseen, decorateQueue } from "../logic/decorateQueue";
+import { receivesInspectionNotifications } from "../logic/receivesInspectionNotifications";
 
 export type AnnualInspectionQueueRow = {
   bleacherUuid: string;
@@ -102,20 +104,27 @@ export function useInspectionHistory(bleacherUuid: string | null): AnnualInspect
 }
 
 /**
- * How many bleachers crossed a threshold since this user last opened the page.
+ * How many bleachers crossed a threshold since this user last opened the page,
+ * for the one role that is supposed to hear about it.
  *
  * Returns a number, not the rows: the sidebar renders this on every navigation,
  * and subscribing it to an array would re-render the whole shell whenever any
  * inspection anywhere changed.
+ *
+ * The role gate lives here rather than at the call site so there is a single
+ * answer to "who gets notified" — an administrator and a viewer can both open
+ * the queue and neither is chased by it.
  */
 export function useUnseenInspectionCount(): number {
   const queue = useInspectionQueue();
   const { data: userData } = useCurrentUser();
+  const access = useUserAccess();
   const lastSeenAt = userData?.[0]?.inspection_queue_last_seen_at ?? null;
+  const notified = access.status === "active" && receivesInspectionNotifications(access.roles);
 
   return useMemo(
-    () => countUnseen(decorateQueue(queue, todayLocal(), lastSeenAt)),
-    [queue, lastSeenAt],
+    () => (notified ? countUnseen(decorateQueue(queue, todayLocal(), lastSeenAt)) : 0),
+    [notified, queue, lastSeenAt],
   );
 }
 
