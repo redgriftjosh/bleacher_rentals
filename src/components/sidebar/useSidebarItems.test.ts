@@ -94,11 +94,12 @@ describe("useSidebarItems", () => {
     expect(children.map((c) => c.href)).toEqual(["/annual-inspections"]);
   });
 
-  it("maintainer sees nothing operational — no dashboard, assets or work trackers", () => {
+  it("maintainer sees nothing operational beyond assets — no dashboard or work trackers", () => {
     const keys = useSidebarItems(["maintainer"]).map((i) => i.key);
     expect(keys).not.toContain("dashboard");
-    expect(keys).not.toContain("assets");
     expect(keys).not.toContain("work-trackers");
+    // Assets stays: a maintainer opens a bleacher to reach its inspection history.
+    expect(keys).toContain("assets");
   });
 
   it("account_manager no longer sees Annual Inspections, but keeps the rest of Quality Assurance", () => {

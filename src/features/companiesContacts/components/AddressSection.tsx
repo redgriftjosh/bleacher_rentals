@@ -30,6 +30,10 @@ export function AddressSection({ label, value, onChange }: Props) {
             city: data.city ?? "",
             stateProvince: data.state ?? "",
             zipPostal: data.postalCode ?? "",
+            lat: data.lat,
+            lng: data.lng,
+            placeId: data.placeId,
+            country: data.country,
           })
         }
         className="h-9 px-3 bg-gray-50 border border-gray-200 rounded-md text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 transition-colors"

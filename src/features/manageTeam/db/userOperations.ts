@@ -104,6 +104,10 @@ async function upsertAddress(
     city: state.homeCity,
     state_province: state.homeState,
     zip_postal: state.homePostalCode,
+    latitude: state.homeLat,
+    longitude: state.homeLng,
+    place_id: state.homePlaceId,
+    country: state.homeCountry,
   };
 
   if (existingAddressUuid) {
@@ -852,6 +856,10 @@ export async function fetchUserById(
         result.homeCity = driver.Addresses.city;
         result.homeState = driver.Addresses.state_province;
         result.homePostalCode = driver.Addresses.zip_postal;
+        result.homeLat = driver.Addresses.latitude;
+        result.homeLng = driver.Addresses.longitude;
+        result.homePlaceId = driver.Addresses.place_id;
+        result.homeCountry = driver.Addresses.country;
       }
 
       // Vehicle info

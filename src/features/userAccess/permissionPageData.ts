@@ -383,6 +383,26 @@ export const PERMISSIONS: PermissionEntry[] = [
     },
   },
   {
+    label: "Work Tracker Types",
+    description:
+      "This applies to the Work Tracker Types page under Configuration, where each of the 3 fixed work tracker types (Trip, Repair / Maintenance, Site Visit / Cleaning / Other) is assigned a QuickBooks account per connection. The 3 types themselves cannot be renamed, added, or removed — only their QuickBooks account assignment is editable, here and nowhere else.",
+    category: "Configuration",
+    roles: {
+      admin: full(
+        "Able to assign or change the QuickBooks account for each of the 3 work tracker types, per QuickBooks connection.",
+      ),
+      account_manager: none("Account managers can't even see this page even on sidebar"),
+      developer: none(
+        "Unable to even access the pages where they can see work tracker types, and developer is only meant to work on the developer roadmap.",
+      ),
+      viewer: none("Viewers do not have access to the web configuration pages."),
+      driver: none("Drivers only have access to the Driver Mobile App."),
+      maintainer: none(
+        "Maintainers work on annual inspections and nothing else. Everything else on the web dashboard is hidden from them entirely.",
+      ),
+    },
+  },
+  {
     label: "Manage Inspection Form",
     description:
       "The ability to create and edit the inspection form template that drivers fill out during pickup and drop-off. This applies to the Inspection Form page under Configuration.",

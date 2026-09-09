@@ -7,7 +7,7 @@ import {
   fetchDriverHeaderInfo,
   fetchDriverName,
 } from "./db/db";
-import { calculateFinancialTotals, getDateRange } from "./util";
+import { calculateFinancialTotals, calculateTravelTotals, getDateRange } from "./util";
 import { MyDocument } from "./components/PdfComponent";
 
 export async function generateDriverPdfBuffer(
@@ -22,6 +22,7 @@ export async function generateDriverPdfBuffer(
   ]);
 
   const financialTotals = calculateFinancialTotals(data);
+  const travelTotals = calculateTravelTotals(data);
   const dateRange = getDateRange(startDate);
 
   return renderToBuffer(
@@ -29,6 +30,7 @@ export async function generateDriverPdfBuffer(
       workTrackers={data.workTrackers}
       header={{ dateRange, driverName }}
       financialTotals={financialTotals}
+      travelTotals={travelTotals}
       driverHeaderInfo={driverHeaderInfo}
     />,
   );

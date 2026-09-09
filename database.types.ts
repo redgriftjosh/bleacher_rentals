@@ -80,24 +80,36 @@ export type Database = {
       Addresses: {
         Row: {
           city: string
+          country: string | null
           created_at: string
           id: string
+          latitude: number | null
+          longitude: number | null
+          place_id: string | null
           state_province: string
           street: string
           zip_postal: string | null
         }
         Insert: {
           city: string
+          country?: string | null
           created_at?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
+          place_id?: string | null
           state_province: string
           street: string
           zip_postal?: string | null
         }
         Update: {
           city?: string
+          country?: string | null
           created_at?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
+          place_id?: string | null
           state_province?: string
           street?: string
           zip_postal?: string | null
@@ -4027,6 +4039,9 @@ export type Database = {
           dropoff_poc: string | null
           dropoff_poc_contact_uuid: string | null
           dropoff_time: string | null
+          dropoff_time_end: string | null
+          dropoff_time_mode: Database["public"]["Enums"]["work_tracker_time_mode"]
+          dropoff_time_start: string | null
           id: string
           internal_notes: string | null
           notes: string | null
@@ -4036,6 +4051,9 @@ export type Database = {
           pickup_poc: string | null
           pickup_poc_contact_uuid: string | null
           pickup_time: string | null
+          pickup_time_end: string | null
+          pickup_time_mode: Database["public"]["Enums"]["work_tracker_time_mode"]
+          pickup_time_start: string | null
           post_inspection_uuid: string | null
           pre_inspection_uuid: string | null
           project_number: string | null
@@ -4067,6 +4085,9 @@ export type Database = {
           dropoff_poc?: string | null
           dropoff_poc_contact_uuid?: string | null
           dropoff_time?: string | null
+          dropoff_time_end?: string | null
+          dropoff_time_mode?: Database["public"]["Enums"]["work_tracker_time_mode"]
+          dropoff_time_start?: string | null
           id?: string
           internal_notes?: string | null
           notes?: string | null
@@ -4076,6 +4097,9 @@ export type Database = {
           pickup_poc?: string | null
           pickup_poc_contact_uuid?: string | null
           pickup_time?: string | null
+          pickup_time_end?: string | null
+          pickup_time_mode?: Database["public"]["Enums"]["work_tracker_time_mode"]
+          pickup_time_start?: string | null
           post_inspection_uuid?: string | null
           pre_inspection_uuid?: string | null
           project_number?: string | null
@@ -4107,6 +4131,9 @@ export type Database = {
           dropoff_poc?: string | null
           dropoff_poc_contact_uuid?: string | null
           dropoff_time?: string | null
+          dropoff_time_end?: string | null
+          dropoff_time_mode?: Database["public"]["Enums"]["work_tracker_time_mode"]
+          dropoff_time_start?: string | null
           id?: string
           internal_notes?: string | null
           notes?: string | null
@@ -4116,6 +4143,9 @@ export type Database = {
           pickup_poc?: string | null
           pickup_poc_contact_uuid?: string | null
           pickup_time?: string | null
+          pickup_time_end?: string | null
+          pickup_time_mode?: Database["public"]["Enums"]["work_tracker_time_mode"]
+          pickup_time_start?: string | null
           post_inspection_uuid?: string | null
           pre_inspection_uuid?: string | null
           project_number?: string | null
@@ -4264,6 +4294,7 @@ export type Database = {
       }
       WorkTrackerTypes: {
         Row: {
+          code: Database["public"]["Enums"]["work_tracker_type_code"] | null
           created_at: string
           display_name: string
           id: string
@@ -4271,6 +4302,7 @@ export type Database = {
           sort_order: number
         }
         Insert: {
+          code?: Database["public"]["Enums"]["work_tracker_type_code"] | null
           created_at?: string
           display_name: string
           id?: string
@@ -4278,6 +4310,7 @@ export type Database = {
           sort_order?: number
         }
         Update: {
+          code?: Database["public"]["Enums"]["work_tracker_type_code"] | null
           created_at?: string
           display_name?: string
           id?: string
@@ -4463,6 +4496,11 @@ export type Database = {
         | "maintenance"
         | "per_diem"
         | "custom"
+      work_tracker_time_mode: "exact" | "flexible" | "any_time"
+      work_tracker_type_code:
+        | "trip"
+        | "repair_maintenance"
+        | "site_visit_cleaning_other"
       worktracker_group_status:
         | "draft"
         | "qbo_bill_creating"
@@ -4646,6 +4684,12 @@ export const Constants = {
         "maintenance",
         "per_diem",
         "custom",
+      ],
+      work_tracker_time_mode: ["exact", "flexible", "any_time"],
+      work_tracker_type_code: [
+        "trip",
+        "repair_maintenance",
+        "site_visit_cleaning_other",
       ],
       worktracker_group_status: [
         "draft",

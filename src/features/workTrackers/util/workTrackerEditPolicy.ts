@@ -1,5 +1,6 @@
 import { Enums, Tables } from "../../../../database.types";
 import { AddressData } from "@/features/eventConfiguration/state/useCurrentEventStore";
+import type { WorkTrackerTimeMode } from "../util";
 
 export type WorkTrackerStatus = Enums<"worktracker_status">;
 
@@ -28,11 +29,15 @@ export type WorkTrackerSnapshot = {
   driver_uuid: string | null;
   pickup_poc: string | null;
   pickup_poc_contact_uuid: string | null;
-  pickup_time: string | null;
+  pickup_time_mode: WorkTrackerTimeMode | null;
+  pickup_time_start: string | null;
+  pickup_time_end: string | null;
   pickup_instructions: string | null;
   dropoff_poc: string | null;
   dropoff_poc_contact_uuid: string | null;
-  dropoff_time: string | null;
+  dropoff_time_mode: WorkTrackerTimeMode | null;
+  dropoff_time_start: string | null;
+  dropoff_time_end: string | null;
   dropoff_instructions: string | null;
   notes: string | null;
   internal_notes: string | null;
@@ -73,11 +78,15 @@ export function buildWorkTrackerSnapshot(
     driver_uuid: workTracker.driver_uuid,
     pickup_poc: workTracker.pickup_poc,
     pickup_poc_contact_uuid: workTracker.pickup_poc_contact_uuid,
-    pickup_time: workTracker.pickup_time,
+    pickup_time_mode: workTracker.pickup_time_mode,
+    pickup_time_start: workTracker.pickup_time_start,
+    pickup_time_end: workTracker.pickup_time_end,
     pickup_instructions: workTracker.pickup_instructions,
     dropoff_poc: workTracker.dropoff_poc,
     dropoff_poc_contact_uuid: workTracker.dropoff_poc_contact_uuid,
-    dropoff_time: workTracker.dropoff_time,
+    dropoff_time_mode: workTracker.dropoff_time_mode,
+    dropoff_time_start: workTracker.dropoff_time_start,
+    dropoff_time_end: workTracker.dropoff_time_end,
     dropoff_instructions: workTracker.dropoff_instructions,
     notes: workTracker.notes,
     internal_notes: workTracker.internal_notes,
@@ -125,7 +134,11 @@ function hasUnacceptFieldChanges(before: WorkTrackerSnapshot, after: WorkTracker
   ) {
     return true;
   }
-  if (normalizeString(before.pickup_time) !== normalizeString(after.pickup_time)) return true;
+  if (before.pickup_time_mode !== after.pickup_time_mode) return true;
+  if (normalizeString(before.pickup_time_start) !== normalizeString(after.pickup_time_start))
+    return true;
+  if (normalizeString(before.pickup_time_end) !== normalizeString(after.pickup_time_end))
+    return true;
   if (normalizeString(before.pickup_instructions) !== normalizeString(after.pickup_instructions)) {
     return true;
   }
@@ -136,7 +149,13 @@ function hasUnacceptFieldChanges(before: WorkTrackerSnapshot, after: WorkTracker
   ) {
     return true;
   }
-  if (normalizeString(before.dropoff_time) !== normalizeString(after.dropoff_time)) return true;
+  if (before.dropoff_time_mode !== after.dropoff_time_mode) return true;
+  if (normalizeString(before.dropoff_time_start) !== normalizeString(after.dropoff_time_start)) {
+    return true;
+  }
+  if (normalizeString(before.dropoff_time_end) !== normalizeString(after.dropoff_time_end)) {
+    return true;
+  }
   if (
     normalizeString(before.dropoff_instructions) !== normalizeString(after.dropoff_instructions)
   ) {

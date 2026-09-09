@@ -22,6 +22,7 @@ import {
   MessageSquare,
   Mails,
   Sparkles,
+  Layers,
 } from "lucide-react";
 import { QuickBooksIcon } from "@/components/Icons";
 import type { WebRole } from "@/features/userAccess/logic/determineAccess";
@@ -190,6 +191,13 @@ const ALL_ITEMS: SidebarItemConfig[] = [
         label: "QuickBooks",
         href: "/quickbooks",
         icon: QuickBooksIcon,
+      },
+      {
+        type: "button",
+        key: "work-tracker-types",
+        label: "Work Tracker Types",
+        href: "/work-tracker-types",
+        icon: Layers,
       },
       {
         type: "button",
