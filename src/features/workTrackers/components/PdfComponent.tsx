@@ -240,7 +240,11 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
                 {row.workTracker.pickup_poc}
               </Text>
               <Text style={[styles.bodyCell, { width: columnWidths[5] }]}>
-                {formatWorkTrackerTime(row.workTracker.pickup_at, row.workTracker.pickup_timezone)}
+                {formatWorkTrackerTime(
+                  row.workTracker.pickup_time_mode,
+                  row.workTracker.pickup_time_start,
+                  row.workTracker.pickup_time_end,
+                )}
               </Text>
               <Text style={[styles.bodyCell, { width: columnWidths[6] }]}>
                 {row.dropoff_address?.street ?? ""}
@@ -250,8 +254,9 @@ export const MyDocument: React.FC<MyDocumentProps> = ({
               </Text>
               <Text style={[styles.bodyCell, { width: columnWidths[8] }]}>
                 {formatWorkTrackerTime(
-                  row.workTracker.dropoff_at,
-                  row.workTracker.dropoff_timezone,
+                  row.workTracker.dropoff_time_mode,
+                  row.workTracker.dropoff_time_start,
+                  row.workTracker.dropoff_time_end,
                 )}
               </Text>
               <Text style={[styles.bodyCell, { width: columnWidths[9] }]}>

@@ -1,151 +1,127 @@
 "use client";
 
-import { useMemo } from "react";
-import { AlertTriangle } from "lucide-react";
-import { DateInput, DateSegment, TimeField } from "react-aria-components";
-import { getBrowserTimezone } from "../util/deriveTimezone";
-import { ANY_TIME_LABEL } from "../util";
+import { ANY_TIME_LABEL, type WorkTrackerTimeMode } from "../util";
 import {
-  isNearDstTransition,
-  needsTimezoneSync,
-  resolveEffectiveTimezone,
-  resolveWorkTrackerTimeFieldValue,
-  resyncWorkTrackerTimeFieldValue,
-  workTrackerTimeFieldValueToIso,
+  normalizeWorkTrackerTime,
+  switchWorkTrackerTimeMode,
+  toInputTimeValue,
+  type WorkTrackerTimeFieldState,
 } from "../util/workTrackerTimeField";
 
 type WorkTrackerTimeFieldProps = {
-  /** The trip's calendar day ("YYYY-MM-DD") — used for a brand-new value's default time. */
-  date: string | null | undefined;
-  /** The stored instant (pickup_at / dropoff_at), as an ISO string. */
-  value: string | null | undefined;
-  /** The zone `value` was actually saved under — the source of truth for reading it back. */
-  storedTimezone: string | null | undefined;
-  /**
-   * IANA zone the current pickup/dropoff address implies (see
-   * deriveTimezone.ts). Null when the address has no coordinates yet — the
-   * field still works (falling back to the browser's own zone), but a
-   * warning + one-click fix appears once the real address zone is known and
-   * disagrees with what's stored.
-   */
-  addressTimezone: string | null | undefined;
-  onChange: (isoValue: string | null, timezone: string) => void;
+  mode: WorkTrackerTimeMode | null | undefined;
+  start: string | null | undefined;
+  end: string | null | undefined;
+  onChange: (next: WorkTrackerTimeFieldState) => void;
   disabled?: boolean;
 };
 
+const MODE_OPTIONS: { value: WorkTrackerTimeMode; label: string }[] = [
+  { value: "exact", label: "Exact" },
+  { value: "flexible", label: "Flexible" },
+  { value: "any_time", label: ANY_TIME_LABEL },
+];
+
+const inputClassName = "border rounded p-1.5 text-sm bg-white w-full";
+
 /**
- * A time-of-day picker whose value always carries its own timezone — picking
- * a react-aria-components ZonedDateTime rather than a plain Date means the
- * zone abbreviation (e.g. "EDT") renders as part of the field itself,
- * automatically, and can never silently drift from the time next to it.
+ * Pickup/dropoff time, one of three deliberate states — no timezone, no
+ * date: a plain clock reading everyone reads the same regardless of where
+ * they are, which is how this has always been communicated in practice.
  *
- * Two warnings on top of that, because dates/times/addresses are an easy
- * place to make a quiet mistake:
- * - the address turns out to be in a different zone than the time was saved
- *   under (with a one-click fix that re-anchors the same clock reading, e.g.
- *   8:00 stays 8:00, onto the correct zone)
- * - the trip date falls within 2 weeks of a daylight-saving change
+ * - exact: one time.
+ * - flexible: a start/end window.
+ * - any_time: unset (start = end = null).
  *
- * A pickup/dropoff can also carry no time at all — "Any Time" — which is
- * exactly `value == null`. There's no backfill and nothing to fall back to
- * display: every existing work tracker starts out this way, and a user can
- * toggle back to it deliberately. Switching off Any Time seeds a default
- * time (8:00 AM on the trip's date) to start editing from.
- *
- * See docs/specs (pickup/dropoff timezone).
+ * See docs/specs/work-tracker-pickup-dropoff-time.md.
  */
 export function WorkTrackerTimeField({
-  date,
-  value,
-  storedTimezone,
-  addressTimezone,
+  mode,
+  start,
+  end,
   onChange,
   disabled,
 }: WorkTrackerTimeFieldProps) {
-  const browserTimezone = useMemo(() => getBrowserTimezone(), []);
-  const effectiveTimezone = resolveEffectiveTimezone(
-    storedTimezone,
-    addressTimezone,
-    browserTimezone,
-  );
-  const isAnyTime = value == null;
-  const zonedValue = resolveWorkTrackerTimeFieldValue(value, effectiveTimezone, date);
-
-  const showSyncWarning = !isAnyTime && needsTimezoneSync(storedTimezone, addressTimezone);
-  const showDstWarning = !isAnyTime && isNearDstTransition(date, effectiveTimezone);
-
-  const handleSync = () => {
-    if (!storedTimezone || !addressTimezone) return;
-    onChange(
-      resyncWorkTrackerTimeFieldValue(value, storedTimezone, addressTimezone),
-      addressTimezone,
-    );
+  const current: WorkTrackerTimeFieldState = {
+    mode: mode ?? "any_time",
+    start: start ?? null,
+    end: end ?? null,
   };
 
-  const handleAnyTimeToggle = (checked: boolean) => {
-    if (checked) {
-      onChange(null, effectiveTimezone);
-      return;
-    }
-    const defaultValue = resolveWorkTrackerTimeFieldValue(null, effectiveTimezone, date);
-    onChange(workTrackerTimeFieldValueToIso(defaultValue), effectiveTimezone);
+  const handleModeChange = (nextMode: WorkTrackerTimeMode) => {
+    onChange(switchWorkTrackerTimeMode(current, nextMode));
+  };
+
+  const handleStartChange = (raw: string) => {
+    const normalized = normalizeWorkTrackerTime(raw);
+    onChange({
+      mode: current.mode,
+      start: normalized,
+      end: current.mode === "exact" ? normalized : current.end,
+    });
+  };
+
+  const handleEndChange = (raw: string) => {
+    onChange({ ...current, end: normalizeWorkTrackerTime(raw) });
   };
 
   return (
-    <div className="space-y-1">
-      {isAnyTime ? (
-        <div className="flex items-center w-full p-2 border rounded bg-gray-50 text-sm text-gray-500">
-          {ANY_TIME_LABEL}
-        </div>
-      ) : (
-        <TimeField
-          value={zonedValue}
-          onChange={(next) => onChange(workTrackerTimeFieldValueToIso(next), effectiveTimezone)}
-          isDisabled={disabled}
-          hourCycle={12}
-          granularity="minute"
-        >
-          <DateInput className="flex items-center w-full p-2 border rounded bg-white text-sm">
-            {(segment) => (
-              <DateSegment
-                segment={segment}
-                className="px-0.5 tabular-nums outline-none rounded focus:bg-darkBlue focus:text-white data-[type=literal]:px-0 data-[placeholder]:text-gray-400"
-              />
-            )}
-          </DateInput>
-        </TimeField>
-      )}
+    <div className="space-y-1.5">
+      <div className="flex rounded border overflow-hidden text-xs" role="radiogroup">
+        {MODE_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={current.mode === option.value}
+            disabled={disabled}
+            onClick={() => handleModeChange(option.value)}
+            className={`flex-1 py-1.5 cursor-pointer disabled:cursor-not-allowed ${
+              current.mode === option.value
+                ? "bg-darkBlue text-white"
+                : "bg-white text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
 
-      <label className="flex items-center gap-1.5 text-xs text-gray-600">
+      {current.mode === "exact" && (
         <input
-          type="checkbox"
-          checked={isAnyTime}
+          type="time"
+          className={inputClassName}
+          value={toInputTimeValue(current.start)}
           disabled={disabled}
-          onChange={(e) => handleAnyTimeToggle(e.target.checked)}
+          onChange={(e) => handleStartChange(e.target.value)}
         />
-        {ANY_TIME_LABEL}
-      </label>
+      )}
 
-      {showSyncWarning && (
-        <div className="flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800">
-          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-          <span className="flex-1">This address is in a different time zone.</span>
-          {!disabled && (
-            <button
-              type="button"
-              onClick={handleSync}
-              className="shrink-0 font-medium underline cursor-pointer"
-            >
-              Sync
-            </button>
-          )}
+      {current.mode === "flexible" && (
+        <div className="flex items-center gap-1.5">
+          <input
+            type="time"
+            aria-label="From"
+            className={inputClassName}
+            value={toInputTimeValue(current.start)}
+            disabled={disabled}
+            onChange={(e) => handleStartChange(e.target.value)}
+          />
+          <span className="text-xs text-gray-500 shrink-0">to</span>
+          <input
+            type="time"
+            aria-label="To"
+            className={inputClassName}
+            value={toInputTimeValue(current.end)}
+            disabled={disabled}
+            onChange={(e) => handleEndChange(e.target.value)}
+          />
         </div>
       )}
 
-      {showDstWarning && (
-        <div className="flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800">
-          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-          <span>Daylight saving changes around this date — double-check this time.</span>
+      {current.mode === "any_time" && (
+        <div className="flex items-center w-full p-1.5 border rounded bg-gray-50 text-sm text-gray-500">
+          {ANY_TIME_LABEL}
         </div>
       )}
     </div>

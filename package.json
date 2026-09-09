@@ -36,7 +36,7 @@
     "test:db:tax": "psql \"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" -v ON_ERROR_STOP=1 -f supabase/tests/driver_tax_dec.test.sql",
     "test:db:qty": "psql \"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" -v ON_ERROR_STOP=1 -f supabase/tests/work_tracker_line_item_qty_decimal.test.sql",
     "test:db:worktrackertypes": "psql \"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" -v ON_ERROR_STOP=1 -f supabase/tests/work_tracker_type_codes.test.sql",
-    "test:db:pickupdropoffat": "psql \"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" -v ON_ERROR_STOP=1 -f supabase/tests/work_tracker_pickup_dropoff_at.test.sql",
+    "test:db:pickupdropofftime": "psql \"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" -v ON_ERROR_STOP=1 -f supabase/tests/work_tracker_pickup_dropoff_time.test.sql",
     "preflight:sign": "tsx scripts/preflight/signPreflight.cli.ts"
   },
   "dependencies": {

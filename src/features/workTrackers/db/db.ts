@@ -304,7 +304,11 @@ export async function fetchWorkTrackersForUserUuidAndStartDate(
     .eq("driver_uuid", driverUuid)
     .gte("date", startDate)
     .lt("date", DateTime.fromISO(startDate).plus({ days: 7 }).toISODate())
-    .order("date", { ascending: true });
+    .order("date", { ascending: true })
+    // Same-day trackers by pickup time — matches useWorkTrackersForWeek (the
+    // trip-list view this PDF mirrors). Any Time (null) trackers sort last
+    // within their date.
+    .order("pickup_time_start", { ascending: true, nullsFirst: false });
 
   if (error) {
     if (!isServer) {

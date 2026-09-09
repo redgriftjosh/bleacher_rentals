@@ -1,5 +1,6 @@
 import { Enums, Tables } from "../../../../database.types";
 import { AddressData } from "@/features/eventConfiguration/state/useCurrentEventStore";
+import type { WorkTrackerTimeMode } from "../util";
 
 export type WorkTrackerStatus = Enums<"worktracker_status">;
 
@@ -28,13 +29,15 @@ export type WorkTrackerSnapshot = {
   driver_uuid: string | null;
   pickup_poc: string | null;
   pickup_poc_contact_uuid: string | null;
-  pickup_at: string | null;
-  pickup_timezone: string | null;
+  pickup_time_mode: WorkTrackerTimeMode | null;
+  pickup_time_start: string | null;
+  pickup_time_end: string | null;
   pickup_instructions: string | null;
   dropoff_poc: string | null;
   dropoff_poc_contact_uuid: string | null;
-  dropoff_at: string | null;
-  dropoff_timezone: string | null;
+  dropoff_time_mode: WorkTrackerTimeMode | null;
+  dropoff_time_start: string | null;
+  dropoff_time_end: string | null;
   dropoff_instructions: string | null;
   notes: string | null;
   internal_notes: string | null;
@@ -75,13 +78,15 @@ export function buildWorkTrackerSnapshot(
     driver_uuid: workTracker.driver_uuid,
     pickup_poc: workTracker.pickup_poc,
     pickup_poc_contact_uuid: workTracker.pickup_poc_contact_uuid,
-    pickup_at: workTracker.pickup_at,
-    pickup_timezone: workTracker.pickup_timezone,
+    pickup_time_mode: workTracker.pickup_time_mode,
+    pickup_time_start: workTracker.pickup_time_start,
+    pickup_time_end: workTracker.pickup_time_end,
     pickup_instructions: workTracker.pickup_instructions,
     dropoff_poc: workTracker.dropoff_poc,
     dropoff_poc_contact_uuid: workTracker.dropoff_poc_contact_uuid,
-    dropoff_at: workTracker.dropoff_at,
-    dropoff_timezone: workTracker.dropoff_timezone,
+    dropoff_time_mode: workTracker.dropoff_time_mode,
+    dropoff_time_start: workTracker.dropoff_time_start,
+    dropoff_time_end: workTracker.dropoff_time_end,
     dropoff_instructions: workTracker.dropoff_instructions,
     notes: workTracker.notes,
     internal_notes: workTracker.internal_notes,
@@ -103,19 +108,6 @@ export function isWorkTrackerInProgress(status: WorkTrackerStatus): boolean {
 
 function normalizeString(value: string | null | undefined): string {
   return (value ?? "").trim();
-}
-
-/**
- * pickup_at/dropoff_at come back from two different serializers — Postgres/
- * PowerSync text on load, `ZonedDateTime.toAbsoluteString()` on write — which
- * can format the identical instant differently (e.g. trailing zeros, "Z" vs
- * "+00:00"). Comparing as strings would flag that as a change; comparing the
- * parsed instant doesn't.
- */
-function normalizeInstant(value: string | null | undefined): number | null {
-  if (!value) return null;
-  const ms = Date.parse(value);
-  return Number.isNaN(ms) ? null : ms;
 }
 
 function addressesEqual(a: AddressSnapshot | null, b: AddressSnapshot | null): boolean {
@@ -142,8 +134,10 @@ function hasUnacceptFieldChanges(before: WorkTrackerSnapshot, after: WorkTracker
   ) {
     return true;
   }
-  if (normalizeInstant(before.pickup_at) !== normalizeInstant(after.pickup_at)) return true;
-  if (normalizeString(before.pickup_timezone) !== normalizeString(after.pickup_timezone))
+  if (before.pickup_time_mode !== after.pickup_time_mode) return true;
+  if (normalizeString(before.pickup_time_start) !== normalizeString(after.pickup_time_start))
+    return true;
+  if (normalizeString(before.pickup_time_end) !== normalizeString(after.pickup_time_end))
     return true;
   if (normalizeString(before.pickup_instructions) !== normalizeString(after.pickup_instructions)) {
     return true;
@@ -155,8 +149,11 @@ function hasUnacceptFieldChanges(before: WorkTrackerSnapshot, after: WorkTracker
   ) {
     return true;
   }
-  if (normalizeInstant(before.dropoff_at) !== normalizeInstant(after.dropoff_at)) return true;
-  if (normalizeString(before.dropoff_timezone) !== normalizeString(after.dropoff_timezone)) {
+  if (before.dropoff_time_mode !== after.dropoff_time_mode) return true;
+  if (normalizeString(before.dropoff_time_start) !== normalizeString(after.dropoff_time_start)) {
+    return true;
+  }
+  if (normalizeString(before.dropoff_time_end) !== normalizeString(after.dropoff_time_end)) {
     return true;
   }
   if (

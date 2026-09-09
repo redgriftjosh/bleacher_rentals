@@ -366,10 +366,12 @@ const WorkTrackersCols = {
   project_number: column.text,
   bol_number: column.text,
   created_by_user_uuid: column.text,
-  pickup_at: column.text,
-  pickup_timezone: column.text,
-  dropoff_at: column.text,
-  dropoff_timezone: column.text,
+  pickup_time_mode: column.text,
+  pickup_time_start: column.text,
+  pickup_time_end: column.text,
+  dropoff_time_mode: column.text,
+  dropoff_time_start: column.text,
+  dropoff_time_end: column.text,
 } satisfies PowerSyncColsFor<"WorkTrackers">;
 const WorkTrackers = new Table(WorkTrackersCols, {
   indexes: {

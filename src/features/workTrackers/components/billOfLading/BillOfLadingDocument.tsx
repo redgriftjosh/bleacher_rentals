@@ -337,7 +337,13 @@ export const BillOfLadingDocument: React.FC<BillOfLadingDocumentProps> = ({
               <View style={s.pdLine}>
                 <Text style={s.pdLabel}>Pick up time:</Text>
                 <Text style={s.pdVal}>
-                  {v(formatWorkTrackerTime(workTracker.pickup_at, workTracker.pickup_timezone))}
+                  {v(
+                    formatWorkTrackerTime(
+                      workTracker.pickup_time_mode,
+                      workTracker.pickup_time_start,
+                      workTracker.pickup_time_end,
+                    ),
+                  )}
                 </Text>
               </View>
               <View style={s.pdLine}>
@@ -371,7 +377,13 @@ export const BillOfLadingDocument: React.FC<BillOfLadingDocumentProps> = ({
             <View style={s.pdLine}>
               <Text style={s.pdLabel}>{isSingleFieldSetType ? "Time:" : "Delivery time:"}</Text>
               <Text style={s.pdVal}>
-                {v(formatWorkTrackerTime(workTracker.dropoff_at, workTracker.dropoff_timezone))}
+                {v(
+                  formatWorkTrackerTime(
+                    workTracker.dropoff_time_mode,
+                    workTracker.dropoff_time_start,
+                    workTracker.dropoff_time_end,
+                  ),
+                )}
               </Text>
             </View>
             <View style={s.pdLine}>

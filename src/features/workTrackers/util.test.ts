@@ -314,24 +314,24 @@ describe("calculateTravelTotals", () => {
 });
 
 describe("formatWorkTrackerTime", () => {
-  it("formats a stored instant in its zone, matching sync_work_tracker_time_text()", () => {
-    expect(formatWorkTrackerTime("2026-07-15T14:00:00Z", "America/Toronto")).toBe("10:00 AM (EDT)");
+  it("formats an exact time, zero-padded, matching sync_work_tracker_time_text()", () => {
+    expect(formatWorkTrackerTime("exact", "10:00:00", "10:00:00")).toBe("10:00 AM");
+    expect(formatWorkTrackerTime("exact", "09:00:00", "09:00:00")).toBe("09:00 AM");
   });
 
-  it("zero-pads the hour, matching the DB trigger's HH12 format", () => {
-    // 14:00 UTC is 9:00 AM Central — should read "09:00 AM", not "9:00 AM".
-    expect(formatWorkTrackerTime("2026-07-15T14:00:00Z", "America/Chicago")).toBe("09:00 AM (CDT)");
+  it("formats midnight and noon correctly", () => {
+    expect(formatWorkTrackerTime("exact", "00:00:00", "00:00:00")).toBe("12:00 AM");
+    expect(formatWorkTrackerTime("exact", "12:00:00", "12:00:00")).toBe("12:00 PM");
   });
 
-  it("the same instant formats differently in a different zone", () => {
-    expect(formatWorkTrackerTime("2026-07-15T14:00:00Z", "America/Vancouver")).toBe(
-      "07:00 AM (PDT)",
-    );
+  it("formats a flexible range", () => {
+    expect(formatWorkTrackerTime("flexible", "09:00:00", "11:30:00")).toBe("09:00 AM - 11:30 AM");
   });
 
-  it("is Any Time when there's no stored instant — no legacy text fallback anymore", () => {
-    expect(formatWorkTrackerTime(null, null)).toBe(ANY_TIME_LABEL);
-    expect(formatWorkTrackerTime(null, "America/Toronto")).toBe(ANY_TIME_LABEL);
-    expect(formatWorkTrackerTime("2026-07-15T14:00:00Z", null)).toBe(ANY_TIME_LABEL);
+  it("is Any Time for any_time mode, or a malformed/incomplete exact or flexible value", () => {
+    expect(formatWorkTrackerTime("any_time", null, null)).toBe(ANY_TIME_LABEL);
+    expect(formatWorkTrackerTime(null, null, null)).toBe(ANY_TIME_LABEL);
+    expect(formatWorkTrackerTime("exact", null, null)).toBe(ANY_TIME_LABEL);
+    expect(formatWorkTrackerTime("flexible", "09:00:00", null)).toBe(ANY_TIME_LABEL);
   });
 });

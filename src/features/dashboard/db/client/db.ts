@@ -401,16 +401,18 @@ export async function saveWorkTracker(
     pickup_poc_contact_uuid: workTracker.pickup_poc_contact_uuid,
     // pickup_time/dropoff_time (legacy free-text columns, kept only for the
     // driver app) are no longer written from the web app — they're kept in
-    // sync from pickup_at/dropoff_at by the sync_work_tracker_time_text() DB trigger.
-    pickup_at: workTracker.pickup_at,
-    pickup_timezone: workTracker.pickup_timezone,
+    // sync from pickup_time_mode/start/end by the sync_work_tracker_time_text() DB trigger.
+    pickup_time_mode: workTracker.pickup_time_mode,
+    pickup_time_start: workTracker.pickup_time_start,
+    pickup_time_end: workTracker.pickup_time_end,
     pickup_instructions: workTracker.pickup_instructions,
     teardown_required: workTracker.teardown_required ? 1 : 0,
     dropoff_address_uuid: dropOffAddressUuid,
     dropoff_poc: workTracker.dropoff_poc,
     dropoff_poc_contact_uuid: workTracker.dropoff_poc_contact_uuid,
-    dropoff_at: workTracker.dropoff_at,
-    dropoff_timezone: workTracker.dropoff_timezone,
+    dropoff_time_mode: workTracker.dropoff_time_mode,
+    dropoff_time_start: workTracker.dropoff_time_start,
+    dropoff_time_end: workTracker.dropoff_time_end,
     dropoff_instructions: workTracker.dropoff_instructions,
     setup_required: workTracker.setup_required ? 1 : 0,
     notes: workTracker.notes,

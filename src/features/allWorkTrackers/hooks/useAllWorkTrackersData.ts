@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { sql } from "kysely";
 import { db } from "@/components/providers/SystemProvider";
 import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import { filterWorkTrackers } from "../utils/filterWorkTrackers";
@@ -40,6 +41,10 @@ const compiled = db
     "da.state_province as dropoff_state",
   ])
   .orderBy("wt.date", "desc")
+  // Same-day trackers by pickup time, matching the driver trip list. Any Time
+  // (null) trackers sort last within their date.
+  .orderBy(sql<string>`wt.pickup_time_start is null`, "asc")
+  .orderBy("wt.pickup_time_start", "asc")
   .compile();
 
 export function useAllWorkTrackersData(filters: WorkTrackerFilters) {

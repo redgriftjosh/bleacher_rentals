@@ -83,12 +83,20 @@ export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
             <th className={`w-[10%] ${className}`}>{row.pickup_address?.street ?? ""}</th>
             <th className={`w-[7%] ${className}`}>{row.workTracker.pickup_poc}</th>
             <th className={`w-[6%] ${className}`}>
-              {formatWorkTrackerTime(row.workTracker.pickup_at, row.workTracker.pickup_timezone)}
+              {formatWorkTrackerTime(
+                row.workTracker.pickup_time_mode,
+                row.workTracker.pickup_time_start,
+                row.workTracker.pickup_time_end,
+              )}
             </th>
             <th className={`w-[10%] ${className}`}>{row.dropoff_address?.street ?? ""}</th>
             <th className={`w-[7%] ${className}`}>{row.workTracker.dropoff_poc}</th>
             <th className={`w-[6%] ${className}`}>
-              {formatWorkTrackerTime(row.workTracker.dropoff_at, row.workTracker.dropoff_timezone)}
+              {formatWorkTrackerTime(
+                row.workTracker.dropoff_time_mode,
+                row.workTracker.dropoff_time_start,
+                row.workTracker.dropoff_time_end,
+              )}
             </th>
             <th className={`w-[6%] ${className}`}>
               {formatDriveTime(row.workTracker.drive_minutes)}

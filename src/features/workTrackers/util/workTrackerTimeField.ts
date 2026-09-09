@@ -1,123 +1,81 @@
-import {
-  parseAbsolute,
-  parseDate,
-  toCalendarDateTime,
-  toZoned,
-  type ZonedDateTime,
-} from "@internationalized/date";
+import type { WorkTrackerTimeMode } from "../util";
 
-/** A brand-new pickup/dropoff time defaults to 8:00 AM rather than midnight. */
-const DEFAULT_HOUR = 8;
+/** A brand-new exact/flexible pickup or dropoff defaults to 8:00 AM. */
+const DEFAULT_TIME = "08:00:00";
+
+/** How far apart Flexible's From/To default when first switched on from Exact. */
+const DEFAULT_FLEXIBLE_WINDOW_HOURS = 1;
 
 /**
- * Which zone a pickup/dropoff time field should actually use: the zone
- * already saved with it (so an existing value is never silently
- * reinterpreted just because the address later resolves to a different
- * zone), else the zone the current address implies, else the browser's own
- * zone as a last resort so the field is never simply unusable.
- * See docs/specs (pickup/dropoff timezone).
+ * Postgres `time` round-trips as "HH:MM:SS" (PowerSync/Kysely) or "HH:MM"
+ * (an `<input type="time">` value or a brand-new default) — this normalizes
+ * either to "HH:MM:SS" so every stored value has one consistent shape, which
+ * matters for plain string comparison/sorting.
  */
-export function resolveEffectiveTimezone(
-  storedTimezone: string | null | undefined,
-  addressTimezone: string | null | undefined,
-  browserTimezone: string,
-): string {
-  return storedTimezone ?? addressTimezone ?? browserTimezone;
+export function normalizeWorkTrackerTime(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const match = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(value);
+  if (!match) return null;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+  const seconds = match[3] ?? "00";
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${seconds}`;
+}
+
+/** "HH:MM:SS" → "HH:MM", the value an `<input type="time">` expects. */
+export function toInputTimeValue(value: string | null | undefined): string {
+  if (!value) return "";
+  const match = /^(\d{1,2}):(\d{2})/.exec(value);
+  return match ? `${match[1].padStart(2, "0")}:${match[2]}` : "";
 }
 
 /**
- * Builds the `ZonedDateTime` a time picker should show: the real stored
- * instant if there is one, otherwise a default time on the trip's own date —
- * never today's date.
- *
- * Null when there's no timezone to interpret the time in, or, for a
- * brand-new value, no trip date to default onto.
+ * Adds `hours`, clamped to the same day (never wraps past midnight) — ranges
+ * don't cross days here (see docs/specs), so a default seeded late in the day
+ * (e.g. 11:30 PM) lands on 11:59 PM rather than producing an end before its
+ * start, which the DB's check constraint would reject anyway.
  */
-export function resolveWorkTrackerTimeFieldValue(
-  isoValue: string | null | undefined,
-  timezone: string | null | undefined,
-  date: string | null | undefined,
-): ZonedDateTime | null {
-  if (!timezone) return null;
+function addHours(time: string, hours: number): string {
+  const match = /^(\d{1,2}):(\d{2})/.exec(time);
+  if (!match) return time;
+  const totalMinutes = Math.min(
+    Number(match[1]) * 60 + Number(match[2]) + hours * 60,
+    23 * 60 + 59,
+  );
+  const hour = Math.floor(totalMinutes / 60);
+  const minute = totalMinutes % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`;
+}
 
-  if (isoValue) {
-    try {
-      return parseAbsolute(isoValue, timezone);
-    } catch {
-      return null;
-    }
+export type WorkTrackerTimeFieldState = {
+  mode: WorkTrackerTimeMode;
+  start: string | null;
+  end: string | null;
+};
+
+/**
+ * The next `{mode, start, end}` when a user switches modes on the toggle.
+ * Preserves an existing value across the switch where it makes sense
+ * (Exact → Flexible keeps the same start), and seeds a sensible default
+ * where there's nothing yet to carry over.
+ */
+export function switchWorkTrackerTimeMode(
+  current: WorkTrackerTimeFieldState,
+  nextMode: WorkTrackerTimeMode,
+): WorkTrackerTimeFieldState {
+  if (nextMode === "any_time") {
+    return { mode: "any_time", start: null, end: null };
   }
-
-  if (!date) return null;
-  try {
-    return toZoned(parseDate(date), timezone).set({ hour: DEFAULT_HOUR, minute: 0 });
-  } catch {
-    return null;
+  if (nextMode === "exact") {
+    const start = current.start ?? DEFAULT_TIME;
+    return { mode: "exact", start, end: start };
   }
-}
-
-/** The ISO instant string to save (pickup_at/dropoff_at), from a picker value. */
-export function workTrackerTimeFieldValueToIso(value: ZonedDateTime | null): string | null {
-  return value ? value.toAbsoluteString() : null;
-}
-
-/**
- * True once a real address zone is known (coordinates resolved) and it
- * disagrees with whatever zone the time was actually saved under — e.g. the
- * pickup was set while the address had no coordinates yet (so it fell back
- * to the browser's zone), and the address has since been re-selected and
- * turned out to be somewhere else. Never fires for a brand-new, unset time —
- * there's nothing yet to be wrong.
- */
-export function needsTimezoneSync(
-  storedTimezone: string | null | undefined,
-  addressTimezone: string | null | undefined,
-): boolean {
-  return Boolean(storedTimezone && addressTimezone && storedTimezone !== addressTimezone);
-}
-
-/**
- * Re-anchors a stored time onto the correct zone, keeping the clock reading
- * the same (8:00 stays 8:00) rather than preserving the absolute instant —
- * the person who entered "8:00 AM" meant 8:00 AM at the actual pickup
- * location, not whatever instant 8:00 AM in the wrong zone happened to be.
- */
-export function resyncWorkTrackerTimeFieldValue(
-  isoValue: string | null | undefined,
-  fromTimezone: string,
-  toTimezone: string,
-): string | null {
-  if (!isoValue) return null;
-  try {
-    const current = parseAbsolute(isoValue, fromTimezone);
-    return toZoned(toCalendarDateTime(current), toTimezone).toAbsoluteString();
-  } catch {
-    return null;
-  }
-}
-
-/** Default: DST changes coming up within this many days either side count as "near". */
-const DEFAULT_DST_WINDOW_DAYS = 14;
-
-/**
- * True when the given zone's UTC offset differs 14 days before vs. 14 days
- * after the trip date — i.e. a daylight-saving transition falls somewhere in
- * that window, so a time someone types without thinking about it could be
- * off by an hour from what they meant. Dates and timezones are confusing
- * enough already; better to ask than to silently get it wrong.
- */
-export function isNearDstTransition(
-  date: string | null | undefined,
-  timezone: string | null | undefined,
-  windowDays: number = DEFAULT_DST_WINDOW_DAYS,
-): boolean {
-  if (!date || !timezone) return false;
-  try {
-    const base = parseDate(date);
-    const before = toZoned(base.subtract({ days: windowDays }), timezone).offset;
-    const after = toZoned(base.add({ days: windowDays }), timezone).offset;
-    return before !== after;
-  } catch {
-    return false;
-  }
+  // flexible
+  const start = current.start ?? DEFAULT_TIME;
+  const end =
+    current.mode === "flexible" && current.end
+      ? current.end
+      : addHours(start, DEFAULT_FLEXIBLE_WINDOW_HOURS);
+  return { mode: "flexible", start, end };
 }

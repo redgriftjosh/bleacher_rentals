@@ -83,6 +83,8 @@ export function checkWorkTrackerOpenAccess(input: WorkTrackerAccessInput): WorkT
  * table gains a column. The exceptions are `pickup_time`/`dropoff_time`: the legacy free-text
  * columns are no longer initialized (or used anywhere) by the web app, only kept alive in
  * Postgres for the driver app, so the object below is cast rather than widened to include them.
+ * A new tracker starts `any_time` on both sides — matches every pre-existing row, which was
+ * never backfilled and never will be.
  */
 export function buildWorkTrackerDraft(params: {
   bleacherUuid: string;
@@ -104,16 +106,18 @@ export function buildWorkTrackerDraft(params: {
     dropoff_address_uuid: null,
     dropoff_poc: null,
     dropoff_poc_contact_uuid: null,
-    dropoff_at: null,
-    dropoff_timezone: null,
+    dropoff_time_mode: "any_time",
+    dropoff_time_start: null,
+    dropoff_time_end: null,
     dropoff_instructions: null,
     notes: null,
     pay_cents: null,
     pickup_address_uuid: null,
     pickup_poc: null,
     pickup_poc_contact_uuid: null,
-    pickup_at: null,
-    pickup_timezone: null,
+    pickup_time_mode: "any_time",
+    pickup_time_start: null,
+    pickup_time_end: null,
     pickup_instructions: null,
     user_uuid: null,
     internal_notes: null,

@@ -3878,23 +3878,25 @@ export type Database = {
           drive_minutes: number | null
           driver_uuid: string | null
           dropoff_address_uuid: string | null
-          dropoff_at: string | null
           dropoff_instructions: string | null
           dropoff_poc: string | null
           dropoff_poc_contact_uuid: string | null
           dropoff_time: string | null
-          dropoff_timezone: string | null
+          dropoff_time_end: string | null
+          dropoff_time_mode: Database["public"]["Enums"]["work_tracker_time_mode"]
+          dropoff_time_start: string | null
           id: string
           internal_notes: string | null
           notes: string | null
           pay_cents: number | null
           pickup_address_uuid: string | null
-          pickup_at: string | null
           pickup_instructions: string | null
           pickup_poc: string | null
           pickup_poc_contact_uuid: string | null
           pickup_time: string | null
-          pickup_timezone: string | null
+          pickup_time_end: string | null
+          pickup_time_mode: Database["public"]["Enums"]["work_tracker_time_mode"]
+          pickup_time_start: string | null
           post_inspection_uuid: string | null
           pre_inspection_uuid: string | null
           project_number: string | null
@@ -3922,23 +3924,25 @@ export type Database = {
           drive_minutes?: number | null
           driver_uuid?: string | null
           dropoff_address_uuid?: string | null
-          dropoff_at?: string | null
           dropoff_instructions?: string | null
           dropoff_poc?: string | null
           dropoff_poc_contact_uuid?: string | null
           dropoff_time?: string | null
-          dropoff_timezone?: string | null
+          dropoff_time_end?: string | null
+          dropoff_time_mode?: Database["public"]["Enums"]["work_tracker_time_mode"]
+          dropoff_time_start?: string | null
           id?: string
           internal_notes?: string | null
           notes?: string | null
           pay_cents?: number | null
           pickup_address_uuid?: string | null
-          pickup_at?: string | null
           pickup_instructions?: string | null
           pickup_poc?: string | null
           pickup_poc_contact_uuid?: string | null
           pickup_time?: string | null
-          pickup_timezone?: string | null
+          pickup_time_end?: string | null
+          pickup_time_mode?: Database["public"]["Enums"]["work_tracker_time_mode"]
+          pickup_time_start?: string | null
           post_inspection_uuid?: string | null
           pre_inspection_uuid?: string | null
           project_number?: string | null
@@ -3966,23 +3970,25 @@ export type Database = {
           drive_minutes?: number | null
           driver_uuid?: string | null
           dropoff_address_uuid?: string | null
-          dropoff_at?: string | null
           dropoff_instructions?: string | null
           dropoff_poc?: string | null
           dropoff_poc_contact_uuid?: string | null
           dropoff_time?: string | null
-          dropoff_timezone?: string | null
+          dropoff_time_end?: string | null
+          dropoff_time_mode?: Database["public"]["Enums"]["work_tracker_time_mode"]
+          dropoff_time_start?: string | null
           id?: string
           internal_notes?: string | null
           notes?: string | null
           pay_cents?: number | null
           pickup_address_uuid?: string | null
-          pickup_at?: string | null
           pickup_instructions?: string | null
           pickup_poc?: string | null
           pickup_poc_contact_uuid?: string | null
           pickup_time?: string | null
-          pickup_timezone?: string | null
+          pickup_time_end?: string | null
+          pickup_time_mode?: Database["public"]["Enums"]["work_tracker_time_mode"]
+          pickup_time_start?: string | null
           post_inspection_uuid?: string | null
           pre_inspection_uuid?: string | null
           project_number?: string | null
@@ -4333,6 +4339,7 @@ export type Database = {
         | "maintenance"
         | "per_diem"
         | "custom"
+      work_tracker_time_mode: "exact" | "flexible" | "any_time"
       work_tracker_type_code:
         | "trip"
         | "repair_maintenance"
@@ -4521,6 +4528,7 @@ export const Constants = {
         "per_diem",
         "custom",
       ],
+      work_tracker_time_mode: ["exact", "flexible", "any_time"],
       work_tracker_type_code: [
         "trip",
         "repair_maintenance",
