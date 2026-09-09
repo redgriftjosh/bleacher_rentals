@@ -572,6 +572,12 @@ const DamageReportsCols = {
   created_by_user_uuid: column.text,
   deleted: column.integer,
   photos_uploaded: column.integer,
+  // A driver's claim that the damage is gone. Not a resolve — the report stays
+  // open until someone here closes it (see the Mark as Resolved button on the
+  // damage reports page).
+  fixed_by_driver: column.integer,
+  fixed_at: column.text,
+  fixed_by_user_uuid: column.text,
 } satisfies PowerSyncColsFor<"DamageReports">;
 const DamageReports = new Table(DamageReportsCols, {
   indexes: { bleacher_uuid: ["bleacher_uuid"], maintenance_event_uuid: ["maintenance_event_uuid"] },

@@ -4,7 +4,16 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { useClerkSupabaseClient } from "@/utils/supabase/useClerkSupabaseClient";
-import { AlertTriangle, CheckCircle2, Plus, X, Trash2, RotateCcw, ImageUp } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Plus,
+  X,
+  Trash2,
+  RotateCcw,
+  ImageUp,
+  Wrench,
+} from "lucide-react";
 import { DamageReportModal, EditDamageReport } from "./DamageReportModal";
 import { useTeamPermissions } from "@/features/manageTeam/hooks/useTeamPermissions";
 import { useUserAccess } from "@/features/userAccess/client";
@@ -284,6 +293,14 @@ function DamageReportCard({
               <span className="inline-flex items-center gap-1 text-xs font-medium text-red-700 bg-red-100 px-2 py-0.5 rounded-full">
                 <AlertTriangle className="h-3 w-3" />
                 Open
+              </span>
+            )}
+            {/* A driver says this one is already fixed — still open, but the
+                cheap end of the backlog: it closes in one click. */}
+            {report.fixed_by_driver && !isResolved && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                <Wrench className="h-3 w-3" />
+                Fixed by driver
               </span>
             )}
           </div>
