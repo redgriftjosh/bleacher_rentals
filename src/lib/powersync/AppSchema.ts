@@ -583,6 +583,19 @@ const DamageReports = new Table(DamageReportsCols, {
   indexes: { bleacher_uuid: ["bleacher_uuid"], maintenance_event_uuid: ["maintenance_event_uuid"] },
 });
 
+const DamageReportAcknowledgementsCols = {
+  damage_report_uuid: column.text,
+  inspection_uuid: column.text,
+  work_tracker_uuid: column.text,
+  acknowledged_by_user_uuid: column.text,
+  created_at: column.text,
+  deleted: column.integer,
+  report_resolved_at: column.text,
+} satisfies PowerSyncColsFor<"DamageReportAcknowledgements">;
+const DamageReportAcknowledgements = new Table(DamageReportAcknowledgementsCols, {
+  indexes: { damage_report_uuid: ["damage_report_uuid"] },
+});
+
 const DamageReportPhotosCols = {
   created_at: column.text,
   damage_report_uuid: column.text,
@@ -1215,6 +1228,7 @@ export const AppSchema = new Schema({
   DriverZones,
   DamageReports,
   DamageReportPhotos,
+  DamageReportAcknowledgements,
   InspectionQuestions,
   MaintenanceEvents,
   BleacherMaintEvents,
