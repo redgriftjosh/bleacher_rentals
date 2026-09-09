@@ -111,7 +111,7 @@ const ROLE_CONFIG: Record<WebRole, RoleConfig> = {
     // so they can read what they are allowed to do, and /changelog so a release
     // note is not invisible to them; without a dashboard, defaultRedirect falls
     // through to the first path here, which is the queue.
-    allowedPaths: ["/annual-inspections", "/permissions", "/changelog"],
+    allowedPaths: ["/annual-inspections", "/permissions", "/changelog", "/assets"],
     showSidebar: true,
   },
   driver: {
