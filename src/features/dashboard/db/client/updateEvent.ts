@@ -40,6 +40,10 @@ export async function updateEvent(
             state_province: state.addressData.state ?? "",
             street: state.addressData.address ?? "",
             zip_postal: state.addressData.postalCode ?? "",
+            latitude: state.addressData.lat ?? null,
+            longitude: state.addressData.lng ?? null,
+            country: state.addressData.country ?? null,
+            place_id: state.addressData.placeId ?? null,
           })
           .where("id", "=", state.addressData.addressUuid)
           .compile(),
@@ -55,6 +59,10 @@ export async function updateEvent(
             state_province: state.addressData.state ?? "",
             street: state.addressData.address ?? "",
             zip_postal: state.addressData.postalCode ?? "",
+            latitude: state.addressData.lat ?? null,
+            longitude: state.addressData.lng ?? null,
+            country: state.addressData.country ?? null,
+            place_id: state.addressData.placeId ?? null,
           })
           .compile(),
       );
@@ -108,9 +116,7 @@ async function updateBleacherEvents(state: CurrentEventStore) {
   );
 
   const existingBleacherUuids = new Set(
-    existingLinks
-      .map((b) => b.bleacher_uuid)
-      .filter((uuid): uuid is string => uuid !== null),
+    existingLinks.map((b) => b.bleacher_uuid).filter((uuid): uuid is string => uuid !== null),
   );
   const incomingBleacherUuids = new Set(state.bleacherUuids);
 

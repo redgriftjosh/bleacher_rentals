@@ -10,6 +10,7 @@ import {
   formatWorkTrackerTime,
 } from "../util";
 import { useWorkTrackersForWeek } from "../hooks/useWorkTrackersForWeek";
+import { isCanadianAddress, isUsaAddress } from "../util/addressCountry";
 import WorkTrackerStatusBadge from "./WorkTrackerStatusBadge";
 
 type Props = {
@@ -17,16 +18,6 @@ type Props = {
   startDate: string;
   onSelectWorkTracker?: (workTracker: Tables<"WorkTrackers">) => void;
 };
-
-function isCanada(street: string | null | undefined): boolean {
-  if (!street) return false;
-  return /canada/i.test(street);
-}
-
-function isUSA(street: string | null | undefined): boolean {
-  if (!street) return false;
-  return /usa|united states/i.test(street);
-}
 
 export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
   const { data, isLoading, error } = useWorkTrackersForWeek(userUuid, startDate);
@@ -65,7 +56,8 @@ export function TripList({ userUuid, startDate, onSelectWorkTracker }: Props) {
     <tbody>
       {data?.workTrackers.map((row, index) => {
         const crossBorder =
-          isCanada(data.driverAddress?.street) && isUSA(row.dropoff_address?.street);
+          isCanadianAddress(data.driverAddress?.country, data.driverAddress?.street) &&
+          isUsaAddress(row.dropoff_address?.country, row.dropoff_address?.street);
         return (
           <tr
             key={index}

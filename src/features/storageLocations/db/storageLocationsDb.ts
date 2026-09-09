@@ -22,6 +22,10 @@ export type StorageLocationAddress = {
   city: string;
   stateProvince: string;
   zipPostal: string;
+  lat?: number;
+  lng?: number;
+  placeId?: string;
+  country?: string;
 };
 
 export type StorageLocationInput = {
@@ -78,6 +82,10 @@ export async function upsertStorageLocationAddress(
     city: address.city,
     state_province: address.stateProvince,
     zip_postal: address.zipPostal || null,
+    latitude: address.lat ?? null,
+    longitude: address.lng ?? null,
+    country: address.country ?? null,
+    place_id: address.placeId ?? null,
   };
 
   if (existingAddressUuid) {

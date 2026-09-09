@@ -254,6 +254,8 @@ async function saveAddress(
           zip_postal: address.postalCode ?? "",
           latitude: address.lat ?? null,
           longitude: address.lng ?? null,
+          country: address.country ?? null,
+          place_id: address.placeId ?? null,
         })
         .where("id", "=", addressUuid)
         .compile(),
@@ -272,6 +274,8 @@ async function saveAddress(
           zip_postal: address.postalCode ?? "",
           latitude: address.lat ?? null,
           longitude: address.lng ?? null,
+          country: address.country ?? null,
+          place_id: address.placeId ?? null,
         })
         .compile(),
     );
@@ -292,6 +296,8 @@ export function getAddressFromUuid(addressUuid: string | null): AddressData | nu
     postalCode: address.zip_postal ?? undefined,
     lat: address.latitude ?? undefined,
     lng: address.longitude ?? undefined,
+    country: address.country ?? undefined,
+    placeId: address.place_id ?? undefined,
   };
 }
 

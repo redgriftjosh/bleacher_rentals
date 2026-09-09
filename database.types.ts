@@ -80,30 +80,36 @@ export type Database = {
       Addresses: {
         Row: {
           city: string
+          country: string | null
           created_at: string
           id: string
           latitude: number | null
           longitude: number | null
+          place_id: string | null
           state_province: string
           street: string
           zip_postal: string | null
         }
         Insert: {
           city: string
+          country?: string | null
           created_at?: string
           id?: string
           latitude?: number | null
           longitude?: number | null
+          place_id?: string | null
           state_province: string
           street: string
           zip_postal?: string | null
         }
         Update: {
           city?: string
+          country?: string | null
           created_at?: string
           id?: string
           latitude?: number | null
           longitude?: number | null
+          place_id?: string | null
           state_province?: string
           street?: string
           zip_postal?: string | null

@@ -14,6 +14,7 @@ interface AddressData {
   lat?: number;
   lng?: number;
   placeId?: string;
+  country?: string;
 }
 
 interface AddressAutocompleteProps {
@@ -73,12 +74,12 @@ export default function AddressAutocomplete({
       // result's county ending up in `city` instead of its actual town).
       const results = await getGeocode({ placeId });
       const { lat, lng } = await getLatLng(results[0]);
-      const { address, city, state, postalCode } = parseGoogleAddressComponents(
+      const { address, city, state, postalCode, country } = parseGoogleAddressComponents(
         results[0].address_components,
         description,
       );
 
-      onAddressSelect({ address, city, state, postalCode, lat, lng, placeId });
+      onAddressSelect({ address, city, state, postalCode, lat, lng, placeId, country });
     } catch (error) {
       console.error("Error fetching address details:", error);
     }

@@ -7,6 +7,7 @@ import { expect, useTypedQuery } from "@/lib/powersync/typedQuery";
 import type { DriverWithMeta } from "../db/db";
 import { applyDriverScope, resolveDriverScope, type DriverScope } from "../db/driverZoneScope";
 import { matchesPayCurrency, type PayCurrencyFilter } from "../util/payCurrencyFilter";
+import { deriveRegion, isUsaAddress } from "../util/addressCountry";
 
 const NONE = "__none__";
 
@@ -65,6 +66,7 @@ type DriverRow = {
   pay_per_unit: string | null;
   taxDec: number | null;
   driver_street: string | null;
+  driver_country: string | null;
   qbo_connection_uuid: string | null;
   user_id: string;
   first_name: string | null;
@@ -77,6 +79,7 @@ type TrackerAggRow = {
   distance_meters: number | null;
   drive_minutes: number | null;
   dropoff_street: string | null;
+  dropoff_country: string | null;
 };
 
 type GroupRow = {
@@ -87,17 +90,6 @@ type GroupRow = {
   week_start: string | null;
   week_end: string | null;
 };
-
-function deriveRegion(street: string | null | undefined): "US" | "CAN" | null {
-  if (!street) return null;
-  const country = street.split(",").pop()?.trim();
-  return country === "USA" ? "US" : country === "Canada" ? "CAN" : null;
-}
-
-function isUsaAddress(street: string | null): boolean {
-  if (!street) return false;
-  return /usa|united states/i.test(street);
-}
 
 export function useDriversForWeek(
   startDate: string,
@@ -121,6 +113,7 @@ export function useDriversForWeek(
         "d.pay_per_unit as pay_per_unit",
         "d.tax_dec as taxDec",
         "a.street as driver_street",
+        "a.country as driver_country",
         "v.qbo_connection_uuid as qbo_connection_uuid",
         "u.id as user_id",
         "u.first_name as first_name",
@@ -152,6 +145,7 @@ export function useDriversForWeek(
         "wt.distance_meters as distance_meters",
         "wt.drive_minutes as drive_minutes",
         "dropoff.street as dropoff_street",
+        "dropoff.country as dropoff_country",
       ])
       .where("wt.date", ">=", startDate)
       .where("wt.date", "<", endDate)
@@ -205,7 +199,8 @@ export function useDriversForWeek(
         wt.driver_uuid,
         (driveMinutes.get(wt.driver_uuid) ?? 0) + (wt.drive_minutes ?? 0),
       );
-      if (isUsaAddress(wt.dropoff_street)) usaDropoffDriverIds.add(wt.driver_uuid);
+      if (isUsaAddress(wt.dropoff_country, wt.dropoff_street))
+        usaDropoffDriverIds.add(wt.driver_uuid);
     }
 
     const groupsByDriver = new Map<string, GroupRow>();
@@ -216,7 +211,7 @@ export function useDriversForWeek(
     const result = driverRows
       .filter((driver) => matchesPayCurrency(driver.pay_currency, payCurrencyFilter))
       .map((driver) => {
-        const region = deriveRegion(driver.driver_street);
+        const region = deriveRegion(driver.driver_country, driver.driver_street);
         const group = groupsByDriver.get(driver.driver_uuid);
         return {
           id: driver.user_id,

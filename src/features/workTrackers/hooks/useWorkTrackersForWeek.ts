@@ -17,6 +17,7 @@ type DriverRow = {
   address_city: string | null;
   address_state_province: string | null;
   address_zip_postal: string | null;
+  address_country: string | null;
 };
 
 const NONE = "__no_driver__";
@@ -42,6 +43,7 @@ export function useWorkTrackersForWeek(
         "a.city as address_city",
         "a.state_province as address_state_province",
         "a.zip_postal as address_zip_postal",
+        "a.country as address_country",
       ])
       .where("d.user_uuid", "=", userUuid)
       .limit(1)
@@ -76,12 +78,14 @@ export function useWorkTrackersForWeek(
           "pu.city as pickup_city",
           "pu.state_province as pickup_state_province",
           "pu.zip_postal as pickup_zip_postal",
+          "pu.country as pickup_country",
           "dof.id as dropoff_id",
           "dof.created_at as dropoff_created_at",
           "dof.street as dropoff_street",
           "dof.city as dropoff_city",
           "dof.state_province as dropoff_state_province",
           "dof.zip_postal as dropoff_zip_postal",
+          "dof.country as dropoff_country",
         ])
         .where("wt.driver_uuid", "=", driverUuid)
         .where("wt.date", ">=", startDate)
@@ -114,6 +118,7 @@ export function useWorkTrackersForWeek(
           city: driver.address_city,
           state_province: driver.address_state_province,
           zip_postal: driver.address_zip_postal,
+          country: driver.address_country,
         } as unknown as Tables<"Addresses">)
       : null;
 
@@ -129,6 +134,7 @@ export function useWorkTrackersForWeek(
             city: row.pickup_city,
             state_province: row.pickup_state_province,
             zip_postal: row.pickup_zip_postal,
+            country: row.pickup_country,
           } as unknown as Tables<"Addresses">)
         : null,
       dropoff_address: row.dropoff_id
@@ -139,6 +145,7 @@ export function useWorkTrackersForWeek(
             city: row.dropoff_city,
             state_province: row.dropoff_state_province,
             zip_postal: row.dropoff_zip_postal,
+            country: row.dropoff_country,
           } as unknown as Tables<"Addresses">)
         : null,
     }));

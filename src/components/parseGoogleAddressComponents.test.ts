@@ -8,6 +8,10 @@ function component(long_name: string, ...types: string[]): GoogleAddressComponen
   return { long_name, short_name: long_name, types };
 }
 
+function countryComponent(long_name: string, short_name: string): GoogleAddressComponent {
+  return { long_name, short_name, types: ["country", "political"] };
+}
+
 describe("parseGoogleAddressComponents", () => {
   it("builds the street from street_number + route, not the raw suggestion text", () => {
     const result = parseGoogleAddressComponents(
@@ -73,5 +77,23 @@ describe("parseGoogleAddressComponents", () => {
 
     expect(result.state).toBe("Ontario");
     expect(result.postalCode).toBe("N3Y 4K6");
+  });
+
+  it("extracts country as its ISO-2 short_name, not the long name", () => {
+    const result = parseGoogleAddressComponents(
+      [component("Ontario", "administrative_area_level_1"), countryComponent("Canada", "CA")],
+      "Somewhere, ON, Canada",
+    );
+
+    expect(result.country).toBe("CA");
+  });
+
+  it("leaves country undefined when there's no country component", () => {
+    const result = parseGoogleAddressComponents(
+      [component("Ontario", "administrative_area_level_1")],
+      "Somewhere, ON",
+    );
+
+    expect(result.country).toBeUndefined();
   });
 });

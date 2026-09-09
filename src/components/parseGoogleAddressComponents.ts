@@ -9,6 +9,8 @@ export type ParsedAddress = {
   city?: string;
   state?: string;
   postalCode?: string;
+  /** ISO-2 country code (e.g. "US", "CA") — `short_name` on the "country" component. */
+  country?: string;
 };
 
 /**
@@ -45,5 +47,8 @@ export function parseGoogleAddressComponents(
   );
   const postalCode = componentOfType("postal_code");
 
-  return { address, city, state, postalCode };
+  // short_name, not long_name — "US"/"CA", an ISO-2 code, not "United States".
+  const country = components.find((comp) => comp.types.includes("country"))?.short_name;
+
+  return { address, city, state, postalCode, country };
 }

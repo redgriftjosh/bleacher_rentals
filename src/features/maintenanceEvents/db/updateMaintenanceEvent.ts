@@ -68,6 +68,10 @@ export async function updateMaintenanceEvent(
           state_province: state.addressData.state ?? "",
           street: state.addressData.address ?? "",
           zip_postal: state.addressData.postalCode ?? "",
+          latitude: state.addressData.lat ?? null,
+          longitude: state.addressData.lng ?? null,
+          country: state.addressData.country ?? null,
+          place_id: state.addressData.placeId ?? null,
         })
         .eq("id", state.addressData.addressUuid);
 
@@ -92,6 +96,10 @@ export async function updateMaintenanceEvent(
           state_province: state.addressData.state ?? "",
           street: state.addressData.address ?? "",
           zip_postal: state.addressData.postalCode ?? "",
+          latitude: state.addressData.lat ?? null,
+          longitude: state.addressData.lng ?? null,
+          country: state.addressData.country ?? null,
+          place_id: state.addressData.placeId ?? null,
         })
         .select("id")
         .single();

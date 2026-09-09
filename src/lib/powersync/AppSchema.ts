@@ -30,6 +30,8 @@ const AddressesCols = {
   zip_postal: column.text,
   latitude: column.real,
   longitude: column.real,
+  country: column.text,
+  place_id: column.text,
 } satisfies PowerSyncColsFor<"Addresses">;
 const Addresses = new Table(AddressesCols);
 
